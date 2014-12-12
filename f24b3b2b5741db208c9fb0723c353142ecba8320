@@ -16,6 +16,24 @@
       "revId": "f24b3b2b5741db208c9fb0723c353142ecba8320",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e46a5265_eaa8e793",
+        "filename": "project.config",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1002100
+      },
+      "writtenOn": "2014-12-12T18:33:50Z",
+      "side": 1,
+      "message": "refs/pending-tags/* is actually used by gnumbd to keep track of its place. It\u0027s not about pushing tags. This is a necessary part of the setup.",
+      "parentUuid": "44731e24_688d9b13",
+      "revId": "f24b3b2b5741db208c9fb0723c353142ecba8320",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
