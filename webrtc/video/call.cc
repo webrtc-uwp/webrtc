@@ -36,16 +36,6 @@
 #include "webrtc/video/video_send_stream.h"
 
 namespace webrtc {
-VideoEncoder* VideoEncoder::Create(VideoEncoder::EncoderType codec_type) {
-  switch (codec_type) {
-    case kVp8:
-      return VP8Encoder::Create();
-    case kVp9:
-      return VP9Encoder::Create();
-  }
-  RTC_NOTREACHED();
-  return nullptr;
-}
 
 VideoDecoder* VideoDecoder::Create(VideoDecoder::DecoderType codec_type) {
   switch (codec_type) {
