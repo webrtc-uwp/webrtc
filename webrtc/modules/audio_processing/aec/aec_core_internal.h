@@ -142,7 +142,6 @@ struct AecCore {
   int delay_correction_count;
   int shift_offset;
   float delay_quality_threshold;
-  int frame_count;
 
   // 0 = reported delay mode disabled (signal based delay correction enabled).
   // otherwise enabled
