@@ -537,4 +537,36 @@ TEST_F(RtpDepacketizerH264Test, TestFuA) {
   EXPECT_EQ(kH264FuA, payload.type.Video.codecHeader.H264.packetization_type);
   EXPECT_EQ(kIdr, payload.type.Video.codecHeader.H264.nalu_type);
 }
+
+TEST_F(RtpDepacketizerH264Test, TestEmptyPayload) {
+  // Using a wild pointer to crash on accesses from inside the depacketizer.
+  uint8_t* garbage_ptr = reinterpret_cast<uint8_t*>(0x4711);
+  RtpDepacketizer::ParsedPayload payload;
+  EXPECT_FALSE(depacketizer_->Parse(&payload, garbage_ptr, 0));
+}
+
+TEST_F(RtpDepacketizerH264Test, TestTruncatedFuaNalu) {
+  const uint8_t kPayload[] = {0x9c};
+  RtpDepacketizer::ParsedPayload payload;
+  EXPECT_FALSE(depacketizer_->Parse(&payload, kPayload, sizeof(kPayload)));
+}
+
+TEST_F(RtpDepacketizerH264Test, TestTruncatedSingleStapANalu) {
+  const uint8_t kPayload[] = {0xd8, 0x27};
+  RtpDepacketizer::ParsedPayload payload;
+  EXPECT_FALSE(depacketizer_->Parse(&payload, kPayload, sizeof(kPayload)));
+}
+
+TEST_F(RtpDepacketizerH264Test, TestTruncationJustAfterSingleStapANalu) {
+  const uint8_t kPayload[] = {0x38, 0x27, 0x27};
+  RtpDepacketizer::ParsedPayload payload;
+  EXPECT_FALSE(depacketizer_->Parse(&payload, kPayload, sizeof(kPayload)));
+}
+
+TEST_F(RtpDepacketizerH264Test, TestShortSpsPacket) {
+  const uint8_t kPayload[] = {0x27, 0x80, 0x00};
+  RtpDepacketizer::ParsedPayload payload;
+  EXPECT_TRUE(depacketizer_->Parse(&payload, kPayload, sizeof(kPayload)));
+}
+
 }  // namespace webrtc

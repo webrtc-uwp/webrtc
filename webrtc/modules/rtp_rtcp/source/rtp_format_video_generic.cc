@@ -90,6 +90,9 @@ bool RtpDepacketizerGeneric::Parse(ParsedPayload* parsed_payload,
                                    const uint8_t* payload_data,
                                    size_t payload_data_length) {
   assert(parsed_payload != NULL);
+  if (payload_data_length == 0) {
+    return false;
+  }
 
   uint8_t generic_header = *payload_data++;
   --payload_data_length;
