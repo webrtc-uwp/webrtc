@@ -19,6 +19,10 @@ deps = {
 
   'src/third_party/junit':
     Var('chromium_git') + '/external/webrtc/deps/third_party/junit@f35596b476aa6e62fd3b3857b9942ddcd13ce35e', # from svn revision 3367
+
+  'src/third_party/libsrtp':
+    Var('chromium_git') + '/chromium/deps/libsrtp.git' + '@' +
+    'b8dd754b4fa05fd4cf1c2e8dc3b1ac976280e41a', # from svn revision 295151
 }
 
 deps_os = {
