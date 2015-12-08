@@ -32,11 +32,13 @@
 #include "webrtc/base/byteorder.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/thread.h"
+extern "C" {
 #ifdef SRTP_RELATIVE_PATH
 #include "crypto/include/err.h"
 #else
-#include "third_party/libsrtp/crypto/include/err.h"
+#include "third_party/libsrtp/srtp/crypto/include/err.h"
 #endif
+}
 
 using cricket::CS_AES_CM_128_HMAC_SHA1_80;
 using cricket::CS_AES_CM_128_HMAC_SHA1_32;
@@ -672,7 +674,7 @@ TEST_F(SrtpSessionTest, TestGetSendStreamPacketIndex) {
   EXPECT_TRUE(s1_.ProtectRtp(rtp_packet_, rtp_len_,
                              sizeof(rtp_packet_), &out_len, &index));
   // |index| will be shifted by 16.
-  int64 be64_index = be64_to_cpu(1 << 16);
+  int64 be64_index = static_cast<int64>(rtc::NetworkToHost64(1 << 16));
   EXPECT_EQ(be64_index, index);
 }
 
