@@ -137,7 +137,9 @@ class AdapterEncodedImageCallback : public webrtc::EncodedImageCallback {
 namespace webrtc {
 
 SimulcastEncoderAdapter::SimulcastEncoderAdapter(VideoEncoderFactory* factory)
-    : factory_(factory), encoded_complete_callback_(NULL) {
+    : factory_(factory),
+      encoded_complete_callback_(NULL),
+      implementation_name_("SimulcastEncoderAdapter") {
   memset(&codec_, 0, sizeof(webrtc::VideoCodec));
 }
 
@@ -195,6 +197,7 @@ int SimulcastEncoderAdapter::InitEncode(const VideoCodec* inst,
     codec_.extra_options = screensharing_extra_options_.get();
   }
 
+  std::string implementation_name;
   // Create |number_of_streams| of encoder instances and init them.
   for (int i = 0; i < number_of_streams; ++i) {
     VideoCodec stream_codec;
@@ -224,7 +227,12 @@ int SimulcastEncoderAdapter::InitEncode(const VideoCodec* inst,
     encoder->RegisterEncodeCompleteCallback(callback);
     streaminfos_.push_back(StreamInfo(encoder, callback, stream_codec.width,
                                       stream_codec.height, send_stream));
+    if (i != 0)
+      implementation_name += ", ";
+    implementation_name += streaminfos_[i].encoder->ImplementationName();
   }
+  implementation_name_ =
+      "SimulcastEncoderAdapter (" + implementation_name + ")";
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -497,10 +505,7 @@ bool SimulcastEncoderAdapter::SupportsNativeHandle() const {
 }
 
 const char* SimulcastEncoderAdapter::ImplementationName() const {
-  // We should not be calling this method before streaminfos_ are configured.
-  RTC_DCHECK(!streaminfos_.empty());
-  // TODO(pbos): Support multiple implementation names for different encoders.
-  return streaminfos_[0].encoder->ImplementationName();
+  return implementation_name_.c_str();
 }
 
 }  // namespace webrtc
