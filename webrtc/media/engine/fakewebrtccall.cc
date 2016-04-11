@@ -175,6 +175,7 @@ bool FakeVideoSendStream::ReconfigureVideoEncoder(
     }
   }
   codec_settings_set_ = config.encoder_specific_settings != NULL;
+  ++num_encoder_reconfigurations_;
   return true;
 }
 
