@@ -1668,6 +1668,14 @@ WebRtcVideoChannel2::WebRtcVideoSendStream::GetSsrcs() const {
 void WebRtcVideoChannel2::WebRtcVideoSendStream::SetOptions(
     const VideoOptions& options) {
   rtc::CritScope cs(&lock_);
+
+  VideoOptions old_options = parameters_.options;
+  parameters_.options.SetAll(options);
+  // No need to do anything if the options aren't changing.
+  if (parameters_.options == old_options) {
+    return;
+  }
+
   if (parameters_.codec_settings) {
     LOG(LS_INFO) << "SetCodecAndOptions because of SetOptions; options="
                  << options.ToString();
