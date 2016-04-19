@@ -1563,26 +1563,40 @@ void WriteFmtpParameters(const cricket::CodecParameterMap& parameters,
                          std::ostringstream* os) {
   for (cricket::CodecParameterMap::const_iterator fmtp = parameters.begin();
        fmtp != parameters.end(); ++fmtp) {
-    // Each new parameter, except the first one starts with ";" and " ".
-    if (fmtp != parameters.begin()) {
+    // Parameters are a semicolon-separated list, no spaces.
+    // The list is separated from the header by a space.
+    if (fmtp == parameters.begin()) {
+      *os << kSdpDelimiterSpace;
+    } else {
       *os << kSdpDelimiterSemicolon;
     }
-    *os << kSdpDelimiterSpace;
     WriteFmtpParameter(fmtp->first, fmtp->second, os);
   }
 }
 
 bool IsFmtpParam(const std::string& name) {
   const char* kFmtpParams[] = {
-    kCodecParamMinPTime, kCodecParamSPropStereo,
-    kCodecParamStereo, kCodecParamUseInbandFec, kCodecParamUseDtx,
-    kCodecParamStartBitrate, kCodecParamMaxBitrate, kCodecParamMinBitrate,
-    kCodecParamMaxQuantization, kCodecParamSctpProtocol, kCodecParamSctpStreams,
-    kCodecParamMaxAverageBitrate, kCodecParamMaxPlaybackRate,
-    kCodecParamAssociatedPayloadType
-  };
+      // TODO(hta): Split FMTP parameters apart from parameters in general.
+      // FMTP parameters are codec specific, not generic.
+      kCodecParamMinPTime,
+      kCodecParamSPropStereo,
+      kCodecParamStereo,
+      kCodecParamUseInbandFec,
+      kCodecParamUseDtx,
+      kCodecParamStartBitrate,
+      kCodecParamMaxBitrate,
+      kCodecParamMinBitrate,
+      kCodecParamMaxQuantization,
+      kCodecParamSctpProtocol,
+      kCodecParamSctpStreams,
+      kCodecParamMaxAverageBitrate,
+      kCodecParamMaxPlaybackRate,
+      kCodecParamAssociatedPayloadType,
+      cricket::kH264FmtpPacketizationMode,
+      cricket::kH264FmtpLevelAsymmetryAllowed,
+      cricket::kH264FmtpProfileLevelId};
   for (size_t i = 0; i < arraysize(kFmtpParams); ++i) {
-    if (_stricmp(name.c_str(), kFmtpParams[i]) == 0) {
+    if (name.compare(kFmtpParams[i]) == 0) {
       return true;
     }
   }
