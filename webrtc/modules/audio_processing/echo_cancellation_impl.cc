@@ -360,11 +360,6 @@ bool EchoCancellationImpl::is_next_generation_aec_enabled() const {
   return next_generation_aec_enabled_;
 }
 
-bool EchoCancellationImpl::is_refined_adaptive_filter_enabled() const {
-  rtc::CritScope cs(crit_capture_);
-  return refined_adaptive_filter_enabled_;
-}
-
 bool EchoCancellationImpl::is_extended_filter_enabled() const {
   rtc::CritScope cs(crit_capture_);
   return extended_filter_enabled_;
@@ -456,8 +451,6 @@ void EchoCancellationImpl::SetExtraOptions(const Config& config) {
     rtc::CritScope cs(crit_capture_);
     extended_filter_enabled_ = config.Get<ExtendedFilter>().enabled;
     delay_agnostic_enabled_ = config.Get<DelayAgnostic>().enabled;
-    refined_adaptive_filter_enabled_ =
-        config.Get<RefinedAdaptiveFilter>().enabled;
     next_generation_aec_enabled_ = config.Get<NextGenerationAec>().enabled;
   }
   Configure();
@@ -501,9 +494,6 @@ int EchoCancellationImpl::ConfigureHandle(void* handle) const {
   WebRtcAec_enable_next_generation_aec(
       WebRtcAec_aec_core(static_cast<Handle*>(handle)),
       next_generation_aec_enabled_ ? 1 : 0);
-  WebRtcAec_enable_refined_adaptive_filter(
-      WebRtcAec_aec_core(canceller->state()),
-      refined_adaptive_filter_enabled_);
   return WebRtcAec_set_config(static_cast<Handle*>(handle), config);
 }
 
