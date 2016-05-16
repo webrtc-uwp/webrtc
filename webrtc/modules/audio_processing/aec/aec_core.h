@@ -117,6 +117,12 @@ void WebRtcAec_enable_next_generation_aec(AecCore* self, int enable);
 // Returns 1 if the next generation aec is enabled and zero if disabled.
 int WebRtcAec_next_generation_aec_enabled(AecCore* self);
 
+// Turns on/off the refined adaptive filter feature.
+void WebRtcAec_enable_refined_adaptive_filter(AecCore* self, bool enable);
+
+// Returns whether the refined adaptive filter is enabled.
+bool WebRtcAec_refined_adaptive_filter(const AecCore* self);
+
 // Enables or disables extended filter mode. Non-zero enables, zero disables.
 void WebRtcAec_enable_extended_filter(AecCore* self, int enable);
 
