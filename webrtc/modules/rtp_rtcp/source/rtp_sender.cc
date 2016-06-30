@@ -676,8 +676,7 @@ size_t RTPSender::SendPadData(size_t bytes,
       if (UpdateTransportSequenceNumber(options.packet_id, padding_packet,
                                         length, rtp_header)) {
         if (transport_feedback_observer_)
-          transport_feedback_observer_->AddPacket(options.packet_id, length,
-                                                  true);
+          transport_feedback_observer_->AddPacket(options.packet_id, length);
       }
     }
 
@@ -932,8 +931,7 @@ bool RTPSender::PrepareAndSendPacket(uint8_t* buffer,
     if (UpdateTransportSequenceNumber(options.packet_id, buffer_to_send_ptr,
                                       length, rtp_header)) {
       if (transport_feedback_observer_)
-        transport_feedback_observer_->AddPacket(options.packet_id, length,
-                                                true);
+        transport_feedback_observer_->AddPacket(options.packet_id, length);
     }
   }
 
@@ -1062,8 +1060,7 @@ int32_t RTPSender::SendToNetwork(uint8_t* buffer,
     if (UpdateTransportSequenceNumber(options.packet_id, buffer, length,
                                       rtp_header)) {
       if (transport_feedback_observer_)
-        transport_feedback_observer_->AddPacket(options.packet_id, length,
-                                                true);
+        transport_feedback_observer_->AddPacket(options.packet_id, length);
     }
   }
   UpdateDelayStatistics(capture_time_ms, now_ms);
