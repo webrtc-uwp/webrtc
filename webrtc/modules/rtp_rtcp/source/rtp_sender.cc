@@ -719,8 +719,8 @@ size_t RTPSender::SendPadData(size_t bytes,
       if (UpdateTransportSequenceNumber(options.packet_id, padding_packet,
                                         length, rtp_header)) {
         if (transport_feedback_observer_)
-          transport_feedback_observer_->AddPacket(options.packet_id, length,
-                                                  probe_cluster_id);
+          transport_feedback_observer_->AddPacket(
+              options.packet_id, padding_bytes_in_packet, probe_cluster_id);
       }
     }
 
@@ -981,8 +981,9 @@ bool RTPSender::PrepareAndSendPacket(uint8_t* buffer,
     if (UpdateTransportSequenceNumber(options.packet_id, buffer_to_send_ptr,
                                       length, rtp_header)) {
       if (transport_feedback_observer_)
-        transport_feedback_observer_->AddPacket(options.packet_id, length,
-                                                probe_cluster_id);
+        transport_feedback_observer_->AddPacket(
+            options.packet_id, length - rtp_header.headerLength,
+            probe_cluster_id);
     }
   }
 
@@ -1112,8 +1113,8 @@ int32_t RTPSender::SendToNetwork(uint8_t* buffer,
     if (UpdateTransportSequenceNumber(options.packet_id, buffer, length,
                                       rtp_header)) {
       if (transport_feedback_observer_)
-        transport_feedback_observer_->AddPacket(options.packet_id, length,
-                                                PacketInfo::kNotAProbe);
+        transport_feedback_observer_->AddPacket(
+            options.packet_id, payload_length, PacketInfo::kNotAProbe);
     }
   }
   UpdateDelayStatistics(capture_time_ms, now_ms);
