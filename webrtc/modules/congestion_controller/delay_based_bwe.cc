@@ -96,7 +96,7 @@ void DelayBasedBwe::IncomingPacketInfo(const PacketInfo& info) {
           probe_bitrate_estimator_.PacketFeedback(info);
       if (probe_result.valid()) {
         remote_rate_.SetEstimate(probe_result.bps, probe_result.timestamp);
-        observer_->OnProbeBitrate(bps);
+        observer_->OnProbeBitrate(probe_result.bps);
         update_estimate = true;
       }
     }
