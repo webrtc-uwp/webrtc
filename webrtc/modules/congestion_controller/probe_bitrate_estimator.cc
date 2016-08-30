@@ -12,6 +12,7 @@
 
 #include <algorithm>
 
+#include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 
 namespace {
@@ -22,7 +23,7 @@ constexpr size_t kMaxNumSavedClusters = 5;
 constexpr int kMinNumProbesValidCluster = 4;
 
 // The maximum (receive rate)/(send rate) ratio for a valid estimate.
-constexpr float kValidRatio = 1.2f;
+constexpr float kValidRatio = 2.0f;
 }
 
 namespace webrtc {
