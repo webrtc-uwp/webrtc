@@ -25,6 +25,7 @@
 #include "webrtc/system_wrappers/include/field_trial.h"
 #include "webrtc/system_wrappers/include/trace.h"
 
+
 namespace webrtc {
 
 const char kAdaptiveThresholdExperiment[] = "WebRTC-AdaptiveBweThreshold";
@@ -37,6 +38,11 @@ const double kMaxAdaptOffsetMs = 15.0;
 const double kOverUsingTimeThreshold = 10;
 
 bool AdaptiveThresholdExperimentIsDisabled() {
+#ifdef WINRT
+    // Don't use the Adaptive Threshold on WinRT.
+    return true;
+#endif
+
   std::string experiment_string =
       webrtc::field_trial::FindFullName(kAdaptiveThresholdExperiment);
   const size_t kMinExperimentLength = kDisabledPrefixLength;
@@ -64,9 +70,18 @@ OveruseDetector::OveruseDetector(const OverUseDetectorOptions& options)
     : in_experiment_(!AdaptiveThresholdExperimentIsDisabled()),
       k_up_(0.004),
       k_down_(0.00006),
-      overusing_time_threshold_(100),
-      options_(options),
-      threshold_(12.5),
+#ifdef WINRT
+    // When being CPU bounds (like low level Windows Phone), the overuse_estimator/detector will detect that 
+    // some offsets between timestamp and time of arrival, which could be 
+    // interpreted as bandwidth limitation. Relax the overuse_detection threshold
+    overusing_time_threshold_(1000),
+    options_(options),
+    threshold_(250.0),
+#else
+    overusing_time_threshold_(100),
+    options_(options),
+    threshold_(12.5),
+#endif
       last_update_ms_(-1),
       prev_offset_(0.0),
       time_over_using_(-1),
@@ -94,6 +109,7 @@ BandwidthUsage OveruseDetector::Detect(double offset,
   const double T = std::min(num_of_deltas, 60) * offset;
   BWE_TEST_LOGGING_PLOT(1, "offset", now_ms, T);
   BWE_TEST_LOGGING_PLOT(1, "threshold", now_ms, threshold_);
+
   if (T > threshold_) {
     if (time_over_using_ == -1) {
       // Initialize the timer. Assume that we've been

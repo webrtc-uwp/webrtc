@@ -520,6 +520,10 @@ void TurnServer::OnAllocationDestroyed(TurnServerAllocation* allocation) {
     allocations_.erase(it);
 }
 
+#if defined WINRT
+// Disabled Declaration of 'socket' hides function parameter
+#pragma warning(disable: 4457)
+#endif
 void TurnServer::DestroyInternalSocket(rtc::AsyncPacketSocket* socket) {
   InternalSocketMap::iterator iter = server_sockets_.find(socket);
   if (iter != server_sockets_.end()) {

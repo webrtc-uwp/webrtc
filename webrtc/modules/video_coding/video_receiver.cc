@@ -82,13 +82,30 @@ void VideoReceiver::Process() {
       int target_delay_ms;
       int jitter_buffer_ms;
       int min_playout_delay_ms;
+#ifdef WINRT
+      int current_endtoend_delay_ms;
+#endif
       int render_delay_ms;
-      _timing.GetTimings(&decode_ms, &max_decode_ms, &current_delay_ms,
-                         &target_delay_ms, &jitter_buffer_ms,
-                         &min_playout_delay_ms, &render_delay_ms);
-      _decoderTimingCallback->OnDecoderTiming(
-          decode_ms, max_decode_ms, current_delay_ms, target_delay_ms,
-          jitter_buffer_ms, min_playout_delay_ms, render_delay_ms);
+      _timing.GetTimings(&decode_ms,
+                         &max_decode_ms,
+                         &current_delay_ms,
+                         &target_delay_ms,
+                         &jitter_buffer_ms,
+                         &min_playout_delay_ms,
+#ifdef WINRT
+                         &current_endtoend_delay_ms,
+#endif
+                         &render_delay_ms);
+      _decoderTimingCallback->OnDecoderTiming(decode_ms,
+                                              max_decode_ms,
+                                              current_delay_ms,
+                                              target_delay_ms,
+                                              jitter_buffer_ms,
+                                              min_playout_delay_ms,
+#ifdef WINRT
+                                              current_endtoend_delay_ms,
+#endif
+                                              render_delay_ms);
     }
 
     // Size of render buffer.
@@ -413,6 +430,8 @@ VideoCodecType VideoReceiver::ReceiveCodec() const {
   return _codecDataBase.ReceiveCodec();
 }
 
+bool globalRequestKeyFrame = false;
+
 // Incoming packet from network parsed and ready for decode, non blocking.
 int32_t VideoReceiver::IncomingPacket(const uint8_t* incomingPayload,
                                       size_t payloadLength,
@@ -432,12 +451,13 @@ int32_t VideoReceiver::IncomingPacket(const uint8_t* incomingPayload,
                                        rtpInfo.type.Video.height);
   // TODO(holmer): Investigate if this somehow should use the key frame
   // request scheduling to throttle the requests.
-  if (ret == VCM_FLUSH_INDICATOR) {
+  if (ret == VCM_FLUSH_INDICATOR || globalRequestKeyFrame) {
     {
       CriticalSectionScoped process_cs(process_crit_sect_.get());
       drop_frames_until_keyframe_ = true;
     }
     RequestKeyFrame();
+    globalRequestKeyFrame = false;
   } else if (ret < 0) {
     return ret;
   }

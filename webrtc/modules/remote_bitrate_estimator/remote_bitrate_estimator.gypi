@@ -92,6 +92,9 @@
             'test/estimators/tcp.cc',
             'test/estimators/tcp.h',
           ],
+          'msvs_disabled_warnings': [
+            4456,
+          ],
           'conditions': [
             ['enable_bwe_test_logging==1', {
               'defines': [ 'BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=1' ],

@@ -11,7 +11,7 @@
   'targets': [
     {
       'target_name': 'rtc_unittest_main',
-      'type': 'static_library',
+      'type': '<(gtest_target_type)',
       'dependencies': [
         '<(webrtc_root)/base/base_tests.gyp:rtc_base_tests_utils',
       ],
@@ -70,7 +70,7 @@
     },  # target rtc_unittest_main
     {
       'target_name': 'rtc_media_unittests',
-      'type': 'executable',
+      'type': '<(gtest_target_type)',
       'dependencies': [
         '<(webrtc_root)/base/base_tests.gyp:rtc_base_tests_utils',
         '<(webrtc_root)/media/media.gyp:rtc_media',

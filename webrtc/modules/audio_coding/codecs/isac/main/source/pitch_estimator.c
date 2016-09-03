@@ -17,6 +17,12 @@
 #include <stdlib.h>
 #endif
 
+#ifdef WINRT
+// https://connect.microsoft.com/VisualStudio/feedback/details/776885/possible-bug-in-visual-studio-2012-c-compiler-related-to-intrinsic-math-functions
+// Still happening in VS2013 Update 4.
+#pragma function(sqrt)
+#endif
+
 static const double kInterpolWin[8] = {-0.00067556028640,  0.02184247643159, -0.12203175715679,  0.60086484101160,
                                        0.60086484101160, -0.12203175715679,  0.02184247643159, -0.00067556028640};
 

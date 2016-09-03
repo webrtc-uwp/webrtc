@@ -34,6 +34,7 @@
 
 namespace webrtc {
 class Call;
+class VoEHardware;
 }
 
 namespace cricket {
@@ -71,6 +72,8 @@ class MediaEngineInterface {
       webrtc::Call* call,
       const MediaConfig& config,
       const VideoOptions& options) = 0;
+
+  virtual webrtc::VoEHardware* GetVoEHardware() = 0;
 
   // Device configuration
   // Gets the current speaker volume, as a value between 0 and 255.
@@ -186,6 +189,10 @@ class CompositeMediaEngine : public MediaEngineInterface {
   }
 
   virtual void StopRtcEventLog() { voice_.StopRtcEventLog(); }
+
+  virtual webrtc::VoEHardware* GetVoEHardware() {
+    return voice_.GetVoEHardware();
+  }
 
  protected:
   VOICE voice_;

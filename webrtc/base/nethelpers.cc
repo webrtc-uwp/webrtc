@@ -116,7 +116,9 @@ int inet_pton(int af, const char* src, void *dst) {
 }
 
 bool HasIPv6Enabled() {
-#if !defined(WEBRTC_WIN)
+#if defined(WINRT)
+    return true;
+#elif !defined(WEBRTC_WIN)
   // We only need to check this for Windows XP (so far).
   return true;
 #else

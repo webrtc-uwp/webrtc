@@ -15,6 +15,10 @@
 #ifndef WEBRTC_SPL_SPL_INL_H_
 #define WEBRTC_SPL_SPL_INL_H_
 
+#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
+#include "webrtc/common_audio/signal_processing/include/spl_inl_neon.h"
+#else
+
 #ifdef WEBRTC_ARCH_ARM_V7
 #include "webrtc/common_audio/signal_processing/include/spl_inl_armv7.h"
 #else
@@ -169,5 +173,7 @@ static __inline int32_t WebRtc_MulAccumW16(int16_t a, int16_t b, int32_t c) {
 #endif  // #if !defined(MIPS32_LE)
 
 #endif  // WEBRTC_ARCH_ARM_V7
+
+#endif  // defined(WINRT) && defined(_M_ARM)
 
 #endif  // WEBRTC_SPL_SPL_INL_H_

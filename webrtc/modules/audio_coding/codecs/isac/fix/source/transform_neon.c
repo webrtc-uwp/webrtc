@@ -10,6 +10,13 @@
 
 #include <arm_neon.h>
 
+#ifdef WINRT
+#define INLINE_KEYWORD __inline
+#else
+#define INLINE_KEYWORD inline
+#endif // WINRT
+
+
 #include "webrtc/modules/audio_coding/codecs/isac/fix/source/codec.h"
 #include "webrtc/modules/audio_coding/codecs/isac/fix/source/fft.h"
 #include "webrtc/modules/audio_coding/codecs/isac/fix/source/settings.h"
@@ -22,7 +29,7 @@ extern const int16_t WebRtcIsacfix_kSinTab1[FRAMESAMPLES/2];
 // Sine table 2 in Q14.
 extern const int16_t WebRtcIsacfix_kSinTab2[FRAMESAMPLES/4];
 
-static inline int32_t ComplexMulAndFindMaxNeon(int16_t* inre1Q9,
+static INLINE_KEYWORD int32_t ComplexMulAndFindMaxNeon(int16_t* inre1Q9,
                                                int16_t* inre2Q9,
                                                int32_t* outreQ16,
                                                int32_t* outimQ16) {
@@ -101,7 +108,7 @@ static inline int32_t ComplexMulAndFindMaxNeon(int16_t* inre1Q9,
   return (int32_t)maximum;
 }
 
-static inline void PreShiftW32toW16Neon(int32_t* inre,
+static INLINE_KEYWORD void PreShiftW32toW16Neon(int32_t* inre,
                                         int32_t* inim,
                                         int16_t* outre,
                                         int16_t* outim,
@@ -138,7 +145,7 @@ static inline void PreShiftW32toW16Neon(int32_t* inre,
   }
 }
 
-static inline void PostShiftAndSeparateNeon(int16_t* inre,
+static INLINE_KEYWORD void PostShiftAndSeparateNeon(int16_t* inre,
                                             int16_t* inim,
                                             int16_t* outre,
                                             int16_t* outim,
@@ -245,7 +252,7 @@ void WebRtcIsacfix_Time2SpecNeon(int16_t* inre1Q9,
   PostShiftAndSeparateNeon(inre1Q9, inre2Q9, outreQ7, outimQ7, sh);
 }
 
-static inline int32_t TransformAndFindMaxNeon(int16_t* inre,
+static INLINE_KEYWORD int32_t TransformAndFindMaxNeon(int16_t* inre,
                                               int16_t* inim,
                                               int32_t* outre,
                                               int32_t* outim) {
@@ -342,7 +349,7 @@ static inline int32_t TransformAndFindMaxNeon(int16_t* inre,
   return (int32_t)maximum;
 }
 
-static inline void PostShiftAndDivideAndDemodulateNeon(int16_t* inre,
+static INLINE_KEYWORD void PostShiftAndDivideAndDemodulateNeon(int16_t* inre,
                                                        int16_t* inim,
                                                        int32_t* outre1,
                                                        int32_t* outre2,

@@ -668,7 +668,31 @@
             'macwindowpicker.h',
           ],
         }],
-        ['OS=="win"', {
+        ['OS=="win" and OS_RUNTIME=="winrt"', {
+          'sources':[
+            'loggingserver.cc',
+            'loggingserver.h',
+            'tracelog.cc',
+            'tracelog.h',
+          ],
+          'sources!': [
+            'ifaddrs_converter.cc',
+            'win32regkey.cc',
+            'win32regkey.h',
+            'win32window.cc',
+            'win32window.h',
+            'win32windowpicker.cc',
+            'win32windowpicker.h',
+            'winfirewall.cc',
+            'winfirewall.h',
+            'sec_buffer.h',
+            'schanneladapter.cc',
+            'schanneladapter.h',
+            'win32socketserver.cc',
+            'win32socketserver.h',
+          ],
+        }],
+        ['OS=="win" and winrt_platform!="win_phone" and  winrt_platform!="win10_arm"', {
           'sources!': [
             'ifaddrs_converter.cc',
           ],
@@ -684,7 +708,8 @@
           'defines': [
             '_CRT_NONSTDC_NO_DEPRECATE',
           ],
-        }, {
+        }],
+				['OS!="win"', {
           'sources/': [
             ['exclude', 'win32[a-z0-9]*\\.(h|cc)$'],
           ],

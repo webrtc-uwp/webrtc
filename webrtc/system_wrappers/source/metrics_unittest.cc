@@ -37,6 +37,9 @@ TEST(MetricsTest, InitiallyNoSamples) {
   EXPECT_EQ(-1, test::LastHistogramSample(kName));
 }
 
+// Disabled for WinRT because we can't link to the default and full
+// implementations in our single gtest_runner app.
+#if !defined(WINRT)
 TEST(MetricsTest, RtcHistogramPercent_AddSample) {
   test::ClearHistograms();
   RTC_HISTOGRAM_PERCENTAGE(kName, kSample);
@@ -111,5 +114,7 @@ TEST(MetricsTest, RtcHistogram_FailsForNonConstantName) {
   EXPECT_DEATH(AddSample("Name2", kSample), "");
 }
 #endif  // GTEST_HAS_DEATH_TEST && !defined(WEBRTC_ANDROID)
+
+#endif
 
 }  // namespace webrtc

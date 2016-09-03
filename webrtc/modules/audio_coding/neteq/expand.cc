@@ -911,11 +911,11 @@ void Expand::GenerateBackgroundNoise(int16_t* random_vector,
         mute_slope = -5;
       }
       // Use UnmuteSignal function with negative slope.
-      // |bgn_mute_factor| is in Q14. |mute_slope| is in Q20.
+      // |bgn_mute_factor| is in Q14. |muteSlope| is in Q20.
       DspHelper::UnmuteSignal(noise_samples,
                               num_noise_samples,
                               &bgn_mute_factor,
-                              mute_slope,
+							  mute_slope,
                               noise_samples);
     } else if (bgn_mute_factor < 16384) {
       // If mode is kBgnOn, or if kBgnFade has started fading,

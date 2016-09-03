@@ -34,7 +34,7 @@ class WindowPickerFactory {
   }
 
   static WindowPicker* CreateWindowPicker() {
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) && !defined(WINRT)
     return new Win32WindowPicker();
 #elif defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
     return new MacWindowPicker();

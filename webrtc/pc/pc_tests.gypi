@@ -11,7 +11,7 @@
   'targets': [
     {
       'target_name': 'rtc_pc_unittests',
-      'type': 'executable',
+      'type': '<(gtest_target_type)',
       'dependencies': [
         '<(webrtc_root)/api/api.gyp:libjingle_peerconnection',
         '<(webrtc_root)/base/base_tests.gyp:rtc_base_tests_utils',

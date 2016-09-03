@@ -36,6 +36,13 @@ TEST_F(Win32Test, FileTimeToUInt64Test) {
   EXPECT_EQ(expected, ToUInt64(ft));
 }
 
+#if defined(WINRT)
+// If we ever need and implement WinPing for WinRT, this test case will fail.
+TEST_F(Win32Test, WinPingTest) {
+  WinPing ping;
+  ASSERT_FALSE(ping.IsValid());
+}
+#else
 TEST_F(Win32Test, WinPingTest) {
   WinPing ping;
   ASSERT_TRUE(ping.IsValid());
@@ -58,6 +65,7 @@ TEST_F(Win32Test, WinPingTest) {
   ASSERT_EQ(WinPing::PING_INVALID_PARAMS, ping.Ping(
             IPAddress(INADDR_LOOPBACK), 20, 50, 0, false));
 }
+#endif
 
 TEST_F(Win32Test, IPv6AddressCompression) {
   IPAddress ipv6;

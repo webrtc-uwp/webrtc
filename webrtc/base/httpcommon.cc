@@ -11,7 +11,9 @@
 #include <time.h>
 
 #if defined(WEBRTC_WIN)
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -474,17 +476,17 @@ HttpData::hasHeader(const std::string& name, std::string* value) const {
 }
 
 void HttpData::setContent(const std::string& content_type,
-                          StreamInterface* document) {
+                          StreamInterface* siDocument) {
   setHeader(HH_CONTENT_TYPE, content_type);
-  setDocumentAndLength(document);
+  setDocumentAndLength(siDocument);
 }
 
-void HttpData::setDocumentAndLength(StreamInterface* document) {
+void HttpData::setDocumentAndLength(StreamInterface* siDocument) {
   // TODO: Consider calling Rewind() here?
   ASSERT(!hasHeader(HH_CONTENT_LENGTH, NULL));
   ASSERT(!hasHeader(HH_TRANSFER_ENCODING, NULL));
-  ASSERT(document != NULL);
-  this->document.reset(document);
+  ASSERT(siDocument != NULL);
+  this->document.reset(siDocument);
   size_t content_length = 0;
   if (this->document->GetAvailable(&content_length)) {
     char buffer[32];
@@ -566,19 +568,19 @@ bool HttpRequestData::getAbsoluteUri(std::string* uri) const {
 }
 
 bool HttpRequestData::getRelativeUri(std::string* host,
-                                     std::string* path) const
+                                     std::string* ppath) const
 {
   if (HV_CONNECT == verb)
     return false;
   Url<char> url(this->path);
   if (url.valid()) {
     host->assign(url.address());
-    path->assign(url.full_path());
+    ppath->assign(url.full_path());
     return true;
   }
   if (!hasHeader(HH_HOST, host))
     return false;
-  path->assign(this->path);
+  ppath->assign(this->path);
   return true;
 }
 
@@ -600,30 +602,30 @@ HttpResponseData::copy(const HttpResponseData& src) {
   HttpData::copy(src);
 }
 
-void HttpResponseData::set_success(uint32_t scode) {
-  this->scode = scode;
+void HttpResponseData::set_success(uint32_t code) {
+  this->scode = code;
   message.clear();
   setHeader(HH_CONTENT_LENGTH, "0", false);
 }
 
 void HttpResponseData::set_success(const std::string& content_type,
-                                   StreamInterface* document,
-                                   uint32_t scode) {
-  this->scode = scode;
+                              StreamInterface* siDocument,
+                              uint32_t code) {
+  this->scode = code;
   message.erase(message.begin(), message.end());
-  setContent(content_type, document);
+  setContent(content_type, siDocument);
 }
 
 void HttpResponseData::set_redirect(const std::string& location,
-                                    uint32_t scode) {
-  this->scode = scode;
+                                    uint32_t code) {
+  this->scode = code;
   message.clear();
   setHeader(HH_LOCATION, location);
   setHeader(HH_CONTENT_LENGTH, "0", false);
 }
 
-void HttpResponseData::set_error(uint32_t scode) {
-  this->scode = scode;
+void HttpResponseData::set_error(uint32_t code) {
+  this->scode = code;
   message.clear();
   setHeader(HH_CONTENT_LENGTH, "0", false);
 }
@@ -722,7 +724,7 @@ std::string quote(const std::string& str) {
   return result;
 }
 
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) && !defined(WINRT) // SSPI not available in WinRT it would seem.
 struct NegotiateAuthContext : public HttpAuthContext {
   CredHandle cred;
   CtxtHandle ctx;
@@ -771,17 +773,17 @@ HttpAuthResult HttpAuthenticate(
 
     // TODO: convert sensitive to a secure buffer that gets securely deleted
     //std::string decoded = username + ":" + password;
-    size_t len = username.size() + password.GetLength() + 2;
-    char * sensitive = new char[len];
-    size_t pos = strcpyn(sensitive, len, username.data(), username.size());
-    pos += strcpyn(sensitive + pos, len - pos, ":");
+    size_t length = username.size() + password.GetLength() + 2;
+    char * sensitive = new char[length];
+    size_t pos = strcpyn(sensitive, length, username.data(), username.size());
+    pos += strcpyn(sensitive + pos, length - pos, ":");
     password.CopyTo(sensitive + pos, true);
 
     response = auth_method;
     response.append(" ");
     // TODO: create a sensitive-source version of Base64::encode
     response.append(Base64::Encode(sensitive));
-    memset(sensitive, 0, len);
+    memset(sensitive, 0, length);
     delete [] sensitive;
     return HAR_RESPONSE;
   }
@@ -815,12 +817,12 @@ HttpAuthResult HttpAuthenticate(
 
     // TODO: convert sensitive to be secure buffer
     //std::string A1 = username + ":" + realm + ":" + password;
-    size_t len = username.size() + realm.size() + password.GetLength() + 3;
-    char * sensitive = new char[len];  // A1
-    size_t pos = strcpyn(sensitive, len, username.data(), username.size());
-    pos += strcpyn(sensitive + pos, len - pos, ":");
-    pos += strcpyn(sensitive + pos, len - pos, realm.c_str());
-    pos += strcpyn(sensitive + pos, len - pos, ":");
+    size_t length = username.size() + realm.size() + password.GetLength() + 3;
+    char * sensitive = new char[length];  // A1
+    size_t pos = strcpyn(sensitive, length, username.data(), username.size());
+    pos += strcpyn(sensitive + pos, length - pos, ":");
+    pos += strcpyn(sensitive + pos, length - pos, realm.c_str());
+    pos += strcpyn(sensitive + pos, length - pos, ":");
     password.CopyTo(sensitive + pos, true);
 
     std::string A2 = method + ":" + uri;
@@ -832,7 +834,7 @@ HttpAuthResult HttpAuthenticate(
       middle = nonce;
     }
     std::string HA1 = MD5(sensitive);
-    memset(sensitive, 0, len);
+    memset(sensitive, 0, length);
     delete [] sensitive;
     std::string HA2 = MD5(A2);
     std::string dig_response = MD5(HA1 + ":" + middle + ":" + HA2);
@@ -860,7 +862,7 @@ HttpAuthResult HttpAuthenticate(
     return HAR_RESPONSE;
   }
 
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) && !defined(WINRT)
 #if 1
   bool want_negotiate = (_stricmp(auth_method.c_str(), "negotiate") == 0);
   bool want_ntlm = (_stricmp(auth_method.c_str(), "ntlm") == 0);

@@ -217,6 +217,10 @@ bool IncomingVideoStream::IncomingVideoStreamProcess() {
     if (wait_time > kEventMaxWaitTimeMs) {
       wait_time = kEventMaxWaitTimeMs;
     }
+
+    if (wait_time < 0) {
+      wait_time = 1;
+    }
     deliver_buffer_event_->StartTimer(false, wait_time);
 
     DeliverFrame(frame_to_render);

@@ -441,6 +441,9 @@ TEST_F(ScreenshareLayerTest, EncoderDrop) {
   layers_->FrameEncoded(frame_size_, timestamp, kDefaultQp);
 }
 
+// Disabled for WinRT because we can't link to the default and full
+// implementations in our single gtest_runner app.
+#if !defined(WINRT)
 TEST_F(ScreenshareLayerTest, UpdatesHistograms) {
   ConfigureBitrates();
   vpx_codec_enc_cfg_t cfg;
@@ -525,5 +528,6 @@ TEST_F(ScreenshareLayerTest, UpdatesHistograms) {
             test::LastHistogramSample(
                 "WebRTC.Video.Screenshare.Layer1.TargetBitrate"));
 }
+#endif
 
 }  // namespace webrtc

@@ -31,7 +31,9 @@ int32_t VideoRenderFrames::AddFrame(const VideoFrame& new_frame) {
 
   // Drop old frames only when there are other frames in the queue, otherwise, a
   // really slow system never renders any frames.
-  if (!incoming_frames_.empty() &&
+  // If native_handle is not null then we can't make the decision to
+  // drop a frame because it could be an encoded sample.
+  if (!incoming_frames_.empty() && new_frame.native_handle() == nullptr &&
       new_frame.render_time_ms() + KOldRenderTimestampMS < time_now) {
     WEBRTC_TRACE(kTraceWarning,
                  kTraceVideoRenderer,
@@ -59,6 +61,10 @@ VideoFrame VideoRenderFrames::FrameToRender() {
   while (!incoming_frames_.empty() && TimeToNextFrameRelease() <= 0) {
     render_frame = incoming_frames_.front();
     incoming_frames_.pop_front();
+
+    if (render_frame.native_handle() != nullptr) {
+      break; // Possibly an encoded sample.  Don't drop them here either.
+    }
   }
   return render_frame;
 }

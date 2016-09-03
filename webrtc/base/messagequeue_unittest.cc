@@ -75,7 +75,7 @@ TEST_F(MessageQueueTest,
   MessageQueue q;
   DelayedPostsWithIdenticalTimesAreProcessedInFifoOrder(&q);
   NullSocketServer nullss;
-  MessageQueue q_nullss(&nullss);
+  MessageQueue q_nullss(false, &nullss);
   DelayedPostsWithIdenticalTimesAreProcessedInFifoOrder(&q_nullss);
 }
 

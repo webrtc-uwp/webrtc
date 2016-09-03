@@ -74,6 +74,18 @@ bool VideoTrackRenderers::RenderFrame(const cricket::VideoFrame* frame) {
   }
 }
 
+bool VideoTrackRenderers::Suspend() {
+    return false;
+}
+
+bool VideoTrackRenderers::Resume() {
+    return false;
+}
+
+bool VideoTrackRenderers::IsSuspended() {
+    return false;
+}
+
 // Called with critical_section_ already locked
 void VideoTrackRenderers::RenderFrameToSinks(const cricket::VideoFrame& frame) {
   for (auto sink : sinks_) {

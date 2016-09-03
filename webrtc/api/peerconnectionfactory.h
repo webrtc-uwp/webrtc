@@ -88,12 +88,24 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
 
   virtual webrtc::MediaControllerInterface* CreateMediaController(
       const cricket::MediaConfig& config) const;
+  virtual cricket::ChannelManager* channel_manager();
   virtual rtc::Thread* signaling_thread();
   virtual rtc::Thread* worker_thread();
   const Options& options() const { return options_; }
+  cricket::MediaEngineInterface* GetMediaEngine() override
+  {
+      return channel_manager_->media_engine();
+  };
+  //VoEHardware* GetVoEHardware() override
+  //{
+  //    return 0;
+  //}
 
  protected:
   PeerConnectionFactory();
+  PeerConnectionFactory(
+      cricket::WebRtcVideoEncoderFactory* video_encoder_factory,
+      cricket::WebRtcVideoDecoderFactory* video_decoder_factory);
   PeerConnectionFactory(
       rtc::Thread* worker_thread,
       rtc::Thread* signaling_thread,

@@ -137,7 +137,7 @@
                 'mac/cocoa_full_screen_window.mm',
               ],
             }],
-            ['OS=="win"', {
+            ['OS=="win" and OS_RUNTIME!="winrt"', {
               'sources': [
                 'windows/i_video_render_win.h',
                 'windows/video_render_direct3d9.h',
@@ -149,7 +149,28 @@
                 '<(directx_sdk_path)/Include',
               ],
             }],
-            ['OS=="win" and clang==1', {
+            ['OS=="win" and OS_RUNTIME=="winrt"', {
+              'sources': [
+                'windows/i_video_render_win.h',
+                'windows/video_render_windows_impl.h',
+                'windows/video_render_windows_impl.cc',
+                'windows/video_render_source_winrt.h',
+                'windows/video_render_source_winrt.cc',
+                'windows/video_render_winrt.h',
+                'windows/video_render_winrt.cc',
+              ],
+              'defines': [ 'WINRT_MF_RENDERING=1' ],
+			  'conditions': [
+                ['winrt_platform=="win10"', {
+                  'msvs_disabled_warnings': [
+                                         #Surpress warning: windows.ui.xaml.media.animation.h(31123):
+										 #warning C4002: too many actual parameters for macro 'GetCurrentTime'
+                                         4002,
+										 ],    
+                }],
+			  ],
+            }],
+            ['OS=="win" and clang==1 and OS_RUNTIME!="winrt"', {
               'msvs_settings': {
                 'VCCLCompilerTool': {
                   'AdditionalOptions': [
@@ -215,4 +236,3 @@
     }], # include_tests==1 and OS!=ios
   ], # conditions
 }
-

@@ -44,7 +44,7 @@
         'util/skin_detection.h',
       ],
       'conditions': [
-        ['target_arch=="ia32" or target_arch=="x64"', {
+        ['(target_arch=="ia32" or target_arch=="x64") and winrt_platform!="win_phone" and  winrt_platform!="win10_arm"', {
           'dependencies': [ 'video_processing_sse2', ],
         }],
         ['target_arch=="arm" or target_arch == "arm64"', {

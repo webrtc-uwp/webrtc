@@ -486,8 +486,8 @@ bool SimulcastEncoderAdapter::Initialized() const {
   return !streaminfos_.empty();
 }
 
-void SimulcastEncoderAdapter::OnDroppedFrame() {
-  streaminfos_[0].encoder->OnDroppedFrame();
+void SimulcastEncoderAdapter::OnDroppedFrame(uint32_t timestamp) {
+  streaminfos_[0].encoder->OnDroppedFrame(timestamp);
 }
 
 int SimulcastEncoderAdapter::GetTargetFramerate() {

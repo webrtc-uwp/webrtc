@@ -16,6 +16,7 @@
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/system_wrappers/include/clock.h"
 #include "webrtc/system_wrappers/include/metrics.h"
+#include "webrtc/base/trace_event.h"
 
 namespace webrtc {
 
@@ -150,6 +151,9 @@ void ReceiveStatisticsProxy::OnDecoderTiming(int decode_ms,
                                              int target_delay_ms,
                                              int jitter_buffer_ms,
                                              int min_playout_delay_ms,
+#ifdef WINRT
+                                             int current_endtoend_delay_ms,
+#endif
                                              int render_delay_ms,
                                              int64_t rtt_ms) {
   rtc::CritScope lock(&crit_);
@@ -159,6 +163,9 @@ void ReceiveStatisticsProxy::OnDecoderTiming(int decode_ms,
   stats_.target_delay_ms = target_delay_ms;
   stats_.jitter_buffer_ms = jitter_buffer_ms;
   stats_.min_playout_delay_ms = min_playout_delay_ms;
+#ifdef WINRT
+  stats_.current_endtoend_delay_ms = current_endtoend_delay_ms;
+#endif
   stats_.render_delay_ms = render_delay_ms;
   decode_time_counter_.Add(decode_ms);
   // Network delay (rtt/2) + target_delay_ms (jitter delay + decode time +
@@ -221,8 +228,9 @@ void ReceiveStatisticsProxy::OnDecodedFrame() {
 }
 
 void ReceiveStatisticsProxy::OnRenderedFrame(int width, int height) {
-  RTC_DCHECK_GT(width, 0);
-  RTC_DCHECK_GT(height, 0);
+  // Commented out because h264 encoded frames may not have dimensions.
+  //RTC_DCHECK_GT(width, 0);
+  //RTC_DCHECK_GT(height, 0);
   uint64_t now = clock_->TimeInMilliseconds();
 
   rtc::CritScope lock(&crit_);
@@ -232,6 +240,13 @@ void ReceiveStatisticsProxy::OnRenderedFrame(int width, int height) {
   render_height_counter_.Add(height);
   render_fps_tracker_.AddSamples(1);
   render_pixel_tracker_.AddSamples(sqrt(width * height));
+#ifdef WINRT
+  TRACE_COUNTER1("webrtc", "RcvStreamFrameWidth", width);
+  TRACE_COUNTER1("webrtc", "RcvStreamFrameHeight", height);
+
+  int32 frameRate = stats_.render_frame_rate;
+  TRACE_COUNTER1("webrtc", "RcvStreamFramerate", frameRate);
+#endif
 }
 
 void ReceiveStatisticsProxy::OnReceiveRatesUpdated(uint32_t bitRate,

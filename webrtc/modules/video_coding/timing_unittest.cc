@@ -89,6 +89,9 @@ TEST(ReceiverTiming, Tests) {
     timing.StopDecodeTimer(
         timeStamp, clock.TimeInMilliseconds() - startTimeMs,
         clock.TimeInMilliseconds(),
+#ifdef WINRT
+        0,//dummy data
+#endif
         timing.RenderTimeMs(timeStamp, clock.TimeInMilliseconds()));
     timeStamp += 90000 / 25;
     clock.AdvanceTimeMilliseconds(1000 / 25 - 10);

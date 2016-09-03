@@ -47,6 +47,10 @@ class Clock {
 
   // Returns an instance of the real-time system clock implementation.
   static Clock* GetRealTimeClock();
+
+#ifdef WINRT
+  static const int64_t CurrentNtpDeltaMs;
+#endif
 };
 
 class SimulatedClock : public Clock {

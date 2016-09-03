@@ -681,9 +681,9 @@ int NetEqImpl::InsertPacketInternal(const WebRtcRTPHeader& rtp_header,
     // CNG packet with a sample rate different than the current CNG then it
     // flushes its buffer, assuming send codec must have been changed. However,
     // payload type of the hypothetically new send codec is not known.
-    const RTPHeader* rtp_header = packet_buffer_->NextRtpHeader();
-    assert(rtp_header);
-    int payload_type = rtp_header->payloadType;
+    const RTPHeader* rtp_Header = packet_buffer_->NextRtpHeader();
+    assert(rtp_Header);
+    int payload_type = rtp_Header->payloadType;
     AudioDecoder* decoder = decoder_database_->GetDecoder(payload_type);
     assert(decoder);  // Payloads are already checked to be valid.
     const DecoderDatabase::DecoderInfo* decoder_info =

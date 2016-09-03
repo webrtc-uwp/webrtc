@@ -260,10 +260,12 @@ bool DeviceManager::IsInWhitelist(const std::string& key,
 bool DeviceManager::GetMaxFormat(const Device& device,
                                  VideoFormat* video_format) const {
   // Match USB ID if available. Failing that, match device name.
+#if !defined(WINRT)
   std::string usb_id;
   if (GetUsbId(device, &usb_id) && IsInWhitelist(usb_id, video_format)) {
       return true;
   }
+#endif
   return IsInWhitelist(device.name, video_format);
 }
 

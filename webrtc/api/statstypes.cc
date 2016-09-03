@@ -494,6 +494,10 @@ const char* StatsReport::Value::display_name() const {
       return "googMaxDecodeMs";
     case kStatsValueNameCurrentDelayMs:
       return "googCurrentDelayMs";
+#ifdef WINRT
+    case kStatsValueNameCurrentEndToEndDelayMs:
+      return "winrtEndToEndDelayMs";
+#endif
     case kStatsValueNameTargetDelayMs:
       return "googTargetDelayMs";
     case kStatsValueNameJitterBufferMs:

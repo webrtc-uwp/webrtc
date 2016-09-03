@@ -33,7 +33,14 @@ class VideoSourceInterface :
   virtual void Stop() = 0;
   virtual void Restart() = 0;
 
+  virtual bool Suspend() = 0;
+  virtual bool Resume() = 0;
+  virtual bool IsSuspended() = 0;
+
   virtual const cricket::VideoOptions* options() const = 0;
+
+  virtual void SetIsH264Source(bool isH264) = 0;
+  virtual bool IsH264Source() = 0;
 
  protected:
   virtual ~VideoSourceInterface() {}

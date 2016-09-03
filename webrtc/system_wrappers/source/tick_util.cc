@@ -27,7 +27,7 @@ int64_t TickTime::MillisecondsToTicks(const int64_t ms) {
 }
 
 int64_t TickTime::TicksToMilliseconds(const int64_t ticks) {
-  return ticks / rtc::kNumNanosecsPerMillisec;
+    return ticks / rtc::kNumNanosecsPerMillisec;
 }
 
 int64_t TickTime::TicksToMicroseconds(const int64_t ticks) {

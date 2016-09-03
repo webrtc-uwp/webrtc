@@ -38,6 +38,9 @@ class ViERembTest : public ::testing::Test {
     process_thread_.reset(new NiceMock<MockProcessThread>);
     vie_remb_.reset(new VieRemb(&fake_clock_));
   }
+  virtual void TearDown() {
+    TickTime::DisableFakeClock();
+  }
   SimulatedClock fake_clock_;
   std::unique_ptr<MockProcessThread> process_thread_;
   std::unique_ptr<VieRemb> vie_remb_;

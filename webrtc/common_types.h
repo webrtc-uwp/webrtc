@@ -388,6 +388,9 @@ struct AudioDecodingCallStats {
         decoded_normal(0),
         decoded_plc(0),
         decoded_cng(0),
+#ifdef WINRT
+        end_to_end_delayMs(0),
+#endif
         decoded_plc_cng(0) {}
 
   int calls_to_silence_generator;  // Number of calls where silence generated,
@@ -396,6 +399,9 @@ struct AudioDecodingCallStats {
   int decoded_normal;  // Number of calls where audio RTP packet decoded.
   int decoded_plc;  // Number of calls resulted in PLC.
   int decoded_cng;  // Number of calls where comfort noise generated due to DTX.
+#ifdef WINRT
+  int end_to_end_delayMs;
+#endif
   int decoded_plc_cng;  // Number of calls resulted where PLC faded to CNG.
 };
 
@@ -491,8 +497,9 @@ enum AudioLayers
     kAudioPlatformDefault = 0,
     kAudioWindowsWave = 1,
     kAudioWindowsCore = 2,
-    kAudioLinuxAlsa = 3,
-    kAudioLinuxPulse = 4
+    kAudioWindowsWasapi = 3,
+    kAudioLinuxAlsa = 4,
+    kAudioLinuxPulse = 5
 };
 
 // TODO(henrika): to be removed.

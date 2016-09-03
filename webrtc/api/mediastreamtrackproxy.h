@@ -58,6 +58,9 @@ BEGIN_PROXY_MAP(VideoTrack)
 
   PROXY_METHOD1(void, RegisterObserver, ObserverInterface*)
   PROXY_METHOD1(void, UnregisterObserver, ObserverInterface*)
+  PROXY_METHOD0(bool, Suspend)
+  PROXY_METHOD0(bool, Resume)
+  PROXY_METHOD0(bool, IsSuspended)
 END_PROXY()
 
 }  // namespace webrtc

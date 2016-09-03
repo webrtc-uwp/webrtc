@@ -15,6 +15,8 @@
 #include "webrtc/system_wrappers/include/trace.h"
 #ifdef DIRECT3D9_RENDERING
 #include "webrtc/modules/video_render/windows/video_render_direct3d9.h"
+#elif defined WINRT_MF_RENDERING
+#include "webrtc/modules/video_render/windows/video_render_winrt.h"
 #endif
 
 #include <tchar.h>
@@ -26,7 +28,11 @@ VideoRenderWindowsImpl::VideoRenderWindowsImpl(const int32_t id,
     : _renderWindowsCritsect(*CriticalSectionWrapper::CreateCriticalSection()),
       _prtWindow(window),
       _fullscreen(fullscreen),
+#ifdef DIRECT3D9_RENDERING
       _renderMethod(kVideoRenderWinD3D9),
+#elif defined WINRT_MF_RENDERING
+      _renderMethod(kVideoRenderWinMF),
+#endif
       _ptrRendererWin(NULL) {
 }
 
@@ -58,6 +64,21 @@ int32_t VideoRenderWindowsImpl::Init()
 #else
             return NULL;
 #endif  //DIRECT3D9_RENDERING
+        }
+            break;
+        case kVideoRenderWinMF:
+        {
+#ifdef WINRT_MF_RENDERING
+            VideoRenderWinRT* ptrRenderer;
+            ptrRenderer = new VideoRenderWinRT(NULL, (HWND)_prtWindow, _fullscreen);
+            if (ptrRenderer == NULL)
+            {
+                break;
+            }
+            _ptrRendererWin = reinterpret_cast<IVideoRenderWin*>(ptrRenderer);
+#else
+            return NULL;
+#endif  //WINRT_MF_RENDERING
         }
             break;
         default:

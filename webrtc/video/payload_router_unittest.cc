@@ -156,20 +156,20 @@ TEST_F(PayloadRouterTest, MaxPayloadLength) {
   // Modules return a higher length than the default value.
   EXPECT_CALL(rtp_1, MaxDataPayloadLength())
       .Times(1)
-      .WillOnce(Return(kDefaultMaxLength + 10));
+      .WillOnce(Return((uint16_t)kDefaultMaxLength + 10));
   EXPECT_CALL(rtp_2, MaxDataPayloadLength())
       .Times(1)
-      .WillOnce(Return(kDefaultMaxLength + 10));
+      .WillOnce(Return((uint16_t)kDefaultMaxLength + 10));
   EXPECT_EQ(kDefaultMaxLength, payload_router_->MaxPayloadLength());
 
   // The modules return a value lower than default.
   const size_t kTestMinPayloadLength = 1001;
   EXPECT_CALL(rtp_1, MaxDataPayloadLength())
       .Times(1)
-      .WillOnce(Return(kTestMinPayloadLength + 10));
+      .WillOnce(Return((uint16_t)kTestMinPayloadLength + 10));
   EXPECT_CALL(rtp_2, MaxDataPayloadLength())
       .Times(1)
-      .WillOnce(Return(kTestMinPayloadLength));
+      .WillOnce(Return((uint16_t)kTestMinPayloadLength));
   EXPECT_EQ(kTestMinPayloadLength, payload_router_->MaxPayloadLength());
 }
 

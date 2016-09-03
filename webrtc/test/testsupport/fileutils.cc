@@ -27,6 +27,12 @@
 #define GET_CURRENT_DIR getcwd
 #endif
 
+#ifdef WINRT
+#include <objbase.h>
+
+#include "webrtc/base/pathutils.h"
+#endif
+
 #include <sys/stat.h>  // To check for directory existence.
 #ifndef S_ISDIR  // Not defined in stat.h on Windows.
 #define S_ISDIR(mode) (((mode) & S_IFMT) == S_IFDIR)
@@ -57,6 +63,9 @@ const char* kPathDelimiter = "/";
 
 #ifdef WEBRTC_ANDROID
 const char* kRootDirName = "/sdcard/";
+#elif WINRT
+const char* kProjectRootFileName = "";
+const char* kFallbackPath = "./";
 #else
 // The file we're looking for to identify the project root dir.
 const char* kProjectRootFileName = "DEPS";
@@ -124,6 +133,9 @@ std::string ProjectRootPath() {
   if (path == kFallbackPath) {
     return kCannotFindProjectRootDir;
   }
+#ifdef WINRT
+  return path + kPathDelimiter;
+#endif
   if (relative_dir_path_set) {
     path = path + kPathDelimiter + relative_dir_path;
   }
@@ -144,7 +156,12 @@ std::string ProjectRootPath() {
 }
 
 std::string OutputPath() {
-#if defined(WEBRTC_IOS)
+#if defined(WINRT)
+  auto folder = Windows::Storage::ApplicationData::Current->LocalFolder;
+  wchar_t buffer[255];
+  wcsncpy_s(buffer, 255, folder->Path->Data(), _TRUNCATE);
+  return ToUtf8(buffer) + kPathDelimiter;
+#elif defined(WEBRTC_IOS)
   return IOSOutputPath();
 #else
   std::string path = ProjectRootPath();
@@ -159,6 +176,17 @@ std::string OutputPath() {
 #endif
 }
 
+#if defined(WINRT)
+std::string WorkingDir() {
+  // Consider the app installation location as the working directory for WinRT
+  Windows::Storage::StorageFolder^ installedLocation =
+    Windows::ApplicationModel::Package::Current->InstalledLocation;
+  const wchar_t* installLocPtr = installedLocation->Path->Data();
+  std::wstring installLocWstr = installLocPtr;
+  std::string installLocStr(installLocWstr.begin(), installLocWstr.end());
+  return installLocStr.empty() ? kFallbackPath : installLocStr;
+}
+#else
 std::string WorkingDir() {
   char path_buffer[FILENAME_MAX];
   if (!GET_CURRENT_DIR(path_buffer, sizeof(path_buffer))) {
@@ -168,13 +196,35 @@ std::string WorkingDir() {
     return std::string(path_buffer);
   }
 }
+#endif
 
 #endif  // !WEBRTC_ANDROID
 
 // Generate a temporary filename in a safe way.
 // Largely copied from talk/base/{unixfilesystem,win32filesystem}.cc.
 std::string TempFilename(const std::string &dir, const std::string &prefix) {
-#ifdef WIN32
+#if defined(WINRT)
+  rtc::Pathname fullpath = dir;
+  GUID g;
+  CoCreateGuid(&g);
+  wchar_t filename[MAX_PATH];
+
+  // printf format for the filename, consists of prefix followed by guid.
+  wchar_t* maskForFN = L"%s_%08x_%04x_%04x_%02x%02x_%02x%02x%02x%02x%02x%02x";
+  swprintf(filename, maskForFN, ToUtf16(prefix).c_str(), g.Data1, g.Data2, g.Data3,
+    UINT(g.Data4[0]), UINT(g.Data4[1]), UINT(g.Data4[2]), UINT(g.Data4[3]),
+    UINT(g.Data4[4]), UINT(g.Data4[5]), UINT(g.Data4[6]), UINT(g.Data4[7]));
+
+  fullpath.AppendPathname(ToUtf8(filename));
+  // make sure to create the file
+  ::CreateFile2(
+    ToUtf16(fullpath.pathname()).c_str(),
+    GENERIC_READ | GENERIC_WRITE,
+    FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+    CREATE_NEW,
+    NULL);
+  return fullpath.pathname();
+#elif defined(WIN32)
   wchar_t filename[MAX_PATH];
   if (::GetTempFileName(ToUtf16(dir).c_str(),
                         ToUtf16(prefix).c_str(), 0, filename) != 0)

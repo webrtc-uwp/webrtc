@@ -86,7 +86,11 @@ void ThreadManager::SetCurrentThread(Thread *thread) {
 
 #if defined(WEBRTC_WIN)
 ThreadManager::ThreadManager() {
+#ifdef WINRT
+  key_ = FlsAlloc(NULL);
+#else
   key_ = TlsAlloc();
+#endif
 #ifndef NO_MAIN_THREAD_WRAPPING
   WrapCurrentThread();
 #endif
@@ -94,15 +98,27 @@ ThreadManager::ThreadManager() {
 
 ThreadManager::~ThreadManager() {
   UnwrapCurrentThread();
+#ifdef WINRT
+  FlsFree(key_);
+#else
   TlsFree(key_);
+#endif
 }
 
 Thread *ThreadManager::CurrentThread() {
+#ifdef WINRT
+  return static_cast<Thread *>(FlsGetValue(key_));
+#else
   return static_cast<Thread *>(TlsGetValue(key_));
+#endif
 }
 
 void ThreadManager::SetCurrentThread(Thread *thread) {
+#ifdef WINRT
+  FlsSetValue(key_, thread);
+#else
   TlsSetValue(key_, thread);
+#endif
 }
 #endif
 
@@ -494,9 +510,13 @@ bool Thread::WrapCurrentWithThreadManager(ThreadManager* thread_manager,
 
 #if defined(WEBRTC_WIN)
   if (need_synchronize_access) {
+#if defined(WINRT)
+    thread_ = GetCurrentThread();
+#else
     // We explicitly ask for no rights other than synchronization.
     // This gives us the best chance of succeeding.
     thread_ = OpenThread(SYNCHRONIZE, FALSE, GetCurrentThreadId());
+#endif
     if (!thread_) {
       LOG_GLE(LS_ERROR) << "Unable to get handle to thread.";
       return false;

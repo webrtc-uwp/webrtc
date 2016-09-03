@@ -36,6 +36,10 @@ class VideoTrackRenderers
   // incoming frames are replaced by black frames.
   virtual bool RenderFrame(const cricket::VideoFrame* frame);
 
+  bool Suspend() override;
+  bool Resume() override;
+  bool IsSuspended() override;
+
   void AddOrUpdateSink(VideoSinkInterface<cricket::VideoFrame>* sink,
                        const rtc::VideoSinkWants& wants) override;
   void RemoveSink(VideoSinkInterface<cricket::VideoFrame>* sink) override;

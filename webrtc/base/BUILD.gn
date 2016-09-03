@@ -452,7 +452,7 @@ static_library("rtc_base") {
       ]
     }
 
-    if (is_win) {
+    if (is_win && target_runtime == "win32") {
       sources += [
         "diskcache_win32.cc",
         "diskcache_win32.h",
@@ -462,6 +462,13 @@ static_library("rtc_base") {
         "win32socketinit.h",
         "win32socketserver.cc",
         "win32socketserver.h",
+      ]
+    } else if (is_win && target_runtime == "winrt") {
+      sources += [
+        "diskcache_win32.cc",
+        "diskcache_win32.h",
+        "win32socketinit.cc",
+        "win32socketinit.h",
       ]
     }
     if (rtc_build_json) {
@@ -564,7 +571,7 @@ static_library("rtc_base") {
     }
   }
 
-  if (is_win) {
+  if (is_win && target_runtime == "win32") {
     sources += [
       "win32.cc",
       "win32.h",
@@ -577,6 +584,30 @@ static_library("rtc_base") {
       "win32windowpicker.h",
       "winfirewall.cc",
       "winfirewall.h",
+      "winping.cc",
+      "winping.h",
+    ]
+
+    libs += [
+      "crypt32.lib",
+      "iphlpapi.lib",
+      "secur32.lib",
+    ]
+
+    cflags += [
+      # Suppress warnings about WIN32_LEAN_AND_MEAN.
+      "/wd4005",
+      "/wd4703",
+    ]
+
+    defines += [ "_CRT_NONSTDC_NO_DEPRECATE" ]
+  } else if (is_win && target_runtime == "winrt") {
+    sources += [
+      "win32.cc",
+      "win32.h",
+      "win32filesystem.cc",
+      "win32filesystem.h",
+      "win32securityerrors.cc",
       "winping.cc",
       "winping.h",
     ]

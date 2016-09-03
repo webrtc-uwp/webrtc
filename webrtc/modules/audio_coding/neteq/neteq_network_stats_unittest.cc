@@ -85,6 +85,10 @@ class NetEqNetworkStatsTest : public NetEqExternalDecoderTest {
   static const int kFrameSizeMs = 20;
   static const int kMaxOutputSize = 960;  // 10 ms * 48 kHz * 2 channels.
 
+#ifdef WINRT
+#undef IGNORE
+#endif 
+
 enum logic {
   kIgnore,
   kEqual,

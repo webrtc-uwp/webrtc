@@ -1,6 +1,6 @@
 solutions = [{
   'name': 'src',
-  'url': 'https://chromium.googlesource.com/chromium/src.git',
+  'url': 'git+https://github.com/webrtc-uwp/chromium-pruned.git',
   'deps_file': '.DEPS.git',
   'managed': False,
   'custom_deps': {

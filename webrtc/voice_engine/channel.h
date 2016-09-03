@@ -596,6 +596,9 @@ class Channel
   std::unique_ptr<TransportFeedbackProxy> feedback_observer_proxy_;
   std::unique_ptr<TransportSequenceNumberProxy> seq_num_allocator_proxy_;
   std::unique_ptr<RtpPacketSenderProxy> rtp_packet_sender_proxy_;
+#ifdef WINRT
+  int current_endtoend_delay_ms_ GUARDED_BY(ts_stats_lock_);
+#endif
 };
 
 }  // namespace voe

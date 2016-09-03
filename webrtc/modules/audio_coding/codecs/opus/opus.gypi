@@ -65,6 +65,11 @@
           'sources': [
             'opus_fec_test.cc',
           ],
+		  'conditions': [
+            ['OS=="win" and OS_RUNTIME=="winrt"', {
+              'type': 'static_library'
+            }],
+          ],
         },
       ],
     }],

@@ -138,6 +138,9 @@ class StatsReport {
     kStatsValueNameContentName,
     kStatsValueNameCpuLimitedResolution,
     kStatsValueNameCurrentDelayMs,
+#ifdef WINRT
+    kStatsValueNameCurrentEndToEndDelayMs,
+#endif
     kStatsValueNameDecodeMs,
     kStatsValueNameDecodingCNG,
     kStatsValueNameDecodingCTN,

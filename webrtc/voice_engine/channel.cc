@@ -19,6 +19,7 @@
 #include "webrtc/base/logging.h"
 #include "webrtc/base/thread_checker.h"
 #include "webrtc/base/timeutils.h"
+#include "webrtc/base/trace_event.h"
 #include "webrtc/common.h"
 #include "webrtc/config.h"
 #include "webrtc/modules/audio_device/include/audio_device.h"
@@ -626,6 +627,22 @@ int32_t Channel::GetAudioFrame(int32_t id, AudioFrame* audioFrame) {
         // |capture_start_ntp_time_ms_| + |elapsed_time_ms_| == |ntp_time_ms_|
         capture_start_ntp_time_ms_ =
             audioFrame->ntp_time_ms_ - audioFrame->elapsed_time_ms_;
+#ifdef WINRT
+
+          int32_t endToEndDelay =
+            static_cast<int32_t>(Clock::GetRealTimeClock()->CurrentNtpInMilliseconds()
+              - audioFrame->ntp_time_ms_);
+
+          // In a slow testing network, where ntp clock sync margin between two testing devices
+          // might be greater than the audio processing time ( especially for a fast testing device)
+          // we shall ignore the negative value for this situation.
+          if (endToEndDelay > 0) 
+          {
+            TRACE_COUNTER1("webrtc", "EndToEndAudioDecoded", endToEndDelay);
+            current_endtoend_delay_ms_ = endToEndDelay;
+          }
+
+#endif
       }
     }
   }
@@ -809,6 +826,9 @@ Channel::Channel(int32_t channelId,
       _rxAgcIsEnabled(false),
       _rxNsIsEnabled(false),
       restored_packet_in_use_(false),
+#ifdef WINRT
+      current_endtoend_delay_ms_(0),
+#endif
       rtcp_observer_(new VoERtcpObserver(this)),
       network_predictor_(new NetworkPredictor(Clock::GetRealTimeClock())),
       associate_send_channel_(ChannelOwner(nullptr)),
@@ -2883,6 +2903,9 @@ int Channel::GetRTPStatistics(CallStatistics& stats) {
   stats.packetsSent = packetsSent;
   stats.bytesReceived = bytesReceived;
   stats.packetsReceived = packetsReceived;
+#ifdef WINRT
+  stats.endtoend_delay_ms_ = current_endtoend_delay_ms_;
+#endif
 
   // --- Timestamps
   {
@@ -3168,6 +3191,9 @@ int Channel::GetNetworkStatistics(NetworkStatistics& stats) {
 
 void Channel::GetDecodingCallStatistics(AudioDecodingCallStats* stats) const {
   audio_coding_->GetDecodingCallStatistics(stats);
+#ifdef WINRT
+  stats->end_to_end_delayMs = current_endtoend_delay_ms_;
+#endif
 }
 
 bool Channel::GetDelayEstimate(int* jitter_buffer_delay_ms,

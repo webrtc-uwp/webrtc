@@ -83,10 +83,12 @@ bool StreamSynchronization::ComputeRelativeDelay(
   *relative_delay_ms = video_measurement.latest_receive_time_ms -
       audio_measurement.latest_receive_time_ms -
       (video_last_capture_time_ms - audio_last_capture_time_ms);
+
   if (*relative_delay_ms > kMaxDeltaDelayMs ||
       *relative_delay_ms < -kMaxDeltaDelayMs) {
     return false;
   }
+
   return true;
 }
 

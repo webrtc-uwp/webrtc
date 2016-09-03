@@ -11,8 +11,10 @@
 #ifndef WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_WINDOWS_VIDEO_RENDER_WINDOWS_IMPL_H_
 #define WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_WINDOWS_VIDEO_RENDER_WINDOWS_IMPL_H_
 
+#if defined(_WIN32) && !defined(WINRT)
 #include <Winerror.h>
 #include <dxdiag.h>
+#endif
 
 #include "webrtc/modules/video_render/i_video_render.h"
 #include "webrtc/modules/video_render/windows/i_video_render_win.h"
@@ -24,6 +26,7 @@ class CriticalSectionWrapper;
 
 enum VideoRenderWinMethod {
   kVideoRenderWinD3D9 = 0,
+  kVideoRenderWinMF = 1,
 };
 
 // Class definitions

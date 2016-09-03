@@ -91,7 +91,7 @@
                 },
               },
             }],  # mac
-            ['OS=="win"', {
+            ['OS=="win" and OS_RUNTIME!="winrt"', {
               'dependencies': [
                 '<(DEPTH)/third_party/winsdk_samples/winsdk_samples.gyp:directshow_baseclasses',
               ],
@@ -115,8 +115,27 @@
                   '-lStrmiids.lib',
                 ],
               },
-            }],  # win
-            ['OS=="win" and clang==1', {
+            }],
+            ['OS=="win" and OS_RUNTIME=="winrt"', {
+              'conditions':[
+                ['winrt_platform=="win10_arm"',{
+                 'defines': ['WINDOWS_PHONE_APP'],
+                }],
+              ],
+              'dependencies': [
+                '<(DEPTH)/third_party/libyuv/libyuv.gyp:libyuv',
+              ],
+              'sources': [
+                'windows/device_info_winrt.cc',
+                'windows/device_info_winrt.h',
+                'windows/video_capture_factory_windows.cc',
+                'windows/video_capture_sink_winrt.cc',
+                'windows/video_capture_sink_winrt.h',
+                'windows/video_capture_winrt.cc',
+                'windows/video_capture_winrt.h',
+              ],
+            }],  # winrt            
+            ['OS=="win" and clang==1 and OS_RUNTIME!="winrt"', {
               'msvs_settings': {
                 'VCCLCompilerTool': {
                   'AdditionalOptions': [
@@ -218,4 +237,3 @@
     }],
   ],
 }
-

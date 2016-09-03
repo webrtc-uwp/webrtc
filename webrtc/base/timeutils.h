@@ -32,6 +32,11 @@ static const int64_t kNumNanosecsPerMicrosec =
 // January 1970, in NTP milliseconds.
 static const int64_t kJan1970AsNtpMillisecs = INT64_C(2208988800000);
 
+#ifdef WINRT
+void SyncWithNtp(int64_t timeFromNtpServer/*in ms*/);
+
+#endif
+
 typedef uint32_t TimeStamp;
 
 // Returns the current time in milliseconds.

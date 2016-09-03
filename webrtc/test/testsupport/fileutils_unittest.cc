@@ -17,8 +17,15 @@
 
 #include "testing/gtest/include/gtest/gtest.h"
 
-#ifdef WIN32
+#if defined WINRT
+#include "webrtc/system_wrappers/include/utf_util_win.h"
+#endif
+
+#if defined(WIN32) && !defined(WINRT)
 #define chdir _chdir
+static const char* kPathDelimiter = "\\";
+#elif defined(WINRT)
+#define chdir(d) 0
 static const char* kPathDelimiter = "\\";
 #else
 static const char* kPathDelimiter = "/";
@@ -74,7 +81,12 @@ TEST_F(FileUtilsTest, ProjectRootPath) {
 #endif
 TEST_F(FileUtilsTest, MAYBE_OutputPathFromUnchangedWorkingDir) {
   std::string path = webrtc::test::OutputPath();
+#if defined WINRT
+  // For WinRT the output folder is the application local folder
+  std::string expected_end = "LocalState";
+#else
   std::string expected_end = "out";
+#endif
   expected_end = kPathDelimiter + expected_end + kPathDelimiter;
   ASSERT_EQ(path.length() - expected_end.length(), path.find(expected_end));
 }
@@ -88,7 +100,14 @@ TEST_F(FileUtilsTest, MAYBE_OutputPathFromUnchangedWorkingDir) {
 #endif
 TEST_F(FileUtilsTest, MAYBE_OutputPathFromRootWorkingDir) {
   ASSERT_EQ(0, chdir(kPathDelimiter));
+#if defined WINRT
+  // For WinRT the output folder is the application local folder
+  auto folder = Windows::Storage::ApplicationData::Current->LocalFolder;
+  std::string outputPath = ToUtf8(folder->Path->Data()) + kPathDelimiter;
+  ASSERT_EQ(outputPath, webrtc::test::OutputPath());
+#else
   ASSERT_EQ("./", webrtc::test::OutputPath());
+#endif
 }
 
 TEST_F(FileUtilsTest, TempFilename) {
@@ -101,7 +120,13 @@ TEST_F(FileUtilsTest, TempFilename) {
 
 // Only tests that the code executes
 TEST_F(FileUtilsTest, CreateDir) {
+#if defined WINRT
+  // For WinRT the output folder is the application local folder
+  // Make sure the file is created in the proper output folder
+  std::string directory = webrtc::test::OutputPath() + "fileutils-unittest-empty-dir";
+#else
   std::string directory = "fileutils-unittest-empty-dir";
+#endif
   // Make sure it's removed if a previous test has failed:
   remove(directory.c_str());
   ASSERT_TRUE(webrtc::test::CreateDir(directory));

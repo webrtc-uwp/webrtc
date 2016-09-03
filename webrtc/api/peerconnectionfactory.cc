@@ -29,6 +29,9 @@
 #include "webrtc/media/engine/webrtcvideodecoderfactory.h"
 #include "webrtc/media/engine/webrtcvideoencoderfactory.h"
 #include "webrtc/modules/audio_device/include/audio_device.h"
+#ifdef WINRT
+#include "webrtc/system_wrappers/include/field_trial_default.h"
+#endif
 #include "webrtc/p2p/base/basicpacketsocketfactory.h"
 #include "webrtc/p2p/client/basicportallocator.h"
 
@@ -64,7 +67,9 @@ CreatePeerConnectionFactory() {
   rtc::scoped_refptr<PeerConnectionFactory> pc_factory(
       new rtc::RefCountedObject<PeerConnectionFactory>());
 
-
+#ifdef WINRT
+  webrtc::field_trial::InitFieldTrialsFromString("WebRTC-SupportVP9/Enabled/");
+#endif
   // Call Initialize synchronously but make sure its executed on
   // |signaling_thread|.
   MethodCall0<PeerConnectionFactory, bool> call(
@@ -77,6 +82,28 @@ CreatePeerConnectionFactory() {
   }
   return PeerConnectionFactoryProxy::Create(pc_factory->signaling_thread(),
                                             pc_factory);
+}
+
+rtc::scoped_refptr<PeerConnectionFactoryInterface> CreatePeerConnectionFactory(
+  cricket::WebRtcVideoEncoderFactory* encoder_factory,
+  cricket::WebRtcVideoDecoderFactory* decoder_factory) {
+    rtc::scoped_refptr<PeerConnectionFactory> pc_factory(
+        new rtc::RefCountedObject<PeerConnectionFactory>(encoder_factory,
+                                                         decoder_factory));
+
+
+    // Call Initialize synchronously but make sure its executed on
+    // |signaling_thread|.
+    MethodCall0<PeerConnectionFactory, bool> call(
+        pc_factory.get(),
+        &PeerConnectionFactory::Initialize);
+    bool result = call.Marshal(pc_factory->signaling_thread());
+
+    if (!result) {
+        return NULL;
+    }
+    return PeerConnectionFactoryProxy::Create(pc_factory->signaling_thread(),
+        pc_factory);
 }
 
 rtc::scoped_refptr<PeerConnectionFactoryInterface>
@@ -116,6 +143,25 @@ PeerConnectionFactory::PeerConnectionFactory()
     wraps_current_thread_ = true;
   }
   worker_thread_->Start();
+}
+
+PeerConnectionFactory::PeerConnectionFactory(
+    cricket::WebRtcVideoEncoderFactory* video_encoder_factory,
+    cricket::WebRtcVideoDecoderFactory* video_decoder_factory)
+    : owns_ptrs_(true),
+    wraps_current_thread_(false),
+    signaling_thread_(rtc::ThreadManager::Instance()->CurrentThread()),
+    worker_thread_(new rtc::Thread),
+    video_encoder_factory_(video_encoder_factory),
+    video_decoder_factory_(video_decoder_factory) {
+    ASSERT(video_encoder_factory != NULL);
+    ASSERT(video_decoder_factory != NULL);
+
+    if (!signaling_thread_) {
+        signaling_thread_ = rtc::ThreadManager::Instance()->WrapCurrentThread();
+        wraps_current_thread_ = true;
+    }
+    worker_thread_->Start();
 }
 
 PeerConnectionFactory::PeerConnectionFactory(
@@ -342,6 +388,11 @@ webrtc::MediaControllerInterface* PeerConnectionFactory::CreateMediaController(
   RTC_DCHECK(signaling_thread_->IsCurrent());
   return MediaControllerInterface::Create(config, worker_thread_,
                                           channel_manager_.get());
+}
+
+cricket::ChannelManager* PeerConnectionFactory::channel_manager() {
+  RTC_DCHECK(signaling_thread_->IsCurrent());
+  return channel_manager_.get();
 }
 
 rtc::Thread* PeerConnectionFactory::signaling_thread() {

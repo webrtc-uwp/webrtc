@@ -10,7 +10,9 @@
 
 #include "webrtc/test/test_suite.h"
 
+#if !defined(WINRT) // On WinRT we'll handle the entry point elsewhere.
 int main(int argc, char** argv) {
   webrtc::test::TestSuite test_suite(argc, argv);
   return test_suite.Run();
 }
+#endif

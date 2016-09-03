@@ -16,8 +16,11 @@
 #include "webrtc/base/byteorder.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/logging.h"
-#include "webrtc/base/win32window.h"
 #include "webrtc/base/winping.h"
+#if !defined(WINRT)
+#include "webrtc/base/win32window.h"
+#endif
+
 
 namespace rtc {
 

@@ -18,19 +18,19 @@ static bool native_rw_locks_supported = false;
 static bool module_load_attempted = false;
 static HMODULE library = NULL;
 
-typedef void (WINAPI* InitializeSRWLock)(PSRWLOCK);
+typedef void (WINAPI* PInitializeSRWLock)(PSRWLOCK);
 
-typedef void (WINAPI* AcquireSRWLockExclusive)(PSRWLOCK);
-typedef void (WINAPI* ReleaseSRWLockExclusive)(PSRWLOCK);
+typedef void (WINAPI* PAcquireSRWLockExclusive)(PSRWLOCK);
+typedef void (WINAPI* PReleaseSRWLockExclusive)(PSRWLOCK);
 
-typedef void (WINAPI* AcquireSRWLockShared)(PSRWLOCK);
-typedef void (WINAPI* ReleaseSRWLockShared)(PSRWLOCK);
+typedef void (WINAPI* PAcquireSRWLockShared)(PSRWLOCK);
+typedef void (WINAPI* PReleaseSRWLockShared)(PSRWLOCK);
 
-InitializeSRWLock       initialize_srw_lock;
-AcquireSRWLockExclusive acquire_srw_lock_exclusive;
-AcquireSRWLockShared    acquire_srw_lock_shared;
-ReleaseSRWLockShared    release_srw_lock_shared;
-ReleaseSRWLockExclusive release_srw_lock_exclusive;
+PInitializeSRWLock       initialize_srw_lock;
+PAcquireSRWLockExclusive acquire_srw_lock_exclusive;
+PAcquireSRWLockShared    acquire_srw_lock_shared;
+PReleaseSRWLockShared    release_srw_lock_shared;
+PReleaseSRWLockExclusive release_srw_lock_exclusive;
 
 RWLockWin::RWLockWin() {
   initialize_srw_lock(&lock_);
@@ -59,6 +59,7 @@ void RWLockWin::ReleaseLockShared() {
   release_srw_lock_shared(&lock_);
 }
 
+#ifndef WINRT
 bool RWLockWin::LoadModule() {
   if (module_load_attempted) {
     return native_rw_locks_supported;
@@ -72,18 +73,18 @@ bool RWLockWin::LoadModule() {
   WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, -1, "Loaded Kernel.dll");
 
   initialize_srw_lock =
-    (InitializeSRWLock)GetProcAddress(library, "InitializeSRWLock");
+    (PInitializeSRWLock)GetProcAddress(library, "InitializeSRWLock");
 
   acquire_srw_lock_exclusive =
-    (AcquireSRWLockExclusive)GetProcAddress(library,
+    (PAcquireSRWLockExclusive)GetProcAddress(library,
                                             "AcquireSRWLockExclusive");
   release_srw_lock_exclusive =
-    (ReleaseSRWLockExclusive)GetProcAddress(library,
+    (PReleaseSRWLockExclusive)GetProcAddress(library,
                                             "ReleaseSRWLockExclusive");
   acquire_srw_lock_shared =
-    (AcquireSRWLockShared)GetProcAddress(library, "AcquireSRWLockShared");
+    (PAcquireSRWLockShared)GetProcAddress(library, "AcquireSRWLockShared");
   release_srw_lock_shared =
-    (ReleaseSRWLockShared)GetProcAddress(library, "ReleaseSRWLockShared");
+    (PReleaseSRWLockShared)GetProcAddress(library, "ReleaseSRWLockShared");
 
   if (initialize_srw_lock && acquire_srw_lock_exclusive &&
       release_srw_lock_exclusive && acquire_srw_lock_shared &&
@@ -93,5 +94,23 @@ bool RWLockWin::LoadModule() {
   }
   return native_rw_locks_supported;
 }
+#else
+// Those symbols are present on WinRT, map them directly.
+bool RWLockWin::LoadModule() {
+    if (module_load_attempted) {
+        return native_rw_locks_supported;
+    }
+    module_load_attempted = true;
+
+    initialize_srw_lock = InitializeSRWLock;
+    acquire_srw_lock_exclusive = AcquireSRWLockExclusive;
+    release_srw_lock_exclusive = ReleaseSRWLockExclusive;
+    acquire_srw_lock_shared = AcquireSRWLockShared;
+    release_srw_lock_shared = ReleaseSRWLockShared;
+
+    native_rw_locks_supported = true;
+    return native_rw_locks_supported;
+}
+#endif
 
 }  // namespace webrtc

@@ -32,6 +32,12 @@
             '<(DEPTH)/testing/android/native_test.gyp:native_test_native_code',
           ],
         }],
+        ['OS=="win" and OS_RUNTIME=="winrt"', {
+          'msvs_disabled_warnings': [ 
+                                     #warning: declaration of '' hides previous local declaration, hides class member declaration
+                                     4456, 
+                                    ],
+        }],
         ['OS=="ios"', {
           'dependencies': [
             'api/api_tests.gyp:rtc_api_objc_tests',

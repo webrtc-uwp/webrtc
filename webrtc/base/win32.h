@@ -90,6 +90,19 @@ inline uint64_t ToUInt64(const FILETIME& ft) {
   return r.QuadPart;
 }
 
+#if defined(WINRT)
+inline bool IsWindowsVistaOrLater() {
+    return true;
+}
+
+inline bool IsWindowsXpOrLater() {
+    return true;
+}
+
+inline bool IsWindows8OrLater() {
+    return true;
+}
+#else
 enum WindowsMajorVersions {
   kWindows2000 = 5,
   kWindowsVista = 6,
@@ -114,7 +127,9 @@ inline bool IsWindows8OrLater() {
           (major > kWindowsVista ||
           (major == kWindowsVista && minor >= 2)));
 }
+#endif
 
+#if !defined(WINRT)
 // Determine the current integrity level of the process.
 bool GetCurrentProcessIntegrityLevel(int* level);
 
@@ -123,8 +138,18 @@ inline bool IsCurrentProcessLowIntegrity() {
   return (GetCurrentProcessIntegrityLevel(&level) &&
       level < SECURITY_MANDATORY_MEDIUM_RID);
 }
+#endif
 
 bool AdjustCurrentProcessPrivilege(const TCHAR* privilege, bool to_enable);
+
+#if defined(WINRT)
+// Some functions can be switch over to the ******Ex() version.
+#define InitializeCriticalSection(a) InitializeCriticalSectionEx(a, 0, 0)
+#undef CreateEvent
+#define CreateEvent(lpEventAttributes, bManualReset, bInitialState, lpName) CreateEventEx(lpEventAttributes, lpName, (bManualReset?CREATE_EVENT_MANUAL_RESET:0) | (bInitialState?CREATE_EVENT_INITIAL_SET:0), EVENT_ALL_ACCESS)
+#define WaitForSingleObject(a, b) WaitForSingleObjectEx(a, b, FALSE)
+#define WaitForMultipleObjects(a, b, c, d) WaitForMultipleObjectsEx(a, b, c, d, FALSE) 
+#endif
 
 }  // namespace rtc
 

@@ -144,12 +144,12 @@ class AudioDeviceGeneric {
                                      unsigned int par3 = 0,
                                      unsigned int par4 = 0);
 
-  // Android only
+  // Android and Windows WASAPI
   virtual bool BuiltInAECIsAvailable() const;
   virtual bool BuiltInAGCIsAvailable() const;
   virtual bool BuiltInNSIsAvailable() const;
 
-  // Windows Core Audio and Android only.
+  // Windows Core Audio, WASAPI  and Android only.
   virtual int32_t EnableBuiltInAEC(bool enable);
   virtual int32_t EnableBuiltInAGC(bool enable);
   virtual int32_t EnableBuiltInNS(bool enable);

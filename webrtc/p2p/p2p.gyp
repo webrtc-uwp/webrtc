@@ -91,6 +91,9 @@
           'FEATURE_ENABLE_VOICEMAIL',
         ],
       },
+      'msvs_disabled_warnings': [
+        4457, 4456, # local members hides previously defined memebers or function members or class members
+      ],
       'conditions': [
         ['build_with_chromium==0', {
           'defines': [

@@ -247,6 +247,12 @@ source_set("webrtc_common") {
   }
 }
 
+group("winrt_tests") {
+  deps = [
+    "//webrtc/build/WinRT_gyp/UnitTests/gtest_runner",
+  ]
+}
+
 if (rtc_enable_protobuf) {
   proto_library("rtc_event_log_proto") {
     sources = [

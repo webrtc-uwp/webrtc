@@ -300,6 +300,7 @@ VideoSource::VideoSource(rtc::Thread* worker_thread,
     : signaling_thread_(rtc::Thread::Current()),
       worker_thread_(worker_thread),
       video_capturer_(capturer),
+     _isH264Source(false),
       started_(false),
       state_(kInitializing),
       remote_(remote) {
@@ -399,6 +400,26 @@ void VideoSource::Restart() {
     return;
   }
   started_ = true;
+}
+
+bool VideoSource::Suspend() {
+  return video_capturer_->Suspend();
+}
+
+bool VideoSource::Resume() {
+  return video_capturer_->Resume();
+}
+
+bool VideoSource::IsSuspended() {
+  return video_capturer_->IsSuspended();
+}
+
+void VideoSource::SetIsH264Source(bool isH264Source) {
+    _isH264Source = isH264Source;
+}
+
+bool VideoSource::IsH264Source() {
+    return _isH264Source;
 }
 
 void VideoSource::AddOrUpdateSink(

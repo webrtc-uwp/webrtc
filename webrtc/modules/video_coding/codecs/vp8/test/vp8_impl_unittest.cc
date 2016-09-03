@@ -105,7 +105,7 @@ int Vp8UnitTestDecodeCompleteCallback::Decoded(VideoFrame& image) {
   return 0;
 }
 
-class TestVp8Impl : public ::testing::Test {
+class TestVp8ImplUnitTest : public ::testing::Test {
  protected:
   virtual void SetUp() {
     encoder_.reset(VP8Encoder::Create());
@@ -195,7 +195,7 @@ class TestVp8Impl : public ::testing::Test {
   VideoCodec codec_inst_;
 };
 
-TEST_F(TestVp8Impl, EncoderParameterTest) {
+TEST_F(TestVp8ImplUnitTest, EncoderParameterTest) {
   strncpy(codec_inst_.plName, "VP8", 31);
   codec_inst_.plType = 126;
   codec_inst_.maxBitrate = 0;
@@ -226,7 +226,7 @@ TEST_F(TestVp8Impl, EncoderParameterTest) {
 #else
 #define MAYBE_AlignedStrideEncodeDecode AlignedStrideEncodeDecode
 #endif
-TEST_F(TestVp8Impl, MAYBE_AlignedStrideEncodeDecode) {
+TEST_F(TestVp8ImplUnitTest, MAYBE_AlignedStrideEncodeDecode) {
   SetUpEncodeDecode();
   encoder_->Encode(input_frame_, NULL, NULL);
   EXPECT_GT(WaitForEncodedFrame(), 0u);
@@ -247,7 +247,7 @@ TEST_F(TestVp8Impl, MAYBE_AlignedStrideEncodeDecode) {
 #else
 #define MAYBE_DecodeWithACompleteKeyFrame DecodeWithACompleteKeyFrame
 #endif
-TEST_F(TestVp8Impl, MAYBE_DecodeWithACompleteKeyFrame) {
+TEST_F(TestVp8ImplUnitTest, MAYBE_DecodeWithACompleteKeyFrame) {
   SetUpEncodeDecode();
   encoder_->Encode(input_frame_, NULL, NULL);
   EXPECT_GT(WaitForEncodedFrame(), 0u);

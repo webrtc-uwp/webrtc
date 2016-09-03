@@ -29,6 +29,7 @@ static const size_t kNaluHeaderAndTypeSize = kNaluHeaderSize + 1;
 static const uint8_t kNaluSps = 0x7;
 static const uint8_t kNaluPps = 0x8;
 static const uint8_t kNaluIdr = 0x5;
+static const uint8_t kNaluAud = 0x9;
 static const uint8_t kNaluTypeMask = 0x1F;
 
 static const uint8_t kSliceTypeP = 0x0;
@@ -534,6 +535,8 @@ void H264BitstreamParser::ParseSlice(const uint8_t* slice, size_t length) {
     case kNaluPps:
       RTC_CHECK(ParsePpsNalu(slice, length))
           << "Failed to parse bitstream PPS.";
+      break;
+    case kNaluAud:
       break;
     default:
       RTC_CHECK(ParseNonParameterSetNalu(slice, length, nalu_type))

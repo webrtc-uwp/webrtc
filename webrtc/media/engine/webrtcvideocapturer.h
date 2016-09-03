@@ -55,6 +55,11 @@ class WebRtcVideoCapturer : public VideoCapturer,
   bool IsRunning() override;
   bool IsScreencast() const override { return false; }
 
+  virtual bool Suspend();
+  virtual bool Resume();
+  virtual bool IsSuspended();
+
+
  protected:
   void OnSinkWantsChanged(const rtc::VideoSinkWants& wants) override;
   // Override virtual methods of the parent class VideoCapturer.
@@ -82,6 +87,10 @@ class WebRtcVideoCapturer : public VideoCapturer,
   rtc::Thread* start_thread_;  // Set in Start(), unset in Stop();
 
   std::unique_ptr<rtc::AsyncInvoker> async_invoker_;
+
+  // Flag so we're not overwhelming the memory with pending async frames.
+  // This can be a problem on low end machines.
+  bool hasFramePending_;
 };
 
 struct WebRtcCapturedFrame : public CapturedFrame {

@@ -38,7 +38,7 @@ class QualityScaler {
   void Reset(int framerate, int bitrate, int width, int height);
   void OnEncodeFrame(const VideoFrame& frame);
   Resolution GetScaledResolution() const;
-  const VideoFrame& GetScaledFrame(const VideoFrame& frame);
+  const VideoFrame& GetScaledFrame(const VideoFrame& frame, int multipleOf = 1);
   int GetTargetFramerate() const;
   int downscale_shift() const { return downscale_shift_; }
 

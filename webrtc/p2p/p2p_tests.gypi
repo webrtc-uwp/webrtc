@@ -36,6 +36,9 @@
           'client/portallocator_unittest.cc',
           'stunprober/stunprober_unittest.cc',
         ],
+        'msvs_disabled_warnings': [
+          4459, #hides global declaration
+        ],
         'conditions': [
           ['use_quic==1', {
             'sources': [

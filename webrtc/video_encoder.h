@@ -123,7 +123,7 @@ class VideoEncoder {
   virtual int32_t SetRates(uint32_t bitrate, uint32_t framerate) = 0;
 
   virtual int32_t SetPeriodicKeyFrames(bool enable) { return -1; }
-  virtual void OnDroppedFrame() {}
+  virtual void OnDroppedFrame(uint32_t timestamp) {}
   virtual int GetTargetFramerate() { return -1; }
   virtual bool SupportsNativeHandle() const { return false; }
   virtual const char* ImplementationName() const { return "unknown"; }
@@ -151,7 +151,7 @@ class VideoEncoderSoftwareFallbackWrapper : public VideoEncoder {
   int32_t SetChannelParameters(uint32_t packet_loss, int64_t rtt) override;
 
   int32_t SetRates(uint32_t bitrate, uint32_t framerate) override;
-  void OnDroppedFrame() override;
+  void OnDroppedFrame(uint32_t timestamp) override;
   int GetTargetFramerate() override;
   bool SupportsNativeHandle() const override;
   const char* ImplementationName() const override;

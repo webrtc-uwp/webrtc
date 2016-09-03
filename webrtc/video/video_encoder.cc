@@ -173,10 +173,10 @@ int32_t VideoEncoderSoftwareFallbackWrapper::SetRates(uint32_t bitrate,
   return ret;
 }
 
-void VideoEncoderSoftwareFallbackWrapper::OnDroppedFrame() {
+void VideoEncoderSoftwareFallbackWrapper::OnDroppedFrame(uint32_t timestamp) {
   if (fallback_encoder_)
-    return fallback_encoder_->OnDroppedFrame();
-  return encoder_->OnDroppedFrame();
+    return fallback_encoder_->OnDroppedFrame(timestamp);
+  return encoder_->OnDroppedFrame(timestamp);
 }
 
 bool VideoEncoderSoftwareFallbackWrapper::SupportsNativeHandle() const {

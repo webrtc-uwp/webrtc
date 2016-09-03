@@ -39,6 +39,9 @@ class CallStatsTest : public ::testing::Test {
 
  protected:
   virtual void SetUp() { call_stats_.reset(new CallStats(&fake_clock_)); }
+  virtual void TearDown() {
+    TickTime::DisableFakeClock();
+  }
   SimulatedClock fake_clock_;
   std::unique_ptr<CallStats> call_stats_;
 };

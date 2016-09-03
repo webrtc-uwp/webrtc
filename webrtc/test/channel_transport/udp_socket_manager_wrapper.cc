@@ -14,7 +14,11 @@
 
 #ifdef _WIN32
 #include "webrtc/system_wrappers/include/fix_interlocked_exchange_pointer_win.h"
+#if defined(WINRT)
+#include "webrtc/test/channel_transport/udp_socket_manager_winrt.h"
+#else
 #include "webrtc/test/channel_transport/udp_socket2_manager_win.h"
+#endif
 #else
 #include "webrtc/test/channel_transport/udp_socket_manager_posix.h"
 #endif
@@ -25,7 +29,11 @@ namespace test {
 UdpSocketManager* UdpSocketManager::CreateInstance()
 {
 #if defined(_WIN32)
+#if defined(WINRT)
+  return static_cast<UdpSocketManager*>(new UdpSocketManagerWinRT());
+#else
   return static_cast<UdpSocketManager*>(new UdpSocket2ManagerWindows());
+#endif
 #else
     return new UdpSocketManagerPosix();
 #endif

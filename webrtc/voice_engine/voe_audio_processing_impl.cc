@@ -37,7 +37,8 @@
 
 namespace webrtc {
 
-#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS) || defined(WINRT)
+// WINRT: Use AECM version for WinRT (not only for phone), investigate why kEcAEc mode doesn't work as well for the desktop
 static const EcModes kDefaultEcMode = kEcAecm;
 #else
 static const EcModes kDefaultEcMode = kEcAec;
@@ -522,6 +523,7 @@ int VoEAudioProcessingImpl::SetEcStatus(bool enable, EcModes mode) {
                             "SetEcStatus() failed to set AEC state");
       return -1;
     }
+
     if (mode == kEcConference) {
       if (_shared->audio_processing()
               ->echo_cancellation()

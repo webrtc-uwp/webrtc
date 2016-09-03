@@ -126,7 +126,7 @@ class VCMGenericEncoder {
 
   bool InternalSource() const;
 
-  void OnDroppedFrame();
+  void OnDroppedFrame(uint32_t timestamp);
 
   bool SupportsNativeHandle() const;
 

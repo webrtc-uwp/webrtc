@@ -195,7 +195,7 @@ TEST(CondVarWaitTest, WaitingWaits) {
   int64_t start_ms = TickTime::MillisecondTimestamp();
   EXPECT_FALSE(cond_var.SleepCS(&crit_sect, kVeryShortWaitMs));
   int64_t end_ms = TickTime::MillisecondTimestamp();
-  EXPECT_LE(start_ms + kVeryShortWaitMs, end_ms)
+  EXPECT_LE(start_ms + kVeryShortWaitMs, (end_ms+1))
       << "actual elapsed:" << end_ms - start_ms;
   LeaveCriticalSection(&crit_sect);
   DeleteCriticalSection(&crit_sect);

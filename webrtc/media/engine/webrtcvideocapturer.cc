@@ -115,7 +115,8 @@ WebRtcVideoCapturer::WebRtcVideoCapturer()
       module_(nullptr),
       captured_frames_(0),
       start_thread_(nullptr),
-      async_invoker_(nullptr) {
+      async_invoker_(),
+      hasFramePending_(false) {
   set_frame_factory(new WebRtcVideoFrameFactory());
 }
 
@@ -124,7 +125,8 @@ WebRtcVideoCapturer::WebRtcVideoCapturer(WebRtcVcmFactoryInterface* factory)
       module_(nullptr),
       captured_frames_(0),
       start_thread_(nullptr),
-      async_invoker_(nullptr) {
+      async_invoker_(),
+      hasFramePending_(false) {
   set_frame_factory(new WebRtcVideoFrameFactory());
 }
 
@@ -275,6 +277,7 @@ CaptureState WebRtcVideoCapturer::Start(const VideoFormat& capture_format) {
   RTC_DCHECK(!async_invoker_);
   async_invoker_.reset(new rtc::AsyncInvoker());
   captured_frames_ = 0;
+  hasFramePending_ = false;
 
   SetCaptureFormat(&capture_format);
 
@@ -337,6 +340,27 @@ bool WebRtcVideoCapturer::IsRunning() {
   return (module_ != NULL && module_->CaptureStarted());
 }
 
+bool WebRtcVideoCapturer::Suspend() {
+  if (module_ == NULL) {
+    return false;
+  }
+  return module_->SuspendCapture();
+}
+
+bool WebRtcVideoCapturer::Resume() {
+  if (module_ == NULL) {
+    return false;
+  }
+  return module_->ResumeCapture();
+}
+
+bool WebRtcVideoCapturer::IsSuspended() {
+  if (module_ == NULL) {
+    return false;
+  }
+  return module_->IsSuspended();
+}
+
 bool WebRtcVideoCapturer::GetPreferredFourccs(std::vector<uint32_t>* fourccs) {
   if (!fourccs) {
     return false;
@@ -352,6 +376,9 @@ bool WebRtcVideoCapturer::GetPreferredFourccs(std::vector<uint32_t>* fourccs) {
 void WebRtcVideoCapturer::OnIncomingCapturedFrame(
     const int32_t id,
     const webrtc::VideoFrame& sample) {
+  if (hasFramePending_)
+    return;
+  hasFramePending_ = true;
   // This can only happen between Start() and Stop().
   RTC_DCHECK(start_thread_);
   RTC_DCHECK(async_invoker_);
@@ -404,6 +431,7 @@ void WebRtcVideoCapturer::SignalFrameCapturedOnStartThread(
   webrtc::ExtractBuffer(frame, length, &capture_buffer_[0]);
   WebRtcCapturedFrame webrtc_frame(frame, &capture_buffer_[0], length);
   SignalFrameCaptured(this, &webrtc_frame);
+  hasFramePending_ = false;
 }
 
 // WebRtcCapturedFrame

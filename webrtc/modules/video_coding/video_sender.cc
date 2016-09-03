@@ -86,6 +86,8 @@ int32_t VideoSender::RegisterSendCodec(const VideoCodec* sendCodec,
     return VCM_PARAMETER_ERROR;
   }
 
+  LOG(LS_INFO) << "Send Codec type: " << sendCodec->plName;
+
   bool ret =
       _codecDataBase.SetSendCodec(sendCodec, numberOfCores, maxPayloadSize);
 
@@ -279,7 +281,7 @@ int32_t VideoSender::AddVideoFrame(const VideoFrame& videoFrame,
     return VCM_UNINITIALIZED;
   SetEncoderParameters(encoder_params);
   if (_mediaOpt.DropFrame()) {
-    _encoder->OnDroppedFrame();
+    _encoder->OnDroppedFrame(videoFrame.timestamp());
     return VCM_OK;
   }
   _mediaOpt.UpdateContentData(contentMetrics);

@@ -39,6 +39,18 @@ std::string VideoTrack::kind() const {
   return kVideoKind;
 }
 
+bool VideoTrack::Suspend() {
+    return false;
+}
+
+bool VideoTrack::Resume() {
+    return false;
+}
+
+bool VideoTrack::IsSuspended() {
+    return false;
+}
+
 void VideoTrack::AddOrUpdateSink(
     rtc::VideoSinkInterface<cricket::VideoFrame>* sink,
     const rtc::VideoSinkWants& wants) {

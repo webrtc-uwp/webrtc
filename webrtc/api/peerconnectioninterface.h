@@ -80,11 +80,13 @@ class Thread;
 namespace cricket {
 class WebRtcVideoDecoderFactory;
 class WebRtcVideoEncoderFactory;
+class ChannelManager;
 }
 
 namespace webrtc {
 class AudioDeviceModule;
 class MediaConstraintsInterface;
+class VoEHardware;
 
 // MediaStream container interface.
 class StreamCollectionInterface : public rtc::RefCountInterface {
@@ -586,6 +588,8 @@ class PeerConnectionFactoryInterface : public rtc::RefCountInterface {
       CreateAudioTrack(const std::string& label,
                        AudioSourceInterface* source) = 0;
 
+  //virtual cricket::ChannelManager* channel_manager() = 0;
+
   // Starts AEC dump using existing file. Takes ownership of |file| and passes
   // it on to VoiceEngine (via other objects) immediately, which will take
   // the ownerhip. If the operation fails, the file will be closed.
@@ -614,6 +618,10 @@ class PeerConnectionFactoryInterface : public rtc::RefCountInterface {
   // Stops logging the RtcEventLog.
   virtual void StopRtcEventLog() = 0;
 
+  virtual cricket::MediaEngineInterface* GetMediaEngine() = 0;
+
+  //virtual VoEHardware* GetVoEHardware() = 0;
+
  protected:
   // Dtor and ctor protected as objects shouldn't be created or deleted via
   // this interface.
@@ -624,6 +632,11 @@ class PeerConnectionFactoryInterface : public rtc::RefCountInterface {
 // Create a new instance of PeerConnectionFactoryInterface.
 rtc::scoped_refptr<PeerConnectionFactoryInterface>
 CreatePeerConnectionFactory();
+
+rtc::scoped_refptr<PeerConnectionFactoryInterface>
+CreatePeerConnectionFactory(
+    cricket::WebRtcVideoEncoderFactory* encoder_factory,
+    cricket::WebRtcVideoDecoderFactory* decoder_factory);
 
 // Create a new instance of PeerConnectionFactoryInterface.
 // Ownership of |factory|, |default_adm|, and optionally |encoder_factory| and

@@ -46,7 +46,11 @@
 
 #if defined(WEBRTC_WIN)
   #define MUTEX_TYPE HANDLE
-  #define MUTEX_SETUP(x) (x) = CreateMutex(NULL, FALSE, NULL)
+  #if defined(WINRT)
+    #define MUTEX_SETUP(x) (x) = CreateMutexEx(NULL, NULL, 0, NULL)
+  #else
+    #define MUTEX_SETUP(x) (x) = CreateMutex(NULL, FALSE, NULL)
+  #endif
   #define MUTEX_CLEANUP(x) CloseHandle(x)
   #define MUTEX_LOCK(x) WaitForSingleObject((x), INFINITE)
   #define MUTEX_UNLOCK(x) ReleaseMutex(x)

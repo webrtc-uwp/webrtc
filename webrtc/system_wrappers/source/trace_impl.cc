@@ -395,11 +395,11 @@ void TraceImpl::WriteToFile(const char* msg, uint16_t length) {
   }
   if (row_count_text_ == 0) {
     char message[WEBRTC_TRACE_MAX_MESSAGE_SIZE + 1];
-    int32_t length = AddDateTimeInfo(message);
-    if (length != -1) {
-      message[length] = 0;
-      message[length - 1] = '\n';
-      trace_file_->Write(message, length);
+    int32_t msgLength = AddDateTimeInfo(message);
+    if (msgLength != -1) {
+      message[msgLength] = 0;
+      message[msgLength - 1] = '\n';
+      trace_file_->Write(message, msgLength);
       row_count_text_++;
     }
   }

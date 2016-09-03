@@ -26,6 +26,10 @@
 #define MAX_PATH 260
 #endif
 
+#if defined(WINRT)
+#define FindFirstFile(a, b) FindFirstFileEx(a, FINDEX_INFO_LEVELS::FindExInfoStandard, b, FINDEX_SEARCH_OPS::FindExSearchNameMatch, NULL, 0)
+#endif
+
 namespace rtc {
 
 //////////////////////////

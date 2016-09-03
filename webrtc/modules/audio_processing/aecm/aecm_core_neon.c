@@ -15,6 +15,12 @@
 
 #include "webrtc/common_audio/signal_processing/include/real_fft.h"
 
+#if defined(_MSC_VER)
+  #define INLINE_KEYWORD __inline
+#else
+  #define INLINE_KEYWORD inline
+#endif
+
 // TODO(kma): Re-write the corresponding assembly file, the offset
 // generating script and makefile, to replace these C functions.
 
@@ -31,7 +37,7 @@ const ALIGN8_BEG int16_t WebRtcAecm_kSqrtHanning[] ALIGN8_END = {
   16111, 16179, 16237, 16286, 16325, 16354, 16373, 16384
 };
 
-static inline void AddLanes(uint32_t* ptr, uint32x4_t v) {
+static INLINE_KEYWORD void AddLanes(uint32_t* ptr, uint32x4_t v) {
 #if defined(WEBRTC_ARCH_ARM64)
   *(ptr) = vaddvq_u32(v);
 #else

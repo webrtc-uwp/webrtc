@@ -263,7 +263,7 @@ void FlagList::Register(Flag* flag) {
   list_ = flag;
 }
 
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) && !defined(WINRT) // Disable command line flag support on WinRT
 WindowsCommandLineArguments::WindowsCommandLineArguments() {
   // start by getting the command line.
   LPTSTR command_line = ::GetCommandLine();

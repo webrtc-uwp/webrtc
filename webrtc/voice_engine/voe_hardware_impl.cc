@@ -66,6 +66,9 @@ int VoEHardwareImpl::SetAudioDeviceLayer(AudioLayers audioLayer) {
     case kAudioWindowsWave:
       wantedLayer = AudioDeviceModule::kWindowsWaveAudio;
       break;
+    case kAudioWindowsWasapi:
+      wantedLayer = AudioDeviceModule::kWindowsWasapiAudio;
+      break;
     case kAudioLinuxAlsa:
       wantedLayer = AudioDeviceModule::kLinuxAlsaAudio;
       break;

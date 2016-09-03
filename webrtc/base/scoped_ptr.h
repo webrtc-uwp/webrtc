@@ -318,6 +318,7 @@ class scoped_ptr {
   // The element and deleter types.
   typedef T element_type;
   typedef D deleter_type;
+  typedef std::nullptr_t nullptr_t;
 
   // Constructor.  Defaults to initializing with nullptr.
   scoped_ptr() : impl_(nullptr) {}
@@ -469,6 +470,7 @@ class scoped_ptr<T[], D> {
   // The element and deleter types.
   typedef T element_type;
   typedef D deleter_type;
+  typedef std::nullptr_t nullptr_t;
 
   // Constructor.  Defaults to initializing with nullptr.
   scoped_ptr() : impl_(nullptr) {}

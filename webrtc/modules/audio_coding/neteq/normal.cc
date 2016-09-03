@@ -70,18 +70,18 @@ int Normal::Process(const int16_t* input,
           (external_mute_factor_array[channel_ix] *
           expand_->MuteFactor(channel_ix)) >> 14);
 
-      int16_t* signal = &(*output)[channel_ix][0];
+      int16_t* sig = &(*output)[channel_ix][0];
       size_t length_per_channel = length / output->Channels();
       // Find largest absolute value in new data.
       int16_t decoded_max =
-          WebRtcSpl_MaxAbsValueW16(signal, length_per_channel);
+          WebRtcSpl_MaxAbsValueW16(sig, length_per_channel);
       // Adjust muting factor if needed (to BGN level).
       size_t energy_length =
           std::min(static_cast<size_t>(fs_mult * 64), length_per_channel);
       int scaling = 6 + fs_shift
           - WebRtcSpl_NormW32(decoded_max * decoded_max);
       scaling = std::max(scaling, 0);  // |scaling| should always be >= 0.
-      int32_t energy = WebRtcSpl_DotProductWithScale(signal, signal,
+      int32_t energy = WebRtcSpl_DotProductWithScale(sig, sig,
                                                      energy_length, scaling);
       int32_t scaled_energy_length =
           static_cast<int32_t>(energy_length >> scaling);

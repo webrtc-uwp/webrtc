@@ -27,7 +27,9 @@
 /* #undef HAVE_FNMATCH_H */
 
 // Define if you have the <shlwapi.h> header file (Windows 2000/XP).
+#if !defined(WINRT)
 #define HAVE_SHLWAPI_H
+#endif
 
 // Define if you have the strtoll function.
 /* #undef HAVE_STRTOLL */

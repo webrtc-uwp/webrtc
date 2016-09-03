@@ -9,7 +9,6 @@
     },
     'webrtc_root%': '<(webrtc_root)',
     'mac_deployment_target%': '<(mac_deployment_target)',
-    'use_sysroot%': '<(use_sysroot)',
     'build_with_chromium': 0,
     'conditions': [
       ['OS=="ios"', {

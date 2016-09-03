@@ -56,7 +56,7 @@ class SimulcastEncoderAdapter : public VP8Encoder {
                   const CodecSpecificInfo* codecSpecificInfo = NULL,
                   const RTPFragmentationHeader* fragmentation = NULL);
 
-  void OnDroppedFrame() override;
+  void OnDroppedFrame(uint32_t timestamp) override;
 
   int GetTargetFramerate() override;
   bool SupportsNativeHandle() const override;

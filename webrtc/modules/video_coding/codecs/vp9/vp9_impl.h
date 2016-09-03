@@ -48,7 +48,7 @@ class VP9EncoderImpl : public VP9Encoder {
 
   int SetRates(uint32_t new_bitrate_kbit, uint32_t frame_rate) override;
 
-  void OnDroppedFrame() override {}
+  void OnDroppedFrame(uint32_t timestamp) override {}
 
   const char* ImplementationName() const override;
 

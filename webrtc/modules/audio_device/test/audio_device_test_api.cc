@@ -156,7 +156,10 @@ class AudioDeviceAPITest: public testing::Test {
 #if defined(_WIN32)
     EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
                 kId, AudioDeviceModule::kLinuxAlsaAudio)) == NULL);
-#if defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
+#if defined WINRT
+    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+      kId, ADM_AUDIO_LAYER)) != NULL);
+#elif defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
     TEST_LOG("WEBRTC_WINDOWS_CORE_AUDIO_BUILD is defined!\n\n");
     // create default implementation (=Core Audio) instance
     EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(

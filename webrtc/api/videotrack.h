@@ -25,6 +25,10 @@ class VideoTrack : public MediaStreamTrack<VideoTrackInterface> {
   static rtc::scoped_refptr<VideoTrack> Create(const std::string& label,
                                                VideoSourceInterface* source);
 
+  bool Suspend() override;
+  bool Resume() override;
+  bool IsSuspended() override;
+
   void AddOrUpdateSink(rtc::VideoSinkInterface<cricket::VideoFrame>* sink,
                        const rtc::VideoSinkWants& wants) override;
   void RemoveSink(rtc::VideoSinkInterface<cricket::VideoFrame>* sink) override;

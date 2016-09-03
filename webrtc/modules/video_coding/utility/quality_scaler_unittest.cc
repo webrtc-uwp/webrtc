@@ -14,7 +14,7 @@
 
 namespace webrtc {
 namespace {
-static const int kNumSeconds = 10;
+static const int kNumSeconds = 20;
 static const int kWidth = 1920;
 static const int kWidthVga = 640;
 static const int kHalfWidth = kWidth / 2;
@@ -345,11 +345,11 @@ TEST_F(QualityScalerTest, ChangeFramerateOnly) {
   VerifyQualityAdaptation(kFramerate, 5, false, true);
 }
 
-// In 10 seconds test, framerate adjusting and scaling are both
+// In 30 seconds test, framerate adjusting and scaling are both
 // triggered, it shows that scaling would happen after framerate
 // adjusting.
 TEST_F(QualityScalerTest, ChangeFramerateAndSpatialSize) {
-  VerifyQualityAdaptation(kFramerate, 10, true, true);
+  VerifyQualityAdaptation(kFramerate, 30, true, true);
 }
 
 // When starting from a low framerate, only spatial size will be changed.

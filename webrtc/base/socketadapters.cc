@@ -16,7 +16,9 @@
 #include <errno.h>
 
 #if defined(WEBRTC_WIN)
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -34,7 +36,7 @@
 #include "webrtc/base/stringencode.h"
 #include "webrtc/base/stringutils.h"
 
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) && !defined(WINRT)
 #include "webrtc/base/sec_buffer.h"
 #endif  // WEBRTC_WIN 
 
@@ -335,12 +337,12 @@ void AsyncHttpsProxySocket::ProcessInput(char* data, size_t* len) {
     if (data[pos++] != '\n')
       continue;
 
-    size_t len = pos - start - 1;
-    if ((len > 0) && (data[start + len - 1] == '\r'))
-      --len;
+    size_t length = pos - start - 1;
+    if ((length > 0) && (data[start + length - 1] == '\r'))
+      --length;
 
-    data[start + len] = 0;
-    ProcessLine(data + start, len);
+    data[start + length] = 0;
+    ProcessLine(data + start, length);
     start = pos;
   }
 
@@ -417,7 +419,7 @@ void AsyncHttpsProxySocket::ProcessLine(char * data, size_t len) {
           );
         //std::string msg("Please report the following information to foo@bar.com:\r\nUnknown methods: ");
         msg.append(unknown_mechanisms_);
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) && !defined(WINRT)
         MessageBoxA(0, msg.c_str(), "Oops!", MB_OK);
 #endif
 #if defined(WEBRTC_POSIX)
@@ -615,10 +617,10 @@ void AsyncSocksProxySocket::ProcessInput(char* data, size_t* len) {
         return;
       LOG(LS_VERBOSE) << "Bound on " << addr << ":" << port;
     } else if (atyp == 3) {
-      uint8_t len;
+      uint8_t length;
       std::string addr;
-      if (!response.ReadUInt8(&len) ||
-          !response.ReadString(&addr, len) ||
+      if (!response.ReadUInt8(&length) ||
+          !response.ReadString(&addr, length) ||
           !response.ReadUInt16(&port))
         return;
       LOG(LS_VERBOSE) << "Bound on " << addr << ":" << port;

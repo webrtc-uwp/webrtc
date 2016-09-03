@@ -191,7 +191,7 @@
                 },
               },
             }],
-            ['OS=="win"', {
+            ['OS=="win" and OS_RUNTIME!="winrt"', {
               'sources': [
                 'win/audio_device_core_win.cc',
                 'win/audio_device_core_win.h',
@@ -210,7 +210,13 @@
                 ],
               },
             }],
-            ['OS=="win" and clang==1', {
+            ['OS=="win" and OS_RUNTIME=="winrt"', {
+                'sources':[
+                    'win/audio_device_wasapi_win.cc',
+                    'win/audio_device_wasapi_win.h',
+                    ],
+            }],
+            ['OS=="win" and winrt_platform!="win_phone" and  winrt_platform!="win10_arm"and clang==1', {
               'msvs_settings': {
                 'VCCLCompilerTool': {
                   'AdditionalOptions': [
@@ -242,7 +248,13 @@
       'targets': [
         {
           'target_name': 'audio_device_tests',
-          'type': 'executable',
+          'conditions': [
+            ['OS=="win" and OS_RUNTIME=="winrt"', {
+              'type': 'static_library',
+            }, {
+              'type': 'executable',
+            }],
+          ],
           'dependencies': [
             'audio_device',
             'webrtc_utility',
@@ -277,4 +289,3 @@
     }], # include_tests==1 and OS!=ios
   ],
 }
-

@@ -15,6 +15,8 @@ import glob
 import os
 import shlex
 import sys
+import pipes
+import xml.etree.ElementTree as ET
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 checkout_root = os.path.abspath(os.path.join(script_dir, os.pardir, os.pardir))
@@ -34,6 +36,40 @@ def GetSupplementalFiles():
   # is different.
   return glob.glob(os.path.join(checkout_root, '*', 'supplement.gypi'))
 
+
+def fixVS2015Ninja():
+
+  vs2015 = '14.0'
+
+  if os.environ.get('GYP_GENERATORS') == 'ninja-winrt' and os.environ.get('VisualStudioVersion') == vs2015:
+    vcpackagePath = os.path.join(os.environ.get('VCInstallDir'), 'vcpackages')
+    if  'LIBPATH' in os.environ:
+      os.environ['LIBPATH'] = os.environ['LIBPATH'] + vcpackagePath+';'
+    else:
+      os.environ.update({'LIBPATH':  vcpackagePath+';'})
+
+    #In the VS2015+WinSDK10 environment, the windsdk include path depends on the installed sdk minor verion
+    #ex.: 10.0.3000.0. we will need to find it from SDKManifest.xml
+    sdfManifestFile = os.environ.get('UniversalCRTSdkDir') + 'SDKManifest.xml';
+
+    sdkVersion = None;
+
+    xmlRoot = ET.parse(sdfManifestFile).getroot()
+    for fileListNode in xmlRoot.iter('FileList'):
+      if fileListNode.get('PlatformIdentity'):
+        sdkVersion = fileListNode.get('PlatformIdentity');
+        verPos = sdkVersion.find('Version=')
+        sdkVersion = sdkVersion[verPos+8:]
+        break;
+
+    if sdkVersion:
+      #contruct WindowsSDK_IncludePath used by VS2015
+      WindowsSDK_IncludePath = "{0}include\{1}\shared;{0}include\{1}\um;{0}include\{1}\winrt;".format(os.environ.get('UniversalCRTSdkDir'),sdkVersion)
+      UCRT_PATH = "{}include\ucrt;".format(os.environ.get('UniversalCRTSdkDir'))
+      os.environ.update({'VS_EXTRA_INCLUDES': UCRT_PATH + WindowsSDK_IncludePath})
+      #Todo: for ninja+vs2015+win10, we only support x86 for now
+      WindowsSDK_lIBPath = "{0}Lib\{1}\um\\x86;".format(os.environ.get('UniversalCRTSdkDir'),sdkVersion)
+      os.environ['LIB'] = WindowsSDK_lIBPath + os.environ['LIB']  
 
 if __name__ == '__main__':
   args = sys.argv[1:]
@@ -70,6 +106,8 @@ if __name__ == '__main__':
   if not os.environ.get('GYP_GENERATORS'):
     os.environ['GYP_GENERATORS'] = 'ninja'
 
+  fixVS2015Ninja()
+
   # Enable check for missing sources in GYP files on Windows.
   if sys.platform.startswith('win'):
     gyp_generator_flags = os.getenv('GYP_GENERATOR_FLAGS', '')
@@ -80,6 +118,13 @@ if __name__ == '__main__':
   vs2013_runtime_dll_dirs = None
   if int(os.environ.get('DEPOT_TOOLS_WIN_TOOLCHAIN', '1')):
     vs2013_runtime_dll_dirs = vs_toolchain.SetEnvironmentAndGetRuntimeDllDirs()
+  else:
+    gyp_defines_dict = gyp.NameValueListToDict(gyp.ShlexEnv('GYP_DEFINES'))
+    winSdkDir = os.environ.get('UniversalCRTSdkDir')
+    if winSdkDir != None:
+        gyp_defines_dict['windows_sdk_path'] = winSdkDir
+        os.environ['GYP_DEFINES'] = ' '.join('%s=%s' % (k, pipes.quote(str(v)))
+            for k, v in gyp_defines_dict.iteritems())
 
   # Enforce gyp syntax checking. This adds about 20% execution time.
   args.append('--check')
@@ -113,3 +158,4 @@ if __name__ == '__main__':
         (x86_runtime, x64_runtime))
 
   sys.exit(gyp_rc)
+

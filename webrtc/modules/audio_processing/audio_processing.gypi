@@ -157,7 +157,8 @@
         ['agc_debug_dump==1', {
           'defines': ['WEBRTC_AGC_DEBUG_DUMP',],
         }],
-        ['enable_protobuf==1', {
+        # TODO(winrt) disabled protobuf to temporary fix the ARM build
+        ['enable_protobuf==1 and winrt_platform!="win_phone"', {
           'dependencies': ['audioproc_debug_proto'],
           'defines': ['WEBRTC_AUDIOPROC_DEBUG_DUMP'],
         }],
@@ -192,7 +193,7 @@
             'ns/windows_private.h',
           ],
         }],
-        ['target_arch=="ia32" or target_arch=="x64"', {
+        ['(target_arch=="ia32" or target_arch=="x64") and winrt_platform!="win_phone" and  winrt_platform!="win10_arm"', {
           'dependencies': ['audio_processing_sse2',],
         }],
         ['build_with_neon==1', {

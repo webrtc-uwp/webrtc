@@ -71,6 +71,8 @@ class ChannelManager : public rtc::MessageHandler,
   void GetSupportedVideoRtpHeaderExtensions(RtpHeaderExtensions* ext) const;
   void GetSupportedDataCodecs(std::vector<DataCodec>* codecs) const;
 
+  void SetPreferredCaptureFormat(const cricket::VideoFormat& aFormat);
+
   // Indicates whether the media engine is started.
   bool initialized() const { return initialized_; }
   // Starts up the media engine.
@@ -135,6 +137,10 @@ class ChannelManager : public rtc::MessageHandler,
                            const VideoFormat& previous_format,
                            const VideoFormat& desired_format,
                            CaptureManager::RestartOptions options);
+
+  bool SuspendVideoCapture(VideoCapturer* video_capturer);
+  bool ResumeVideoCapture(VideoCapturer* video_capturer);
+  bool IsSuspended(VideoCapturer* video_capturer);
 
   virtual void AddVideoSink(VideoCapturer* video_capturer,
                             rtc::VideoSinkInterface<VideoFrame>* sink);

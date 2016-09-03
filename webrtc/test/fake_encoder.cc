@@ -80,7 +80,7 @@ int32_t FakeEncoder::Encode(const VideoFrame& input_image,
     CodecSpecificInfo specifics;
     memset(&specifics, 0, sizeof(specifics));
     specifics.codecType = kVideoCodecGeneric;
-    specifics.codecSpecific.generic.simulcast_idx = i;
+    specifics.codecSpecific.genericCodec.simulcast_idx = i;
     size_t min_stream_bits = static_cast<size_t>(
         config_.simulcastStream[i].minBitrate * time_since_last_encode_ms);
     size_t max_stream_bits = static_cast<size_t>(

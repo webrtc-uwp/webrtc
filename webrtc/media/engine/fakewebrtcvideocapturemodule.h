@@ -61,6 +61,22 @@ class FakeWebRtcVideoCaptureModule : public webrtc::VideoCaptureModule {
     running_ = false;
     return 0;
   }
+
+  bool SuspendCapture() override {
+    // not implemented
+    return false;
+  }
+
+  bool ResumeCapture() override {
+    // not implemented
+    return false;
+  }
+
+  bool IsSuspended() override {
+    // not implemented
+    return false;
+  }
+
   const char* CurrentDeviceName() const override {
     return NULL;  // not implemented
   }

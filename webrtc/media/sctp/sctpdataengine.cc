@@ -50,7 +50,7 @@ std::string ListFlags(int flags) {
   std::stringstream result;
   bool first = true;
   // Skip past the first 12 chars (strlen("SCTP_STREAM_"))
-#define MAKEFLAG(X) { X, #X + 12}
+#define MAKEFLAG(X) { X, (char*)#X + 12}
   struct flaginfo_t {
     int value;
     const char* name;

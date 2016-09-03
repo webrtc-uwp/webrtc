@@ -203,13 +203,16 @@
       ['OS=="ios"', {
         'build_libjpeg%': 0,
       }],
+      ['winrt_platform=="win_phone" or  winrt_platform=="win10_arm"', {
+        'enable_protobuf%': 0,
+      }],
       ['target_arch=="arm" or target_arch=="arm64" or target_arch=="mipsel"', {
         'prefer_fixed_point%': 1,
       }],
-      ['(target_arch=="arm" and (arm_neon==1 or arm_neon_optional==1)) or target_arch=="arm64"', {
+      ['(target_arch=="arm" and (arm_neon==1 or arm_neon_optional==1)) or target_arch=="arm64" or (winrt_platform=="win_phone" or  winrt_platform=="win10_arm")', {
         'build_with_neon%': 1,
       }],
-      ['OS!="ios" and (target_arch!="arm" or arm_version>=7) and target_arch!="mips64el"', {
+      ['(OS!="ios" and (target_arch!="arm" or arm_version>=7) and target_arch!="mips64el") or (winrt_platform=="win_phone" or  winrt_platform=="win10_arm")', {
         'rtc_use_openmax_dl%': 1,
       }, {
         'rtc_use_openmax_dl%': 0,
@@ -412,6 +415,13 @@
         ],
         # Re-enable some warnings that Chromium disables.
         'msvs_disabled_warnings!': [4189,],
+        'conditions': [
+          ['winrt_platform=="win_phone" or winrt_platform=="win10_arm"', {
+           'defines': [
+             'WEBRTC_HAS_NEON',
+           ],
+          }],
+        ],
       }],
       ['OS=="android"', {
         'defines': [

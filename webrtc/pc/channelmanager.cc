@@ -452,7 +452,7 @@ bool ChannelManager::StartVideoCapture(
     VideoCapturer* capturer, const VideoFormat& video_format) {
   return initialized_ && worker_thread_->Invoke<bool>(
       Bind(&CaptureManager::StartVideoCapture,
-           capture_manager_.get(), capturer, video_format));
+      capture_manager_.get(), capturer, video_format));
 }
 
 bool ChannelManager::StopVideoCapture(

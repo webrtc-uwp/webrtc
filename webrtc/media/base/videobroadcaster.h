@@ -25,6 +25,9 @@ class VideoBroadcaster : public VideoSourceInterface<cricket::VideoFrame>,
                          public VideoSinkInterface<cricket::VideoFrame> {
  public:
   VideoBroadcaster();
+  bool Suspend() override;
+  bool Resume() override;
+  bool IsSuspended() override;
   void AddOrUpdateSink(VideoSinkInterface<cricket::VideoFrame>* sink,
                        const VideoSinkWants& wants) override;
   void RemoveSink(VideoSinkInterface<cricket::VideoFrame>* sink) override;

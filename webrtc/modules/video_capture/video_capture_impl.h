@@ -95,6 +95,9 @@ public:
         return -1;
     }
     virtual int32_t StopCapture()   { return -1; }
+    virtual bool SuspendCapture() { return false; }
+    virtual bool ResumeCapture() { return false; }
+    virtual bool IsSuspended() { return false; }
     virtual bool CaptureStarted() {return false; }
     virtual int32_t CaptureSettings(VideoCaptureCapability& /*settings*/)
     { return -1; }

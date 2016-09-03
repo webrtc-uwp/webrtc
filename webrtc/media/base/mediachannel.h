@@ -544,6 +544,9 @@ struct MediaReceiverInfo {
       : bytes_rcvd(0),
         packets_rcvd(0),
         packets_lost(0),
+#ifdef WINRT
+        end_to_end_delayMs(0),
+#endif
         fraction_lost(0.0) {
   }
   void add_ssrc(const SsrcReceiverInfo& stat) {
@@ -579,6 +582,9 @@ struct MediaReceiverInfo {
   int packets_rcvd;
   int packets_lost;
   float fraction_lost;
+#ifdef WINRT
+  int end_to_end_delayMs;
+#endif
   std::string codec_name;
   std::vector<SsrcReceiverInfo> local_stats;
   std::vector<SsrcSenderInfo> remote_stats;

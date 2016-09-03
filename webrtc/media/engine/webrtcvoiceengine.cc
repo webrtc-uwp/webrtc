@@ -660,7 +660,8 @@ bool WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
   options.echo_cancellation = rtc::Optional<bool>(false);
   options.auto_gain_control = rtc::Optional<bool>(false);
   LOG(LS_INFO) << "Always disable AEC and AGC on iOS. Use built-in instead.";
-#elif defined(ANDROID)
+#elif defined(ANDROID) || defined(WINRT)
+// WINRT: Use AECM version for WinRT, investigate why kEcAEc mode doesn't work well for the desktop
   ec_mode = webrtc::kEcAecm;
 #endif
 
@@ -717,8 +718,9 @@ bool WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
       LOG(LS_INFO) << "Echo control set to " << *options.echo_cancellation
                    << " with mode " << ec_mode;
     }
-#if !defined(ANDROID)
-    // TODO(ajm): Remove the error return on Android from webrtc.
+
+#if !defined(ANDROID) && !defined(WINRT)
+    // TODO(ajm): Remove the error return on Android and Windows Phone from webrtc.
     if (voep->SetEcMetricsStatus(*options.echo_cancellation) == -1) {
       LOG_RTCERR1(SetEcMetricsStatus, *options.echo_cancellation);
       return false;
@@ -2457,6 +2459,9 @@ bool WebRtcVoiceMediaChannel::GetStats(VoiceMediaInfo* info) {
     rinfo.decoding_plc = stats.decoding_plc;
     rinfo.decoding_cng = stats.decoding_cng;
     rinfo.decoding_plc_cng = stats.decoding_plc_cng;
+#ifdef WINRT
+    rinfo.end_to_end_delayMs = stats.end_to_end_delayMs;
+#endif
     rinfo.capture_start_ntp_time_ms = stats.capture_start_ntp_time_ms;
     info->receivers.push_back(rinfo);
   }

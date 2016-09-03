@@ -1290,7 +1290,7 @@ TEST_F(ApmTest, ManualVolumeChangeIsPossible) {
   }
 }
 
-#if !defined(WEBRTC_ANDROID) && !defined(WEBRTC_IOS)
+#if !defined(WEBRTC_ANDROID) && !defined(WEBRTC_IOS) && !defined(WINRT)
 TEST_F(ApmTest, AgcOnlyAdaptsWhenTargetSignalIsPresent) {
   const int kSampleRateHz = 16000;
   const size_t kSamplesPerChannel =

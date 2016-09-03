@@ -135,6 +135,9 @@ void ExtractStats(const cricket::VoiceReceiverInfo& info, StatsReport* report) {
   const IntForAdd ints[] = {
     { StatsReport::kStatsValueNameAudioOutputLevel, info.audio_level },
     { StatsReport::kStatsValueNameCurrentDelayMs, info.delay_estimate_ms },
+#ifdef WINRT
+    { StatsReport::kStatsValueNameCurrentEndToEndDelayMs, info.end_to_end_delayMs },
+#endif
     { StatsReport::kStatsValueNameDecodingCNG, info.decoding_cng },
     { StatsReport::kStatsValueNameDecodingCTN, info.decoding_calls_to_neteq },
     { StatsReport::kStatsValueNameDecodingCTSG,
@@ -194,6 +197,9 @@ void ExtractStats(const cricket::VideoReceiverInfo& info, StatsReport* report) {
                    info.capture_start_ntp_time_ms);
   const IntForAdd ints[] = {
     { StatsReport::kStatsValueNameCurrentDelayMs, info.current_delay_ms },
+#ifdef WINRT
+    { StatsReport::kStatsValueNameCurrentEndToEndDelayMs, info.end_to_end_delayMs },
+#endif
     { StatsReport::kStatsValueNameDecodeMs, info.decode_ms },
     { StatsReport::kStatsValueNameFirsSent, info.firs_sent },
     { StatsReport::kStatsValueNameFrameHeightReceived, info.frame_height },

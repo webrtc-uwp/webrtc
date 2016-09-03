@@ -828,6 +828,7 @@ source_set("neteq") {
     "../..:webrtc_common",
     "../../common_audio",
     "../../system_wrappers",
+    rtc_opus_dir,
   ]
 
   defines = []

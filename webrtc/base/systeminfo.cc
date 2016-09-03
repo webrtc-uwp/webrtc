@@ -31,6 +31,10 @@
 #include "webrtc/base/logging.h"
 #include "webrtc/base/stringutils.h"
 
+#if defined(WINRT)
+#define GetSystemInfo GetNativeSystemInfo
+#endif
+
 namespace rtc {
 
 // See Also: http://msdn.microsoft.com/en-us/library/ms683194(v=vs.85).aspx
@@ -106,7 +110,10 @@ int SystemInfo::GetMaxCpus() {
 // Can be affected by heat.
 int SystemInfo::GetCurCpus() {
   int cur_cpus = 0;
-#if defined(WEBRTC_WIN)
+#if defined(WINRT)
+  // WinRT doesn't support GetProcessAffinityMask.
+  cur_cpus = 1;
+#elif defined(WEBRTC_WIN)
   DWORD_PTR process_mask = 0;
   DWORD_PTR system_mask = 0;
   ::GetProcessAffinityMask(::GetCurrentProcess(), &process_mask, &system_mask);
@@ -164,7 +171,10 @@ std::string SystemInfo::GetCpuVendor() {
 int64_t SystemInfo::GetMemorySize() {
   int64_t memory = -1;
 
-#if defined(WEBRTC_WIN)
+#if defined(WINRT)
+  // Can't get system memory size on WinRT
+  memory = -1;
+#elif defined(WEBRTC_WIN)
   MEMORYSTATUSEX status = {0};
   status.dwLength = sizeof(status);
 

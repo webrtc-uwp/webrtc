@@ -29,6 +29,10 @@
 #define LOG_TAG "WebRtc ADM TEST"
 #define TEST_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 #define TEST_LOG_ERROR(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#elif defined(WINRT)
+#define TEST_LOG printf
+#define TEST_LOG_ERROR(...) fprintf(stderr, __VA_ARGS__)
+#define ADM_AUDIO_LAYER AudioDeviceModule::kWindowsWasapiAudio
 #else
 #define TEST_LOG printf
 #define TEST_LOG_ERROR(...) fprintf(stderr, __VA_ARGS__)

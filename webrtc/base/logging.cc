@@ -17,6 +17,11 @@
 #define snprintf _snprintf
 #endif
 #undef ERROR  // wingdi.h
+
+#if defined(WINRT)
+#include <stdlib.h>
+#include "webrtc/base/win32.h"
+#endif
 #endif
 
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
@@ -151,12 +156,22 @@ LogMessage::LogMessage(const char* file,
         break;
 #if WEBRTC_WIN
       case ERRCTX_HRESULT: {
-        char msgbuf[256];
+        WCHAR msgbuf[256];
         DWORD flags = FORMAT_MESSAGE_FROM_SYSTEM;
+#if defined(WINRT)
+        HMODULE hmod = NULL;
+        if (module) {
+          wchar_t modulew[255];
+          size_t temp;
+          mbstowcs_s(&temp, modulew, 255, module, _TRUNCATE);
+          hmod = LoadPackagedLibrary(modulew, 0);
+        }
+#else
         HMODULE hmod = GetModuleHandleA(module);
+#endif
         if (hmod)
           flags |= FORMAT_MESSAGE_FROM_HMODULE;
-        if (DWORD len = FormatMessageA(
+        if (DWORD len = FormatMessageW(
             flags, hmod, err,
             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
             msgbuf, sizeof(msgbuf) / sizeof(msgbuf[0]), NULL)) {
@@ -305,7 +320,7 @@ void LogMessage::ConfigureLogging(const char* params) {
     }
   }
 
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) && !defined(WINRT)
   if ((LS_NONE != debug_level) && !::IsDebuggerPresent()) {
     // First, attempt to attach to our parent's console... so if you invoke
     // from the command line, we'll see the output there.  Otherwise, create
@@ -362,7 +377,10 @@ void LogMessage::OutputToDebug(const std::string& str,
     CFRelease(key);
   }
 #endif
-#if defined(WEBRTC_WIN)
+#if defined(WINRT)
+  // Always log to the debugger.
+  OutputDebugString(rtc::ToUtf16(str).c_str());
+#elif defined(WEBRTC_WIN)
   // Always log to the debugger.
   // Perhaps stderr should be controlled by a preference, as on Mac?
   OutputDebugStringA(str.c_str());

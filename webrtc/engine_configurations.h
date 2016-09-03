@@ -52,7 +52,7 @@
 //  VideoEngine Windows
 // ----------------------------------------------------------------------------
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(WINRT)
 #define DIRECT3D9_RENDERING  // Requires DirectX 9.
 #endif
 

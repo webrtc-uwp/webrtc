@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <algorithm>
+
 #include "webrtc/modules/video_coding/timing.h"
 
 #include <algorithm>
@@ -171,11 +173,18 @@ void VCMTiming::UpdateCurrentDelay(int64_t render_time_ms,
 int32_t VCMTiming::StopDecodeTimer(uint32_t time_stamp,
                                    int32_t decode_time_ms,
                                    int64_t now_ms,
+#ifdef WINRT
+                                   int current_endtoend_delay_ms,
+#endif
                                    int64_t render_time_ms) {
   CriticalSectionScoped cs(crit_sect_);
   codec_timer_.MaxFilter(decode_time_ms, now_ms);
   assert(decode_time_ms >= 0);
   last_decode_ms_ = decode_time_ms;
+
+#ifdef WINRT
+  current_endtoend_delay_ms_ = current_endtoend_delay_ms;
+#endif
 
   // Update stats.
   ++num_decoded_frames_;
@@ -270,6 +279,9 @@ void VCMTiming::GetTimings(int* decode_ms,
                            int* target_delay_ms,
                            int* jitter_buffer_ms,
                            int* min_playout_delay_ms,
+#ifdef WINRT
+                           int* current_endtoend_delay_ms,
+#endif
                            int* render_delay_ms) const {
   CriticalSectionScoped cs(crit_sect_);
   *decode_ms = last_decode_ms_;
@@ -278,6 +290,9 @@ void VCMTiming::GetTimings(int* decode_ms,
   *target_delay_ms = TargetDelayInternal();
   *jitter_buffer_ms = jitter_delay_ms_;
   *min_playout_delay_ms = min_playout_delay_ms_;
+#ifdef WINRT
+  *current_endtoend_delay_ms =  current_endtoend_delay_ms_,
+#endif
   *render_delay_ms = render_delay_ms_;
 }
 

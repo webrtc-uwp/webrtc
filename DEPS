@@ -6,14 +6,15 @@
 vars = {
   'extra_gyp_flag': '-Dextra_gyp_flag=0',
   'chromium_git': 'https://chromium.googlesource.com',
-  'chromium_revision': 'ee311243eae6aef9c907543663754ff38f1f4f40',
+  'chromium_uwp_git': 'git+https://github.com/webrtc-uwp',
+  'chromium_revision': '38ed253f09644f26fd7a7785b7fc0cc7ba911b4f',
 }
 
 # NOTE: Use http rather than https; the latter can cause problems for users
 # behind proxies.
 deps = {
   'src/third_party/gflags/src':
-    Var('chromium_git') + '/external/github.com/gflags/gflags@03bebcb065c83beff83d50ae025a55a4bf94dfca',
+    Var('chromium_uwp_git') + '/gflags.git' + '@' + '516f2ecf10805b9aed9f1feed69b4cf3a380141a',
 }
 
 deps_os = {

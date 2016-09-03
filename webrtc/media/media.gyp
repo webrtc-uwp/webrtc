@@ -192,7 +192,7 @@
             '<!@(pkg-config --cflags gobject-2.0 gthread-2.0 gtk+-2.0)',
           ],
         }],
-        ['OS=="win"', {
+        ['OS=="win" and OS_RUNTIME!="winrt"', {
           'sources': [
             'devices/gdivideorenderer.cc',
             'devices/gdivideorenderer.h',
@@ -207,7 +207,13 @@
             },
           },
         }],
-        ['OS=="win" and include_internal_device_management==1', {
+        ['OS=="win" and OS_RUNTIME=="winrt"', {
+          'sources': [
+            'devices/winrtdevicemanager.cc',
+            'devices/winrtdevicemanager.h',
+            ]
+        }],
+        ['OS=="win" and OS_RUNTIME!="winrt" and include_internal_device_management==1', {
           'sources': [
             'devices/win32deviceinfo.cc',
             'devices/win32devicemanager.cc',

@@ -171,9 +171,10 @@ void AutoDetectProxy::Next() {
     timeout += 2000;
     if (!resolver_) {
       resolver_ = new AsyncResolver();
+      resolver_->SignalDone.connect(this, &AutoDetectProxy::OnResolveResult);
+      resolver_->Start(proxy_.address);
     }
-    resolver_->SignalDone.connect(this, &AutoDetectProxy::OnResolveResult);
-    resolver_->Start(proxy_.address);
+
   } else {
     if (!DoConnect()) {
       Thread::Current()->Post(this, MSG_TIMEOUT);

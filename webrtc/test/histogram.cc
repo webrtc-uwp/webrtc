@@ -35,6 +35,7 @@ rtc::CriticalSection histogram_crit_;
 std::map<std::string, SampleInfo> histograms_ GUARDED_BY(histogram_crit_);
 }  // namespace
 
+#ifndef WINRT
 namespace metrics {
 Histogram* HistogramFactoryGetCounts(const std::string& name, int min, int max,
                                      int bucket_count) {
@@ -66,7 +67,7 @@ void HistogramAdd(
   ++ptr->total_;
 }
 }  // namespace metrics
-
+#endif
 namespace test {
 int LastHistogramSample(const std::string& name) {
   rtc::CritScope cs(&histogram_crit_);

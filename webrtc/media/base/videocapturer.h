@@ -176,9 +176,15 @@ class VideoCapturer : public sigslot::has_slots<>,
   virtual void Stop() = 0;
   // Check if the video capturer is running.
   virtual bool IsRunning() = 0;
+
   CaptureState capture_state() const {
     return capture_state_;
   }
+
+  // Suspend/Resume flow default behavior
+  virtual bool Suspend() { return false; }
+  virtual bool Resume() { return false; }
+  virtual bool IsSuspended() { return false; }
 
   virtual bool GetApplyRotation() { return apply_rotation_; }
 

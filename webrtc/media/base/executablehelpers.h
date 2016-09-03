@@ -20,13 +20,21 @@
 #include "webrtc/base/logging.h"
 #include "webrtc/base/pathutils.h"
 
+#if defined(WINRT)
+#include "webrtc/test/testsupport/fileutils.h"
+#endif
+
 namespace rtc {
 
 // Returns the path to the running executable or an empty path.
 // TODO(thorcarpenter): Consolidate with FluteClient::get_executable_dir.
 inline Pathname GetExecutablePath() {
   const int32_t kMaxExePathSize = 255;
-#ifdef WIN32
+#if defined (WINRT)
+  // For WinRT the application installation location is used
+  return rtc::Pathname(webrtc::test::ProjectRootPath());
+#endif
+#if defined(WIN32) && !defined(WINRT)
   TCHAR exe_path_buffer[kMaxExePathSize];
   DWORD copied_length = GetModuleFileName(NULL,  // NULL = Current process
                                           exe_path_buffer, kMaxExePathSize);

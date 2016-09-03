@@ -77,12 +77,12 @@ HttpParser::Process(const char* buffer, size_t len, size_t* processed,
         break;  // don't have a full header
       }
       const char* line = buffer + *processed;
-      size_t len = (pos - *processed);
+      size_t length = (pos - *processed);
       *processed = pos + 1;
-      while ((len > 0) && isspace(static_cast<unsigned char>(line[len-1]))) {
-        len -= 1;
+      while ((length > 0) && isspace(static_cast<unsigned char>(line[length -1]))) {
+		  length -= 1;
       }
-      ProcessResult result = ProcessLine(line, len, error);
+      ProcessResult result = ProcessLine(line, length, error);
       LOG(LS_VERBOSE) << "Processed line, result=" << result;
 
       if (PR_CONTINUE != result) {

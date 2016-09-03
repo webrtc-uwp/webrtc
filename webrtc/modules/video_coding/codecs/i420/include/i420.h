@@ -73,7 +73,7 @@ class I420Encoder : public VideoEncoder {
     return WEBRTC_VIDEO_CODEC_OK;
   }
 
-  void OnDroppedFrame() override {}
+  void OnDroppedFrame(uint32_t timestamp) override {}
 
  private:
   static uint8_t* InsertHeader(uint8_t* buffer,

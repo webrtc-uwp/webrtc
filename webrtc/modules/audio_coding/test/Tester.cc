@@ -33,7 +33,7 @@ using webrtc::Trace;
 // set to 0, and all tests are run in quite mode.
 #define ACM_TEST_MODE 0
 
-TEST(AudioCodingModuleTest, TestAllCodecs) {
+TEST(AudioCodingModuleUnitTest, TestAllCodecs) {
   Trace::CreateTrace();
   Trace::SetTraceFile((webrtc::test::OutputPath() +
           "acm_allcodecs_trace.txt").c_str());
@@ -120,7 +120,7 @@ TEST(AudioCodingModuleTest, TestWebRtcVadDtx) {
   Trace::ReturnTrace();
 }
 
-TEST(AudioCodingModuleTest, TestOpusDtx) {
+TEST(AudioCodingModuleUnitTest, TestOpusDtx) {
   Trace::CreateTrace();
   Trace::SetTraceFile((webrtc::test::OutputPath() +
       "acm_opusdtx_trace.txt").c_str());
@@ -128,7 +128,7 @@ TEST(AudioCodingModuleTest, TestOpusDtx) {
   Trace::ReturnTrace();
 }
 
-TEST(AudioCodingModuleTest, TestOpus) {
+TEST(AudioCodingModuleUnitTest, TestOpus) {
   Trace::CreateTrace();
   Trace::SetTraceFile((webrtc::test::OutputPath() +
       "acm_opus_trace.txt").c_str());
@@ -136,7 +136,7 @@ TEST(AudioCodingModuleTest, TestOpus) {
   Trace::ReturnTrace();
 }
 
-TEST(AudioCodingModuleTest, TestPacketLoss) {
+TEST(AudioCodingModuleUnitTest, TestPacketLoss) {
   Trace::CreateTrace();
   Trace::SetTraceFile((webrtc::test::OutputPath() +
       "acm_packetloss_trace.txt").c_str());
@@ -144,7 +144,7 @@ TEST(AudioCodingModuleTest, TestPacketLoss) {
   Trace::ReturnTrace();
 }
 
-TEST(AudioCodingModuleTest, TestPacketLossBurst) {
+TEST(AudioCodingModuleUnitTest, TestPacketLossBurst) {
   Trace::CreateTrace();
   Trace::SetTraceFile((webrtc::test::OutputPath() +
       "acm_packetloss_burst_trace.txt").c_str());
@@ -152,7 +152,7 @@ TEST(AudioCodingModuleTest, TestPacketLossBurst) {
   Trace::ReturnTrace();
 }
 
-TEST(AudioCodingModuleTest, TestPacketLossStereo) {
+TEST(AudioCodingModuleUnitTest, TestPacketLossStereo) {
   Trace::CreateTrace();
   Trace::SetTraceFile((webrtc::test::OutputPath() +
       "acm_packetloss_trace.txt").c_str());
@@ -160,7 +160,7 @@ TEST(AudioCodingModuleTest, TestPacketLossStereo) {
   Trace::ReturnTrace();
 }
 
-TEST(AudioCodingModuleTest, TestPacketLossStereoBurst) {
+TEST(AudioCodingModuleUnitTest, TestPacketLossStereoBurst) {
   Trace::CreateTrace();
   Trace::SetTraceFile((webrtc::test::OutputPath() +
       "acm_packetloss_burst_trace.txt").c_str());
@@ -171,7 +171,7 @@ TEST(AudioCodingModuleTest, TestPacketLossStereoBurst) {
 // The full API test is too long to run automatically on bots, but can be used
 // for offline testing. User interaction is needed.
 #ifdef ACM_TEST_FULL_API
-  TEST(AudioCodingModuleTest, TestAPI) {
+  TEST(AudioCodingModuleUnitTest, TestAPI) {
     Trace::CreateTrace();
     Trace::SetTraceFile((webrtc::test::OutputPath() +
         "acm_apitest_trace.txt").c_str());

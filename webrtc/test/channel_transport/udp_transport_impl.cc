@@ -50,6 +50,9 @@
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/test/channel_transport/udp_socket_manager_wrapper.h"
 #include "webrtc/typedefs.h"
+#if defined(_WIN32)
+#include "webrtc/base/win32.h"
+#endif
 
 #if defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
 #define GetLastError() errno
@@ -791,7 +794,7 @@ int32_t UdpTransportImpl::SetToS(int32_t DSCP, bool useSetSockOpt)
 
     if (useSetSockOpt)
     {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(WINRT)
         OSVERSIONINFO OsVersion;
         OsVersion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
         GetVersionEx(&OsVersion);
@@ -2338,8 +2341,13 @@ int32_t UdpTransport::InetPresentationToNumeric(int32_t af,
 
     if(af == AF_INET)
     {
+#if defined(WINRT)
+        int32_t result = WSAStringToAddress(
+            (LPWSTR)rtc::ToUtf16(src).data(),
+#else
         int32_t result = WSAStringToAddressA(
             (const LPSTR)src,
+#endif
             af,
             0,
             reinterpret_cast<struct sockaddr*>(&temp),
@@ -2354,8 +2362,13 @@ int32_t UdpTransport::InetPresentationToNumeric(int32_t af,
     }
     else if(af == AF_INET6)
     {
+#if defined(WINRT)
+        int32_t result = WSAStringToAddress(
+            (LPWSTR)rtc::ToUtf16(src).data(),
+#else
         int32_t result = WSAStringToAddressA(
             (const LPSTR)src,
+#endif
             af,
             0,
             reinterpret_cast<struct sockaddr*>(&temp),
@@ -2732,11 +2745,25 @@ int32_t UdpTransport::IPAddress(const SocketAddress& address,
 {
  #if defined(_WIN32)
     DWORD dwIPSize = ipSize;
+#if defined(WINRT)
+    wchar_t* wIp = new wchar_t[ipSize];
+    int32_t returnvalue = WSAAddressToString((LPSOCKADDR)(&address),
+                                         sizeof(SocketAddress),
+                                         NULL,
+                                         wIp,
+                                         &dwIPSize);
+    if (returnvalue != -1) {
+      memcpy(ip, rtc::ToUtf8(wIp).data(), ipSize);
+    }
+    delete[] wIp;
+#else
     int32_t returnvalue = WSAAddressToStringA((LPSOCKADDR)(&address),
                                          sizeof(SocketAddress),
                                          NULL,
                                          ip,
                                          &dwIPSize);
+#endif
+
     if(returnvalue == -1)
     {
         return -1;

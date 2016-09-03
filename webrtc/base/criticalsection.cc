@@ -19,7 +19,11 @@ namespace rtc {
 
 CriticalSection::CriticalSection() {
 #if defined(WEBRTC_WIN)
+#ifdef WINRT
+  InitializeCriticalSectionEx(&crit_, 0, 0);
+#else
   InitializeCriticalSection(&crit_);
+#endif
 #else
 #if defined(WEBRTC_MAC) && !USE_NATIVE_MUTEX_ON_MAC
   lock_queue_ = 0;

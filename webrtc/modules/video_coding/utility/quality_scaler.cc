@@ -12,7 +12,7 @@
 namespace webrtc {
 
 static const int kMinFps = 10;
-static const int kMeasureSeconds = 5;
+static const int kMeasureSeconds = 15;
 static const int kFramedropPercentThreshold = 60;
 static const int kHdResolutionThreshold = 700 * 500;
 static const int kHdBitrateThresholdKbps = 500;
@@ -136,13 +136,18 @@ int QualityScaler::GetTargetFramerate() const {
   return target_framerate_;
 }
 
-const VideoFrame& QualityScaler::GetScaledFrame(const VideoFrame& frame) {
+const VideoFrame& QualityScaler::GetScaledFrame(const VideoFrame& frame, int multipleOf) {
   Resolution res = GetScaledResolution();
   if (res.width == frame.width())
     return frame;
 
-  scaler_.Set(frame.width(), frame.height(), res.width, res.height, kI420,
-              kI420, kScaleBox);
+  scaler_.Set(frame.width(),
+              frame.height(),
+              res.width - (res.width % multipleOf),
+              res.height - (res.height % multipleOf),
+              kI420,
+              kI420,
+              kScaleBox);
   if (scaler_.Scale(frame, &scaled_frame_) != 0)
     return frame;
 

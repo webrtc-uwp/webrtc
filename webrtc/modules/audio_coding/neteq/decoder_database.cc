@@ -185,17 +185,17 @@ int DecoderDatabase::SetActiveDecoder(uint8_t rtp_payload_type,
     *new_decoder = true;
   } else if (active_decoder_ != rtp_payload_type) {
     // Moving from one active decoder to another. Delete the first one.
-    DecoderMap::iterator it = decoders_.find(active_decoder_);
-    if (it == decoders_.end()) {
+    DecoderMap::iterator iter = decoders_.find(active_decoder_);
+    if (iter == decoders_.end()) {
       // Decoder not found. This should not be possible.
       assert(false);
       return kDecoderNotFound;
     }
-    if (!(*it).second.external) {
+    if (!(*iter).second.external) {
       // Delete the AudioDecoder object, unless it is an externally created
       // decoder.
-      delete (*it).second.decoder;
-      (*it).second.decoder = NULL;
+      delete (*iter).second.decoder;
+      (*iter).second.decoder = NULL;
     }
     *new_decoder = true;
   }
@@ -220,17 +220,17 @@ int DecoderDatabase::SetActiveCngDecoder(uint8_t rtp_payload_type) {
   }
   if (active_cng_decoder_ >= 0 && active_cng_decoder_ != rtp_payload_type) {
     // Moving from one active CNG decoder to another. Delete the first one.
-    DecoderMap::iterator it = decoders_.find(active_cng_decoder_);
-    if (it == decoders_.end()) {
+    DecoderMap::iterator iter = decoders_.find(active_cng_decoder_);
+    if (iter == decoders_.end()) {
       // Decoder not found. This should not be possible.
       assert(false);
       return kDecoderNotFound;
     }
-    if (!(*it).second.external) {
+    if (!(*iter).second.external) {
       // Delete the AudioDecoder object, unless it is an externally created
       // decoder.
-      delete (*it).second.decoder;
-      (*it).second.decoder = NULL;
+      delete (*iter).second.decoder;
+      (*iter).second.decoder = NULL;
     }
   }
   active_cng_decoder_ = rtp_payload_type;

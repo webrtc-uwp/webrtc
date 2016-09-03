@@ -25,5 +25,18 @@ void HistogramAdd(
     Histogram* histogram_pointer, const std::string& name, int sample) {}
 
 }  // namespace metrics
+
+// On WinRT we wrap all unit tests in a single executable.
+// The fact that metrics_defaults.cc doesn't define all functions
+// found in histogram.cc results in linking errors.
+#ifdef WINRT
+//namespace test {
+//  int LastHistogramSample(const std::string& name) { return 0; }
+//
+//  int NumHistogramSamples(const std::string& name) { return 0; }
+//
+//  void ClearHistograms() {}
+//}  // namespace test
+#endif
 }  // namespace webrtc
 

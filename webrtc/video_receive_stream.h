@@ -56,6 +56,9 @@ class VideoReceiveStream : public ReceiveStream {
     int decode_ms = 0;
     int max_decode_ms = 0;
     int current_delay_ms = 0;
+#ifdef WINRT
+    int current_endtoend_delay_ms = 0;
+#endif
     int target_delay_ms = 0;
     int jitter_buffer_ms = 0;
     int min_playout_delay_ms = 0;

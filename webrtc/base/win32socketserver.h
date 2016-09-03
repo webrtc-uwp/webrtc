@@ -19,7 +19,9 @@
 #include "webrtc/base/socketfactory.h"
 #include "webrtc/base/socket.h"
 #include "webrtc/base/thread.h"
+#if !defined(WINRT)
 #include "webrtc/base/win32window.h"
+#endif
 
 namespace rtc {
 

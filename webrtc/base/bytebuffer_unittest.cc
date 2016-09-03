@@ -174,8 +174,8 @@ TEST(ByteBufferTest, TestReadWriteBuffer) {
     buffer.WriteBytes(write_bytes, 3);
     char read_bytes[3];
     EXPECT_TRUE(buffer.ReadBytes(read_bytes, 3));
-    for (int i = 0; i < 3; ++i) {
-      EXPECT_EQ(write_bytes[i], read_bytes[i]);
+    for (int index = 0; index < 3; ++index) {
+      EXPECT_EQ(write_bytes[index], read_bytes[index]);
     }
     EXPECT_EQ(0U, buffer.Length());
 
@@ -184,8 +184,8 @@ TEST(ByteBufferTest, TestReadWriteBuffer) {
     memcpy(write_dst, write_bytes, 3);
     memset(read_bytes, 0, 3);
     EXPECT_TRUE(buffer.ReadBytes(read_bytes, 3));
-    for (int i = 0; i < 3; ++i) {
-      EXPECT_EQ(write_bytes[i], read_bytes[i]);
+    for (int index = 0; index < 3; ++index) {
+      EXPECT_EQ(write_bytes[index], read_bytes[index]);
     }
     EXPECT_EQ(0U, buffer.Length());
 

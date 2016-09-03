@@ -141,7 +141,7 @@
             'WEBRTC_THREAD_RR',
           ],
         }],
-        ['OS=="win"', {
+        ['OS=="win" and winrt_platform!="win_phone" and  winrt_platform!="win10_arm"', {
           'link_settings': {
             'libraries': [ '-lwinmm.lib', ],
           },
@@ -181,7 +181,13 @@
       ],
     }, {
       'target_name': 'system_wrappers_default',
-      'type': 'static_library',
+      'conditions': [
+        ['OS=="win" and OS_RUNTIME=="winrt"', {
+          'type': 'none',
+        }, {
+          'type': 'static_library',
+        }],
+      ],
       'dependencies': [
         'system_wrappers',
         'field_trial_default',

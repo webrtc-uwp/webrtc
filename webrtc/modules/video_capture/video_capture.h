@@ -115,6 +115,12 @@ class VideoCaptureModule: public RefCountedModule {
 
   virtual int32_t StopCapture() = 0;
 
+  virtual bool SuspendCapture() = 0;
+
+  virtual bool ResumeCapture() = 0;
+
+  virtual bool IsSuspended() = 0;
+
   // Returns the name of the device used by this module.
   virtual const char* CurrentDeviceName() const = 0;
 

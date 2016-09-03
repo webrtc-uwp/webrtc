@@ -12,6 +12,7 @@
 #define WEBRTC_SYSTEM_WRAPPERS_SOURCE_EVENT_WIN_H_
 
 #include <windows.h>
+#include <memory>
 
 #include "webrtc/system_wrappers/include/event_wrapper.h"
 
@@ -31,8 +32,8 @@ class EventTimerWin : public EventTimerWrapper {
   virtual bool StopTimer();
 
  private:
-  HANDLE  event_;
-  uint32_t timerID_;
+  class Impl;
+  std::shared_ptr<Impl> pimpl_;
 };
 
 }  // namespace webrtc

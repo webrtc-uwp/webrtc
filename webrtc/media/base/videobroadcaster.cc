@@ -20,6 +20,16 @@ VideoBroadcaster::VideoBroadcaster() {
   thread_checker_.DetachFromThread();
 }
 
+bool VideoBroadcaster::Suspend() {
+    return false;
+}
+bool VideoBroadcaster::Resume() {
+    return false;
+}
+bool VideoBroadcaster::IsSuspended() {
+    return false;
+}
+
 void VideoBroadcaster::AddOrUpdateSink(
     VideoSinkInterface<cricket::VideoFrame>* sink,
     const VideoSinkWants& wants) {

@@ -65,11 +65,16 @@ class VideoSource : public Notifier<VideoSourceInterface>,
 
   void Stop() override;
   void Restart() override;
+  bool Suspend() override;
+  bool Resume() override;
+  bool IsSuspended() override;
 
   void AddOrUpdateSink(rtc::VideoSinkInterface<cricket::VideoFrame>* sink,
                        const rtc::VideoSinkWants& wants) override;
   void RemoveSink(rtc::VideoSinkInterface<cricket::VideoFrame>* sink) override;
 
+  void SetIsH264Source(bool isH264) override;
+  bool IsH264Source() override;
  protected:
   VideoSource(rtc::Thread* worker_thread,
               cricket::VideoCapturer* capturer,
@@ -93,6 +98,8 @@ class VideoSource : public Notifier<VideoSourceInterface>,
   cricket::VideoOptions options_;
   SourceState state_;
   const bool remote_;
+
+  bool _isH264Source;
 };
 
 }  // namespace webrtc

@@ -9,7 +9,13 @@
   'targets': [
     {
       'target_name': 'rtp_player',
-      'type': 'executable',
+      'conditions': [
+        ['OS=="win" and OS_RUNTIME=="winrt"', {
+          'type': 'static_library',
+        }, {
+          'type': 'executable',
+        }],
+      ],
       'dependencies': [
          'rtp_rtcp',
          'webrtc_video_coding',

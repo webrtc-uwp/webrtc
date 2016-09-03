@@ -13,6 +13,7 @@
 #endif
 
 #include "webrtc/base/network.h"
+#include "webrtc/base/nethelpers.h"
 
 #if defined(WEBRTC_POSIX)
 // linux/if.h can't be included at the same time as the posix sys/if.h, and
@@ -488,6 +489,56 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
 
 #elif defined(WEBRTC_WIN)
 
+#if defined(WINRT)
+bool BasicNetworkManager::CreateNetworks(bool include_ignored,
+                                         NetworkList* networks) const {
+
+  auto hostnames =
+    Windows::Networking::Connectivity::NetworkInformation::GetHostNames();
+  for (unsigned int i = 0; i < hostnames->Size; ++i) {
+    Windows::Networking::HostName^ hostname = hostnames->GetAt(i);
+
+    std::string networkInfterfaceId("unknown_interface");
+    if (hostname != nullptr && hostname->IPInformation != nullptr
+      && hostname->IPInformation->NetworkAdapter != nullptr) {
+
+      networkInfterfaceId = rtc::ToUtf8(
+        hostname->IPInformation->NetworkAdapter->NetworkAdapterId.ToString()->Data());
+    }
+
+    if (hostname->Type == Windows::Networking::HostNameType::Ipv4) {
+
+      std::string addrStr = rtc::ToUtf8(hostname->CanonicalName->Data());
+      if (addrStr.substr(0, 7) == "169.254") {
+        LOG(LS_INFO) << "Ignoring private ip address: " << addrStr;
+        continue;
+      }
+
+      struct in_addr addr;
+      rtc::inet_pton(AF_INET, addrStr.c_str(), &addr);
+      IPAddress ip(addr);
+      int prefixLength = hostname->IPInformation->PrefixLength->Value;
+
+      auto network = new Network(networkInfterfaceId, networkInfterfaceId, ip,
+        prefixLength);
+      network->AddIP(InterfaceAddress(ip));
+      networks->push_back(network);
+    } else if (hostname->Type == Windows::Networking::HostNameType::Ipv6 && ipv6_enabled()) {
+      struct in6_addr addr;
+      rtc::inet_pton(AF_INET6, rtc::ToUtf8(
+        hostname->CanonicalName->Data()).c_str(), &addr);
+      IPAddress ip(addr);
+      int prefixLength = hostname->IPInformation->PrefixLength->Value;
+      auto network = new Network(networkInfterfaceId, networkInfterfaceId, ip,
+        prefixLength);
+      network->AddIP(InterfaceAddress(ip));
+      networks->push_back(network);
+    }
+  }
+  return true;
+}
+#else
+
 unsigned int GetPrefix(PIP_ADAPTER_PREFIX prefixlist,
               const IPAddress& ip, IPAddress* prefix) {
   IPAddress current_prefix;
@@ -632,6 +683,7 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
   }
   return true;
 }
+#endif
 #endif  // WEBRTC_WIN
 
 #if defined(WEBRTC_LINUX)

@@ -71,7 +71,6 @@ void SharedData::set_audio_processing(AudioProcessing* audioproc) {
 }
 
 int SharedData::NumOfSendingChannels() {
-  ChannelManager::Iterator it(&_channelManager);
   int sending_channels = 0;
 
   for (ChannelManager::Iterator it(&_channelManager); it.IsValid();
@@ -84,7 +83,6 @@ int SharedData::NumOfSendingChannels() {
 }
 
 int SharedData::NumOfPlayingChannels() {
-  ChannelManager::Iterator it(&_channelManager);
   int playout_channels = 0;
 
   for (ChannelManager::Iterator it(&_channelManager); it.IsValid();

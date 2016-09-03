@@ -16,7 +16,7 @@
 // Autocorrelation function in fixed point.
 // NOTE! Different from SPLIB-version in how it scales the signal.
 int WebRtcIsacfix_AutocorrNeon(int32_t* __restrict r,
-                               const int16_t* x,
+                               const int16_t* __restrict x,
                                int16_t n,
                                int16_t order,
                                int16_t* __restrict scale) {

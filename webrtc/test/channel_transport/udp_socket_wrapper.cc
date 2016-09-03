@@ -17,8 +17,10 @@
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/test/channel_transport/udp_socket_manager_wrapper.h"
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(WINRT)
     #include "webrtc/test/channel_transport/udp_socket2_win.h"
+#elif defined(WINRT)
+    #include "webrtc/test/channel_transport/udp_socket_winrt.h"
 #else
     #include "webrtc/test/channel_transport/udp_socket_posix.h"
 #endif
@@ -93,7 +95,11 @@ UdpSocketWrapper* UdpSocketWrapper::CreateSocket(const int32_t id,
         _initiated = true;
     }
 
+#if !defined(WINRT)
     s = new UdpSocket2Windows(id, mgr, ipV6Enable, disableGQOS);
+#else
+    s = new UdpSocketWinRT(id, mgr, ipV6Enable);
+#endif
 
 #else
     if (!_initiated)

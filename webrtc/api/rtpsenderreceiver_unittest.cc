@@ -86,6 +86,9 @@ class FakeVideoSource : public Notifier<VideoSourceInterface> {
   cricket::VideoCapturer* GetVideoCapturer() { return &fake_capturer_; }
   void Stop() override {}
   void Restart() override {}
+  bool Suspend() override { return true; }
+  bool Resume() override { return true; }
+  bool IsSuspended() override { return false; }
   void AddOrUpdateSink(
       rtc::VideoSinkInterface<cricket::VideoFrame>* sink,
       const rtc::VideoSinkWants& wants) override {}
@@ -94,6 +97,8 @@ class FakeVideoSource : public Notifier<VideoSourceInterface> {
   SourceState state() const override { return state_; }
   bool remote() const override { return remote_; }
   const cricket::VideoOptions* options() const override { return &options_; }
+  void SetIsH264Source(bool isH264) override { h264_ = isH264; }
+  bool IsH264Source() override { return h264_; }
 
  protected:
   explicit FakeVideoSource(bool remote) : state_(kLive), remote_(remote) {}
@@ -104,6 +109,7 @@ class FakeVideoSource : public Notifier<VideoSourceInterface> {
   SourceState state_;
   bool remote_;
   cricket::VideoOptions options_;
+  bool h264_;
 };
 
 class RtpSenderReceiverTest : public testing::Test {

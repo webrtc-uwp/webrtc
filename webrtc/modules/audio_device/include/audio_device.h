@@ -27,10 +27,11 @@ class AudioDeviceModule : public RefCountedModule {
     kPlatformDefaultAudio = 0,
     kWindowsWaveAudio = 1,
     kWindowsCoreAudio = 2,
-    kLinuxAlsaAudio = 3,
-    kLinuxPulseAudio = 4,
-    kAndroidJavaAudio = 5,
-    kAndroidJavaInputAndOpenSLESOutputAudio = 6,
+    kWindowsWasapiAudio = 3,
+    kLinuxAlsaAudio = 4,
+    kLinuxPulseAudio = 5,
+    kAndroidJavaAudio = 6,
+    kAndroidJavaInputAndOpenSLESOutputAudio = 7,
     kDummyAudio = 8
   };
 
