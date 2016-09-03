@@ -7,7 +7,7 @@ vars = {
   'extra_gyp_flag': '-Dextra_gyp_flag=0',
   'chromium_git': 'https://chromium.googlesource.com',
   'chromium_uwp_git': 'git+https://github.com/webrtc-uwp',
-  'chromium_revision': '38ed253f09644f26fd7a7785b7fc0cc7ba911b4f',
+  'chromium_revision': '03fca1bd133899f6065d8dbff2c2e4f2a2524a3f',
 }
 
 # NOTE: Use http rather than https; the latter can cause problems for users
