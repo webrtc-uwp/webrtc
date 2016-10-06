@@ -95,7 +95,7 @@ inline const wchar_t* strstr(const wchar_t* haystack, const wchar_t* needle) {
 }
 #ifndef vsnprintf
 inline int vsnprintf(wchar_t* buf, size_t n, const wchar_t* fmt, va_list args) {
-#if defined(WINRT)
+#if defined(__cplusplus_winrt)
   return _vsnwprintf_s(buf, n, _TRUNCATE, fmt, args);
 #else
   return _vsnwprintf(buf, n, fmt, args);
