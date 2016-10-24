@@ -14,8 +14,10 @@
 
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/modules/audio_coding/codecs/builtin_audio_decoder_factory.h"
 #include "webrtc/modules/audio_coding/neteq/mock/mock_decoder_database.h"
 #include "webrtc/modules/audio_coding/neteq/packet.h"
+#include "webrtc/modules/audio_coding/neteq/tick_timer.h"
 
 using ::testing::Return;
 using ::testing::_;
@@ -58,9 +60,8 @@ Packet* PacketGenerator::NextPacket(int payload_size_bytes) {
   packet->header.ssrc = 0x12345678;
   packet->header.numCSRCs = 0;
   packet->header.paddingLength = 0;
-  packet->payload_length = payload_size_bytes;
   packet->primary = true;
-  packet->payload = new uint8_t[payload_size_bytes];
+  packet->payload.SetSize(payload_size_bytes);
   ++seq_no_;
   ts_ += frame_size_;
   return packet;
@@ -80,13 +81,15 @@ struct PacketsToInsert {
 // Start of test definitions.
 
 TEST(PacketBuffer, CreateAndDestroy) {
-  PacketBuffer* buffer = new PacketBuffer(10);  // 10 packets.
+  TickTimer tick_timer;
+  PacketBuffer* buffer = new PacketBuffer(10, &tick_timer);  // 10 packets.
   EXPECT_TRUE(buffer->Empty());
   delete buffer;
 }
 
 TEST(PacketBuffer, InsertPacket) {
-  PacketBuffer buffer(10);  // 10 packets.
+  TickTimer tick_timer;
+  PacketBuffer buffer(10, &tick_timer);  // 10 packets.
   PacketGenerator gen(17u, 4711u, 0, 10);
 
   const int payload_len = 100;
@@ -107,7 +110,8 @@ TEST(PacketBuffer, InsertPacket) {
 
 // Test to flush buffer.
 TEST(PacketBuffer, FlushBuffer) {
-  PacketBuffer buffer(10);  // 10 packets.
+  TickTimer tick_timer;
+  PacketBuffer buffer(10, &tick_timer);  // 10 packets.
   PacketGenerator gen(0, 0, 0, 10);
   const int payload_len = 10;
 
@@ -127,7 +131,8 @@ TEST(PacketBuffer, FlushBuffer) {
 
 // Test to fill the buffer over the limits, and verify that it flushes.
 TEST(PacketBuffer, OverfillBuffer) {
-  PacketBuffer buffer(10);  // 10 packets.
+  TickTimer tick_timer;
+  PacketBuffer buffer(10, &tick_timer);  // 10 packets.
   PacketGenerator gen(0, 0, 0, 10);
 
   // Insert 10 small packets; should be ok.
@@ -156,7 +161,8 @@ TEST(PacketBuffer, OverfillBuffer) {
 
 // Test inserting a list of packets.
 TEST(PacketBuffer, InsertPacketList) {
-  PacketBuffer buffer(10);  // 10 packets.
+  TickTimer tick_timer;
+  PacketBuffer buffer(10, &tick_timer);  // 10 packets.
   PacketGenerator gen(0, 0, 0, 10);
   PacketList list;
   const int payload_len = 10;
@@ -168,20 +174,22 @@ TEST(PacketBuffer, InsertPacketList) {
   }
 
   MockDecoderDatabase decoder_database;
-  EXPECT_CALL(decoder_database, IsComfortNoise(0))
-      .WillRepeatedly(Return(false));
-  EXPECT_CALL(decoder_database, IsDtmf(0))
-      .WillRepeatedly(Return(false));
-  uint8_t current_pt = 0xFF;
-  uint8_t current_cng_pt = 0xFF;
+  auto factory = CreateBuiltinAudioDecoderFactory();
+  const DecoderDatabase::DecoderInfo info(NetEqDecoder::kDecoderPCMu, "",
+                                          factory);
+  EXPECT_CALL(decoder_database, GetDecoderInfo(0))
+      .WillRepeatedly(Return(&info));
+  rtc::Optional<uint8_t> current_pt;
+  rtc::Optional<uint8_t> current_cng_pt;
   EXPECT_EQ(PacketBuffer::kOK, buffer.InsertPacketList(&list,
                                                        decoder_database,
                                                        &current_pt,
                                                        &current_cng_pt));
   EXPECT_TRUE(list.empty());  // The PacketBuffer should have depleted the list.
   EXPECT_EQ(10u, buffer.NumPacketsInBuffer());
-  EXPECT_EQ(0, current_pt);  // Current payload type changed to 0.
-  EXPECT_EQ(0xFF, current_cng_pt);  // CNG payload type not changed.
+  EXPECT_EQ(rtc::Optional<uint8_t>(0),
+            current_pt);         // Current payload type changed to 0.
+  EXPECT_FALSE(current_cng_pt);  // CNG payload type not changed.
 
   buffer.Flush();  // Clean up.
 
@@ -192,7 +200,8 @@ TEST(PacketBuffer, InsertPacketList) {
 // Expecting the buffer to flush.
 // TODO(hlundin): Remove this test when legacy operation is no longer needed.
 TEST(PacketBuffer, InsertPacketListChangePayloadType) {
-  PacketBuffer buffer(10);  // 10 packets.
+  TickTimer tick_timer;
+  PacketBuffer buffer(10, &tick_timer);  // 10 packets.
   PacketGenerator gen(0, 0, 0, 10);
   PacketList list;
   const int payload_len = 10;
@@ -209,20 +218,26 @@ TEST(PacketBuffer, InsertPacketListChangePayloadType) {
 
 
   MockDecoderDatabase decoder_database;
-  EXPECT_CALL(decoder_database, IsComfortNoise(_))
-      .WillRepeatedly(Return(false));
-  EXPECT_CALL(decoder_database, IsDtmf(_))
-      .WillRepeatedly(Return(false));
-  uint8_t current_pt = 0xFF;
-  uint8_t current_cng_pt = 0xFF;
+  auto factory = CreateBuiltinAudioDecoderFactory();
+  const DecoderDatabase::DecoderInfo info0(NetEqDecoder::kDecoderPCMu, "",
+                                           factory);
+  EXPECT_CALL(decoder_database, GetDecoderInfo(0))
+      .WillRepeatedly(Return(&info0));
+  const DecoderDatabase::DecoderInfo info1(NetEqDecoder::kDecoderPCMa, "",
+                                           factory);
+  EXPECT_CALL(decoder_database, GetDecoderInfo(1))
+      .WillRepeatedly(Return(&info1));
+  rtc::Optional<uint8_t> current_pt;
+  rtc::Optional<uint8_t> current_cng_pt;
   EXPECT_EQ(PacketBuffer::kFlushed, buffer.InsertPacketList(&list,
                                                             decoder_database,
                                                             &current_pt,
                                                             &current_cng_pt));
   EXPECT_TRUE(list.empty());  // The PacketBuffer should have depleted the list.
   EXPECT_EQ(1u, buffer.NumPacketsInBuffer());  // Only the last packet.
-  EXPECT_EQ(1, current_pt);  // Current payload type changed to 0.
-  EXPECT_EQ(0xFF, current_cng_pt);  // CNG payload type not changed.
+  EXPECT_EQ(rtc::Optional<uint8_t>(1),
+            current_pt);         // Current payload type changed to 1.
+  EXPECT_FALSE(current_cng_pt);  // CNG payload type not changed.
 
   buffer.Flush();  // Clean up.
 
@@ -230,7 +245,8 @@ TEST(PacketBuffer, InsertPacketListChangePayloadType) {
 }
 
 TEST(PacketBuffer, ExtractOrderRedundancy) {
-  PacketBuffer buffer(100);  // 100 packets.
+  TickTimer tick_timer;
+  PacketBuffer buffer(100, &tick_timer);  // 100 packets.
   const int kPackets = 18;
   const int kFrameSize = 10;
   const int kPayloadLength = 10;
@@ -282,14 +298,14 @@ TEST(PacketBuffer, ExtractOrderRedundancy) {
     Packet* packet = buffer.GetNextPacket(&drop_count);
     EXPECT_EQ(0u, drop_count);
     EXPECT_EQ(packet, expect_order[i]);  // Compare pointer addresses.
-    delete[] packet->payload;
     delete packet;
   }
   EXPECT_TRUE(buffer.Empty());
 }
 
 TEST(PacketBuffer, DiscardPackets) {
-  PacketBuffer buffer(100);  // 100 packets.
+  TickTimer tick_timer;
+  PacketBuffer buffer(100, &tick_timer);  // 100 packets.
   const uint16_t start_seq_no = 17;
   const uint32_t start_ts = 4711;
   const uint32_t ts_increment = 10;
@@ -318,7 +334,8 @@ TEST(PacketBuffer, DiscardPackets) {
 }
 
 TEST(PacketBuffer, Reordering) {
-  PacketBuffer buffer(100);  // 100 packets.
+  TickTimer tick_timer;
+  PacketBuffer buffer(100, &tick_timer);  // 100 packets.
   const uint16_t start_seq_no = 17;
   const uint32_t start_ts = 4711;
   const uint32_t ts_increment = 10;
@@ -339,12 +356,13 @@ TEST(PacketBuffer, Reordering) {
   }
 
   MockDecoderDatabase decoder_database;
-  EXPECT_CALL(decoder_database, IsComfortNoise(0))
-      .WillRepeatedly(Return(false));
-  EXPECT_CALL(decoder_database, IsDtmf(0))
-      .WillRepeatedly(Return(false));
-  uint8_t current_pt = 0xFF;
-  uint8_t current_cng_pt = 0xFF;
+  auto factory = CreateBuiltinAudioDecoderFactory();
+  const DecoderDatabase::DecoderInfo info(NetEqDecoder::kDecoderPCMu, "",
+                                          factory);
+  EXPECT_CALL(decoder_database, GetDecoderInfo(0))
+      .WillRepeatedly(Return(&info));
+  rtc::Optional<uint8_t> current_pt;
+  rtc::Optional<uint8_t> current_cng_pt;
 
   EXPECT_EQ(PacketBuffer::kOK, buffer.InsertPacketList(&list,
                                                        decoder_database,
@@ -359,11 +377,71 @@ TEST(PacketBuffer, Reordering) {
     ASSERT_FALSE(packet == NULL);
     EXPECT_EQ(current_ts, packet->header.timestamp);
     current_ts += ts_increment;
-    delete [] packet->payload;
     delete packet;
   }
   EXPECT_TRUE(buffer.Empty());
 
+  EXPECT_CALL(decoder_database, Die());  // Called when object is deleted.
+}
+
+// The test first inserts a packet with narrow-band CNG, then a packet with
+// wide-band speech. The expected behavior of the packet buffer is to detect a
+// change in sample rate, even though no speech packet has been inserted before,
+// and flush out the CNG packet.
+TEST(PacketBuffer, CngFirstThenSpeechWithNewSampleRate) {
+  TickTimer tick_timer;
+  PacketBuffer buffer(10, &tick_timer);  // 10 packets.
+  const uint8_t kCngPt = 13;
+  const int kPayloadLen = 10;
+  const uint8_t kSpeechPt = 100;
+
+  MockDecoderDatabase decoder_database;
+  auto factory = CreateBuiltinAudioDecoderFactory();
+  const DecoderDatabase::DecoderInfo info_cng(NetEqDecoder::kDecoderCNGnb, "",
+                                              factory);
+  EXPECT_CALL(decoder_database, GetDecoderInfo(kCngPt))
+      .WillRepeatedly(Return(&info_cng));
+  const DecoderDatabase::DecoderInfo info_speech(NetEqDecoder::kDecoderPCM16Bwb,
+                                                 "", factory);
+  EXPECT_CALL(decoder_database, GetDecoderInfo(kSpeechPt))
+      .WillRepeatedly(Return(&info_speech));
+
+  // Insert first packet, which is narrow-band CNG.
+  PacketGenerator gen(0, 0, kCngPt, 10);
+  PacketList list;
+  list.push_back(gen.NextPacket(kPayloadLen));
+  rtc::Optional<uint8_t> current_pt;
+  rtc::Optional<uint8_t> current_cng_pt;
+  EXPECT_EQ(PacketBuffer::kOK,
+            buffer.InsertPacketList(&list, decoder_database, &current_pt,
+                                    &current_cng_pt));
+  EXPECT_TRUE(list.empty());
+  EXPECT_EQ(1u, buffer.NumPacketsInBuffer());
+  ASSERT_TRUE(buffer.NextRtpHeader());
+  EXPECT_EQ(kCngPt, buffer.NextRtpHeader()->payloadType);
+  EXPECT_FALSE(current_pt);  // Current payload type not set.
+  EXPECT_EQ(rtc::Optional<uint8_t>(kCngPt),
+            current_cng_pt);  // CNG payload type set.
+
+  // Insert second packet, which is wide-band speech.
+  Packet* packet = gen.NextPacket(kPayloadLen);
+  packet->header.payloadType = kSpeechPt;
+  list.push_back(packet);
+  // Expect the buffer to flush out the CNG packet, since it does not match the
+  // new speech sample rate.
+  EXPECT_EQ(PacketBuffer::kFlushed,
+            buffer.InsertPacketList(&list, decoder_database, &current_pt,
+                                    &current_cng_pt));
+  EXPECT_TRUE(list.empty());
+  EXPECT_EQ(1u, buffer.NumPacketsInBuffer());
+  ASSERT_TRUE(buffer.NextRtpHeader());
+  EXPECT_EQ(kSpeechPt, buffer.NextRtpHeader()->payloadType);
+
+  EXPECT_EQ(rtc::Optional<uint8_t>(kSpeechPt),
+            current_pt);         // Current payload type set.
+  EXPECT_FALSE(current_cng_pt);  // CNG payload type reset.
+
+  buffer.Flush();                        // Clean up.
   EXPECT_CALL(decoder_database, Die());  // Called when object is deleted.
 }
 
@@ -373,13 +451,13 @@ TEST(PacketBuffer, Failures) {
   const uint32_t ts_increment = 10;
   int payload_len = 100;
   PacketGenerator gen(start_seq_no, start_ts, 0, ts_increment);
+  TickTimer tick_timer;
 
-  PacketBuffer* buffer = new PacketBuffer(100);  // 100 packets.
+  PacketBuffer* buffer = new PacketBuffer(100, &tick_timer);  // 100 packets.
   Packet* packet = NULL;
   EXPECT_EQ(PacketBuffer::kInvalidPacket, buffer->InsertPacket(packet));
   packet = gen.NextPacket(payload_len);
-  delete [] packet->payload;
-  packet->payload = NULL;
+  packet->payload.Clear();
   EXPECT_EQ(PacketBuffer::kInvalidPacket, buffer->InsertPacket(packet));
   // Packet is deleted by the PacketBuffer.
 
@@ -404,21 +482,21 @@ TEST(PacketBuffer, Failures) {
   // Insert packet list of three packets, where the second packet has an invalid
   // payload.  Expect first packet to be inserted, and the remaining two to be
   // discarded.
-  buffer = new PacketBuffer(100);  // 100 packets.
+  buffer = new PacketBuffer(100, &tick_timer);  // 100 packets.
   PacketList list;
   list.push_back(gen.NextPacket(payload_len));  // Valid packet.
   packet = gen.NextPacket(payload_len);
-  delete [] packet->payload;
-  packet->payload = NULL;  // Invalid.
+  packet->payload.Clear();  // Invalid.
   list.push_back(packet);
   list.push_back(gen.NextPacket(payload_len));  // Valid packet.
   MockDecoderDatabase decoder_database;
-  EXPECT_CALL(decoder_database, IsComfortNoise(0))
-      .WillRepeatedly(Return(false));
-  EXPECT_CALL(decoder_database, IsDtmf(0))
-      .WillRepeatedly(Return(false));
-  uint8_t current_pt = 0xFF;
-  uint8_t current_cng_pt = 0xFF;
+  auto factory = CreateBuiltinAudioDecoderFactory();
+  const DecoderDatabase::DecoderInfo info(NetEqDecoder::kDecoderPCMu, "",
+                                          factory);
+  EXPECT_CALL(decoder_database, GetDecoderInfo(0))
+      .WillRepeatedly(Return(&info));
+  rtc::Optional<uint8_t> current_pt;
+  rtc::Optional<uint8_t> current_cng_pt;
   EXPECT_EQ(PacketBuffer::kInvalidPacket,
             buffer->InsertPacketList(&list,
                                      decoder_database,
@@ -489,9 +567,7 @@ TEST(PacketBuffer, ComparePackets) {
   EXPECT_FALSE(*a <= *b);
   EXPECT_TRUE(*a >= *b);
 
-  delete [] a->payload;
   delete a;
-  delete [] b->payload;
   delete b;
 }
 

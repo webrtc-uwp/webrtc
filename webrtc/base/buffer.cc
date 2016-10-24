@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015 The WebRTC Project Authors. All rights reserved.
+ *  Copyright 2016 The WebRTC project authors. All rights reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,39 +8,5 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/base/buffer.h"
-
-#include <algorithm>
-#include <utility>
-
-namespace rtc {
-
-Buffer::Buffer() : size_(0), capacity_(0), data_(nullptr) {
-  RTC_DCHECK(IsConsistent());
-}
-
-Buffer::Buffer(const Buffer& buf) : Buffer(buf.data(), buf.size()) {
-}
-
-Buffer::Buffer(Buffer&& buf)
-    : size_(buf.size()),
-      capacity_(buf.capacity()),
-      data_(std::move(buf.data_)) {
-  RTC_DCHECK(IsConsistent());
-  buf.OnMovedFrom();
-}
-
-Buffer::Buffer(size_t size) : Buffer(size, size) {
-}
-
-Buffer::Buffer(size_t size, size_t capacity)
-    : size_(size),
-      capacity_(std::max(size, capacity)),
-      data_(new uint8_t[capacity_]) {
-  RTC_DCHECK(IsConsistent());
-}
-
-// Note: The destructor works even if the buffer has been moved from.
-Buffer::~Buffer() = default;
-
-};  // namespace rtc
+// This is a dummy file, added because something in the Chromium build claims
+// to need it. We should fix that, and then remove it (bug 5845).

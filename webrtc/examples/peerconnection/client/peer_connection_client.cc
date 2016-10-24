@@ -296,7 +296,7 @@ bool PeerConnectionClient::ReadIntoBuffer(rtc::AsyncSocket* socket,
                                           size_t* content_length) {
   char buffer[0xffff];
   do {
-    int bytes = socket->Recv(buffer, sizeof(buffer));
+    int bytes = socket->Recv(buffer, sizeof(buffer), nullptr);
     if (bytes <= 0)
       break;
     data->append(buffer, bytes);
@@ -500,7 +500,8 @@ void PeerConnectionClient::OnClose(rtc::AsyncSocket* socket, int err) {
   } else {
     if (socket == control_socket_.get()) {
       LOG(WARNING) << "Connection refused; retrying in 2 seconds";
-      rtc::Thread::Current()->PostDelayed(kReconnectDelay, this, 0);
+      rtc::Thread::Current()->PostDelayed(RTC_FROM_HERE, kReconnectDelay, this,
+                                          0);
     } else {
       Close();
       callback_->OnDisconnected();

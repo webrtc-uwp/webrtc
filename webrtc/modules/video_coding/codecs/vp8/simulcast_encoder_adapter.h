@@ -51,14 +51,14 @@ class SimulcastEncoderAdapter : public VP8Encoder {
   // Eventual handler for the contained encoders' EncodedImageCallbacks, but
   // called from an internal helper that also knows the correct stream
   // index.
-  int32_t Encoded(size_t stream_idx,
-                  const EncodedImage& encodedImage,
-                  const CodecSpecificInfo* codecSpecificInfo = NULL,
-                  const RTPFragmentationHeader* fragmentation = NULL);
+  EncodedImageCallback::Result OnEncodedImage(
+      size_t stream_idx,
+      const EncodedImage& encoded_image,
+      const CodecSpecificInfo* codec_specific_info,
+      const RTPFragmentationHeader* fragmentation);
 
   void OnDroppedFrame(uint32_t timestamp) override;
 
-  int GetTargetFramerate() override;
   bool SupportsNativeHandle() const override;
   const char* ImplementationName() const override;
 

@@ -12,13 +12,14 @@
 #define WEBRTC_MODULES_AUDIO_CODING_NETEQ_PACKET_BUFFER_H_
 
 #include "webrtc/base/constructormagic.h"
+#include "webrtc/base/optional.h"
 #include "webrtc/modules/audio_coding/neteq/packet.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
 
-// Forward declaration.
 class DecoderDatabase;
+class TickTimer;
 
 // This is the actual buffer holding the packets before decoding.
 class PacketBuffer {
@@ -34,7 +35,7 @@ class PacketBuffer {
 
   // Constructor creates a buffer which can hold a maximum of
   // |max_number_of_packets| packets.
-  PacketBuffer(size_t max_number_of_packets);
+  PacketBuffer(size_t max_number_of_packets, const TickTimer* tick_timer);
 
   // Deletes all packets in the buffer before destroying the buffer.
   virtual ~PacketBuffer();
@@ -59,10 +60,11 @@ class PacketBuffer {
   // The last three parameters are included for legacy compatibility.
   // TODO(hlundin): Redesign to not use current_*_payload_type and
   // decoder_database.
-  virtual int InsertPacketList(PacketList* packet_list,
-                               const DecoderDatabase& decoder_database,
-                               uint8_t* current_rtp_payload_type,
-                               uint8_t* current_cng_rtp_payload_type);
+  virtual int InsertPacketList(
+      PacketList* packet_list,
+      const DecoderDatabase& decoder_database,
+      rtc::Optional<uint8_t>* current_rtp_payload_type,
+      rtc::Optional<uint8_t>* current_cng_rtp_payload_type);
 
   // Gets the timestamp for the first packet in the buffer and writes it to the
   // output variable |next_timestamp|.
@@ -116,10 +118,6 @@ class PacketBuffer {
   virtual size_t NumSamplesInBuffer(DecoderDatabase* decoder_database,
                                     size_t last_decoded_length) const;
 
-  // Increase the waiting time counter for every packet in the buffer by |inc|.
-  // The default value for |inc| is 1.
-  virtual void IncrementWaitingTimes(int inc = 1);
-
   virtual void BufferStat(int* num_packets, int* max_num_packets) const;
 
   // Static method that properly deletes the first packet, and its payload
@@ -148,6 +146,7 @@ class PacketBuffer {
  private:
   size_t max_number_of_packets_;
   PacketList buffer_;
+  const TickTimer* tick_timer_;
   RTC_DISALLOW_COPY_AND_ASSIGN(PacketBuffer);
 };
 

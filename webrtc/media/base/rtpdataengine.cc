@@ -10,7 +10,7 @@
 
 #include "webrtc/media/base/rtpdataengine.h"
 
-#include "webrtc/base/buffer.h"
+#include "webrtc/base/copyonwritebuffer.h"
 #include "webrtc/base/helpers.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/ratelimiter.h"
@@ -36,8 +36,7 @@ static const size_t kMaxSrtpHmacOverhead = 16;
 
 RtpDataEngine::RtpDataEngine() {
   data_codecs_.push_back(
-      DataCodec(kGoogleRtpDataCodecId,
-                kGoogleRtpDataCodecName, 0));
+      DataCodec(kGoogleRtpDataCodecId, kGoogleRtpDataCodecName));
   SetTiming(new rtc::Timing());
 }
 
@@ -92,7 +91,7 @@ void RtpClock::Tick(double now, int* seq_num, uint32_t* timestamp) {
 }
 
 const DataCodec* FindUnknownCodec(const std::vector<DataCodec>& codecs) {
-  DataCodec data_codec(kGoogleRtpDataCodecId, kGoogleRtpDataCodecName, 0);
+  DataCodec data_codec(kGoogleRtpDataCodecId, kGoogleRtpDataCodecName);
   std::vector<DataCodec>::const_iterator iter;
   for (iter = codecs.begin(); iter != codecs.end(); ++iter) {
     if (!iter->Matches(data_codec)) {
@@ -103,7 +102,7 @@ const DataCodec* FindUnknownCodec(const std::vector<DataCodec>& codecs) {
 }
 
 const DataCodec* FindKnownCodec(const std::vector<DataCodec>& codecs) {
-  DataCodec data_codec(kGoogleRtpDataCodecId, kGoogleRtpDataCodecName, 0);
+  DataCodec data_codec(kGoogleRtpDataCodecId, kGoogleRtpDataCodecName);
   std::vector<DataCodec>::const_iterator iter;
   for (iter = codecs.begin(); iter != codecs.end(); ++iter) {
     if (iter->Matches(data_codec)) {
@@ -205,9 +204,9 @@ bool RtpDataMediaChannel::RemoveRecvStream(uint32_t ssrc) {
 }
 
 void RtpDataMediaChannel::OnPacketReceived(
-    rtc::Buffer* packet, const rtc::PacketTime& packet_time) {
+    rtc::CopyOnWriteBuffer* packet, const rtc::PacketTime& packet_time) {
   RtpHeader header;
-  if (!GetRtpHeader(packet->data(), packet->size(), &header)) {
+  if (!GetRtpHeader(packet->cdata(), packet->size(), &header)) {
     // Don't want to log for every corrupt packet.
     // LOG(LS_WARNING) << "Could not read rtp header from packet of length "
     //                 << packet->length() << ".";
@@ -215,7 +214,7 @@ void RtpDataMediaChannel::OnPacketReceived(
   }
 
   size_t header_length;
-  if (!GetRtpHeaderLen(packet->data(), packet->size(), &header_length)) {
+  if (!GetRtpHeaderLen(packet->cdata(), packet->size(), &header_length)) {
     // Don't want to log for every corrupt packet.
     // LOG(LS_WARNING) << "Could not read rtp header"
     //                 << length from packet of length "
@@ -223,7 +222,7 @@ void RtpDataMediaChannel::OnPacketReceived(
     return;
   }
   const char* data =
-      packet->data<char>() + header_length + sizeof(kReservedSpace);
+      packet->cdata<char>() + header_length + sizeof(kReservedSpace);
   size_t data_len = packet->size() - header_length - sizeof(kReservedSpace);
 
   if (!receiving_) {
@@ -276,7 +275,7 @@ bool RtpDataMediaChannel::SetMaxSendBandwidth(int bps) {
 
 bool RtpDataMediaChannel::SendData(
     const SendDataParams& params,
-    const rtc::Buffer& payload,
+    const rtc::CopyOnWriteBuffer& payload,
     SendDataResult* result) {
   if (result) {
     // If we return true, we'll set this to SDR_SUCCESS.
@@ -329,7 +328,7 @@ bool RtpDataMediaChannel::SendData(
   rtp_clock_by_send_ssrc_[header.ssrc]->Tick(
       now, &header.seq_num, &header.timestamp);
 
-  rtc::Buffer packet(kMinRtpPacketLen, packet_len);
+  rtc::CopyOnWriteBuffer packet(kMinRtpPacketLen, packet_len);
   if (!SetRtpHeader(packet.data(), packet.size(), header)) {
     return false;
   }

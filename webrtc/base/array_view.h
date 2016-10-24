@@ -12,6 +12,7 @@
 #define WEBRTC_BASE_ARRAY_VIEW_H_
 
 #include "webrtc/base/checks.h"
+#include "webrtc/base/type_traits.h"
 
 namespace rtc {
 
@@ -56,6 +57,7 @@ namespace rtc {
 //   Contains17(arr);                             // C array
 //   Contains17(arr);                             // std::vector
 //   Contains17(rtc::ArrayView<int>(arr, size));  // pointer + size
+//   Contains17(nullptr);                         // nullptr -> empty ArrayView
 //   ...
 //
 // One important point is that ArrayView<T> and ArrayView<const T> are
@@ -73,6 +75,7 @@ class ArrayView final {
  public:
   // Construct an empty ArrayView.
   ArrayView() : ArrayView(static_cast<T*>(nullptr), 0) {}
+  ArrayView(std::nullptr_t) : ArrayView() {}
 
   // Construct an ArrayView for a (pointer,size) pair.
   template <typename U>
@@ -93,7 +96,9 @@ class ArrayView final {
   // or ArrayView<const T>, const std::vector<T> to ArrayView<const T>, and
   // rtc::Buffer to ArrayView<uint8_t> (with the same const behavior as
   // std::vector).
-  template <typename U>
+  template <
+      typename U,
+      typename std::enable_if<HasDataAndSize<U, T>::value>::type* = nullptr>
   ArrayView(U& u) : ArrayView(u.data(), u.size()) {}
 
   // Indexing, size, and iteration. These allow mutation even if the ArrayView
@@ -127,6 +132,11 @@ class ArrayView final {
   T* data_;
   size_t size_;
 };
+
+template <typename T>
+inline ArrayView<T> MakeArrayView(T* data, size_t size) {
+  return ArrayView<T>(data, size);
+}
 
 }  // namespace rtc
 

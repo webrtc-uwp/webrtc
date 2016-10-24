@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <map>
+#include <memory>
 #include <vector>
 
 #include "webrtc/base/checks.h"
@@ -155,7 +156,7 @@ int VirtualSocket::Bind(const SocketAddress& addr) {
     was_any_ = addr.IsAnyIP();
     // Post a message here such that test case could have chance to
     // process the local address. (i.e. SetAlternativeLocalAddress).
-    server_->msg_queue_->Post(this, MSG_ID_ADDRESS_BOUND);
+    server_->msg_queue_->Post(RTC_FROM_HERE, this, MSG_ID_ADDRESS_BOUND);
   }
   return result;
 }
@@ -263,12 +264,18 @@ int VirtualSocket::SendTo(const void* pv,
   }
 }
 
-int VirtualSocket::Recv(void* pv, size_t cb) {
+int VirtualSocket::Recv(void* pv, size_t cb, int64_t* timestamp) {
   SocketAddress addr;
-  return RecvFrom(pv, cb, &addr);
+  return RecvFrom(pv, cb, &addr, timestamp);
 }
 
-int VirtualSocket::RecvFrom(void* pv, size_t cb, SocketAddress* paddr) {
+int VirtualSocket::RecvFrom(void* pv,
+                            size_t cb,
+                            SocketAddress* paddr,
+                            int64_t* timestamp) {
+  if (timestamp) {
+    *timestamp = -1;
+  }
   // If we don't have a packet, then either error or wait for one to arrive.
   if (recv_buffer_.empty()) {
     if (async_) {
@@ -500,15 +507,25 @@ int VirtualSocket::SendTcp(const void* pv, size_t cb) {
 }
 
 VirtualSocketServer::VirtualSocketServer(SocketServer* ss)
-    : server_(ss), server_owned_(false), msg_queue_(NULL), stop_on_idle_(false),
-      network_delay_(Time()), next_ipv4_(kInitialNextIPv4),
-      next_ipv6_(kInitialNextIPv6), next_port_(kFirstEphemeralPort),
-      bindings_(new AddressMap()), connections_(new ConnectionMap()),
-      bandwidth_(0), network_capacity_(kDefaultNetworkCapacity),
+    : server_(ss),
+      server_owned_(false),
+      msg_queue_(NULL),
+      stop_on_idle_(false),
+      network_delay_(0),
+      next_ipv4_(kInitialNextIPv4),
+      next_ipv6_(kInitialNextIPv6),
+      next_port_(kFirstEphemeralPort),
+      bindings_(new AddressMap()),
+      connections_(new ConnectionMap()),
+      bandwidth_(0),
+      network_capacity_(kDefaultNetworkCapacity),
       send_buffer_capacity_(kDefaultTcpBufferSize),
       recv_buffer_capacity_(kDefaultTcpBufferSize),
-      delay_mean_(0), delay_stddev_(0), delay_samples_(NUM_SAMPLES),
-      delay_dist_(NULL), drop_prob_(0.0) {
+      delay_mean_(0),
+      delay_stddev_(0),
+      delay_samples_(NUM_SAMPLES),
+      delay_dist_(NULL),
+      drop_prob_(0.0) {
   if (!server_) {
     server_ = new PhysicalSocketServer();
     server_owned_ = true;
@@ -567,7 +584,9 @@ AsyncSocket* VirtualSocketServer::CreateAsyncSocket(int family, int type) {
 }
 
 VirtualSocket* VirtualSocketServer::CreateSocketInternal(int family, int type) {
-  return new VirtualSocket(this, family, type, true);
+  VirtualSocket* socket = new VirtualSocket(this, family, type, true);
+  SignalSocketCreated(socket);
+  return socket;
 }
 
 void VirtualSocketServer::SetMessageQueue(MessageQueue* msg_queue) {
@@ -741,19 +760,22 @@ int VirtualSocketServer::Connect(VirtualSocket* socket,
   }
   if (remote != NULL) {
     SocketAddress addr = socket->GetLocalAddress();
-    msg_queue_->PostDelayed(delay, remote, MSG_ID_CONNECT,
+    msg_queue_->PostDelayed(RTC_FROM_HERE, delay, remote, MSG_ID_CONNECT,
                             new MessageAddress(addr));
   } else {
     LOG(LS_INFO) << "No one listening at " << remote_addr;
-    msg_queue_->PostDelayed(delay, socket, MSG_ID_DISCONNECT);
+    msg_queue_->PostDelayed(RTC_FROM_HERE, delay, socket, MSG_ID_DISCONNECT);
   }
   return 0;
 }
 
 bool VirtualSocketServer::Disconnect(VirtualSocket* socket) {
   if (socket) {
+    // If we simulate packets being delayed, we should simulate the
+    // equivalent of a FIN being delayed as well.
+    uint32_t delay = GetRandomTransitDelay();
     // Remove the mapping.
-    msg_queue_->Post(socket, MSG_ID_DISCONNECT);
+    msg_queue_->PostDelayed(RTC_FROM_HERE, delay, socket, MSG_ID_DISCONNECT);
     return true;
   }
   return false;
@@ -771,7 +793,7 @@ int VirtualSocketServer::SendUdp(VirtualSocket* socket,
   VirtualSocket* recipient = LookupBinding(remote_addr);
   if (!recipient) {
     // Make a fake recipient for address family checking.
-    scoped_ptr<VirtualSocket> dummy_socket(
+    std::unique_ptr<VirtualSocket> dummy_socket(
         CreateSocketInternal(AF_INET, SOCK_DGRAM));
     dummy_socket->SetLocalAddress(remote_addr);
     if (!CanInteractWith(socket, dummy_socket.get())) {
@@ -791,7 +813,7 @@ int VirtualSocketServer::SendUdp(VirtualSocket* socket,
 
   CritScope cs(&socket->crit_);
 
-  uint32_t cur_time = Time();
+  int64_t cur_time = TimeMillis();
   PurgeNetworkPackets(socket, cur_time);
 
   // Determine whether we have enough bandwidth to accept this packet.  To do
@@ -831,7 +853,7 @@ void VirtualSocketServer::SendTcp(VirtualSocket* socket) {
 
   CritScope cs(&socket->crit_);
 
-  uint32_t cur_time = Time();
+  int64_t cur_time = TimeMillis();
   PurgeNetworkPackets(socket, cur_time);
 
   while (true) {
@@ -866,7 +888,7 @@ void VirtualSocketServer::SendTcp(VirtualSocket* socket) {
 
 void VirtualSocketServer::AddPacketToNetwork(VirtualSocket* sender,
                                              VirtualSocket* recipient,
-                                             uint32_t cur_time,
+                                             int64_t cur_time,
                                              const char* data,
                                              size_t data_size,
                                              size_t header_size,
@@ -894,19 +916,19 @@ void VirtualSocketServer::AddPacketToNetwork(VirtualSocket* sender,
   // Post the packet as a message to be delivered (on our own thread)
   Packet* p = new Packet(data, data_size, sender_addr);
 
-  uint32_t ts = TimeAfter(send_delay + transit_delay);
+  int64_t ts = TimeAfter(send_delay + transit_delay);
   if (ordered) {
     // Ensure that new packets arrive after previous ones
     // TODO: consider ordering on a per-socket basis, since this
-    // introduces artifical delay.
-    ts = TimeMax(ts, network_delay_);
+    // introduces artificial delay.
+    ts = std::max(ts, network_delay_);
   }
-  msg_queue_->PostAt(ts, recipient, MSG_ID_PACKET, p);
-  network_delay_ = TimeMax(ts, network_delay_);
+  msg_queue_->PostAt(RTC_FROM_HERE, ts, recipient, MSG_ID_PACKET, p);
+  network_delay_ = std::max(ts, network_delay_);
 }
 
 void VirtualSocketServer::PurgeNetworkPackets(VirtualSocket* socket,
-                                              uint32_t cur_time) {
+                                              int64_t cur_time) {
   while (!socket->network_.empty() &&
          (socket->network_.front().done_time <= cur_time)) {
     ASSERT(socket->network_size_ >= socket->network_.front().size);

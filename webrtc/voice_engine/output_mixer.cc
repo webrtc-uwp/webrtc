@@ -93,14 +93,12 @@ OutputMixer::Create(OutputMixer*& mixer, uint32_t instanceId)
 OutputMixer::OutputMixer(uint32_t instanceId) :
     _mixerModule(*AudioConferenceMixer::Create(instanceId)),
     _audioLevel(),
-    _dtmfGenerator(instanceId),
     _instanceId(instanceId),
     _externalMediaCallbackPtr(NULL),
     _externalMedia(false),
     _panLeft(1.0f),
     _panRight(1.0f),
     _mixingFrequencyHz(8000),
-    _outputFileRecorderPtr(NULL),
     _outputFileRecording(false)
 {
     WEBRTC_TRACE(kTraceMemory, kTraceVoice, VoEId(_instanceId,-1),
@@ -112,8 +110,6 @@ OutputMixer::OutputMixer(uint32_t instanceId) :
                      "OutputMixer::OutputMixer() failed to register mixer"
                      "callbacks");
     }
-
-    _dtmfGenerator.Init();
 }
 
 void
@@ -136,12 +132,9 @@ OutputMixer::~OutputMixer()
     }
     {
         rtc::CritScope cs(&_fileCritSect);
-        if (_outputFileRecorderPtr)
-        {
-            _outputFileRecorderPtr->RegisterModuleFileCallback(NULL);
-            _outputFileRecorderPtr->StopRecording();
-            FileRecorder::DestroyFileRecorder(_outputFileRecorderPtr);
-            _outputFileRecorderPtr = NULL;
+        if (output_file_recorder_) {
+          output_file_recorder_->RegisterModuleFileCallback(NULL);
+          output_file_recorder_->StopRecording();
         }
     }
     _mixerModule.UnRegisterMixedStreamCallback();
@@ -189,21 +182,6 @@ int OutputMixer::DeRegisterExternalMediaProcessing()
     _externalMedia = false;
     _externalMediaCallbackPtr = NULL;
 
-    return 0;
-}
-
-int OutputMixer::PlayDtmfTone(uint8_t eventCode, int lengthMs,
-                              int attenuationDb)
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, -1),
-                 "OutputMixer::PlayDtmfTone()");
-    if (_dtmfGenerator.AddTone(eventCode, lengthMs, attenuationDb) != 0)
-    {
-        _engineStatisticsPtr->SetLastError(VE_STILL_PLAYING_PREV_DTMF,
-                                           kTraceError,
-                                           "OutputMixer::PlayDtmfTone()");
-        return -1;
-    }
     return 0;
 }
 
@@ -313,38 +291,30 @@ int OutputMixer::StartRecordingPlayout(const char* fileName,
     rtc::CritScope cs(&_fileCritSect);
 
     // Destroy the old instance
-    if (_outputFileRecorderPtr)
-    {
-        _outputFileRecorderPtr->RegisterModuleFileCallback(NULL);
-        FileRecorder::DestroyFileRecorder(_outputFileRecorderPtr);
-        _outputFileRecorderPtr = NULL;
+    if (output_file_recorder_) {
+      output_file_recorder_->RegisterModuleFileCallback(NULL);
+      output_file_recorder_.reset();
     }
 
-    _outputFileRecorderPtr = FileRecorder::CreateFileRecorder(
-        _instanceId,
-        (const FileFormats)format);
-    if (_outputFileRecorderPtr == NULL)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_INVALID_ARGUMENT, kTraceError,
-            "StartRecordingPlayout() fileRecorder format isnot correct");
-        return -1;
+    output_file_recorder_ = FileRecorder::CreateFileRecorder(
+        _instanceId, (const FileFormats)format);
+    if (!output_file_recorder_) {
+      _engineStatisticsPtr->SetLastError(
+          VE_INVALID_ARGUMENT, kTraceError,
+          "StartRecordingPlayout() fileRecorder format isnot correct");
+      return -1;
     }
 
-    if (_outputFileRecorderPtr->StartRecordingAudioFile(
-        fileName,
-        (const CodecInst&)*codecInst,
-        notificationTime) != 0)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_BAD_FILE, kTraceError,
-            "StartRecordingAudioFile() failed to start file recording");
-        _outputFileRecorderPtr->StopRecording();
-        FileRecorder::DestroyFileRecorder(_outputFileRecorderPtr);
-        _outputFileRecorderPtr = NULL;
-        return -1;
+    if (output_file_recorder_->StartRecordingAudioFile(
+            fileName, (const CodecInst&)*codecInst, notificationTime) != 0) {
+      _engineStatisticsPtr->SetLastError(
+          VE_BAD_FILE, kTraceError,
+          "StartRecordingAudioFile() failed to start file recording");
+      output_file_recorder_->StopRecording();
+      output_file_recorder_.reset();
+      return -1;
     }
-    _outputFileRecorderPtr->RegisterModuleFileCallback(this);
+    output_file_recorder_->RegisterModuleFileCallback(this);
     _outputFileRecording = true;
 
     return 0;
@@ -393,37 +363,31 @@ int OutputMixer::StartRecordingPlayout(OutStream* stream,
     rtc::CritScope cs(&_fileCritSect);
 
     // Destroy the old instance
-    if (_outputFileRecorderPtr)
-    {
-        _outputFileRecorderPtr->RegisterModuleFileCallback(NULL);
-        FileRecorder::DestroyFileRecorder(_outputFileRecorderPtr);
-        _outputFileRecorderPtr = NULL;
+    if (output_file_recorder_) {
+      output_file_recorder_->RegisterModuleFileCallback(NULL);
+      output_file_recorder_.reset();
     }
 
-    _outputFileRecorderPtr = FileRecorder::CreateFileRecorder(
-        _instanceId,
-        (const FileFormats)format);
-    if (_outputFileRecorderPtr == NULL)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_INVALID_ARGUMENT, kTraceError,
-            "StartRecordingPlayout() fileRecorder format isnot correct");
-        return -1;
+    output_file_recorder_ = FileRecorder::CreateFileRecorder(
+        _instanceId, (const FileFormats)format);
+    if (!output_file_recorder_) {
+      _engineStatisticsPtr->SetLastError(
+          VE_INVALID_ARGUMENT, kTraceError,
+          "StartRecordingPlayout() fileRecorder format isnot correct");
+      return -1;
     }
 
-    if (_outputFileRecorderPtr->StartRecordingAudioFile(*stream,
-                                                        *codecInst,
-                                                        notificationTime) != 0)
-    {
-       _engineStatisticsPtr->SetLastError(VE_BAD_FILE, kTraceError,
-           "StartRecordingAudioFile() failed to start file recording");
-        _outputFileRecorderPtr->StopRecording();
-        FileRecorder::DestroyFileRecorder(_outputFileRecorderPtr);
-        _outputFileRecorderPtr = NULL;
-        return -1;
+    if (output_file_recorder_->StartRecordingAudioFile(stream, *codecInst,
+                                                       notificationTime) != 0) {
+      _engineStatisticsPtr->SetLastError(
+          VE_BAD_FILE, kTraceError,
+          "StartRecordingAudioFile() failed to start file recording");
+      output_file_recorder_->StopRecording();
+      output_file_recorder_.reset();
+      return -1;
     }
 
-    _outputFileRecorderPtr->RegisterModuleFileCallback(this);
+    output_file_recorder_->RegisterModuleFileCallback(this);
     _outputFileRecording = true;
 
     return 0;
@@ -443,16 +407,14 @@ int OutputMixer::StopRecordingPlayout()
 
     rtc::CritScope cs(&_fileCritSect);
 
-    if (_outputFileRecorderPtr->StopRecording() != 0)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_STOP_RECORDING_FAILED, kTraceError,
-            "StopRecording(), could not stop recording");
-        return -1;
+    if (output_file_recorder_->StopRecording() != 0) {
+      _engineStatisticsPtr->SetLastError(
+          VE_STOP_RECORDING_FAILED, kTraceError,
+          "StopRecording(), could not stop recording");
+      return -1;
     }
-    _outputFileRecorderPtr->RegisterModuleFileCallback(NULL);
-    FileRecorder::DestroyFileRecorder(_outputFileRecorderPtr);
-    _outputFileRecorderPtr = NULL;
+    output_file_recorder_->RegisterModuleFileCallback(NULL);
+    output_file_recorder_.reset();
     _outputFileRecording = false;
 
     return 0;
@@ -469,8 +431,8 @@ int OutputMixer::GetMixedAudio(int sample_rate_hz,
   // --- Record playout if enabled
   {
     rtc::CritScope cs(&_fileCritSect);
-    if (_outputFileRecording && _outputFileRecorderPtr)
-      _outputFileRecorderPtr->RecordAudioToFile(_audioFrame);
+    if (_outputFileRecording && output_file_recorder_)
+      output_file_recorder_->RecordAudioToFile(_audioFrame);
   }
 
   frame->num_channels_ = num_channels;
@@ -492,12 +454,6 @@ OutputMixer::DoOperationsOnCombinedSignal(bool feed_data_to_apm)
         _mixingFrequencyHz = _audioFrame.sample_rate_hz_;
     }
 
-    // --- Insert inband Dtmf tone
-    if (_dtmfGenerator.IsAddingTone())
-    {
-        InsertInbandDtmfTone();
-    }
-
     // Scale left and/or right channel(s) if balance is active
     if (_panLeft != 1.0 || _panRight != 1.0)
     {
@@ -516,16 +472,9 @@ OutputMixer::DoOperationsOnCombinedSignal(bool feed_data_to_apm)
 
     // --- Far-end Voice Quality Enhancement (AudioProcessing Module)
     if (feed_data_to_apm) {
-      // Convert from mixing to AudioProcessing sample rate, similarly to how it
-      // is done on the send side. Downmix to mono.
-      AudioFrame frame;
-      frame.num_channels_ = 1;
-      frame.sample_rate_hz_ = _audioProcessingModulePtr->input_sample_rate_hz();
-      RemixAndResample(_audioFrame, &audioproc_resampler_, &frame);
-
-      if (_audioProcessingModulePtr->AnalyzeReverseStream(&frame) != 0) {
+      if (_audioProcessingModulePtr->ProcessReverseStream(&_audioFrame) != 0) {
         WEBRTC_TRACE(kTraceWarning, kTraceVoice, VoEId(_instanceId, -1),
-                     "AudioProcessingModule::AnalyzeReverseStream() => error");
+                     "AudioProcessingModule::ProcessReverseStream() => error");
         RTC_DCHECK(false);
       }
     }
@@ -554,54 +503,5 @@ OutputMixer::DoOperationsOnCombinedSignal(bool feed_data_to_apm)
 
     return 0;
 }
-
-// ----------------------------------------------------------------------------
-//                             Private methods
-// ----------------------------------------------------------------------------
-
-int
-OutputMixer::InsertInbandDtmfTone()
-{
-    uint16_t sampleRate(0);
-    _dtmfGenerator.GetSampleRate(sampleRate);
-    if (sampleRate != _audioFrame.sample_rate_hz_)
-    {
-        // Update sample rate of Dtmf tone since the mixing frequency changed.
-        _dtmfGenerator.SetSampleRate(
-            (uint16_t)(_audioFrame.sample_rate_hz_));
-        // Reset the tone to be added taking the new sample rate into account.
-        _dtmfGenerator.ResetTone();
-    }
-
-    int16_t toneBuffer[320];
-    uint16_t toneSamples(0);
-    if (_dtmfGenerator.Get10msTone(toneBuffer, toneSamples) == -1)
-    {
-        WEBRTC_TRACE(kTraceWarning, kTraceVoice, VoEId(_instanceId, -1),
-                     "OutputMixer::InsertInbandDtmfTone() inserting Dtmf"
-                     "tone failed");
-        return -1;
-    }
-
-    // replace mixed audio with Dtmf tone
-    if (_audioFrame.num_channels_ == 1)
-    {
-        // mono
-        memcpy(_audioFrame.data_, toneBuffer, sizeof(int16_t)
-            * toneSamples);
-    } else
-    {
-        // stereo
-        for (size_t i = 0; i < _audioFrame.samples_per_channel_; i++)
-        {
-            _audioFrame.data_[2 * i] = toneBuffer[i];
-            _audioFrame.data_[2 * i + 1] = 0;
-        }
-    }
-    assert(_audioFrame.samples_per_channel_ == toneSamples);
-
-    return 0;
-}
-
 }  // namespace voe
 }  // namespace webrtc

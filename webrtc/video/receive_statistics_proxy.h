@@ -19,12 +19,11 @@
 #include "webrtc/base/ratetracker.h"
 #include "webrtc/base/thread_annotations.h"
 #include "webrtc/common_types.h"
-#include "webrtc/frame_callback.h"
+#include "webrtc/common_video/include/frame_callback.h"
 #include "webrtc/modules/video_coding/include/video_coding_defines.h"
 #include "webrtc/video/report_block_stats.h"
-#include "webrtc/video/vie_channel.h"
+#include "webrtc/video/video_stream_decoder.h"
 #include "webrtc/video_receive_stream.h"
-#include "webrtc/video_renderer.h"
 
 namespace webrtc {
 
@@ -38,13 +37,14 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
                                public RtcpPacketTypeCounterObserver,
                                public StreamDataCountersCallback {
  public:
-  ReceiveStatisticsProxy(const VideoReceiveStream::Config& config,
+  ReceiveStatisticsProxy(const VideoReceiveStream::Config* config,
                          Clock* clock);
   virtual ~ReceiveStatisticsProxy();
 
   VideoReceiveStream::Stats GetStats() const;
 
   void OnDecodedFrame();
+  void OnSyncOffsetUpdated(int64_t sync_offset_ms);
   void OnRenderedFrame(int width, int height);
   void OnIncomingPayloadType(int payload_type);
   void OnDecoderImplementationName(const char* implementation_name);
@@ -99,7 +99,15 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
   void UpdateHistograms() EXCLUSIVE_LOCKS_REQUIRED(crit_);
 
   Clock* const clock_;
-  const VideoReceiveStream::Config config_;
+  // Ownership of this object lies with the owner of the ReceiveStatisticsProxy
+  // instance.  Lifetime is guaranteed to outlive |this|.
+  // TODO(tommi): In practice the config_ reference is only used for accessing
+  // config_.rtp.fec.ulpfec_payload_type.  Instead of holding a pointer back,
+  // we could just store the value of ulpfec_payload_type and change the
+  // ReceiveStatisticsProxy() ctor to accept a const& of Config (since we'll
+  // then no longer store a pointer to the object).
+  const VideoReceiveStream::Config& config_;
+  const int64_t start_ms_;
 
   rtc::CriticalSection crit_;
   VideoReceiveStream::Stats stats_ GUARDED_BY(crit_);
@@ -109,7 +117,11 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
   rtc::RateTracker render_pixel_tracker_ GUARDED_BY(crit_);
   SampleCounter render_width_counter_ GUARDED_BY(crit_);
   SampleCounter render_height_counter_ GUARDED_BY(crit_);
+  SampleCounter sync_offset_counter_ GUARDED_BY(crit_);
   SampleCounter decode_time_counter_ GUARDED_BY(crit_);
+  SampleCounter jitter_buffer_delay_counter_ GUARDED_BY(crit_);
+  SampleCounter target_delay_counter_ GUARDED_BY(crit_);
+  SampleCounter current_delay_counter_ GUARDED_BY(crit_);
   SampleCounter delay_counter_ GUARDED_BY(crit_);
   ReportBlockStats report_block_stats_ GUARDED_BY(crit_);
   QpCounters qp_counters_;  // Only accessed on the decoding thread.

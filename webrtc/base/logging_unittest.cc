@@ -128,7 +128,14 @@ TEST(LogTest, WallClockStartTime) {
 }
 
 // Test the time required to write 1000 80-character logs to an unbuffered file.
-TEST(LogTest, Perf) {
+#if defined (WEBRTC_ANDROID)
+// Fails on Android: https://bugs.chromium.org/p/webrtc/issues/detail?id=4364.
+#define MAYBE_Perf DISABLED_Perf
+#else
+#define MAYBE_Perf Perf
+#endif
+
+TEST(LogTest, MAYBE_Perf) {
   Pathname path;
   EXPECT_TRUE(Filesystem::GetTemporaryFolder(path, true, NULL));
   path.SetPathname(Filesystem::TempFilename(path, "ut"));
@@ -138,18 +145,18 @@ TEST(LogTest, Perf) {
   stream.DisableBuffering();
   LogMessage::AddLogToStream(&stream, LS_SENSITIVE);
 
-  uint32_t start = Time(), finish;
+  int64_t start = TimeMillis(), finish;
   std::string message('X', 80);
   for (int i = 0; i < 1000; ++i) {
     LOG(LS_SENSITIVE) << message;
   }
-  finish = Time();
+  finish = TimeMillis();
 
   LogMessage::RemoveLogToStream(&stream);
   stream.Close();
   Filesystem::DeleteFile(path);
 
-  LOG(LS_INFO) << "Average log time: " << TimeDiff(finish, start) << " us";
+  LOG(LS_INFO) << "Average log time: " << TimeDiff(finish, start) << " ms";
 }
 
 }  // namespace rtc

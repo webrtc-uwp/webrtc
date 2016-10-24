@@ -11,6 +11,7 @@
 #ifndef WEBRTC_API_PEERCONNECTIONFACTORYPROXY_H_
 #define WEBRTC_API_PEERCONNECTIONFACTORYPROXY_H_
 
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -20,28 +21,32 @@
 
 namespace webrtc {
 
-BEGIN_PROXY_MAP(PeerConnectionFactory)
+BEGIN_SIGNALING_PROXY_MAP(PeerConnectionFactory)
   PROXY_METHOD1(void, SetOptions, const Options&)
-  // Can't use PROXY_METHOD5 because scoped_ptr must be moved.
-  // TODO(tommi,hbos): Use of templates to support scoped_ptr?
+  // Can't use PROXY_METHOD5 because unique_ptr must be moved.
+  // TODO(tommi,hbos): Use of templates to support unique_ptr?
   rtc::scoped_refptr<PeerConnectionInterface> CreatePeerConnection(
       const PeerConnectionInterface::RTCConfiguration& a1,
       const MediaConstraintsInterface* a2,
-      rtc::scoped_ptr<cricket::PortAllocator> a3,
-      rtc::scoped_ptr<DtlsIdentityStoreInterface> a4,
+      std::unique_ptr<cricket::PortAllocator> a3,
+      std::unique_ptr<rtc::RTCCertificateGeneratorInterface> a4,
       PeerConnectionObserver* a5) override {
-    return owner_thread_->Invoke<rtc::scoped_refptr<PeerConnectionInterface>>(
-        rtc::Bind(&PeerConnectionFactoryProxy::CreatePeerConnection_ot, this,
-                  a1, a2, a3.release(), a4.release(), a5));
+    return signaling_thread_
+        ->Invoke<rtc::scoped_refptr<PeerConnectionInterface>>(
+            RTC_FROM_HERE,
+            rtc::Bind(&PeerConnectionFactoryProxy::CreatePeerConnection_ot,
+                      this, a1, a2, a3.release(), a4.release(), a5));
   }
   rtc::scoped_refptr<PeerConnectionInterface> CreatePeerConnection(
       const PeerConnectionInterface::RTCConfiguration& a1,
-      rtc::scoped_ptr<cricket::PortAllocator> a3,
-      rtc::scoped_ptr<DtlsIdentityStoreInterface> a4,
+      std::unique_ptr<cricket::PortAllocator> a3,
+      std::unique_ptr<rtc::RTCCertificateGeneratorInterface> a4,
       PeerConnectionObserver* a5) override {
-    return owner_thread_->Invoke<rtc::scoped_refptr<PeerConnectionInterface>>(
-        rtc::Bind(&PeerConnectionFactoryProxy::CreatePeerConnection_ot, this,
-                  a1, a3.release(), a4.release(), a5));
+    return signaling_thread_
+        ->Invoke<rtc::scoped_refptr<PeerConnectionInterface>>(
+            RTC_FROM_HERE,
+            rtc::Bind(&PeerConnectionFactoryProxy::CreatePeerConnection_ot,
+                      this, a1, a3.release(), a4.release(), a5));
   }
   PROXY_METHOD1(rtc::scoped_refptr<MediaStreamInterface>,
                 CreateLocalMediaStream, const std::string&)
@@ -50,19 +55,25 @@ BEGIN_PROXY_MAP(PeerConnectionFactory)
   PROXY_METHOD1(rtc::scoped_refptr<AudioSourceInterface>,
                 CreateAudioSource,
                 const cricket::AudioOptions&)
-  PROXY_METHOD2(rtc::scoped_refptr<VideoSourceInterface>,
-                CreateVideoSource, cricket::VideoCapturer*,
+  PROXY_METHOD2(rtc::scoped_refptr<VideoTrackSourceInterface>,
+                CreateVideoSource,
+                cricket::VideoCapturer*,
                 const MediaConstraintsInterface*)
-  PROXY_METHOD1(rtc::scoped_refptr<VideoSourceInterface>,
+  PROXY_METHOD1(rtc::scoped_refptr<VideoTrackSourceInterface>,
                 CreateVideoSource,
                 cricket::VideoCapturer*)
   PROXY_METHOD2(rtc::scoped_refptr<VideoTrackInterface>,
-                CreateVideoTrack, const std::string&,  VideoSourceInterface*)
+                CreateVideoTrack,
+                const std::string&,
+                VideoTrackSourceInterface*)
   PROXY_METHOD2(rtc::scoped_refptr<AudioTrackInterface>,
                 CreateAudioTrack, const std::string&,  AudioSourceInterface*)
   PROXY_METHOD2(bool, StartAecDump, rtc::PlatformFile, int64_t)
   PROXY_METHOD0(void, StopAecDump)
+  // TODO(ivoc): Remove the StartRtcEventLog and StopRtcEventLog functions as
+  // soon as they are removed from PeerConnectionFactoryInterface.
   PROXY_METHOD1(bool, StartRtcEventLog, rtc::PlatformFile)
+  PROXY_METHOD2(bool, StartRtcEventLog, rtc::PlatformFile, int64_t)
   PROXY_METHOD0(void, StopRtcEventLog)
   PROXY_METHOD0(cricket::MediaEngineInterface*, GetMediaEngine)
 
@@ -71,10 +82,10 @@ BEGIN_PROXY_MAP(PeerConnectionFactory)
       const PeerConnectionInterface::RTCConfiguration& a1,
       const MediaConstraintsInterface* a2,
       cricket::PortAllocator* a3,
-      DtlsIdentityStoreInterface* a4,
+      rtc::RTCCertificateGeneratorInterface* a4,
       PeerConnectionObserver* a5) {
-    rtc::scoped_ptr<cricket::PortAllocator> ptr_a3(a3);
-    rtc::scoped_ptr<DtlsIdentityStoreInterface> ptr_a4(a4);
+    std::unique_ptr<cricket::PortAllocator> ptr_a3(a3);
+    std::unique_ptr<rtc::RTCCertificateGeneratorInterface> ptr_a4(a4);
     return c_->CreatePeerConnection(a1, a2, std::move(ptr_a3),
                                     std::move(ptr_a4), a5);
   }
@@ -82,14 +93,14 @@ BEGIN_PROXY_MAP(PeerConnectionFactory)
   rtc::scoped_refptr<PeerConnectionInterface> CreatePeerConnection_ot(
       const PeerConnectionInterface::RTCConfiguration& a1,
       cricket::PortAllocator* a3,
-      DtlsIdentityStoreInterface* a4,
+      rtc::RTCCertificateGeneratorInterface* a4,
       PeerConnectionObserver* a5) {
-    rtc::scoped_ptr<cricket::PortAllocator> ptr_a3(a3);
-    rtc::scoped_ptr<DtlsIdentityStoreInterface> ptr_a4(a4);
+    std::unique_ptr<cricket::PortAllocator> ptr_a3(a3);
+    std::unique_ptr<rtc::RTCCertificateGeneratorInterface> ptr_a4(a4);
     return c_->CreatePeerConnection(a1, std::move(ptr_a3), std::move(ptr_a4),
                                     a5);
   }
-  END_PROXY()
+  END_SIGNALING_PROXY()
 
 }  // namespace webrtc
 

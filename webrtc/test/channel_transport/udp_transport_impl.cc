@@ -2949,6 +2949,10 @@ bool UdpTransport::IsIpAddressValid(const char* ipadr, const bool ipV6)
                 // Store index of dots and count number of dots.
                 iDotPos[nDots++] = i;
             }
+            else if (isdigit(ipadr[i]) == 0)
+            {
+                return false;
+            }
         }
 
         bool allUnder256 = false;
@@ -2969,7 +2973,7 @@ bool UdpTransport::IsIpAddressValid(const char* ipadr, const bool ipV6)
                 memset(nr,0,4);
                 strncpy(nr,&ipadr[0],iDotPos[0]);
                 int32_t num = atoi(nr);
-                if (num > 255)
+                if (num > 255 || num < 0)
                 {
                     break;
                 }
@@ -2983,7 +2987,7 @@ bool UdpTransport::IsIpAddressValid(const char* ipadr, const bool ipV6)
                 memset(nr,0,4);
                 strncpy(nr,&ipadr[iDotPos[0]+1], iDotPos[1] - iDotPos[0] - 1);
                 int32_t num = atoi(nr);
-                if (num > 255)
+                if (num > 255 || num < 0)
                     break;
             } else {
                 break;
@@ -2993,20 +2997,27 @@ bool UdpTransport::IsIpAddressValid(const char* ipadr, const bool ipV6)
             {
                 char nr[4];
                 memset(nr,0,4);
-                strncpy(nr,&ipadr[iDotPos[1]+1], iDotPos[1] - iDotPos[0] - 1);
+                strncpy(nr,&ipadr[iDotPos[1]+1], iDotPos[2] - iDotPos[1] - 1);
                 int32_t num = atoi(nr);
-                if (num > 255)
+                if (num > 255 || num < 0)
                     break;
+            } else {
+                break;
+            }
 
+            if (len - iDotPos[2] <= 4)
+            {
+                char nr[4];
                 memset(nr,0,4);
                 strncpy(nr,&ipadr[iDotPos[2]+1], len - iDotPos[2] -1);
-                num = atoi(nr);
-                if (num > 255)
+                int32_t num = atoi(nr);
+                if (num > 255 || num < 0)
                     break;
                 else
                     allUnder256 = true;
-            } else
+            } else {
                 break;
+            }
         } while(false);
 
         if (nDots != 3 || !allUnder256)

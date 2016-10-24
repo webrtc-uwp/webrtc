@@ -7,6 +7,7 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
+#include "webrtc/base/logging.h"
 #include "webrtc/base/platform_thread.h"
 #include "webrtc/modules/audio_device/dummy/file_audio_device.h"
 #include "webrtc/system_wrappers/include/sleep.h"
@@ -46,15 +47,7 @@ FileAudioDevice::FileAudioDevice(const int32_t id,
 }
 
 FileAudioDevice::~FileAudioDevice() {
-  if (_outputFile.Open()) {
-      _outputFile.Flush();
-      _outputFile.CloseFile();
-  }
   delete &_outputFile;
-  if (_inputFile.Open()) {
-      _inputFile.Flush();
-      _inputFile.CloseFile();
-  }
   delete &_inputFile;
 }
 
@@ -63,7 +56,9 @@ int32_t FileAudioDevice::ActiveAudioLayer(
   return -1;
 }
 
-int32_t FileAudioDevice::Init() { return 0; }
+AudioDeviceGeneric::InitStatus FileAudioDevice::Init() {
+  return InitStatus::OK;
+}
 
 int32_t FileAudioDevice::Terminate() { return 0; }
 
@@ -181,7 +176,7 @@ int32_t FileAudioDevice::InitRecording() {
 }
 
 bool FileAudioDevice::RecordingIsInitialized() const {
-  return true;
+  return _recordingFramesIn10MS != 0;
 }
 
 int32_t FileAudioDevice::StartPlayout() {
@@ -202,9 +197,9 @@ int32_t FileAudioDevice::StartPlayout() {
   }
 
   // PLAYOUT
-  if (!_outputFilename.empty() && _outputFile.OpenFile(
-        _outputFilename.c_str(), false, false, false) == -1) {
-    printf("Failed to open playout file %s!\n", _outputFilename.c_str());
+  if (!_outputFilename.empty() &&
+      !_outputFile.OpenFile(_outputFilename.c_str(), false)) {
+    LOG(LS_ERROR) << "Failed to open playout file: " << _outputFilename;
     _playing = false;
     delete [] _playoutBuffer;
     _playoutBuffer = NULL;
@@ -215,6 +210,9 @@ int32_t FileAudioDevice::StartPlayout() {
       PlayThreadFunc, this, "webrtc_audio_module_play_thread"));
   _ptrThreadPlay->Start();
   _ptrThreadPlay->SetPriority(rtc::kRealtimePriority);
+
+  LOG(LS_INFO) << "Started playout capture to output file: "
+               << _outputFilename;
   return 0;
 }
 
@@ -235,11 +233,11 @@ int32_t FileAudioDevice::StopPlayout() {
   _playoutFramesLeft = 0;
   delete [] _playoutBuffer;
   _playoutBuffer = NULL;
-  if (_outputFile.Open()) {
-      _outputFile.Flush();
-      _outputFile.CloseFile();
-  }
-   return 0;
+  _outputFile.CloseFile();
+
+  LOG(LS_INFO) << "Stopped playout capture to output file: "
+               << _outputFilename;
+  return 0;
 }
 
 bool FileAudioDevice::Playing() const {
@@ -257,10 +255,9 @@ int32_t FileAudioDevice::StartRecording() {
       _recordingBuffer = new int8_t[_recordingBufferSizeIn10MS];
   }
 
-  if (!_inputFilename.empty() && _inputFile.OpenFile(
-        _inputFilename.c_str(), true, true, false) == -1) {
-    printf("Failed to open audio input file %s!\n",
-           _inputFilename.c_str());
+  if (!_inputFilename.empty() &&
+      !_inputFile.OpenFile(_inputFilename.c_str(), true)) {
+    LOG(LS_ERROR) << "Failed to open audio input file: " << _inputFilename;
     _recording = false;
     delete[] _recordingBuffer;
     _recordingBuffer = NULL;
@@ -272,6 +269,9 @@ int32_t FileAudioDevice::StartRecording() {
 
   _ptrThreadRec->Start();
   _ptrThreadRec->SetPriority(rtc::kRealtimePriority);
+
+  LOG(LS_INFO) << "Started recording from input file: "
+               << _inputFilename;
 
   return 0;
 }
@@ -294,6 +294,10 @@ int32_t FileAudioDevice::StopRecording() {
       delete [] _recordingBuffer;
       _recordingBuffer = NULL;
   }
+  _inputFile.CloseFile();
+
+  LOG(LS_INFO) << "Stopped recording from input file: "
+               << _inputFilename;
   return 0;
 }
 
@@ -490,9 +494,8 @@ bool FileAudioDevice::PlayThreadProcess()
 
         _playoutFramesLeft = _ptrAudioBuffer->GetPlayoutData(_playoutBuffer);
         assert(_playoutFramesLeft == _playoutFramesIn10MS);
-        if (_outputFile.Open()) {
+        if (_outputFile.is_open()) {
           _outputFile.Write(_playoutBuffer, kPlayoutBufferSize);
-          _outputFile.Flush();
         }
         _lastCallPlayoutMillis = currentTime;
     }
@@ -518,7 +521,7 @@ bool FileAudioDevice::RecThreadProcess()
 
     if (_lastCallRecordMillis == 0 ||
         currentTime - _lastCallRecordMillis >= 10) {
-      if (_inputFile.Open()) {
+      if (_inputFile.is_open()) {
         if (_inputFile.Read(_recordingBuffer, kRecordingBufferSize) > 0) {
           _ptrAudioBuffer->SetRecordedBuffer(_recordingBuffer,
                                              _recordingFramesIn10MS);

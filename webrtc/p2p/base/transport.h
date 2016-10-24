@@ -26,8 +26,12 @@
 #define WEBRTC_P2P_BASE_TRANSPORT_H_
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
+
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/base/optional.h"
 #include "webrtc/p2p/base/candidate.h"
 #include "webrtc/p2p/base/p2pconstants.h"
 #include "webrtc/p2p/base/sessiondescription.h"
@@ -78,6 +82,16 @@ enum IceGatheringState {
   kIceGatheringComplete,
 };
 
+enum ContinualGatheringPolicy {
+  // All port allocator sessions will stop after a writable connection is found.
+  GATHER_ONCE = 0,
+  // The most recent port allocator session will keep on running.
+  GATHER_CONTINUALLY,
+  // The most recent port allocator session will keep on running, and it will
+  // try to recover connectivity if the channel becomes disconnected.
+  GATHER_CONTINUALLY_AND_RECOVER,
+};
+
 // Stats that we can return about the connections for a transport channel.
 // TODO(hta): Rename to ConnectionStats
 struct ConnectionInfo {
@@ -92,8 +106,13 @@ struct ConnectionInfo {
         sent_bytes_second(0),
         sent_discarded_packets(0),
         sent_total_packets(0),
+        sent_ping_requests_total(0),
+        sent_ping_requests_before_first_response(0),
+        sent_ping_responses(0),
         recv_total_bytes(0),
         recv_bytes_second(0),
+        recv_ping_requests(0),
+        recv_ping_responses(0),
         key(NULL) {}
 
   bool best_connection;        // Is this the best connection we have?
@@ -108,9 +127,15 @@ struct ConnectionInfo {
                                   // socket errors.
   size_t sent_total_packets;  // Number of total outgoing packets attempted for
                               // sending.
+  size_t sent_ping_requests_total;  // Number of STUN ping request sent.
+  size_t sent_ping_requests_before_first_response;  // Number of STUN ping
+  // sent before receiving the first response.
+  size_t sent_ping_responses;  // Number of STUN ping response sent.
 
   size_t recv_total_bytes;     // Total bytes received on this connection.
   size_t recv_bytes_second;    // Bps over the last measurement interval.
+  size_t recv_ping_requests;   // Number of STUN ping request received.
+  size_t recv_ping_responses;  // Number of STUN ping response received.
   Candidate local_candidate;   // The local candidate for this connection.
   Candidate remote_candidate;  // The remote candidate for this connection.
   void* key;                   // A static value that identifies this conn.
@@ -137,38 +162,77 @@ struct TransportStats {
   TransportChannelStatsList channel_stats;
 };
 
+// ICE Nomination mode.
+enum class NominationMode {
+  REGULAR,         // Nominate once per ICE restart (Not implemented yet).
+  AGGRESSIVE,      // Nominate every connection except that it will behave as if
+                   // REGULAR when the remote is an ICE-LITE endpoint.
+  SEMI_AGGRESSIVE  // Our current implementation of the nomination algorithm.
+                   // The details are described in P2PTransportChannel.
+};
+
 // Information about ICE configuration.
+// TODO(deadbeef): Use rtc::Optional to represent unset values, instead of
+// -1.
 struct IceConfig {
-  // The ICE connection receiving timeout value.
-  // TODO(honghaiz): Remove suffix _ms to be consistent.
-  int receiving_timeout_ms = -1;
+  // The ICE connection receiving timeout value in milliseconds.
+  int receiving_timeout = -1;
   // Time interval in milliseconds to ping a backup connection when the ICE
   // channel is strongly connected.
   int backup_connection_ping_interval = -1;
-  // If true, the most recent port allocator session will keep on running.
-  bool gather_continually = false;
+
+  ContinualGatheringPolicy continual_gathering_policy = GATHER_ONCE;
+
+  bool gather_continually() const {
+    return continual_gathering_policy == GATHER_CONTINUALLY ||
+           continual_gathering_policy == GATHER_CONTINUALLY_AND_RECOVER;
+  }
 
   // Whether we should prioritize Relay/Relay candidate when nothing
   // is writable yet.
   bool prioritize_most_likely_candidate_pairs = false;
 
-  // If the current best connection is both writable and receiving,
-  // then we will also try hard to make sure it is pinged at this rate
-  // (Default value is a little less than 2 * STRONG_PING_DELAY).
-  int max_strong_delay = -1;
+  // Writable connections are pinged at a slower rate once stablized.
+  int stable_writable_connection_ping_interval = -1;
+
+  // If set to true, this means the ICE transport should presume TURN-to-TURN
+  // candidate pairs will succeed, even before a binding response is received.
+  bool presume_writable_when_fully_relayed = false;
+
+  // Interval to check on all networks and to perform ICE regathering on any
+  // active network having no connection on it.
+  rtc::Optional<int> regather_on_failed_networks_interval;
+
+  // The time period in which we will not switch the selected connection
+  // when a new connection becomes receiving but the selected connection is not
+  // in case that the selected connection may become receiving soon.
+  rtc::Optional<int> receiving_switching_delay;
+
+  // TODO(honghaiz): Change the default to regular nomination.
+  // Default nomination mode if the remote does not support renomination.
+  NominationMode default_nomination_mode = NominationMode::SEMI_AGGRESSIVE;
 
   IceConfig() {}
-  IceConfig(int receiving_timeout,
+  IceConfig(int receiving_timeout_ms,
             int backup_connection_ping_interval,
-            bool gather_continually,
+            ContinualGatheringPolicy gathering_policy,
             bool prioritize_most_likely_candidate_pairs,
-            int max_strong_delay)
-      : receiving_timeout_ms(receiving_timeout),
+            int stable_writable_connection_ping_interval_ms,
+            bool presume_writable_when_fully_relayed,
+            int regather_on_failed_networks_interval_ms,
+            int receiving_switching_delay_ms)
+      : receiving_timeout(receiving_timeout_ms),
         backup_connection_ping_interval(backup_connection_ping_interval),
-        gather_continually(gather_continually),
+        continual_gathering_policy(gathering_policy),
         prioritize_most_likely_candidate_pairs(
             prioritize_most_likely_candidate_pairs),
-        max_strong_delay(max_strong_delay) {}
+        stable_writable_connection_ping_interval(
+            stable_writable_connection_ping_interval_ms),
+        presume_writable_when_fully_relayed(
+            presume_writable_when_fully_relayed),
+        regather_on_failed_networks_interval(
+            regather_on_failed_networks_interval_ms),
+        receiving_switching_delay(receiving_switching_delay_ms) {}
 };
 
 bool BadTransportDescription(const std::string& desc, std::string* err_desc);
@@ -193,9 +257,6 @@ class Transport : public sigslot::has_slots<> {
     return local_description_set_ && remote_description_set_;
   }
 
-  // Returns whether the client has requested the channels to connect.
-  bool connect_requested() const { return connect_requested_; }
-
   void SetIceRole(IceRole role);
   IceRole ice_role() const { return ice_role_; }
 
@@ -215,7 +276,7 @@ class Transport : public sigslot::has_slots<> {
   }
 
   // Get a copy of the remote certificate in use by the specified channel.
-  bool GetRemoteSSLCertificate(rtc::SSLCertificate** cert);
+  std::unique_ptr<rtc::SSLCertificate> GetRemoteSSLCertificate();
 
   // Create, destroy, and lookup the channels of this type by their components.
   TransportChannelImpl* CreateChannel(int component);
@@ -239,9 +300,6 @@ class Transport : public sigslot::has_slots<> {
                                      ContentAction action,
                                      std::string* error_desc);
 
-  // Tells all current and future channels to start connecting.
-  void ConnectChannels();
-
   // Tells channels to start gathering candidates if necessary.
   // Should be called after ConnectChannels() has been called at least once,
   // which will happen in SetLocalTransportDescription.
@@ -259,11 +317,8 @@ class Transport : public sigslot::has_slots<> {
   // Called when one or more candidates are ready from the remote peer.
   bool AddRemoteCandidates(const std::vector<Candidate>& candidates,
                            std::string* error);
-
-  // If candidate is not acceptable, returns false and sets error.
-  // Call this before calling OnRemoteCandidates.
-  virtual bool VerifyCandidate(const Candidate& candidate,
-                               std::string* error);
+  bool RemoveRemoteCandidates(const std::vector<Candidate>& candidates,
+                              std::string* error);
 
   virtual bool GetSslRole(rtc::SSLRole* ssl_role) const { return false; }
 
@@ -272,23 +327,25 @@ class Transport : public sigslot::has_slots<> {
     return false;
   }
 
- protected:
-  // These are called by Create/DestroyChannel above in order to create or
-  // destroy the appropriate type of channel.
-  virtual TransportChannelImpl* CreateTransportChannel(int component) = 0;
-  virtual void DestroyTransportChannel(TransportChannelImpl* channel) = 0;
-
   // The current local transport description, for use by derived classes
-  // when performing transport description negotiation.
+  // when performing transport description negotiation, and possibly used
+  // by the transport controller.
   const TransportDescription* local_description() const {
     return local_description_.get();
   }
 
   // The current remote transport description, for use by derived classes
-  // when performing transport description negotiation.
+  // when performing transport description negotiation, and possibly used
+  // by the transport controller.
   const TransportDescription* remote_description() const {
     return remote_description_.get();
   }
+
+ protected:
+  // These are called by Create/DestroyChannel above in order to create or
+  // destroy the appropriate type of channel.
+  virtual TransportChannelImpl* CreateTransportChannel(int component) = 0;
+  virtual void DestroyTransportChannel(TransportChannelImpl* channel) = 0;
 
   // Pushes down the transport parameters from the local description, such
   // as the ICE ufrag and pwd.
@@ -316,7 +373,26 @@ class Transport : public sigslot::has_slots<> {
       TransportChannelImpl* channel,
       std::string* error_desc);
 
+  // Returns false if the certificate's identity does not match the fingerprint,
+  // or either is NULL.
+  virtual bool VerifyCertificateFingerprint(
+      const rtc::RTCCertificate* certificate,
+      const rtc::SSLFingerprint* fingerprint,
+      std::string* error_desc) const;
+
+  // Negotiates the SSL role based off the offer and answer as specified by
+  // RFC 4145, section-4.1. Returns false if the SSL role cannot be determined
+  // from the local description and remote description.
+  virtual bool NegotiateRole(ContentAction local_role,
+                             rtc::SSLRole* ssl_role,
+                             std::string* error_desc) const;
+
  private:
+  // If a candidate is not acceptable, returns false and sets error.
+  // Call this before calling OnRemoteCandidates.
+  bool VerifyCandidate(const Candidate& candidate, std::string* error);
+  bool VerifyCandidates(const Candidates& candidates, std::string* error);
+
   // Candidate component => TransportChannelImpl*
   typedef std::map<int, TransportChannelImpl*> ChannelMap;
 
@@ -327,13 +403,12 @@ class Transport : public sigslot::has_slots<> {
   const std::string name_;
   PortAllocator* const allocator_;
   bool channels_destroyed_ = false;
-  bool connect_requested_ = false;
   IceRole ice_role_ = ICEROLE_UNKNOWN;
   uint64_t tiebreaker_ = 0;
   IceMode remote_ice_mode_ = ICEMODE_FULL;
   IceConfig ice_config_;
-  rtc::scoped_ptr<TransportDescription> local_description_;
-  rtc::scoped_ptr<TransportDescription> remote_description_;
+  std::unique_ptr<TransportDescription> local_description_;
+  std::unique_ptr<TransportDescription> remote_description_;
   bool local_description_set_ = false;
   bool remote_description_set_ = false;
 

@@ -10,17 +10,16 @@
 
 #import "ARDAppClient.h"
 
+#import "WebRTC/RTCPeerConnection.h"
+
 #import "ARDRoomServerClient.h"
 #import "ARDSignalingChannel.h"
 #import "ARDTURNClient.h"
-#import "RTCPeerConnection.h"
-#import "RTCPeerConnectionDelegate.h"
-#import "RTCPeerConnectionFactory.h"
-#import "RTCSessionDescriptionDelegate.h"
-#import "RTCStatsDelegate.h"
+
+@class RTCPeerConnectionFactory;
 
 @interface ARDAppClient () <ARDSignalingChannelDelegate,
-  RTCPeerConnectionDelegate, RTCSessionDescriptionDelegate, RTCStatsDelegate>
+  RTCPeerConnectionDelegate>
 
 // All properties should only be mutated from the main queue.
 @property(nonatomic, strong) id<ARDRoomServerClient> roomServerClient;
@@ -44,6 +43,8 @@
 @property(nonatomic, strong) NSURL *webSocketRestURL;
 @property(nonatomic, readonly) BOOL isLoopback;
 @property(nonatomic, readonly) BOOL isAudioOnly;
+@property(nonatomic, readonly) BOOL shouldMakeAecDump;
+@property(nonatomic, readonly) BOOL shouldUseLevelControl;
 
 @property(nonatomic, strong)
     RTCMediaConstraints *defaultPeerConnectionConstraints;

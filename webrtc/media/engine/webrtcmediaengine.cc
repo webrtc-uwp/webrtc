@@ -9,6 +9,7 @@
  */
 
 #include "webrtc/media/engine/webrtcmediaengine.h"
+#include "webrtc/modules/audio_coding/codecs/builtin_audio_decoder_factory.h"
 
 #include <algorithm>
 
@@ -29,11 +30,19 @@ class WebRtcMediaEngine2
 #endif
  public:
   WebRtcMediaEngine2(webrtc::AudioDeviceModule* adm,
-                     WebRtcVideoEncoderFactory* encoder_factory,
-                     WebRtcVideoDecoderFactory* decoder_factory) {
-    voice_.SetAudioDeviceModule(adm);
-    video_.SetExternalDecoderFactory(decoder_factory);
-    video_.SetExternalEncoderFactory(encoder_factory);
+                     const rtc::scoped_refptr<webrtc::AudioDecoderFactory>&
+                         audio_decoder_factory,
+                     WebRtcVideoEncoderFactory* video_encoder_factory,
+                     WebRtcVideoDecoderFactory* video_decoder_factory)
+#ifdef HAVE_WEBRTC_VIDEO
+      : CompositeMediaEngine<WebRtcVoiceEngine, WebRtcVideoEngine2>(
+            adm, audio_decoder_factory){
+#else
+      : CompositeMediaEngine<WebRtcVoiceEngine, NullWebRtcVideoEngine>(
+            adm, audio_decoder_factory) {
+#endif
+    video_.SetExternalDecoderFactory(video_decoder_factory);
+    video_.SetExternalEncoderFactory(video_encoder_factory);
   }
 };
 
@@ -41,10 +50,12 @@ class WebRtcMediaEngine2
 
 cricket::MediaEngineInterface* CreateWebRtcMediaEngine(
     webrtc::AudioDeviceModule* adm,
-    cricket::WebRtcVideoEncoderFactory* encoder_factory,
-    cricket::WebRtcVideoDecoderFactory* decoder_factory) {
-  return new cricket::WebRtcMediaEngine2(adm, encoder_factory,
-                                         decoder_factory);
+    const rtc::scoped_refptr<webrtc::AudioDecoderFactory>&
+        audio_decoder_factory,
+    cricket::WebRtcVideoEncoderFactory* video_encoder_factory,
+    cricket::WebRtcVideoDecoderFactory* video_decoder_factory) {
+  return new cricket::WebRtcMediaEngine2(
+      adm, audio_decoder_factory, video_encoder_factory, video_decoder_factory);
 }
 
 void DestroyWebRtcMediaEngine(cricket::MediaEngineInterface* media_engine) {
@@ -53,13 +64,28 @@ void DestroyWebRtcMediaEngine(cricket::MediaEngineInterface* media_engine) {
 
 namespace cricket {
 
+// TODO(ossu): Backwards-compatible interface. Will be deprecated once the
+// audio decoder factory is fully plumbed and used throughout WebRTC.
+// See: crbug.com/webrtc/6000
+MediaEngineInterface* WebRtcMediaEngineFactory::Create(
+    webrtc::AudioDeviceModule* adm,
+    WebRtcVideoEncoderFactory* video_encoder_factory,
+    WebRtcVideoDecoderFactory* video_decoder_factory) {
+  return CreateWebRtcMediaEngine(adm,
+                                 webrtc::CreateBuiltinAudioDecoderFactory(),
+                                 video_encoder_factory, video_decoder_factory);
+}
+
 // Used by PeerConnectionFactory to create a media engine passed into
 // ChannelManager.
 MediaEngineInterface* WebRtcMediaEngineFactory::Create(
     webrtc::AudioDeviceModule* adm,
-    WebRtcVideoEncoderFactory* encoder_factory,
-    WebRtcVideoDecoderFactory* decoder_factory) {
-  return CreateWebRtcMediaEngine(adm, encoder_factory, decoder_factory);
+    const rtc::scoped_refptr<webrtc::AudioDecoderFactory>&
+        audio_decoder_factory,
+    WebRtcVideoEncoderFactory* video_encoder_factory,
+    WebRtcVideoDecoderFactory* video_decoder_factory) {
+  return CreateWebRtcMediaEngine(adm, audio_decoder_factory,
+                                 video_encoder_factory, video_decoder_factory);
 }
 
 namespace {
@@ -69,11 +95,10 @@ void DiscardRedundantExtensions(
     rtc::ArrayView<const char*> extensions_decreasing_prio) {
   RTC_DCHECK(extensions);
   bool found = false;
-  for (const char* name : extensions_decreasing_prio) {
-    auto it = std::find_if(extensions->begin(), extensions->end(),
-        [name](const webrtc::RtpExtension& rhs) {
-          return rhs.name == name;
-        });
+  for (const char* uri : extensions_decreasing_prio) {
+    auto it = std::find_if(
+        extensions->begin(), extensions->end(),
+        [uri](const webrtc::RtpExtension& rhs) { return rhs.uri == uri; });
     if (it != extensions->end()) {
       if (found) {
         extensions->erase(it);
@@ -84,7 +109,8 @@ void DiscardRedundantExtensions(
 }
 }  // namespace
 
-bool ValidateRtpExtensions(const std::vector<RtpHeaderExtension>& extensions) {
+bool ValidateRtpExtensions(
+    const std::vector<webrtc::RtpExtension>& extensions) {
   bool id_used[14] = {false};
   for (const auto& extension : extensions) {
     if (extension.id <= 0 || extension.id >= 15) {
@@ -101,7 +127,7 @@ bool ValidateRtpExtensions(const std::vector<RtpHeaderExtension>& extensions) {
 }
 
 std::vector<webrtc::RtpExtension> FilterRtpExtensions(
-    const std::vector<RtpHeaderExtension>& extensions,
+    const std::vector<webrtc::RtpExtension>& extensions,
     bool (*supported)(const std::string&),
     bool filter_redundant_extensions) {
   RTC_DCHECK(ValidateRtpExtensions(extensions));
@@ -111,7 +137,7 @@ std::vector<webrtc::RtpExtension> FilterRtpExtensions(
   // Ignore any extensions that we don't recognize.
   for (const auto& extension : extensions) {
     if (supported(extension.uri)) {
-      result.push_back({extension.uri, extension.id});
+      result.push_back(extension);
     } else {
       LOG(LS_WARNING) << "Unsupported RTP extension: " << extension.ToString();
     }
@@ -120,24 +146,23 @@ std::vector<webrtc::RtpExtension> FilterRtpExtensions(
   // Sort by name, ascending, so that we don't reset extensions if they were
   // specified in a different order (also allows us to use std::unique below).
   std::sort(result.begin(), result.end(),
-      [](const webrtc::RtpExtension& rhs, const webrtc::RtpExtension& lhs) {
-        return rhs.name < lhs.name;
-      });
+            [](const webrtc::RtpExtension& rhs,
+               const webrtc::RtpExtension& lhs) { return rhs.uri < lhs.uri; });
 
   // Remove unnecessary extensions (used on send side).
   if (filter_redundant_extensions) {
-    auto it = std::unique(result.begin(), result.end(),
+    auto it = std::unique(
+        result.begin(), result.end(),
         [](const webrtc::RtpExtension& rhs, const webrtc::RtpExtension& lhs) {
-          return rhs.name == lhs.name;
+          return rhs.uri == lhs.uri;
         });
     result.erase(it, result.end());
 
     // Keep just the highest priority extension of any in the following list.
     static const char* kBweExtensionPriorities[] = {
-      kRtpTransportSequenceNumberHeaderExtension,
-      kRtpAbsoluteSenderTimeHeaderExtension,
-      kRtpTimestampOffsetHeaderExtension
-    };
+        webrtc::RtpExtension::kTransportSequenceNumberUri,
+        webrtc::RtpExtension::kAbsSendTimeUri,
+        webrtc::RtpExtension::kTimestampOffsetUri};
     DiscardRedundantExtensions(&result, kBweExtensionPriorities);
   }
 

@@ -41,12 +41,14 @@ int MinBitrateKbps() {
   return static_cast<int>(FLAGS_min_bitrate);
 }
 
-DEFINE_int32(start_bitrate, 200, "Call start bitrate in kbps.");
+DEFINE_int32(start_bitrate,
+             Call::Config::kDefaultStartBitrateBps / 1000,
+             "Call start bitrate in kbps.");
 int StartBitrateKbps() {
   return static_cast<int>(FLAGS_start_bitrate);
 }
 
-DEFINE_int32(target_bitrate, 2000, "Stream target bitrate in kbps.");
+DEFINE_int32(target_bitrate, 200, "Stream target bitrate in kbps.");
 int TargetBitrateKbps() {
   return static_cast<int>(FLAGS_target_bitrate);
 }
@@ -221,19 +223,21 @@ void Loopback() {
   call_bitrate_config.start_bitrate_bps = flags::StartBitrateKbps() * 1000;
   call_bitrate_config.max_bitrate_bps = flags::MaxBitrateKbps() * 1000;
 
-  VideoQualityTest::Params params{
-      {flags::Width(), flags::Height(), flags::Fps(),
-       flags::MinBitrateKbps() * 1000, flags::TargetBitrateKbps() * 1000,
-       flags::MaxBitrateKbps() * 1000, flags::Codec(),
-       flags::NumTemporalLayers(), flags::SelectedTL(),
-       flags::MinTransmitBitrateKbps() * 1000, call_bitrate_config,
-       flags::FLAGS_send_side_bwe},
-      {},  // Video specific.
-      {true, flags::SlideChangeInterval(), flags::ScrollDuration()},
-      {"screenshare", 0.0, 0.0, flags::DurationSecs(), flags::OutputFilename(),
-       flags::GraphTitle()},
-      pipe_config,
-      flags::FLAGS_logs};
+  VideoQualityTest::Params params;
+  params.common = {flags::Width(), flags::Height(), flags::Fps(),
+      flags::MinBitrateKbps() * 1000, flags::TargetBitrateKbps() * 1000,
+      flags::MaxBitrateKbps() * 1000, false, flags::Codec(),
+      flags::NumTemporalLayers(), flags::SelectedTL(),
+      flags::MinTransmitBitrateKbps() * 1000, flags::FLAGS_send_side_bwe,
+      false, call_bitrate_config};
+  params.screenshare = {true, flags::SlideChangeInterval(),
+      flags::ScrollDuration()};
+  params.analyzer = {"screenshare", 0.0, 0.0, flags::DurationSecs(),
+      flags::OutputFilename(), flags::GraphTitle()};
+  params.pipe = pipe_config;
+  params.logs = flags::FLAGS_logs;
+  params.audio = false;
+  params.audio_video_sync = false;
 
   std::vector<std::string> stream_descriptors;
   stream_descriptors.push_back(flags::Stream0());
@@ -249,7 +253,7 @@ void Loopback() {
   if (flags::DurationSecs()) {
     test.RunWithAnalyzer(params);
   } else {
-    test.RunWithVideoRenderer(params);
+    test.RunWithRenderers(params);
   }
 }
 }  // namespace webrtc

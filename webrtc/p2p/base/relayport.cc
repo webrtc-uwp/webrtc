@@ -16,7 +16,7 @@
 
 namespace cricket {
 
-static const uint32_t kMessageConnectTimeout = 1;
+static const int kMessageConnectTimeout = 1;
 static const int kKeepAliveDelay           = 10 * 60 * 1000;
 static const int kRetryTimeout             = 50 * 1000;  // ICE says 50 secs
 // How long to wait for a socket to connect to remote host in milliseconds
@@ -175,7 +175,7 @@ class AllocateRequest : public StunRequest {
  private:
   RelayEntry* entry_;
   RelayConnection* connection_;
-  uint32_t start_time_;
+  int64_t start_time_;
 };
 
 RelayPort::RelayPort(rtc::Thread* thread,
@@ -302,7 +302,7 @@ Connection* RelayPort::CreateConnection(const Candidate& address,
   }
 
   Connection * conn = new ProxyConnection(this, index, address);
-  AddConnection(conn);
+  AddOrReplaceConnection(conn);
   return conn;
 }
 
@@ -344,7 +344,7 @@ int RelayPort::SendTo(const void* data, size_t size,
     ASSERT(!entries_.empty());
     entry = entries_[0];
     if (!entry->connected()) {
-      error_ = EWOULDBLOCK;
+      error_ = ENOTCONN;
       return SOCKET_ERROR;
     }
   }
@@ -506,7 +506,7 @@ void RelayEntry::Connect() {
 
   // If we failed to get a socket, move on to the next protocol.
   if (!socket) {
-    port()->thread()->Post(this, kMessageConnectTimeout);
+    port()->thread()->Post(RTC_FROM_HERE, this, kMessageConnectTimeout);
     return;
   }
 
@@ -525,7 +525,7 @@ void RelayEntry::Connect() {
   if ((ra->proto == PROTO_TCP) || (ra->proto == PROTO_SSLTCP)) {
     socket->SignalClose.connect(this, &RelayEntry::OnSocketClose);
     socket->SignalConnect.connect(this, &RelayEntry::OnSocketConnect);
-    port()->thread()->PostDelayed(kSoftConnectTimeoutMs, this,
+    port()->thread()->PostDelayed(RTC_FROM_HERE, kSoftConnectTimeoutMs, this,
                                   kMessageConnectTimeout);
   } else {
     current_connection_->SendAllocateRequest(this, 0);
@@ -607,7 +607,7 @@ int RelayEntry::SendTo(const void* data, size_t size,
 
   // TODO: compute the HMAC.
 
-  rtc::ByteBuffer buf;
+  rtc::ByteBufferWriter buf;
   request.Write(&buf);
 
   return SendPacket(buf.Data(), buf.Length(), options);
@@ -703,7 +703,7 @@ void RelayEntry::OnReadPacket(
     return;
   }
 
-  rtc::ByteBuffer buf(data, size);
+  rtc::ByteBufferReader buf(data, size);
   RelayMessage msg;
   if (!msg.Read(&buf)) {
     LOG(INFO) << "Incoming packet was not STUN";
@@ -779,7 +779,7 @@ AllocateRequest::AllocateRequest(RelayEntry* entry,
     : StunRequest(new RelayMessage()),
       entry_(entry),
       connection_(connection) {
-  start_time_ = rtc::Time();
+  start_time_ = rtc::TimeMillis();
 }
 
 void AllocateRequest::Prepare(StunMessage* request) {
@@ -834,7 +834,7 @@ void AllocateRequest::OnErrorResponse(StunMessage* response) {
               << " reason='" << attr->reason() << "'";
   }
 
-  if (rtc::TimeSince(start_time_) <= kRetryTimeout)
+  if (rtc::TimeMillis() - start_time_ <= kRetryTimeout)
     entry_->ScheduleKeepAlive();
 }
 

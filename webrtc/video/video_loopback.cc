@@ -56,6 +56,10 @@ int MaxBitrateKbps() {
   return static_cast<int>(FLAGS_max_bitrate);
 }
 
+DEFINE_bool(suspend_below_min_bitrate,
+            false,
+            "Suspends video below the configured min bitrate.");
+
 DEFINE_int32(num_temporal_layers,
              1,
              "Number of temporal layers. Set to 1-4 to override.");
@@ -99,6 +103,13 @@ std::string GraphTitle() {
 DEFINE_int32(loss_percent, 0, "Percentage of packets randomly lost.");
 int LossPercent() {
   return static_cast<int>(FLAGS_loss_percent);
+}
+
+DEFINE_int32(avg_burst_loss_length,
+             -1,
+             "Average burst length of lost packets.");
+int AvgBurstLossLength() {
+  return static_cast<int>(FLAGS_avg_burst_loss_length);
 }
 
 DEFINE_int32(link_capacity,
@@ -178,6 +189,13 @@ DEFINE_bool(send_side_bwe, true, "Use send-side bandwidth estimation");
 
 DEFINE_bool(allow_reordering, false, "Allow packet reordering to occur");
 
+DEFINE_bool(use_fec, false, "Use forward error correction.");
+
+DEFINE_bool(audio, false, "Add audio stream");
+
+DEFINE_bool(audio_video_sync, false, "Sync audio and video stream (no effect if"
+    " audio is false)");
+
 DEFINE_string(
     force_fieldtrials,
     "",
@@ -199,6 +217,7 @@ std::string Clip() {
 void Loopback() {
   FakeNetworkPipe::Config pipe_config;
   pipe_config.loss_percent = flags::LossPercent();
+  pipe_config.avg_burst_loss_length = flags::AvgBurstLossLength();
   pipe_config.link_capacity_kbps = flags::LinkCapacityKbps();
   pipe_config.queue_length_packets = flags::QueueSize();
   pipe_config.queue_delay_ms = flags::AvgPropagationDelayMs();
@@ -210,19 +229,20 @@ void Loopback() {
   call_bitrate_config.start_bitrate_bps = flags::StartBitrateKbps() * 1000;
   call_bitrate_config.max_bitrate_bps = flags::MaxBitrateKbps() * 1000;
 
-  VideoQualityTest::Params params{
-      {flags::Width(), flags::Height(), flags::Fps(),
-       flags::MinBitrateKbps() * 1000, flags::TargetBitrateKbps() * 1000,
-       flags::MaxBitrateKbps() * 1000, flags::Codec(),
-       flags::NumTemporalLayers(), flags::SelectedTL(),
-       0,  // No min transmit bitrate.
-       call_bitrate_config, flags::FLAGS_send_side_bwe},
-      {flags::Clip()},
-      {},  // Screenshare specific.
-      {"video", 0.0, 0.0, flags::DurationSecs(), flags::OutputFilename(),
-       flags::GraphTitle()},
-      pipe_config,
-      flags::FLAGS_logs};
+  VideoQualityTest::Params params;
+  params.common = {flags::Width(), flags::Height(), flags::Fps(),
+      flags::MinBitrateKbps() * 1000, flags::TargetBitrateKbps() * 1000,
+      flags::MaxBitrateKbps() * 1000, flags::FLAGS_suspend_below_min_bitrate,
+      flags::Codec(), flags::NumTemporalLayers(), flags::SelectedTL(),
+      0,  // No min transmit bitrate.
+      flags::FLAGS_send_side_bwe, flags::FLAGS_use_fec, call_bitrate_config};
+  params.video = {flags::Clip()};
+  params.analyzer = {"video", 0.0, 0.0, flags::DurationSecs(),
+      flags::OutputFilename(), flags::GraphTitle()};
+  params.pipe = pipe_config;
+  params.logs = flags::FLAGS_logs;
+  params.audio = flags::FLAGS_audio,
+  params.audio_video_sync = flags::FLAGS_audio_video_sync;
 
   std::vector<std::string> stream_descriptors;
   stream_descriptors.push_back(flags::Stream0());
@@ -238,7 +258,7 @@ void Loopback() {
   if (flags::DurationSecs()) {
     test.RunWithAnalyzer(params);
   } else {
-    test.RunWithVideoRenderer(params);
+    test.RunWithRenderers(params);
   }
 }
 }  // namespace webrtc

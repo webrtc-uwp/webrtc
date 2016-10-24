@@ -12,27 +12,30 @@
 #define WEBRTC_API_VIDEOSOURCEPROXY_H_
 
 #include "webrtc/api/proxy.h"
-#include "webrtc/api/videosourceinterface.h"
+#include "webrtc/api/mediastreaminterface.h"
 
 namespace webrtc {
 
-// VideoSourceProxy makes sure the real VideoSourceInterface implementation is
+// VideoTrackSourceInterface makes sure the real VideoTrackSourceInterface
+// implementation is
 // destroyed on the signaling thread and marshals all method calls to the
 // signaling thread.
-BEGIN_PROXY_MAP(VideoSource)
+BEGIN_PROXY_MAP(VideoTrackSource)
   PROXY_CONSTMETHOD0(SourceState, state)
   PROXY_CONSTMETHOD0(bool, remote)
-  PROXY_METHOD0(cricket::VideoCapturer*, GetVideoCapturer)
-  PROXY_METHOD0(void, Stop)
-  PROXY_METHOD0(void, Restart)
+  PROXY_CONSTMETHOD0(bool, is_screencast)
+  PROXY_CONSTMETHOD0(rtc::Optional<bool>, needs_denoising)
+  PROXY_METHOD1(bool, GetStats, Stats*)
   PROXY_METHOD0(bool, Suspend)
   PROXY_METHOD0(bool, Resume)
   PROXY_METHOD0(bool, IsSuspended)
-  PROXY_METHOD2(void, AddOrUpdateSink,
-                rtc::VideoSinkInterface<cricket::VideoFrame>*,
-                const rtc::VideoSinkWants&)
-  PROXY_METHOD1(void, RemoveSink, rtc::VideoSinkInterface<cricket::VideoFrame>*)
-  PROXY_CONSTMETHOD0(const cricket::VideoOptions*, options)
+  PROXY_WORKER_METHOD2(void,
+                       AddOrUpdateSink,
+                       rtc::VideoSinkInterface<cricket::VideoFrame>*,
+                       const rtc::VideoSinkWants&)
+  PROXY_WORKER_METHOD1(void,
+                       RemoveSink,
+                       rtc::VideoSinkInterface<cricket::VideoFrame>*)
   PROXY_METHOD1(void, SetIsH264Source, bool)
   PROXY_METHOD0(bool, IsH264Source)
   PROXY_METHOD1(void, RegisterObserver, ObserverInterface*)

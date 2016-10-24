@@ -17,6 +17,7 @@
 #include <numeric>
 
 #include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
 #include "webrtc/common_audio/include/audio_util.h"
 #include "webrtc/common_audio/window_generator.h"
 
@@ -29,14 +30,18 @@ const int kWindowSizeMs = 16;
 const int kChunkSizeMs = 10;  // Size provided by APM.
 const float kClipFreqKhz = 0.2f;
 const float kKbdAlpha = 1.5f;
-const float kLambdaBot = -1.0f;      // Extreme values in bisection
+const float kLambdaBot = -1.f;      // Extreme values in bisection
 const float kLambdaTop = -1e-5f;      // search for lamda.
-const float kVoiceProbabilityThreshold = 0.02f;
+const float kVoiceProbabilityThreshold = 0.5f;
 // Number of chunks after voice activity which is still considered speech.
-const size_t kSpeechOffsetDelay = 80;
-const float kDecayRate = 0.98f;              // Power estimation decay rate.
-const float kMaxRelativeGainChange = 0.04f;  // Maximum relative change in gain.
+const size_t kSpeechOffsetDelay = 10;
+const float kDecayRate = 0.995f;              // Power estimation decay rate.
+const float kMaxRelativeGainChange = 0.005f;
 const float kRho = 0.0004f;  // Default production and interpretation SNR.
+const float kPowerNormalizationFactor = 1.f / (1 << 30);
+const float kMaxActiveSNR = 128.f;  // 21dB
+const float kMinInactiveSNR = 32.f;  // 15dB
+const size_t kGainUpdatePeriod = 10u;
 
 // Returns dot product of vectors |a| and |b| with size |length|.
 float DotProduct(const float* a, const float* b, size_t length) {
@@ -54,32 +59,43 @@ void MapToErbBands(const float* pow,
                    float* result) {
   for (size_t i = 0; i < filter_bank.size(); ++i) {
     RTC_DCHECK_GT(filter_bank[i].size(), 0u);
-    result[i] = DotProduct(filter_bank[i].data(), pow, filter_bank[i].size());
+    result[i] = kPowerNormalizationFactor *
+                DotProduct(filter_bank[i].data(), pow, filter_bank[i].size());
   }
 }
 
 }  // namespace
 
 IntelligibilityEnhancer::IntelligibilityEnhancer(int sample_rate_hz,
-                                                 size_t num_render_channels)
+                                                 size_t num_render_channels,
+                                                 size_t num_noise_bins)
     : freqs_(RealFourier::ComplexLength(
           RealFourier::FftOrder(sample_rate_hz * kWindowSizeMs / 1000))),
+      num_noise_bins_(num_noise_bins),
       chunk_length_(static_cast<size_t>(sample_rate_hz * kChunkSizeMs / 1000)),
       bank_size_(GetBankSize(sample_rate_hz, kErbResolution)),
       sample_rate_hz_(sample_rate_hz),
       num_render_channels_(num_render_channels),
       clear_power_estimator_(freqs_, kDecayRate),
-      noise_power_estimator_(
-          new intelligibility::PowerEstimator<float>(freqs_, kDecayRate)),
+      noise_power_estimator_(num_noise_bins, kDecayRate),
       filtered_clear_pow_(bank_size_, 0.f),
-      filtered_noise_pow_(bank_size_, 0.f),
+      filtered_noise_pow_(num_noise_bins, 0.f),
       center_freqs_(bank_size_),
+      capture_filter_bank_(CreateErbBank(num_noise_bins)),
       render_filter_bank_(CreateErbBank(freqs_)),
       gains_eq_(bank_size_),
       gain_applier_(freqs_, kMaxRelativeGainChange),
       audio_s16_(chunk_length_),
       chunks_since_voice_(kSpeechOffsetDelay),
-      is_speech_(false) {
+      is_speech_(false),
+      snr_(kMaxActiveSNR),
+      is_active_(false),
+      num_chunks_(0u),
+      num_active_chunks_(0u),
+      noise_estimation_buffer_(num_noise_bins),
+      noise_estimation_queue_(kMaxNumNoiseEstimatesToBuffer,
+                              std::vector<float>(num_noise_bins),
+                              RenderQueueItemVerifier<float>(num_noise_bins)) {
   RTC_DCHECK_LE(kRho, 1.f);
 
   const size_t erb_index = static_cast<size_t>(
@@ -96,15 +112,24 @@ IntelligibilityEnhancer::IntelligibilityEnhancer(int sample_rate_hz,
       kbd_window.data(), window_size, window_size / 2, this));
 }
 
+IntelligibilityEnhancer::~IntelligibilityEnhancer() {
+  // Don't rely on this log, since the destructor isn't called when the app/tab
+  // is killed.
+  LOG(LS_INFO) << "Intelligibility Enhancer was active for "
+               << static_cast<float>(num_active_chunks_) / num_chunks_
+               << "% of the call.";
+}
+
 void IntelligibilityEnhancer::SetCaptureNoiseEstimate(
-    std::vector<float> noise) {
-  if (capture_filter_bank_.size() != bank_size_ ||
-      capture_filter_bank_[0].size() != noise.size()) {
-    capture_filter_bank_ = CreateErbBank(noise.size());
-    noise_power_estimator_.reset(
-        new intelligibility::PowerEstimator<float>(noise.size(), kDecayRate));
+    std::vector<float> noise, float gain) {
+  RTC_DCHECK_EQ(noise.size(), num_noise_bins_);
+  for (auto& bin : noise) {
+    bin *= gain;
   }
-  noise_power_estimator_->Step(noise.data());
+  // Disregarding return value since buffer overflow is acceptable, because it
+  // is not critical to get each noise estimate.
+  if (noise_estimation_queue_.Insert(&noise)) {
+  };
 }
 
 void IntelligibilityEnhancer::ProcessRenderAudio(float* const* audio,
@@ -112,6 +137,9 @@ void IntelligibilityEnhancer::ProcessRenderAudio(float* const* audio,
                                                  size_t num_channels) {
   RTC_CHECK_EQ(sample_rate_hz_, sample_rate_hz);
   RTC_CHECK_EQ(num_render_channels_, num_channels);
+  while (noise_estimation_queue_.Remove(&noise_estimation_buffer_)) {
+    noise_power_estimator_.Step(noise_estimation_buffer_.data());
+  }
   is_speech_ = IsSpeech(audio[0]);
   render_mangler_->ProcessChunk(audio, audio);
 }
@@ -126,26 +154,62 @@ void IntelligibilityEnhancer::ProcessAudioBlock(
   if (is_speech_) {
     clear_power_estimator_.Step(in_block[0]);
   }
-  const std::vector<float>& clear_power = clear_power_estimator_.power();
-  const std::vector<float>& noise_power = noise_power_estimator_->power();
-  MapToErbBands(clear_power.data(), render_filter_bank_,
-                filtered_clear_pow_.data());
-  MapToErbBands(noise_power.data(), capture_filter_bank_,
-                filtered_noise_pow_.data());
-  SolveForGainsGivenLambda(kLambdaTop, start_freq_, gains_eq_.data());
-  const float power_target =
-      std::accumulate(clear_power.data(), clear_power.data() + freqs_, 0.f);
-  const float power_top =
-      DotProduct(gains_eq_.data(), filtered_clear_pow_.data(), bank_size_);
-  SolveForGainsGivenLambda(kLambdaBot, start_freq_, gains_eq_.data());
-  const float power_bot =
-      DotProduct(gains_eq_.data(), filtered_clear_pow_.data(), bank_size_);
-  if (power_target >= power_bot && power_target <= power_top) {
-    SolveForLambda(power_target);
-    UpdateErbGains();
-  }  // Else experiencing power underflow, so do nothing.
+  SnrBasedEffectActivation();
+  ++num_chunks_;
+  if (is_active_) {
+    ++num_active_chunks_;
+    if (num_chunks_ % kGainUpdatePeriod == 0) {
+      MapToErbBands(clear_power_estimator_.power().data(), render_filter_bank_,
+                    filtered_clear_pow_.data());
+      MapToErbBands(noise_power_estimator_.power().data(), capture_filter_bank_,
+                    filtered_noise_pow_.data());
+      SolveForGainsGivenLambda(kLambdaTop, start_freq_, gains_eq_.data());
+      const float power_target = std::accumulate(
+          filtered_clear_pow_.data(),
+          filtered_clear_pow_.data() + bank_size_,
+          0.f);
+      const float power_top =
+          DotProduct(gains_eq_.data(), filtered_clear_pow_.data(), bank_size_);
+      SolveForGainsGivenLambda(kLambdaBot, start_freq_, gains_eq_.data());
+      const float power_bot =
+          DotProduct(gains_eq_.data(), filtered_clear_pow_.data(), bank_size_);
+      if (power_target >= power_bot && power_target <= power_top) {
+        SolveForLambda(power_target);
+        UpdateErbGains();
+      }  // Else experiencing power underflow, so do nothing.
+    }
+  }
   for (size_t i = 0; i < in_channels; ++i) {
     gain_applier_.Apply(in_block[i], out_block[i]);
+  }
+}
+
+void IntelligibilityEnhancer::SnrBasedEffectActivation() {
+  const float* clear_psd = clear_power_estimator_.power().data();
+  const float* noise_psd = noise_power_estimator_.power().data();
+  const float clear_power =
+      std::accumulate(clear_psd, clear_psd + freqs_, 0.f);
+  const float noise_power =
+      std::accumulate(noise_psd, noise_psd + freqs_, 0.f);
+  snr_ = kDecayRate * snr_ + (1.f - kDecayRate) * clear_power /
+      (noise_power + std::numeric_limits<float>::epsilon());
+  if (is_active_) {
+    if (snr_ > kMaxActiveSNR) {
+      LOG(LS_INFO) << "Intelligibility Enhancer was deactivated at chunk "
+                   << num_chunks_;
+      is_active_ = false;
+      // Set the target gains to unity.
+      float* gains = gain_applier_.target();
+      for (size_t i = 0; i < freqs_; ++i) {
+        gains[i] = 1.f;
+      }
+    }
+  } else {
+    if (snr_ < kMinInactiveSNR) {
+      LOG(LS_INFO) << "Intelligibility Enhancer was activated at chunk "
+                   << num_chunks_;
+      is_active_ = true;
+    }
   }
 }
 

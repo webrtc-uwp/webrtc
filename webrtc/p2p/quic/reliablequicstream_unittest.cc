@@ -10,6 +10,7 @@
 
 #include "webrtc/p2p/quic/reliablequicstream.h"
 
+#include <memory>
 #include <string>
 
 #include "net/base/ip_address_number.h"
@@ -25,9 +26,9 @@
 using cricket::QuicConnectionHelper;
 using cricket::ReliableQuicStream;
 
-using net::FecProtection;
-using net::IPAddressNumber;
+using net::IPAddress;
 using net::IPEndPoint;
+using net::PerPacketOptions;
 using net::Perspective;
 using net::QuicAckListenerInterface;
 using net::QuicConfig;
@@ -46,6 +47,10 @@ using net::SpdyPriority;
 using rtc::SR_SUCCESS;
 using rtc::SR_BLOCK;
 
+// Arbitrary number for a stream's write blocked priority.
+static const SpdyPriority kDefaultPriority = 3;
+static const net::QuicStreamId kStreamId = 5;
+
 // QuicSession that does not create streams and writes data from
 // ReliableQuicStream to a string.
 class MockQuicSession : public QuicSession {
@@ -61,7 +66,6 @@ class MockQuicSession : public QuicSession {
       QuicIOVector iovector,
       QuicStreamOffset offset,
       bool fin,
-      FecProtection fec_protection,
       QuicAckListenerInterface* ack_notifier_delegate) override {
     if (!writable_) {
       return QuicConsumedData(0, false);
@@ -75,7 +79,7 @@ class MockQuicSession : public QuicSession {
 
   net::ReliableQuicStream* CreateIncomingDynamicStream(
       QuicStreamId id) override {
-    return nullptr;
+    return new ReliableQuicStream(kStreamId, this);
   }
 
   net::ReliableQuicStream* CreateOutgoingDynamicStream(
@@ -113,10 +117,11 @@ class DummyPacketWriter : public QuicPacketWriter {
   DummyPacketWriter() {}
 
   // QuicPacketWriter overrides.
-  virtual net::WriteResult WritePacket(const char* buffer,
-                                       size_t buf_len,
-                                       const IPAddressNumber& self_address,
-                                       const IPEndPoint& peer_address) {
+  net::WriteResult WritePacket(const char* buffer,
+                               size_t buf_len,
+                               const IPAddress& self_address,
+                               const IPEndPoint& peer_address,
+                               PerPacketOptions* options) override {
     return net::WriteResult(net::WRITE_STATUS_ERROR, 0);
   }
 
@@ -132,36 +137,24 @@ class DummyPacketWriter : public QuicPacketWriter {
   }
 };
 
-// QuicPacketWriter is not necessary, so this creates a packet writer that
-// doesn't do anything.
-class DummyPacketWriterFactory : public QuicConnection::PacketWriterFactory {
- public:
-  DummyPacketWriterFactory() {}
-
-  QuicPacketWriter* Create(QuicConnection* connection) const override {
-    return new DummyPacketWriter();
-  }
-};
-
 class ReliableQuicStreamTest : public ::testing::Test,
                                public sigslot::has_slots<> {
  public:
   ReliableQuicStreamTest() {}
 
   void CreateReliableQuicStream() {
-    const net::QuicStreamId kStreamId = 5;
 
     // Arbitrary values for QuicConnection.
     QuicConnectionHelper* quic_helper =
         new QuicConnectionHelper(rtc::Thread::Current());
     Perspective perspective = Perspective::IS_SERVER;
-    net::IPAddressNumber ip(net::kIPv4AddressSize, 0);
+    net::IPAddress ip(0, 0, 0, 0);
 
-    bool owns_writer = false;
+    bool owns_writer = true;
 
     QuicConnection* connection = new QuicConnection(
-        0, IPEndPoint(ip, 0), quic_helper, DummyPacketWriterFactory(),
-        owns_writer, perspective, net::QuicSupportedVersions());
+        0, IPEndPoint(ip, 0), quic_helper, new DummyPacketWriter(), owns_writer,
+        perspective, net::QuicSupportedVersions());
 
     session_.reset(
         new MockQuicSession(connection, QuicConfig(), &write_buffer_));
@@ -169,8 +162,10 @@ class ReliableQuicStreamTest : public ::testing::Test,
     stream_->SignalDataReceived.connect(
         this, &ReliableQuicStreamTest::OnDataReceived);
     stream_->SignalClosed.connect(this, &ReliableQuicStreamTest::OnClosed);
+    stream_->SignalQueuedBytesWritten.connect(
+        this, &ReliableQuicStreamTest::OnQueuedBytesWritten);
 
-    session_->register_write_blocked_stream(stream_->id(), stream_->Priority());
+    session_->register_write_blocked_stream(stream_->id(), kDefaultPriority);
   }
 
   void OnDataReceived(QuicStreamId id, const char* data, size_t length) {
@@ -178,11 +173,15 @@ class ReliableQuicStreamTest : public ::testing::Test,
     read_buffer_.append(data, length);
   }
 
-  void OnClosed(QuicStreamId id, QuicErrorCode err) { closed_ = true; }
+  void OnClosed(QuicStreamId id, int err) { closed_ = true; }
+
+  void OnQueuedBytesWritten(QuicStreamId id, uint64_t queued_bytes_written) {
+    queued_bytes_written_ = queued_bytes_written;
+  }
 
  protected:
-  scoped_ptr<ReliableQuicStream> stream_;
-  scoped_ptr<MockQuicSession> session_;
+  std::unique_ptr<ReliableQuicStream> stream_;
+  std::unique_ptr<MockQuicSession> session_;
 
   // Data written by the ReliableQuicStream.
   std::string write_buffer_;
@@ -190,6 +189,8 @@ class ReliableQuicStreamTest : public ::testing::Test,
   std::string read_buffer_;
   // Whether the ReliableQuicStream is closed.
   bool closed_ = false;
+  // Bytes written by OnCanWrite().
+  uint64_t queued_bytes_written_;
 };
 
 // Write an entire string.
@@ -219,6 +220,7 @@ TEST_F(ReliableQuicStreamTest, BufferData) {
 
   session_->set_writable(true);
   stream_->OnCanWrite();
+  EXPECT_EQ(7ul, queued_bytes_written_);
 
   EXPECT_FALSE(stream_->HasBufferedData());
   EXPECT_EQ("Foo bar", write_buffer_);
@@ -230,7 +232,7 @@ TEST_F(ReliableQuicStreamTest, BufferData) {
 // Read an entire string.
 TEST_F(ReliableQuicStreamTest, ReadDataWhole) {
   CreateReliableQuicStream();
-  net::QuicStreamFrame frame(-1, false, 0, "Hello, World!");
+  net::QuicStreamFrame frame(kStreamId, false, 0, "Hello, World!");
   stream_->OnStreamFrame(frame);
 
   EXPECT_EQ("Hello, World!", read_buffer_);
@@ -239,7 +241,7 @@ TEST_F(ReliableQuicStreamTest, ReadDataWhole) {
 // Read part of a string.
 TEST_F(ReliableQuicStreamTest, ReadDataPartial) {
   CreateReliableQuicStream();
-  net::QuicStreamFrame frame(-1, false, 0, "Hello, World!");
+  net::QuicStreamFrame frame(kStreamId, false, 0, "Hello, World!");
   frame.frame_length = 5;
   stream_->OnStreamFrame(frame);
 

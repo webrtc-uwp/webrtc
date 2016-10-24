@@ -13,7 +13,9 @@
 #include <assert.h>
 #include <math.h>
 #include <string.h>
+
 #include <algorithm>
+#include <cmath>
 
 #include "webrtc/call.h"
 #include "webrtc/system_wrappers/include/clock.h"
@@ -34,7 +36,27 @@ FakeNetworkPipe::FakeNetworkPipe(Clock* clock,
       dropped_packets_(0),
       sent_packets_(0),
       total_packet_delay_(0),
-      next_process_time_(clock_->TimeInMilliseconds()) {}
+      bursting_(false),
+      next_process_time_(clock_->TimeInMilliseconds()) {
+  double prob_loss = config.loss_percent / 100.0;
+  if (config_.avg_burst_loss_length == -1) {
+    // Uniform loss
+    prob_loss_bursting_ = prob_loss;
+    prob_start_bursting_ = prob_loss;
+  } else {
+    // Lose packets according to a gilbert-elliot model.
+    int avg_burst_loss_length = config.avg_burst_loss_length;
+    int min_avg_burst_loss_length = std::ceil(prob_loss / (1 - prob_loss));
+
+    RTC_CHECK_GT(avg_burst_loss_length, min_avg_burst_loss_length)
+        << "For a total packet loss of " << config.loss_percent << "%% then"
+        << " avg_burst_loss_length must be " << min_avg_burst_loss_length + 1
+        << " or higher.";
+
+    prob_loss_bursting_ = (1.0 - 1.0 / avg_burst_loss_length);
+    prob_start_bursting_ = prob_loss / (1 - prob_loss) / avg_burst_loss_length;
+  }
+}
 
 FakeNetworkPipe::~FakeNetworkPipe() {
   while (!capacity_link_.empty()) {
@@ -78,8 +100,9 @@ void FakeNetworkPipe::SendPacket(const uint8_t* data, size_t data_length) {
   int64_t network_start_time = time_now;
 
   // Check if there already are packets on the link and change network start
-  // time if there is.
-  if (!capacity_link_.empty())
+  // time forward if there is.
+  if (!capacity_link_.empty() &&
+      network_start_time < capacity_link_.back()->arrival_time())
     network_start_time = capacity_link_.back()->arrival_time();
 
   int64_t arrival_time = network_start_time + capacity_delay_ms;
@@ -118,10 +141,15 @@ void FakeNetworkPipe::Process() {
       NetworkPacket* packet = capacity_link_.front();
       capacity_link_.pop();
 
-      // Packets are randomly dropped after being affected by the bottleneck.
-      if (random_.Rand(100) < static_cast<uint32_t>(config_.loss_percent)) {
+      // Drop packets at an average rate of |config_.loss_percent| with
+      // and average loss burst length of |config_.avg_burst_loss_length|.
+      if ((bursting_ && random_.Rand<double>() < prob_loss_bursting_) ||
+          (!bursting_ && random_.Rand<double>() < prob_start_bursting_)) {
+        bursting_ = true;
         delete packet;
         continue;
+      } else {
+        bursting_ = false;
       }
 
       int arrival_time_jitter = random_.Gaussian(

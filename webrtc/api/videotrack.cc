@@ -17,22 +17,15 @@ namespace webrtc {
 const char MediaStreamTrackInterface::kVideoKind[] = "video";
 
 VideoTrack::VideoTrack(const std::string& label,
-                       VideoSourceInterface* video_source)
+                       VideoTrackSourceInterface* video_source)
     : MediaStreamTrack<VideoTrackInterface>(label),
       video_source_(video_source) {
-  // TODO(perkj): Sinks should register directly to the source so that
-  // VideoSinkWants can be applied correctly per sink. For now, |renderers_|
-  // must be able to apply rotation. Note that this is only actual renderers,
-  // not sinks that connect directly to cricket::VideoCapture.
-  rtc::VideoSinkWants wants;
-  wants.rotation_applied = false;
-  if (video_source_)
-    video_source_->AddOrUpdateSink(&renderers_, wants);
+  worker_thread_checker_.DetachFromThread();
+  video_source_->RegisterObserver(this);
 }
 
 VideoTrack::~VideoTrack() {
-  if (video_source_)
-    video_source_->RemoveSink(&renderers_);
+  video_source_->UnregisterObserver(this);
 }
 
 std::string VideoTrack::kind() const {
@@ -40,40 +33,60 @@ std::string VideoTrack::kind() const {
 }
 
 bool VideoTrack::Suspend() {
-    return false;
+  return false;
 }
 
 bool VideoTrack::Resume() {
-    return false;
+  return false;
 }
 
 bool VideoTrack::IsSuspended() {
-    return false;
+  return false;
 }
 
+// AddOrUpdateSink and RemoveSink should be called on the worker
+// thread.
 void VideoTrack::AddOrUpdateSink(
     rtc::VideoSinkInterface<cricket::VideoFrame>* sink,
     const rtc::VideoSinkWants& wants) {
-  renderers_.AddOrUpdateSink(sink, wants);
+  RTC_DCHECK(worker_thread_checker_.CalledOnValidThread());
+  VideoSourceBase::AddOrUpdateSink(sink, wants);
+  rtc::VideoSinkWants modified_wants = wants;
+  modified_wants.black_frames = !enabled();
+  video_source_->AddOrUpdateSink(sink, modified_wants);
 }
 
 void VideoTrack::RemoveSink(
     rtc::VideoSinkInterface<cricket::VideoFrame>* sink) {
-  renderers_.RemoveSink(sink);
-}
-
-rtc::VideoSinkInterface<cricket::VideoFrame>* VideoTrack::GetSink() {
-  return &renderers_;
+  RTC_DCHECK(worker_thread_checker_.CalledOnValidThread());
+  VideoSourceBase::RemoveSink(sink);
+  video_source_->RemoveSink(sink);
 }
 
 bool VideoTrack::set_enabled(bool enable) {
-  renderers_.SetEnabled(enable);
+  RTC_DCHECK(signaling_thread_checker_.CalledOnValidThread());
+  for (auto& sink_pair : sink_pairs()) {
+    rtc::VideoSinkWants modified_wants = sink_pair.wants;
+    modified_wants.black_frames = !enable;
+    // video_source_ is a proxy object, marshalling the call to the
+    // worker thread.
+    video_source_->AddOrUpdateSink(sink_pair.sink, modified_wants);
+  }
   return MediaStreamTrack<VideoTrackInterface>::set_enabled(enable);
+}
+
+void VideoTrack::OnChanged() {
+  RTC_DCHECK(signaling_thread_checker_.CalledOnValidThread());
+  if (video_source_->state() == MediaSourceInterface::kEnded) {
+    set_state(kEnded);
+  } else {
+    set_state(kLive);
+  }
 }
 
 rtc::scoped_refptr<VideoTrack> VideoTrack::Create(
     const std::string& id,
-    VideoSourceInterface* source) {
+    VideoTrackSourceInterface* source) {
   rtc::RefCountedObject<VideoTrack>* track =
       new rtc::RefCountedObject<VideoTrack>(id, source);
   return track;

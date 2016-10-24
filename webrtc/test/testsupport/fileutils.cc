@@ -23,7 +23,6 @@
 #else
 #include <unistd.h>
 
-#include "webrtc/base/scoped_ptr.h"
 #define GET_CURRENT_DIR getcwd
 #endif
 
@@ -31,7 +30,7 @@
 #include <objbase.h>
 
 #include "webrtc/base/pathutils.h"
-#endif
+#endif // WINRT
 
 #include <sys/stat.h>  // To check for directory existence.
 #ifndef S_ISDIR  // Not defined in stat.h on Windows.
@@ -41,6 +40,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <memory>
 
 #include "webrtc/typedefs.h"  // For architecture defines
 
@@ -62,7 +63,7 @@ const char* kPathDelimiter = "/";
 #endif
 
 #ifdef WEBRTC_ANDROID
-const char* kRootDirName = "/sdcard/";
+const char* kRootDirName = "/sdcard/chromium_tests_root/";
 #elif WINRT
 const char* kProjectRootFileName = "";
 const char* kFallbackPath = "./";
@@ -135,7 +136,7 @@ std::string ProjectRootPath() {
   }
 #ifdef WINRT
   return path + kPathDelimiter;
-#endif
+#endif // WINRT
   if (relative_dir_path_set) {
     path = path + kPathDelimiter + relative_dir_path;
   }
@@ -186,7 +187,7 @@ std::string WorkingDir() {
   std::string installLocStr(installLocWstr.begin(), installLocWstr.end());
   return installLocStr.empty() ? kFallbackPath : installLocStr;
 }
-#else
+#else // WINRT
 std::string WorkingDir() {
   char path_buffer[FILENAME_MAX];
   if (!GET_CURRENT_DIR(path_buffer, sizeof(path_buffer))) {
@@ -196,7 +197,7 @@ std::string WorkingDir() {
     return std::string(path_buffer);
   }
 }
-#endif
+#endif // WINRT
 
 #endif  // !WEBRTC_ANDROID
 
@@ -233,7 +234,7 @@ std::string TempFilename(const std::string &dir, const std::string &prefix) {
   return "";
 #else
   int len = dir.size() + prefix.size() + 2 + 6;
-  rtc::scoped_ptr<char[]> tempname(new char[len]);
+  std::unique_ptr<char[]> tempname(new char[len]);
 
   snprintf(tempname.get(), len, "%s/%sXXXXXX", dir.c_str(),
            prefix.c_str());

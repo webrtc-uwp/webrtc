@@ -15,17 +15,19 @@ import org.appspot.apprtc.WebSocketChannelClient.WebSocketChannelEvents;
 import org.appspot.apprtc.WebSocketChannelClient.WebSocketConnectionState;
 import org.appspot.apprtc.util.AsyncHttpURLConnection;
 import org.appspot.apprtc.util.AsyncHttpURLConnection.AsyncHttpEvents;
-import org.appspot.apprtc.util.LooperExecutor;
 
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.webrtc.IceCandidate;
 import org.webrtc.SessionDescription;
 
 /**
- * Negotiates signaling for chatting with apprtc.appspot.com "rooms".
+ * Negotiates signaling for chatting with https://appr.tc "rooms".
  * Uses the client<->server specifics of the apprtc AppEngine webapp.
  *
  * <p>To use: create an instance of this object (registering a message handler) and
@@ -47,7 +49,7 @@ public class WebSocketRTCClient implements AppRTCClient,
   private enum MessageType {
     MESSAGE, LEAVE
   };
-  private final LooperExecutor executor;
+  private final Handler handler;
   private boolean initiator;
   private SignalingEvents events;
   private WebSocketChannelClient wsClient;
@@ -56,11 +58,12 @@ public class WebSocketRTCClient implements AppRTCClient,
   private String messageUrl;
   private String leaveUrl;
 
-  public WebSocketRTCClient(SignalingEvents events, LooperExecutor executor) {
+  public WebSocketRTCClient(SignalingEvents events) {
     this.events = events;
-    this.executor = executor;
     roomState = ConnectionState.NEW;
-    executor.requestStart();
+    final HandlerThread handlerThread = new HandlerThread(TAG);
+    handlerThread.start();
+    handler = new Handler(handlerThread.getLooper());
   }
 
   // --------------------------------------------------------------------
@@ -70,7 +73,7 @@ public class WebSocketRTCClient implements AppRTCClient,
   @Override
   public void connectToRoom(RoomConnectionParameters connectionParameters) {
     this.connectionParameters = connectionParameters;
-    executor.execute(new Runnable() {
+    handler.post(new Runnable() {
       @Override
       public void run() {
         connectToRoomInternal();
@@ -80,13 +83,13 @@ public class WebSocketRTCClient implements AppRTCClient,
 
   @Override
   public void disconnectFromRoom() {
-    executor.execute(new Runnable() {
+    handler.post(new Runnable() {
       @Override
       public void run() {
         disconnectFromRoomInternal();
+        handler.getLooper().quit();
       }
     });
-    executor.requestStop();
   }
 
   // Connects to room - function runs on a local looper thread.
@@ -94,13 +97,13 @@ public class WebSocketRTCClient implements AppRTCClient,
     String connectionUrl = getConnectionUrl(connectionParameters);
     Log.d(TAG, "Connect to room: " + connectionUrl);
     roomState = ConnectionState.NEW;
-    wsClient = new WebSocketChannelClient(executor, this);
+    wsClient = new WebSocketChannelClient(handler, this);
 
     RoomParametersFetcherEvents callbacks = new RoomParametersFetcherEvents() {
       @Override
       public void onSignalingParametersReady(
           final SignalingParameters params) {
-        WebSocketRTCClient.this.executor.execute(new Runnable() {
+        WebSocketRTCClient.this.handler.post(new Runnable() {
           @Override
           public void run() {
             WebSocketRTCClient.this.signalingParametersReady(params);
@@ -183,7 +186,7 @@ public class WebSocketRTCClient implements AppRTCClient,
   // Send local offer SDP to the other participant.
   @Override
   public void sendOfferSdp(final SessionDescription sdp) {
-    executor.execute(new Runnable() {
+    handler.post(new Runnable() {
       @Override
       public void run() {
         if (roomState != ConnectionState.CONNECTED) {
@@ -208,7 +211,7 @@ public class WebSocketRTCClient implements AppRTCClient,
   // Send local answer SDP to the other participant.
   @Override
   public void sendAnswerSdp(final SessionDescription sdp) {
-    executor.execute(new Runnable() {
+    handler.post(new Runnable() {
       @Override
       public void run() {
         if (connectionParameters.loopback) {
@@ -226,7 +229,7 @@ public class WebSocketRTCClient implements AppRTCClient,
   // Send Ice candidate to the other participant.
   @Override
   public void sendLocalIceCandidate(final IceCandidate candidate) {
-    executor.execute(new Runnable() {
+    handler.post(new Runnable() {
       @Override
       public void run() {
         JSONObject json = new JSONObject();
@@ -243,6 +246,37 @@ public class WebSocketRTCClient implements AppRTCClient,
           sendPostMessage(MessageType.MESSAGE, messageUrl, json.toString());
           if (connectionParameters.loopback) {
             events.onRemoteIceCandidate(candidate);
+          }
+        } else {
+          // Call receiver sends ice candidates to websocket server.
+          wsClient.send(json.toString());
+        }
+      }
+    });
+  }
+
+  // Send removed Ice candidates to the other participant.
+  @Override
+  public void sendLocalIceCandidateRemovals(final IceCandidate[] candidates) {
+    handler.post(new Runnable() {
+      @Override
+      public void run() {
+        JSONObject json = new JSONObject();
+        jsonPut(json, "type", "remove-candidates");
+        JSONArray jsonArray =  new JSONArray();
+        for (final IceCandidate candidate : candidates) {
+          jsonArray.put(toJsonCandidate(candidate));
+        }
+        jsonPut(json, "candidates", jsonArray);
+        if (initiator) {
+          // Call initiator sends ice candidates to GAE server.
+          if (roomState != ConnectionState.CONNECTED) {
+            reportError("Sending ICE candidate removals in non connected state.");
+            return;
+          }
+          sendPostMessage(MessageType.MESSAGE, messageUrl, json.toString());
+          if (connectionParameters.loopback) {
+            events.onRemoteIceCandidatesRemoved(candidates);
           }
         } else {
           // Call receiver sends ice candidates to websocket server.
@@ -270,11 +304,14 @@ public class WebSocketRTCClient implements AppRTCClient,
         json = new JSONObject(msgText);
         String type = json.optString("type");
         if (type.equals("candidate")) {
-          IceCandidate candidate = new IceCandidate(
-              json.getString("id"),
-              json.getInt("label"),
-              json.getString("candidate"));
-          events.onRemoteIceCandidate(candidate);
+          events.onRemoteIceCandidate(toJavaCandidate(json));
+        } else if (type.equals("remove-candidates")) {
+          JSONArray candidateArray = json.getJSONArray("candidates");
+          IceCandidate[] candidates = new IceCandidate[candidateArray.length()];
+          for (int i =0; i < candidateArray.length(); ++i) {
+            candidates[i] = toJavaCandidate(candidateArray.getJSONObject(i));
+          }
+          events.onRemoteIceCandidatesRemoved(candidates);
         } else if (type.equals("answer")) {
           if (initiator) {
             SessionDescription sdp = new SessionDescription(
@@ -324,7 +361,7 @@ public class WebSocketRTCClient implements AppRTCClient,
   // Helper functions.
   private void reportError(final String errorMessage) {
     Log.e(TAG, errorMessage);
-    executor.execute(new Runnable() {
+    handler.post(new Runnable() {
       @Override
       public void run() {
         if (roomState != ConnectionState.ERROR) {
@@ -375,5 +412,21 @@ public class WebSocketRTCClient implements AppRTCClient,
         }
       });
     httpConnection.send();
+  }
+
+  // Converts a Java candidate to a JSONObject.
+  private JSONObject toJsonCandidate(final IceCandidate candidate) {
+    JSONObject json = new JSONObject();
+    jsonPut(json, "label", candidate.sdpMLineIndex);
+    jsonPut(json, "id", candidate.sdpMid);
+    jsonPut(json, "candidate", candidate.sdp);
+    return json;
+  }
+
+  // Converts a JSON candidate to a Java object.
+  IceCandidate toJavaCandidate(JSONObject json) throws JSONException {
+    return new IceCandidate(json.getString("id"),
+                            json.getInt("label"),
+                            json.getString("candidate"));
   }
 }

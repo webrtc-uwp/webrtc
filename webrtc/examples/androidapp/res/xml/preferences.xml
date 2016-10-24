@@ -10,6 +10,11 @@
             android:dialogTitle="@string/pref_videocall_dlg"
             android:defaultValue="@string/pref_videocall_default" />
 
+        <CheckBoxPreference
+            android:key="@string/pref_camera2_key"
+            android:title="@string/pref_camera2_title"
+            android:defaultValue="@string/pref_camera2_default" />
+
         <ListPreference
             android:key="@string/pref_resolution_key"
             android:title="@string/pref_resolution_title"
@@ -33,19 +38,19 @@
             android:defaultValue="@string/pref_capturequalityslider_default" />
 
         <ListPreference
-            android:key="@string/pref_startvideobitrate_key"
-            android:title="@string/pref_startvideobitrate_title"
-            android:defaultValue="@string/pref_startvideobitrate_default"
-            android:dialogTitle="@string/pref_startvideobitrate_dlg"
+            android:key="@string/pref_maxvideobitrate_key"
+            android:title="@string/pref_maxvideobitrate_title"
+            android:defaultValue="@string/pref_maxvideobitrate_default"
+            android:dialogTitle="@string/pref_maxvideobitrate_dlg"
             android:entries="@array/startBitrate"
             android:entryValues="@array/startBitrate" />
 
         <EditTextPreference
-            android:key="@string/pref_startvideobitratevalue_key"
-            android:title="@string/pref_startvideobitratevalue_title"
+            android:key="@string/pref_maxvideobitratevalue_key"
+            android:title="@string/pref_maxvideobitratevalue_title"
             android:inputType="number"
-            android:defaultValue="@string/pref_startvideobitratevalue_default"
-            android:dialogTitle="@string/pref_startvideobitratevalue_dlg" />
+            android:defaultValue="@string/pref_maxvideobitratevalue_default"
+            android:dialogTitle="@string/pref_maxvideobitratevalue_dlg" />
 
         <ListPreference
             android:key="@string/pref_videocodec_key"
@@ -112,6 +117,37 @@
             android:title="@string/pref_opensles_title"
             android:dialogTitle="@string/pref_opensles_dlg"
             android:defaultValue="@string/pref_opensles_default" />
+
+        <CheckBoxPreference
+            android:key="@string/pref_disable_built_in_aec_key"
+            android:title="@string/pref_disable_built_in_aec_title"
+            android:dialogTitle="@string/pref_disable_built_in_aec_dlg"
+            android:defaultValue="@string/pref_disable_built_in_aec_default" />
+
+        <CheckBoxPreference
+            android:key="@string/pref_disable_built_in_agc_key"
+            android:title="@string/pref_disable_built_in_agc_title"
+            android:dialogTitle="@string/pref_disable_built_in_agc_dlg"
+            android:defaultValue="@string/pref_disable_built_in_agc_default" />
+
+        <CheckBoxPreference
+            android:key="@string/pref_disable_built_in_ns_key"
+            android:title="@string/pref_disable_built_in_ns_title"
+            android:dialogTitle="@string/pref_disable_built_in_ns_dlg"
+            android:defaultValue="@string/pref_disable_built_in_ns_default" />
+
+        <CheckBoxPreference
+            android:key="@string/pref_enable_level_control_key"
+            android:title="@string/pref_enable_level_control_title"
+            android:defaultValue="@string/pref_enable_level_control_default" />
+
+        <ListPreference
+            android:key="@string/pref_speakerphone_key"
+            android:title="@string/pref_speakerphone_title"
+            android:defaultValue="@string/pref_speakerphone_default"
+            android:dialogTitle="@string/pref_speakerphone_dlg"
+            android:entries="@array/speakerphone"
+            android:entryValues="@array/speakerphoneValues" />
     </PreferenceCategory>
 
     <PreferenceCategory

@@ -21,13 +21,13 @@
 
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/platform_thread.h"
+#include "webrtc/base/timeutils.h"
 #include "webrtc/common.h"
 #include "webrtc/common_types.h"
 #include "webrtc/engine_configurations.h"
 #include "webrtc/modules/audio_coding/acm2/acm_common_defs.h"
 #include "webrtc/modules/audio_coding/test/utility.h"
 #include "webrtc/system_wrappers/include/event_wrapper.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
@@ -323,7 +323,8 @@ bool APITest::APIThreadB(void* obj) {
 bool APITest::PullAudioRunA() {
   _pullEventA->Wait(100);
   AudioFrame audioFrame;
-  if (_acmA->PlayoutData10Ms(_outFreqHzA, &audioFrame) < 0) {
+  bool muted;
+  if (_acmA->PlayoutData10Ms(_outFreqHzA, &audioFrame, &muted) < 0) {
     bool thereIsDecoder;
     {
       ReadLockScoped rl(_apiTestRWLock);
@@ -343,7 +344,8 @@ bool APITest::PullAudioRunA() {
 bool APITest::PullAudioRunB() {
   _pullEventB->Wait(100);
   AudioFrame audioFrame;
-  if (_acmB->PlayoutData10Ms(_outFreqHzB, &audioFrame) < 0) {
+  bool muted;
+  if (_acmB->PlayoutData10Ms(_outFreqHzB, &audioFrame, &muted) < 0) {
     bool thereIsDecoder;
     {
       ReadLockScoped rl(_apiTestRWLock);
@@ -560,7 +562,7 @@ void APITest::Perform() {
   // Keep main thread waiting for sender/receiver
   // threads to complete
   EventWrapper* completeEvent = EventWrapper::Create();
-  uint64_t startTime = TickTime::MillisecondTimestamp();
+  uint64_t startTime = rtc::TimeMillis();
   uint64_t currentTime;
   // Run test in 2 minutes (120000 ms).
   do {
@@ -570,7 +572,7 @@ void APITest::Perform() {
     }
     //fflush(stderr);
     completeEvent->Wait(50);
-    currentTime = TickTime::MillisecondTimestamp();
+    currentTime = rtc::TimeMillis();
   } while ((currentTime - startTime) < 120000);
 
   //completeEvent->Wait(0xFFFFFFFF);
@@ -666,7 +668,6 @@ void APITest::TestDelay(char side) {
   EventTimerWrapper* myEvent = EventTimerWrapper::Create();
 
   uint32_t inTimestamp = 0;
-  uint32_t outTimestamp = 0;
   double estimDelay = 0;
 
   double averageEstimDelay = 0;
@@ -688,7 +689,8 @@ void APITest::TestDelay(char side) {
   CHECK_ERROR_MT(myACM->SetMinimumPlayoutDelay(*myMinDelay));
 
   inTimestamp = myChannel->LastInTimestamp();
-  CHECK_ERROR_MT(myACM->PlayoutTimestamp(&outTimestamp));
+  rtc::Optional<uint32_t> outTimestamp = myACM->PlayoutTimestamp();
+  CHECK_ERROR_MT(outTimestamp ? 0 : -1);
 
   if (!_randomTest) {
     myEvent->StartTimer(true, 30);
@@ -698,11 +700,12 @@ void APITest::TestDelay(char side) {
       myEvent->Wait(1000);
 
       inTimestamp = myChannel->LastInTimestamp();
-      CHECK_ERROR_MT(myACM->PlayoutTimestamp(&outTimestamp));
+      outTimestamp = myACM->PlayoutTimestamp();
+      CHECK_ERROR_MT(outTimestamp ? 0 : -1);
 
       //std::cout << outTimestamp << std::endl << std::flush;
-      estimDelay = (double) ((uint32_t)(inTimestamp - outTimestamp))
-          / ((double) myACM->ReceiveFrequency() / 1000.0);
+      estimDelay = (double)((uint32_t)(inTimestamp - *outTimestamp)) /
+                   ((double)myACM->ReceiveFrequency() / 1000.0);
 
       estimDelayCB.Update(estimDelay);
 

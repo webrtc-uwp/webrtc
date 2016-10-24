@@ -102,8 +102,8 @@ public final class SurfaceTextureHelperTest extends ActivityTestCase {
     final GlRectDrawer drawer = new GlRectDrawer();
 
     // Create SurfaceTextureHelper and listener.
-    final SurfaceTextureHelper surfaceTextureHelper =
-        SurfaceTextureHelper.create(eglBase.getEglBaseContext());
+    final SurfaceTextureHelper surfaceTextureHelper = SurfaceTextureHelper.create(
+        "SurfaceTextureHelper test" /* threadName */, eglBase.getEglBaseContext());
     final MockTextureListener listener = new MockTextureListener();
     surfaceTextureHelper.startListening(listener);
     surfaceTextureHelper.getSurfaceTexture().setDefaultBufferSize(width, height);
@@ -131,7 +131,8 @@ public final class SurfaceTextureHelperTest extends ActivityTestCase {
       // Wait for an OES texture to arrive and draw it onto the pixel buffer.
       listener.waitForNewFrame();
       eglBase.makeCurrent();
-      drawer.drawOes(listener.oesTextureId, listener.transformMatrix, 0, 0, width, height);
+      drawer.drawOes(listener.oesTextureId, listener.transformMatrix, width, height,
+          0, 0, width, height);
 
       surfaceTextureHelper.returnTextureFrame();
 
@@ -169,8 +170,8 @@ public final class SurfaceTextureHelperTest extends ActivityTestCase {
     eglBase.createPbufferSurface(width, height);
 
     // Create SurfaceTextureHelper and listener.
-    final SurfaceTextureHelper surfaceTextureHelper =
-        SurfaceTextureHelper.create(eglBase.getEglBaseContext());
+    final SurfaceTextureHelper surfaceTextureHelper = SurfaceTextureHelper.create(
+        "SurfaceTextureHelper test" /* threadName */, eglBase.getEglBaseContext());
     final MockTextureListener listener = new MockTextureListener();
     surfaceTextureHelper.startListening(listener);
     surfaceTextureHelper.getSurfaceTexture().setDefaultBufferSize(width, height);
@@ -202,7 +203,8 @@ public final class SurfaceTextureHelperTest extends ActivityTestCase {
     // Draw the pending texture frame onto the pixel buffer.
     eglBase.makeCurrent();
     final GlRectDrawer drawer = new GlRectDrawer();
-    drawer.drawOes(listener.oesTextureId, listener.transformMatrix, 0, 0, width, height);
+    drawer.drawOes(listener.oesTextureId, listener.transformMatrix, width, height,
+        0, 0, width, height);
     drawer.release();
 
     // Download the pixels in the pixel buffer as RGBA. Not all platforms support RGB, e.g. Nexus 9.
@@ -229,8 +231,8 @@ public final class SurfaceTextureHelperTest extends ActivityTestCase {
   @MediumTest
   public static void testDispose() throws InterruptedException {
     // Create SurfaceTextureHelper and listener.
-    final SurfaceTextureHelper surfaceTextureHelper =
-        SurfaceTextureHelper.create(null);
+    final SurfaceTextureHelper surfaceTextureHelper = SurfaceTextureHelper.create(
+        "SurfaceTextureHelper test" /* threadName */, null);
     final MockTextureListener listener = new MockTextureListener();
     surfaceTextureHelper.startListening(listener);
     // Create EglBase with the SurfaceTexture as target EGLSurface.
@@ -265,23 +267,9 @@ public final class SurfaceTextureHelperTest extends ActivityTestCase {
    */
   @SmallTest
   public static void testDisposeImmediately() {
-    final SurfaceTextureHelper surfaceTextureHelper =
-        SurfaceTextureHelper.create(null);
+    final SurfaceTextureHelper surfaceTextureHelper = SurfaceTextureHelper.create(
+        "SurfaceTextureHelper test" /* threadName */, null);
     surfaceTextureHelper.dispose();
-  }
-
-  // Helper method to call stopListening() on correct thread.
-  private static void stopListeningOnHandlerThread(final SurfaceTextureHelper surfaceTextureHelper)
-      throws InterruptedException {
-    final CountDownLatch barrier = new CountDownLatch(1);
-    surfaceTextureHelper.getHandler().post(new Runnable() {
-      @Override
-      public void run() {
-        surfaceTextureHelper.stopListening();
-        barrier.countDown();
-      }
-    });
-    barrier.await();
   }
 
   /**
@@ -291,8 +279,8 @@ public final class SurfaceTextureHelperTest extends ActivityTestCase {
   @MediumTest
   public static void testStopListening() throws InterruptedException {
     // Create SurfaceTextureHelper and listener.
-    final SurfaceTextureHelper surfaceTextureHelper =
-        SurfaceTextureHelper.create(null);
+    final SurfaceTextureHelper surfaceTextureHelper = SurfaceTextureHelper.create(
+        "SurfaceTextureHelper test" /* threadName */, null);
     final MockTextureListener listener = new MockTextureListener();
     surfaceTextureHelper.startListening(listener);
     // Create EglBase with the SurfaceTexture as target EGLSurface.
@@ -309,7 +297,7 @@ public final class SurfaceTextureHelperTest extends ActivityTestCase {
     surfaceTextureHelper.returnTextureFrame();
 
     // Stop listening - we should not receive any textures after this.
-    stopListeningOnHandlerThread(surfaceTextureHelper);
+    surfaceTextureHelper.stopListening();
 
     // Draw one frame.
     GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
@@ -327,11 +315,53 @@ public final class SurfaceTextureHelperTest extends ActivityTestCase {
    */
   @SmallTest
   public static void testStopListeningImmediately() throws InterruptedException {
-    final SurfaceTextureHelper surfaceTextureHelper =
-        SurfaceTextureHelper.create(null);
+    final SurfaceTextureHelper surfaceTextureHelper = SurfaceTextureHelper.create(
+        "SurfaceTextureHelper test" /* threadName */, null);
     final MockTextureListener listener = new MockTextureListener();
     surfaceTextureHelper.startListening(listener);
-    stopListeningOnHandlerThread(surfaceTextureHelper);
+    surfaceTextureHelper.stopListening();
+    surfaceTextureHelper.dispose();
+  }
+
+  /**
+   * Test stopListening() immediately after the SurfaceTextureHelper has been setup on the handler
+   * thread.
+   */
+  @SmallTest
+  public static void testStopListeningImmediatelyOnHandlerThread() throws InterruptedException {
+    final SurfaceTextureHelper surfaceTextureHelper = SurfaceTextureHelper.create(
+        "SurfaceTextureHelper test" /* threadName */, null);
+    final MockTextureListener listener = new MockTextureListener();
+
+    final CountDownLatch stopListeningBarrier = new CountDownLatch(1);
+    final CountDownLatch stopListeningBarrierDone = new CountDownLatch(1);
+    // Start by posting to the handler thread to keep it occupied.
+    surfaceTextureHelper.getHandler().post(new Runnable() {
+      @Override
+      public void run() {
+        ThreadUtils.awaitUninterruptibly(stopListeningBarrier);
+        surfaceTextureHelper.stopListening();
+        stopListeningBarrierDone.countDown();
+      }
+    });
+
+    // startListening() is asynchronous and will post to the occupied handler thread.
+    surfaceTextureHelper.startListening(listener);
+    // Wait for stopListening() to be called on the handler thread.
+    stopListeningBarrier.countDown();
+    stopListeningBarrierDone.await();
+    // Wait until handler thread is idle to try to catch late startListening() call.
+    final CountDownLatch barrier = new CountDownLatch(1);
+    surfaceTextureHelper.getHandler().post(new Runnable() {
+      @Override public void run() {
+        barrier.countDown();
+      }
+    });
+    ThreadUtils.awaitUninterruptibly(barrier);
+    // Previous startListening() call should never have taken place and it should be ok to call it
+    // again.
+    surfaceTextureHelper.startListening(listener);
+
     surfaceTextureHelper.dispose();
   }
 
@@ -341,8 +371,8 @@ public final class SurfaceTextureHelperTest extends ActivityTestCase {
   @MediumTest
   public static void testRestartListeningWithNewListener() throws InterruptedException {
     // Create SurfaceTextureHelper and listener.
-    final SurfaceTextureHelper surfaceTextureHelper =
-        SurfaceTextureHelper.create(null);
+    final SurfaceTextureHelper surfaceTextureHelper = SurfaceTextureHelper.create(
+        "SurfaceTextureHelper test" /* threadName */, null);
     final MockTextureListener listener1 = new MockTextureListener();
     surfaceTextureHelper.startListening(listener1);
     // Create EglBase with the SurfaceTexture as target EGLSurface.
@@ -359,7 +389,7 @@ public final class SurfaceTextureHelperTest extends ActivityTestCase {
     surfaceTextureHelper.returnTextureFrame();
 
     // Stop listening - |listener1| should not receive any textures after this.
-    stopListeningOnHandlerThread(surfaceTextureHelper);
+    surfaceTextureHelper.stopListening();
 
     // Connect different listener.
     final MockTextureListener listener2 = new MockTextureListener();
@@ -389,8 +419,8 @@ public final class SurfaceTextureHelperTest extends ActivityTestCase {
     final EglBase eglBase = EglBase.create(null, EglBase.CONFIG_PLAIN);
 
     // Create SurfaceTextureHelper and listener.
-    final SurfaceTextureHelper surfaceTextureHelper =
-        SurfaceTextureHelper.create(eglBase.getEglBaseContext());
+    final SurfaceTextureHelper surfaceTextureHelper = SurfaceTextureHelper.create(
+        "SurfaceTextureHelper test" /* threadName */, eglBase.getEglBaseContext());
     final MockTextureListener listener = new MockTextureListener();
     surfaceTextureHelper.startListening(listener);
     surfaceTextureHelper.getSurfaceTexture().setDefaultBufferSize(width, height);

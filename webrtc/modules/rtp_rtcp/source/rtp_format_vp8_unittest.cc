@@ -8,9 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-/*
- * This file includes unit tests for the VP8 packetizer.
- */
+#include <memory>
 
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -421,7 +419,7 @@ class RtpDepacketizerVp8Test : public ::testing::Test {
                 ::testing::ElementsAreArray(data, length));
   }
 
-  rtc::scoped_ptr<RtpDepacketizer> depacketizer_;
+  std::unique_ptr<RtpDepacketizer> depacketizer_;
 };
 
 TEST_F(RtpDepacketizerVp8Test, BasicHeader) {

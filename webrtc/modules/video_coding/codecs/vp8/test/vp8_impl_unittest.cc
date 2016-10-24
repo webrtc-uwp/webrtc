@@ -14,12 +14,20 @@
 
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/checks.h"
+#include "webrtc/base/timeutils.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
+
+namespace {
+void Calc16ByteAlignedStride(int width, int* stride_y, int* stride_uv) {
+  *stride_y = 16 * ((width + 15) / 16);
+  *stride_uv = 16 * ((width + 31) / 32);
+}
+
+}  // Anonymous namespace
 
 enum { kMaxWaitEncTimeMs = 100 };
 enum { kMaxWaitDecTimeMs = 25 };
@@ -35,9 +43,9 @@ class Vp8UnitTestEncodeCompleteCallback : public webrtc::EncodedImageCallback {
                                     void* decoderSpecificInfo)
       : encoded_frame_(frame), encode_complete_(false) {}
 
-  virtual int Encoded(const EncodedImage& encoded_frame_,
-                      const CodecSpecificInfo* codecSpecificInfo,
-                      const RTPFragmentationHeader*);
+  Result OnEncodedImage(const EncodedImage& encoded_frame_,
+                        const CodecSpecificInfo* codec_specific_info,
+                        const RTPFragmentationHeader* fragmentation) override;
   bool EncodeComplete();
 
  private:
@@ -46,9 +54,10 @@ class Vp8UnitTestEncodeCompleteCallback : public webrtc::EncodedImageCallback {
   bool encode_complete_;
 };
 
-int Vp8UnitTestEncodeCompleteCallback::Encoded(
+webrtc::EncodedImageCallback::Result
+Vp8UnitTestEncodeCompleteCallback::OnEncodedImage(
     const EncodedImage& encoded_frame,
-    const CodecSpecificInfo* codecSpecificInfo,
+    const CodecSpecificInfo* codec_specific_info,
     const RTPFragmentationHeader* fragmentation) {
   if (encoded_frame_->_size < encoded_frame._length) {
     delete[] encoded_frame_->_buffer;
@@ -64,7 +73,7 @@ int Vp8UnitTestEncodeCompleteCallback::Encoded(
   encoded_frame_->_frameType = encoded_frame._frameType;
   encoded_frame_->_completeFrame = encoded_frame._completeFrame;
   encode_complete_ = true;
-  return 0;
+  return Result(Result::OK, 0);
 }
 
 bool Vp8UnitTestEncodeCompleteCallback::EncodeComplete() {
@@ -132,8 +141,8 @@ class TestVp8ImplUnitTest : public ::testing::Test {
     const int kFramerate = 30;
     codec_inst_.maxFramerate = kFramerate;
     // Setting aligned stride values.
-    int stride_uv = 0;
-    int stride_y = 0;
+    int stride_uv;
+    int stride_y;
     Calc16ByteAlignedStride(codec_inst_.width, &stride_y, &stride_uv);
     EXPECT_EQ(stride_y, 176);
     EXPECT_EQ(stride_uv, 96);
@@ -159,8 +168,8 @@ class TestVp8ImplUnitTest : public ::testing::Test {
   }
 
   size_t WaitForEncodedFrame() const {
-    int64_t startTime = TickTime::MillisecondTimestamp();
-    while (TickTime::MillisecondTimestamp() - startTime < kMaxWaitEncTimeMs) {
+    int64_t startTime = rtc::TimeMillis();
+    while (rtc::TimeMillis() - startTime < kMaxWaitEncTimeMs) {
       if (encode_complete_callback_->EncodeComplete()) {
         return encoded_frame_._length;
       }
@@ -169,8 +178,8 @@ class TestVp8ImplUnitTest : public ::testing::Test {
   }
 
   size_t WaitForDecodedFrame() const {
-    int64_t startTime = TickTime::MillisecondTimestamp();
-    while (TickTime::MillisecondTimestamp() - startTime < kMaxWaitDecTimeMs) {
+    int64_t startTime = rtc::TimeMillis();
+    while (rtc::TimeMillis() - startTime < kMaxWaitDecTimeMs) {
       if (decode_complete_callback_->DecodeComplete()) {
         return CalcBufferSize(kI420, decoded_frame_.width(),
                               decoded_frame_.height());

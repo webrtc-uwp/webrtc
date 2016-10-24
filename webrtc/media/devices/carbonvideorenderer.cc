@@ -92,7 +92,7 @@ bool CarbonVideoRenderer::DrawFrame() {
   return true;
 }
 
-bool CarbonVideoRenderer::SetSize(int width, int height, int reserved) {
+bool CarbonVideoRenderer::SetSize(int width, int height) {
   if (width != image_width_ || height != image_height_) {
     // Grab the image lock while changing its size.
     rtc::CritScope cs(&image_crit_);
@@ -104,23 +104,24 @@ bool CarbonVideoRenderer::SetSize(int width, int height, int reserved) {
   return true;
 }
 
-bool CarbonVideoRenderer::RenderFrame(const VideoFrame* video_frame) {
-  if (!video_frame) {
-    return false;
-  }
+void CarbonVideoRenderer::OnFrame(const VideoFrame& video_frame) {
   {
-    const VideoFrame* frame = video_frame->GetCopyWithRotationApplied();
+    const cricket::WebRtcVideoFrame frame(
+        webrtc::I420Buffer::Rotate(video_frame.video_frame_buffer(),
+                                   video_frame.rotation()),
+        webrtc::kVideoRotation_0, video_frame.timestamp_us());
 
-    if (!SetSize(frame->GetWidth(), frame->GetHeight(), 0)) {
+    if (!SetSize(frame.width(), frame.height())) {
       return false;
     }
 
     // Grab the image lock so we are not trashing up the image being drawn.
     rtc::CritScope cs(&image_crit_);
-    frame->ConvertToRgbBuffer(cricket::FOURCC_ABGR,
-                              image_.get(),
-                              frame->GetWidth() * frame->GetHeight() * 4,
-                              frame->GetWidth() * 4);
+    frame.ConvertToRgbBuffer(cricket::FOURCC_ABGR,
+                             image_.get(),
+                             static_cast<size_t>(frame.width()) *
+                                 frame.height() * 4,
+                             frame.width() * 4);
   }
 
   // Trigger a repaint event for the whole window.

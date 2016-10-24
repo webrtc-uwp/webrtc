@@ -14,10 +14,12 @@
 #include <gtk/gtk.h>
 #include <stddef.h>
 
+#include "libyuv/convert_from.h"
 #include "webrtc/examples/peerconnection/client/defaults.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/stringutils.h"
+#include "webrtc/media/engine/webrtcvideoframe.h"
 
 using rtc::sprintfn;
 
@@ -484,28 +486,20 @@ void GtkMainWnd::VideoRenderer::OnFrame(
     const cricket::VideoFrame& video_frame) {
   gdk_threads_enter();
 
-  const cricket::VideoFrame* frame = video_frame.GetCopyWithRotationApplied();
+  const cricket::WebRtcVideoFrame frame(
+      webrtc::I420Buffer::Rotate(video_frame.video_frame_buffer(),
+                                 video_frame.rotation()),
+      webrtc::kVideoRotation_0, video_frame.timestamp_us());
 
-  SetSize(static_cast<int>(frame->GetWidth()),
-          static_cast<int>(frame->GetHeight()));
+  SetSize(frame.width(), frame.height());
 
-  int size = width_ * height_ * 4;
-  // TODO(henrike): Convert directly to RGBA
-  frame->ConvertToRgbBuffer(cricket::FOURCC_ARGB,
-                            image_.get(),
-                            size,
-                            width_ * 4);
-  // Convert the B,G,R,A frame to R,G,B,A, which is accepted by GTK.
-  // The 'A' is just padding for GTK, so we can use it as temp.
-  uint8_t* pix = image_.get();
-  uint8_t* end = image_.get() + size;
-  while (pix < end) {
-    pix[3] = pix[0];     // Save B to A.
-    pix[0] = pix[2];  // Set Red.
-    pix[2] = pix[3];  // Set Blue.
-    pix[3] = 0xFF;     // Fixed Alpha.
-    pix += 4;
-  }
+  rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer(
+      frame.video_frame_buffer());
+  libyuv::I420ToRGBA(buffer->DataY(), buffer->StrideY(),
+                     buffer->DataU(), buffer->StrideU(),
+                     buffer->DataV(), buffer->StrideV(),
+                     image_.get(), width_ * 4,
+                     buffer->width(), buffer->height());
 
   gdk_threads_leave();
 

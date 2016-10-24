@@ -25,12 +25,32 @@ namespace webrtc {
 // type must have an implementation of this class.
 class AudioEncoder {
  public:
+  // Used for UMA logging of codec usage. The same codecs, with the
+  // same values, must be listed in
+  // src/tools/metrics/histograms/histograms.xml in chromium to log
+  // correct values.
+  enum class CodecType {
+    kOther = 0,  // Codec not specified, and/or not listed in this enum
+    kOpus = 1,
+    kIsac = 2,
+    kPcmA = 3,
+    kPcmU = 4,
+    kG722 = 5,
+    kIlbc = 6,
+
+    // Number of histogram bins in the UMA logging of codec types. The
+    // total number of different codecs that are logged cannot exceed this
+    // number.
+    kMaxLoggedAudioCodecTypes
+  };
+
   struct EncodedInfoLeaf {
     size_t encoded_bytes = 0;
     uint32_t encoded_timestamp = 0;
     int payload_type = 0;
     bool send_even_if_empty = false;
     bool speech = true;
+    CodecType encoder_type = CodecType::kOther;
   };
 
   // This is the main struct for auxiliary encoding information. Each encoded
@@ -45,20 +65,16 @@ class AudioEncoder {
   // vector.
   struct EncodedInfo : public EncodedInfoLeaf {
     EncodedInfo();
+    EncodedInfo(const EncodedInfo&);
+    EncodedInfo(EncodedInfo&&);
     ~EncodedInfo();
+    EncodedInfo& operator=(const EncodedInfo&);
+    EncodedInfo& operator=(EncodedInfo&&);
 
     std::vector<EncodedInfoLeaf> redundant;
   };
 
   virtual ~AudioEncoder() = default;
-
-  // Returns the maximum number of bytes that can be produced by the encoder
-  // at each Encode() call. The caller can use the return value to determine
-  // the size of the buffer that needs to be allocated. This value is allowed
-  // to depend on encoder parameters like bitrate, frame size etc., so if
-  // any of these change, the caller of Encode() is responsible for checking
-  // that the buffer is large enough by calling MaxEncodedBytes() again.
-  virtual size_t MaxEncodedBytes() const = 0;
 
   // Returns the input sample rate in Hz and the number of input channels.
   // These are constants set at instantiation time.
@@ -95,33 +111,6 @@ class AudioEncoder {
                      rtc::ArrayView<const int16_t> audio,
                      rtc::Buffer* encoded);
 
-  // Deprecated interface to Encode (remove eventually, bug 5591). May incur a
-  // copy. The encoder produces zero or more bytes of output in |encoded| and
-  // returns additional encoding information.  The caller is responsible for
-  // making sure that |max_encoded_bytes| is not smaller than the number of
-  // bytes actually produced by the encoder.
-  RTC_DEPRECATED EncodedInfo Encode(uint32_t rtp_timestamp,
-                                    rtc::ArrayView<const int16_t> audio,
-                                    size_t max_encoded_bytes,
-                                    uint8_t* encoded);
-
-  EncodedInfo DEPRECATED_Encode(uint32_t rtp_timestamp,
-                                rtc::ArrayView<const int16_t> audio,
-                                size_t max_encoded_bytes,
-                                uint8_t* encoded);
-
-  // Deprecated interface EncodeInternal (see bug 5591). May incur a copy.
-  // Subclasses implement this to perform the actual encoding. Called by
-  // Encode(). By default, this is implemented as a call to the newer
-  // EncodeImpl() that accepts an rtc::Buffer instead of a raw pointer.
-  // That version is protected, so see below. At least one of EncodeInternal
-  // or EncodeImpl _must_ be implemented by a subclass.
-  virtual EncodedInfo EncodeInternal(
-      uint32_t rtp_timestamp,
-      rtc::ArrayView<const int16_t> audio,
-      size_t max_encoded_bytes,
-      uint8_t* encoded);
-
   // Resets the encoder to its starting state, discarding any input that has
   // been fed to the encoder but not yet emitted in a packet.
   virtual void Reset() = 0;
@@ -137,6 +126,10 @@ class AudioEncoder {
   // disable DTX and false when asked to enable it (meaning that DTX isn't
   // supported).
   virtual bool SetDtx(bool enable);
+
+  // Returns the status of codec-internal DTX. The default implementation always
+  // returns false.
+  virtual bool GetDtx() const;
 
   // Sets the application mode. Returns true if the codec was able to comply.
   // The default implementation just returns false.
@@ -160,15 +153,21 @@ class AudioEncoder {
   // implementation does the latter).
   virtual void SetTargetBitrate(int target_bps);
 
+  // Causes this encoder to let go of any other encoders it contains, and
+  // returns a pointer to an array where they are stored (which is required to
+  // live as long as this encoder). Unless the returned array is empty, you may
+  // not call any methods on this encoder afterwards, except for the
+  // destructor. The default implementation just returns an empty array.
+  // NOTE: This method is subject to change. Do not call or override it.
+  virtual rtc::ArrayView<std::unique_ptr<AudioEncoder>>
+  ReclaimContainedEncoders();
+
  protected:
   // Subclasses implement this to perform the actual encoding. Called by
-  // Encode(). For compatibility reasons, this is implemented by default as a
-  // call to the older interface EncodeInternal(). At least one of
-  // EncodeInternal or EncodeImpl _must_ be implemented by a
-  // subclass. Preferably this one.
+  // Encode().
   virtual EncodedInfo EncodeImpl(uint32_t rtp_timestamp,
                                  rtc::ArrayView<const int16_t> audio,
-                                 rtc::Buffer* encoded);
+                                 rtc::Buffer* encoded) = 0;
 };
 }  // namespace webrtc
 #endif  // WEBRTC_MODULES_AUDIO_CODING_CODECS_AUDIO_ENCODER_H_

@@ -11,14 +11,17 @@
 #include "webrtc/modules/congestion_controller/include/congestion_controller.h"
 
 #include <algorithm>
+#include <memory>
 #include <vector>
 
 #include "webrtc/base/checks.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/logging.h"
+#include "webrtc/base/rate_limiter.h"
 #include "webrtc/base/socket.h"
 #include "webrtc/base/thread_annotations.h"
 #include "webrtc/modules/bitrate_controller/include/bitrate_controller.h"
-#include "webrtc/modules/pacing/paced_sender.h"
+#include "webrtc/modules/congestion_controller/delay_based_bwe.h"
 #include "webrtc/modules/remote_bitrate_estimator/include/send_time_history.h"
 #include "webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.h"
 #include "webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream.h"
@@ -30,6 +33,23 @@ namespace webrtc {
 namespace {
 
 static const uint32_t kTimeOffsetSwitchThreshold = 30;
+static const int64_t kRetransmitWindowSizeMs = 500;
+
+// Makes sure that the bitrate and the min, max values are in valid range.
+static void ClampBitrates(int* bitrate_bps,
+                          int* min_bitrate_bps,
+                          int* max_bitrate_bps) {
+  // TODO(holmer): We should make sure the default bitrates are set to 10 kbps,
+  // and that we don't try to set the min bitrate to 0 from any applications.
+  // The congestion controller should allow a min bitrate of 0.
+  const int kMinBitrateBps = 10000;
+  if (*min_bitrate_bps < kMinBitrateBps)
+    *min_bitrate_bps = kMinBitrateBps;
+  if (*max_bitrate_bps > 0)
+    *max_bitrate_bps = std::max(*min_bitrate_bps, *max_bitrate_bps);
+  if (*bitrate_bps > 0)
+    *bitrate_bps = std::max(*min_bitrate_bps, *bitrate_bps);
+}
 
 class WrappingBitrateEstimator : public RemoteBitrateEstimator {
  public:
@@ -46,11 +66,10 @@ class WrappingBitrateEstimator : public RemoteBitrateEstimator {
 
   void IncomingPacket(int64_t arrival_time_ms,
                       size_t payload_size,
-                      const RTPHeader& header,
-                      bool was_paced) override {
+                      const RTPHeader& header) override {
     CriticalSectionScoped cs(crit_sect_.get());
     PickEstimatorFromHeader(header);
-    rbe_->IncomingPacket(arrival_time_ms, payload_size, header, was_paced);
+    rbe_->IncomingPacket(arrival_time_ms, payload_size, header);
   }
 
   void Process() override {
@@ -79,7 +98,7 @@ class WrappingBitrateEstimator : public RemoteBitrateEstimator {
     return rbe_->LatestEstimate(ssrcs, bitrate_bps);
   }
 
-  void SetMinBitrate(int min_bitrate_bps) {
+  void SetMinBitrate(int min_bitrate_bps) override {
     CriticalSectionScoped cs(crit_sect_.get());
     rbe_->SetMinBitrate(min_bitrate_bps);
     min_bitrate_bps_ = min_bitrate_bps;
@@ -123,8 +142,8 @@ class WrappingBitrateEstimator : public RemoteBitrateEstimator {
 
   RemoteBitrateObserver* observer_;
   Clock* const clock_;
-  rtc::scoped_ptr<CriticalSectionWrapper> crit_sect_;
-  rtc::scoped_ptr<RemoteBitrateEstimator> rbe_;
+  std::unique_ptr<CriticalSectionWrapper> crit_sect_;
+  std::unique_ptr<RemoteBitrateEstimator> rbe_;
   bool using_absolute_send_time_;
   uint32_t packets_since_absolute_send_time_;
   int min_bitrate_bps_;
@@ -136,56 +155,129 @@ class WrappingBitrateEstimator : public RemoteBitrateEstimator {
 
 CongestionController::CongestionController(
     Clock* clock,
-    BitrateObserver* bitrate_observer,
-    RemoteBitrateObserver* remote_bitrate_observer)
+    Observer* observer,
+    RemoteBitrateObserver* remote_bitrate_observer,
+    RtcEventLog* event_log)
     : clock_(clock),
-      pacer_(new PacedSender(clock_,
-             &packet_router_,
-             BitrateController::kDefaultStartBitrateKbps,
-             PacedSender::kDefaultPaceMultiplier *
-                 BitrateController::kDefaultStartBitrateKbps,
-             0)),
+      observer_(observer),
+      packet_router_(new PacketRouter()),
+      pacer_(new PacedSender(clock_, packet_router_.get())),
+      remote_bitrate_estimator_(
+          new WrappingBitrateEstimator(remote_bitrate_observer, clock_)),
+      bitrate_controller_(
+          BitrateController::CreateBitrateController(clock_, event_log)),
+      retransmission_rate_limiter_(
+          new RateLimiter(clock, kRetransmitWindowSizeMs)),
+      remote_estimator_proxy_(clock_, packet_router_.get()),
+      transport_feedback_adapter_(bitrate_controller_.get(), clock_),
+      min_bitrate_bps_(RemoteBitrateEstimator::kDefaultMinBitrateBps),
+      max_bitrate_bps_(0),
+      initial_probing_triggered_(false),
+      last_reported_bitrate_bps_(0),
+      last_reported_fraction_loss_(0),
+      last_reported_rtt_(0),
+      network_state_(kNetworkUp) {
+  Init();
+}
+
+CongestionController::CongestionController(
+    Clock* clock,
+    Observer* observer,
+    RemoteBitrateObserver* remote_bitrate_observer,
+    RtcEventLog* event_log,
+    std::unique_ptr<PacketRouter> packet_router,
+    std::unique_ptr<PacedSender> pacer)
+    : clock_(clock),
+      observer_(observer),
+      packet_router_(std::move(packet_router)),
+      pacer_(std::move(pacer)),
       remote_bitrate_estimator_(
           new WrappingBitrateEstimator(remote_bitrate_observer, clock_)),
       // Constructed last as this object calls the provided callback on
       // construction.
       bitrate_controller_(
-          BitrateController::CreateBitrateController(clock_, bitrate_observer)),
-      remote_estimator_proxy_(clock_, &packet_router_),
+          BitrateController::CreateBitrateController(clock_, event_log)),
+      retransmission_rate_limiter_(
+          new RateLimiter(clock, kRetransmitWindowSizeMs)),
+      remote_estimator_proxy_(clock_, packet_router_.get()),
       transport_feedback_adapter_(bitrate_controller_.get(), clock_),
-      min_bitrate_bps_(RemoteBitrateEstimator::kDefaultMinBitrateBps) {
+      min_bitrate_bps_(RemoteBitrateEstimator::kDefaultMinBitrateBps),
+      max_bitrate_bps_(0),
+      initial_probing_triggered_(false),
+      last_reported_bitrate_bps_(0),
+      last_reported_fraction_loss_(0),
+      last_reported_rtt_(0),
+      network_state_(kNetworkUp) {
+  Init();
+}
+
+CongestionController::~CongestionController() {}
+
+void CongestionController::Init() {
   transport_feedback_adapter_.SetBitrateEstimator(
-      new RemoteBitrateEstimatorAbsSendTime(&transport_feedback_adapter_,
-                                            clock_));
+      new DelayBasedBwe(&transport_feedback_adapter_, clock_));
   transport_feedback_adapter_.GetBitrateEstimator()->SetMinBitrate(
       min_bitrate_bps_);
 }
 
-CongestionController::~CongestionController() {
-}
-
-
 void CongestionController::SetBweBitrates(int min_bitrate_bps,
                                           int start_bitrate_bps,
                                           int max_bitrate_bps) {
-  // TODO(holmer): We should make sure the default bitrates are set to 10 kbps,
-  // and that we don't try to set the min bitrate to 0 from any applications.
-  // The congestion controller should allow a min bitrate of 0.
-  const int kMinBitrateBps = 10000;
-  if (min_bitrate_bps < kMinBitrateBps)
-    min_bitrate_bps = kMinBitrateBps;
-  if (max_bitrate_bps > 0)
-    max_bitrate_bps = std::max(min_bitrate_bps, max_bitrate_bps);
-  if (start_bitrate_bps > 0) {
-    start_bitrate_bps = std::max(min_bitrate_bps, start_bitrate_bps);
-    bitrate_controller_->SetStartBitrate(start_bitrate_bps);
+  ClampBitrates(&start_bitrate_bps, &min_bitrate_bps, &max_bitrate_bps);
+  bitrate_controller_->SetBitrates(start_bitrate_bps,
+                                   min_bitrate_bps,
+                                   max_bitrate_bps);
+
+  {
+    rtc::CritScope cs(&critsect_);
+    if (!initial_probing_triggered_) {
+      pacer_->CreateProbeCluster(start_bitrate_bps * 3, 6);
+      pacer_->CreateProbeCluster(start_bitrate_bps * 6, 5);
+      initial_probing_triggered_ = true;
+    }
+
+    // Only do probing if:
+    //   - we are mid-call, which we consider to be if
+    //     |last_reported_bitrate_bps_| != 0, and
+    //   - the current bitrate is lower than the new |max_bitrate_bps|, and
+    //   - we actually want to increase the |max_bitrate_bps_|.
+    if (last_reported_bitrate_bps_ != 0 &&
+        last_reported_bitrate_bps_ < static_cast<uint32_t>(max_bitrate_bps) &&
+        max_bitrate_bps > max_bitrate_bps_) {
+      pacer_->CreateProbeCluster(max_bitrate_bps, 5);
+    }
   }
-  bitrate_controller_->SetMinMaxBitrate(min_bitrate_bps, max_bitrate_bps);
+  max_bitrate_bps_ = max_bitrate_bps;
+
   if (remote_bitrate_estimator_)
     remote_bitrate_estimator_->SetMinBitrate(min_bitrate_bps);
   min_bitrate_bps_ = min_bitrate_bps;
   transport_feedback_adapter_.GetBitrateEstimator()->SetMinBitrate(
       min_bitrate_bps_);
+  MaybeTriggerOnNetworkChanged();
+}
+
+void CongestionController::ResetBweAndBitrates(int bitrate_bps,
+                                               int min_bitrate_bps,
+                                               int max_bitrate_bps) {
+  ClampBitrates(&bitrate_bps, &min_bitrate_bps, &max_bitrate_bps);
+  // TODO(honghaiz): Recreate this object once the bitrate controller is
+  // no longer exposed outside CongestionController.
+  bitrate_controller_->ResetBitrates(bitrate_bps, min_bitrate_bps,
+                                     max_bitrate_bps);
+  min_bitrate_bps_ = min_bitrate_bps;
+  max_bitrate_bps_ = max_bitrate_bps;
+  // TODO(honghaiz): Recreate this object once the remote bitrate estimator is
+  // no longer exposed outside CongestionController.
+  if (remote_bitrate_estimator_)
+    remote_bitrate_estimator_->SetMinBitrate(min_bitrate_bps);
+
+  RemoteBitrateEstimator* rbe = new DelayBasedBwe(
+      &transport_feedback_adapter_, clock_);
+  transport_feedback_adapter_.SetBitrateEstimator(rbe);
+  rbe->SetMinBitrate(min_bitrate_bps);
+  // TODO(holmer): Trigger a new probe once mid-call probing is implemented.
+  MaybeTriggerOnNetworkChanged();
 }
 
 BitrateController* CongestionController::GetBitrateController() const {
@@ -206,10 +298,14 @@ CongestionController::GetTransportFeedbackObserver() {
   return &transport_feedback_adapter_;
 }
 
-void CongestionController::UpdatePacerBitrate(int bitrate_kbps,
-                                              int max_bitrate_kbps,
-                                              int min_bitrate_kbps) {
-  pacer_->UpdateBitrate(bitrate_kbps, max_bitrate_kbps, min_bitrate_kbps);
+RateLimiter* CongestionController::GetRetransmissionRateLimiter() {
+  return retransmission_rate_limiter_.get();
+}
+
+void CongestionController::SetAllocatedSendBitrateLimits(
+    int min_send_bitrate_bps,
+    int max_padding_bitrate_bps) {
+  pacer_->SetSendBitrateLimits(min_send_bitrate_bps, max_padding_bitrate_bps);
 }
 
 int64_t CongestionController::GetPacerQueuingDelayMs() const {
@@ -217,16 +313,23 @@ int64_t CongestionController::GetPacerQueuingDelayMs() const {
 }
 
 void CongestionController::SignalNetworkState(NetworkState state) {
+  LOG(LS_INFO) << "SignalNetworkState "
+               << (state == kNetworkUp ? "Up" : "Down");
   if (state == kNetworkUp) {
     pacer_->Resume();
   } else {
     pacer_->Pause();
   }
+  {
+    rtc::CritScope cs(&critsect_);
+    network_state_ = state;
+  }
+  MaybeTriggerOnNetworkChanged();
 }
 
 void CongestionController::OnSentPacket(const rtc::SentPacket& sent_packet) {
   transport_feedback_adapter_.OnSentPacket(sent_packet.packet_id,
-                                            sent_packet.send_time_ms);
+                                           sent_packet.send_time_ms);
 }
 
 void CongestionController::OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms) {
@@ -242,6 +345,58 @@ int64_t CongestionController::TimeUntilNextProcess() {
 void CongestionController::Process() {
   bitrate_controller_->Process();
   remote_bitrate_estimator_->Process();
+  MaybeTriggerOnNetworkChanged();
+}
+
+void CongestionController::MaybeTriggerOnNetworkChanged() {
+  // TODO(perkj): |observer_| can be nullptr if the ctor that accepts a
+  // BitrateObserver is used. Remove this check once the ctor is removed.
+  if (!observer_)
+    return;
+
+  uint32_t bitrate_bps;
+  uint8_t fraction_loss;
+  int64_t rtt;
+  bool estimate_changed = bitrate_controller_->GetNetworkParameters(
+      &bitrate_bps, &fraction_loss, &rtt);
+  if (estimate_changed) {
+    pacer_->SetEstimatedBitrate(bitrate_bps);
+    retransmission_rate_limiter_->SetMaxRate(bitrate_bps);
+  }
+
+  bitrate_bps = IsNetworkDown() || IsSendQueueFull() ? 0 : bitrate_bps;
+
+  if (HasNetworkParametersToReportChanged(bitrate_bps, fraction_loss, rtt)) {
+    observer_->OnNetworkChanged(bitrate_bps, fraction_loss, rtt);
+  }
+}
+
+bool CongestionController::HasNetworkParametersToReportChanged(
+    uint32_t bitrate_bps,
+    uint8_t fraction_loss,
+    int64_t rtt) {
+  rtc::CritScope cs(&critsect_);
+  bool changed =
+      last_reported_bitrate_bps_ != bitrate_bps ||
+      (bitrate_bps > 0 && (last_reported_fraction_loss_ != fraction_loss ||
+                           last_reported_rtt_ != rtt));
+  if (changed && (last_reported_bitrate_bps_ == 0 || bitrate_bps == 0)) {
+    LOG(LS_INFO) << "Bitrate estimate state changed, BWE: " << bitrate_bps
+                 << " bps.";
+  }
+  last_reported_bitrate_bps_ = bitrate_bps;
+  last_reported_fraction_loss_ = fraction_loss;
+  last_reported_rtt_ = rtt;
+  return changed;
+}
+
+bool CongestionController::IsSendQueueFull() const {
+  return pacer_->ExpectedQueueTimeMs() > PacedSender::kMaxQueueLengthMs;
+}
+
+bool CongestionController::IsNetworkDown() const {
+  rtc::CritScope cs(&critsect_);
+  return network_state_ == kNetworkDown;
 }
 
 }  // namespace webrtc

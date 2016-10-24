@@ -94,6 +94,7 @@
         'signal_processing/resample_by_2_internal.h',
         'signal_processing/resample_fractional.c',
         'signal_processing/spl_init.c',
+        'signal_processing/spl_inl.c',
         'signal_processing/spl_sqrt.c',
         'signal_processing/spl_sqrt_floor.c',
         'signal_processing/splitting_filter.c',
@@ -101,7 +102,6 @@
         'signal_processing/vector_scaling_operations.c',
         'sparse_fir_filter.cc',
         'sparse_fir_filter.h',
-        'swap_queue.h',
         'vad/include/vad.h',
         'vad/include/webrtc_vad.h',
         'vad/vad.cc',
@@ -274,6 +274,7 @@
             'audio_ring_buffer_unittest.cc',
             'audio_util_unittest.cc',
             'blocker_unittest.cc',
+            'channel_buffer_unittest.cc',
             'fir_filter_unittest.cc',
             'lapped_transform_unittest.cc',
             'real_fourier_unittest.cc',
@@ -286,7 +287,6 @@
             'signal_processing/real_fft_unittest.cc',
             'signal_processing/signal_processing_unittest.cc',
             'sparse_fir_filter_unittest.cc',
-            'swap_queue_unittest.cc',
             'vad/vad_core_unittest.cc',
             'vad/vad_filterbank_unittest.cc',
             'vad/vad_gmm_unittest.cc',
@@ -322,11 +322,32 @@
               'target_name': 'common_audio_unittests_apk_target',
               'type': 'none',
               'dependencies': [
-                '<(apk_tests_path):common_audio_unittests_apk',
+                '<(android_tests_path):common_audio_unittests_apk',
               ],
             },
           ],
-        }],
+          'conditions': [
+            ['test_isolation_mode != "noop"',
+              {
+                'targets': [
+                  {
+                    'target_name': 'common_audio_unittests_apk_run',
+                    'type': 'none',
+                    'dependencies': [
+                      '<(android_tests_path):common_audio_unittests_apk',
+                    ],
+                    'includes': [
+                      '../build/isolate.gypi',
+                    ],
+                    'sources': [
+                      'common_audio_unittests_apk.isolate',
+                    ],
+                  },
+                ],
+              },
+            ],
+          ],
+        }],  # OS=="android"
         ['test_isolation_mode != "noop"', {
           'targets': [
             {

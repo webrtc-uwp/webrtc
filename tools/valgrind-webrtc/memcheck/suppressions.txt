@@ -11,12 +11,20 @@
 # third_party libraries
 
 {
-   libnss_leak_hitting_trusty_machines
-   Memcheck:Leak
-   fun:calloc
-   obj:/usr/lib/x86_64-linux-gnu/libnss3.so
+   libc_free_hitting_gce_vms
+   Memcheck:Free
+   fun:free
+   fun:__libc_freeres
+   fun:_vgnU_freeres
    ...
-   fun:NSS_NoDB_Init
+}
+{
+   Ubuntu_Precise_Itoa_Optimized_Code
+   Memcheck:Uninitialized
+   fun:_itoa_word
+   fun:vfprintf
+   fun:vsnprintf
+   fun:snprintf
    ...
 }
 
@@ -46,18 +54,6 @@
    fun:_ZN9rtc6Thread15ProcessMessagesEi
    fun:_ZN9rtc6Thread3RunEv
    fun:_ZN9rtc6Thread6PreRunEPv
-}
-{
-   bug_1976_2
-   Memcheck:Leak
-   fun:calloc
-   obj:/usr/lib/x86_64-linux-gnu/libnss3.so
-   ...
-   fun:NSS_NoDB_Init
-   fun:_ZN9rtc10NSSContext13InitializeSSLEPFbPvE
-   fun:_ZN9rtc13InitializeSSLEPFbPvE
-   fun:_ZN9rtc10RandomTest13SetUpTestCaseEv
-   fun:_ZN7testing8TestCase16RunSetUpTestCaseEv
 }
 {
    bug_2100_3
@@ -253,19 +249,6 @@
 }
 
 {
-   ignore_leak_when_alsa_hits_error
-   Memcheck:Leak
-   ...
-   fun:snd_device_name_hint
-   fun:_ZNK6webrtc20AudioDeviceLinuxALSA14GetDevicesInfoEibiPci
-   fun:_ZN6webrtc20AudioDeviceLinuxALSA16SetPlayoutDeviceEt
-   fun:_ZN6webrtc21AudioDeviceModuleImpl16SetPlayoutDeviceEt
-   fun:_ZN6webrtc11VoEBaseImpl4InitEPNS_17AudioDeviceModuleE
-   fun:_ZN11ViEAutoTest19ViEFileStandardTestEv
-   fun:_ZN12_GLOBAL__N_157ViEStandardIntegrationTest_RunsFileTestWithoutErrors_Test8TestBodyEv
-}
-
-{
    bug_270_1
    Memcheck:Uninitialized
    ...
@@ -280,6 +263,20 @@
    fun:WebRtcNetEQ_GetSpeechOutputType
    ...
 }
+{
+   vfprintf
+   Memcheck:Uninitialized
+   fun:vfprintf
+   fun:vsnprintf
+   fun:snprintf
+   ...
+   fun:_ZNK7testing8internal18FunctionMockerBaseIFbRKN6webrtc4rtcp17TransportFeedbackEEE32UntypedDescribeUninterestingCallEPKvPSo
+   fun:_ZN7testing8internal25UntypedFunctionMockerBase17UntypedInvokeWithEPKv
+   fun:_ZN6webrtc11MockRtpRtcp18SendFeedbackPacketERKNS_4rtcp17TransportFeedbackE
+   fun:_ZN6webrtc12PacketRouter12SendFeedbackEPNS_4rtcp17TransportFeedbackE
+   fun:_ZN6webrtc34PacketRouterTest_SendFeedback_Test8TestBodyEv
+}
+
 
 #-----------------------------------------------------------------------
 # libjingle stuff (talk folder)
@@ -386,23 +383,6 @@
    ...
 }
 {
-   bug_3063
-   Memcheck:Uninitialized
-   ...
-   fun:vfprintf
-   fun:__vsnprintf_chk
-   fun:_ZN6webrtc5Trace3AddENS_10TraceLevelENS_11TraceModuleEiPKcz
-   fun:_ZNK6webrtc12ViECodecImpl21GetCodecTargetBitrateEiPj
-   fun:_ZN7cricket23WebRtcVideoMediaChannel23MaybeChangeStartBitrateEiPN6webrtc10VideoCodecE
-   fun:_ZN7cricket23WebRtcVideoMediaChannel12SetSendCodecEPNS_26WebRtcVideoChannelSendInfoERKN6webrtc10VideoCodecEiii
-   fun:_ZN7cricket23WebRtcVideoMediaChannel12SetSendCodecERKN6webrtc10VideoCodecEiii
-   fun:_ZN7cricket23WebRtcVideoMediaChannel13SetSendCodecsERKSt6vectorINS_10VideoCodecESaIS2_EE
-   fun:_ZN21VideoMediaChannelTestIN7cricket17WebRtcVideoEngineENS0_23WebRtcVideoMediaChannelEE11SetOneCodecERKNS0_10VideoCodecE
-   fun:_ZN21VideoMediaChannelTestIN7cricket17WebRtcVideoEngineENS0_23WebRtcVideoMediaChannelEE4SendERKNS0_10VideoCodecE
-   fun:_ZN21VideoMediaChannelTestIN7cricket17WebRtcVideoEngineENS0_23WebRtcVideoMediaChannelEE36TwoStreamsSendAndFailUnsignalledRecvERKNS0_10VideoCodecE
-   fun:_ZN69WebRtcVideoMediaChannelTest_TwoStreamsSendAndFailUnsignalledRecv_Test8TestBodyEv
-}
-{
    bug_3478
    Memcheck:Leak
    fun:_Znw*
@@ -415,4 +395,65 @@
    fun:_ZN6webrtc14StatsCollector11UpdateStatsENS_23PeerConnectionInterface16StatsOutputLevelE
    fun:_ZN12_GLOBAL__N_118StatsCollectorTest22TestCertificateReportsERKN3rtc18FakeSSLCertificateERKSt6vectorISsSaISsEES4_S9_
    fun:_ZN12_GLOBAL__N_156StatsCollectorTest_ChainedCertificateReportsCreated_Test8TestBodyEv
+}
+{
+   bug_5651
+   Memcheck:Unaddressable
+   fun:silk_NLSF_encode
+   fun:silk_process_NLSFs
+   fun:silk_process_NLSFs_FLP
+   fun:silk_find_pred_coefs_FLP
+   fun:silk_encode_frame_FLP
+   fun:silk_Encode
+   fun:opus_encode_native
+   fun:opus_encode
+   fun:WebRtcOpus_Encode
+}
+{
+   bug_5983
+   Memcheck:Uninitialized
+   fun:_ZN6webrtc11DataChannel4InitERKNS_23InternalDataChannelInitE
+   ...
+}
+{
+   bug_5984
+   Memcheck:Uninitialized
+   fun:_ZN6webrtc15GainControlImpl19ProcessCaptureAudioEPNS_11AudioBufferEb
+   ...
+}
+{
+   bug_5986
+   Memcheck:Unaddressable
+   fun:silk_stereo_LR_to_MS
+   fun:silk_Encode
+   fun:opus_encode_native
+   ...
+}
+{
+   bug_5987
+   Memcheck:Leak
+   fun:_Znw*
+   fun:_ZN6webrtc51AudioEncoderCopyRedDeathTest_NullSpeechEncoder_Test8TestBodyEv
+}
+{
+   bug_5988
+   Memcheck:Leak
+   fun:_Znw*
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsSsESt10_Select1stIS2_EN3rtc5ilessESaIS2_EE15_M_insert_equalIS2_EESt17_Rb_tree_iteratorIS2_EOT_
+   fun:_ZN3rtc8HttpData12changeHeaderERKSsS2_NS0_13HeaderCombineE
+   fun:_ZN3rtc16HttpResponseData9set_errorEj
+   fun:_ZN3rtc12_GLOBAL__N_117HttpServerMonitor9OnRequestEPNS_10HttpServerEPNS_21HttpServerTransactionE
+   fun:_ZN3rtc10HttpServer10Connection14onHttpCompleteENS_8HttpModeENS_9HttpErrorE
+   fun:_ZN3rtc8HttpBase10OnCompleteENS_9HttpErrorE
+   fun:_ZN3rtc8HttpBase17OnHttpStreamEventEPNS_15StreamInterfaceEii
+   fun:_ZN7testing12StreamSource11QueueStringEPKc
+   fun:_ZN3rtc12_GLOBAL__N_122CreateClientConnectionERNS_10HttpServerERNS0_17HttpServerMonitorEb
+   fun:_ZN3rtc47HttpServer_SignalsCloseAfterForcedCloseAll_Test8TestBodyEv
+}
+{
+   bug_5989
+   Memcheck:Unaddressable
+   ...
+   fun:_ZNK3rtc15CriticalSection5EnterEv
+   ...
 }

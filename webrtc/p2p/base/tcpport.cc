@@ -162,7 +162,7 @@ Connection* TCPPort::CreateConnection(const Candidate& address,
   } else {
     conn = new TCPConnection(this, address);
   }
-  AddConnection(conn);
+  AddOrReplaceConnection(conn);
   return conn;
 }
 
@@ -348,13 +348,13 @@ int TCPConnection::Send(const void* data, size_t size,
   // the connection a chance to reconnect.
   if (pretending_to_be_writable_ || write_state() != STATE_WRITABLE) {
     // TODO: Should STATE_WRITE_TIMEOUT return a non-blocking error?
-    error_ = EWOULDBLOCK;
+    error_ = ENOTCONN;
     return SOCKET_ERROR;
   }
-  sent_packets_total_++;
+  stats_.sent_total_packets++;
   int sent = socket_->Send(data, size, options);
   if (sent < 0) {
-    sent_packets_discarded_++;
+    stats_.sent_discarded_packets++;
     error_ = socket_->GetError();
   } else {
     send_rate_tracker_.AddSamples(sent);
@@ -382,37 +382,44 @@ void TCPConnection::OnConnectionRequestResponse(ConnectionRequest* req,
 }
 
 void TCPConnection::OnConnect(rtc::AsyncPacketSocket* socket) {
-  ASSERT(socket == socket_);
+  ASSERT(socket == socket_.get());
   // Do not use this connection if the socket bound to a different address than
   // the one we asked for. This is seen in Chrome, where TCP sockets cannot be
   // given a binding address, and the platform is expected to pick the
   // correct local address.
-  const rtc::IPAddress& socket_ip = socket->GetLocalAddress().ipaddr();
-  if (socket_ip == port()->ip() || IPIsAny(port()->ip())) {
-    if (socket_ip == port()->ip()) {
-      LOG_J(LS_VERBOSE, this) << "Connection established to "
-                              << socket->GetRemoteAddress().ToSensitiveString();
-    } else {
-      LOG(LS_WARNING) << "Socket is bound to a different address:"
-                      << socket->GetLocalAddress().ipaddr().ToString()
-                      << ", rather then the local port:"
-                      << port()->ip().ToString()
-                      << ". Still allowing it since it's any address"
-                      << ", possibly caused by multi-routes being disabled.";
-    }
-    set_connected(true);
-    connection_pending_ = false;
+  const rtc::SocketAddress& socket_addr = socket->GetLocalAddress();
+  if (socket_addr.ipaddr() == port()->ip()) {
+    LOG_J(LS_VERBOSE, this) << "Connection established to "
+                            << socket->GetRemoteAddress().ToSensitiveString();
+  } else if (IPIsAny(port()->ip())) {
+    LOG(LS_WARNING) << "Socket is bound to a different address:"
+                    << socket_addr.ipaddr().ToString()
+                    << ", rather then the local port:"
+                    << port()->ip().ToString()
+                    << ". Still allowing it since it's any address"
+                    << ", possibly caused by multi-routes being disabled.";
+  } else if (socket_addr.IsLoopbackIP()) {
+    LOG(LS_WARNING) << "Socket is bound to a different address:"
+                    << socket_addr.ipaddr().ToString()
+                    << ", rather then the local port:"
+                    << port()->ip().ToString()
+                    << ". Still allowing it since it's localhost.";
   } else {
     LOG_J(LS_WARNING, this) << "Dropping connection as TCP socket bound to IP "
-                            << socket_ip.ToSensitiveString()
+                            << socket_addr.ipaddr().ToSensitiveString()
                             << ", different from the local candidate IP "
                             << port()->ip().ToSensitiveString();
     OnClose(socket, 0);
+    return;
   }
+
+  // Connection is established successfully.
+  set_connected(true);
+  connection_pending_ = false;
 }
 
 void TCPConnection::OnClose(rtc::AsyncPacketSocket* socket, int error) {
-  ASSERT(socket == socket_);
+  ASSERT(socket == socket_.get());
   LOG_J(LS_INFO, this) << "Connection closed with error " << error;
 
   // Guard against the condition where IPC socket will call OnClose for every
@@ -427,7 +434,7 @@ void TCPConnection::OnClose(rtc::AsyncPacketSocket* socket, int error) {
     // We don't attempt reconnect right here. This is to avoid a case where the
     // shutdown is intentional and reconnect is not necessary. We only reconnect
     // when the connection is used to Send() or Ping().
-    port()->thread()->PostDelayed(reconnection_timeout(), this,
+    port()->thread()->PostDelayed(RTC_FROM_HERE, reconnection_timeout(), this,
                                   MSG_TCPCONNECTION_DELAYED_ONCLOSE);
   } else if (!pretending_to_be_writable_) {
     // OnClose could be called when the underneath socket times out during the
@@ -471,12 +478,12 @@ void TCPConnection::OnReadPacket(
   rtc::AsyncPacketSocket* socket, const char* data, size_t size,
   const rtc::SocketAddress& remote_addr,
   const rtc::PacketTime& packet_time) {
-  ASSERT(socket == socket_);
+  ASSERT(socket == socket_.get());
   Connection::OnReadPacket(data, size, packet_time);
 }
 
 void TCPConnection::OnReadyToSend(rtc::AsyncPacketSocket* socket) {
-  ASSERT(socket == socket_);
+  ASSERT(socket == socket_.get());
   Connection::OnReadyToSend();
 }
 

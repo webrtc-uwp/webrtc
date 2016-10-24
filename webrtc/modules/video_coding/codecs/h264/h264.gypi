@@ -62,6 +62,10 @@
         {
           'target_name': 'webrtc_h264_video_toolbox',
           'type': 'static_library',
+          'includes': [ '../../../../build/objc_common.gypi' ],
+          'dependencies': [
+            '<(webrtc_root)/sdk/sdk.gyp:rtc_sdk_common_objc',
+          ],
           'link_settings': {
             'xcode_settings': {
               'OTHER_LDFLAGS': [
@@ -75,8 +79,8 @@
           'sources': [
             'h264_video_toolbox_decoder.cc',
             'h264_video_toolbox_decoder.h',
-            'h264_video_toolbox_encoder.cc',
             'h264_video_toolbox_encoder.h',
+            'h264_video_toolbox_encoder.mm',
             'h264_video_toolbox_nalu.cc',
             'h264_video_toolbox_nalu.h',
           ],

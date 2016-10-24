@@ -14,9 +14,6 @@
 #include "webrtc/modules/audio_processing/aec/echo_cancellation.h"
 
 #include <math.h>
-#ifdef WEBRTC_AEC_DEBUG_DUMP
-#include <stdio.h>
-#endif
 #include <stdlib.h>
 #include <string.h>
 
@@ -26,8 +23,13 @@ extern "C" {
 }
 #include "webrtc/modules/audio_processing/aec/aec_core.h"
 #include "webrtc/modules/audio_processing/aec/aec_resampler.h"
-#include "webrtc/modules/audio_processing/aec/echo_cancellation_internal.h"
+#include "webrtc/modules/audio_processing/logging/apm_data_dumper.h"
 #include "webrtc/typedefs.h"
+
+namespace webrtc {
+
+Aec::Aec() = default;
+Aec::~Aec() = default;
 
 // Measured delays [ms]
 // Device                Chrome  GTP
@@ -97,9 +99,7 @@ static const int kMaxBufSizeStart = 62;  // In partitions
 static const int sampMsNb = 8;           // samples per ms in nb
 static const int initCheck = 42;
 
-#ifdef WEBRTC_AEC_DEBUG_DUMP
-int webrtc_aec_instance_count = 0;
-#endif
+int Aec::instance_count = 0;
 
 // Estimates delay to set the position of the far-end buffer read pointer
 // (controlled by knownDelay)
@@ -121,13 +121,14 @@ static void ProcessExtended(Aec* self,
                             int32_t skew);
 
 void* WebRtcAec_Create() {
-  Aec* aecpc = reinterpret_cast<Aec*>(malloc(sizeof(Aec)));
+  Aec* aecpc = new Aec();
 
   if (!aecpc) {
     return NULL;
   }
+  aecpc->data_dumper.reset(new ApmDataDumper(aecpc->instance_count));
 
-  aecpc->aec = WebRtcAec_CreateAec();
+  aecpc->aec = WebRtcAec_CreateAec(aecpc->instance_count);
   if (!aecpc->aec) {
     WebRtcAec_Free(aecpc);
     return NULL;
@@ -149,22 +150,7 @@ void* WebRtcAec_Create() {
 
   aecpc->initFlag = 0;
 
-#ifdef WEBRTC_AEC_DEBUG_DUMP
-  {
-    char filename[64];
-    snprintf(filename, sizeof(filename), "aec_buf%d.dat",
-             webrtc_aec_instance_count);
-    aecpc->bufFile = fopen(filename, "wb");
-    snprintf(filename, sizeof(filename), "aec_skew%d.dat",
-             webrtc_aec_instance_count);
-    aecpc->skewFile = fopen(filename, "wb");
-    snprintf(filename, sizeof(filename), "aec_delay%d.dat",
-             webrtc_aec_instance_count);
-    aecpc->delayFile = fopen(filename, "wb");
-    webrtc_aec_instance_count++;
-  }
-#endif
-
+  aecpc->instance_count++;
   return aecpc;
 }
 
@@ -177,19 +163,14 @@ void WebRtcAec_Free(void* aecInst) {
 
   WebRtc_FreeBuffer(aecpc->far_pre_buf);
 
-#ifdef WEBRTC_AEC_DEBUG_DUMP
-  fclose(aecpc->bufFile);
-  fclose(aecpc->skewFile);
-  fclose(aecpc->delayFile);
-#endif
-
   WebRtcAec_FreeAec(aecpc->aec);
   WebRtcAec_FreeResampler(aecpc->resampler);
-  free(aecpc);
+  delete aecpc;
 }
 
 int32_t WebRtcAec_Init(void* aecInst, int32_t sampFreq, int32_t scSampFreq) {
   Aec* aecpc = reinterpret_cast<Aec*>(aecInst);
+  aecpc->data_dumper->InitiateNewSetOfRecordings();
   AecConfig aecConfig;
 
   if (sampFreq != 8000 && sampFreq != 16000 && sampFreq != 32000 &&
@@ -374,15 +355,9 @@ int32_t WebRtcAec_Process(void* aecInst,
                            msInSndCardBuf, skew);
   }
 
-#ifdef WEBRTC_AEC_DEBUG_DUMP
-  {
-    int16_t far_buf_size_ms = (int16_t)(WebRtcAec_system_delay(aecpc->aec) /
-                                        (sampMsNb * aecpc->rate_factor));
-    (void)fwrite(&far_buf_size_ms, 2, 1, aecpc->bufFile);
-    (void)fwrite(&aecpc->knownDelay, sizeof(aecpc->knownDelay), 1,
-                 aecpc->delayFile);
-  }
-#endif
+  int far_buf_size_samples = WebRtcAec_system_delay(aecpc->aec);
+  aecpc->data_dumper->DumpRaw("aec_system_delay", 1, &far_buf_size_samples);
+  aecpc->data_dumper->DumpRaw("aec_known_delay", 1, &aecpc->knownDelay);
 
   return retVal;
 }
@@ -450,7 +425,8 @@ int WebRtcAec_GetMetrics(void* handle, AecMetrics* metrics) {
     return AEC_UNINITIALIZED_ERROR;
   }
 
-  WebRtcAec_GetEchoStats(self->aec, &erl, &erle, &a_nlp);
+  WebRtcAec_GetEchoStats(self->aec, &erl, &erle, &a_nlp,
+                         &metrics->divergent_filter_fraction);
 
   // ERL
   metrics->erl.instant = static_cast<int>(erl.instant);
@@ -600,9 +576,7 @@ static int ProcessNormal(Aec* aecpc,
         aecpc->skew = maxSkewEst;
       }
 
-#ifdef WEBRTC_AEC_DEBUG_DUMP
-      (void)fwrite(&aecpc->skew, sizeof(aecpc->skew), 1, aecpc->skewFile);
-#endif
+      aecpc->data_dumper->DumpRaw("aec_skew", 1, &aecpc->skew);
     }
   }
 
@@ -881,3 +855,4 @@ static void EstBufDelayExtended(Aec* self) {
     self->knownDelay = WEBRTC_SPL_MAX((int)self->filtDelay - 256, 0);
   }
 }
+}  // namespace webrtc

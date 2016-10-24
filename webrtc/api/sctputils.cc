@@ -10,8 +10,8 @@
 
 #include "webrtc/api/sctputils.h"
 
-#include "webrtc/base/buffer.h"
 #include "webrtc/base/bytebuffer.h"
+#include "webrtc/base/copyonwritebuffer.h"
 #include "webrtc/base/logging.h"
 
 namespace webrtc {
@@ -31,26 +31,25 @@ enum DataChannelOpenMessageChannelType {
   DCOMCT_UNORDERED_PARTIAL_TIME = 0x82,
 };
 
-bool IsOpenMessage(const rtc::Buffer& payload) {
+bool IsOpenMessage(const rtc::CopyOnWriteBuffer& payload) {
   // Format defined at
   // http://tools.ietf.org/html/draft-jesup-rtcweb-data-protocol-04
-
-  rtc::ByteBuffer buffer(payload);
-  uint8_t message_type;
-  if (!buffer.ReadUInt8(&message_type)) {
+  if (payload.size() < 1) {
     LOG(LS_WARNING) << "Could not read OPEN message type.";
     return false;
   }
+
+  uint8_t message_type = payload[0];
   return message_type == DATA_CHANNEL_OPEN_MESSAGE_TYPE;
 }
 
-bool ParseDataChannelOpenMessage(const rtc::Buffer& payload,
+bool ParseDataChannelOpenMessage(const rtc::CopyOnWriteBuffer& payload,
                                  std::string* label,
                                  DataChannelInit* config) {
   // Format defined at
   // http://tools.ietf.org/html/draft-jesup-rtcweb-data-protocol-04
 
-  rtc::ByteBuffer buffer(payload);
+  rtc::ByteBufferReader buffer(payload.data<char>(), payload.size());
   uint8_t message_type;
   if (!buffer.ReadUInt8(&message_type)) {
     LOG(LS_WARNING) << "Could not read OPEN message type.";
@@ -120,13 +119,13 @@ bool ParseDataChannelOpenMessage(const rtc::Buffer& payload,
   return true;
 }
 
-bool ParseDataChannelOpenAckMessage(const rtc::Buffer& payload) {
-  rtc::ByteBuffer buffer(payload);
-  uint8_t message_type;
-  if (!buffer.ReadUInt8(&message_type)) {
+bool ParseDataChannelOpenAckMessage(const rtc::CopyOnWriteBuffer& payload) {
+  if (payload.size() < 1) {
     LOG(LS_WARNING) << "Could not read OPEN_ACK message type.";
     return false;
   }
+
+  uint8_t message_type = payload[0];
   if (message_type != DATA_CHANNEL_OPEN_ACK_MESSAGE_TYPE) {
     LOG(LS_WARNING) << "Data Channel OPEN_ACK message of unexpected type: "
                     << message_type;
@@ -137,7 +136,7 @@ bool ParseDataChannelOpenAckMessage(const rtc::Buffer& payload) {
 
 bool WriteDataChannelOpenMessage(const std::string& label,
                                  const DataChannelInit& config,
-                                 rtc::Buffer* payload) {
+                                 rtc::CopyOnWriteBuffer* payload) {
   // Format defined at
   // http://tools.ietf.org/html/draft-ietf-rtcweb-data-protocol-00#section-6.1
   uint8_t channel_type = 0;
@@ -165,9 +164,10 @@ bool WriteDataChannelOpenMessage(const std::string& label,
     }
   }
 
-  rtc::ByteBuffer buffer(
+  rtc::ByteBufferWriter buffer(
       NULL, 20 + label.length() + config.protocol.length(),
       rtc::ByteBuffer::ORDER_NETWORK);
+  // TODO(tommi): Add error handling and check resulting length.
   buffer.WriteUInt8(DATA_CHANNEL_OPEN_MESSAGE_TYPE);
   buffer.WriteUInt8(channel_type);
   buffer.WriteUInt16(priority);
@@ -180,9 +180,9 @@ bool WriteDataChannelOpenMessage(const std::string& label,
   return true;
 }
 
-void WriteDataChannelOpenAckMessage(rtc::Buffer* payload) {
-  rtc::ByteBuffer buffer(rtc::ByteBuffer::ORDER_NETWORK);
-  buffer.WriteUInt8(DATA_CHANNEL_OPEN_ACK_MESSAGE_TYPE);
-  payload->SetData(buffer.Data(), buffer.Length());
+void WriteDataChannelOpenAckMessage(rtc::CopyOnWriteBuffer* payload) {
+  uint8_t data = DATA_CHANNEL_OPEN_ACK_MESSAGE_TYPE;
+  payload->SetData(&data, sizeof(data));
 }
+
 }  // namespace webrtc

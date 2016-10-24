@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include "webrtc/p2p/quic/quicconnectionhelper.h"
 
 #include "net/quic/quic_time.h"
@@ -51,10 +53,7 @@ class MockAlarmDelegate : public QuicAlarm::Delegate {
  public:
   MockAlarmDelegate() : fired_(false) {}
 
-  QuicTime OnAlarm() override {
-    fired_ = true;
-    return QuicTime::Zero();
-  }
+  void OnAlarm() override { fired_ = true; }
 
   bool fired() const { return fired_; }
   void Clear() { fired_ = false; }
@@ -67,7 +66,10 @@ class QuicAlarmTest : public ::testing::Test {
  public:
   QuicAlarmTest()
       : delegate_(new MockAlarmDelegate()),
-        alarm_(new QuicAlarm(&clock_, rtc::Thread::Current(), delegate_)) {}
+        alarm_(new QuicAlarm(
+            &clock_,
+            rtc::Thread::Current(),
+            net::QuicArenaScopedPtr<net::QuicAlarm::Delegate>(delegate_))) {}
 
   // Make the alarm fire after the given microseconds (us). Negative values
   // imply the alarm should fire immediately.
@@ -85,7 +87,7 @@ class QuicAlarmTest : public ::testing::Test {
   // Used for setting clock time relative to alarm.
   MockClock clock_;
 
-  scoped_ptr<QuicAlarm> alarm_;
+  std::unique_ptr<QuicAlarm> alarm_;
 };
 
 // Test that the alarm is fired.

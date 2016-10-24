@@ -33,7 +33,7 @@ AudioTrackJni::JavaAudioTrack::JavaAudioTrack(
     NativeRegistration* native_reg,
     std::unique_ptr<GlobalRef> audio_track)
     : audio_track_(std::move(audio_track)),
-      init_playout_(native_reg->GetMethodId("initPlayout", "(II)V")),
+      init_playout_(native_reg->GetMethodId("initPlayout", "(II)Z")),
       start_playout_(native_reg->GetMethodId("startPlayout", "()Z")),
       stop_playout_(native_reg->GetMethodId("stopPlayout", "()Z")),
       set_stream_volume_(native_reg->GetMethodId("setStreamVolume", "(I)Z")),
@@ -43,8 +43,8 @@ AudioTrackJni::JavaAudioTrack::JavaAudioTrack(
 
 AudioTrackJni::JavaAudioTrack::~JavaAudioTrack() {}
 
-void AudioTrackJni::JavaAudioTrack::InitPlayout(int sample_rate, int channels) {
-  audio_track_->CallVoidMethod(init_playout_, sample_rate, channels);
+bool AudioTrackJni::JavaAudioTrack::InitPlayout(int sample_rate, int channels) {
+  return audio_track_->CallBooleanMethod(init_playout_, sample_rate, channels);
 }
 
 bool AudioTrackJni::JavaAudioTrack::StartPlayout() {
@@ -69,7 +69,7 @@ int AudioTrackJni::JavaAudioTrack::GetStreamVolume() {
 
 // TODO(henrika): possible extend usage of AudioManager and add it as member.
 AudioTrackJni::AudioTrackJni(AudioManager* audio_manager)
-    : j_environment_(rtc::ScopedToUnique(JVM::GetInstance()->environment())),
+    : j_environment_(JVM::GetInstance()->environment()),
       audio_parameters_(audio_manager->GetPlayoutAudioParameters()),
       direct_buffer_address_(nullptr),
       direct_buffer_capacity_in_bytes_(0),
@@ -86,14 +86,14 @@ AudioTrackJni::AudioTrackJni(AudioManager* audio_manager)
           &webrtc::AudioTrackJni::CacheDirectBufferAddress)},
       {"nativeGetPlayoutData", "(IJ)V",
       reinterpret_cast<void*>(&webrtc::AudioTrackJni::GetPlayoutData)}};
-  j_native_registration_ = rtc::ScopedToUnique(j_environment_->RegisterNatives(
-      "org/webrtc/voiceengine/WebRtcAudioTrack",
-      native_methods, arraysize(native_methods)));
+  j_native_registration_ = j_environment_->RegisterNatives(
+      "org/webrtc/voiceengine/WebRtcAudioTrack", native_methods,
+      arraysize(native_methods));
   j_audio_track_.reset(new JavaAudioTrack(
       j_native_registration_.get(),
-      rtc::ScopedToUnique(j_native_registration_->NewObject(
+      j_native_registration_->NewObject(
           "<init>", "(Landroid/content/Context;J)V",
-          JVM::GetInstance()->context(), PointerTojlong(this)))));
+          JVM::GetInstance()->context(), PointerTojlong(this))));
   // Detach from this thread since we want to use the checker to verify calls
   // from the Java based audio thread.
   thread_checker_java_.DetachFromThread();
@@ -123,8 +123,11 @@ int32_t AudioTrackJni::InitPlayout() {
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
   RTC_DCHECK(!initialized_);
   RTC_DCHECK(!playing_);
-  j_audio_track_->InitPlayout(
-      audio_parameters_.sample_rate(), audio_parameters_.channels());
+  if (!j_audio_track_->InitPlayout(
+      audio_parameters_.sample_rate(), audio_parameters_.channels())) {
+    ALOGE("InitPlayout failed!");
+    return -1;
+  }
   initialized_ = true;
   return 0;
 }

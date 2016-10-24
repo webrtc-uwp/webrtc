@@ -17,6 +17,12 @@
 
 using namespace cricket;
 
+// STUN timeout (with all retries) is 9500ms.
+// Add some margin of error for slow bots.
+// TODO(deadbeef): Use simulated clock instead of just increasing timeouts to
+// fix flaky tests.
+static const int kTimeoutMs = 15000;
+
 class StunRequestTest : public testing::Test,
                         public sigslot::has_slots<> {
  public:
@@ -146,13 +152,13 @@ TEST_F(StunRequestTest, TestUnexpected) {
 TEST_F(StunRequestTest, TestBackoff) {
   StunMessage* req = CreateStunMessage(STUN_BINDING_REQUEST, NULL);
 
-  uint32_t start = rtc::Time();
+  int64_t start = rtc::TimeMillis();
   manager_.Send(new StunRequestThunker(req, this));
   StunMessage* res = CreateStunMessage(STUN_BINDING_RESPONSE, req);
   for (int i = 0; i < 9; ++i) {
     while (request_count_ == i)
       rtc::Thread::Current()->ProcessMessages(1);
-    int32_t elapsed = rtc::TimeSince(start);
+    int64_t elapsed = rtc::TimeMillis() - start;
     LOG(LS_INFO) << "STUN request #" << (i + 1)
                  << " sent at " << elapsed << " ms";
     EXPECT_GE(TotalDelay(i + 1), elapsed);
@@ -172,7 +178,7 @@ TEST_F(StunRequestTest, TestTimeout) {
   StunMessage* res = CreateStunMessage(STUN_BINDING_RESPONSE, req);
 
   manager_.Send(new StunRequestThunker(req, this));
-  rtc::Thread::Current()->ProcessMessages(10000);  // > STUN timeout
+  rtc::Thread::Current()->ProcessMessages(kTimeoutMs);
   EXPECT_FALSE(manager_.CheckResponse(res));
 
   EXPECT_TRUE(response_ == NULL);

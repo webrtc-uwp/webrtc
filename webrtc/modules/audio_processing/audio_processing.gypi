@@ -16,7 +16,6 @@
       'type': 'static_library',
       'variables': {
         # Outputs some low-level debug files.
-        'aec_debug_dump%': 0,
         'agc_debug_dump%': 0,
 
         # Disables the usual mode where we trust the reported system delay
@@ -34,25 +33,24 @@
       'sources': [
         'aec/aec_core.cc',
         'aec/aec_core.h',
-        'aec/aec_core_internal.h',
-        'aec/aec_rdft.c',
+        'aec/aec_core_optimized_methods.h',
+        'aec/aec_rdft.cc',
         'aec/aec_rdft.h',
         'aec/aec_resampler.cc',
         'aec/aec_resampler.h',
         'aec/echo_cancellation.cc',
-        'aec/echo_cancellation_internal.h',
         'aec/echo_cancellation.h',
-        'aecm/aecm_core.c',
+        'aecm/aecm_core.cc',
         'aecm/aecm_core.h',
-        'aecm/echo_control_mobile.c',
+        'aecm/echo_control_mobile.cc',
         'aecm/echo_control_mobile.h',
         'agc/agc.cc',
         'agc/agc.h',
         'agc/agc_manager_direct.cc',
         'agc/agc_manager_direct.h',
         'agc/gain_map_internal.h',
-        'agc/histogram.cc',
-        'agc/histogram.h',
+        'agc/loudness_histogram.cc',
+        'agc/loudness_histogram.h',
         'agc/legacy/analog_agc.c',
         'agc/legacy/analog_agc.h',
         'agc/legacy/digital_agc.c',
@@ -62,11 +60,11 @@
         'agc/utility.h',
         'audio_buffer.cc',
         'audio_buffer.h',
+        'audio_processing.cc',
         'audio_processing_impl.cc',
         'audio_processing_impl.h',
         'beamformer/array_util.cc',
         'beamformer/array_util.h',
-        'beamformer/beamformer.h',
         'beamformer/complex_matrix.h',
         'beamformer/covariance_matrix_generator.cc',
         'beamformer/covariance_matrix_generator.h',
@@ -85,19 +83,34 @@
         'high_pass_filter_impl.cc',
         'high_pass_filter_impl.h',
         'include/audio_processing.h',
-        'intelligibility/intelligibility_enhancer.cc',
-        'intelligibility/intelligibility_enhancer.h',
-        'intelligibility/intelligibility_utils.cc',
-        'intelligibility/intelligibility_utils.h',
+        'level_controller/biquad_filter.cc',
+        'level_controller/biquad_filter.h',
+        'level_controller/down_sampler.cc',
+        'level_controller/down_sampler.h',
+        'level_controller/gain_applier.cc',
+        'level_controller/gain_applier.h',
+        'level_controller/gain_selector.cc',
+        'level_controller/gain_selector.h',
+        'level_controller/lc_constants.h',
+        'level_controller/level_controller.cc',
+        'level_controller/level_controller.h',
+        'level_controller/noise_spectrum_estimator.cc',
+        'level_controller/noise_spectrum_estimator.h',
+        'level_controller/noise_level_estimator.cc',
+        'level_controller/noise_level_estimator.h',
+        'level_controller/peak_level_estimator.cc',
+        'level_controller/peak_level_estimator.h',
+        'level_controller/saturating_gain_estimator.cc',
+        'level_controller/saturating_gain_estimator.h',
+        'level_controller/signal_classifier.cc',
+        'level_controller/signal_classifier.h',
         'level_estimator_impl.cc',
         'level_estimator_impl.h',
-        'logging/aec_logging.h',
-        'logging/aec_logging_file_handling.cc',
-        'logging/aec_logging_file_handling.h',
+        'logging/apm_data_dumper.cc',
+        'logging/apm_data_dumper.h',
         'noise_suppression_impl.cc',
         'noise_suppression_impl.h',
-        'processing_component.cc',
-        'processing_component.h',
+        'render_queue_item_verifier.h',
         'rms_level.cc',
         'rms_level.h',
         'splitting_filter.cc',
@@ -119,10 +132,12 @@
         'transient/wpd_tree.h',
         'typing_detection.cc',
         'typing_detection.h',
-        'utility/delay_estimator.c',
+        'utility/block_mean_calculator.cc',
+        'utility/block_mean_calculator.h',
+        'utility/delay_estimator.cc',
         'utility/delay_estimator.h',
         'utility/delay_estimator_internal.h',
-        'utility/delay_estimator_wrapper.c',
+        'utility/delay_estimator_wrapper.cc',
         'utility/delay_estimator_wrapper.h',
         'vad/common.h',
         'vad/gmm.cc',
@@ -148,8 +163,10 @@
         'voice_detection_impl.h',
       ],
       'conditions': [
-        ['aec_debug_dump==1', {
-          'defines': ['WEBRTC_AEC_DEBUG_DUMP',],
+        ['apm_debug_dump==1', {
+          'defines': ['WEBRTC_APM_DEBUG_DUMP=1',],
+        }, {
+          'defines': ['WEBRTC_APM_DEBUG_DUMP=0',],
         }],
         ['aec_untrusted_delay_for_testing==1', {
           'defines': ['WEBRTC_UNTRUSTED_DELAY',],
@@ -161,6 +178,17 @@
         ['enable_protobuf==1 and winrt_platform!="win_phone"', {
           'dependencies': ['audioproc_debug_proto'],
           'defines': ['WEBRTC_AUDIOPROC_DEBUG_DUMP'],
+        }],
+        ['enable_intelligibility_enhancer==1', {
+          'defines': ['WEBRTC_INTELLIGIBILITY_ENHANCER=1',],
+          'sources': [
+            'intelligibility/intelligibility_enhancer.cc',
+            'intelligibility/intelligibility_enhancer.h',
+            'intelligibility/intelligibility_utils.cc',
+            'intelligibility/intelligibility_utils.h',
+          ],
+        }, {
+          'defines': ['WEBRTC_INTELLIGIBILITY_ENHANCER=0',],
         }],
         ['prefer_fixed_point==1', {
           'defines': ['WEBRTC_NS_FIXED'],
@@ -201,19 +229,19 @@
         }],
         ['target_arch=="mipsel" and mips_arch_variant!="r6"', {
           'sources': [
-            'aecm/aecm_core_mips.c',
+            'aecm/aecm_core_mips.cc',
           ],
           'conditions': [
             ['mips_float_abi=="hard"', {
               'sources': [
                 'aec/aec_core_mips.cc',
-                'aec/aec_rdft_mips.c',
+                'aec/aec_rdft_mips.cc',
               ],
             }],
           ],
         }, {
           'sources': [
-            'aecm/aecm_core_c.c',
+            'aecm/aecm_core_c.cc',
           ],
         }],
       ],
@@ -246,9 +274,14 @@
           'type': 'static_library',
           'sources': [
             'aec/aec_core_sse2.cc',
-            'aec/aec_rdft_sse2.c',
+            'aec/aec_rdft_sse2.cc',
           ],
           'conditions': [
+            ['apm_debug_dump==1', {
+              'defines': ['WEBRTC_APM_DEBUG_DUMP=1',],
+            }, {
+              'defines': ['WEBRTC_APM_DEBUG_DUMP=0',],
+            }],
             ['os_posix==1', {
               'cflags': [ '-msse2', ],
               'xcode_settings': {
@@ -269,9 +302,17 @@
         ],
         'sources': [
           'aec/aec_core_neon.cc',
-          'aec/aec_rdft_neon.c',
-          'aecm/aecm_core_neon.c',
+          'aec/aec_rdft_neon.cc',
+          'aecm/aecm_core_neon.cc',
           'ns/nsx_core_neon.c',
+        ],
+        'conditions': [
+          ['apm_debug_dump==1', {
+            'defines': ['WEBRTC_APM_DEBUG_DUMP=1',],
+          }],
+          ['apm_debug_dump==0', {
+            'defines': ['WEBRTC_APM_DEBUG_DUMP=0',],
+          }],
         ],
       }],
     }],

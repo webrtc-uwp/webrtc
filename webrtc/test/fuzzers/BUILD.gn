@@ -6,11 +6,12 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
+import("../../build/webrtc.gni")
 import("//build/config/features.gni")
-import("webrtc_fuzzer.gni")
+import("//build_overrides/webrtc.gni")
+import("//testing/libfuzzer/fuzzer_test.gni")
 
-static_library("webrtc_fuzzer_main") {
-  public_configs = [ "../..:common_inherited_config" ]
+rtc_static_library("webrtc_fuzzer_main") {
   sources = [
     "webrtc_fuzzer_main.cc",
   ]
@@ -19,6 +20,18 @@ static_library("webrtc_fuzzer_main") {
     "../../system_wrappers:metrics_default",
     "//testing/libfuzzer:libfuzzer_main",
   ]
+}
+
+template("webrtc_fuzzer_test") {
+  fuzzer_test(target_name) {
+    forward_variables_from(invoker, "*")
+    deps += [ ":webrtc_fuzzer_main" ]
+    if (is_clang) {
+      # Suppress warnings from Chrome's Clang plugins.
+      # See http://code.google.com/p/webrtc/issues/detail?id=163 for details
+      suppressed_configs = [ "//build/config/clang:find_bad_constructs" ]
+    }
+  }
 }
 
 webrtc_fuzzer_test("h264_depacketizer_fuzzer") {
@@ -73,10 +86,39 @@ webrtc_fuzzer_test("rtcp_receiver_fuzzer") {
   deps = [
     "../../modules/rtp_rtcp/",
   ]
+  seed_corpus = "corpora/rtcp-corpus"
 }
 
-source_set("audio_decoder_fuzzer") {
-  public_configs = [ "../..:common_inherited_config" ]
+webrtc_fuzzer_test("rtp_packet_fuzzer") {
+  sources = [
+    "rtp_packet_fuzzer.cc",
+  ]
+  deps = [
+    "../../modules/rtp_rtcp/",
+  ]
+  seed_corpus = "corpora/rtp-corpus"
+}
+
+webrtc_fuzzer_test("rtp_header_fuzzer") {
+  sources = [
+    "rtp_header_fuzzer.cc",
+  ]
+  deps = [
+    "../../modules/rtp_rtcp/",
+  ]
+}
+
+webrtc_fuzzer_test("congestion_controller_feedback_fuzzer") {
+  sources = [
+    "congestion_controller_feedback_fuzzer.cc",
+  ]
+  deps = [
+    "../../:rtc_event_log",
+    "../../modules/congestion_controller/",
+  ]
+}
+
+rtc_source_set("audio_decoder_fuzzer") {
   sources = [
     "audio_decoder_fuzzer.cc",
     "audio_decoder_fuzzer.h",
@@ -141,4 +183,59 @@ webrtc_fuzzer_test("audio_decoder_opus_redundant_fuzzer") {
     ":audio_decoder_fuzzer",
     "../../modules/audio_coding:webrtc_opus",
   ]
+}
+
+# TODO(katrielc) Enable in Chromium when CL 2022833002 lands.
+# Although the dependency on media compiles in standalone, it is
+# flagged by gn check, so breaks when rolled into Chromium.
+if (!build_with_chromium) {
+  webrtc_fuzzer_test("turn_unwrap_fuzzer") {
+    sources = [
+      "turn_unwrap_fuzzer.cc",
+    ]
+    deps = [
+      "../../media:media",
+    ]
+  }
+
+  webrtc_fuzzer_test("sdp_parser_fuzzer") {
+    sources = [
+      "sdp_parser_fuzzer.cc",
+    ]
+    deps = [
+      "../../api:libjingle_peerconnection",
+    ]
+    seed_corpus = "corpora/sdp-corpus"
+  }
+
+  webrtc_fuzzer_test("stun_parser_fuzzer") {
+    sources = [
+      "stun_parser_fuzzer.cc",
+    ]
+    deps = [
+      "../../p2p:rtc_p2p",
+    ]
+    seed_corpus = "corpora/stun-corpus"
+    dict = "corpora/stun.tokens"
+  }
+
+  webrtc_fuzzer_test("stun_validator_fuzzer") {
+    sources = [
+      "stun_validator_fuzzer.cc",
+    ]
+    deps = [
+      "../../p2p:rtc_p2p",
+    ]
+    seed_corpus = "corpora/stun-corpus"
+    dict = "corpora/stun.tokens"
+  }
+
+  webrtc_fuzzer_test("pseudotcp_parser_fuzzer") {
+    sources = [
+      "pseudotcp_parser_fuzzer.cc",
+    ]
+    deps = [
+      "../../p2p:rtc_p2p",
+    ]
+  }
 }

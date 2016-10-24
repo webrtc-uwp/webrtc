@@ -13,12 +13,18 @@
 
 #include "testing/gtest/include/gtest/gtest.h"
 
+#include "webrtc/call/mock/mock_rtc_event_log.h"
 #include "webrtc/modules/bitrate_controller/include/bitrate_controller.h"
+#include "webrtc/modules/pacing/mock/mock_paced_sender.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
-using webrtc::RtcpBandwidthObserver;
-using webrtc::BitrateObserver;
+using ::testing::Exactly;
+using ::testing::Return;
+
 using webrtc::BitrateController;
+using webrtc::BitrateObserver;
+using webrtc::PacedSender;
+using webrtc::RtcpBandwidthObserver;
 
 uint8_t WeightedLoss(int num_packets1, uint8_t fraction_loss1,
                      int num_packets2, uint8_t fraction_loss2) {
@@ -61,8 +67,8 @@ class BitrateControllerTest : public ::testing::Test {
   ~BitrateControllerTest() {}
 
   virtual void SetUp() {
-    controller_ =
-        BitrateController::CreateBitrateController(&clock_, &bitrate_observer_);
+    controller_ = BitrateController::CreateBitrateController(
+        &clock_, &bitrate_observer_, &event_log_);
     controller_->SetStartBitrate(kStartBitrateBps);
     EXPECT_EQ(kStartBitrateBps, bitrate_observer_.last_bitrate_);
     controller_->SetMinMaxBitrate(kMinBitrateBps, kMaxBitrateBps);
@@ -86,6 +92,7 @@ class BitrateControllerTest : public ::testing::Test {
   TestBitrateObserver bitrate_observer_;
   BitrateController* controller_;
   RtcpBandwidthObserver* bandwidth_observer_;
+  testing::NiceMock<webrtc::MockRtcEventLog> event_log_;
 };
 
 TEST_F(BitrateControllerTest, DefaultMinMaxBitrate) {
@@ -145,14 +152,14 @@ TEST_F(BitrateControllerTest, OneBitrateObserverOneRtcpObserver) {
   time_ms += 1000;
 
   report_blocks.clear();
-  report_blocks.push_back(CreateReportBlock(1, 2, 0, 801));
+  report_blocks.push_back(CreateReportBlock(1, 2, 0, 101));
   bandwidth_observer_->OnReceivedRtcpReceiverReport(report_blocks, 50, time_ms);
   EXPECT_EQ(299732, bitrate_observer_.last_bitrate_);
   time_ms += 1000;
 
   // Reach max cap.
   report_blocks.clear();
-  report_blocks.push_back(CreateReportBlock(1, 2, 0, 101));
+  report_blocks.push_back(CreateReportBlock(1, 2, 0, 121));
   bandwidth_observer_->OnReceivedRtcpReceiverReport(report_blocks, 50, time_ms);
   EXPECT_EQ(300000, bitrate_observer_.last_bitrate_);
   time_ms += 1000;

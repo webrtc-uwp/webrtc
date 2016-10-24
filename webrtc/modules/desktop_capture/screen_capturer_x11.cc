@@ -11,6 +11,8 @@
 #include "webrtc/modules/desktop_capture/screen_capturer.h"
 
 #include <string.h>
+
+#include <memory>
 #include <set>
 
 #include <X11/extensions/Xdamage.h>
@@ -19,15 +21,16 @@
 #include <X11/Xutil.h>
 
 #include "webrtc/base/checks.h"
-#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/base/timeutils.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/differ.h"
 #include "webrtc/modules/desktop_capture/screen_capture_frame_queue.h"
 #include "webrtc/modules/desktop_capture/screen_capturer_helper.h"
+#include "webrtc/modules/desktop_capture/shared_desktop_frame.h"
 #include "webrtc/modules/desktop_capture/x11/x_server_pixel_buffer.h"
 #include "webrtc/system_wrappers/include/logging.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
 
 namespace webrtc {
 namespace {
@@ -63,7 +66,7 @@ class ScreenCapturerLinux : public ScreenCapturer,
   // from HandleXEvent(). In the non-DAMAGE case, this captures the
   // whole screen, then calculates some invalid rectangles that include any
   // differences between this and the previous capture.
-  DesktopFrame* CaptureScreen();
+  std::unique_ptr<DesktopFrame> CaptureScreen();
 
   // Called when the screen configuration is changed.
   void ScreenConfigurationChanged();
@@ -79,23 +82,23 @@ class ScreenCapturerLinux : public ScreenCapturer,
 
   DesktopCaptureOptions options_;
 
-  Callback* callback_;
+  Callback* callback_ = nullptr;
 
   // X11 graphics context.
-  GC gc_;
-  Window root_window_;
+  GC gc_ = nullptr;
+  Window root_window_ = BadValue;
 
   // XFixes.
-  bool has_xfixes_;
-  int xfixes_event_base_;
-  int xfixes_error_base_;
+  bool has_xfixes_ = false;
+  int xfixes_event_base_ = -1;
+  int xfixes_error_base_ = -1;
 
   // XDamage information.
-  bool use_damage_;
-  Damage damage_handle_;
-  int damage_event_base_;
-  int damage_error_base_;
-  XserverRegion damage_region_;
+  bool use_damage_ = false;
+  Damage damage_handle_ = 0;
+  int damage_event_base_ = -1;
+  int damage_error_base_ = -1;
+  XserverRegion damage_region_ = 0;
 
   // Access to the X Server's pixel buffer.
   XServerPixelBuffer x_server_pixel_buffer_;
@@ -105,30 +108,19 @@ class ScreenCapturerLinux : public ScreenCapturer,
   ScreenCapturerHelper helper_;
 
   // Queue of the frames buffers.
-  ScreenCaptureFrameQueue queue_;
+  ScreenCaptureFrameQueue<SharedDesktopFrame> queue_;
 
   // Invalid region from the previous capture. This is used to synchronize the
   // current with the last buffer used.
   DesktopRegion last_invalid_region_;
 
   // |Differ| for use when polling for changes.
-  rtc::scoped_ptr<Differ> differ_;
+  std::unique_ptr<Differ> differ_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(ScreenCapturerLinux);
 };
 
-ScreenCapturerLinux::ScreenCapturerLinux()
-    : callback_(NULL),
-      gc_(NULL),
-      root_window_(BadValue),
-      has_xfixes_(false),
-      xfixes_event_base_(-1),
-      xfixes_error_base_(-1),
-      use_damage_(false),
-      damage_handle_(0),
-      damage_event_base_(-1),
-      damage_error_base_(-1),
-      damage_region_(0) {
+ScreenCapturerLinux::ScreenCapturerLinux() {
   helper_.SetLogGridSize(4);
 }
 
@@ -233,9 +225,10 @@ void ScreenCapturerLinux::Start(Callback* callback) {
 }
 
 void ScreenCapturerLinux::Capture(const DesktopRegion& region) {
-  TickTime capture_start_time = TickTime::Now();
+  int64_t capture_start_time_nanos = rtc::TimeNanos();
 
   queue_.MoveToNextFrame();
+  RTC_DCHECK(!queue_.current_frame() || !queue_.current_frame()->IsShared());
 
   // Process XEvents for XDamage and cursor shape tracking.
   options_.x_display()->ProcessPendingXEvents();
@@ -245,7 +238,7 @@ void ScreenCapturerLinux::Capture(const DesktopRegion& region) {
   // in a good shape.
   if (!x_server_pixel_buffer_.is_initialized()) {
      // We failed to initialize pixel buffer.
-     callback_->OnCaptureCompleted(NULL);
+     callback_->OnCaptureResult(Result::ERROR_PERMANENT, nullptr);
      return;
   }
 
@@ -253,28 +246,26 @@ void ScreenCapturerLinux::Capture(const DesktopRegion& region) {
   // Note that we can't reallocate other buffers at this point, since the caller
   // may still be reading from them.
   if (!queue_.current_frame()) {
-    rtc::scoped_ptr<DesktopFrame> frame(
-        new BasicDesktopFrame(x_server_pixel_buffer_.window_size()));
-    queue_.ReplaceCurrentFrame(frame.release());
+    queue_.ReplaceCurrentFrame(
+        SharedDesktopFrame::Wrap(std::unique_ptr<DesktopFrame>(
+            new BasicDesktopFrame(x_server_pixel_buffer_.window_size()))));
   }
 
   // Refresh the Differ helper used by CaptureFrame(), if needed.
   DesktopFrame* frame = queue_.current_frame();
-  if (!use_damage_ && (
-      !differ_.get() ||
-      (differ_->width() != frame->size().width()) ||
-      (differ_->height() != frame->size().height()) ||
-      (differ_->bytes_per_row() != frame->stride()))) {
+  if (!use_damage_ &&
+      (!differ_ || (differ_->width() != frame->size().width()) ||
+       (differ_->height() != frame->size().height()) ||
+       (differ_->bytes_per_row() != frame->stride()))) {
     differ_.reset(new Differ(frame->size().width(), frame->size().height(),
-                             DesktopFrame::kBytesPerPixel,
-                             frame->stride()));
+                             DesktopFrame::kBytesPerPixel, frame->stride()));
   }
 
-  DesktopFrame* result = CaptureScreen();
+  std::unique_ptr<DesktopFrame> result = CaptureScreen();
   last_invalid_region_ = result->updated_region();
-  result->set_capture_time_ms(
-      (TickTime::Now() - capture_start_time).Milliseconds());
-  callback_->OnCaptureCompleted(result);
+  result->set_capture_time_ms((rtc::TimeNanos() - capture_start_time_nanos) /
+                              rtc::kNumNanosecsPerMillisec);
+  callback_->OnCaptureResult(Result::SUCCESS, std::move(result));
 }
 
 bool ScreenCapturerLinux::GetScreenList(ScreenList* screens) {
@@ -306,8 +297,8 @@ bool ScreenCapturerLinux::HandleXEvent(const XEvent& event) {
   return false;
 }
 
-DesktopFrame* ScreenCapturerLinux::CaptureScreen() {
-  DesktopFrame* frame = queue_.current_frame()->Share();
+std::unique_ptr<DesktopFrame> ScreenCapturerLinux::CaptureScreen() {
+  std::unique_ptr<SharedDesktopFrame> frame = queue_.current_frame()->Share();
   assert(x_server_pixel_buffer_.window_size().equals(frame->size()));
 
   // Pass the screen size to the helper, so it can clip the invalid region if it
@@ -349,18 +340,18 @@ DesktopFrame* ScreenCapturerLinux::CaptureScreen() {
 
     for (DesktopRegion::Iterator it(*updated_region);
          !it.IsAtEnd(); it.Advance()) {
-      x_server_pixel_buffer_.CaptureRect(it.rect(), frame);
+      x_server_pixel_buffer_.CaptureRect(it.rect(), frame.get());
     }
   } else {
     // Doing full-screen polling, or this is the first capture after a
     // screen-resolution change.  In either case, need a full-screen capture.
     DesktopRect screen_rect = DesktopRect::MakeSize(frame->size());
-    x_server_pixel_buffer_.CaptureRect(screen_rect, frame);
+    x_server_pixel_buffer_.CaptureRect(screen_rect, frame.get());
 
     if (queue_.previous_frame()) {
       // Full-screen polling, so calculate the invalid rects here, based on the
       // changed pixels between current and previous buffers.
-      RTC_DCHECK(differ_.get() != NULL);
+      RTC_DCHECK(differ_);
       RTC_DCHECK(queue_.previous_frame()->data());
       differ_->CalcDirtyRegion(queue_.previous_frame()->data(),
                                frame->data(), updated_region);
@@ -373,7 +364,7 @@ DesktopFrame* ScreenCapturerLinux::CaptureScreen() {
     }
   }
 
-  return frame;
+  return std::move(frame);
 }
 
 void ScreenCapturerLinux::ScreenConfigurationChanged() {
@@ -410,7 +401,7 @@ void ScreenCapturerLinux::SynchronizeFrame() {
 void ScreenCapturerLinux::DeinitXlib() {
   if (gc_) {
     XFreeGC(display(), gc_);
-    gc_ = NULL;
+    gc_ = nullptr;
   }
 
   x_server_pixel_buffer_.Release();
@@ -433,9 +424,9 @@ void ScreenCapturerLinux::DeinitXlib() {
 // static
 ScreenCapturer* ScreenCapturer::Create(const DesktopCaptureOptions& options) {
   if (!options.x_display())
-    return NULL;
+    return nullptr;
 
-  rtc::scoped_ptr<ScreenCapturerLinux> capturer(new ScreenCapturerLinux());
+  std::unique_ptr<ScreenCapturerLinux> capturer(new ScreenCapturerLinux());
   if (!capturer->Init(options))
     capturer.reset();
   return capturer.release();

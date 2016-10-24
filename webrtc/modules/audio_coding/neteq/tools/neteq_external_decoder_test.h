@@ -27,7 +27,9 @@ class NetEqExternalDecoderTest {
   static const int kOutputLengthMs = 10;
 
   // The external decoder |decoder| is suppose to be of type |codec|.
-  NetEqExternalDecoderTest(NetEqDecoder codec, AudioDecoder* decoder);
+  NetEqExternalDecoderTest(NetEqDecoder codec,
+                           int sample_rate_hz,
+                           AudioDecoder* decoder);
 
   virtual ~NetEqExternalDecoderTest() { }
 
@@ -42,10 +44,8 @@ class NetEqExternalDecoderTest {
                             rtc::ArrayView<const uint8_t> payload,
                             uint32_t receive_timestamp);
 
-  // Get 10 ms of audio data. The data is written to |output|, which can hold
-  // (at least) |max_length| elements. Returns number of samples.
-  size_t GetOutputAudio(size_t max_length, int16_t* output,
-                        NetEqOutputType* output_type);
+  // Get 10 ms of audio data.
+  void GetOutputAudio(AudioFrame* output);
 
   NetEq* neteq() { return neteq_.get(); }
 

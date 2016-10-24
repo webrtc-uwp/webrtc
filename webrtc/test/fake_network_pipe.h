@@ -11,6 +11,7 @@
 #ifndef WEBRTC_TEST_FAKE_NETWORK_PIPE_H_
 #define WEBRTC_TEST_FAKE_NETWORK_PIPE_H_
 
+#include <memory>
 #include <set>
 #include <string.h>
 #include <queue>
@@ -18,7 +19,6 @@
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/base/criticalsection.h"
 #include "webrtc/base/random.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -50,7 +50,7 @@ class NetworkPacket {
 
  private:
   // The packet data.
-  rtc::scoped_ptr<uint8_t[]> data_;
+  std::unique_ptr<uint8_t[]> data_;
   // Length of data_.
   size_t data_length_;
   // The time the packet was sent out on the network.
@@ -63,7 +63,6 @@ class NetworkPacket {
 // capacity and adding an extra transport delay in addition to the capacity
 // introduced delay.
 
-// TODO(mflodman) Add random and bursty packet loss.
 class FakeNetworkPipe {
  public:
   struct Config {
@@ -80,6 +79,8 @@ class FakeNetworkPipe {
     int loss_percent = 0;
     // If packets are allowed to be reordered.
     bool allow_reordering = false;
+    // The average length of a burst of lost packets.
+    int avg_burst_loss_length = -1;
   };
 
   FakeNetworkPipe(Clock* clock, const FakeNetworkPipe::Config& config);
@@ -132,6 +133,16 @@ class FakeNetworkPipe {
   size_t dropped_packets_;
   size_t sent_packets_;
   int64_t total_packet_delay_;
+
+  // Are we currently dropping a burst of packets?
+  bool bursting_;
+
+  // The probability to drop the packet if we are currently dropping a
+  // burst of packet
+  double prob_loss_bursting_;
+
+  // The probability to drop a burst of packets.
+  double prob_start_bursting_;
 
   int64_t next_process_time_;
 

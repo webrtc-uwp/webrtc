@@ -14,12 +14,12 @@
 #include <stdlib.h>
 
 #include <algorithm>
+#include <memory>
 
 #include "gflags/gflags.h"
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_processing/agc/agc.h"
-#include "webrtc/modules/audio_processing/agc/histogram.h"
+#include "webrtc/modules/audio_processing/agc/loudness_histogram.h"
 #include "webrtc/modules/audio_processing/agc/utility.h"
 #include "webrtc/modules/audio_processing/vad/vad_audio_proc.h"
 #include "webrtc/modules/audio_processing/vad/common.h"
@@ -75,7 +75,7 @@ class AgcStat {
   AgcStat()
       : video_index_(0),
         activity_threshold_(kDefaultActivityThreshold),
-        audio_content_(Histogram::Create(kAgcAnalWindowSamples)),
+        audio_content_(LoudnessHistogram::Create(kAgcAnalWindowSamples)),
         audio_processing_(new VadAudioProc()),
         vad_(new PitchBasedVad()),
         standalone_vad_(StandaloneVad::Create()),
@@ -155,10 +155,10 @@ class AgcStat {
   int video_index_;
   double activity_threshold_;
   double video_vad_[kMaxNumFrames];
-  rtc::scoped_ptr<Histogram> audio_content_;
-  rtc::scoped_ptr<VadAudioProc> audio_processing_;
-  rtc::scoped_ptr<PitchBasedVad> vad_;
-  rtc::scoped_ptr<StandaloneVad> standalone_vad_;
+  std::unique_ptr<LoudnessHistogram> audio_content_;
+  std::unique_ptr<VadAudioProc> audio_processing_;
+  std::unique_ptr<PitchBasedVad> vad_;
+  std::unique_ptr<StandaloneVad> standalone_vad_;
 
   FILE* audio_content_fid_;
 };

@@ -35,35 +35,43 @@ TEST_F(RemoteBitrateEstimatorAbsSendTimeTest, RateIncreaseReordering) {
 }
 
 TEST_F(RemoteBitrateEstimatorAbsSendTimeTest, RateIncreaseRtpTimestamps) {
-  RateIncreaseRtpTimestampsTestHelper(1232);
+  RateIncreaseRtpTimestampsTestHelper(1237);
 }
 
 TEST_F(RemoteBitrateEstimatorAbsSendTimeTest, CapacityDropOneStream) {
-  CapacityDropTestHelper(1, false, 700);
+  CapacityDropTestHelper(1, false, 633, 0);
+}
+
+TEST_F(RemoteBitrateEstimatorAbsSendTimeTest, CapacityDropPosOffsetChange) {
+  CapacityDropTestHelper(1, false, 267, 30000);
+}
+
+TEST_F(RemoteBitrateEstimatorAbsSendTimeTest, CapacityDropNegOffsetChange) {
+  CapacityDropTestHelper(1, false, 267, -30000);
 }
 
 TEST_F(RemoteBitrateEstimatorAbsSendTimeTest, CapacityDropOneStreamWrap) {
-  CapacityDropTestHelper(1, true, 700);
+  CapacityDropTestHelper(1, true, 633, 0);
 }
 
 TEST_F(RemoteBitrateEstimatorAbsSendTimeTest, CapacityDropTwoStreamsWrap) {
-  CapacityDropTestHelper(2, true, 633);
+  CapacityDropTestHelper(2, true, 633, 0);
 }
 
 TEST_F(RemoteBitrateEstimatorAbsSendTimeTest, CapacityDropThreeStreamsWrap) {
-  CapacityDropTestHelper(3, true, 633);
+  CapacityDropTestHelper(3, true, 633, 0);
 }
 
 TEST_F(RemoteBitrateEstimatorAbsSendTimeTest, CapacityDropThirteenStreamsWrap) {
-  CapacityDropTestHelper(13, true, 700);
+  CapacityDropTestHelper(13, true, 667, 0);
 }
 
 TEST_F(RemoteBitrateEstimatorAbsSendTimeTest, CapacityDropNineteenStreamsWrap) {
-  CapacityDropTestHelper(19, true, 667);
+  CapacityDropTestHelper(19, true, 667, 0);
 }
 
 TEST_F(RemoteBitrateEstimatorAbsSendTimeTest, CapacityDropThirtyStreamsWrap) {
-  CapacityDropTestHelper(30, true, 667);
+  CapacityDropTestHelper(30, true, 667, 0);
 }
 
 TEST_F(RemoteBitrateEstimatorAbsSendTimeTest, TestTimestampGrouping) {
@@ -90,7 +98,7 @@ TEST_F(RemoteBitrateEstimatorAbsSendTimeTest, TestProcessAfterTimeout) {
   // RemoteBitrateEstimator.
   const int64_t kStreamTimeOutMs = 2000;
   const int64_t kProcessIntervalMs = 1000;
-  IncomingPacket(0, 1000, clock_.TimeInMilliseconds(), 0, 0, true);
+  IncomingPacket(0, 1000, clock_.TimeInMilliseconds(), 0, 0);
   clock_.AdvanceTimeMilliseconds(kStreamTimeOutMs + 1);
   // Trigger timeout.
   bitrate_estimator_->Process();
@@ -106,16 +114,14 @@ TEST_F(RemoteBitrateEstimatorAbsSendTimeTest, TestProbeDetection) {
   for (int i = 0; i < kProbeLength; ++i) {
     clock_.AdvanceTimeMilliseconds(10);
     now_ms = clock_.TimeInMilliseconds();
-    IncomingPacket(0, 1000, now_ms, 90 * now_ms, AbsSendTime(now_ms, 1000),
-                   true);
+    IncomingPacket(0, 1000, now_ms, 90 * now_ms, AbsSendTime(now_ms, 1000));
   }
 
   // Second burst sent at 8 * 1000 / 5 = 1600 kbps.
   for (int i = 0; i < kProbeLength; ++i) {
     clock_.AdvanceTimeMilliseconds(5);
     now_ms = clock_.TimeInMilliseconds();
-    IncomingPacket(0, 1000, now_ms, 90 * now_ms, AbsSendTime(now_ms, 1000),
-                   true);
+    IncomingPacket(0, 1000, now_ms, 90 * now_ms, AbsSendTime(now_ms, 1000));
   }
 
   bitrate_estimator_->Process();
@@ -132,12 +138,10 @@ TEST_F(RemoteBitrateEstimatorAbsSendTimeTest,
   for (int i = 0; i < kProbeLength; ++i) {
     clock_.AdvanceTimeMilliseconds(5);
     now_ms = clock_.TimeInMilliseconds();
-    IncomingPacket(0, 1000, now_ms, 90 * now_ms, AbsSendTime(now_ms, 1000),
-                   true);
+    IncomingPacket(0, 1000, now_ms, 90 * now_ms, AbsSendTime(now_ms, 1000));
     // Non-paced packet, arriving 5 ms after.
     clock_.AdvanceTimeMilliseconds(5);
-    IncomingPacket(0, 100, now_ms, 90 * now_ms, AbsSendTime(now_ms, 1000),
-                   false);
+    IncomingPacket(0, 100, now_ms, 90 * now_ms, AbsSendTime(now_ms, 1000));
   }
 
   bitrate_estimator_->Process();
@@ -158,7 +162,7 @@ TEST_F(RemoteBitrateEstimatorAbsSendTimeTest,
     now_ms = clock_.TimeInMilliseconds();
     send_time_ms += 10;
     IncomingPacket(0, 1000, now_ms, 90 * send_time_ms,
-                   AbsSendTime(send_time_ms, 1000), true);
+                   AbsSendTime(send_time_ms, 1000));
   }
 
   // Second burst sent at 8 * 1000 / 5 = 1600 kbps, arriving at 8 * 1000 / 8 =
@@ -168,7 +172,7 @@ TEST_F(RemoteBitrateEstimatorAbsSendTimeTest,
     now_ms = clock_.TimeInMilliseconds();
     send_time_ms += 5;
     IncomingPacket(0, 1000, now_ms, send_time_ms,
-                   AbsSendTime(send_time_ms, 1000), true);
+                   AbsSendTime(send_time_ms, 1000));
   }
 
   bitrate_estimator_->Process();
@@ -188,7 +192,7 @@ TEST_F(RemoteBitrateEstimatorAbsSendTimeTest,
     send_time_ms += 10;
     now_ms = clock_.TimeInMilliseconds();
     IncomingPacket(0, 1000, now_ms, 90 * send_time_ms,
-                   AbsSendTime(send_time_ms, 1000), true);
+                   AbsSendTime(send_time_ms, 1000));
   }
 
   bitrate_estimator_->Process();
@@ -207,7 +211,7 @@ TEST_F(RemoteBitrateEstimatorAbsSendTimeTest, TestProbeDetectionFasterArrival) {
     send_time_ms += 10;
     now_ms = clock_.TimeInMilliseconds();
     IncomingPacket(0, 1000, now_ms, 90 * send_time_ms,
-                   AbsSendTime(send_time_ms, 1000), true);
+                   AbsSendTime(send_time_ms, 1000));
   }
 
   bitrate_estimator_->Process();
@@ -225,7 +229,7 @@ TEST_F(RemoteBitrateEstimatorAbsSendTimeTest, TestProbeDetectionSlowerArrival) {
     send_time_ms += 5;
     now_ms = clock_.TimeInMilliseconds();
     IncomingPacket(0, 1000, now_ms, 90 * send_time_ms,
-                   AbsSendTime(send_time_ms, 1000), true);
+                   AbsSendTime(send_time_ms, 1000));
   }
 
   bitrate_estimator_->Process();
@@ -245,7 +249,7 @@ TEST_F(RemoteBitrateEstimatorAbsSendTimeTest,
     send_time_ms += 1;
     now_ms = clock_.TimeInMilliseconds();
     IncomingPacket(0, 1000, now_ms, 90 * send_time_ms,
-                   AbsSendTime(send_time_ms, 1000), true);
+                   AbsSendTime(send_time_ms, 1000));
   }
 
   bitrate_estimator_->Process();
@@ -261,8 +265,7 @@ TEST_F(RemoteBitrateEstimatorAbsSendTimeTest, ProbingIgnoresSmallPackets) {
   for (int i = 0; i < kProbeLength; ++i) {
     clock_.AdvanceTimeMilliseconds(10);
     now_ms = clock_.TimeInMilliseconds();
-    IncomingPacket(0, 200, now_ms, 90 * now_ms, AbsSendTime(now_ms, 1000),
-                   true);
+    IncomingPacket(0, 200, now_ms, 90 * now_ms, AbsSendTime(now_ms, 1000));
   }
 
   bitrate_estimator_->Process();
@@ -273,8 +276,7 @@ TEST_F(RemoteBitrateEstimatorAbsSendTimeTest, ProbingIgnoresSmallPackets) {
   for (int i = 0; i < kProbeLength; ++i) {
     clock_.AdvanceTimeMilliseconds(10);
     now_ms = clock_.TimeInMilliseconds();
-    IncomingPacket(0, 1000, now_ms, 90 * now_ms, AbsSendTime(now_ms, 1000),
-                   true);
+    IncomingPacket(0, 1000, now_ms, 90 * now_ms, AbsSendTime(now_ms, 1000));
   }
 
   // Wait long enough so that we can call Process again.

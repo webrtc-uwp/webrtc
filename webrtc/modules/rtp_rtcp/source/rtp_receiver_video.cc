@@ -13,6 +13,8 @@
 #include <assert.h>
 #include <string.h>
 
+#include <memory>
+
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/trace_event.h"
@@ -21,7 +23,6 @@
 #include "webrtc/modules/rtp_rtcp/source/rtp_format.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_video_generic.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 namespace webrtc {
 
@@ -70,8 +71,12 @@ int32_t RTPReceiverVideo::ParseRtpPacket(WebRtcRTPHeader* rtp_header,
                                                                            : -1;
   }
 
+  if (first_packet_received_()) {
+    LOG(LS_INFO) << "Received first video RTP packet";
+  }
+
   // We are not allowed to hold a critical section when calling below functions.
-  rtc::scoped_ptr<RtpDepacketizer> depacketizer(
+  std::unique_ptr<RtpDepacketizer> depacketizer(
       RtpDepacketizer::Create(rtp_header->type.Video.codec));
   if (depacketizer.get() == NULL) {
     LOG(LS_ERROR) << "Failed to create depacketizer.";
@@ -92,6 +97,9 @@ int32_t RTPReceiverVideo::ParseRtpPacket(WebRtcRTPHeader* rtp_header,
     rtp_header->type.Video.rotation = ConvertCVOByteToVideoRotation(
         rtp_header->header.extension.videoRotation);
   }
+
+  rtp_header->type.Video.playout_delay =
+      rtp_header->header.extension.playout_delay;
 
   return data_callback_->OnReceivedPayloadData(parsed_payload.payload,
                                                parsed_payload.payload_length,

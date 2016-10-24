@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
 #include <set>
 #include <vector>
 
@@ -17,7 +18,6 @@
 #include "webrtc/base/event.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/platform_thread.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/scopedptrcollection.h"
 #include "webrtc/base/thread.h"
 
@@ -204,7 +204,7 @@ void StartThreads(ScopedPtrCollection<Thread>* threads,
   for (int i = 0; i < kNumThreads; ++i) {
     Thread* thread = new Thread();
     thread->Start();
-    thread->Post(handler);
+    thread->Post(RTC_FROM_HERE, handler);
     threads->PushBack(thread);
   }
 }
@@ -226,8 +226,8 @@ TEST(AtomicOpsTest, Simple) {
 TEST(AtomicOpsTest, SimplePtr) {
   class Foo {};
   Foo* volatile foo = nullptr;
-  scoped_ptr<Foo> a(new Foo());
-  scoped_ptr<Foo> b(new Foo());
+  std::unique_ptr<Foo> a(new Foo());
+  std::unique_ptr<Foo> b(new Foo());
   // Reading the initial value should work as expected.
   EXPECT_TRUE(rtc::AtomicOps::AcquireLoadPtr(&foo) == nullptr);
   // Setting using compare and swap should work.
@@ -305,23 +305,6 @@ TEST(CriticalSectionTest, Basic) {
   EXPECT_TRUE(runner.Run());
   EXPECT_EQ(0, runner.shared_value());
 }
-
-#if !defined(NDEBUG) || defined(DCHECK_ALWAYS_ON)
-TEST(CriticalSectionTest, IsLocked) {
-  // Simple single-threaded test of IsLocked.
-  CriticalSection cs;
-  EXPECT_FALSE(cs.IsLocked());
-  cs.Enter();
-  EXPECT_TRUE(cs.IsLocked());
-  cs.Leave();
-  EXPECT_FALSE(cs.IsLocked());
-  if (!cs.TryEnter())
-    FAIL();
-  EXPECT_TRUE(cs.IsLocked());
-  cs.Leave();
-  EXPECT_FALSE(cs.IsLocked());
-}
-#endif
 
 class PerfTestData {
  public:

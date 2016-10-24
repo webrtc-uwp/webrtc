@@ -12,12 +12,12 @@
 
 #include <memory>
 
-#include "webrtc/media/base/videoframe_unittest.h"
+#include "webrtc/base/gunit.h"
+#include "webrtc/media/base/videocapturer.h"
 #include "webrtc/media/engine/webrtcvideoframe.h"
 #include "webrtc/media/engine/webrtcvideoframefactory.h"
 
-class WebRtcVideoFrameFactoryTest
-    : public VideoFrameTest<cricket::WebRtcVideoFrameFactory> {
+class WebRtcVideoFrameFactoryTest : public testing::Test {
  public:
   WebRtcVideoFrameFactoryTest() {}
 
@@ -29,7 +29,7 @@ class WebRtcVideoFrameFactoryTest
     captured_frame_.fourcc = cricket::FOURCC_I420;
     captured_frame_.pixel_width = 1;
     captured_frame_.pixel_height = 1;
-    captured_frame_.time_stamp = 5678;
+    captured_frame_.time_stamp = rtc::TimeNanos();
     captured_frame_.rotation = frame_rotation;
     captured_frame_.width = frame_width;
     captured_frame_.height = frame_height;
@@ -48,18 +48,18 @@ class WebRtcVideoFrameFactoryTest
                    int src_height,
                    bool apply_rotation) {
     if (!apply_rotation) {
-      EXPECT_EQ(dest_frame->GetVideoRotation(), src_rotation);
-      EXPECT_EQ(dest_frame->GetWidth(), src_width);
-      EXPECT_EQ(dest_frame->GetHeight(), src_height);
+      EXPECT_EQ(dest_frame->rotation(), src_rotation);
+      EXPECT_EQ(dest_frame->width(), src_width);
+      EXPECT_EQ(dest_frame->height(), src_height);
     } else {
-      EXPECT_EQ(dest_frame->GetVideoRotation(), webrtc::kVideoRotation_0);
+      EXPECT_EQ(dest_frame->rotation(), webrtc::kVideoRotation_0);
       if (src_rotation == webrtc::kVideoRotation_90 ||
           src_rotation == webrtc::kVideoRotation_270) {
-        EXPECT_EQ(dest_frame->GetWidth(), src_height);
-        EXPECT_EQ(dest_frame->GetHeight(), src_width);
+        EXPECT_EQ(dest_frame->width(), src_height);
+        EXPECT_EQ(dest_frame->height(), src_width);
       } else {
-        EXPECT_EQ(dest_frame->GetWidth(), src_width);
-        EXPECT_EQ(dest_frame->GetHeight(), src_height);
+        EXPECT_EQ(dest_frame->width(), src_width);
+        EXPECT_EQ(dest_frame->height(), src_height);
       }
     }
   }

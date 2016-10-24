@@ -13,9 +13,8 @@
 #endif
 
 #import "APPRTCAppDelegate.h"
-
 #import "APPRTCViewController.h"
-#import "RTCPeerConnectionFactory.h"
+#import "WebRTC/RTCSSLAdapter.h"
 
 @interface APPRTCAppDelegate () <NSWindowDelegate>
 @end
@@ -28,7 +27,7 @@
 #pragma mark - NSApplicationDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification*)notification {
-  [RTCPeerConnectionFactory initializeSSL];
+  RTCInitializeSSL();
   NSScreen* screen = [NSScreen mainScreen];
   NSRect visibleRect = [screen visibleFrame];
   NSRect windowRect = NSMakeRect(NSMidX(visibleRect),
@@ -52,7 +51,7 @@
 
 - (void)windowWillClose:(NSNotification*)notification {
   [_viewController windowWillClose:notification];
-  [RTCPeerConnectionFactory deinitializeSSL];
+  RTCCleanupSSL();
   [NSApp terminate:self];
 }
 

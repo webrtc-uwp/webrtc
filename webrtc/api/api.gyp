@@ -22,36 +22,39 @@
         }],
       ],
     }],
-    ['OS=="android"', {
+    # Excluded from the Chromium build since they cannot be built due to
+    # incompability with Chromium's logging implementation.
+    ['OS=="android" and build_with_chromium==0', {
       'targets': [
         {
           'target_name': 'libjingle_peerconnection_jni',
           'type': 'static_library',
           'dependencies': [
             '<(webrtc_root)/system_wrappers/system_wrappers.gyp:field_trial_default',
+            '<(webrtc_root)/system_wrappers/system_wrappers.gyp:metrics_default',
             'libjingle_peerconnection',
           ],
           'sources': [
-            'androidvideocapturer.cc',
-            'androidvideocapturer.h',
-            'java/jni/androidmediacodeccommon.h',
-            'java/jni/androidmediadecoder_jni.cc',
-            'java/jni/androidmediadecoder_jni.h',
-            'java/jni/androidmediaencoder_jni.cc',
-            'java/jni/androidmediaencoder_jni.h',
-            'java/jni/androidnetworkmonitor_jni.cc',
-            'java/jni/androidnetworkmonitor_jni.h',
-            'java/jni/androidvideocapturer_jni.cc',
-            'java/jni/androidvideocapturer_jni.h',
-            'java/jni/surfacetexturehelper_jni.cc',
-            'java/jni/surfacetexturehelper_jni.h',
-            'java/jni/classreferenceholder.cc',
-            'java/jni/classreferenceholder.h',
-            'java/jni/jni_helpers.cc',
-            'java/jni/jni_helpers.h',
-            'java/jni/native_handle_impl.cc',
-            'java/jni/native_handle_impl.h',
-            'java/jni/peerconnection_jni.cc',
+            'android/jni/androidmediacodeccommon.h',
+            'android/jni/androidmediadecoder_jni.cc',
+            'android/jni/androidmediadecoder_jni.h',
+            'android/jni/androidmediaencoder_jni.cc',
+            'android/jni/androidmediaencoder_jni.h',
+            'android/jni/androidmetrics_jni.cc',
+            'android/jni/androidnetworkmonitor_jni.cc',
+            'android/jni/androidnetworkmonitor_jni.h',
+            'android/jni/androidvideotracksource_jni.cc',
+            'android/jni/classreferenceholder.cc',
+            'android/jni/classreferenceholder.h',
+            'android/jni/jni_helpers.cc',
+            'android/jni/jni_helpers.h',
+            'android/jni/native_handle_impl.cc',
+            'android/jni/native_handle_impl.h',
+            'android/jni/peerconnection_jni.cc',
+            'android/jni/surfacetexturehelper_jni.cc',
+            'android/jni/surfacetexturehelper_jni.h',
+            'androidvideotracksource.cc',
+            'androidvideotracksource.h',
           ],
           'include_dirs': [
             '<(libyuv_dir)/include',
@@ -64,10 +67,6 @@
           ],
           'cflags!': [
             '-Wextra',
-          ],
-          'cflags_cc!': [
-            '-Wnon-virtual-dtor',
-            '-Woverloaded-virtual',
           ],
           'msvs_disabled_warnings': [
             4245,  # conversion from 'int' to 'size_t', signed/unsigned mismatch.
@@ -83,7 +82,7 @@
             'libjingle_peerconnection_jni',
           ],
           'sources': [
-           'java/jni/jni_onload.cc',
+           'android/jni/jni_onload.cc',
           ],
           'variables': {
             # This library uses native JNI exports; tell GYP so that the
@@ -91,162 +90,31 @@
             'use_native_jni_exports': 1,
           },
         },
-        {
-          # |libjingle_peerconnection_java| builds a jar file with name
-          # libjingle_peerconnection_java.jar using Chrome's build system.
-          # It includes all Java files needed to setup a PeeerConnection call
-          # from Android.
-          'target_name': 'libjingle_peerconnection_java',
-          'type': 'none',
-          'dependencies': [
-            'libjingle_peerconnection_so',
-          ],
-          'variables': {
-            # Designate as Chromium code and point to our lint settings to
-            # enable linting of the WebRTC code (this is the only way to make
-            # lint_action invoke the Android linter).
-            'android_manifest_path': '<(webrtc_root)/build/android/AndroidManifest.xml',
-            'suppressions_file': '<(webrtc_root)/build/android/suppressions.xml',
-            'chromium_code': 1,
-            'java_in_dir': 'java',
-            'webrtc_base_dir': '<(webrtc_root)/base',
-            'webrtc_modules_dir': '<(webrtc_root)/modules',
-            'additional_src_dirs' : [
-              'java/android',
-              '<(webrtc_base_dir)/java/src',
-              '<(webrtc_modules_dir)/audio_device/android/java/src',
-              '<(webrtc_modules_dir)/video_render/android/java/src',
-            ],
-          },
-          'includes': ['../../build/java.gypi'],
-        }, # libjingle_peerconnection_java
       ]
     }],
-    ['OS=="ios" or (OS=="mac" and mac_deployment_target=="10.7")', {
-      'targets': [
-        {
-          'target_name': 'rtc_api_objc',
-          'type': 'static_library',
-          'includes': [
-            '../build/objc_common.gypi',
-          ],
-          'dependencies': [
-            '<(webrtc_root)/base/base.gyp:rtc_base_objc',
-            'libjingle_peerconnection',
-          ],
-          'sources': [
-            'objc/RTCAudioTrack+Private.h',
-            'objc/RTCAudioTrack.h',
-            'objc/RTCAudioTrack.mm',
-            'objc/RTCConfiguration+Private.h',
-            'objc/RTCConfiguration.h',
-            'objc/RTCConfiguration.mm',
-            'objc/RTCDataChannel+Private.h',
-            'objc/RTCDataChannel.h',
-            'objc/RTCDataChannel.mm',
-            'objc/RTCDataChannelConfiguration+Private.h',
-            'objc/RTCDataChannelConfiguration.h',
-            'objc/RTCDataChannelConfiguration.mm',
-            'objc/RTCIceCandidate+Private.h',
-            'objc/RTCIceCandidate.h',
-            'objc/RTCIceCandidate.mm',
-            'objc/RTCIceServer+Private.h',
-            'objc/RTCIceServer.h',
-            'objc/RTCIceServer.mm',
-            'objc/RTCMediaConstraints+Private.h',
-            'objc/RTCMediaConstraints.h',
-            'objc/RTCMediaConstraints.mm',
-            'objc/RTCMediaStream+Private.h',
-            'objc/RTCMediaStream.h',
-            'objc/RTCMediaStream.mm',
-            'objc/RTCMediaStreamTrack+Private.h',
-            'objc/RTCMediaStreamTrack.h',
-            'objc/RTCMediaStreamTrack.mm',
-            'objc/RTCOpenGLVideoRenderer.h',
-            'objc/RTCOpenGLVideoRenderer.mm',
-            'objc/RTCPeerConnection+DataChannel.mm',
-            'objc/RTCPeerConnection+Private.h',
-            'objc/RTCPeerConnection+Stats.mm',
-            'objc/RTCPeerConnection.h',
-            'objc/RTCPeerConnection.mm',
-            'objc/RTCPeerConnectionFactory+Private.h',
-            'objc/RTCPeerConnectionFactory.h',
-            'objc/RTCPeerConnectionFactory.mm',
-            'objc/RTCSessionDescription+Private.h',
-            'objc/RTCSessionDescription.h',
-            'objc/RTCSessionDescription.mm',
-            'objc/RTCStatsReport+Private.h',
-            'objc/RTCStatsReport.h',
-            'objc/RTCStatsReport.mm',
-            'objc/RTCVideoFrame+Private.h',
-            'objc/RTCVideoFrame.h',
-            'objc/RTCVideoFrame.mm',
-            'objc/RTCVideoRenderer.h',
-            'objc/RTCVideoRendererAdapter+Private.h',
-            'objc/RTCVideoRendererAdapter.h',
-            'objc/RTCVideoRendererAdapter.mm',
-            'objc/RTCVideoSource+Private.h',
-            'objc/RTCVideoSource.h',
-            'objc/RTCVideoSource.mm',
-            'objc/RTCVideoTrack+Private.h',
-            'objc/RTCVideoTrack.h',
-            'objc/RTCVideoTrack.mm',
-          ],
-          # TODO(hjon): Make this compile without linking to libstdc++
-          # See https://bugs.chromium.org/p/webrtc/issues/detail?id=5593
-          'link_settings': {
-            'libraries': [
-              '-lstdc++',
-            ],
-          },
-          'conditions': [
-            ['OS=="ios"', {
-              'sources': [
-                'objc/RTCAVFoundationVideoSource+Private.h',
-                'objc/RTCAVFoundationVideoSource.h',
-                'objc/RTCAVFoundationVideoSource.mm',
-                'objc/RTCEAGLVideoView.h',
-                'objc/RTCEAGLVideoView.m',
-                'objc/avfoundationvideocapturer.h',
-                'objc/avfoundationvideocapturer.mm',
-              ],
-              'all_dependent_settings': {
-                'xcode_settings': {
-                  'OTHER_LDFLAGS': [
-                    '-framework CoreGraphics',
-                    '-framework GLKit',
-                    '-framework OpenGLES',
-                    '-framework QuartzCore',
-                  ]
-                }
-              },
-              # TODO(kjellander): Make the code compile without disabling these.
-              # See https://bugs.chromium.org/p/webrtc/issues/detail?id=3307
-              'cflags': [
-                '-Wno-return-type',
-              ],
-              'xcode_settings': {
-                'WARNING_CFLAGS': [
-                  '-Wno-return-type',
-                ],
-              },
-            }],
-            ['OS=="mac"', {
-              'sources': [
-                'objc/RTCNSGLVideoView.h',
-                'objc/RTCNSGLVideoView.m',
-              ],
-            }],
-          ],
-        }
-      ],
-    }],  # OS=="ios"
   ],  # conditions
   'targets': [
+    {
+      'target_name': 'call_api',
+      'type': 'static_library',
+      'dependencies': [
+        # TODO(kjellander): Add remaining dependencies when webrtc:4243 is done.
+        '<(webrtc_root)/base/base.gyp:rtc_base_approved',
+        '<(webrtc_root)/common.gyp:webrtc_common',
+        '<(webrtc_root)/modules/modules.gyp:audio_encoder_interface',
+      ],
+      'sources': [
+        'call/audio_receive_stream.h',
+        'call/audio_send_stream.h',
+        'call/audio_sink.h',
+        'call/audio_state.h',
+      ],
+    },
     {
       'target_name': 'libjingle_peerconnection',
       'type': 'static_library',
       'dependencies': [
+        ':call_api',
         '<(webrtc_root)/media/media.gyp:rtc_media',
         '<(webrtc_root)/pc/pc.gyp:rtc_pc',
       ],
@@ -256,8 +124,6 @@
         'datachannel.cc',
         'datachannel.h',
         'datachannelinterface.h',
-        'dtlsidentitystore.cc',
-        'dtlsidentitystore.h',
         'dtmfsender.cc',
         'dtmfsender.h',
         'dtmfsenderinterface.h',
@@ -277,7 +143,6 @@
         'mediastreaminterface.h',
         'mediastreamobserver.cc',
         'mediastreamobserver.h',
-        'mediastreamprovider.h',
         'mediastreamproxy.h',
         'mediastreamtrack.h',
         'mediastreamtrackproxy.h',
@@ -292,8 +157,10 @@
         'proxy.h',
         'remoteaudiosource.cc',
         'remoteaudiosource.h',
-        'remotevideocapturer.cc',
-        'remotevideocapturer.h',
+        'rtcstats.h',
+        'rtcstats_objects.h',
+        'rtcstatsreport.h',
+        'rtpparameters.h',
         'rtpreceiver.cc',
         'rtpreceiver.h',
         'rtpreceiverinterface.h',
@@ -307,29 +174,19 @@
         'statstypes.cc',
         'statstypes.h',
         'streamcollection.h',
-        'videosource.cc',
-        'videosource.h',
-        'videosourceinterface.h',
+        'videocapturertracksource.cc',
+        'videocapturertracksource.h',
         'videosourceproxy.h',
         'videotrack.cc',
         'videotrack.h',
-        'videotrackrenderers.cc',
-        'videotrackrenderers.h',
+        'videotracksource.cc',
+        'videotracksource.h',
         'webrtcsdp.cc',
         'webrtcsdp.h',
         'webrtcsession.cc',
         'webrtcsession.h',
         'webrtcsessiondescriptionfactory.cc',
         'webrtcsessiondescriptionfactory.h',
-      ],
-      # TODO(kjellander): Make the code compile without disabling these flags.
-      # See https://bugs.chromium.org/p/webrtc/issues/detail?id=3307
-      'cflags': [
-        '-Wno-sign-compare',
-      ],
-      'cflags_cc!': [
-        '-Wnon-virtual-dtor',
-        '-Woverloaded-virtual',
       ],
       'conditions': [
         ['clang==1', {
@@ -344,22 +201,19 @@
             '-Wno-maybe-uninitialized',  # Only exists for GCC.
           ],
         }],
-        ['OS=="win"', {
-          # Disable warning for signed/unsigned mismatch.
-          'msvs_settings': {
-            'VCCLCompilerTool': {
-              'AdditionalOptions!': ['/we4389'],
-            },
-          },
-        }],
-        ['OS=="win" and clang==1', {
-          'msvs_settings': {
-            'VCCLCompilerTool': {
-              'AdditionalOptions': [
-                '-Wno-sign-compare',
-              ],
-            },
-          },
+        ['use_quic==1', {
+          'dependencies': [
+            '<(DEPTH)/third_party/libquic/libquic.gyp:libquic',
+          ],
+          'sources': [
+            'quicdatachannel.cc',
+            'quicdatachannel.h',
+            'quicdatatransport.cc',
+            'quicdatatransport.h',
+          ],
+          'export_dependent_settings': [
+            '<(DEPTH)/third_party/libquic/libquic.gyp:libquic',
+          ],
         }],
       ],
     },  # target libjingle_peerconnection

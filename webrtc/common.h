@@ -14,6 +14,7 @@
 #include <map>
 
 #include "webrtc/base/basictypes.h"
+#include "webrtc/base/constructormagic.h"
 
 namespace webrtc {
 
@@ -32,7 +33,9 @@ enum class ConfigOptionID {
   kExperimentalNs,
   kBeamforming,
   kIntelligibility,
-  kNextGenerationAec
+  kEchoCanceller3,
+  kAecRefinedAdaptiveFilter,
+  kLevelControl
 };
 
 // Class Config is designed to ease passing a set of options across webrtc code.
@@ -68,15 +71,8 @@ class Config {
   // This instance gets ownership of the newly set value.
   template<typename T> void Set(T* value);
 
-  Config() {}
-  ~Config() {
-    // Note: this method is inline so webrtc public API depends only
-    // on the headers.
-    for (OptionMap::iterator it = options_.begin();
-         it != options_.end(); ++it) {
-      delete it->second;
-    }
-  }
+  Config();
+  ~Config();
 
  private:
   struct BaseOption {

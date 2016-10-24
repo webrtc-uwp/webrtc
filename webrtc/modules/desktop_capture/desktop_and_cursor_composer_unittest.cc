@@ -8,10 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include "webrtc/modules/desktop_capture/desktop_and_cursor_composer.h"
 
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/mouse_cursor.h"
@@ -77,17 +78,19 @@ class FakeScreenCapturer : public DesktopCapturer {
   void Start(Callback* callback) override { callback_ = callback; }
 
   void Capture(const DesktopRegion& region) override {
-    callback_->OnCaptureCompleted(next_frame_.release());
+    callback_->OnCaptureResult(
+        next_frame_ ? Result::SUCCESS : Result::ERROR_TEMPORARY,
+        std::move(next_frame_));
   }
 
-  void SetNextFrame(DesktopFrame* next_frame) {
-    next_frame_.reset(next_frame);
+  void SetNextFrame(std::unique_ptr<DesktopFrame> next_frame) {
+    next_frame_ = std::move(next_frame);
   }
 
  private:
-  Callback* callback_;
+  Callback* callback_ = nullptr;
 
-  rtc::scoped_ptr<DesktopFrame> next_frame_;
+  std::unique_ptr<DesktopFrame> next_frame_;
 };
 
 class FakeMouseMonitor : public MouseCursorMonitor {
@@ -109,7 +112,7 @@ class FakeMouseMonitor : public MouseCursorMonitor {
 
   void Capture() override {
     if (changed_) {
-      rtc::scoped_ptr<DesktopFrame> image(
+      std::unique_ptr<DesktopFrame> image(
           new BasicDesktopFrame(DesktopSize(kCursorWidth, kCursorHeight)));
       uint32_t* data = reinterpret_cast<uint32_t*>(image->data());
       memset(data, 0, image->stride() * kCursorHeight);
@@ -164,11 +167,13 @@ class DesktopAndCursorComposerTest : public testing::Test,
   DesktopAndCursorComposerTest()
       : fake_screen_(new FakeScreenCapturer()),
         fake_cursor_(new FakeMouseMonitor()),
-        blender_(fake_screen_, fake_cursor_) {
-  }
+        blender_(fake_screen_, fake_cursor_) {}
 
   // DesktopCapturer::Callback interface
-  void OnCaptureCompleted(DesktopFrame* frame) override { frame_.reset(frame); }
+  void OnCaptureResult(DesktopCapturer::Result result,
+                       std::unique_ptr<DesktopFrame> frame) override {
+    frame_ = std::move(frame);
+  }
 
  protected:
   // Owned by |blender_|.
@@ -176,7 +181,7 @@ class DesktopAndCursorComposerTest : public testing::Test,
   FakeMouseMonitor* fake_cursor_;
 
   DesktopAndCursorComposer blender_;
-  rtc::scoped_ptr<DesktopFrame> frame_;
+  std::unique_ptr<DesktopFrame> frame_;
 };
 
 // Verify DesktopAndCursorComposer can handle the case when the screen capturer
@@ -186,11 +191,11 @@ TEST_F(DesktopAndCursorComposerTest, Error) {
 
   fake_cursor_->SetHotspot(DesktopVector());
   fake_cursor_->SetState(MouseCursorMonitor::INSIDE, DesktopVector());
-  fake_screen_->SetNextFrame(NULL);
+  fake_screen_->SetNextFrame(nullptr);
 
   blender_.Capture(DesktopRegion());
 
-  EXPECT_EQ(frame_, static_cast<DesktopFrame*>(NULL));
+  EXPECT_FALSE(frame_);
 }
 
 TEST_F(DesktopAndCursorComposerTest, Blend) {
@@ -228,7 +233,7 @@ TEST_F(DesktopAndCursorComposerTest, Blend) {
     DesktopVector pos(tests[i].x, tests[i].y);
     fake_cursor_->SetState(state, pos);
 
-    rtc::scoped_ptr<SharedDesktopFrame> frame(
+    std::unique_ptr<SharedDesktopFrame> frame(
         SharedDesktopFrame::Wrap(CreateTestFrame()));
     fake_screen_->SetNextFrame(frame->Share());
 

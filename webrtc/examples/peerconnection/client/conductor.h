@@ -21,7 +21,6 @@
 #include "webrtc/api/peerconnectioninterface.h"
 #include "webrtc/examples/peerconnection/client/main_wnd.h"
 #include "webrtc/examples/peerconnection/client/peer_connection_client.h"
-#include "webrtc/base/scoped_ptr.h"
 
 namespace webrtc {
 class VideoCaptureModule;
@@ -67,9 +66,12 @@ class Conductor
 
   void OnSignalingChange(
       webrtc::PeerConnectionInterface::SignalingState new_state) override{};
-  void OnAddStream(webrtc::MediaStreamInterface* stream) override;
-  void OnRemoveStream(webrtc::MediaStreamInterface* stream) override;
-  void OnDataChannel(webrtc::DataChannelInterface* channel) override {}
+  void OnAddStream(
+      rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override;
+  void OnRemoveStream(
+      rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override;
+  void OnDataChannel(
+      rtc::scoped_refptr<webrtc::DataChannelInterface> channel) override {}
   void OnRenegotiationNeeded() override {}
   void OnIceConnectionChange(
       webrtc::PeerConnectionInterface::IceConnectionState new_state) override{};

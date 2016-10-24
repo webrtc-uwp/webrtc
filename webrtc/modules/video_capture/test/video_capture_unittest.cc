@@ -16,19 +16,19 @@
 
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/base/timeutils.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/utility/include/process_thread.h"
 #include "webrtc/modules/video_capture/video_capture.h"
 #include "webrtc/modules/video_capture/video_capture_factory.h"
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/include/sleep.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
+#include "webrtc/test/frame_utils.h"
 #include "webrtc/video_frame.h"
 
 using webrtc::CriticalSectionWrapper;
 using webrtc::CriticalSectionScoped;
 using webrtc::SleepMs;
-using webrtc::TickTime;
 using webrtc::VideoCaptureAlarm;
 using webrtc::VideoCaptureCapability;
 using webrtc::VideoCaptureDataCallback;
@@ -40,8 +40,8 @@ using webrtc::VideoCaptureModule;
 #define WAIT_(ex, timeout, res) \
   do { \
     res = (ex); \
-    int64_t start = TickTime::MillisecondTimestamp(); \
-    while (!res && TickTime::MillisecondTimestamp() < start + timeout) { \
+    int64_t start = rtc::TimeMillis(); \
+    while (!res && rtc::TimeMillis() < start + timeout) { \
       SleepMs(5); \
       res = (ex); \
     } \
@@ -59,32 +59,6 @@ static const int kTimeOut = 5000;
 static const int kTestHeight = 288;
 static const int kTestWidth = 352;
 static const int kTestFramerate = 30;
-
-// Compares the content of two video frames.
-static bool CompareFrames(const webrtc::VideoFrame& frame1,
-                          const webrtc::VideoFrame& frame2) {
-  bool result =
-      (frame1.stride(webrtc::kYPlane) == frame2.stride(webrtc::kYPlane)) &&
-      (frame1.stride(webrtc::kUPlane) == frame2.stride(webrtc::kUPlane)) &&
-      (frame1.stride(webrtc::kVPlane) == frame2.stride(webrtc::kVPlane)) &&
-      (frame1.width() == frame2.width()) &&
-      (frame1.height() == frame2.height());
-
-  if (!result)
-    return false;
-  for (int plane = 0; plane < webrtc::kNumOfPlanes; plane ++) {
-      webrtc::PlaneType plane_type = static_cast<webrtc::PlaneType>(plane);
-      int allocated_size1 = frame1.allocated_size(plane_type);
-      int allocated_size2 = frame2.allocated_size(plane_type);
-      if (allocated_size1 != allocated_size2)
-        return false;
-      const uint8_t* plane_buffer1 = frame1.buffer(plane_type);
-      const uint8_t* plane_buffer2 = frame2.buffer(plane_type);
-      if (memcmp(plane_buffer1, plane_buffer2, allocated_size1))
-        return false;
-    }
-    return true;
-}
 
 class TestVideoCaptureCallback : public VideoCaptureDataCallback {
  public:
@@ -112,19 +86,14 @@ class TestVideoCaptureCallback : public VideoCaptureDataCallback {
     EXPECT_TRUE(height == capability_.height || height == capability_.width);
     EXPECT_TRUE(width == capability_.width || width == capability_.height);
 #else
-    if (rotate_frame_ == webrtc::kVideoRotation_90 ||
-        rotate_frame_ == webrtc::kVideoRotation_270) {
-      EXPECT_EQ(width, capability_.height);
-      EXPECT_EQ(height, capability_.width);
-    } else {
-      EXPECT_EQ(height, capability_.height);
-      EXPECT_EQ(width, capability_.width);
-    }
+    EXPECT_EQ(height, capability_.height);
+    EXPECT_EQ(width, capability_.width);
+    EXPECT_EQ(rotate_frame_, videoFrame.rotation());
 #endif
     // RenderTimstamp should be the time now.
     EXPECT_TRUE(
-        videoFrame.render_time_ms() >= TickTime::MillisecondTimestamp()-30 &&
-        videoFrame.render_time_ms() <= TickTime::MillisecondTimestamp());
+        videoFrame.render_time_ms() >= rtc::TimeMillis()-30 &&
+        videoFrame.render_time_ms() <= rtc::TimeMillis());
 
     if ((videoFrame.render_time_ms() >
             last_render_time_ms_ + (1000 * 1.1) / capability_.maxFPS &&
@@ -137,7 +106,7 @@ class TestVideoCaptureCallback : public VideoCaptureDataCallback {
 
     incoming_frames_++;
     last_render_time_ms_ = videoFrame.render_time_ms();
-    last_frame_.CopyFrame(videoFrame);
+    last_frame_ = videoFrame.video_frame_buffer();
   }
 
   virtual void OnCaptureDelayChanged(const int32_t id,
@@ -148,7 +117,7 @@ class TestVideoCaptureCallback : public VideoCaptureDataCallback {
 
   void SetExpectedCapability(VideoCaptureCapability capability) {
     CriticalSectionScoped cs(capture_cs_.get());
-    capability_ = capability;
+    capability_= capability;
     incoming_frames_ = 0;
     last_render_time_ms_ = 0;
     capture_delay_ = -1;
@@ -173,7 +142,8 @@ class TestVideoCaptureCallback : public VideoCaptureDataCallback {
 
   bool CompareLastFrame(const webrtc::VideoFrame& frame) {
     CriticalSectionScoped cs(capture_cs_.get());
-    return CompareFrames(last_frame_, frame);
+    return webrtc::test::FrameBufsEqual(last_frame_,
+                                        frame.video_frame_buffer());
   }
 
   void SetExpectedCaptureRotation(webrtc::VideoRotation rotation) {
@@ -188,7 +158,7 @@ class TestVideoCaptureCallback : public VideoCaptureDataCallback {
   int64_t last_render_time_ms_;
   int incoming_frames_;
   int timing_warnings_;
-  webrtc::VideoFrame last_frame_;
+  rtc::scoped_refptr<webrtc::VideoFrameBuffer> last_frame_;
   webrtc::VideoRotation rotate_frame_;
 };
 
@@ -214,6 +184,7 @@ class TestVideoCaptureFeedBack : public VideoCaptureFeedBack {
   int frame_rate() {
     CriticalSectionScoped cs(capture_cs_.get());
     return frame_rate_;
+
   }
   VideoCaptureAlarm alarm() {
     CriticalSectionScoped cs(capture_cs_.get());
@@ -272,7 +243,7 @@ class VideoCaptureTest : public testing::Test {
   unsigned int number_of_devices_;
 };
 
-#if defined(WEBRTC_MAC) || defined(WINRT)
+#ifdef WEBRTC_MAC
 // Currently fails on Mac 64-bit, see
 // https://bugs.chromium.org/p/webrtc/issues/detail?id=5406
 #define MAYBE_CreateDelete DISABLED_CreateDelete
@@ -281,7 +252,7 @@ class VideoCaptureTest : public testing::Test {
 #endif
 TEST_F(VideoCaptureTest, MAYBE_CreateDelete) {
   for (int i = 0; i < 5; ++i) {
-    int64_t start_time = TickTime::MillisecondTimestamp();
+    int64_t start_time = rtc::TimeMillis();
     TestVideoCaptureCallback capture_observer;
     rtc::scoped_refptr<VideoCaptureModule> module(
         OpenVideoCaptureDevice(0, &capture_observer));
@@ -300,23 +271,23 @@ TEST_F(VideoCaptureTest, MAYBE_CreateDelete) {
     ASSERT_NO_FATAL_FAILURE(StartCapture(module.get(), capability));
 
     // Less than 4s to start the camera.
-    EXPECT_LE(TickTime::MillisecondTimestamp() - start_time, 4000);
+    EXPECT_LE(rtc::TimeMillis() - start_time, 4000);
 
     // Make sure 5 frames are captured.
     EXPECT_TRUE_WAIT(capture_observer.incoming_frames() >= 5, kTimeOut);
 
     EXPECT_GE(capture_observer.capture_delay(), 0);
 
-    int64_t stop_time = TickTime::MillisecondTimestamp();
+    int64_t stop_time = rtc::TimeMillis();
     EXPECT_EQ(0, module->StopCapture());
     EXPECT_FALSE(module->CaptureStarted());
 
     // Less than 3s to stop the camera.
-    EXPECT_LE(TickTime::MillisecondTimestamp() - stop_time, 3000);
+    EXPECT_LE(rtc::TimeMillis() - stop_time, 3000);
   }
 }
 
-#if defined(WEBRTC_MAC) || defined(WINRT)
+#ifdef WEBRTC_MAC
 // Currently fails on Mac 64-bit, see
 // https://bugs.chromium.org/p/webrtc/issues/detail?id=5406
 #define MAYBE_Capabilities DISABLED_Capabilities
@@ -438,8 +409,7 @@ class VideoCaptureExternalTest : public testing::Test {
  public:
   void SetUp() {
     capture_module_ = VideoCaptureFactory::Create(0, capture_input_interface_);
-    process_module_ =
-        rtc::ScopedToUnique(webrtc::ProcessThread::Create("ProcessThread"));
+    process_module_ = webrtc::ProcessThread::Create("ProcessThread");
     process_module_->Start();
     process_module_->RegisterModule(capture_module_);
 
@@ -452,11 +422,12 @@ class VideoCaptureExternalTest : public testing::Test {
 
     test_frame_.CreateEmptyFrame(kTestWidth, kTestHeight, kTestWidth,
                                  ((kTestWidth + 1) / 2), (kTestWidth + 1) / 2);
-    SleepMs(1);  // Wait 1ms so that two tests can't have the same timestamp.
-    memset(test_frame_.buffer(webrtc::kYPlane), 127, kTestWidth * kTestHeight);
-    memset(test_frame_.buffer(webrtc::kUPlane), 127,
+    SleepMs(1); // Wait 1ms so that two tests can't have the same timestamp.
+    memset(test_frame_.video_frame_buffer()->MutableDataY(), 127,
+           kTestWidth * kTestHeight);
+    memset(test_frame_.video_frame_buffer()->MutableDataU(), 127,
            ((kTestWidth + 1) / 2) * ((kTestHeight + 1) / 2));
-    memset(test_frame_.buffer(webrtc::kVPlane), 127,
+    memset(test_frame_.video_frame_buffer()->MutableDataV(), 127,
            ((kTestWidth + 1) / 2) * ((kTestHeight + 1) / 2));
 
     capture_module_->RegisterCaptureDataCallback(capture_callback_);
@@ -491,16 +462,16 @@ TEST_F(VideoCaptureExternalTest, TestExternalCapture) {
 
 // Test frame rate and no picture alarm.
 // Flaky on Win32, see webrtc:3270.
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) || defined(WEBRTC_MAC)
 #define MAYBE_FrameRate DISABLED_FrameRate
 #else
 #define MAYBE_FrameRate FrameRate
 #endif
 TEST_F(VideoCaptureExternalTest, MAYBE_FrameRate) {
-  int64_t testTime = 3;
-  TickTime startTime = TickTime::Now();
+  uint64_t testTime = 3 * rtc::kNumNanosecsPerSec;
+  uint64_t startTime = rtc::TimeNanos();
 
-  while ((TickTime::Now() - startTime).Milliseconds() < testTime * 1000) {
+  while ((rtc::TimeNanos() - startTime) < testTime) {
      size_t length = webrtc::CalcBufferSize(webrtc::kI420,
                                             test_frame_.width(),
                                             test_frame_.height());
@@ -515,8 +486,8 @@ TEST_F(VideoCaptureExternalTest, MAYBE_FrameRate) {
   SleepMs(500);
   EXPECT_EQ(webrtc::Raised, capture_feedback_.alarm());
 
-  startTime = TickTime::Now();
-  while ((TickTime::Now() - startTime).Milliseconds() < testTime * 1000) {
+  startTime = rtc::TimeNanos();
+  while ((rtc::TimeNanos() - startTime) < testTime) {
     size_t length = webrtc::CalcBufferSize(webrtc::kI420,
                                            test_frame_.width(),
                                            test_frame_.height());

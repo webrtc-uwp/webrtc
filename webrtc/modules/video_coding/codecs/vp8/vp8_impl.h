@@ -40,23 +40,23 @@ class VP8EncoderImpl : public VP8Encoder {
 
   virtual ~VP8EncoderImpl();
 
-  virtual int Release();
+  int Release() override;
 
-  virtual int InitEncode(const VideoCodec* codec_settings,
-                         int number_of_cores,
-                         size_t max_payload_size);
+  int InitEncode(const VideoCodec* codec_settings,
+                 int number_of_cores,
+                 size_t max_payload_size) override;
 
-  virtual int Encode(const VideoFrame& input_image,
-                     const CodecSpecificInfo* codec_specific_info,
-                     const std::vector<FrameType>* frame_types);
+  int Encode(const VideoFrame& input_image,
+             const CodecSpecificInfo* codec_specific_info,
+             const std::vector<FrameType>* frame_types) override;
 
-  virtual int RegisterEncodeCompleteCallback(EncodedImageCallback* callback);
+  int RegisterEncodeCompleteCallback(EncodedImageCallback* callback) override;
 
-  virtual int SetChannelParameters(uint32_t packet_loss, int64_t rtt);
+  int SetChannelParameters(uint32_t packet_loss, int64_t rtt) override;
 
-  virtual int SetRates(uint32_t new_bitrate_kbit, uint32_t frame_rate);
+  int SetRates(uint32_t new_bitrate_kbit, uint32_t frame_rate) override;
 
-  void OnDroppedFrame(uint32_t timestamp) override {}
+  void OnDroppedFrame(uint32_t timestamp) override;
 
   const char* ImplementationName() const override;
 
@@ -75,7 +75,7 @@ class VP8EncoderImpl : public VP8Encoder {
   int InitAndSetControlSettings();
 
   // Update frame size for codec.
-  int UpdateCodecFrameSize(const VideoFrame& input_image);
+  int UpdateCodecFrameSize(int width, int height);
 
   void PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
                              const vpx_codec_cx_pkt& pkt,
@@ -158,7 +158,6 @@ class VP8DecoderImpl : public VP8Decoder {
   bool feedback_mode_;
   vpx_codec_ctx_t* decoder_;
   VideoCodec codec_;
-  EncodedImage last_keyframe_;
   int image_format_;
   vpx_ref_frame_t* ref_frame_;
   int propagation_cnt_;

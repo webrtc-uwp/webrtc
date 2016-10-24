@@ -27,22 +27,23 @@
 
 #ifdef WINRT
 #include "webrtc/system_wrappers/include/clock.h"
-#endif
+#endif // WINRT
 
 #include "webrtc/base/checks.h"
 #include "webrtc/base/timeutils.h"
 
-#define EFFICIENT_IMPLEMENTATION 1
-
 namespace rtc {
 
-const uint32_t HALF = 0x80000000;
+ClockInterface* g_clock = nullptr;
 
-#if defined(WEBRTC_WIN)
-static const uint64 kFileTimeToUnixTimeEpochOffset = 116444736000000000ULL;
-#endif
+ClockInterface* SetClockForTesting(ClockInterface* clock) {
+  ClockInterface* prev = g_clock;
+  g_clock = clock;
+  return prev;
+}
 
 #ifdef WINRT
+static const uint64 kFileTimeToUnixTimeEpochOffset = 116444736000000000ULL;
 static const uint64 kNTPTimeToUnixTimeEpochOffset = 2208988800000L;
 int64_t gAppStartTime = -1;  // Record app start time
 int64_t gTimeSinceOsStart = -1;  // when app start,
@@ -93,10 +94,10 @@ inline void InitializeAppStartTimestamp() {
   QueryPerformanceCounter(&qpcnt);
   gTimeSinceOsStart = (int64_t)((((uint64_t)qpcnt.QuadPart) * 100000ull / ((uint64_t)gOsTicksPerSecond)) * 10000ull);  // ns
 }
-#endif
+#endif // WINRT
 
-uint64_t TimeNanos() {
-  int64_t ticks = 0;
+uint64_t SystemTimeNanos() {
+  int64_t ticks;
 #if defined(WEBRTC_MAC)
   static mach_timebase_info_data_t timebase;
   if (timebase.denom == 0) {
@@ -110,8 +111,8 @@ uint64_t TimeNanos() {
   ticks = mach_absolute_time() * timebase.numer / timebase.denom;
 #elif defined(WEBRTC_POSIX)
   struct timespec ts;
-  // TODO: Do we need to handle the case when CLOCK_MONOTONIC
-  // is not supported?
+  // TODO(deadbeef): Do we need to handle the case when CLOCK_MONOTONIC is not
+  // supported?
   clock_gettime(CLOCK_MONOTONIC, &ts);
   ticks = kNumNanosecsPerSec * static_cast<int64_t>(ts.tv_sec) +
           static_cast<int64_t>(ts.tv_nsec);
@@ -129,8 +130,7 @@ uint64_t TimeNanos() {
   // Atomically update the last gotten time
   DWORD old = InterlockedExchange(last_timegettime_ptr, now);
   if (now < old) {
-    // If now is earlier than old, there may have been a race between
-    // threads.
+    // If now is earlier than old, there may have been a race between threads.
     // 0x0fffffff ~3.1 days, the code will not take that long to execute
     // so it must have been a wrap around.
     if (old > 0xf0000000 && now < 0x0fffffff) {
@@ -138,8 +138,8 @@ uint64_t TimeNanos() {
     }
   }
   ticks = now + (num_wrap_timegettime << 32);
-  // TODO: Calculate with nanosecond precision.  Otherwise, we're just
-  // wasting a multiply and divide when doing Time() on Windows.
+  // TODO(deadbeef): Calculate with nanosecond precision. Otherwise, we're
+  // just wasting a multiply and divide when doing Time() on Windows.
   ticks = ticks * kNumNanosecsPerMillisec;
 #else
 #error Unsupported platform.
@@ -147,129 +147,62 @@ uint64_t TimeNanos() {
   return ticks;
 }
 
-uint32_t Time() {
+int64_t SystemTimeMillis() {
+  return static_cast<int64_t>(SystemTimeNanos() / kNumNanosecsPerMillisec);
+}
+
+uint64_t TimeNanos() {
+  if (g_clock) {
+    return g_clock->TimeNanos();
+  }
+  return SystemTimeNanos();
+}
+
+uint32_t Time32() {
   return static_cast<uint32_t>(TimeNanos() / kNumNanosecsPerMillisec);
+}
+
+int64_t TimeMillis() {
+  return static_cast<int64_t>(TimeNanos() / kNumNanosecsPerMillisec);
 }
 
 uint64_t TimeMicros() {
   return static_cast<uint64_t>(TimeNanos() / kNumNanosecsPerMicrosec);
 }
 
-#if defined(WEBRTC_WIN)
-
-struct timeval {
-  long tv_sec, tv_usec;  // NOLINT
-};
-
-// Emulate POSIX gettimeofday().
-// Based on breakpad/src/third_party/glog/src/utilities.cc
-static int gettimeofday(struct timeval *tv, void *tz) {
-  // FILETIME is measured in tens of microseconds since 1601-01-01 UTC.
-  FILETIME ft;
-  GetSystemTimeAsFileTime(&ft);
-
-  LARGE_INTEGER li;
-  li.LowPart = ft.dwLowDateTime;
-  li.HighPart = ft.dwHighDateTime;
-
-  // Convert to seconds and microseconds since Unix time Epoch.
-  int64_t micros = (li.QuadPart - kFileTimeToUnixTimeEpochOffset) / 10;
-  tv->tv_sec = static_cast<long>(micros / kNumMicrosecsPerSec);  // NOLINT
-  tv->tv_usec = static_cast<long>(micros % kNumMicrosecsPerSec); // NOLINT
-
-  return 0;
-}
-
-// Emulate POSIX gmtime_r().
-static struct tm *gmtime_r(const time_t *timep, struct tm *result) {
-  // On Windows, gmtime is thread safe.
-  struct tm *tm = gmtime(timep);  // NOLINT
-  if (tm == NULL) {
-    return NULL;
-  }
-  *result = *tm;
-  return result;
-}
-#endif  // WEBRTC_WIN
-
-void CurrentTmTime(struct tm *tm, int *microseconds) {
-  struct timeval timeval;
-  if (gettimeofday(&timeval, NULL) < 0) {
-    // Incredibly unlikely code path.
-    timeval.tv_sec = timeval.tv_usec = 0;
-  }
-  time_t secs = timeval.tv_sec;
-  gmtime_r(&secs, tm);
-  *microseconds = timeval.tv_usec;
-}
-
-uint32_t TimeAfter(int32_t elapsed) {
+int64_t TimeAfter(int64_t elapsed) {
   RTC_DCHECK_GE(elapsed, 0);
-  RTC_DCHECK_LT(static_cast<uint32_t>(elapsed), HALF);
-  return Time() + elapsed;
+  return TimeMillis() + elapsed;
 }
 
-bool TimeIsBetween(uint32_t earlier, uint32_t middle, uint32_t later) {
-  if (earlier <= later) {
-    return ((earlier <= middle) && (middle <= later));
-  } else {
-    return !((later < middle) && (middle < earlier));
-  }
-}
-
-bool TimeIsLaterOrEqual(uint32_t earlier, uint32_t later) {
-#if EFFICIENT_IMPLEMENTATION
-  int32_t diff = later - earlier;
-  return (diff >= 0 && static_cast<uint32_t>(diff) < HALF);
-#else
-  const bool later_or_equal = TimeIsBetween(earlier, later, earlier + HALF);
-  return later_or_equal;
-#endif
-}
-
-bool TimeIsLater(uint32_t earlier, uint32_t later) {
-#if EFFICIENT_IMPLEMENTATION
-  int32_t diff = later - earlier;
-  return (diff > 0 && static_cast<uint32_t>(diff) < HALF);
-#else
-  const bool earlier_or_equal = TimeIsBetween(later, earlier, later + HALF);
-  return !earlier_or_equal;
-#endif
-}
-
-int32_t TimeDiff(uint32_t later, uint32_t earlier) {
-#if EFFICIENT_IMPLEMENTATION
+int32_t TimeDiff32(uint32_t later, uint32_t earlier) {
   return later - earlier;
-#else
-  const bool later_or_equal = TimeIsBetween(earlier, later, earlier + HALF);
-  if (later_or_equal) {
-    if (earlier <= later) {
-      return static_cast<long>(later - earlier);
-    } else {
-      return static_cast<long>(later + (UINT32_MAX - earlier) + 1);
-    }
-  } else {
-    if (later <= earlier) {
-      return -static_cast<long>(earlier - later);
-    } else {
-      return -static_cast<long>(earlier + (UINT32_MAX - later) + 1);
-    }
-  }
-#endif
+}
+
+int64_t TimeDiff(int64_t later, int64_t earlier) {
+  return later - earlier;
 }
 
 TimestampWrapAroundHandler::TimestampWrapAroundHandler()
-    : last_ts_(0), num_wrap_(0) {}
+    : last_ts_(0), num_wrap_(-1) {}
 
 int64_t TimestampWrapAroundHandler::Unwrap(uint32_t ts) {
-  if (ts < last_ts_) {
-    if (last_ts_ > 0xf0000000 && ts < 0x0fffffff) {
-      ++num_wrap_;
-    }
+  if (num_wrap_ == -1) {
+    last_ts_ = ts;
+    num_wrap_ = 0;
+    return ts;
   }
+
+  if (ts < last_ts_) {
+    if (last_ts_ >= 0xf0000000 && ts < 0x0fffffff)
+      ++num_wrap_;
+  } else if ((ts - last_ts_) > 0xf0000000) {
+    // Backwards wrap. Unwrap with last wrap count and don't update last_ts_.
+    return ts + ((num_wrap_ - 1) << 32);
+  }
+
   last_ts_ = ts;
-  int64_t unwrapped_ts = ts + (num_wrap_ << 32);
-  return unwrapped_ts;
+  return ts + (num_wrap_ << 32);
 }
 
 int64_t TmToSeconds(const std::tm& tm) {

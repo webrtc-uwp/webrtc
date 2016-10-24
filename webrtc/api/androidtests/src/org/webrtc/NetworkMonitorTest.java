@@ -24,7 +24,6 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.telephony.TelephonyManager;
 import android.test.ActivityTestCase;
 import android.test.UiThreadTest;
 import android.test.suitebuilder.annotation.MediumTest;
@@ -72,7 +71,7 @@ public class NetworkMonitorTest extends ActivityTestCase {
     // Dummy implementations to avoid NullPointerExceptions in default implementations:
 
     @Override
-    public int getDefaultNetId() {
+    public long getDefaultNetId() {
       return INVALID_NET_ID;
     }
 
@@ -127,7 +126,7 @@ public class NetworkMonitorTest extends ActivityTestCase {
     public void onNetworkConnect(NetworkInformation networkInfo) {}
 
     @Override
-    public void onNetworkDisconnect(int networkHandle) {}
+    public void onNetworkDisconnect(long networkHandle) {}
   }
 
   private static final Object lock = new Object();

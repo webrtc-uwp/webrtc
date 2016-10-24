@@ -46,11 +46,11 @@ void XmppPump::OnStateChange(buzz::XmppEngine::State state) {
 }
 
 void XmppPump::WakeTasks() {
-  rtc::Thread::Current()->Post(this);
+  rtc::Thread::Current()->Post(RTC_FROM_HERE, this);
 }
 
 int64_t XmppPump::CurrentTime() {
-  return (int64_t)rtc::Time();
+  return (int64_t)rtc::TimeMillis();
 }
 
 void XmppPump::OnMessage(rtc::Message *pmsg) {

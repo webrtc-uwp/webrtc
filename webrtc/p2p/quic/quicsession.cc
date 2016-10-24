@@ -20,7 +20,11 @@
 
 namespace cricket {
 
-QuicSession::QuicSession(scoped_ptr<net::QuicConnection> connection,
+// Default priority for incoming QUIC streams.
+// TODO(mikescarlett): Determine if this value is correct.
+static const net::SpdyPriority kDefaultPriority = 3;
+
+QuicSession::QuicSession(std::unique_ptr<net::QuicConnection> connection,
                          const net::QuicConfig& config)
     : net::QuicSession(connection.release(), config) {}
 
@@ -46,7 +50,7 @@ void QuicSession::SetCryptoStream(net::QuicCryptoStream* crypto_stream) {
 bool QuicSession::ExportKeyingMaterial(base::StringPiece label,
                                        base::StringPiece context,
                                        size_t result_len,
-                                       string* result) {
+                                       std::string* result) {
   return crypto_stream_->ExportKeyingMaterial(label, context, result_len,
                                               result);
 }
@@ -54,7 +58,7 @@ bool QuicSession::ExportKeyingMaterial(base::StringPiece label,
 void QuicSession::OnCryptoHandshakeEvent(CryptoHandshakeEvent event) {
   net::QuicSession::OnCryptoHandshakeEvent(event);
   if (event == HANDSHAKE_CONFIRMED) {
-    LOG(INFO) << "QuicSession handshake complete";
+    LOG(LS_INFO) << "QuicSession handshake complete";
     RTC_DCHECK(IsEncryptionEstablished());
     RTC_DCHECK(IsCryptoHandshakeConfirmed());
 
@@ -62,9 +66,19 @@ void QuicSession::OnCryptoHandshakeEvent(CryptoHandshakeEvent event) {
   }
 }
 
+void QuicSession::CloseStream(net::QuicStreamId stream_id) {
+  if (IsClosedStream(stream_id)) {
+    // When CloseStream has been called recursively (via
+    // ReliableQuicStream::OnClose), the stream is already closed so return.
+    return;
+  }
+  write_blocked_streams()->UnregisterStream(stream_id);
+  net::QuicSession::CloseStream(stream_id);
+}
+
 ReliableQuicStream* QuicSession::CreateIncomingDynamicStream(
     net::QuicStreamId id) {
-  ReliableQuicStream* stream = CreateDataStream(id);
+  ReliableQuicStream* stream = CreateDataStream(id, kDefaultPriority);
   if (stream) {
     SignalIncomingStream(stream);
   }
@@ -73,30 +87,39 @@ ReliableQuicStream* QuicSession::CreateIncomingDynamicStream(
 
 ReliableQuicStream* QuicSession::CreateOutgoingDynamicStream(
     net::SpdyPriority priority) {
-  ReliableQuicStream* stream = CreateDataStream(GetNextOutgoingStreamId());
-  if (stream) {
-    ActivateStream(stream);
-  }
-  return stream;
+  return CreateDataStream(GetNextOutgoingStreamId(), priority);
 }
 
-ReliableQuicStream* QuicSession::CreateDataStream(net::QuicStreamId id) {
+ReliableQuicStream* QuicSession::CreateDataStream(net::QuicStreamId id,
+                                                  net::SpdyPriority priority) {
   if (crypto_stream_ == nullptr || !crypto_stream_->encryption_established()) {
     // Encryption not active so no stream created
     return nullptr;
   }
-  return new ReliableQuicStream(id, this);
+  ReliableQuicStream* stream = new ReliableQuicStream(id, this);
+  if (stream) {
+    // Make QuicSession take ownership of the stream.
+    ActivateStream(stream);
+    // Register the stream to the QuicWriteBlockedList. |priority| is clamped
+    // between 0 and 7, with 0 being the highest priority and 7 the lowest
+    // priority.
+    write_blocked_streams()->RegisterStream(stream->id(), priority);
+  }
+  return stream;
 }
 
-void QuicSession::OnConnectionClosed(net::QuicErrorCode error, bool from_peer) {
-  net::QuicSession::OnConnectionClosed(error, from_peer);
-  SignalConnectionClosed(error, from_peer);
+void QuicSession::OnConnectionClosed(net::QuicErrorCode error,
+                                     const std::string& error_details,
+                                     net::ConnectionCloseSource source) {
+  net::QuicSession::OnConnectionClosed(error, error_details, source);
+  SignalConnectionClosed(error,
+                         source == net::ConnectionCloseSource::FROM_PEER);
 }
 
 bool QuicSession::OnReadPacket(const char* data, size_t data_len) {
-  net::QuicEncryptedPacket packet(data, data_len);
-  connection()->ProcessUdpPacket(connection()->self_address(),
-                                 connection()->peer_address(), packet);
+  net::QuicReceivedPacket packet(data, data_len, clock_.Now());
+  ProcessUdpPacket(connection()->self_address(), connection()->peer_address(),
+                   packet);
   return true;
 }
 

@@ -128,18 +128,6 @@
       ],
     },
     {
-      'target_name': 'histogram',
-      'type': 'static_library',
-      'sources': [
-        'histogram.cc',
-        'histogram.h',
-      ],
-      'dependencies': [
-        '<(webrtc_root)/common.gyp:webrtc_common',
-        '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
-      ],
-    },
-    {
       'target_name': 'test_main',
       'type': 'static_library',
       'sources': [
@@ -147,10 +135,10 @@
       ],
       'dependencies': [
         'field_trial',
-        'histogram',
         'test_support',
         '<(DEPTH)/testing/gtest.gyp:gtest',
         '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
+        '<(webrtc_root)/system_wrappers/system_wrappers.gyp:metrics_default',
       ],
     },
     {
@@ -160,6 +148,7 @@
         '<(DEPTH)/testing/gtest.gyp:gtest',
         '<(DEPTH)/testing/gmock.gyp:gmock',
         '<(webrtc_root)/base/base.gyp:gtest_prod',
+        '<(webrtc_root)/common_video/common_video.gyp:common_video',
         '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
       ],
       'sources': [
@@ -170,6 +159,8 @@
         'testsupport/frame_writer.cc',
         'testsupport/frame_writer.h',
         'testsupport/iosfileutils.mm',
+        'testsupport/metrics/video_metrics.h',
+        'testsupport/metrics/video_metrics.cc',
         'testsupport/mock/mock_frame_reader.h',
         'testsupport/mock/mock_frame_writer.h',
         'testsupport/packet_reader.cc',
@@ -202,11 +193,11 @@
       'type': 'static_library',
       'dependencies': [
         'field_trial',
-        'histogram',
         'test_support',
         '<(DEPTH)/testing/gmock.gyp:gmock',
         '<(DEPTH)/testing/gtest.gyp:gtest',
         '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
+        '<(webrtc_root)/system_wrappers/system_wrappers.gyp:metrics_default',
       ],
       'sources': [
         'run_all_unittests.cc',
@@ -252,6 +243,7 @@
         '<(DEPTH)/testing/gtest.gyp:gtest',
       ],
       'sources': [
+        'common_unittest.cc',
         'fake_network_pipe_unittest.cc',
         'frame_generator_unittest.cc',
         'rtp_file_reader_unittest.cc',
@@ -264,6 +256,7 @@
         'testsupport/fileutils_unittest.cc',
         'testsupport/frame_reader_unittest.cc',
         'testsupport/frame_writer_unittest.cc',
+        'testsupport/metrics/video_metrics_unittest.cc',
         'testsupport/packet_reader_unittest.cc',
         'testsupport/perf_test_unittest.cc',
       ],
@@ -313,8 +306,6 @@
        'null_transport.cc',
        'null_transport.h',
        'rtp_rtcp_observer.h',
-       'run_loop.cc',
-       'run_loop.h',
        'statistics.cc',
        'statistics.h',
        'vcm_capturer.cc',
@@ -324,9 +315,10 @@
        'win/run_loop_win.cc',
      ],
      'conditions': [
-       ['OS=="win"', {
-         'sources!': [
-           'run_loop.cc',
+       ['OS!="win"', {
+         'sources': [
+            'run_loop.h',
+            'run_loop.cc',
          ],
        }],
        ['OS=="win" and OS_RUNTIME=="winrt"', {
@@ -339,10 +331,9 @@
        '<(DEPTH)/testing/gmock.gyp:gmock',
        '<(DEPTH)/testing/gtest.gyp:gtest',
        '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
-       '<(webrtc_root)/base/base.gyp:rtc_base',
+       '<(webrtc_root)/base/base.gyp:rtc_base_approved',
        '<(webrtc_root)/common.gyp:webrtc_common',
        '<(webrtc_root)/modules/modules.gyp:media_file',
-       '<(webrtc_root)/modules/modules.gyp:video_render_module_internal_impl',
        '<(webrtc_root)/webrtc.gyp:webrtc',
        'rtp_test_utils',
        'test_support',
@@ -353,40 +344,29 @@
      'target_name': 'test_renderer',
      'type': 'static_library',
      'sources': [
-       'gl/gl_renderer.cc',
-       'gl/gl_renderer.h',
        'linux/glx_renderer.cc',
        'linux/glx_renderer.h',
        'linux/video_renderer_linux.cc',
        'mac/video_renderer_mac.h',
        'mac/video_renderer_mac.mm',
-       'null_platform_renderer.cc',
        'video_renderer.cc',
        'video_renderer.h',
        'win/d3d_renderer.cc',
        'win/d3d_renderer.h',
      ],
      'conditions': [
-       ['OS=="linux"', {
-         'sources!': [
+       ['OS!="linux" and OS!="mac" and OS!="win"', {
+         'sources': [
            'null_platform_renderer.cc',
          ],
        }],
-       ['OS=="mac"', {
-         'sources!': [
-           'null_platform_renderer.cc',
-         ],
-       }],
-       ['OS!="linux" and OS!="mac"', {
-         'sources!' : [
+       ['OS=="linux" or OS=="mac"', {
+         'sources' : [
            'gl/gl_renderer.cc',
            'gl/gl_renderer.h',
          ],
        }],
        ['OS=="win"', {
-         'sources!': [
-           'null_platform_renderer.cc',
-         ],
          'include_dirs': [
            '<(directx_sdk_path)/Include',
          ],
@@ -439,17 +419,38 @@
     },
   ],
   'conditions': [
-    ['include_tests==1 and OS=="android"', {
+    ['OS=="android"', {
       'targets': [
         {
           'target_name': 'test_support_unittests_apk_target',
           'type': 'none',
           'dependencies': [
-            '<(apk_tests_path):test_support_unittests_apk',
+            '<(android_tests_path):test_support_unittests_apk',
           ],
         },
       ],
-    }],
+      'conditions': [
+        ['test_isolation_mode != "noop"',
+          {
+            'targets': [
+              {
+                'target_name': 'test_support_unittests_apk_run',
+                'type': 'none',
+                'dependencies': [
+                  '<(android_tests_path):test_support_unittests_apk',
+                ],
+                'includes': [
+                  '../build/isolate.gypi',
+                ],
+                'sources': [
+                  'test_support_unittests_apk.isolate',
+                ],
+              },
+            ],
+          },
+        ],
+      ],
+    }],  # OS=="android"
     ['test_isolation_mode != "noop"', {
       'targets': [
         {

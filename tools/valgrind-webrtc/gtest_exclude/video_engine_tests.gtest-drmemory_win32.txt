@@ -9,6 +9,8 @@ EndToEndTest.SendsAndReceivesVP9
 EndToEndTest.TransportFeedbackNotConfigured
 EndToEndTest.TransportSeqNumOnAudioAndVideo
 EndToEndTest.VerifyHistogramStatsWithRed
+# Flaky: https://bugs.chromium.org/p/webrtc/issues/detail?id=6146
+EndToEndTest.GetStats
 VideoSendStreamTest.CanReconfigureToUseStartBitrateAbovePreviousMax
 VideoSendStreamTest.ReconfigureBitratesSetsEncoderBitratesCorrectly
 # https://code.google.com/p/webrtc/issues/detail?id=5417
@@ -19,5 +21,4 @@ VideoSendStreamTest.Vp9FlexModeRefCount
 EndToEndTest.AssignsTransportSequenceNumbers
 # Flaky: https://bugs.chromium.org/p/webrtc/issues/detail?id=5225
 BitrateEstimatorTest.SwitchesToASTThenBackToTOFForVideo
-# https://bugs.chromium.org/p/webrtc/issues/detail?id=5312
-RtcEventLogTest.DropOldEvents
+

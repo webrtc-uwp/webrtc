@@ -13,10 +13,13 @@
 
 #include <memory>
 
-#include "webrtc/audio_sink.h"
+#include "webrtc/api/call/audio_sink.h"
 #include "webrtc/base/criticalsection.h"
+#include "webrtc/base/optional.h"
 #include "webrtc/common_audio/resampler/include/push_resampler.h"
 #include "webrtc/common_types.h"
+#include "webrtc/modules/audio_coding/acm2/codec_manager.h"
+#include "webrtc/modules/audio_coding/acm2/rent_a_codec.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module.h"
 #include "webrtc/modules/audio_conference_mixer/include/audio_conference_mixer_defines.h"
 #include "webrtc/modules/audio_processing/rms_level.h"
@@ -25,8 +28,6 @@
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
 #include "webrtc/modules/utility/include/file_player.h"
 #include "webrtc/modules/utility/include/file_recorder.h"
-#include "webrtc/voice_engine/dtmf_inband.h"
-#include "webrtc/voice_engine/dtmf_inband_queue.h"
 #include "webrtc/voice_engine/include/voe_audio_processing.h"
 #include "webrtc/voice_engine/include/voe_network.h"
 #include "webrtc/voice_engine/level_indicator.h"
@@ -34,13 +35,7 @@
 #include "webrtc/voice_engine/shared_data.h"
 #include "webrtc/voice_engine/voice_engine_defines.h"
 
-#ifdef WEBRTC_DTMF_DETECTION
-// TelephoneEventDetectionMethods, TelephoneEventObserver
-#include "webrtc/voice_engine/include/voe_dtmf.h"
-#endif
-
 namespace rtc {
-
 class TimestampWrapAroundHandler;
 }
 
@@ -51,6 +46,7 @@ class Config;
 class FileWrapper;
 class PacketRouter;
 class ProcessThread;
+class RateLimiter;
 class ReceiveStatistics;
 class RemoteNtpTimeEstimator;
 class RtcEventLog;
@@ -70,6 +66,7 @@ struct SenderInfo;
 namespace voe {
 
 class OutputMixer;
+class RtcEventLogProxy;
 class RtpPacketSenderProxy;
 class Statistics;
 class StatisticsProxy;
@@ -163,7 +160,6 @@ class Channel
       public FileCallback,  // receiving notification from file player &
                             // recorder
       public Transport,
-      public RtpAudioFeedback,
       public AudioPacketizationCallback,  // receive encoded packets from the
                                           // ACM
       public ACMVADCallback,              // receive voice activity from the ACM
@@ -175,15 +171,16 @@ class Channel
   enum { KNumSocketThreads = 1 };
   enum { KNumberOfSocketBuffers = 8 };
   virtual ~Channel();
-  static int32_t CreateChannel(Channel*& channel,
-                               int32_t channelId,
-                               uint32_t instanceId,
-                               RtcEventLog* const event_log,
-                               const Config& config);
+  static int32_t CreateChannel(
+      Channel*& channel,
+      int32_t channelId,
+      uint32_t instanceId,
+      const Config& config,
+      const rtc::scoped_refptr<AudioDecoderFactory>& decoder_factory);
   Channel(int32_t channelId,
           uint32_t instanceId,
-          RtcEventLog* const event_log,
-          const Config& config);
+          const Config& config,
+          const rtc::scoped_refptr<AudioDecoderFactory>& decoder_factory);
   int32_t Init();
   int32_t SetEngineInformation(Statistics& engineStatistics,
                                OutputMixer& outputMixer,
@@ -195,6 +192,12 @@ class Channel
   int32_t UpdateLocalTimeStamp();
 
   void SetSink(std::unique_ptr<AudioSinkInterface> sink);
+
+  // TODO(ossu): Don't use! It's only here to confirm that the decoder factory
+  // passed into AudioReceiveStream is the same as the one set when creating the
+  // ADM. Once Channel creation is moved into Audio{Send,Receive}Stream this can
+  // go.
+  const rtc::scoped_refptr<AudioDecoderFactory>& GetAudioDecoderFactory() const;
 
   // API methods
 
@@ -221,14 +224,15 @@ class Channel
   int32_t SetSendCNPayloadType(int type, PayloadFrequencies frequency);
   int SetOpusMaxPlaybackRate(int frequency_hz);
   int SetOpusDtx(bool enable_dtx);
+  int GetOpusDtx(bool* enabled);
 
   // VoENetwork
-  int32_t RegisterExternalTransport(Transport& transport);
+  int32_t RegisterExternalTransport(Transport* transport);
   int32_t DeRegisterExternalTransport();
-  int32_t ReceivedRTPPacket(const int8_t* data,
+  int32_t ReceivedRTPPacket(const uint8_t* received_packet,
                             size_t length,
                             const PacketTime& packet_time);
-  int32_t ReceivedRTCPPacket(const int8_t* data, size_t length);
+  int32_t ReceivedRTCPPacket(const uint8_t* data, size_t length);
 
   // VoEFile
   int StartPlayingFileLocally(const char* fileName,
@@ -277,8 +281,8 @@ class Channel
   // VoEVolumeControl
   int GetSpeechOutputLevel(uint32_t& level) const;
   int GetSpeechOutputLevelFullRange(uint32_t& level) const;
-  int SetMute(bool enable);
-  bool Mute() const;
+  int SetInputMute(bool enable);
+  bool InputMute() const;
   int SetOutputVolumePan(float left, float right);
   int GetOutputVolumePan(float& left, float& right) const;
   int SetChannelOutputVolumeScaling(float scaling);
@@ -301,17 +305,9 @@ class Channel
   // VoEVideoSyncExtended
   int GetRtpRtcp(RtpRtcp** rtpRtcpModule, RtpReceiver** rtp_receiver) const;
 
-  // VoEDtmf
-  int SendTelephoneEventOutband(unsigned char eventCode,
-                                int lengthMs,
-                                int attenuationDb,
-                                bool playDtmfEvent);
-  int SendTelephoneEventInband(unsigned char eventCode,
-                               int lengthMs,
-                               int attenuationDb,
-                               bool playDtmfEvent);
-  int SetSendTelephoneEventPayloadType(unsigned char type);
-  int GetSendTelephoneEventPayloadType(unsigned char& type);
+  // DTMF
+  int SendTelephoneEventOutband(int event, int duration_ms);
+  int SetSendTelephoneEventPayloadType(int payload_type);
 
   // VoEAudioProcessingImpl
   int UpdateRxVadDetection(AudioFrame& audioFrame);
@@ -366,8 +362,6 @@ class Channel
                        unsigned int& discardedPackets);
   int GetRemoteRTCPReportBlocks(std::vector<ReportBlock>* report_blocks);
   int GetRTPStatistics(CallStatistics& stats);
-  int SetREDStatus(bool enable, int redPayloadtype);
-  int GetREDStatus(bool& enabled, int& redPayloadtype);
   int SetCodecFECStatus(bool enable);
   bool GetCodecFECStatus();
   void SetNACKStatus(bool enable, int maxNumberOfPackets);
@@ -400,11 +394,6 @@ class Channel
   void OnIncomingSSRCChanged(uint32_t ssrc) override;
   void OnIncomingCSRCChanged(uint32_t CSRC, bool added) override;
 
-  // From RtpAudioFeedback in the RTP/RTCP module
-  void OnPlayTelephoneEvent(uint8_t event,
-                            uint16_t lengthMs,
-                            uint8_t volume) override;
-
   // From Transport (called by the RTP/RTCP module)
   bool SendRtp(const uint8_t* data,
                size_t len,
@@ -412,7 +401,9 @@ class Channel
   bool SendRtcp(const uint8_t* data, size_t len) override;
 
   // From MixerParticipant
-  int32_t GetAudioFrame(int32_t id, AudioFrame* audioFrame) override;
+  MixerParticipant::AudioFrameInfo GetAudioFrameWithMuted(
+      int32_t id,
+      AudioFrame* audioFrame) override;
   int32_t NeededFrequency(int32_t id) const override;
 
   // From FileCallback
@@ -455,6 +446,9 @@ class Channel
   // Disassociate a send channel if it was associated.
   void DisassociateSendChannel(int channel_id);
 
+  // Set a RtcEventLog logging object.
+  void SetRtcEventLog(RtcEventLog* event_log);
+
  protected:
   void OnIncomingFractionLoss(int fraction_lost);
 
@@ -469,19 +463,16 @@ class Channel
   bool IsPacketInOrder(const RTPHeader& header) const;
   bool IsPacketRetransmitted(const RTPHeader& header, bool in_order) const;
   int ResendPackets(const uint16_t* sequence_numbers, int length);
-  int InsertInbandDtmfTone();
   int32_t MixOrReplaceAudioWithFile(int mixingFrequency);
   int32_t MixAudioWithFile(AudioFrame& audioFrame, int mixingFrequency);
   void UpdatePlayoutTimestamp(bool rtcp);
-  void UpdatePacketDelay(uint32_t timestamp, uint16_t sequenceNumber);
   void RegisterReceiveCodecsToRTPModule();
 
-  int SetRedPayloadType(int red_payload_type);
   int SetSendRtpHeaderExtension(bool enable,
                                 RTPExtensionType type,
                                 unsigned char id);
 
-  int32_t GetPlayoutFrequency();
+  int32_t GetPlayoutFrequency() const;
   int64_t GetRTT(bool allow_associate_channel) const;
 
   rtc::CriticalSection _fileCritSect;
@@ -492,7 +483,7 @@ class Channel
 
   ChannelState channel_state_;
 
-  RtcEventLog* const event_log_;
+  std::unique_ptr<voe::RtcEventLogProxy> event_log_proxy_;
 
   std::unique_ptr<RtpHeaderParser> rtp_header_parser_;
   std::unique_ptr<RTPPayloadRegistry> rtp_payload_registry_;
@@ -502,31 +493,30 @@ class Channel
   TelephoneEventHandler* telephone_event_handler_;
   std::unique_ptr<RtpRtcp> _rtpRtcpModule;
   std::unique_ptr<AudioCodingModule> audio_coding_;
+  acm2::CodecManager codec_manager_;
+  acm2::RentACodec rent_a_codec_;
   std::unique_ptr<AudioSinkInterface> audio_sink_;
   AudioLevel _outputAudioLevel;
   bool _externalTransport;
   AudioFrame _audioFrame;
   // Downsamples to the codec rate if necessary.
   PushResampler<int16_t> input_resampler_;
-  FilePlayer* _inputFilePlayerPtr;
-  FilePlayer* _outputFilePlayerPtr;
-  FileRecorder* _outputFileRecorderPtr;
+  std::unique_ptr<FilePlayer> input_file_player_;
+  std::unique_ptr<FilePlayer> output_file_player_;
+  std::unique_ptr<FileRecorder> output_file_recorder_;
   int _inputFilePlayerId;
   int _outputFilePlayerId;
   int _outputFileRecorderId;
   bool _outputFileRecording;
-  DtmfInbandQueue _inbandDtmfQueue;
-  DtmfInband _inbandDtmfGenerator;
   bool _outputExternalMedia;
   VoEMediaProcess* _inputExternalMediaCallbackPtr;
   VoEMediaProcess* _outputExternalMediaCallbackPtr;
   uint32_t _timeStamp;
-  uint8_t _sendTelephoneEventPayloadType;
 
   RemoteNtpTimeEstimator ntp_estimator_ GUARDED_BY(ts_stats_lock_);
 
   // Timestamp of the audio pulled from NetEq.
-  uint32_t jitter_buffer_playout_timestamp_;
+  rtc::Optional<uint32_t> jitter_buffer_playout_timestamp_;
   uint32_t playout_timestamp_rtp_ GUARDED_BY(video_sync_lock_);
   uint32_t playout_timestamp_rtcp_;
   uint32_t playout_delay_ms_ GUARDED_BY(video_sync_lock_);
@@ -561,13 +551,11 @@ class Channel
   bool _externalMixing;
   bool _mixFileWithMicrophone;
   // VoEVolumeControl
-  bool _mute;
-  float _panLeft;
-  float _panRight;
-  float _outputGain;
-  // VoEDtmf
-  bool _playOutbandDtmfEvent;
-  bool _playInbandDtmfEvent;
+  bool input_mute_ GUARDED_BY(volume_settings_critsect_);
+  bool previous_frame_muted_;  // Only accessed from PrepareEncodeAndSend().
+  float _panLeft GUARDED_BY(volume_settings_critsect_);
+  float _panRight GUARDED_BY(volume_settings_critsect_);
+  float _outputGain GUARDED_BY(volume_settings_critsect_);
   // VoeRTP_RTCP
   uint32_t _lastLocalTimeStamp;
   int8_t _lastPayloadType;
@@ -576,9 +564,6 @@ class Channel
   AudioFrame::SpeechType _outputSpeechType;
   // VoEVideoSync
   rtc::CriticalSection video_sync_lock_;
-  uint32_t _average_jitter_buffer_delay_us GUARDED_BY(video_sync_lock_);
-  uint32_t _previousTimestamp;
-  uint16_t _recPacketDelayMs GUARDED_BY(video_sync_lock_);
   // VoEAudioProcessing
   bool _RxVadDetection;
   bool _rxAgcIsEnabled;
@@ -596,9 +581,14 @@ class Channel
   std::unique_ptr<TransportFeedbackProxy> feedback_observer_proxy_;
   std::unique_ptr<TransportSequenceNumberProxy> seq_num_allocator_proxy_;
   std::unique_ptr<RtpPacketSenderProxy> rtp_packet_sender_proxy_;
+  std::unique_ptr<RateLimiter> retransmission_rate_limiter_;
+
+  // TODO(ossu): Remove once GetAudioDecoderFactory() is no longer needed.
+  rtc::scoped_refptr<AudioDecoderFactory> decoder_factory_;
+
 #ifdef WINRT
   int current_endtoend_delay_ms_ GUARDED_BY(ts_stats_lock_);
-#endif
+#endif // WINRT
 };
 
 }  // namespace voe

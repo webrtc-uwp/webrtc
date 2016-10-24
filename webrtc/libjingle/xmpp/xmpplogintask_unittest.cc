@@ -9,8 +9,10 @@
  */
 
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
+
 #include "webrtc/libjingle/xmllite/xmlelement.h"
 #include "webrtc/libjingle/xmpp/constants.h"
 #include "webrtc/libjingle/xmpp/plainsaslhandler.h"
@@ -20,6 +22,7 @@
 #include "webrtc/base/common.h"
 #include "webrtc/base/cryptstring.h"
 #include "webrtc/base/gunit.h"
+#include "webrtc/typedefs.h"
 
 using buzz::Jid;
 using buzz::QName;
@@ -67,8 +70,8 @@ class XmppLoginTaskTest : public testing::Test {
   void SetTlsOptions(buzz::TlsOptions option);
 
  private:
-  rtc::scoped_ptr<XmppEngine> engine_;
-  rtc::scoped_ptr<XmppTestHandler> handler_;
+  std::unique_ptr<XmppEngine> engine_;
+  std::unique_ptr<XmppTestHandler> handler_;
 };
 
 void XmppLoginTaskTest::SetTlsOptions(buzz::TlsOptions option) {

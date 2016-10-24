@@ -10,9 +10,8 @@
 
 package org.webrtc.voiceengine;
 
-import java.lang.System;
-import java.nio.ByteBuffer;
-import java.util.concurrent.TimeUnit;
+import org.webrtc.Logging;
+import org.webrtc.ThreadUtils;
 
 import android.content.Context;
 import android.media.AudioFormat;
@@ -20,7 +19,9 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder.AudioSource;
 import android.os.Process;
 
-import org.webrtc.Logging;
+import java.lang.System;
+import java.nio.ByteBuffer;
+import java.util.concurrent.TimeUnit;
 
 public class  WebRtcAudioRecord {
   private static final boolean DEBUG = false;
@@ -41,6 +42,10 @@ public class  WebRtcAudioRecord {
   // buffer size). The extra space is allocated to guard against glitches under
   // high load.
   private static final int BUFFER_SIZE_FACTOR = 2;
+
+  // The AudioRecordJavaThread is allowed to wait for successful call to join()
+  // but the wait times out afther this amount of time.
+  private static final long AUDIO_RECORD_THREAD_JOIN_TIMEOUT_MS = 2000;
 
   private final long nativeAudioRecord;
   private final Context context;
@@ -100,21 +105,19 @@ public class  WebRtcAudioRecord {
       }
 
       try {
-        audioRecord.stop();
+        if (audioRecord != null) {
+          audioRecord.stop();
+        }
       } catch (IllegalStateException e) {
-        Logging.e(TAG,"AudioRecord.stop failed: " + e.getMessage());
+        Logging.e(TAG, "AudioRecord.stop failed: " + e.getMessage());
       }
     }
 
-    public void joinThread() {
+    // Stops the inner thread loop and also calls AudioRecord.stop().
+    // Does not block the calling thread.
+    public void stopThread() {
+      Logging.d(TAG, "stopThread");
       keepAlive = false;
-      while (isAlive()) {
-        try {
-          join();
-        } catch (InterruptedException e) {
-          // Ignore.
-        }
-      }
     }
   }
 
@@ -131,7 +134,7 @@ public class  WebRtcAudioRecord {
   private boolean enableBuiltInAEC(boolean enable) {
     Logging.d(TAG, "enableBuiltInAEC(" + enable + ')');
     if (effects == null) {
-      Logging.e(TAG,"Built-in AEC is not supported on this platform");
+      Logging.e(TAG, "Built-in AEC is not supported on this platform");
       return false;
     }
     return effects.setAEC(enable);
@@ -140,7 +143,7 @@ public class  WebRtcAudioRecord {
   private boolean enableBuiltInAGC(boolean enable) {
     Logging.d(TAG, "enableBuiltInAGC(" + enable + ')');
     if (effects == null) {
-      Logging.e(TAG,"Built-in AGC is not supported on this platform");
+      Logging.e(TAG, "Built-in AGC is not supported on this platform");
       return false;
     }
     return effects.setAGC(enable);
@@ -149,7 +152,7 @@ public class  WebRtcAudioRecord {
   private boolean enableBuiltInNS(boolean enable) {
     Logging.d(TAG, "enableBuiltInNS(" + enable + ')');
     if (effects == null) {
-      Logging.e(TAG,"Built-in NS is not supported on this platform");
+      Logging.e(TAG, "Built-in NS is not supported on this platform");
       return false;
     }
     return effects.setNS(enable);
@@ -160,11 +163,11 @@ public class  WebRtcAudioRecord {
         channels + ")");
     if (!WebRtcAudioUtils.hasPermission(
         context, android.Manifest.permission.RECORD_AUDIO)) {
-      Logging.e(TAG,"RECORD_AUDIO permission is missing");
+      Logging.e(TAG, "RECORD_AUDIO permission is missing");
       return -1;
     }
     if (audioRecord != null) {
-      Logging.e(TAG,"InitRecording() called twice without StopRecording()");
+      Logging.e(TAG, "InitRecording() called twice without StopRecording()");
       return -1;
     }
     final int bytesPerFrame = channels * (BITS_PER_SAMPLE / 8);
@@ -209,7 +212,7 @@ public class  WebRtcAudioRecord {
     }
     if (audioRecord == null ||
         audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
-      Logging.e(TAG,"Failed to create a new AudioRecord instance");
+      Logging.e(TAG, "Failed to create a new AudioRecord instance");
       return -1;
     }
     Logging.d(TAG, "AudioRecord "
@@ -242,11 +245,11 @@ public class  WebRtcAudioRecord {
     try {
       audioRecord.startRecording();
     } catch (IllegalStateException e) {
-      Logging.e(TAG,"AudioRecord.startRecording failed: " + e.getMessage());
+      Logging.e(TAG, "AudioRecord.startRecording failed: " + e.getMessage());
       return false;
     }
     if (audioRecord.getRecordingState() != AudioRecord.RECORDSTATE_RECORDING) {
-      Logging.e(TAG,"AudioRecord.startRecording failed");
+      Logging.e(TAG, "AudioRecord.startRecording failed");
       return false;
     }
     audioThread = new AudioRecordThread("AudioRecordJavaThread");
@@ -257,7 +260,11 @@ public class  WebRtcAudioRecord {
   private boolean stopRecording() {
     Logging.d(TAG, "stopRecording");
     assertTrue(audioThread != null);
-    audioThread.joinThread();
+    audioThread.stopThread();
+    if (!ThreadUtils.joinUninterruptibly(
+        audioThread, AUDIO_RECORD_THREAD_JOIN_TIMEOUT_MS)) {
+      Logging.e(TAG, "Join of AudioRecordJavaThread timed out");
+    }
     audioThread = null;
     if (effects != null) {
       effects.release();
@@ -279,9 +286,10 @@ public class  WebRtcAudioRecord {
 
   private native void nativeDataIsRecorded(int bytes, long nativeAudioRecord);
 
-  // TODO(glaznev): remove this API once SW mic mute can use AudioTrack.setEnabled().
+  // Sets all recorded samples to zero if |mute| is true, i.e., ensures that
+  // the microphone is muted.
   public static void setMicrophoneMute(boolean mute) {
-    Logging.w(TAG,"setMicrophoneMute API will be deprecated soon.");
+     Logging.w(TAG, "setMicrophoneMute(" + mute + ")");
     microphoneMute = mute;
   }
 }

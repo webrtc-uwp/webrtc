@@ -9,11 +9,13 @@
  */
 
 #include <algorithm>
+#include <memory>
 #include <vector>
 #include "testing/gtest/include/gtest/gtest.h"
 
 #include "webrtc/modules/rtp_rtcp/test/testAPI/test_api.h"
 
+#include "webrtc/base/rate_limiter.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -27,7 +29,7 @@ class VerifyingAudioReceiver : public NullRtpData {
  public:
   int32_t OnReceivedPayloadData(
       const uint8_t* payloadData,
-      const size_t payloadSize,
+      size_t payloadSize,
       const webrtc::WebRtcRTPHeader* rtpHeader) override {
     if (rtpHeader->header.payloadType == 98 ||
         rtpHeader->header.payloadType == 99) {
@@ -76,7 +78,8 @@ class RTPCallback : public NullRtpFeedback {
 
 class RtpRtcpAudioTest : public ::testing::Test {
  protected:
-  RtpRtcpAudioTest() : fake_clock(123456) {
+  RtpRtcpAudioTest()
+      : fake_clock(123456), retransmission_rate_limiter_(&fake_clock, 1000) {
     test_CSRC[0] = 1234;
     test_CSRC[2] = 2345;
     test_ssrc = 3456;
@@ -86,7 +89,6 @@ class RtpRtcpAudioTest : public ::testing::Test {
   ~RtpRtcpAudioTest() {}
 
   void SetUp() override {
-    audioFeedback = new NullRtpAudioFeedback();
     data_receiver1 = new VerifyingAudioReceiver();
     data_receiver2 = new VerifyingAudioReceiver();
     rtp_callback = new RTPCallback();
@@ -106,21 +108,18 @@ class RtpRtcpAudioTest : public ::testing::Test {
     configuration.clock = &fake_clock;
     configuration.receive_statistics = receive_statistics1_.get();
     configuration.outgoing_transport = transport1;
-    configuration.audio_messages = audioFeedback;
+    configuration.retransmission_rate_limiter = &retransmission_rate_limiter_;
 
     module1 = RtpRtcp::CreateRtpRtcp(configuration);
     rtp_receiver1_.reset(RtpReceiver::CreateAudioReceiver(
-        &fake_clock, audioFeedback, data_receiver1, NULL,
-        rtp_payload_registry1_.get()));
+        &fake_clock, data_receiver1, NULL, rtp_payload_registry1_.get()));
 
     configuration.receive_statistics = receive_statistics2_.get();
     configuration.outgoing_transport = transport2;
-    configuration.audio_messages = audioFeedback;
 
     module2 = RtpRtcp::CreateRtpRtcp(configuration);
     rtp_receiver2_.reset(RtpReceiver::CreateAudioReceiver(
-        &fake_clock, audioFeedback, data_receiver2, NULL,
-        rtp_payload_registry2_.get()));
+        &fake_clock, data_receiver2, NULL, rtp_payload_registry2_.get()));
 
     transport1->SetSendModule(module2, rtp_payload_registry2_.get(),
                               rtp_receiver2_.get(), receive_statistics2_.get());
@@ -133,7 +132,6 @@ class RtpRtcpAudioTest : public ::testing::Test {
     delete module2;
     delete transport1;
     delete transport2;
-    delete audioFeedback;
     delete data_receiver1;
     delete data_receiver2;
     delete rtp_callback;
@@ -141,23 +139,23 @@ class RtpRtcpAudioTest : public ::testing::Test {
 
   RtpRtcp* module1;
   RtpRtcp* module2;
-  rtc::scoped_ptr<ReceiveStatistics> receive_statistics1_;
-  rtc::scoped_ptr<ReceiveStatistics> receive_statistics2_;
-  rtc::scoped_ptr<RtpReceiver> rtp_receiver1_;
-  rtc::scoped_ptr<RtpReceiver> rtp_receiver2_;
-  rtc::scoped_ptr<RTPPayloadRegistry> rtp_payload_registry1_;
-  rtc::scoped_ptr<RTPPayloadRegistry> rtp_payload_registry2_;
+  std::unique_ptr<ReceiveStatistics> receive_statistics1_;
+  std::unique_ptr<ReceiveStatistics> receive_statistics2_;
+  std::unique_ptr<RtpReceiver> rtp_receiver1_;
+  std::unique_ptr<RtpReceiver> rtp_receiver2_;
+  std::unique_ptr<RTPPayloadRegistry> rtp_payload_registry1_;
+  std::unique_ptr<RTPPayloadRegistry> rtp_payload_registry2_;
   VerifyingAudioReceiver* data_receiver1;
   VerifyingAudioReceiver* data_receiver2;
   LoopBackTransport* transport1;
   LoopBackTransport* transport2;
-  NullRtpAudioFeedback* audioFeedback;
   RTPCallback* rtp_callback;
   uint32_t test_ssrc;
   uint32_t test_timestamp;
   uint16_t test_sequence_number;
   uint32_t test_CSRC[webrtc::kRtpCsrcSize];
   SimulatedClock fake_clock;
+  RateLimiter retransmission_rate_limiter_;
 };
 
 TEST_F(RtpRtcpAudioTest, Basic) {
@@ -173,8 +171,9 @@ TEST_F(RtpRtcpAudioTest, Basic) {
 
   // Send an empty RTP packet.
   // Should fail since we have not registered the payload type.
-  EXPECT_EQ(-1, module1->SendOutgoingData(webrtc::kAudioFrameSpeech,
-                                          96, 0, -1, NULL, 0));
+  EXPECT_FALSE(module1->SendOutgoingData(webrtc::kAudioFrameSpeech, 96, 0, -1,
+                                         nullptr, 0, nullptr, nullptr,
+                                         nullptr));
 
   CodecInst voice_codec;
   memset(&voice_codec, 0, sizeof(voice_codec));
@@ -199,86 +198,14 @@ TEST_F(RtpRtcpAudioTest, Basic) {
       (voice_codec.rate < 0) ? 0 : voice_codec.rate));
 
   const uint8_t test[5] = "test";
-  EXPECT_EQ(0, module1->SendOutgoingData(webrtc::kAudioFrameSpeech, 96,
-                                         0, -1, test, 4));
+  EXPECT_EQ(true,
+            module1->SendOutgoingData(webrtc::kAudioFrameSpeech, 96, 0, -1,
+                                      test, 4, nullptr, nullptr, nullptr));
 
   EXPECT_EQ(test_ssrc, rtp_receiver2_->SSRC());
   uint32_t timestamp;
   EXPECT_TRUE(rtp_receiver2_->Timestamp(&timestamp));
   EXPECT_EQ(test_timestamp, timestamp);
-}
-
-TEST_F(RtpRtcpAudioTest, RED) {
-  CodecInst voice_codec;
-  memset(&voice_codec, 0, sizeof(voice_codec));
-  voice_codec.pltype = 96;
-  voice_codec.plfreq = 8000;
-  memcpy(voice_codec.plname, "PCMU", 5);
-
-  EXPECT_EQ(0, module1->RegisterSendPayload(voice_codec));
-  EXPECT_EQ(0, rtp_receiver1_->RegisterReceivePayload(
-      voice_codec.plname,
-      voice_codec.pltype,
-      voice_codec.plfreq,
-      voice_codec.channels,
-      (voice_codec.rate < 0) ? 0 : voice_codec.rate));
-  EXPECT_EQ(0, module2->RegisterSendPayload(voice_codec));
-  voice_codec.rate = test_rate;
-  EXPECT_EQ(0, rtp_receiver2_->RegisterReceivePayload(
-      voice_codec.plname,
-      voice_codec.pltype,
-      voice_codec.plfreq,
-      voice_codec.channels,
-      (voice_codec.rate < 0) ? 0 : voice_codec.rate));
-
-  module1->SetSSRC(test_ssrc);
-  module1->SetStartTimestamp(test_timestamp);
-  EXPECT_EQ(0, module1->SetSendingStatus(true));
-
-  voice_codec.pltype = 127;
-  voice_codec.plfreq = 8000;
-  memcpy(voice_codec.plname, "RED", 4);
-
-  EXPECT_EQ(0, module1->SetSendREDPayloadType(voice_codec.pltype));
-  int8_t red = 0;
-  EXPECT_EQ(0, module1->SendREDPayloadType(&red));
-  EXPECT_EQ(voice_codec.pltype, red);
-  EXPECT_EQ(0, rtp_receiver1_->RegisterReceivePayload(
-      voice_codec.plname,
-      voice_codec.pltype,
-      voice_codec.plfreq,
-      voice_codec.channels,
-      (voice_codec.rate < 0) ? 0 : voice_codec.rate));
-  EXPECT_EQ(0, rtp_receiver2_->RegisterReceivePayload(
-      voice_codec.plname,
-      voice_codec.pltype,
-      voice_codec.plfreq,
-      voice_codec.channels,
-      (voice_codec.rate < 0) ? 0 : voice_codec.rate));
-
-  RTPFragmentationHeader fragmentation;
-  fragmentation.fragmentationVectorSize = 2;
-  fragmentation.fragmentationLength = new size_t[2];
-  fragmentation.fragmentationLength[0] = 4;
-  fragmentation.fragmentationLength[1] = 4;
-  fragmentation.fragmentationOffset = new size_t[2];
-  fragmentation.fragmentationOffset[0] = 0;
-  fragmentation.fragmentationOffset[1] = 4;
-  fragmentation.fragmentationTimeDiff = new uint16_t[2];
-  fragmentation.fragmentationTimeDiff[0] = 0;
-  fragmentation.fragmentationTimeDiff[1] = 0;
-  fragmentation.fragmentationPlType = new uint8_t[2];
-  fragmentation.fragmentationPlType[0] = 96;
-  fragmentation.fragmentationPlType[1] = 96;
-
-  const uint8_t test[5] = "test";
-  // Send a RTP packet.
-  EXPECT_EQ(0, module1->SendOutgoingData(webrtc::kAudioFrameSpeech,
-                                         96, 160, -1, test, 4,
-                                         &fragmentation));
-
-  EXPECT_EQ(0, module1->SetSendREDPayloadType(-1));
-  EXPECT_EQ(-1, module1->SendREDPayloadType(&red));
 }
 
 TEST_F(RtpRtcpAudioTest, DTMF) {
@@ -322,7 +249,7 @@ TEST_F(RtpRtcpAudioTest, DTMF) {
         (voice_codec.rate < 0) ? 0 : voice_codec.rate));
 
   // Start DTMF test.
-  uint32_t timeStamp = 160;
+  int timeStamp = 160;
 
   // Send a DTMF tone using RFC 2833 (4733).
   for (int i = 0; i < 16; i++) {
@@ -335,16 +262,18 @@ TEST_F(RtpRtcpAudioTest, DTMF) {
   // Send RTP packets for 16 tones a 160 ms  100ms
   // pause between = 2560ms + 1600ms = 4160ms
   for (; timeStamp <= 250 * 160; timeStamp += 160) {
-    EXPECT_EQ(0, module1->SendOutgoingData(webrtc::kAudioFrameSpeech, 96,
-                                           timeStamp, -1, test, 4));
+    EXPECT_TRUE(module1->SendOutgoingData(webrtc::kAudioFrameSpeech, 96,
+                                          timeStamp, -1, test, 4, nullptr,
+                                          nullptr, nullptr));
     fake_clock.AdvanceTimeMilliseconds(20);
     module1->Process();
   }
   EXPECT_EQ(0, module1->SendTelephoneEventOutband(32, 9000, 10));
 
   for (; timeStamp <= 740 * 160; timeStamp += 160) {
-    EXPECT_EQ(0, module1->SendOutgoingData(webrtc::kAudioFrameSpeech, 96,
-                                           timeStamp, -1, test, 4));
+    EXPECT_TRUE(module1->SendOutgoingData(webrtc::kAudioFrameSpeech, 96,
+                                          timeStamp, -1, test, 4, nullptr,
+                                          nullptr, nullptr));
     fake_clock.AdvanceTimeMilliseconds(20);
     module1->Process();
   }

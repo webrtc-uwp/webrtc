@@ -11,8 +11,10 @@
 #include "webrtc/modules/rtp_rtcp/test/testAPI/test_api.h"
 
 #include <algorithm>
+#include <memory>
 #include <vector>
 
+#include "webrtc/base/rate_limiter.h"
 #include "webrtc/test/null_transport.h"
 
 namespace webrtc {
@@ -41,7 +43,7 @@ bool LoopBackTransport::SendRtp(const uint8_t* data,
     }
   }
   RTPHeader header;
-  rtc::scoped_ptr<RtpHeaderParser> parser(RtpHeaderParser::Create());
+  std::unique_ptr<RtpHeaderParser> parser(RtpHeaderParser::Create());
   if (!parser->Parse(static_cast<const uint8_t*>(data), len, &header)) {
     return false;
   }
@@ -68,7 +70,7 @@ bool LoopBackTransport::SendRtcp(const uint8_t* data, size_t len) {
 
 int32_t TestRtpReceiver::OnReceivedPayloadData(
     const uint8_t* payload_data,
-    const size_t payload_size,
+    size_t payload_size,
     const webrtc::WebRtcRTPHeader* rtp_header) {
   EXPECT_LE(payload_size, sizeof(payload_data_));
   memcpy(payload_data_, payload_data, payload_size);
@@ -79,7 +81,8 @@ int32_t TestRtpReceiver::OnReceivedPayloadData(
 
 class RtpRtcpAPITest : public ::testing::Test {
  protected:
-  RtpRtcpAPITest() : fake_clock_(123456) {
+  RtpRtcpAPITest()
+      : fake_clock_(123456), retransmission_rate_limiter_(&fake_clock_, 1000) {
     test_csrcs_.push_back(1234);
     test_csrcs_.push_back(2345);
     test_ssrc_ = 3456;
@@ -93,22 +96,24 @@ class RtpRtcpAPITest : public ::testing::Test {
     configuration.audio = true;
     configuration.clock = &fake_clock_;
     configuration.outgoing_transport = &null_transport_;
+    configuration.retransmission_rate_limiter = &retransmission_rate_limiter_;
     module_.reset(RtpRtcp::CreateRtpRtcp(configuration));
     rtp_payload_registry_.reset(new RTPPayloadRegistry(
             RTPPayloadStrategy::CreateStrategy(true)));
     rtp_receiver_.reset(RtpReceiver::CreateAudioReceiver(
-        &fake_clock_, NULL, NULL, NULL, rtp_payload_registry_.get()));
+        &fake_clock_, NULL, NULL, rtp_payload_registry_.get()));
   }
 
-  rtc::scoped_ptr<RTPPayloadRegistry> rtp_payload_registry_;
-  rtc::scoped_ptr<RtpReceiver> rtp_receiver_;
-  rtc::scoped_ptr<RtpRtcp> module_;
+  std::unique_ptr<RTPPayloadRegistry> rtp_payload_registry_;
+  std::unique_ptr<RtpReceiver> rtp_receiver_;
+  std::unique_ptr<RtpRtcp> module_;
   uint32_t test_ssrc_;
   uint32_t test_timestamp_;
   uint16_t test_sequence_number_;
   std::vector<uint32_t> test_csrcs_;
   SimulatedClock fake_clock_;
   test::NullTransport null_transport_;
+  RateLimiter retransmission_rate_limiter_;
 };
 
 TEST_F(RtpRtcpAPITest, Basic) {
@@ -151,10 +156,6 @@ TEST_F(RtpRtcpAPITest, RTCP) {
   EXPECT_TRUE(module_->TMMBR());
   module_->SetTMMBRStatus(false);
   EXPECT_FALSE(module_->TMMBR());
-
-  EXPECT_EQ(kNackOff, rtp_receiver_->NACK());
-  rtp_receiver_->SetNACKStatus(kNackRtcp);
-  EXPECT_EQ(kNackRtcp, rtp_receiver_->NACK());
 }
 
 TEST_F(RtpRtcpAPITest, RtxSender) {

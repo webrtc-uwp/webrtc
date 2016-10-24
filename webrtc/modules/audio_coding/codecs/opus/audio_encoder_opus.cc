@@ -10,6 +10,8 @@
 
 #include "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.h"
 
+#include <algorithm>
+
 #include "webrtc/base/checks.h"
 #include "webrtc/base/safe_conversions.h"
 #include "webrtc/common_types.h"
@@ -27,7 +29,7 @@ AudioEncoderOpus::Config CreateConfig(const CodecInst& codec_inst) {
   AudioEncoderOpus::Config config;
   config.frame_size_ms = rtc::CheckedDivExact(codec_inst.pacsize, 48);
   config.num_channels = codec_inst.channels;
-  config.bitrate_bps = codec_inst.rate;
+  config.bitrate_bps = rtc::Optional<int>(codec_inst.rate);
   config.payload_type = codec_inst.pltype;
   config.application = config.num_channels == 1 ? AudioEncoderOpus::kVoip
                                                 : AudioEncoderOpus::kAudio;
@@ -76,16 +78,30 @@ double OptimizePacketLossRate(double new_loss_rate, double old_loss_rate) {
 
 }  // namespace
 
+AudioEncoderOpus::Config::Config() = default;
+AudioEncoderOpus::Config::Config(const Config&) = default;
+AudioEncoderOpus::Config::~Config() = default;
+auto AudioEncoderOpus::Config::operator=(const Config&) -> Config& = default;
+
 bool AudioEncoderOpus::Config::IsOk() const {
   if (frame_size_ms <= 0 || frame_size_ms % 10 != 0)
     return false;
   if (num_channels != 1 && num_channels != 2)
     return false;
-  if (bitrate_bps < kMinBitrateBps || bitrate_bps > kMaxBitrateBps)
+  if (bitrate_bps &&
+      (*bitrate_bps < kMinBitrateBps || *bitrate_bps > kMaxBitrateBps))
     return false;
   if (complexity < 0 || complexity > 10)
     return false;
   return true;
+}
+
+int AudioEncoderOpus::Config::GetBitrateBps() const {
+  RTC_DCHECK(IsOk());
+  if (bitrate_bps)
+    return *bitrate_bps;  // Explicitly set value.
+  else
+    return num_channels == 1 ? 32000 : 64000;  // Default value.
 }
 
 AudioEncoderOpus::AudioEncoderOpus(const Config& config)
@@ -98,16 +114,6 @@ AudioEncoderOpus::AudioEncoderOpus(const CodecInst& codec_inst)
 
 AudioEncoderOpus::~AudioEncoderOpus() {
   RTC_CHECK_EQ(0, WebRtcOpus_EncoderFree(inst_));
-}
-
-size_t AudioEncoderOpus::MaxEncodedBytes() const {
-  // Calculate the number of bytes we expect the encoder to produce,
-  // then multiply by two to give a wide margin for error.
-  const size_t bytes_per_millisecond =
-      static_cast<size_t>(config_.bitrate_bps / (1000 * 8) + 1);
-  const size_t approx_encoded_bytes =
-      Num10msFramesPerPacket() * 10 * bytes_per_millisecond;
-  return 2 * approx_encoded_bytes;
 }
 
 int AudioEncoderOpus::SampleRateHz() const {
@@ -127,7 +133,7 @@ size_t AudioEncoderOpus::Max10MsFramesInAPacket() const {
 }
 
 int AudioEncoderOpus::GetTargetBitrate() const {
-  return config_.bitrate_bps;
+  return config_.GetBitrateBps();
 }
 
 void AudioEncoderOpus::Reset() {
@@ -144,6 +150,10 @@ bool AudioEncoderOpus::SetDtx(bool enable) {
   auto conf = config_;
   conf.dtx_enabled = enable;
   return RecreateEncoderInstance(conf);
+}
+
+bool AudioEncoderOpus::GetDtx() const {
+  return config_.dtx_enabled;
 }
 
 bool AudioEncoderOpus::SetApplication(Application application) {
@@ -176,10 +186,10 @@ void AudioEncoderOpus::SetProjectedPacketLossRate(double fraction) {
 }
 
 void AudioEncoderOpus::SetTargetBitrate(int bits_per_second) {
-  config_.bitrate_bps =
-      std::max(std::min(bits_per_second, kMaxBitrateBps), kMinBitrateBps);
+  config_.bitrate_bps = rtc::Optional<int>(
+      std::max(std::min(bits_per_second, kMaxBitrateBps), kMinBitrateBps));
   RTC_DCHECK(config_.IsOk());
-  RTC_CHECK_EQ(0, WebRtcOpus_SetBitRate(inst_, config_.bitrate_bps));
+  RTC_CHECK_EQ(0, WebRtcOpus_SetBitRate(inst_, config_.GetBitrateBps()));
 }
 
 AudioEncoder::EncodedInfo AudioEncoderOpus::EncodeImpl(
@@ -198,7 +208,7 @@ AudioEncoder::EncodedInfo AudioEncoderOpus::EncodeImpl(
   RTC_CHECK_EQ(input_buffer_.size(),
                Num10msFramesPerPacket() * SamplesPer10msFrame());
 
-  const size_t max_encoded_bytes = MaxEncodedBytes();
+  const size_t max_encoded_bytes = SufficientOutputBufferSize();
   EncodedInfo info;
   info.encoded_bytes =
       encoded->AppendData(
@@ -220,6 +230,7 @@ AudioEncoder::EncodedInfo AudioEncoderOpus::EncodeImpl(
   info.payload_type = config_.payload_type;
   info.send_even_if_empty = true;  // Allows Opus to send empty packets.
   info.speech = (info.encoded_bytes > 0);
+  info.encoder_type = CodecType::kOpus;
   return info;
 }
 
@@ -229,6 +240,16 @@ size_t AudioEncoderOpus::Num10msFramesPerPacket() const {
 
 size_t AudioEncoderOpus::SamplesPer10msFrame() const {
   return rtc::CheckedDivExact(kSampleRateHz, 100) * config_.num_channels;
+}
+
+size_t AudioEncoderOpus::SufficientOutputBufferSize() const {
+  // Calculate the number of bytes we expect the encoder to produce,
+  // then multiply by two to give a wide margin for error.
+  const size_t bytes_per_millisecond =
+      static_cast<size_t>(config_.GetBitrateBps() / (1000 * 8) + 1);
+  const size_t approx_encoded_bytes =
+      Num10msFramesPerPacket() * 10 * bytes_per_millisecond;
+  return 2 * approx_encoded_bytes;
 }
 
 // If the given config is OK, recreate the Opus encoder instance with those
@@ -243,7 +264,7 @@ bool AudioEncoderOpus::RecreateEncoderInstance(const Config& config) {
   input_buffer_.reserve(Num10msFramesPerPacket() * SamplesPer10msFrame());
   RTC_CHECK_EQ(0, WebRtcOpus_EncoderCreate(&inst_, config.num_channels,
                                            config.application));
-  RTC_CHECK_EQ(0, WebRtcOpus_SetBitRate(inst_, config.bitrate_bps));
+  RTC_CHECK_EQ(0, WebRtcOpus_SetBitRate(inst_, config.GetBitrateBps()));
   if (config.fec_enabled) {
     RTC_CHECK_EQ(0, WebRtcOpus_EnableFec(inst_));
   } else {

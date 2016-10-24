@@ -441,7 +441,10 @@ int Win32Socket::SendTo(const void* buffer, size_t length,
   return sent;
 }
 
-int Win32Socket::Recv(void* buffer, size_t length) {
+int Win32Socket::Recv(void* buffer, size_t length, int64_t* timestamp) {
+  if (timestamp) {
+    *timestamp = -1;
+  }
   int received = ::recv(socket_, static_cast<char*>(buffer),
                         static_cast<int>(length), 0);
   UpdateLastError();
@@ -450,8 +453,13 @@ int Win32Socket::Recv(void* buffer, size_t length) {
   return received;
 }
 
-int Win32Socket::RecvFrom(void* buffer, size_t length,
-                          SocketAddress* out_addr) {
+int Win32Socket::RecvFrom(void* buffer,
+                          size_t length,
+                          SocketAddress* out_addr,
+                          int64_t* timestamp) {
+  if (timestamp) {
+    *timestamp = -1;
+  }
   sockaddr_storage saddr;
   socklen_t addr_len = sizeof(saddr);
   int received = ::recvfrom(socket_, static_cast<char*>(buffer),
@@ -630,7 +638,7 @@ void Win32Socket::OnSocketNotify(SOCKET socket, int event, int error) {
       if (error != ERROR_SUCCESS) {
         ReportWSAError("WSAAsync:connect notify", error, addr_);
 #if !defined(NDEBUG)
-        int32_t duration = TimeSince(connect_time_);
+        int64_t duration = TimeSince(connect_time_);
         LOG(LS_INFO) << "WSAAsync:connect error (" << duration
                      << " ms), faking close";
 #endif
@@ -643,7 +651,7 @@ void Win32Socket::OnSocketNotify(SOCKET socket, int event, int error) {
         SignalCloseEvent(this, error);
       } else {
 #if !defined(NDEBUG)
-        int32_t duration = TimeSince(connect_time_);
+        int64_t duration = TimeSince(connect_time_);
         LOG(LS_INFO) << "WSAAsync:connect (" << duration << " ms)";
 #endif
         state_ = CS_CONNECTED;

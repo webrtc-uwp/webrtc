@@ -525,8 +525,8 @@ class VideoProcessorIntegrationTest : public testing::Test {
     EXPECT_GT(psnr_result.min, quality_metrics.minimum_min_psnr);
     EXPECT_GT(ssim_result.average, quality_metrics.minimum_avg_ssim);
     EXPECT_GT(ssim_result.min, quality_metrics.minimum_min_ssim);
-    if (!remove(config_.output_filename.c_str())) {
-      fprintf(stderr, "Failed to remove temporary file!");
+    if (remove(config_.output_filename.c_str()) < 0) {
+      fprintf(stderr, "Failed to remove temporary file!\n");
     }
   }
 };
@@ -626,6 +626,7 @@ TEST_F(VideoProcessorIntegrationTest, Process0PercentPacketLossH264) {
 // Fails on iOS. See webrtc:4755.
 #if !defined(WEBRTC_IOS)
 
+#if !defined(RTC_DISABLE_VP9)
 // VP9: Run with no packet loss and fixed bitrate. Quality should be very high.
 // One key frame (first frame only) in sequence. Setting |key_frame_interval|
 // to -1 below means no periodic key frames in test.
@@ -689,7 +690,7 @@ TEST_F(VideoProcessorIntegrationTest, ProcessNoLossChangeBitRateVP9) {
                      false, true, false);
   // Metrics for expected quality.
   QualityMetrics quality_metrics;
-  SetQualityMetrics(&quality_metrics, 35.7, 30.0, 0.90, 0.85);
+  SetQualityMetrics(&quality_metrics, 35.5, 30.0, 0.90, 0.85);
   // Metrics for rate control.
   RateControlMetrics rc_metrics[3];
   SetRateControlMetrics(rc_metrics, 0, 0, 30, 20, 20, 30, 0, 1);
@@ -706,8 +707,17 @@ TEST_F(VideoProcessorIntegrationTest, ProcessNoLossChangeBitRateVP9) {
 // for the rate control metrics can be lower. One key frame (first frame only).
 // Note: quality after update should be higher but we currently compute quality
 // metrics averaged over whole sequence run.
+
+#if defined(WEBRTC_ANDROID)
+// Flaky on Android: https://bugs.chromium.org/p/webrtc/issues/detail?id=6057.
+#define MAYBE_ProcessNoLossChangeFrameRateFrameDropVP9 \
+  DISABLED_ProcessNoLossChangeFrameRateFrameDropVP9
+#else
+#define MAYBE_ProcessNoLossChangeFrameRateFrameDropVP9 \
+  ProcessNoLossChangeFrameRateFrameDropVP9
+#endif
 TEST_F(VideoProcessorIntegrationTest,
-       ProcessNoLossChangeFrameRateFrameDropVP9) {
+       MAYBE_ProcessNoLossChangeFrameRateFrameDropVP9) {
   config_.networking_config.packet_loss_probability = 0;
   // Bitrate and frame rate profile.
   RateProfile rate_profile;
@@ -779,6 +789,8 @@ TEST_F(VideoProcessorIntegrationTest, ProcessNoLossSpatialResizeFrameDropVP9) {
 
 // TODO(marpan): Add temporal layer test for VP9, once changes are in
 // vp9 wrapper for this.
+
+#endif  // !defined(RTC_DISABLE_VP9)
 
 // VP8: Run with no packet loss and fixed bitrate. Quality should be very high.
 // One key frame (first frame only) in sequence. Setting |key_frame_interval|
@@ -963,7 +975,7 @@ TEST_F(VideoProcessorIntegrationTest,
   SetQualityMetrics(&quality_metrics, 25.0, 15.0, 0.70, 0.40);
   // Metrics for rate control.
   RateControlMetrics rc_metrics[1];
-  SetRateControlMetrics(rc_metrics, 0, 160, 60, 120, 20, 70, 1, 2);
+  SetRateControlMetrics(rc_metrics, 0, 160, 80, 120, 20, 70, 1, 2);
   ProcessFramesAndVerify(quality_metrics, rate_profile, process_settings,
                          rc_metrics);
 }

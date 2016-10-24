@@ -28,7 +28,7 @@ SharedData::SharedData(const Config& config)
       _engineStatistics(_gInstanceCounter),
       _audioDevicePtr(NULL),
       _moduleProcessThreadPtr(
-          rtc::ScopedToUnique(ProcessThread::Create("VoiceProcessThread"))) {
+          ProcessThread::Create("VoiceProcessThread")) {
     Trace::CreateTrace();
     if (OutputMixer::Create(_outputMixerPtr, _gInstanceCounter) == 0)
     {
@@ -54,14 +54,9 @@ SharedData::~SharedData()
     Trace::ReturnTrace();
 }
 
-void SharedData::set_audio_device(AudioDeviceModule* audio_device)
-{
-    // AddRef first in case the pointers are equal.
-    if (audio_device)
-      audio_device->AddRef();
-    if (_audioDevicePtr)
-      _audioDevicePtr->Release();
-    _audioDevicePtr = audio_device;
+void SharedData::set_audio_device(
+    const rtc::scoped_refptr<AudioDeviceModule>& audio_device) {
+  _audioDevicePtr = audio_device;
 }
 
 void SharedData::set_audio_processing(AudioProcessing* audioproc) {

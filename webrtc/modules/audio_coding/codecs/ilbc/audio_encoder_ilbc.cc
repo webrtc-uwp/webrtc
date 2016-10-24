@@ -56,10 +56,6 @@ AudioEncoderIlbc::~AudioEncoderIlbc() {
   RTC_CHECK_EQ(0, WebRtcIlbcfix_EncoderFree(encoder_));
 }
 
-size_t AudioEncoderIlbc::MaxEncodedBytes() const {
-  return RequiredOutputSizeBytes();
-}
-
 int AudioEncoderIlbc::SampleRateHz() const {
   return kSampleRateHz;
 }
@@ -131,6 +127,7 @@ AudioEncoder::EncodedInfo AudioEncoderIlbc::EncodeImpl(
   info.encoded_bytes = encoded_bytes;
   info.encoded_timestamp = first_timestamp_in_buffer_;
   info.payload_type = config_.payload_type;
+  info.encoder_type = CodecType::kIlbc;
   return info;
 }
 

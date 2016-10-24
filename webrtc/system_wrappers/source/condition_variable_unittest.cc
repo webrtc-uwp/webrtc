@@ -17,9 +17,8 @@
 
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/platform_thread.h"
-#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/base/timeutils.h"
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/system_wrappers/include/trace.h"
 
 namespace webrtc {
@@ -192,10 +191,10 @@ TEST(CondVarWaitTest, WaitingWaits) {
   InitializeCriticalSection(&crit_sect);
   ConditionVariableEventWin cond_var;
   EnterCriticalSection(&crit_sect);
-  int64_t start_ms = TickTime::MillisecondTimestamp();
+  int64_t start_ms = rtc::TimeMillis();
   EXPECT_FALSE(cond_var.SleepCS(&crit_sect, kVeryShortWaitMs));
-  int64_t end_ms = TickTime::MillisecondTimestamp();
-  EXPECT_LE(start_ms + kVeryShortWaitMs, (end_ms+1))
+  int64_t end_ms = rtc::TimeMillis();
+  EXPECT_LE(start_ms + kVeryShortWaitMs, end_ms)
       << "actual elapsed:" << end_ms - start_ms;
   LeaveCriticalSection(&crit_sect);
   DeleteCriticalSection(&crit_sect);

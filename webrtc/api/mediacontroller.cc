@@ -10,8 +10,11 @@
 
 #include "webrtc/api/mediacontroller.h"
 
+#include <memory>
+
 #include "webrtc/base/bind.h"
 #include "webrtc/base/checks.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/call.h"
 #include "webrtc/pc/channelmanager.h"
 #include "webrtc/media/base/mediachannel.h"
@@ -32,9 +35,9 @@ class MediaController : public webrtc::MediaControllerInterface,
         media_config_(media_config),
         channel_manager_(channel_manager) {
     RTC_DCHECK(worker_thread);
-    worker_thread_->Invoke<void>(
-        rtc::Bind(&MediaController::Construct_w, this,
-                  channel_manager_->media_engine()));
+    worker_thread_->Invoke<void>(RTC_FROM_HERE,
+                                 rtc::Bind(&MediaController::Construct_w, this,
+                                           channel_manager_->media_engine()));
   }
   ~MediaController() override {
     Close();
@@ -42,7 +45,8 @@ class MediaController : public webrtc::MediaControllerInterface,
 
   // webrtc::MediaControllerInterface implementation.
   void Close() override {
-    worker_thread_->Invoke<void>(rtc::Bind(&MediaController::Close_w, this));
+    worker_thread_->Invoke<void>(RTC_FROM_HERE,
+                                 rtc::Bind(&MediaController::Close_w, this));
   }
   webrtc::Call* call_w() override {
     RTC_DCHECK(worker_thread_->IsCurrent());
@@ -74,7 +78,7 @@ class MediaController : public webrtc::MediaControllerInterface,
   const cricket::MediaConfig media_config_;
   cricket::ChannelManager* const channel_manager_;
   webrtc::Call::Config call_config_;
-  rtc::scoped_ptr<webrtc::Call> call_;
+  std::unique_ptr<webrtc::Call> call_;
 
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(MediaController);
 };

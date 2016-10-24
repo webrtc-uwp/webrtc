@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "webrtc/base/event.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/call.h"
 #include "webrtc/test/call_test.h"
 
@@ -65,6 +64,7 @@ class RampUpTester : public test::EndToEndTest {
   const size_t num_audio_streams_;
   const bool rtx_;
   const bool red_;
+  Call* sender_call_;
   VideoSendStream* send_stream_;
   test::PacketTransport* send_transport_;
 
@@ -100,7 +100,6 @@ class RampUpTester : public test::EndToEndTest {
   SsrcMap rtx_ssrc_map_;
 
   rtc::PlatformThread poller_thread_;
-  Call* sender_call_;
 };
 
 class RampUpDownUpTester : public RampUpTester {

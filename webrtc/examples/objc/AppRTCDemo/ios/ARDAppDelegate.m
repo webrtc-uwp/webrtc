@@ -10,10 +10,10 @@
 
 #import "ARDAppDelegate.h"
 
-#import "webrtc/base/objc/RTCFieldTrials.h"
-#import "webrtc/base/objc/RTCTracing.h"
-#import "RTCLogging.h"
-#import "RTCPeerConnectionFactory.h"
+#import "WebRTC/RTCFieldTrials.h"
+#import "WebRTC/RTCLogging.h"
+#import "WebRTC/RTCSSLAdapter.h"
+#import "WebRTC/RTCTracing.h"
 
 #import "ARDMainViewController.h"
 
@@ -26,7 +26,7 @@
 - (BOOL)application:(UIApplication *)application
     didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
   RTCInitFieldTrials(RTCFieldTrialOptionsSendSideBwe);
-  [RTCPeerConnectionFactory initializeSSL];
+  RTCInitializeSSL();
   RTCSetupInternalTracer();
   _window =  [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
   [_window makeKeyAndVisible];
@@ -37,21 +37,15 @@
   // In debug builds the default level is LS_INFO and in non-debug builds it is
   // disabled. Continue to log to console in non-debug builds, but only
   // warnings and errors.
-  RTCSetMinDebugLogLevel(kRTCLoggingSeverityWarning);
+  RTCSetMinDebugLogLevel(RTCLoggingSeverityWarning);
 #endif
 
   return YES;
 }
 
-- (void)applicationWillResignActive:(UIApplication *)application {
-  ARDMainViewController *viewController =
-      (ARDMainViewController *)_window.rootViewController;
-  [viewController applicationWillResignActive:application];
-}
-
 - (void)applicationWillTerminate:(UIApplication *)application {
   RTCShutdownInternalTracer();
-  [RTCPeerConnectionFactory deinitializeSSL];
+  RTCCleanupSSL();
 }
 
 @end

@@ -26,7 +26,6 @@
 #include "webrtc/modules/audio_coding/acm2/acm_common_defs.h"
 #include "webrtc/modules/audio_coding/test/utility.h"
 #include "webrtc/system_wrappers/include/event_wrapper.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
@@ -199,9 +198,12 @@ void ISACTest::Run10ms() {
   EXPECT_GT(_inFileA.Read10MsData(audioFrame), 0);
   EXPECT_GE(_acmA->Add10MsData(audioFrame), 0);
   EXPECT_GE(_acmB->Add10MsData(audioFrame), 0);
-  EXPECT_EQ(0, _acmA->PlayoutData10Ms(32000, &audioFrame));
+  bool muted;
+  EXPECT_EQ(0, _acmA->PlayoutData10Ms(32000, &audioFrame, &muted));
+  ASSERT_FALSE(muted);
   _outFileA.Write10MsData(audioFrame);
-  EXPECT_EQ(0, _acmB->PlayoutData10Ms(32000, &audioFrame));
+  EXPECT_EQ(0, _acmB->PlayoutData10Ms(32000, &audioFrame, &muted));
+  ASSERT_FALSE(muted);
   _outFileB.Write10MsData(audioFrame);
 }
 

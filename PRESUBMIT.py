@@ -20,6 +20,7 @@ CPPLINT_DIRS = [
   'webrtc/call',
   'webrtc/common_video',
   'webrtc/examples',
+  'webrtc/modules/audio_mixer',
   'webrtc/modules/bitrate_controller',
   'webrtc/modules/congestion_controller',
   'webrtc/modules/pacing',
@@ -27,7 +28,6 @@ CPPLINT_DIRS = [
   'webrtc/modules/rtp_rtcp',
   'webrtc/modules/video_coding',
   'webrtc/modules/video_processing',
-  'webrtc/sound',
   'webrtc/tools',
   'webrtc/video',
 ]
@@ -39,8 +39,11 @@ CPPLINT_DIRS = [
 # - build/c++11         : Rvalue ref checks are unreliable (false positives),
 #                         include file and feature blacklists are
 #                         google3-specific.
+# - whitespace/operators: Same as above (doesn't seem sufficient to eliminate
+#                         all move-related errors).
 BLACKLIST_LINT_FILTERS = [
   '-build/c++11',
+  '-whitespace/operators',
 ]
 
 # List of directories of "supported" native APIs. That means changes to headers
@@ -50,32 +53,37 @@ BLACKLIST_LINT_FILTERS = [
 # 3. Deprecation is announced to discuss-webrtc@googlegroups.com and
 #    webrtc-users@google.com (internal list).
 # 4. (later) The deprecated APIs are removed.
-# Directories marked as DEPRECATED should not be used. They're only present in
-# the list to support legacy downstream code.
 NATIVE_API_DIRS = (
-  'talk/app/webrtc',
   'webrtc',
-  'webrtc/base',  # DEPRECATED.
-  'webrtc/common_audio/include',  # DEPRECATED.
-  'webrtc/modules/audio_coding/include',
-  'webrtc/modules/audio_conference_mixer/include',  # DEPRECATED.
+  'webrtc/api',
+  'webrtc/media',
   'webrtc/modules/audio_device/include',
+  'webrtc/pc',
+)
+# These directories should not be used but are maintained only to avoid breaking
+# some legacy downstream code.
+LEGACY_API_DIRS = (
+  'webrtc/base',
+  'webrtc/common_audio/include',
+  'webrtc/modules/audio_coding/include',
+  'webrtc/modules/audio_conference_mixer/include',
   'webrtc/modules/audio_processing/include',
   'webrtc/modules/bitrate_controller/include',
   'webrtc/modules/congestion_controller/include',
   'webrtc/modules/include',
   'webrtc/modules/remote_bitrate_estimator/include',
   'webrtc/modules/rtp_rtcp/include',
-  'webrtc/modules/rtp_rtcp/source',  # DEPRECATED.
+  'webrtc/modules/rtp_rtcp/source',
   'webrtc/modules/utility/include',
   'webrtc/modules/video_coding/codecs/h264/include',
   'webrtc/modules/video_coding/codecs/i420/include',
   'webrtc/modules/video_coding/codecs/vp8/include',
   'webrtc/modules/video_coding/codecs/vp9/include',
   'webrtc/modules/video_coding/include',
-  'webrtc/system_wrappers/include',  # DEPRECATED.
+  'webrtc/system_wrappers/include',
   'webrtc/voice_engine/include',
 )
+API_DIRS = NATIVE_API_DIRS[:] + LEGACY_API_DIRS[:]
 
 
 def _VerifyNativeApiHeadersListIsValid(input_api, output_api):
@@ -83,7 +91,7 @@ def _VerifyNativeApiHeadersListIsValid(input_api, output_api):
   non_existing_paths = []
   native_api_full_paths = [
       input_api.os_path.join(input_api.PresubmitLocalPath(),
-                             *path.split('/')) for path in NATIVE_API_DIRS]
+                             *path.split('/')) for path in API_DIRS]
   for path in native_api_full_paths:
     if not os.path.isdir(path):
       non_existing_paths.append(path)
@@ -95,31 +103,35 @@ def _VerifyNativeApiHeadersListIsValid(input_api, output_api):
         non_existing_paths)]
   return []
 
+api_change_msg = """
+You seem to be changing native API header files. Please make sure that you:
+  1. Make compatible changes that don't break existing clients.
+  2. Mark the old stuff as deprecated.
+  3. Create a timeline and plan for when the deprecated stuff will be
+     removed. (The amount of time we give users to change their code
+     should be informed by how much work it is for them. If they just
+     need to replace one name with another or something equally
+     simple, 1-2 weeks might be good; if they need to do serious work,
+     up to 3 months may be called for.)
+  4. Update/inform existing downstream code owners to stop using the
+     deprecated stuff. (Send announcements to
+     discuss-webrtc@googlegroups.com and webrtc-users@google.com.)
+  5. Remove the deprecated stuff, once the agreed-upon amount of time
+     has passed.
+Related files:
+"""
 
 def _CheckNativeApiHeaderChanges(input_api, output_api):
   """Checks to remind proper changing of native APIs."""
   files = []
   for f in input_api.AffectedSourceFiles(input_api.FilterSourceFile):
     if f.LocalPath().endswith('.h'):
-      for path in NATIVE_API_DIRS:
+      for path in API_DIRS:
         if os.path.dirname(f.LocalPath()) == path:
           files.append(f)
 
   if files:
-    return [output_api.PresubmitNotifyResult(
-        'You seem to be changing native API header files. Please make sure '
-        'you:\n'
-        '  1. Make compatible changes that don\'t break existing clients.\n'
-        '  2. Mark the old APIs as deprecated.\n'
-        '  3. Create a timeline and plan for when the deprecated method will '
-        'be removed (preferably 3 months or so).\n'
-        '  4. Update/inform existing downstream code owners to stop using the '
-        'deprecated APIs: \n'
-        'send announcement to discuss-webrtc@googlegroups.com and '
-        'webrtc-users@google.com.\n'
-        '  5. (after ~3 months) remove the deprecated API.\n'
-        'Related files:',
-        files)]
+    return [output_api.PresubmitNotifyResult(api_change_msg, files)]
   return []
 
 
@@ -226,7 +238,7 @@ def _CheckNoRtcBaseDeps(input_api, gyp_files, output_api):
         'base_tests.gyp',
         'desktop_capture.gypi',
         'p2p.gyp',
-        'sound.gyp',
+        'sdk.gyp',
         'webrtc_test_common.gyp',
         'webrtc_tests.gypi',
     )
@@ -243,9 +255,43 @@ def _CheckNoRtcBaseDeps(input_api, gyp_files, output_api):
         items=violating_files)]
   return []
 
+def _CheckNoRtcBaseDepsGn(input_api, gn_files, output_api):
+  pattern = input_api.re.compile(r'base:rtc_base\s*"')
+  violating_files = []
+  for f in gn_files:
+    gn_exceptions = (
+        os.path.join('base_tests', 'BUILD.gn'),
+        os.path.join('desktop_capture', 'BUILD.gn'),
+        os.path.join('p2p', 'BUILD.gn'),
+        os.path.join('sdk', 'BUILD.gn'),
+        os.path.join('webrtc_test_common', 'BUILD.gn'),
+        os.path.join('webrtc_tests', 'BUILD.gn'),
+
+        # TODO(ehmaldonado): Clean up references to rtc_base in these files.
+        # See https://bugs.chromium.org/p/webrtc/issues/detail?id=3806
+        os.path.join('webrtc', 'BUILD.gn'),
+        os.path.join('xmllite', 'BUILD.gn'),
+        os.path.join('xmpp', 'BUILD.gn'),
+        os.path.join('modules', 'BUILD.gn'),
+        os.path.join('audio_device', 'BUILD.gn'),
+        os.path.join('pc', 'BUILD.gn'),
+    )
+    if f.LocalPath().endswith(gn_exceptions):
+      continue
+    contents = input_api.ReadFile(f)
+    if pattern.search(contents):
+      violating_files.append(f)
+  if violating_files:
+    return [output_api.PresubmitError(
+        'Depending on rtc_base is not allowed. Change your dependency to '
+        'rtc_base_approved and possibly sanitize and move the desired source '
+        'file(s) to rtc_base_approved.\nChanged GN files:',
+        items=violating_files)]
+  return []
+
 def _CheckNoSourcesAboveGyp(input_api, gyp_files, output_api):
   # Disallow referencing source files with paths above the GYP file location.
-  source_pattern = input_api.re.compile(r'sources.*?\[(.*?)\]',
+  source_pattern = input_api.re.compile(r'\'sources\'.*?\[(.*?)\]',
                                         re.MULTILINE | re.DOTALL)
   file_pattern = input_api.re.compile(r"'((\.\./.*?)|(<\(webrtc_root\).*?))'")
   violating_gyp_files = set()
@@ -259,8 +305,8 @@ def _CheckNoSourcesAboveGyp(input_api, gyp_files, output_api):
     for source_block_match in source_pattern.finditer(contents):
       # Find all source list entries starting with ../ in the source block
       # (exclude overrides entries).
-      for file_list_match in file_pattern.finditer(source_block_match.group(0)):
-        source_file = file_list_match.group(0)
+      for file_list_match in file_pattern.finditer(source_block_match.group(1)):
+        source_file = file_list_match.group(1)
         if 'overrides/' not in source_file:
           violating_source_entries.append(source_file)
           violating_gyp_files.add(gyp_file)
@@ -273,6 +319,34 @@ def _CheckNoSourcesAboveGyp(input_api, gyp_files, output_api):
         '%s\n'
         'Violating GYP files:' % '\n'.join(violating_source_entries),
         items=violating_gyp_files)]
+  return []
+
+def _CheckNoSourcesAboveGn(input_api, gn_files, output_api):
+  # Disallow referencing source files with paths above the GN file location.
+  source_pattern = input_api.re.compile(r' +sources \+?= \[(.*?)\]',
+                                        re.MULTILINE | re.DOTALL)
+  file_pattern = input_api.re.compile(r'"((\.\./.*?)|(//.*?))"')
+  violating_gn_files = set()
+  violating_source_entries = []
+  for gn_file in gn_files:
+    contents = input_api.ReadFile(gn_file)
+    for source_block_match in source_pattern.finditer(contents):
+      # Find all source list entries starting with ../ in the source block
+      # (exclude overrides entries).
+      for file_list_match in file_pattern.finditer(source_block_match.group(1)):
+        source_file = file_list_match.group(1)
+        if 'overrides/' not in source_file:
+          violating_source_entries.append(source_file)
+          violating_gn_files.add(gn_file)
+  if violating_gn_files:
+    return [output_api.PresubmitError(
+        'Referencing source files above the directory of the GN file is not '
+        'allowed. Please introduce new GYP targets and/or GN files in the '
+        'proper location instead.\n'
+        'Invalid source entries:\n'
+        '%s\n'
+        'Violating GN files:' % '\n'.join(violating_source_entries),
+        items=violating_gn_files)]
   return []
 
 def _CheckGypChanges(input_api, output_api):
@@ -292,6 +366,25 @@ def _CheckGypChanges(input_api, output_api):
         items=gyp_files))
     result.extend(_CheckNoRtcBaseDeps(input_api, gyp_files, output_api))
     result.extend(_CheckNoSourcesAboveGyp(input_api, gyp_files, output_api))
+  return result
+
+def _CheckGnChanges(input_api, output_api):
+  source_file_filter = lambda x: input_api.FilterSourceFile(
+      x, white_list=(r'.+\.(gn|gni)$',))
+
+  gn_files = []
+  for f in input_api.AffectedSourceFiles(source_file_filter):
+    if f.LocalPath().startswith('webrtc'):
+      gn_files.append(f)
+
+  result = []
+  if gn_files:
+    result.append(output_api.PresubmitNotifyResult(
+        'As you\'re changing GN files: please make sure corresponding GYP'
+        'files are also updated.\nChanged GN files:',
+        items=gn_files))
+    result.extend(_CheckNoRtcBaseDepsGn(input_api, gn_files, output_api))
+    result.extend(_CheckNoSourcesAboveGn(input_api, gn_files, output_api))
   return result
 
 def _CheckUnwantedDependencies(input_api, output_api):
@@ -385,6 +478,7 @@ def _RunPythonTests(input_api, output_api):
 
   test_directories = [
     join('tools', 'autoroller', 'unittests'),
+    join('webrtc', 'tools', 'py_event_log_analyzer'),
   ]
 
   tests = []
@@ -405,6 +499,7 @@ def _CommonChecks(input_api, output_api):
   # they do not follow C++ lint rules.
   black_list = input_api.DEFAULT_BLACK_LIST + (
     r".*\bobjc[\\\/].*",
+    r"webrtc\/build\/ios\/SDK\/.*",
   )
   source_file_filter = lambda x: input_api.FilterSourceFile(x, None, black_list)
   results.extend(_CheckApprovedFilesLintClean(
@@ -416,17 +511,17 @@ def _CommonChecks(input_api, output_api):
                   r'^build[\\\/].*\.py$',
                   r'^buildtools[\\\/].*\.py$',
                   r'^chromium[\\\/].*\.py$',
-                  r'^google_apis[\\\/].*\.py$',
-                  r'^net.*[\\\/].*\.py$',
+                  r'^mojo.*[\\\/].*\.py$',
                   r'^out.*[\\\/].*\.py$',
                   r'^testing[\\\/].*\.py$',
                   r'^third_party[\\\/].*\.py$',
-                  r'^tools[\\\/]find_depot_tools.py$',
                   r'^tools[\\\/]clang[\\\/].*\.py$',
                   r'^tools[\\\/]generate_library_loader[\\\/].*\.py$',
+                  r'^tools[\\\/]generate_stubs[\\\/].*\.py$',
                   r'^tools[\\\/]gn[\\\/].*\.py$',
                   r'^tools[\\\/]gyp[\\\/].*\.py$',
                   r'^tools[\\\/]isolate_driver.py$',
+                  r'^tools[\\\/]mb[\\\/].*\.py$',
                   r'^tools[\\\/]protoc_wrapper[\\\/].*\.py$',
                   r'^tools[\\\/]python[\\\/].*\.py$',
                   r'^tools[\\\/]python_charts[\\\/]data[\\\/].*\.py$',
@@ -444,15 +539,27 @@ def _CommonChecks(input_api, output_api):
                         ],
       pylintrc='pylintrc'))
 
+  # TODO(nisse): talk/ is no more, so make below checks simpler?
   # WebRTC can't use the presubmit_canned_checks.PanProjectChecks function since
   # we need to have different license checks in talk/ and webrtc/ directories.
   # Instead, hand-picked checks are included below.
 
+  # .m and .mm files are ObjC files. For simplicity we will consider .h files in
+  # ObjC subdirectories ObjC headers.
+  objc_filter_list = (r'.+\.m$', r'.+\.mm$', r'.+objc\/.+\.h$')
   # Skip long-lines check for DEPS, GN and GYP files.
-  long_lines_sources = lambda x: input_api.FilterSourceFile(x,
-      black_list=(r'.+\.gyp$', r'.+\.gypi$', r'.+\.gn$', r'.+\.gni$', 'DEPS'))
+  build_file_filter_list = (r'.+\.gyp$', r'.+\.gypi$', r'.+\.gn$', r'.+\.gni$',
+      'DEPS')
+  eighty_char_sources = lambda x: input_api.FilterSourceFile(x,
+      black_list=build_file_filter_list + objc_filter_list)
+  hundred_char_sources = lambda x: input_api.FilterSourceFile(x,
+      white_list=objc_filter_list)
   results.extend(input_api.canned_checks.CheckLongLines(
-      input_api, output_api, maxlen=80, source_file_filter=long_lines_sources))
+      input_api, output_api, maxlen=80, source_file_filter=eighty_char_sources))
+  results.extend(input_api.canned_checks.CheckLongLines(
+      input_api, output_api, maxlen=100,
+      source_file_filter=hundred_char_sources))
+
   results.extend(input_api.canned_checks.CheckChangeHasNoTabs(
       input_api, output_api))
   results.extend(input_api.canned_checks.CheckChangeHasNoStrayWhitespace(
@@ -463,6 +570,7 @@ def _CommonChecks(input_api, output_api):
   results.extend(_CheckNoIOStreamInHeaders(input_api, output_api))
   results.extend(_CheckNoFRIEND_TEST(input_api, output_api))
   results.extend(_CheckGypChanges(input_api, output_api))
+  results.extend(_CheckGnChanges(input_api, output_api))
   results.extend(_CheckUnwantedDependencies(input_api, output_api))
   results.extend(_CheckJSONParseErrors(input_api, output_api))
   results.extend(_RunPythonTests(input_api, output_api))

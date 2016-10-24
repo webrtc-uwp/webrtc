@@ -29,6 +29,7 @@ const int kLimitNumPackets = 20;
 const int kDefaultMinBitrateBps = 10000;
 const int kDefaultMaxBitrateBps = 1000000000;
 const int64_t kLowBitrateLogPeriodMs = 10000;
+const int64_t kRtcEventLogPeriodMs = 5000;
 
 struct UmaRampUpMetric {
   const char* metric_name;
@@ -44,7 +45,7 @@ const size_t kNumUmaRampupMetrics =
 
 }  // namespace
 
-SendSideBandwidthEstimation::SendSideBandwidthEstimation()
+SendSideBandwidthEstimation::SendSideBandwidthEstimation(RtcEventLog* event_log)
     : lost_packets_since_last_loss_update_Q8_(0),
       expected_packets_since_last_loss_update_(0),
       bitrate_(0),
@@ -54,6 +55,7 @@ SendSideBandwidthEstimation::SendSideBandwidthEstimation()
       has_decreased_since_last_fraction_loss_(false),
       time_last_receiver_block_ms_(-1),
       last_fraction_loss_(0),
+      last_logged_fraction_loss_(0),
       last_round_trip_time_ms_(0),
       bwe_incoming_(0),
       delay_based_bitrate_bps_(0),
@@ -63,9 +65,20 @@ SendSideBandwidthEstimation::SendSideBandwidthEstimation()
       bitrate_at_2_seconds_kbps_(0),
       uma_update_state_(kNoUpdate),
       rampup_uma_stats_updated_(kNumUmaRampupMetrics, false),
-      event_log_(nullptr) {}
+      event_log_(event_log),
+      last_rtc_event_log_ms_(-1) {
+  RTC_DCHECK(event_log);
+}
 
 SendSideBandwidthEstimation::~SendSideBandwidthEstimation() {}
+
+void SendSideBandwidthEstimation::SetBitrates(int send_bitrate,
+                                              int min_bitrate,
+                                              int max_bitrate) {
+  if (send_bitrate > 0)
+    SetSendBitrate(send_bitrate);
+  SetMinMaxBitrate(min_bitrate, max_bitrate);
+}
 
 void SendSideBandwidthEstimation::SetSendBitrate(int bitrate) {
   RTC_DCHECK_GT(bitrate, 0);
@@ -155,8 +168,8 @@ void SendSideBandwidthEstimation::UpdateUmaStats(int64_t now_ms,
   for (size_t i = 0; i < kNumUmaRampupMetrics; ++i) {
     if (!rampup_uma_stats_updated_[i] &&
         bitrate_kbps >= kUmaRampupMetrics[i].bitrate_kbps) {
-      RTC_HISTOGRAMS_COUNTS_100000(i, kUmaRampupMetrics[i].metric_name,
-                                   now_ms - first_report_time_ms_);
+      RTC_LOGGED_HISTOGRAMS_COUNTS_100000(i, kUmaRampupMetrics[i].metric_name,
+                                          now_ms - first_report_time_ms_);
       rampup_uma_stats_updated_[i] = true;
     }
   }
@@ -165,19 +178,19 @@ void SendSideBandwidthEstimation::UpdateUmaStats(int64_t now_ms,
   } else if (uma_update_state_ == kNoUpdate) {
     uma_update_state_ = kFirstDone;
     bitrate_at_2_seconds_kbps_ = bitrate_kbps;
-    RTC_HISTOGRAM_COUNTS("WebRTC.BWE.InitiallyLostPackets",
-                         initially_lost_packets_, 0, 100, 50);
-    RTC_HISTOGRAM_COUNTS("WebRTC.BWE.InitialRtt", static_cast<int>(rtt), 0,
-                         2000, 50);
-    RTC_HISTOGRAM_COUNTS("WebRTC.BWE.InitialBandwidthEstimate",
-                         bitrate_at_2_seconds_kbps_, 0, 2000, 50);
+    RTC_LOGGED_HISTOGRAM_COUNTS("WebRTC.BWE.InitiallyLostPackets",
+                                initially_lost_packets_, 0, 100, 50);
+    RTC_LOGGED_HISTOGRAM_COUNTS("WebRTC.BWE.InitialRtt", static_cast<int>(rtt),
+                                0, 2000, 50);
+    RTC_LOGGED_HISTOGRAM_COUNTS("WebRTC.BWE.InitialBandwidthEstimate",
+                                bitrate_at_2_seconds_kbps_, 0, 2000, 50);
   } else if (uma_update_state_ == kFirstDone &&
              now_ms - first_report_time_ms_ >= kBweConverganceTimeMs) {
     uma_update_state_ = kDone;
     int bitrate_diff_kbps =
         std::max(bitrate_at_2_seconds_kbps_ - bitrate_kbps, 0);
-    RTC_HISTOGRAM_COUNTS("WebRTC.BWE.InitialVsConvergedDiff", bitrate_diff_kbps,
-                         0, 2000, 50);
+    RTC_LOGGED_HISTOGRAM_COUNTS("WebRTC.BWE.InitialVsConvergedDiff",
+                                bitrate_diff_kbps, 0, 2000, 50);
   }
 }
 
@@ -218,12 +231,6 @@ void SendSideBandwidthEstimation::UpdateEstimate(int64_t now_ms) {
       // (gives a little extra increase at low rates, negligible at higher
       // rates).
       bitrate_ += 1000;
-
-      if (event_log_) {
-        event_log_->LogBwePacketLossEvent(
-            bitrate_, last_fraction_loss_,
-            expected_packets_since_last_loss_update_);
-      }
     } else if (last_fraction_loss_ <= 26) {
       // Loss between 2% - 10%: Do nothing.
     } else {
@@ -242,14 +249,19 @@ void SendSideBandwidthEstimation::UpdateEstimate(int64_t now_ms) {
             512.0);
         has_decreased_since_last_fraction_loss_ = true;
       }
-      if (event_log_) {
-        event_log_->LogBwePacketLossEvent(
-            bitrate_, last_fraction_loss_,
-            expected_packets_since_last_loss_update_);
-      }
     }
   }
-  bitrate_ = CapBitrateToThresholds(now_ms, bitrate_);
+  uint32_t capped_bitrate = CapBitrateToThresholds(now_ms, bitrate_);
+  if (capped_bitrate != bitrate_ ||
+      last_fraction_loss_ != last_logged_fraction_loss_ ||
+      last_rtc_event_log_ms_ == -1 ||
+      now_ms - last_rtc_event_log_ms_ > kRtcEventLogPeriodMs) {
+    event_log_->LogBwePacketLossEvent(capped_bitrate, last_fraction_loss_,
+                                      expected_packets_since_last_loss_update_);
+    last_logged_fraction_loss_ = last_fraction_loss_;
+    last_rtc_event_log_ms_ = now_ms;
+  }
+  bitrate_ = capped_bitrate;
 }
 
 bool SendSideBandwidthEstimation::IsInStartPhase(int64_t now_ms) const {
@@ -300,9 +312,4 @@ uint32_t SendSideBandwidthEstimation::CapBitrateToThresholds(
   }
   return bitrate;
 }
-
-void SendSideBandwidthEstimation::SetEventLog(RtcEventLog* event_log) {
-  event_log_ = event_log;
-}
-
 }  // namespace webrtc

@@ -25,14 +25,13 @@
 #include "webrtc/modules/audio_processing/beamformer/array_util.h"
 #include "webrtc/typedefs.h"
 
-struct AecCore;
-
 namespace webrtc {
+
+struct AecCore;
 
 class AudioFrame;
 
-template<typename T>
-class Beamformer;
+class NonlinearBeamformer;
 
 class StreamConfig;
 class ProcessingConfig;
@@ -73,10 +72,30 @@ struct ExtendedFilter {
 // standard methods for echo removal in the AEC. This configuration only applies
 // to EchoCancellation and not EchoControlMobile. It can be set in the
 // constructor or using AudioProcessing::SetExtraOptions().
-struct NextGenerationAec {
-  NextGenerationAec() : enabled(false) {}
-  explicit NextGenerationAec(bool enabled) : enabled(enabled) {}
-  static const ConfigOptionID identifier = ConfigOptionID::kNextGenerationAec;
+struct EchoCanceller3 {
+  EchoCanceller3() : enabled(false) {}
+  explicit EchoCanceller3(bool enabled) : enabled(enabled) {}
+  static const ConfigOptionID identifier = ConfigOptionID::kEchoCanceller3;
+  bool enabled;
+};
+
+// Enables the refined linear filter adaptation in the echo canceller.
+// This configuration only applies to EchoCancellation and not
+// EchoControlMobile. It can be set in the constructor
+// or using AudioProcessing::SetExtraOptions().
+struct RefinedAdaptiveFilter {
+  RefinedAdaptiveFilter() : enabled(false) {}
+  explicit RefinedAdaptiveFilter(bool enabled) : enabled(enabled) {}
+  static const ConfigOptionID identifier =
+      ConfigOptionID::kAecRefinedAdaptiveFilter;
+  bool enabled;
+};
+
+// Enables the adaptive level controller.
+struct LevelControl {
+  LevelControl() : enabled(false) {}
+  explicit LevelControl(bool enabled) : enabled(enabled) {}
+  static const ConfigOptionID identifier = ConfigOptionID::kLevelControl;
   bool enabled;
 };
 
@@ -126,31 +145,20 @@ struct ExperimentalNs {
 // Use to enable beamforming. Must be provided through the constructor. It will
 // have no impact if used with AudioProcessing::SetExtraOptions().
 struct Beamforming {
-  Beamforming()
-      : enabled(false),
-        array_geometry(),
-        target_direction(
-            SphericalPointf(static_cast<float>(M_PI) / 2.f, 0.f, 1.f)) {}
-  Beamforming(bool enabled, const std::vector<Point>& array_geometry)
-      : Beamforming(enabled,
-                    array_geometry,
-                    SphericalPointf(static_cast<float>(M_PI) / 2.f, 0.f, 1.f)) {
-  }
+  Beamforming();
+  Beamforming(bool enabled, const std::vector<Point>& array_geometry);
   Beamforming(bool enabled,
               const std::vector<Point>& array_geometry,
-              SphericalPointf target_direction)
-      : enabled(enabled),
-        array_geometry(array_geometry),
-        target_direction(target_direction) {}
+              SphericalPointf target_direction);
+  ~Beamforming();
+
   static const ConfigOptionID identifier = ConfigOptionID::kBeamforming;
   const bool enabled;
   const std::vector<Point> array_geometry;
   const SphericalPointf target_direction;
 };
 
-// Use to enable intelligibility enhancer in audio processing. Must be provided
-// though the constructor. It will have no impact if used with
-// AudioProcessing::SetExtraOptions().
+// Use to enable intelligibility enhancer in audio processing.
 //
 // Note: If enabled and the reverse stream has more than one output channel,
 // the reverse stream will become an upmixed mono signal.
@@ -166,11 +174,11 @@ struct Intelligibility {
 //
 // APM operates on two audio streams on a frame-by-frame basis. Frames of the
 // primary stream, on which all processing is applied, are passed to
-// |ProcessStream()|. Frames of the reverse direction stream, which are used for
-// analysis by some components, are passed to |AnalyzeReverseStream()|. On the
-// client-side, this will typically be the near-end (capture) and far-end
-// (render) streams, respectively. APM should be placed in the signal chain as
-// close to the audio hardware abstraction layer (HAL) as possible.
+// |ProcessStream()|. Frames of the reverse direction stream are passed to
+// |ProcessReverseStream()|. On the client-side, this will typically be the
+// near-end (capture) and far-end (render) streams, respectively. APM should be
+// placed in the signal chain as close to the audio hardware abstraction layer
+// (HAL) as possible.
 //
 // On the server-side, the reverse stream will normally not be used, with
 // processing occurring on each incoming stream.
@@ -214,7 +222,7 @@ struct Intelligibility {
 // // Start a voice call...
 //
 // // ... Render frame arrives bound for the audio HAL ...
-// apm->AnalyzeReverseStream(render_frame);
+// apm->ProcessReverseStream(render_frame);
 //
 // // ... Capture frame arrives from the audio HAL ...
 // // Call required set_stream_ functions.
@@ -257,7 +265,7 @@ class AudioProcessing {
   static AudioProcessing* Create(const Config& config);
   // Only for testing.
   static AudioProcessing* Create(const Config& config,
-                                 Beamformer<float>* beamformer);
+                                 NonlinearBeamformer* beamformer);
   virtual ~AudioProcessing() {}
 
   // Initializes internal states, while retaining all user settings. This
@@ -267,7 +275,7 @@ class AudioProcessing {
   //
   // It is also not necessary to call if the audio parameters (sample
   // rate and number of channels) have changed. Passing updated parameters
-  // directly to |ProcessStream()| and |AnalyzeReverseStream()| is permissible.
+  // directly to |ProcessStream()| and |ProcessReverseStream()| is permissible.
   // If the parameters are known at init-time though, they may be provided.
   virtual int Initialize() = 0;
 
@@ -295,10 +303,6 @@ class AudioProcessing {
   // Pass down additional options which don't have explicit setters. This
   // ensures the options are applied immediately.
   virtual void SetExtraOptions(const Config& config) = 0;
-
-  // TODO(peah): Remove after voice engine no longer requires it to resample
-  // the reverse stream to the forward rate.
-  virtual int input_sample_rate_hz() const = 0;
 
   // TODO(ajm): Only intended for internal use. Make private and friend the
   // necessary classes?
@@ -356,27 +360,18 @@ class AudioProcessing {
                             const StreamConfig& output_config,
                             float* const* dest) = 0;
 
-  // Analyzes a 10 ms |frame| of the reverse direction audio stream. The frame
-  // will not be modified. On the client-side, this is the far-end (or to be
+  // Processes a 10 ms |frame| of the reverse direction audio stream. The frame
+  // may be modified. On the client-side, this is the far-end (or to be
   // rendered) audio.
   //
-  // It is only necessary to provide this if echo processing is enabled, as the
+  // It is necessary to provide this if echo processing is enabled, as the
   // reverse stream forms the echo reference signal. It is recommended, but not
   // necessary, to provide if gain control is enabled. On the server-side this
   // typically will not be used. If you're not sure what to pass in here,
   // chances are you don't need to use it.
   //
   // The |sample_rate_hz_|, |num_channels_|, and |samples_per_channel_|
-  // members of |frame| must be valid. |sample_rate_hz_| must correspond to
-  // |input_sample_rate_hz()|
-  //
-  // TODO(ajm): add const to input; requires an implementation fix.
-  // DEPRECATED: Use |ProcessReverseStream| instead.
-  // TODO(ekm): Remove once all users have updated to |ProcessReverseStream|.
-  virtual int AnalyzeReverseStream(AudioFrame* frame) = 0;
-
-  // Same as |AnalyzeReverseStream|, but may modify |frame| if intelligibility
-  // is enabled.
+  // members of |frame| must be valid.
   virtual int ProcessReverseStream(AudioFrame* frame) = 0;
 
   // Accepts deinterleaved float audio with the range [-1, 1]. Each element
@@ -396,12 +391,12 @@ class AudioProcessing {
 
   // This must be called if and only if echo processing is enabled.
   //
-  // Sets the |delay| in ms between AnalyzeReverseStream() receiving a far-end
+  // Sets the |delay| in ms between ProcessReverseStream() receiving a far-end
   // frame and ProcessStream() receiving a near-end frame containing the
   // corresponding echo. On the client-side this can be expressed as
   //   delay = (t_render - t_analyze) + (t_process - t_capture)
   // where,
-  //   - t_analyze is the time a frame is passed to AnalyzeReverseStream() and
+  //   - t_analyze is the time a frame is passed to ProcessReverseStream() and
   //     t_render is the time the first sample of the same frame is rendered by
   //     the audio hardware.
   //   - t_capture is the time the first sample of a frame is captured by the
@@ -446,9 +441,7 @@ class AudioProcessing {
   // Same as above but uses an existing PlatformFile handle. Takes ownership
   // of |handle| and closes it at StopDebugRecording().
   // TODO(xians): Make this interface pure virtual.
-  virtual int StartDebugRecordingForPlatformFile(rtc::PlatformFile handle) {
-      return -1;
-  }
+  virtual int StartDebugRecordingForPlatformFile(rtc::PlatformFile handle);
 
   // Stops recording debugging information, and closes the file. Recording
   // cannot be resumed in the same file (without overwriting it).
@@ -508,7 +501,6 @@ class AudioProcessing {
   static const int kNativeSampleRatesHz[];
   static const size_t kNumNativeSampleRates;
   static const int kMaxNativeSampleRateHz;
-  static const int kMaxAECMSampleRateHz;
 
   static const int kChunkSizeMs = 10;
 };
@@ -686,6 +678,10 @@ class EchoCancellation {
 
     // (Pre non-linear processing suppression) A_NLP = 10log_10(P_echo / P_a)
     AudioProcessing::Statistic a_nlp;
+
+    // Fraction of time that the AEC linear filter is divergent, in a 1-second
+    // non-overlapped aggregation window.
+    float divergent_filter_fraction;
   };
 
   // TODO(ajm): discuss the metrics update period.

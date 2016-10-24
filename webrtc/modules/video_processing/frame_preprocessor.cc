@@ -15,37 +15,27 @@
 namespace webrtc {
 
 VPMFramePreprocessor::VPMFramePreprocessor()
-    : content_metrics_(nullptr),
-      resampled_frame_(),
-      enable_ca_(false),
-      frame_cnt_(0) {
+    : resampled_frame_(), frame_cnt_(0) {
   spatial_resampler_ = new VPMSimpleSpatialResampler();
-  ca_ = new VPMContentAnalysis(true);
   vd_ = new VPMVideoDecimator();
+  EnableDenoising(false);
+  denoised_frame_toggle_ = 0;
 }
 
 VPMFramePreprocessor::~VPMFramePreprocessor() {
   Reset();
-  delete ca_;
   delete vd_;
   delete spatial_resampler_;
 }
 
 void VPMFramePreprocessor::Reset() {
-  ca_->Release();
   vd_->Reset();
-  content_metrics_ = nullptr;
   spatial_resampler_->Reset();
-  enable_ca_ = false;
   frame_cnt_ = 0;
 }
 
 void VPMFramePreprocessor::EnableTemporalDecimation(bool enable) {
   vd_->EnableTemporalDecimation(enable);
-}
-
-void VPMFramePreprocessor::EnableContentAnalysis(bool enable) {
-  enable_ca_ = enable;
 }
 
 void VPMFramePreprocessor::SetInputFrameResampleMode(
@@ -69,15 +59,6 @@ int32_t VPMFramePreprocessor::SetTargetResolution(uint32_t width,
   return VPM_OK;
 }
 
-void VPMFramePreprocessor::SetTargetFramerate(int frame_rate) {
-  if (frame_rate == -1) {
-    vd_->EnableTemporalDecimation(false);
-  } else {
-    vd_->EnableTemporalDecimation(true);
-    vd_->SetTargetFramerate(frame_rate);
-  }
-}
-
 void VPMFramePreprocessor::UpdateIncomingframe_rate() {
   vd_->UpdateIncomingframe_rate();
 }
@@ -94,7 +75,7 @@ uint32_t VPMFramePreprocessor::GetDecimatedHeight() const {
   return spatial_resampler_->TargetHeight();
 }
 
-void VPMFramePreprocessor::EnableDenosing(bool enable) {
+void VPMFramePreprocessor::EnableDenoising(bool enable) {
   if (enable) {
     denoiser_.reset(new VideoDenoiser(true));
   } else {
@@ -115,7 +96,22 @@ const VideoFrame* VPMFramePreprocessor::PreprocessFrame(
 
   const VideoFrame* current_frame = &frame;
   if (denoiser_) {
-    denoiser_->DenoiseFrame(*current_frame, &denoised_frame_);
+    rtc::scoped_refptr<I420Buffer>* denoised_buffer = &denoised_buffer_[0];
+    rtc::scoped_refptr<I420Buffer>* denoised_buffer_prev = &denoised_buffer_[1];
+    // Swap the buffer to save one memcpy in DenoiseFrame.
+    if (denoised_frame_toggle_) {
+      denoised_buffer = &denoised_buffer_[1];
+      denoised_buffer_prev = &denoised_buffer_[0];
+    }
+    // Invert the flag.
+    denoised_frame_toggle_ ^= 1;
+    denoiser_->DenoiseFrame(current_frame->video_frame_buffer(),
+                            denoised_buffer,
+                            denoised_buffer_prev, true);
+    denoised_frame_ = VideoFrame(*denoised_buffer,
+                                 current_frame->timestamp(),
+                                 current_frame->render_time_ms(),
+                                 current_frame->rotation());
     current_frame = &denoised_frame_;
   }
 
@@ -128,18 +124,8 @@ const VideoFrame* VPMFramePreprocessor::PreprocessFrame(
     current_frame = &resampled_frame_;
   }
 
-  // Perform content analysis on the frame to be encoded.
-  if (enable_ca_ && frame_cnt_ % kSkipFrameCA == 0) {
-    // Compute new metrics every |kSkipFramesCA| frames, starting with
-    // the first frame.
-    content_metrics_ = ca_->ComputeContentMetrics(*current_frame);
-  }
   ++frame_cnt_;
   return current_frame;
-}
-
-VideoContentMetrics* VPMFramePreprocessor::GetContentMetrics() const {
-  return content_metrics_;
 }
 
 }  // namespace webrtc

@@ -8,10 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <algorithm>
+
 #include "webrtc/common_video/include/video_frame_buffer.h"
 
 #include "webrtc/base/checks.h"
 #include "webrtc/base/keep_ref_until_done.h"
+#include "libyuv/convert.h"
+#include "libyuv/planar_functions.h"
+#include "libyuv/scale.h"
 
 // Aligning pointer to 64 bytes for improved performance, e.g. use SIMD.
 static const int kBufferAlignment = 64;
@@ -26,7 +31,15 @@ int I420DataSize(int height, int stride_y, int stride_u, int stride_v) {
 
 }  // namespace
 
-uint8_t* VideoFrameBuffer::MutableData(PlaneType type) {
+uint8_t* VideoFrameBuffer::MutableDataY() {
+  RTC_NOTREACHED();
+  return nullptr;
+}
+uint8_t* VideoFrameBuffer::MutableDataU() {
+  RTC_NOTREACHED();
+  return nullptr;
+}
+uint8_t* VideoFrameBuffer::MutableDataV() {
   RTC_NOTREACHED();
   return nullptr;
 }
@@ -60,6 +73,19 @@ I420Buffer::I420Buffer(int width,
 I420Buffer::~I420Buffer() {
 }
 
+rtc::scoped_refptr<I420Buffer> I420Buffer::Create(int width, int height) {
+  return new rtc::RefCountedObject<I420Buffer>(width, height);
+}
+
+rtc::scoped_refptr<I420Buffer> I420Buffer::Create(int width,
+                                                  int height,
+                                                  int stride_y,
+                                                  int stride_u,
+                                                  int stride_v) {
+  return new rtc::RefCountedObject<I420Buffer>(
+      width, height, stride_y, stride_u, stride_v);
+}
+
 void I420Buffer::InitializeData() {
   memset(data_.get(), 0,
          I420DataSize(height_, stride_y_, stride_u_, stride_v_));
@@ -73,39 +99,34 @@ int I420Buffer::height() const {
   return height_;
 }
 
-const uint8_t* I420Buffer::data(PlaneType type) const {
-  switch (type) {
-    case kYPlane:
-      return data_.get();
-    case kUPlane:
-      return data_.get() + stride_y_ * height_;
-    case kVPlane:
-      return data_.get() + stride_y_ * height_ +
-             stride_u_ * ((height_ + 1) / 2);
-    default:
-      RTC_NOTREACHED();
-      return nullptr;
-  }
+const uint8_t* I420Buffer::DataY() const {
+  return data_.get();
+}
+const uint8_t* I420Buffer::DataU() const {
+  return data_.get() + stride_y_ * height_;
+}
+const uint8_t* I420Buffer::DataV() const {
+  return data_.get() + stride_y_ * height_ + stride_u_ * ((height_ + 1) / 2);
 }
 
-uint8_t* I420Buffer::MutableData(PlaneType type) {
-  RTC_DCHECK(HasOneRef());
-  return const_cast<uint8_t*>(
-      static_cast<const VideoFrameBuffer*>(this)->data(type));
+uint8_t* I420Buffer::MutableDataY() {
+  return const_cast<uint8_t*>(DataY());
+}
+uint8_t* I420Buffer::MutableDataU() {
+  return const_cast<uint8_t*>(DataU());
+}
+uint8_t* I420Buffer::MutableDataV() {
+  return const_cast<uint8_t*>(DataV());
 }
 
-int I420Buffer::stride(PlaneType type) const {
-  switch (type) {
-    case kYPlane:
-      return stride_y_;
-    case kUPlane:
-      return stride_u_;
-    case kVPlane:
-      return stride_v_;
-    default:
-      RTC_NOTREACHED();
-      return 0;
-  }
+int I420Buffer::StrideY() const {
+  return stride_y_;
+}
+int I420Buffer::StrideU() const {
+  return stride_u_;
+}
+int I420Buffer::StrideV() const {
+  return stride_v_;
 }
 
 void* I420Buffer::native_handle() const {
@@ -115,6 +136,140 @@ void* I420Buffer::native_handle() const {
 rtc::scoped_refptr<VideoFrameBuffer> I420Buffer::NativeToI420Buffer() {
   RTC_NOTREACHED();
   return nullptr;
+}
+
+rtc::scoped_refptr<I420Buffer> I420Buffer::Copy(
+    const rtc::scoped_refptr<VideoFrameBuffer>& source) {
+  int width = source->width();
+  int height = source->height();
+  rtc::scoped_refptr<I420Buffer> target = I420Buffer::Create(width, height);
+  RTC_CHECK(libyuv::I420Copy(source->DataY(), source->StrideY(),
+                             source->DataU(), source->StrideU(),
+                             source->DataV(), source->StrideV(),
+                             target->MutableDataY(), target->StrideY(),
+                             target->MutableDataU(), target->StrideU(),
+                             target->MutableDataV(), target->StrideV(),
+                             width, height) == 0);
+
+  return target;
+}
+
+void I420Buffer::SetToBlack() {
+  RTC_CHECK(libyuv::I420Rect(MutableDataY(), StrideY(),
+                             MutableDataU(), StrideU(),
+                             MutableDataV(), StrideV(),
+                             0, 0, width(), height(),
+                             0, 128, 128) == 0);
+}
+
+void I420Buffer::CropAndScaleFrom(
+    const rtc::scoped_refptr<VideoFrameBuffer>& src,
+    int offset_x,
+    int offset_y,
+    int crop_width,
+    int crop_height) {
+  RTC_CHECK_LE(crop_width, src->width());
+  RTC_CHECK_LE(crop_height, src->height());
+  RTC_CHECK_LE(crop_width + offset_x, src->width());
+  RTC_CHECK_LE(crop_height + offset_y, src->height());
+  RTC_CHECK_GE(offset_x, 0);
+  RTC_CHECK_GE(offset_y, 0);
+
+  // Make sure offset is even so that u/v plane becomes aligned.
+  const int uv_offset_x = offset_x / 2;
+  const int uv_offset_y = offset_y / 2;
+  offset_x = uv_offset_x * 2;
+  offset_y = uv_offset_y * 2;
+
+  const uint8_t* y_plane =
+      src->DataY() + src->StrideY() * offset_y + offset_x;
+  const uint8_t* u_plane =
+      src->DataU() + src->StrideU() * uv_offset_y + uv_offset_x;
+  const uint8_t* v_plane =
+      src->DataV() + src->StrideV() * uv_offset_y + uv_offset_x;
+  int res = libyuv::I420Scale(y_plane, src->StrideY(),
+                              u_plane, src->StrideU(),
+                              v_plane, src->StrideV(),
+                              crop_width, crop_height,
+                              MutableDataY(), StrideY(),
+                              MutableDataU(), StrideU(),
+                              MutableDataV(), StrideV(),
+                              width(), height(), libyuv::kFilterBox);
+
+  RTC_DCHECK_EQ(res, 0);
+}
+
+void I420Buffer::CropAndScaleFrom(
+    const rtc::scoped_refptr<VideoFrameBuffer>& src) {
+  const int crop_width =
+      std::min(src->width(), width() * src->height() / height());
+  const int crop_height =
+      std::min(src->height(), height() * src->width() / width());
+
+  CropAndScaleFrom(
+      src,
+      (src->width() - crop_width) / 2, (src->height() - crop_height) / 2,
+      crop_width, crop_height);
+}
+
+void I420Buffer::ScaleFrom(const rtc::scoped_refptr<VideoFrameBuffer>& src) {
+  CropAndScaleFrom(src, 0, 0, src->width(), src->height());
+}
+
+// static
+rtc::scoped_refptr<I420Buffer> I420Buffer::CopyKeepStride(
+    const rtc::scoped_refptr<VideoFrameBuffer>& source) {
+  int width = source->width();
+  int height = source->height();
+  int stride_y = source->StrideY();
+  int stride_u = source->StrideU();
+  int stride_v = source->StrideV();
+  rtc::scoped_refptr<I420Buffer> target =
+      I420Buffer::Create(width, height, stride_y, stride_u, stride_v);
+  RTC_CHECK(libyuv::I420Copy(source->DataY(), stride_y,
+                             source->DataU(), stride_u,
+                             source->DataV(), stride_v,
+                             target->MutableDataY(), stride_y,
+                             target->MutableDataU(), stride_u,
+                             target->MutableDataV(), stride_v,
+                             width, height) == 0);
+
+  return target;
+}
+
+// static
+rtc::scoped_refptr<VideoFrameBuffer> I420Buffer::Rotate(
+    const rtc::scoped_refptr<VideoFrameBuffer>& src,
+    VideoRotation rotation) {
+  RTC_DCHECK(src->DataY());
+  RTC_DCHECK(src->DataU());
+  RTC_DCHECK(src->DataV());
+
+  if (rotation == webrtc::kVideoRotation_0) {
+    return src;
+  }
+
+  int rotated_width = src->width();
+  int rotated_height = src->height();
+  if (rotation == webrtc::kVideoRotation_90 ||
+      rotation == webrtc::kVideoRotation_270) {
+    std::swap(rotated_width, rotated_height);
+  }
+
+  rtc::scoped_refptr<webrtc::I420Buffer> buffer =
+      I420Buffer::Create(rotated_width, rotated_height);
+
+  int res = libyuv::I420Rotate(
+      src->DataY(), src->StrideY(),
+      src->DataU(), src->StrideU(),
+      src->DataV(), src->StrideV(),
+      buffer->MutableDataY(), buffer->StrideY(), buffer->MutableDataU(),
+      buffer->StrideU(), buffer->MutableDataV(), buffer->StrideV(),
+      src->width(), src->height(),
+      static_cast<libyuv::RotationMode>(rotation));
+  RTC_DCHECK_EQ(res, 0);
+
+  return buffer;
 }
 
 NativeHandleBuffer::NativeHandleBuffer(void* native_handle,
@@ -138,12 +293,28 @@ int NativeHandleBuffer::height() const {
   return height_;
 }
 
-const uint8_t* NativeHandleBuffer::data(PlaneType type) const {
+const uint8_t* NativeHandleBuffer::DataY() const {
+  RTC_NOTREACHED();  // Should not be called.
+  return nullptr;
+}
+const uint8_t* NativeHandleBuffer::DataU() const {
+  RTC_NOTREACHED();  // Should not be called.
+  return nullptr;
+}
+const uint8_t* NativeHandleBuffer::DataV() const {
   RTC_NOTREACHED();  // Should not be called.
   return nullptr;
 }
 
-int NativeHandleBuffer::stride(PlaneType type) const {
+int NativeHandleBuffer::StrideY() const {
+  RTC_NOTREACHED();  // Should not be called.
+  return 0;
+}
+int NativeHandleBuffer::StrideU() const {
+  RTC_NOTREACHED();  // Should not be called.
+  return 0;
+}
+int NativeHandleBuffer::StrideV() const {
   RTC_NOTREACHED();  // Should not be called.
   return 0;
 }
@@ -184,32 +355,24 @@ int WrappedI420Buffer::height() const {
   return height_;
 }
 
-const uint8_t* WrappedI420Buffer::data(PlaneType type) const {
-  switch (type) {
-    case kYPlane:
-      return y_plane_;
-    case kUPlane:
-      return u_plane_;
-    case kVPlane:
-      return v_plane_;
-    default:
-      RTC_NOTREACHED();
-      return nullptr;
-  }
+const uint8_t* WrappedI420Buffer::DataY() const {
+  return y_plane_;
+}
+const uint8_t* WrappedI420Buffer::DataU() const {
+  return u_plane_;
+}
+const uint8_t* WrappedI420Buffer::DataV() const {
+  return v_plane_;
 }
 
-int WrappedI420Buffer::stride(PlaneType type) const {
-  switch (type) {
-    case kYPlane:
-      return y_stride_;
-    case kUPlane:
-      return u_stride_;
-    case kVPlane:
-      return v_stride_;
-    default:
-      RTC_NOTREACHED();
-      return 0;
-  }
+int WrappedI420Buffer::StrideY() const {
+  return y_stride_;
+}
+int WrappedI420Buffer::StrideU() const {
+  return u_stride_;
+}
+int WrappedI420Buffer::StrideV() const {
+  return v_stride_;
 }
 
 void* WrappedI420Buffer::native_handle() const {
@@ -219,37 +382,6 @@ void* WrappedI420Buffer::native_handle() const {
 rtc::scoped_refptr<VideoFrameBuffer> WrappedI420Buffer::NativeToI420Buffer() {
   RTC_NOTREACHED();
   return nullptr;
-}
-
-rtc::scoped_refptr<VideoFrameBuffer> ShallowCenterCrop(
-    const rtc::scoped_refptr<VideoFrameBuffer>& buffer,
-    int cropped_width,
-    int cropped_height) {
-  RTC_CHECK(buffer->native_handle() == nullptr);
-  RTC_CHECK_LE(cropped_width, buffer->width());
-  RTC_CHECK_LE(cropped_height, buffer->height());
-  if (buffer->width() == cropped_width && buffer->height() == cropped_height)
-    return buffer;
-
-  // Center crop to |cropped_width| x |cropped_height|.
-  // Make sure offset is even so that u/v plane becomes aligned.
-  const int uv_offset_x = (buffer->width() - cropped_width) / 4;
-  const int uv_offset_y = (buffer->height() - cropped_height) / 4;
-  const int offset_x = uv_offset_x * 2;
-  const int offset_y = uv_offset_y * 2;
-
-  const uint8_t* y_plane = buffer->data(kYPlane) +
-                           buffer->stride(kYPlane) * offset_y + offset_x;
-  const uint8_t* u_plane = buffer->data(kUPlane) +
-                           buffer->stride(kUPlane) * uv_offset_y + uv_offset_x;
-  const uint8_t* v_plane = buffer->data(kVPlane) +
-                           buffer->stride(kVPlane) * uv_offset_y + uv_offset_x;
-  return new rtc::RefCountedObject<WrappedI420Buffer>(
-      cropped_width, cropped_height,
-      y_plane, buffer->stride(kYPlane),
-      u_plane, buffer->stride(kUPlane),
-      v_plane, buffer->stride(kVPlane),
-      rtc::KeepRefUntilDone(buffer));
 }
 
 }  // namespace webrtc

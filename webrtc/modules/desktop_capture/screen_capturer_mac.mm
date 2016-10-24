@@ -11,17 +11,20 @@
 #include "webrtc/modules/desktop_capture/screen_capturer.h"
 
 #include <stddef.h>
+
+#include <memory>
 #include <set>
 
 #include <ApplicationServices/ApplicationServices.h>
 #include <Cocoa/Cocoa.h>
 #include <dlfcn.h>
-#include <IOKit/pwr_mgt/IOPMLib.h>
 #include <OpenGL/CGLMacro.h>
 #include <OpenGL/OpenGL.h>
 
+#include "webrtc/base/checks.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/macutils.h"
-#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/base/timeutils.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/desktop_geometry.h"
@@ -31,8 +34,8 @@
 #include "webrtc/modules/desktop_capture/mac/scoped_pixel_buffer_object.h"
 #include "webrtc/modules/desktop_capture/screen_capture_frame_queue.h"
 #include "webrtc/modules/desktop_capture/screen_capturer_helper.h"
+#include "webrtc/modules/desktop_capture/shared_desktop_frame.h"
 #include "webrtc/system_wrappers/include/logging.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
 
 namespace webrtc {
 
@@ -92,15 +95,15 @@ void CopyRect(const uint8_t* src_plane,
 // caller should release the returned CFArrayRef.
 CFArrayRef CreateWindowListWithExclusion(CGWindowID window_to_exclude) {
   if (!window_to_exclude)
-    return NULL;
+    return nullptr;
 
   CFArrayRef all_windows = CGWindowListCopyWindowInfo(
       kCGWindowListOptionOnScreenOnly, kCGNullWindowID);
   if (!all_windows)
-    return NULL;
+    return nullptr;
 
-  CFMutableArrayRef returned_array = CFArrayCreateMutable(
-      NULL, CFArrayGetCount(all_windows), NULL);
+  CFMutableArrayRef returned_array =
+      CFArrayCreateMutable(nullptr, CFArrayGetCount(all_windows), nullptr);
 
   bool found = false;
   for (CFIndex i = 0; i < CFArrayGetCount(all_windows); ++i) {
@@ -122,7 +125,7 @@ CFArrayRef CreateWindowListWithExclusion(CGWindowID window_to_exclude) {
 
   if (!found) {
     CFRelease(returned_array);
-    returned_array = NULL;
+    returned_array = nullptr;
   }
   return returned_array;
 }
@@ -139,7 +142,7 @@ DesktopRect GetExcludedWindowPixelBounds(CGWindowID window,
   ids[0] = window;
 
   CFArrayRef window_id_array =
-      CFArrayCreate(NULL, reinterpret_cast<const void **>(&ids), 1, NULL);
+      CFArrayCreate(nullptr, reinterpret_cast<const void**>(&ids), 1, nullptr);
   CFArrayRef window_array =
       CGWindowListCreateDescriptionFromArray(window_id_array);
 
@@ -167,8 +170,7 @@ DesktopRect GetExcludedWindowPixelBounds(CGWindowID window,
 // pixels. The caller should release the returned CGImageRef and CFDataRef.
 CGImageRef CreateExcludedWindowRegionImage(const DesktopRect& pixel_bounds,
                                            float dip_to_pixel_scale,
-                                           CFArrayRef window_list,
-                                           CFDataRef* data_ref) {
+                                           CFArrayRef window_list) {
   CGRect window_bounds;
   // The origin is in DIP while the size is in physical pixels. That's what
   // CGWindowListCreateImageFromArray expects.
@@ -177,13 +179,8 @@ CGImageRef CreateExcludedWindowRegionImage(const DesktopRect& pixel_bounds,
   window_bounds.size.width = pixel_bounds.width();
   window_bounds.size.height = pixel_bounds.height();
 
-  CGImageRef excluded_image = CGWindowListCreateImageFromArray(
+  return CGWindowListCreateImageFromArray(
       window_bounds, window_list, kCGWindowImageDefault);
-
-  CGDataProviderRef provider = CGImageGetDataProvider(excluded_image);
-  *data_ref = CGDataProviderCopyData(provider);
-  assert(*data_ref);
-  return excluded_image;
 }
 
 // A class to perform video frame capturing for mac.
@@ -231,28 +228,28 @@ class ScreenCapturerMac : public ScreenCapturer {
                                        void *user_parameter);
   void ReleaseBuffers();
 
-  DesktopFrame* CreateFrame();
+  std::unique_ptr<DesktopFrame> CreateFrame();
 
-  Callback* callback_;
+  Callback* callback_ = nullptr;
 
-  CGLContextObj cgl_context_;
+  CGLContextObj cgl_context_ = nullptr;
   ScopedPixelBufferObject pixel_buffer_object_;
 
   // Queue of the frames buffers.
-  ScreenCaptureFrameQueue queue_;
+  ScreenCaptureFrameQueue<SharedDesktopFrame> queue_;
 
   // Current display configuration.
   MacDesktopConfiguration desktop_config_;
 
   // Currently selected display, or 0 if the full desktop is selected. On OS X
   // 10.6 and before, this is always 0.
-  CGDirectDisplayID current_display_;
+  CGDirectDisplayID current_display_ = 0;
 
   // The physical pixel bounds of the current screen.
   DesktopRect screen_pixel_bounds_;
 
   // The dip to physical pixel scale of the current screen.
-  float dip_to_pixel_scale_;
+  float dip_to_pixel_scale_ = 1.0f;
 
   // A thread-safe list of invalid rectangles, and the size of the most
   // recently captured screen.
@@ -264,21 +261,15 @@ class ScreenCapturerMac : public ScreenCapturer {
   // Monitoring display reconfiguration.
   rtc::scoped_refptr<DesktopConfigurationMonitor> desktop_config_monitor_;
 
-  // Power management assertion to prevent the screen from sleeping.
-  IOPMAssertionID power_assertion_id_display_;
-
-  // Power management assertion to indicate that the user is active.
-  IOPMAssertionID power_assertion_id_user_;
-
   // Dynamically link to deprecated APIs for Mac OS X 10.6 support.
-  void* app_services_library_;
-  CGDisplayBaseAddressFunc cg_display_base_address_;
-  CGDisplayBytesPerRowFunc cg_display_bytes_per_row_;
-  CGDisplayBitsPerPixelFunc cg_display_bits_per_pixel_;
-  void* opengl_library_;
-  CGLSetFullScreenFunc cgl_set_full_screen_;
+  void* app_services_library_ = nullptr;
+  CGDisplayBaseAddressFunc cg_display_base_address_ = nullptr;
+  CGDisplayBytesPerRowFunc cg_display_bytes_per_row_ = nullptr;
+  CGDisplayBitsPerPixelFunc cg_display_bits_per_pixel_ = nullptr;
+  void* opengl_library_ = nullptr;
+  CGLSetFullScreenFunc cgl_set_full_screen_ = nullptr;
 
-  CGWindowID excluded_window_;
+  CGWindowID excluded_window_ = 0;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(ScreenCapturerMac);
 };
@@ -287,53 +278,30 @@ class ScreenCapturerMac : public ScreenCapturer {
 // stride.
 class InvertedDesktopFrame : public DesktopFrame {
  public:
-  // Takes ownership of |frame|.
-  InvertedDesktopFrame(DesktopFrame* frame)
+  InvertedDesktopFrame(std::unique_ptr<DesktopFrame> frame)
       : DesktopFrame(
-            frame->size(), -frame->stride(),
+            frame->size(),
+            -frame->stride(),
             frame->data() + (frame->size().height() - 1) * frame->stride(),
-            frame->shared_memory()),
-        original_frame_(frame) {
-    set_dpi(frame->dpi());
-    set_capture_time_ms(frame->capture_time_ms());
-    mutable_updated_region()->Swap(frame->mutable_updated_region());
+            frame->shared_memory()) {
+    original_frame_ = std::move(frame);
+    set_dpi(original_frame_->dpi());
+    set_capture_time_ms(original_frame_->capture_time_ms());
+    mutable_updated_region()->Swap(original_frame_->mutable_updated_region());
   }
   virtual ~InvertedDesktopFrame() {}
 
  private:
-  rtc::scoped_ptr<DesktopFrame> original_frame_;
+  std::unique_ptr<DesktopFrame> original_frame_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(InvertedDesktopFrame);
 };
 
 ScreenCapturerMac::ScreenCapturerMac(
     rtc::scoped_refptr<DesktopConfigurationMonitor> desktop_config_monitor)
-    : callback_(NULL),
-      cgl_context_(NULL),
-      current_display_(0),
-      dip_to_pixel_scale_(1.0f),
-      desktop_config_monitor_(desktop_config_monitor),
-      power_assertion_id_display_(kIOPMNullAssertionID),
-      power_assertion_id_user_(kIOPMNullAssertionID),
-      app_services_library_(NULL),
-      cg_display_base_address_(NULL),
-      cg_display_bytes_per_row_(NULL),
-      cg_display_bits_per_pixel_(NULL),
-      opengl_library_(NULL),
-      cgl_set_full_screen_(NULL),
-      excluded_window_(0) {
-}
+    : desktop_config_monitor_(desktop_config_monitor) {}
 
 ScreenCapturerMac::~ScreenCapturerMac() {
-  if (power_assertion_id_display_ != kIOPMNullAssertionID) {
-    IOPMAssertionRelease(power_assertion_id_display_);
-    power_assertion_id_display_ = kIOPMNullAssertionID;
-  }
-  if (power_assertion_id_user_ != kIOPMNullAssertionID) {
-    IOPMAssertionRelease(power_assertion_id_user_);
-    power_assertion_id_user_ = kIOPMNullAssertionID;
-  }
-
   ReleaseBuffers();
   UnregisterRefreshAndMoveHandlers();
   dlclose(app_services_library_);
@@ -355,7 +323,7 @@ void ScreenCapturerMac::ReleaseBuffers() {
   if (cgl_context_) {
     pixel_buffer_object_.Release();
     CGLDestroyContext(cgl_context_);
-    cgl_context_ = NULL;
+    cgl_context_ = nullptr;
   }
   // The buffers might be in use by the encoder, so don't delete them here.
   // Instead, mark them as "needs update"; next time the buffers are used by
@@ -368,27 +336,13 @@ void ScreenCapturerMac::Start(Callback* callback) {
   assert(callback);
 
   callback_ = callback;
-
-  // Create power management assertions to wake the display and prevent it from
-  // going to sleep on user idle.
-  // TODO(jamiewalch): Use IOPMAssertionDeclareUserActivity on 10.7.3 and above
-  //                   instead of the following two assertions.
-  IOPMAssertionCreateWithName(kIOPMAssertionTypeNoDisplaySleep,
-                              kIOPMAssertionLevelOn,
-                              CFSTR("Chrome Remote Desktop connection active"),
-                              &power_assertion_id_display_);
-  // This assertion ensures that the display is woken up if it  already asleep
-  // (as used by Apple Remote Desktop).
-  IOPMAssertionCreateWithName(CFSTR("UserIsActive"),
-                              kIOPMAssertionLevelOn,
-                              CFSTR("Chrome Remote Desktop connection active"),
-                              &power_assertion_id_user_);
 }
 
 void ScreenCapturerMac::Capture(const DesktopRegion& region_to_capture) {
-  TickTime capture_start_time = TickTime::Now();
+  int64_t capture_start_time_nanos = rtc::TimeNanos();
 
   queue_.MoveToNextFrame();
+  RTC_DCHECK(!queue_.current_frame() || !queue_.current_frame()->IsShared());
 
   desktop_config_monitor_->Lock();
   MacDesktopConfiguration new_config =
@@ -410,7 +364,7 @@ void ScreenCapturerMac::Capture(const DesktopRegion& region_to_capture) {
   // Note that we can't reallocate other buffers at this point, since the caller
   // may still be reading from them.
   if (!queue_.current_frame())
-    queue_.ReplaceCurrentFrame(CreateFrame());
+    queue_.ReplaceCurrentFrame(SharedDesktopFrame::Wrap(CreateFrame()));
 
   DesktopFrame* current_frame = queue_.current_frame();
 
@@ -420,7 +374,7 @@ void ScreenCapturerMac::Capture(const DesktopRegion& region_to_capture) {
     // APIS currently crash on 10.6.8 if there is no monitor attached.
     if (!CgBlitPostLion(*current_frame, region)) {
       desktop_config_monitor_->Unlock();
-      callback_->OnCaptureCompleted(NULL);
+      callback_->OnCaptureResult(Result::ERROR_PERMANENT, nullptr);
       return;
     }
   } else if (cgl_context_) {
@@ -436,11 +390,11 @@ void ScreenCapturerMac::Capture(const DesktopRegion& region_to_capture) {
     CgBlitPreLion(*current_frame, region);
   }
 
-  DesktopFrame* new_frame = queue_.current_frame()->Share();
+  std::unique_ptr<DesktopFrame> new_frame = queue_.current_frame()->Share();
   *new_frame->mutable_updated_region() = region;
 
   if (flip)
-    new_frame = new InvertedDesktopFrame(new_frame);
+    new_frame.reset(new InvertedDesktopFrame(std::move(new_frame)));
 
   helper_.set_size_most_recent(new_frame->size());
 
@@ -448,9 +402,9 @@ void ScreenCapturerMac::Capture(const DesktopRegion& region_to_capture) {
   // and accessing display structures.
   desktop_config_monitor_->Unlock();
 
-  new_frame->set_capture_time_ms(
-      (TickTime::Now() - capture_start_time).Milliseconds());
-  callback_->OnCaptureCompleted(new_frame);
+  new_frame->set_capture_time_ms((rtc::TimeNanos() - capture_start_time_nanos) /
+                                 rtc::kNumNanosecsPerMillisec);
+  callback_->OnCaptureResult(Result::SUCCESS, std::move(new_frame));
 }
 
 void ScreenCapturerMac::SetExcludedWindow(WindowId window) {
@@ -534,7 +488,7 @@ void ScreenCapturerMac::GlBlitFast(const DesktopFrame& frame,
                GL_UNSIGNED_BYTE, 0);
   GLubyte* ptr = static_cast<GLubyte*>(
       glMapBufferARB(GL_PIXEL_PACK_BUFFER_ARB, GL_READ_ONLY_ARB));
-  if (ptr == NULL) {
+  if (!ptr) {
     // If the buffer can't be mapped, assume that it's no longer valid and
     // release it.
     pixel_buffer_object_.Release();
@@ -642,8 +596,7 @@ bool ScreenCapturerMac::CgBlitPostLion(const DesktopFrame& frame,
   // TODO(wez): Get rid of this as per crbug.com/145064, or implement
   // crbug.com/92354.
   if (queue_.previous_frame()) {
-    memcpy(frame.data(),
-           queue_.previous_frame()->data(),
+    memcpy(frame.data(), queue_.previous_frame()->data(),
            frame.stride() * frame.size().height());
   }
 
@@ -692,8 +645,7 @@ bool ScreenCapturerMac::CgBlitPostLion(const DesktopFrame& frame,
     copy_region.Translate(-display_bounds.left(), -display_bounds.top());
 
     DesktopRect excluded_window_bounds;
-    CGImageRef excluded_image = NULL;
-    CFDataRef excluded_window_region_data = NULL;
+    CGImageRef excluded_image = nullptr;
     if (excluded_window_ && window_list) {
       // Get the region of the excluded window relative the primary display.
       excluded_window_bounds = GetExcludedWindowPixelBounds(
@@ -704,17 +656,30 @@ bool ScreenCapturerMac::CgBlitPostLion(const DesktopFrame& frame,
       // than captuing the whole display.
       if (!excluded_window_bounds.is_empty()) {
         excluded_image = CreateExcludedWindowRegionImage(
-            excluded_window_bounds,
-            display_config.dip_to_pixel_scale,
-            window_list,
-            &excluded_window_region_data);
+            excluded_window_bounds, display_config.dip_to_pixel_scale,
+            window_list);
       }
     }
 
     // Create an image containing a snapshot of the display.
     CGImageRef image = CGDisplayCreateImage(display_config.id);
-    if (image == NULL)
+    if (!image) {
+      if (excluded_image)
+        CFRelease(excluded_image);
       continue;
+    }
+
+    // Verify that the image has 32-bit depth.
+    int bits_per_pixel = CGImageGetBitsPerPixel(image);
+    if (bits_per_pixel / 8 != DesktopFrame::kBytesPerPixel) {
+      LOG(LS_ERROR) << "CGDisplayCreateImage() returned imaged with "
+                    << bits_per_pixel
+                    << " bits per pixel. Only 32-bit depth is supported.";
+      CFRelease(image);
+      if (excluded_image)
+        CFRelease(excluded_image);
+      return false;
+    }
 
     // Request access to the raw pixel data via the image's DataProvider.
     CGDataProviderRef provider = CGImageGetDataProvider(image);
@@ -723,50 +688,51 @@ bool ScreenCapturerMac::CgBlitPostLion(const DesktopFrame& frame,
 
     const uint8_t* display_base_address = CFDataGetBytePtr(data);
     int src_bytes_per_row = CGImageGetBytesPerRow(image);
-    int src_bytes_per_pixel = CGImageGetBitsPerPixel(image) / 8;
 
-    // Calculate where in the output buffer the display's origin is.
-    uint8_t* out_ptr = frame.data() +
-        (display_bounds.left() * src_bytes_per_pixel) +
-        (display_bounds.top() * frame.stride());
+    // |image| size may be different from display_bounds in case the screen was
+    // resized recently.
+    copy_region.IntersectWith(
+        DesktopRect::MakeWH(CGImageGetWidth(image), CGImageGetHeight(image)));
 
     // Copy the dirty region from the display buffer into our desktop buffer.
+    uint8_t* out_ptr = frame.GetFrameDataAtPos(display_bounds.top_left());
     for (DesktopRegion::Iterator i(copy_region); !i.IsAtEnd(); i.Advance()) {
-      CopyRect(display_base_address,
-               src_bytes_per_row,
-               out_ptr,
-               frame.stride(),
-               src_bytes_per_pixel,
-               i.rect());
+      CopyRect(display_base_address, src_bytes_per_row, out_ptr, frame.stride(),
+               DesktopFrame::kBytesPerPixel, i.rect());
     }
 
-    // Copy the region of the excluded window to the frame.
+    CFRelease(data);
+    CFRelease(image);
+
     if (excluded_image) {
-      assert(excluded_window_region_data);
-      display_base_address = CFDataGetBytePtr(excluded_window_region_data);
+      CGDataProviderRef provider = CGImageGetDataProvider(excluded_image);
+      CFDataRef excluded_image_data = CGDataProviderCopyData(provider);
+      assert(excluded_image_data);
+      display_base_address = CFDataGetBytePtr(excluded_image_data);
       src_bytes_per_row = CGImageGetBytesPerRow(excluded_image);
 
       // Translate the bounds relative to the desktop, because |frame| data
       // starts from the desktop top-left corner.
       DesktopRect window_bounds_relative_to_desktop(excluded_window_bounds);
-      window_bounds_relative_to_desktop.Translate(
-          -screen_pixel_bounds_.left(), -screen_pixel_bounds_.top());
-      out_ptr = frame.data() +
-          (window_bounds_relative_to_desktop.left() * src_bytes_per_pixel) +
-          (window_bounds_relative_to_desktop.top() * frame.stride());
+      window_bounds_relative_to_desktop.Translate(-screen_pixel_bounds_.left(),
+                                                  -screen_pixel_bounds_.top());
 
-      CopyRect(display_base_address,
-               src_bytes_per_row,
-               out_ptr,
-               frame.stride(),
-               src_bytes_per_pixel,
-               DesktopRect::MakeSize(excluded_window_bounds.size()));
-      CFRelease(excluded_window_region_data);
+      DesktopRect rect_to_copy =
+          DesktopRect::MakeSize(excluded_window_bounds.size());
+      rect_to_copy.IntersectWith(DesktopRect::MakeWH(
+          CGImageGetWidth(excluded_image), CGImageGetHeight(excluded_image)));
+
+      if (CGImageGetBitsPerPixel(excluded_image) / 8 ==
+          DesktopFrame::kBytesPerPixel) {
+        CopyRect(display_base_address, src_bytes_per_row,
+                 frame.GetFrameDataAtPos(
+                     window_bounds_relative_to_desktop.top_left()),
+                 frame.stride(), DesktopFrame::kBytesPerPixel, rect_to_copy);
+      }
+
+      CFRelease(excluded_image_data);
       CFRelease(excluded_image);
     }
-
-    CFRelease(data);
-    CFRelease(image);
   }
   if (window_list)
     CFRelease(window_list);
@@ -861,13 +827,13 @@ void ScreenCapturerMac::ScreenConfigurationChanged() {
     (CGLPixelFormatAttribute)CGDisplayIDToOpenGLDisplayMask(mainDevice),
     (CGLPixelFormatAttribute)0
   };
-  CGLPixelFormatObj pixel_format = NULL;
+  CGLPixelFormatObj pixel_format = nullptr;
   GLint matching_pixel_format_count = 0;
   CGLError err = CGLChoosePixelFormat(attributes,
                                       &pixel_format,
                                       &matching_pixel_format_count);
   assert(err == kCGLNoError);
-  err = CGLCreateContext(pixel_format, NULL, &cgl_context_);
+  err = CGLCreateContext(pixel_format, nullptr, &cgl_context_);
   assert(err == kCGLNoError);
   CGLDestroyPixelFormat(pixel_format);
   (*cgl_set_full_screen_)(cgl_context_);
@@ -956,13 +922,12 @@ void ScreenCapturerMac::ScreenUpdateMoveCallback(
   capturer->ScreenUpdateMove(delta, count, rect_array);
 }
 
-DesktopFrame* ScreenCapturerMac::CreateFrame() {
-  rtc::scoped_ptr<DesktopFrame> frame(
+std::unique_ptr<DesktopFrame> ScreenCapturerMac::CreateFrame() {
+  std::unique_ptr<DesktopFrame> frame(
       new BasicDesktopFrame(screen_pixel_bounds_.size()));
-
   frame->set_dpi(DesktopVector(kStandardDPI * dip_to_pixel_scale_,
                                kStandardDPI * dip_to_pixel_scale_));
-  return frame.release();
+  return frame;
 }
 
 }  // namespace
@@ -970,9 +935,9 @@ DesktopFrame* ScreenCapturerMac::CreateFrame() {
 // static
 ScreenCapturer* ScreenCapturer::Create(const DesktopCaptureOptions& options) {
   if (!options.configuration_monitor())
-    return NULL;
+    return nullptr;
 
-  rtc::scoped_ptr<ScreenCapturerMac> capturer(
+  std::unique_ptr<ScreenCapturerMac> capturer(
       new ScreenCapturerMac(options.configuration_monitor()));
   if (!capturer->Init())
     capturer.reset();

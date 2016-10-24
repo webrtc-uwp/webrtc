@@ -10,13 +10,12 @@
 
 #include <utility>
 
-#include "webrtc/api/test/fakedtlsidentitystore.h"
 #include "webrtc/api/test/fakeperiodicvideocapturer.h"
+#include "webrtc/api/test/fakertccertificategenerator.h"
 #include "webrtc/api/test/mockpeerconnectionobservers.h"
 #include "webrtc/api/test/peerconnectiontestwrapper.h"
-#include "webrtc/api/videosourceinterface.h"
 #include "webrtc/base/gunit.h"
-#include "webrtc/p2p/client/fakeportallocator.h"
+#include "webrtc/p2p/base/fakeportallocator.h"
 
 static const char kStreamLabelBase[] = "stream_label";
 static const char kVideoTrackLabelBase[] = "video_track";
@@ -48,15 +47,21 @@ void PeerConnectionTestWrapper::Connect(PeerConnectionTestWrapper* caller,
       caller, &PeerConnectionTestWrapper::ReceiveAnswerSdp);
 }
 
-PeerConnectionTestWrapper::PeerConnectionTestWrapper(const std::string& name)
-    : name_(name) {}
+PeerConnectionTestWrapper::PeerConnectionTestWrapper(
+    const std::string& name,
+    rtc::Thread* network_thread,
+    rtc::Thread* worker_thread)
+    : name_(name),
+      network_thread_(network_thread),
+      worker_thread_(worker_thread) {}
 
 PeerConnectionTestWrapper::~PeerConnectionTestWrapper() {}
 
 bool PeerConnectionTestWrapper::CreatePc(
-  const MediaConstraintsInterface* constraints) {
-  rtc::scoped_ptr<cricket::PortAllocator> port_allocator(
-      new cricket::FakePortAllocator(rtc::Thread::Current(), nullptr));
+    const MediaConstraintsInterface* constraints,
+    const webrtc::PeerConnectionInterface::RTCConfiguration& config) {
+  std::unique_ptr<cricket::PortAllocator> port_allocator(
+      new cricket::FakePortAllocator(network_thread_, nullptr));
 
   fake_audio_capture_module_ = FakeAudioCaptureModule::Create();
   if (fake_audio_capture_module_ == NULL) {
@@ -64,23 +69,18 @@ bool PeerConnectionTestWrapper::CreatePc(
   }
 
   peer_connection_factory_ = webrtc::CreatePeerConnectionFactory(
-      rtc::Thread::Current(), rtc::Thread::Current(),
+      network_thread_, worker_thread_, rtc::Thread::Current(),
       fake_audio_capture_module_, NULL, NULL);
   if (!peer_connection_factory_) {
     return false;
   }
 
-  // CreatePeerConnection with RTCConfiguration.
-  webrtc::PeerConnectionInterface::RTCConfiguration config;
-  webrtc::PeerConnectionInterface::IceServer ice_server;
-  ice_server.uri = "stun:stun.l.google.com:19302";
-  config.servers.push_back(ice_server);
-  rtc::scoped_ptr<webrtc::DtlsIdentityStoreInterface> dtls_identity_store(
-      rtc::SSLStreamAdapter::HaveDtlsSrtp() ?
-      new FakeDtlsIdentityStore() : nullptr);
+  std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator(
+      rtc::SSLStreamAdapter::HaveDtlsSrtp() ? new FakeRTCCertificateGenerator()
+                                            : nullptr);
   peer_connection_ = peer_connection_factory_->CreatePeerConnection(
-      config, constraints, std::move(port_allocator),
-      std::move(dtls_identity_store), this);
+      config, constraints, std::move(port_allocator), std::move(cert_generator),
+      this);
 
   return peer_connection_.get() != NULL;
 }
@@ -92,7 +92,8 @@ PeerConnectionTestWrapper::CreateDataChannel(
   return peer_connection_->CreateDataChannel(label, &init);
 }
 
-void PeerConnectionTestWrapper::OnAddStream(MediaStreamInterface* stream) {
+void PeerConnectionTestWrapper::OnAddStream(
+    rtc::scoped_refptr<MediaStreamInterface> stream) {
   LOG(LS_INFO) << "PeerConnectionTestWrapper " << name_
                << ": OnAddStream";
   // TODO(ronghuawu): support multiple streams.
@@ -112,13 +113,13 @@ void PeerConnectionTestWrapper::OnIceCandidate(
 }
 
 void PeerConnectionTestWrapper::OnDataChannel(
-    webrtc::DataChannelInterface* data_channel) {
+    rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {
   SignalOnDataChannel(data_channel);
 }
 
 void PeerConnectionTestWrapper::OnSuccess(SessionDescriptionInterface* desc) {
   // This callback should take the ownership of |desc|.
-  rtc::scoped_ptr<SessionDescriptionInterface> owned_desc(desc);
+  std::unique_ptr<SessionDescriptionInterface> owned_desc(desc);
   std::string sdp;
   EXPECT_TRUE(desc->ToString(&sdp));
 
@@ -183,7 +184,7 @@ void PeerConnectionTestWrapper::SetRemoteDescription(const std::string& type,
 void PeerConnectionTestWrapper::AddIceCandidate(const std::string& sdp_mid,
                                                 int sdp_mline_index,
                                                 const std::string& candidate) {
-  rtc::scoped_ptr<webrtc::IceCandidateInterface> owned_candidate(
+  std::unique_ptr<webrtc::IceCandidateInterface> owned_candidate(
       webrtc::CreateIceCandidate(sdp_mid, sdp_mline_index, candidate, NULL));
   EXPECT_TRUE(peer_connection_->AddIceCandidate(owned_candidate.get()));
 }
@@ -267,7 +268,7 @@ rtc::scoped_refptr<webrtc::MediaStreamInterface>
     FakeConstraints constraints = video_constraints;
     constraints.SetMandatoryMaxFrameRate(10);
 
-    rtc::scoped_refptr<webrtc::VideoSourceInterface> source =
+    rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> source =
         peer_connection_factory_->CreateVideoSource(
             new webrtc::FakePeriodicVideoCapturer(), &constraints);
     std::string videotrack_label = label + kVideoTrackLabelBase;

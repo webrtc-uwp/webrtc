@@ -39,8 +39,7 @@ class RemoteEstimatorProxy : public RemoteBitrateEstimator {
       const std::vector<PacketInfo>& packet_feedback_vector) override;
   void IncomingPacket(int64_t arrival_time_ms,
                       size_t payload_size,
-                      const RTPHeader& header,
-                      bool was_paced) override;
+                      const RTPHeader& header) override;
   void RemoveStream(uint32_t ssrc) override {}
   bool LatestEstimate(std::vector<unsigned int>* ssrcs,
                       unsigned int* bitrate_bps) const override;
@@ -55,7 +54,7 @@ class RemoteEstimatorProxy : public RemoteBitrateEstimator {
  private:
   void OnPacketArrival(uint16_t sequence_number, int64_t arrival_time)
       EXCLUSIVE_LOCKS_REQUIRED(&lock_);
-  bool BuildFeedbackPacket(rtcp::TransportFeedback* feedback_packetket);
+  bool BuildFeedbackPacket(rtcp::TransportFeedback* feedback_packet);
 
   Clock* const clock_;
   PacketRouter* const packet_router_;

@@ -15,6 +15,7 @@
       'target_name': 'voice_engine',
       'type': 'static_library',
       'dependencies': [
+        '<(webrtc_root)/api/api.gyp:call_api',
         '<(webrtc_root)/base/base.gyp:rtc_base_approved',
         '<(webrtc_root)/common.gyp:webrtc_common',
         '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
@@ -29,6 +30,7 @@
         '<(webrtc_root)/modules/modules.gyp:webrtc_utility',
         '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
         '<(webrtc_root)/webrtc.gyp:rtc_event_log',
+        'level_indicator',
       ],
       'export_dependent_settings': [
         '<(webrtc_root)/modules/modules.gyp:audio_coding_module',
@@ -37,7 +39,6 @@
         'include/voe_audio_processing.h',
         'include/voe_base.h',
         'include/voe_codec.h',
-        'include/voe_dtmf.h',
         'include/voe_errors.h',
         'include/voe_external_media.h',
         'include/voe_file.h',
@@ -53,12 +54,6 @@
         'channel_manager.h',
         'channel_proxy.cc',
         'channel_proxy.h',
-        'dtmf_inband.cc',
-        'dtmf_inband.h',
-        'dtmf_inband_queue.cc',
-        'dtmf_inband_queue.h',
-        'level_indicator.cc',
-        'level_indicator.h',
         'monitor_module.cc',
         'monitor_module.h',
         'network_predictor.cc',
@@ -79,8 +74,6 @@
         'voe_base_impl.h',
         'voe_codec_impl.cc',
         'voe_codec_impl.h',
-        'voe_dtmf_impl.cc',
-        'voe_dtmf_impl.h',
         'voe_external_media_impl.cc',
         'voe_external_media_impl.h',
         'voe_file_impl.cc',
@@ -102,6 +95,19 @@
         'voice_engine_impl.h',
       ],
     },
+    {
+      'target_name': 'level_indicator',
+      'type': 'static_library',
+      'dependencies': [
+        '<(webrtc_root)/base/base.gyp:rtc_base_approved',
+        '<(webrtc_root)/common.gyp:webrtc_common',
+        '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
+      ],
+      'sources': [
+        'level_indicator.cc',
+        'level_indicator.h',
+      ]
+    }
   ],
   'conditions': [
     ['OS=="win"', {
@@ -258,9 +264,30 @@
               'target_name': 'voice_engine_unittests_apk_target',
               'type': 'none',
               'dependencies': [
-                '<(apk_tests_path):voice_engine_unittests_apk',
+                '<(android_tests_path):voice_engine_unittests_apk',
               ],
             },
+          ],
+          'conditions': [
+            ['test_isolation_mode != "noop"',
+              {
+                'targets': [
+                  {
+                    'target_name': 'voice_engine_unittests_apk_run',
+                    'type': 'none',
+                    'dependencies': [
+                      '<(android_tests_path):voice_engine_unittests_apk',
+                    ],
+                    'includes': [
+                      '../build/isolate.gypi',
+                    ],
+                    'sources': [
+                      'voice_engine_unittests_apk.isolate',
+                    ],
+                  },
+                ],
+              },
+            ],
           ],
         }],
         ['test_isolation_mode != "noop"', {

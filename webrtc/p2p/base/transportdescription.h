@@ -12,11 +12,11 @@
 #define WEBRTC_P2P_BASE_TRANSPORTDESCRIPTION_H_
 
 #include <algorithm>
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "webrtc/p2p/base/p2pconstants.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/sslfingerprint.h"
 
 namespace cricket {
@@ -60,10 +60,32 @@ enum ConnectionRole {
   CONNECTIONROLE_HOLDCONN,
 };
 
+struct IceParameters {
+  // TODO(honghaiz): Include ICE mode in this structure to match the ORTC
+  // struct:
+  // http://ortc.org/wp-content/uploads/2016/03/ortc.html#idl-def-RTCIceParameters
+  std::string ufrag;
+  std::string pwd;
+  bool renomination = false;
+  IceParameters() = default;
+  IceParameters(const std::string& ice_ufrag,
+                const std::string& ice_pwd,
+                bool ice_renomination)
+      : ufrag(ice_ufrag), pwd(ice_pwd), renomination(ice_renomination) {}
+
+  bool operator==(const IceParameters& other) {
+    return ufrag == other.ufrag && pwd == other.pwd &&
+           renomination == other.renomination;
+  }
+  bool operator!=(const IceParameters& other) { return !(*this == other); }
+};
+
 extern const char CONNECTIONROLE_ACTIVE_STR[];
 extern const char CONNECTIONROLE_PASSIVE_STR[];
 extern const char CONNECTIONROLE_ACTPASS_STR[];
 extern const char CONNECTIONROLE_HOLDCONN_STR[];
+
+constexpr auto ICE_RENOMINATION_STR = "renomination";
 
 bool StringToConnectionRole(const std::string& role_str, ConnectionRole* role);
 bool ConnectionRoleToString(const ConnectionRole& role, std::string* role_str);
@@ -125,6 +147,10 @@ struct TransportDescription {
   }
   bool secure() const { return identity_fingerprint != NULL; }
 
+  IceParameters GetIceParameters() {
+    return IceParameters(ice_ufrag, ice_pwd, HasOption(ICE_RENOMINATION_STR));
+  }
+
   static rtc::SSLFingerprint* CopyFingerprint(
       const rtc::SSLFingerprint* from) {
     if (!from)
@@ -139,7 +165,7 @@ struct TransportDescription {
   IceMode ice_mode;
   ConnectionRole connection_role;
 
-  rtc::scoped_ptr<rtc::SSLFingerprint> identity_fingerprint;
+  std::unique_ptr<rtc::SSLFingerprint> identity_fingerprint;
 };
 
 }  // namespace cricket

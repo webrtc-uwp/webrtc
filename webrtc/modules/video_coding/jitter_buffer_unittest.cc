@@ -8,12 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <string.h>
+#include <string>
 
 #include <list>
 #include <memory>
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "testing/gmock/include/gmock/gmock.h"
 #include "webrtc/modules/video_coding/frame_buffer.h"
 #include "webrtc/modules/video_coding/jitter_buffer.h"
 #include "webrtc/modules/video_coding/media_opt_util.h"
@@ -21,8 +22,10 @@
 #include "webrtc/modules/video_coding/test/stream_generator.h"
 #include "webrtc/modules/video_coding/test/test_util.h"
 #include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/system_wrappers/include/field_trial.h"
 #include "webrtc/system_wrappers/include/metrics.h"
-#include "webrtc/test/histogram.h"
+#include "webrtc/system_wrappers/include/metrics_default.h"
+#include "webrtc/test/field_trial.h"
 
 namespace webrtc {
 
@@ -32,20 +35,24 @@ const uint32_t kProcessIntervalSec = 60;
 
 class Vp9SsMapTest : public ::testing::Test {
  protected:
-  Vp9SsMapTest() : packet_(data_, 1400, 1234, 1, true) {}
+  Vp9SsMapTest() : packet_() {}
 
   virtual void SetUp() {
     packet_.isFirstPacket = true;
+    packet_.dataPtr = data_;
+    packet_.sizeBytes = 1400;
+    packet_.seqNum = 1234;
+    packet_.timestamp = 1;
     packet_.markerBit = true;
     packet_.frameType = kVideoFrameKey;
     packet_.codec = kVideoCodecVP9;
-    packet_.codecSpecificHeader.codec = kRtpVideoVp9;
-    packet_.codecSpecificHeader.codecHeader.VP9.flexible_mode = false;
-    packet_.codecSpecificHeader.codecHeader.VP9.gof_idx = 0;
-    packet_.codecSpecificHeader.codecHeader.VP9.temporal_idx = kNoTemporalIdx;
-    packet_.codecSpecificHeader.codecHeader.VP9.temporal_up_switch = false;
-    packet_.codecSpecificHeader.codecHeader.VP9.ss_data_available = true;
-    packet_.codecSpecificHeader.codecHeader.VP9.gof.SetGofInfoVP9(
+    packet_.video_header.codec = kRtpVideoVp9;
+    packet_.video_header.codecHeader.VP9.flexible_mode = false;
+    packet_.video_header.codecHeader.VP9.gof_idx = 0;
+    packet_.video_header.codecHeader.VP9.temporal_idx = kNoTemporalIdx;
+    packet_.video_header.codecHeader.VP9.temporal_up_switch = false;
+    packet_.video_header.codecHeader.VP9.ss_data_available = true;
+    packet_.video_header.codecHeader.VP9.gof.SetGofInfoVP9(
         kTemporalStructureMode3);  // kTemporalStructureMode3: 0-2-1-2..
   }
 
@@ -59,7 +66,7 @@ TEST_F(Vp9SsMapTest, Insert) {
 }
 
 TEST_F(Vp9SsMapTest, Insert_NoSsData) {
-  packet_.codecSpecificHeader.codecHeader.VP9.ss_data_available = false;
+  packet_.video_header.codecHeader.VP9.ss_data_available = false;
   EXPECT_FALSE(map_.Insert(packet_));
 }
 
@@ -136,62 +143,89 @@ TEST_F(Vp9SsMapTest, RemoveOld_WithWrap) {
 }
 
 TEST_F(Vp9SsMapTest, UpdatePacket_NoSsData) {
-  packet_.codecSpecificHeader.codecHeader.VP9.gof_idx = 0;
+  packet_.video_header.codecHeader.VP9.gof_idx = 0;
   EXPECT_FALSE(map_.UpdatePacket(&packet_));
 }
 
 TEST_F(Vp9SsMapTest, UpdatePacket_NoGofIdx) {
   EXPECT_TRUE(map_.Insert(packet_));
-  packet_.codecSpecificHeader.codecHeader.VP9.gof_idx = kNoGofIdx;
+  packet_.video_header.codecHeader.VP9.gof_idx = kNoGofIdx;
   EXPECT_FALSE(map_.UpdatePacket(&packet_));
 }
 
 TEST_F(Vp9SsMapTest, UpdatePacket_InvalidGofIdx) {
   EXPECT_TRUE(map_.Insert(packet_));
-  packet_.codecSpecificHeader.codecHeader.VP9.gof_idx = 4;
+  packet_.video_header.codecHeader.VP9.gof_idx = 4;
   EXPECT_FALSE(map_.UpdatePacket(&packet_));
 }
 
 TEST_F(Vp9SsMapTest, UpdatePacket) {
   EXPECT_TRUE(map_.Insert(packet_));  // kTemporalStructureMode3: 0-2-1-2..
 
-  packet_.codecSpecificHeader.codecHeader.VP9.gof_idx = 0;
+  packet_.video_header.codecHeader.VP9.gof_idx = 0;
   EXPECT_TRUE(map_.UpdatePacket(&packet_));
-  EXPECT_EQ(0, packet_.codecSpecificHeader.codecHeader.VP9.temporal_idx);
-  EXPECT_FALSE(packet_.codecSpecificHeader.codecHeader.VP9.temporal_up_switch);
-  EXPECT_EQ(1U, packet_.codecSpecificHeader.codecHeader.VP9.num_ref_pics);
-  EXPECT_EQ(4, packet_.codecSpecificHeader.codecHeader.VP9.pid_diff[0]);
+  EXPECT_EQ(0, packet_.video_header.codecHeader.VP9.temporal_idx);
+  EXPECT_FALSE(packet_.video_header.codecHeader.VP9.temporal_up_switch);
+  EXPECT_EQ(1U, packet_.video_header.codecHeader.VP9.num_ref_pics);
+  EXPECT_EQ(4, packet_.video_header.codecHeader.VP9.pid_diff[0]);
 
-  packet_.codecSpecificHeader.codecHeader.VP9.gof_idx = 1;
+  packet_.video_header.codecHeader.VP9.gof_idx = 1;
   EXPECT_TRUE(map_.UpdatePacket(&packet_));
-  EXPECT_EQ(2, packet_.codecSpecificHeader.codecHeader.VP9.temporal_idx);
-  EXPECT_TRUE(packet_.codecSpecificHeader.codecHeader.VP9.temporal_up_switch);
-  EXPECT_EQ(1U, packet_.codecSpecificHeader.codecHeader.VP9.num_ref_pics);
-  EXPECT_EQ(1, packet_.codecSpecificHeader.codecHeader.VP9.pid_diff[0]);
+  EXPECT_EQ(2, packet_.video_header.codecHeader.VP9.temporal_idx);
+  EXPECT_TRUE(packet_.video_header.codecHeader.VP9.temporal_up_switch);
+  EXPECT_EQ(1U, packet_.video_header.codecHeader.VP9.num_ref_pics);
+  EXPECT_EQ(1, packet_.video_header.codecHeader.VP9.pid_diff[0]);
 
-  packet_.codecSpecificHeader.codecHeader.VP9.gof_idx = 2;
+  packet_.video_header.codecHeader.VP9.gof_idx = 2;
   EXPECT_TRUE(map_.UpdatePacket(&packet_));
-  EXPECT_EQ(1, packet_.codecSpecificHeader.codecHeader.VP9.temporal_idx);
-  EXPECT_TRUE(packet_.codecSpecificHeader.codecHeader.VP9.temporal_up_switch);
-  EXPECT_EQ(1U, packet_.codecSpecificHeader.codecHeader.VP9.num_ref_pics);
-  EXPECT_EQ(2, packet_.codecSpecificHeader.codecHeader.VP9.pid_diff[0]);
+  EXPECT_EQ(1, packet_.video_header.codecHeader.VP9.temporal_idx);
+  EXPECT_TRUE(packet_.video_header.codecHeader.VP9.temporal_up_switch);
+  EXPECT_EQ(1U, packet_.video_header.codecHeader.VP9.num_ref_pics);
+  EXPECT_EQ(2, packet_.video_header.codecHeader.VP9.pid_diff[0]);
 
-  packet_.codecSpecificHeader.codecHeader.VP9.gof_idx = 3;
+  packet_.video_header.codecHeader.VP9.gof_idx = 3;
   EXPECT_TRUE(map_.UpdatePacket(&packet_));
-  EXPECT_EQ(2, packet_.codecSpecificHeader.codecHeader.VP9.temporal_idx);
-  EXPECT_FALSE(packet_.codecSpecificHeader.codecHeader.VP9.temporal_up_switch);
-  EXPECT_EQ(2U, packet_.codecSpecificHeader.codecHeader.VP9.num_ref_pics);
-  EXPECT_EQ(1, packet_.codecSpecificHeader.codecHeader.VP9.pid_diff[0]);
-  EXPECT_EQ(2, packet_.codecSpecificHeader.codecHeader.VP9.pid_diff[1]);
+  EXPECT_EQ(2, packet_.video_header.codecHeader.VP9.temporal_idx);
+  EXPECT_FALSE(packet_.video_header.codecHeader.VP9.temporal_up_switch);
+  EXPECT_EQ(2U, packet_.video_header.codecHeader.VP9.num_ref_pics);
+  EXPECT_EQ(1, packet_.video_header.codecHeader.VP9.pid_diff[0]);
+  EXPECT_EQ(2, packet_.video_header.codecHeader.VP9.pid_diff[1]);
 }
 
-class TestBasicJitterBuffer : public ::testing::Test {
+class ProcessThreadMock : public ProcessThread {
+ public:
+  MOCK_METHOD0(Start, void());
+  MOCK_METHOD0(Stop, void());
+  MOCK_METHOD1(WakeUp, void(Module* module));
+  MOCK_METHOD1(RegisterModule, void(Module* module));
+  MOCK_METHOD1(DeRegisterModule, void(Module* module));
+  void PostTask(std::unique_ptr<rtc::QueuedTask> task) /*override*/ {}
+};
+
+class TestBasicJitterBuffer : public ::testing::TestWithParam<std::string>,
+                              public NackSender,
+                              public KeyFrameRequestSender {
+ public:
+  void SendNack(const std::vector<uint16_t>& sequence_numbers) override {
+    nack_sent_.insert(nack_sent_.end(), sequence_numbers.begin(),
+                      sequence_numbers.end());
+  }
+
+  void RequestKeyFrame() override { ++keyframe_requests_; }
+
+  ::testing::NiceMock<ProcessThreadMock> process_thread_mock_;
+  std::vector<uint16_t> nack_sent_;
+  int keyframe_requests_;
+
  protected:
-  virtual void SetUp() {
+  TestBasicJitterBuffer() {}
+  void SetUp() override {
     clock_.reset(new SimulatedClock(0));
     jitter_buffer_.reset(new VCMJitterBuffer(
         clock_.get(),
-        std::unique_ptr<EventWrapper>(event_factory_.CreateEvent())));
+        std::unique_ptr<EventWrapper>(event_factory_.CreateEvent()),
+        this,
+        this));
     jitter_buffer_->Start();
     seq_num_ = 1234;
     timestamp_ = 0;
@@ -212,16 +246,20 @@ class TestBasicJitterBuffer : public ::testing::Test {
         i += 3;
       }
     }
-    packet_.reset(new VCMPacket(data_, size_, seq_num_, timestamp_, true));
+    WebRtcRTPHeader rtpHeader;
+    memset(&rtpHeader, 0, sizeof(rtpHeader));
+    rtpHeader.header.sequenceNumber = seq_num_;
+    rtpHeader.header.timestamp = timestamp_;
+    rtpHeader.header.markerBit = true;
+    rtpHeader.frameType = kVideoFrameDelta;
+    packet_.reset(new VCMPacket(data_, size_, rtpHeader));
   }
 
   VCMEncodedFrame* DecodeCompleteFrame() {
-    uint32_t timestamp = 0;
-    bool found_frame = jitter_buffer_->NextCompleteTimestamp(10, &timestamp);
+    VCMEncodedFrame* found_frame = jitter_buffer_->NextCompleteFrame(10);
     if (!found_frame)
-      return NULL;
-    VCMEncodedFrame* frame = jitter_buffer_->ExtractAndSetDecode(timestamp);
-    return frame;
+      return nullptr;
+    return jitter_buffer_->ExtractAndSetDecode(found_frame->TimeStamp());
   }
 
   VCMEncodedFrame* DecodeIncompleteFrame() {
@@ -280,7 +318,21 @@ class TestBasicJitterBuffer : public ::testing::Test {
   std::unique_ptr<VCMJitterBuffer> jitter_buffer_;
 };
 
-class TestRunningJitterBuffer : public ::testing::Test {
+class TestRunningJitterBuffer : public ::testing::TestWithParam<std::string>,
+                                public NackSender,
+                                public KeyFrameRequestSender {
+ public:
+  void SendNack(const std::vector<uint16_t>& sequence_numbers) {
+    nack_sent_.insert(nack_sent_.end(), sequence_numbers.begin(),
+                      sequence_numbers.end());
+  }
+
+  void RequestKeyFrame() { ++keyframe_requests_; }
+
+  ::testing::NiceMock<ProcessThreadMock> process_thread_mock_;
+  std::vector<uint16_t> nack_sent_;
+  int keyframe_requests_;
+
  protected:
   enum { kDataBufferSize = 10 };
 
@@ -290,7 +342,8 @@ class TestRunningJitterBuffer : public ::testing::Test {
     oldest_packet_to_nack_ = 250;
     jitter_buffer_ = new VCMJitterBuffer(
         clock_.get(),
-        std::unique_ptr<EventWrapper>(event_factory_.CreateEvent()));
+        std::unique_ptr<EventWrapper>(event_factory_.CreateEvent()),
+        this, this);
     stream_generator_ = new StreamGenerator(0, clock_->TimeInMilliseconds());
     jitter_buffer_->Start();
     jitter_buffer_->SetNackSettings(max_nack_list_size_, oldest_packet_to_nack_,
@@ -357,12 +410,12 @@ class TestRunningJitterBuffer : public ::testing::Test {
   }
 
   bool DecodeCompleteFrame() {
-    uint32_t timestamp = 0;
-    bool found_frame = jitter_buffer_->NextCompleteTimestamp(0, &timestamp);
+    VCMEncodedFrame* found_frame = jitter_buffer_->NextCompleteFrame(0);
     if (!found_frame)
       return false;
 
-    VCMEncodedFrame* frame = jitter_buffer_->ExtractAndSetDecode(timestamp);
+    VCMEncodedFrame* frame =
+        jitter_buffer_->ExtractAndSetDecode(found_frame->TimeStamp());
     bool ret = (frame != NULL);
     jitter_buffer_->ReleaseFrame(frame);
     return ret;
@@ -390,6 +443,7 @@ class TestRunningJitterBuffer : public ::testing::Test {
 
 class TestJitterBufferNack : public TestRunningJitterBuffer {
  protected:
+  TestJitterBufferNack() {}
   virtual void SetUp() {
     TestRunningJitterBuffer::SetUp();
     jitter_buffer_->SetNackMode(kNack, -1, -1);
@@ -440,7 +494,7 @@ TEST_F(TestBasicJitterBuffer, SinglePacketFrame) {
 // implementations in our single gtest_runner app.
 #if !defined(WINRT)
 TEST_F(TestBasicJitterBuffer, VerifyHistogramStats) {
-  test::ClearHistograms();
+  metrics::Reset();
   // Always start with a complete key frame when not allowing errors.
   jitter_buffer_->SetDecodeErrorMode(kNoErrors);
   packet_->frameType = kVideoFrameKey;
@@ -460,25 +514,21 @@ TEST_F(TestBasicJitterBuffer, VerifyHistogramStats) {
   // Verify that histograms are updated when the jitter buffer is stopped.
   clock_->AdvanceTimeMilliseconds(metrics::kMinRunTimeInSeconds * 1000);
   jitter_buffer_->Stop();
+  EXPECT_EQ(1, metrics::NumEvents("WebRTC.Video.DiscardedPacketsInPercent", 0));
+  EXPECT_EQ(1,
+            metrics::NumEvents("WebRTC.Video.DuplicatedPacketsInPercent", 0));
   EXPECT_EQ(
-      0, test::LastHistogramSample("WebRTC.Video.DiscardedPacketsInPercent"));
+      1, metrics::NumSamples("WebRTC.Video.CompleteFramesReceivedPerSecond"));
   EXPECT_EQ(
-      0, test::LastHistogramSample("WebRTC.Video.DuplicatedPacketsInPercent"));
-  EXPECT_NE(-1, test::LastHistogramSample(
-                    "WebRTC.Video.CompleteFramesReceivedPerSecond"));
-  EXPECT_EQ(1000, test::LastHistogramSample(
-                      "WebRTC.Video.KeyFramesReceivedInPermille"));
+      1, metrics::NumEvents("WebRTC.Video.KeyFramesReceivedInPermille", 1000));
 
   // Verify that histograms are not updated if stop is called again.
   jitter_buffer_->Stop();
+  EXPECT_EQ(1, metrics::NumSamples("WebRTC.Video.DiscardedPacketsInPercent"));
+  EXPECT_EQ(1, metrics::NumSamples("WebRTC.Video.DuplicatedPacketsInPercent"));
   EXPECT_EQ(
-      1, test::NumHistogramSamples("WebRTC.Video.DiscardedPacketsInPercent"));
-  EXPECT_EQ(
-      1, test::NumHistogramSamples("WebRTC.Video.DuplicatedPacketsInPercent"));
-  EXPECT_EQ(1, test::NumHistogramSamples(
-                   "WebRTC.Video.CompleteFramesReceivedPerSecond"));
-  EXPECT_EQ(
-      1, test::NumHistogramSamples("WebRTC.Video.KeyFramesReceivedInPermille"));
+      1, metrics::NumSamples("WebRTC.Video.CompleteFramesReceivedPerSecond"));
+  EXPECT_EQ(1, metrics::NumSamples("WebRTC.Video.KeyFramesReceivedInPermille"));
 }
 #endif
 
@@ -759,7 +809,12 @@ TEST_F(TestBasicJitterBuffer, TestReorderingWithPadding) {
 
   // Add in the padding. These are empty packets (data length is 0) with no
   // marker bit and matching the timestamp of Frame B.
-  VCMPacket empty_packet(data_, 0, seq_num_ + 2, timestamp_ + (33 * 90), false);
+  WebRtcRTPHeader rtpHeader;
+  memset(&rtpHeader, 0, sizeof(rtpHeader));
+  rtpHeader.header.sequenceNumber = seq_num_ + 2;
+  rtpHeader.header.timestamp = timestamp_ + (33 * 90);
+  rtpHeader.header.markerBit = false;
+  VCMPacket empty_packet(data_, 0, rtpHeader);
   EXPECT_EQ(kOldPacket,
             jitter_buffer_->InsertPacket(empty_packet, &retransmitted));
   empty_packet.seqNum += 1;
@@ -879,23 +934,23 @@ TEST_F(TestBasicJitterBuffer, TestSkipForwardVp9) {
 
   bool re = false;
   packet_->codec = kVideoCodecVP9;
-  packet_->codecSpecificHeader.codec = kRtpVideoVp9;
+  packet_->video_header.codec = kRtpVideoVp9;
   packet_->isFirstPacket = true;
   packet_->markerBit = true;
-  packet_->codecSpecificHeader.codecHeader.VP9.flexible_mode = false;
-  packet_->codecSpecificHeader.codecHeader.VP9.spatial_idx = 0;
-  packet_->codecSpecificHeader.codecHeader.VP9.beginning_of_frame = true;
-  packet_->codecSpecificHeader.codecHeader.VP9.end_of_frame = true;
-  packet_->codecSpecificHeader.codecHeader.VP9.temporal_up_switch = false;
+  packet_->video_header.codecHeader.VP9.flexible_mode = false;
+  packet_->video_header.codecHeader.VP9.spatial_idx = 0;
+  packet_->video_header.codecHeader.VP9.beginning_of_frame = true;
+  packet_->video_header.codecHeader.VP9.end_of_frame = true;
+  packet_->video_header.codecHeader.VP9.temporal_up_switch = false;
 
   packet_->seqNum = 65485;
   packet_->timestamp = 1000;
   packet_->frameType = kVideoFrameKey;
-  packet_->codecSpecificHeader.codecHeader.VP9.picture_id = 5;
-  packet_->codecSpecificHeader.codecHeader.VP9.tl0_pic_idx = 200;
-  packet_->codecSpecificHeader.codecHeader.VP9.temporal_idx = 0;
-  packet_->codecSpecificHeader.codecHeader.VP9.ss_data_available = true;
-  packet_->codecSpecificHeader.codecHeader.VP9.gof.SetGofInfoVP9(
+  packet_->video_header.codecHeader.VP9.picture_id = 5;
+  packet_->video_header.codecHeader.VP9.tl0_pic_idx = 200;
+  packet_->video_header.codecHeader.VP9.temporal_idx = 0;
+  packet_->video_header.codecHeader.VP9.ss_data_available = true;
+  packet_->video_header.codecHeader.VP9.gof.SetGofInfoVP9(
       kTemporalStructureMode3);  // kTemporalStructureMode3: 0-2-1-2..
   EXPECT_EQ(kCompleteSession, jitter_buffer_->InsertPacket(*packet_, &re));
 
@@ -903,10 +958,10 @@ TEST_F(TestBasicJitterBuffer, TestSkipForwardVp9) {
   packet_->seqNum = 65489;
   packet_->timestamp = 13000;
   packet_->frameType = kVideoFrameDelta;
-  packet_->codecSpecificHeader.codecHeader.VP9.picture_id = 9;
-  packet_->codecSpecificHeader.codecHeader.VP9.tl0_pic_idx = 201;
-  packet_->codecSpecificHeader.codecHeader.VP9.temporal_idx = 0;
-  packet_->codecSpecificHeader.codecHeader.VP9.ss_data_available = false;
+  packet_->video_header.codecHeader.VP9.picture_id = 9;
+  packet_->video_header.codecHeader.VP9.tl0_pic_idx = 201;
+  packet_->video_header.codecHeader.VP9.temporal_idx = 0;
+  packet_->video_header.codecHeader.VP9.ss_data_available = false;
   EXPECT_EQ(kCompleteSession, jitter_buffer_->InsertPacket(*packet_, &re));
 
   VCMEncodedFrame* frame_out = DecodeCompleteFrame();
@@ -932,29 +987,29 @@ TEST_F(TestBasicJitterBuffer, ReorderedVp9SsData_3TlLayers) {
 
   bool re = false;
   packet_->codec = kVideoCodecVP9;
-  packet_->codecSpecificHeader.codec = kRtpVideoVp9;
+  packet_->video_header.codec = kRtpVideoVp9;
   packet_->isFirstPacket = true;
   packet_->markerBit = true;
-  packet_->codecSpecificHeader.codecHeader.VP9.flexible_mode = false;
-  packet_->codecSpecificHeader.codecHeader.VP9.spatial_idx = 0;
-  packet_->codecSpecificHeader.codecHeader.VP9.beginning_of_frame = true;
-  packet_->codecSpecificHeader.codecHeader.VP9.end_of_frame = true;
-  packet_->codecSpecificHeader.codecHeader.VP9.tl0_pic_idx = 200;
+  packet_->video_header.codecHeader.VP9.flexible_mode = false;
+  packet_->video_header.codecHeader.VP9.spatial_idx = 0;
+  packet_->video_header.codecHeader.VP9.beginning_of_frame = true;
+  packet_->video_header.codecHeader.VP9.end_of_frame = true;
+  packet_->video_header.codecHeader.VP9.tl0_pic_idx = 200;
 
   packet_->seqNum = 65486;
   packet_->timestamp = 6000;
   packet_->frameType = kVideoFrameDelta;
-  packet_->codecSpecificHeader.codecHeader.VP9.picture_id = 6;
-  packet_->codecSpecificHeader.codecHeader.VP9.temporal_idx = 2;
-  packet_->codecSpecificHeader.codecHeader.VP9.temporal_up_switch = true;
+  packet_->video_header.codecHeader.VP9.picture_id = 6;
+  packet_->video_header.codecHeader.VP9.temporal_idx = 2;
+  packet_->video_header.codecHeader.VP9.temporal_up_switch = true;
   EXPECT_EQ(kCompleteSession, jitter_buffer_->InsertPacket(*packet_, &re));
 
   packet_->seqNum = 65487;
   packet_->timestamp = 9000;
   packet_->frameType = kVideoFrameDelta;
-  packet_->codecSpecificHeader.codecHeader.VP9.picture_id = 7;
-  packet_->codecSpecificHeader.codecHeader.VP9.temporal_idx = 1;
-  packet_->codecSpecificHeader.codecHeader.VP9.temporal_up_switch = true;
+  packet_->video_header.codecHeader.VP9.picture_id = 7;
+  packet_->video_header.codecHeader.VP9.temporal_idx = 1;
+  packet_->video_header.codecHeader.VP9.temporal_up_switch = true;
   EXPECT_EQ(kCompleteSession, jitter_buffer_->InsertPacket(*packet_, &re));
 
   // Insert first frame with SS data.
@@ -963,11 +1018,11 @@ TEST_F(TestBasicJitterBuffer, ReorderedVp9SsData_3TlLayers) {
   packet_->frameType = kVideoFrameKey;
   packet_->width = 352;
   packet_->height = 288;
-  packet_->codecSpecificHeader.codecHeader.VP9.picture_id = 5;
-  packet_->codecSpecificHeader.codecHeader.VP9.temporal_idx = 0;
-  packet_->codecSpecificHeader.codecHeader.VP9.temporal_up_switch = false;
-  packet_->codecSpecificHeader.codecHeader.VP9.ss_data_available = true;
-  packet_->codecSpecificHeader.codecHeader.VP9.gof.SetGofInfoVP9(
+  packet_->video_header.codecHeader.VP9.picture_id = 5;
+  packet_->video_header.codecHeader.VP9.temporal_idx = 0;
+  packet_->video_header.codecHeader.VP9.temporal_up_switch = false;
+  packet_->video_header.codecHeader.VP9.ss_data_available = true;
+  packet_->video_header.codecHeader.VP9.gof.SetGofInfoVP9(
       kTemporalStructureMode3);  // kTemporalStructureMode3: 0-2-1-2..
   EXPECT_EQ(kCompleteSession, jitter_buffer_->InsertPacket(*packet_, &re));
 
@@ -1008,31 +1063,31 @@ TEST_F(TestBasicJitterBuffer, ReorderedVp9SsData_2Tl2SLayers) {
 
   bool re = false;
   packet_->codec = kVideoCodecVP9;
-  packet_->codecSpecificHeader.codec = kRtpVideoVp9;
-  packet_->codecSpecificHeader.codecHeader.VP9.flexible_mode = false;
-  packet_->codecSpecificHeader.codecHeader.VP9.beginning_of_frame = true;
-  packet_->codecSpecificHeader.codecHeader.VP9.end_of_frame = true;
-  packet_->codecSpecificHeader.codecHeader.VP9.tl0_pic_idx = 200;
+  packet_->video_header.codec = kRtpVideoVp9;
+  packet_->video_header.codecHeader.VP9.flexible_mode = false;
+  packet_->video_header.codecHeader.VP9.beginning_of_frame = true;
+  packet_->video_header.codecHeader.VP9.end_of_frame = true;
+  packet_->video_header.codecHeader.VP9.tl0_pic_idx = 200;
 
   packet_->isFirstPacket = true;
   packet_->markerBit = false;
   packet_->seqNum = 65486;
   packet_->timestamp = 6000;
   packet_->frameType = kVideoFrameDelta;
-  packet_->codecSpecificHeader.codecHeader.VP9.spatial_idx = 0;
-  packet_->codecSpecificHeader.codecHeader.VP9.picture_id = 6;
-  packet_->codecSpecificHeader.codecHeader.VP9.temporal_idx = 1;
-  packet_->codecSpecificHeader.codecHeader.VP9.temporal_up_switch = true;
+  packet_->video_header.codecHeader.VP9.spatial_idx = 0;
+  packet_->video_header.codecHeader.VP9.picture_id = 6;
+  packet_->video_header.codecHeader.VP9.temporal_idx = 1;
+  packet_->video_header.codecHeader.VP9.temporal_up_switch = true;
   EXPECT_EQ(kIncomplete, jitter_buffer_->InsertPacket(*packet_, &re));
 
   packet_->isFirstPacket = false;
   packet_->markerBit = true;
   packet_->seqNum = 65487;
   packet_->frameType = kVideoFrameDelta;
-  packet_->codecSpecificHeader.codecHeader.VP9.spatial_idx = 1;
-  packet_->codecSpecificHeader.codecHeader.VP9.picture_id = 6;
-  packet_->codecSpecificHeader.codecHeader.VP9.temporal_idx = 1;
-  packet_->codecSpecificHeader.codecHeader.VP9.temporal_up_switch = true;
+  packet_->video_header.codecHeader.VP9.spatial_idx = 1;
+  packet_->video_header.codecHeader.VP9.picture_id = 6;
+  packet_->video_header.codecHeader.VP9.temporal_idx = 1;
+  packet_->video_header.codecHeader.VP9.temporal_up_switch = true;
   EXPECT_EQ(kCompleteSession, jitter_buffer_->InsertPacket(*packet_, &re));
 
   packet_->isFirstPacket = false;
@@ -1040,10 +1095,10 @@ TEST_F(TestBasicJitterBuffer, ReorderedVp9SsData_2Tl2SLayers) {
   packet_->seqNum = 65485;
   packet_->timestamp = 3000;
   packet_->frameType = kVideoFrameKey;
-  packet_->codecSpecificHeader.codecHeader.VP9.spatial_idx = 1;
-  packet_->codecSpecificHeader.codecHeader.VP9.picture_id = 5;
-  packet_->codecSpecificHeader.codecHeader.VP9.temporal_idx = 0;
-  packet_->codecSpecificHeader.codecHeader.VP9.temporal_up_switch = false;
+  packet_->video_header.codecHeader.VP9.spatial_idx = 1;
+  packet_->video_header.codecHeader.VP9.picture_id = 5;
+  packet_->video_header.codecHeader.VP9.temporal_idx = 0;
+  packet_->video_header.codecHeader.VP9.temporal_up_switch = false;
   EXPECT_EQ(kIncomplete, jitter_buffer_->InsertPacket(*packet_, &re));
 
   // Insert first frame with SS data.
@@ -1053,12 +1108,12 @@ TEST_F(TestBasicJitterBuffer, ReorderedVp9SsData_2Tl2SLayers) {
   packet_->frameType = kVideoFrameKey;
   packet_->width = 352;
   packet_->height = 288;
-  packet_->codecSpecificHeader.codecHeader.VP9.spatial_idx = 0;
-  packet_->codecSpecificHeader.codecHeader.VP9.picture_id = 5;
-  packet_->codecSpecificHeader.codecHeader.VP9.temporal_idx = 0;
-  packet_->codecSpecificHeader.codecHeader.VP9.temporal_up_switch = false;
-  packet_->codecSpecificHeader.codecHeader.VP9.ss_data_available = true;
-  packet_->codecSpecificHeader.codecHeader.VP9.gof.SetGofInfoVP9(
+  packet_->video_header.codecHeader.VP9.spatial_idx = 0;
+  packet_->video_header.codecHeader.VP9.picture_id = 5;
+  packet_->video_header.codecHeader.VP9.temporal_idx = 0;
+  packet_->video_header.codecHeader.VP9.temporal_up_switch = false;
+  packet_->video_header.codecHeader.VP9.ss_data_available = true;
+  packet_->video_header.codecHeader.VP9.gof.SetGofInfoVP9(
       kTemporalStructureMode2);  // kTemporalStructureMode3: 0-1-0-1..
   EXPECT_EQ(kCompleteSession, jitter_buffer_->InsertPacket(*packet_, &re));
 
@@ -1124,7 +1179,7 @@ TEST_F(TestBasicJitterBuffer, PacketLossWithSelectiveErrorsThresholdCheck) {
   EXPECT_EQ(kIncomplete,
             jitter_buffer_->InsertPacket(*packet_, &retransmitted));
   uint32_t timestamp = 0;
-  EXPECT_FALSE(jitter_buffer_->NextCompleteTimestamp(0, &timestamp));
+  EXPECT_EQ(jitter_buffer_->NextCompleteFrame(0), nullptr);
   EXPECT_FALSE(jitter_buffer_->NextMaybeIncompleteTimestamp(&timestamp));
 
   packet_->isFirstPacket = false;
@@ -1132,7 +1187,7 @@ TEST_F(TestBasicJitterBuffer, PacketLossWithSelectiveErrorsThresholdCheck) {
     packet_->seqNum++;
     EXPECT_EQ(kIncomplete,
               jitter_buffer_->InsertPacket(*packet_, &retransmitted));
-    EXPECT_FALSE(jitter_buffer_->NextCompleteTimestamp(0, &timestamp));
+    EXPECT_EQ(jitter_buffer_->NextCompleteFrame(0), nullptr);
     EXPECT_FALSE(jitter_buffer_->NextMaybeIncompleteTimestamp(&timestamp));
   }
 
@@ -1157,7 +1212,7 @@ TEST_F(TestBasicJitterBuffer, PacketLossWithSelectiveErrorsThresholdCheck) {
 
   EXPECT_EQ(kDecodableSession,
             jitter_buffer_->InsertPacket(*packet_, &retransmitted));
-  EXPECT_FALSE(jitter_buffer_->NextCompleteTimestamp(0, &timestamp));
+  EXPECT_EQ(jitter_buffer_->NextCompleteFrame(0), nullptr);
   EXPECT_FALSE(jitter_buffer_->NextMaybeIncompleteTimestamp(&timestamp));
 
   // Insert second frame
@@ -1166,7 +1221,7 @@ TEST_F(TestBasicJitterBuffer, PacketLossWithSelectiveErrorsThresholdCheck) {
 
   EXPECT_EQ(kDecodableSession,
             jitter_buffer_->InsertPacket(*packet_, &retransmitted));
-  EXPECT_FALSE(jitter_buffer_->NextCompleteTimestamp(0, &timestamp));
+  EXPECT_EQ(jitter_buffer_->NextCompleteFrame(0), nullptr);
   EXPECT_TRUE(jitter_buffer_->NextMaybeIncompleteTimestamp(&timestamp));
 
   packet_->isFirstPacket = false;
@@ -1174,14 +1229,14 @@ TEST_F(TestBasicJitterBuffer, PacketLossWithSelectiveErrorsThresholdCheck) {
     packet_->seqNum++;
     EXPECT_EQ(kDecodableSession,
               jitter_buffer_->InsertPacket(*packet_, &retransmitted));
-    EXPECT_FALSE(jitter_buffer_->NextCompleteTimestamp(0, &timestamp));
+    EXPECT_EQ(jitter_buffer_->NextCompleteFrame(0), nullptr);
     EXPECT_TRUE(jitter_buffer_->NextMaybeIncompleteTimestamp(&timestamp));
   }
 
   packet_->seqNum++;
   EXPECT_EQ(kDecodableSession,
             jitter_buffer_->InsertPacket(*packet_, &retransmitted));
-  EXPECT_FALSE(jitter_buffer_->NextCompleteTimestamp(0, &timestamp));
+  EXPECT_EQ(jitter_buffer_->NextCompleteFrame(0), nullptr);
   EXPECT_TRUE(jitter_buffer_->NextMaybeIncompleteTimestamp(&timestamp));
 
   frame_out = DecodeIncompleteFrame();
@@ -1223,7 +1278,7 @@ TEST_F(TestBasicJitterBuffer, PacketLossWithSelectiveErrorsIncompleteKey) {
   EXPECT_EQ(kIncomplete,
             jitter_buffer_->InsertPacket(*packet_, &retransmitted));
   uint32_t timestamp;
-  EXPECT_FALSE(jitter_buffer_->NextCompleteTimestamp(0, &timestamp));
+  EXPECT_EQ(jitter_buffer_->NextCompleteFrame(0), nullptr);
   EXPECT_FALSE(jitter_buffer_->NextMaybeIncompleteTimestamp(&timestamp));
 
   // Insert second frame - an incomplete key frame.
@@ -1234,7 +1289,7 @@ TEST_F(TestBasicJitterBuffer, PacketLossWithSelectiveErrorsIncompleteKey) {
 
   EXPECT_EQ(kIncomplete,
             jitter_buffer_->InsertPacket(*packet_, &retransmitted));
-  EXPECT_FALSE(jitter_buffer_->NextCompleteTimestamp(0, &timestamp));
+  EXPECT_EQ(jitter_buffer_->NextCompleteFrame(0), nullptr);
   EXPECT_FALSE(jitter_buffer_->NextMaybeIncompleteTimestamp(&timestamp));
 
   // Insert a few more packets. Make sure we're waiting for the key frame to be
@@ -1244,7 +1299,7 @@ TEST_F(TestBasicJitterBuffer, PacketLossWithSelectiveErrorsIncompleteKey) {
     packet_->seqNum++;
     EXPECT_EQ(kIncomplete,
               jitter_buffer_->InsertPacket(*packet_, &retransmitted));
-    EXPECT_FALSE(jitter_buffer_->NextCompleteTimestamp(0, &timestamp));
+    EXPECT_EQ(jitter_buffer_->NextCompleteFrame(0), nullptr);
     EXPECT_FALSE(jitter_buffer_->NextMaybeIncompleteTimestamp(&timestamp));
   }
 
@@ -1287,7 +1342,7 @@ TEST_F(TestBasicJitterBuffer, PacketLossWithSelectiveErrorsMissingFirstPacket) {
   EXPECT_EQ(kIncomplete,
             jitter_buffer_->InsertPacket(*packet_, &retransmitted));
   uint32_t timestamp;
-  EXPECT_FALSE(jitter_buffer_->NextCompleteTimestamp(0, &timestamp));
+  EXPECT_EQ(jitter_buffer_->NextCompleteFrame(0), nullptr);
   EXPECT_FALSE(jitter_buffer_->NextMaybeIncompleteTimestamp(&timestamp));
 
   // Insert second frame with the first packet missing. Make sure we're waiting
@@ -1297,14 +1352,14 @@ TEST_F(TestBasicJitterBuffer, PacketLossWithSelectiveErrorsMissingFirstPacket) {
 
   EXPECT_EQ(kIncomplete,
             jitter_buffer_->InsertPacket(*packet_, &retransmitted));
-  EXPECT_FALSE(jitter_buffer_->NextCompleteTimestamp(0, &timestamp));
+  EXPECT_EQ(jitter_buffer_->NextCompleteFrame(0), nullptr);
   EXPECT_FALSE(jitter_buffer_->NextMaybeIncompleteTimestamp(&timestamp));
 
   for (int i = 0; i < 5; ++i) {
     packet_->seqNum++;
     EXPECT_EQ(kIncomplete,
               jitter_buffer_->InsertPacket(*packet_, &retransmitted));
-    EXPECT_FALSE(jitter_buffer_->NextCompleteTimestamp(0, &timestamp));
+    EXPECT_EQ(jitter_buffer_->NextCompleteFrame(0), nullptr);
     EXPECT_FALSE(jitter_buffer_->NextMaybeIncompleteTimestamp(&timestamp));
   }
 
@@ -1313,7 +1368,7 @@ TEST_F(TestBasicJitterBuffer, PacketLossWithSelectiveErrorsMissingFirstPacket) {
   packet_->seqNum -= 6;
   EXPECT_EQ(kDecodableSession,
             jitter_buffer_->InsertPacket(*packet_, &retransmitted));
-  EXPECT_FALSE(jitter_buffer_->NextCompleteTimestamp(0, &timestamp));
+  EXPECT_EQ(jitter_buffer_->NextCompleteFrame(0), nullptr);
   EXPECT_TRUE(jitter_buffer_->NextMaybeIncompleteTimestamp(&timestamp));
 
   frame_out = DecodeIncompleteFrame();
@@ -1334,9 +1389,10 @@ TEST_F(TestBasicJitterBuffer, DiscontinuousStreamWhenDecodingWithErrors) {
   EXPECT_EQ(kCompleteSession,
             jitter_buffer_->InsertPacket(*packet_, &retransmitted));
   uint32_t next_timestamp;
-  EXPECT_TRUE(jitter_buffer_->NextCompleteTimestamp(0, &next_timestamp));
-  EXPECT_EQ(packet_->timestamp, next_timestamp);
-  VCMEncodedFrame* frame = jitter_buffer_->ExtractAndSetDecode(next_timestamp);
+  VCMEncodedFrame* frame = jitter_buffer_->NextCompleteFrame(0);
+  EXPECT_NE(frame, nullptr);
+  EXPECT_EQ(packet_->timestamp, frame->TimeStamp());
+  frame = jitter_buffer_->ExtractAndSetDecode(frame->TimeStamp());
   EXPECT_TRUE(frame != NULL);
   jitter_buffer_->ReleaseFrame(frame);
 
@@ -1360,7 +1416,7 @@ TEST_F(TestBasicJitterBuffer, DiscontinuousStreamWhenDecodingWithErrors) {
   packet_->timestamp = timestamp_;
   EXPECT_EQ(kDecodableSession,
             jitter_buffer_->InsertPacket(*packet_, &retransmitted));
-  EXPECT_FALSE(jitter_buffer_->NextCompleteTimestamp(0, &next_timestamp));
+  EXPECT_EQ(jitter_buffer_->NextCompleteFrame(0), nullptr);
   EXPECT_TRUE(jitter_buffer_->NextMaybeIncompleteTimestamp(&next_timestamp));
   EXPECT_EQ(packet_->timestamp - 33 * 90, next_timestamp);
 }
@@ -2036,7 +2092,9 @@ TEST_F(TestBasicJitterBuffer, H264IncompleteNalu) {
   // Test to insert empty packet.
   seq_num_++;
   timestamp_ += 33 * 90;
-  VCMPacket emptypacket(data_, 0, seq_num_, timestamp_, true);
+  WebRtcRTPHeader rtpHeader;
+  memset(&rtpHeader, 0, sizeof(rtpHeader));
+  VCMPacket emptypacket(data_, 0, rtpHeader);
   emptypacket.seqNum = seq_num_;
   emptypacket.timestamp = timestamp_;
   emptypacket.frameType = kVideoFrameKey;
@@ -2395,9 +2453,11 @@ TEST_F(TestJitterBufferNack, VerifyRetransmittedFlag) {
   EXPECT_FALSE(DecodeCompleteFrame());
   bool extended = false;
   std::vector<uint16_t> nack_list = jitter_buffer_->GetNackList(&extended);
+  uint16_t seq_num;
   EXPECT_EQ(1u, nack_list.size());
+  seq_num = nack_list[0];
   stream_generator_->PopPacket(&packet, 0);
-  EXPECT_EQ(packet.seqNum, nack_list[0]);
+  EXPECT_EQ(packet.seqNum, seq_num);
   EXPECT_EQ(kCompleteSession,
             jitter_buffer_->InsertPacket(packet, &retransmitted));
   EXPECT_TRUE(retransmitted);
@@ -2414,10 +2474,12 @@ TEST_F(TestJitterBufferNack, UseNackToRecoverFirstKeyFrame) {
   EXPECT_FALSE(DecodeCompleteFrame());
   bool extended = false;
   std::vector<uint16_t> nack_list = jitter_buffer_->GetNackList(&extended);
-  EXPECT_EQ(1u, nack_list.size());
+  uint16_t seq_num;
+  ASSERT_EQ(1u, nack_list.size());
+  seq_num = nack_list[0];
   VCMPacket packet;
   stream_generator_->GetPacket(&packet, 0);
-  EXPECT_EQ(packet.seqNum, nack_list[0]);
+  EXPECT_EQ(packet.seqNum, seq_num);
 }
 
 TEST_F(TestJitterBufferNack, UseNackToRecoverFirstKeyFrameSecondInQueue) {
@@ -2439,9 +2501,11 @@ TEST_F(TestJitterBufferNack, UseNackToRecoverFirstKeyFrameSecondInQueue) {
   EXPECT_FALSE(DecodeCompleteFrame());
   bool extended = false;
   std::vector<uint16_t> nack_list = jitter_buffer_->GetNackList(&extended);
-  EXPECT_EQ(1u, nack_list.size());
+  uint16_t seq_num;
+  ASSERT_EQ(1u, nack_list.size());
+  seq_num = nack_list[0];
   stream_generator_->GetPacket(&packet, 0);
-  EXPECT_EQ(packet.seqNum, nack_list[0]);
+  EXPECT_EQ(packet.seqNum, seq_num);
 }
 
 TEST_F(TestJitterBufferNack, NormalOperation) {
@@ -2472,9 +2536,10 @@ TEST_F(TestJitterBufferNack, NormalOperation) {
   EXPECT_FALSE(DecodeCompleteFrame());
   EXPECT_FALSE(DecodeIncompleteFrame());
   bool request_key_frame = false;
+
+  // Verify the NACK list.
   std::vector<uint16_t> nack_list =
       jitter_buffer_->GetNackList(&request_key_frame);
-  // Verify the NACK list.
   const size_t kExpectedNackSize = 9;
   ASSERT_EQ(kExpectedNackSize, nack_list.size());
   for (size_t i = 0; i < nack_list.size(); ++i)

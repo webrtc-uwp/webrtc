@@ -60,10 +60,6 @@ AudioEncoderG722::AudioEncoderG722(const CodecInst& codec_inst)
 
 AudioEncoderG722::~AudioEncoderG722() = default;
 
-size_t AudioEncoderG722::MaxEncodedBytes() const {
-  return SamplesPerChannel() / 2 * num_channels_;
-}
-
 int AudioEncoderG722::SampleRateHz() const {
   return kSampleRateHz;
 }
@@ -149,6 +145,7 @@ AudioEncoder::EncodedInfo AudioEncoderG722::EncodeImpl(
       });
   info.encoded_timestamp = first_timestamp_in_buffer_;
   info.payload_type = payload_type_;
+  info.encoder_type = CodecType::kG722;
   return info;
 }
 

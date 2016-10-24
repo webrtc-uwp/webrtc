@@ -10,10 +10,13 @@
 
 #include "webrtc/p2p/base/turnserver.h"
 
+#include <tuple>  // for std::tie
+
 #include "webrtc/p2p/base/asyncstuntcpsocket.h"
 #include "webrtc/p2p/base/common.h"
 #include "webrtc/p2p/base/packetsocketfactory.h"
 #include "webrtc/p2p/base/stun.h"
+#include "webrtc/base/bind.h"
 #include "webrtc/base/bytebuffer.h"
 #include "webrtc/base/helpers.h"
 #include "webrtc/base/logging.h"
@@ -35,7 +38,7 @@ static const int kMinChannelNumber = 0x4000;
 static const int kMaxChannelNumber = 0x7FFF;
 
 static const size_t kNonceKeySize = 16;
-static const size_t kNonceSize = 40;
+static const size_t kNonceSize = 48;
 
 static const size_t TURN_CHANNEL_HEADER_SIZE = 4U;
 
@@ -124,11 +127,6 @@ TurnServer::TurnServer(rtc::Thread* thread)
 }
 
 TurnServer::~TurnServer() {
-  for (AllocationMap::iterator it = allocations_.begin();
-       it != allocations_.end(); ++it) {
-    delete it->second;
-  }
-
   for (InternalSocketMap::iterator it = server_sockets_.begin();
        it != server_sockets_.end(); ++it) {
     rtc::AsyncPacketSocket* socket = it->first;
@@ -216,7 +214,7 @@ void TurnServer::OnInternalPacket(rtc::AsyncPacketSocket* socket,
 void TurnServer::HandleStunMessage(TurnServerConnection* conn, const char* data,
                                    size_t size) {
   TurnMessage msg;
-  rtc::ByteBuffer buf(data, size);
+  rtc::ByteBufferReader buf(data, size);
   if (!msg.Read(&buf) || (buf.Length() > 0)) {
     LOG(LS_WARNING) << "Received invalid STUN message";
     return;
@@ -392,12 +390,13 @@ void TurnServer::HandleAllocateRequest(TurnServerConnection* conn,
   }
 }
 
-std::string TurnServer::GenerateNonce(uint32_t now) const {
+std::string TurnServer::GenerateNonce(int64_t now) const {
   // Generate a nonce of the form hex(now + HMAC-MD5(nonce_key_, now))
   std::string input(reinterpret_cast<const char*>(&now), sizeof(now));
   std::string nonce = rtc::hex_encode(input.c_str(), input.size());
   nonce += rtc::ComputeHmac(rtc::DIGEST_MD5, nonce_key_, input);
   ASSERT(nonce.size() == kNonceSize);
+
   return nonce;
 }
 
@@ -408,7 +407,7 @@ bool TurnServer::ValidateNonce(const std::string& nonce) const {
   }
 
   // Decode the timestamp.
-  uint32_t then;
+  int64_t then;
   char* p = reinterpret_cast<char*>(&then);
   size_t len = rtc::hex_decode(p, sizeof(then),
       nonce.substr(0, sizeof(then) * 2));
@@ -423,12 +422,12 @@ bool TurnServer::ValidateNonce(const std::string& nonce) const {
   }
 
   // Validate the timestamp.
-  return rtc::TimeSince(then) < kNonceTimeout;
+  return rtc::TimeMillis() - then < kNonceTimeout;
 }
 
 TurnServerAllocation* TurnServer::FindAllocation(TurnServerConnection* conn) {
   AllocationMap::const_iterator it = allocations_.find(*conn);
-  return (it != allocations_.end()) ? it->second : NULL;
+  return (it != allocations_.end()) ? it->second.get() : nullptr;
 }
 
 TurnServerAllocation* TurnServer::CreateAllocation(TurnServerConnection* conn,
@@ -444,7 +443,7 @@ TurnServerAllocation* TurnServer::CreateAllocation(TurnServerConnection* conn,
   TurnServerAllocation* allocation = new TurnServerAllocation(this,
       thread_, *conn, external_socket, key);
   allocation->SignalDestroyed.connect(this, &TurnServer::OnAllocationDestroyed);
-  allocations_[*conn] = allocation;
+  allocations_[*conn].reset(allocation);
   return allocation;
 }
 
@@ -464,7 +463,7 @@ void TurnServer::SendErrorResponseWithRealmAndNonce(
   TurnMessage resp;
   InitErrorResponse(msg, code, reason, &resp);
 
-  uint32_t timestamp = rtc::Time();
+  int64_t timestamp = rtc::TimeMillis();
   if (ts_for_next_nonce_) {
     timestamp = ts_for_next_nonce_;
     ts_for_next_nonce_ = 0;
@@ -488,7 +487,7 @@ void TurnServer::SendErrorResponseWithAlternateServer(
 }
 
 void TurnServer::SendStun(TurnServerConnection* conn, StunMessage* msg) {
-  rtc::ByteBuffer buf;
+  rtc::ByteBufferWriter buf;
   // Add a SOFTWARE attribute if one is set.
   if (!software_.empty()) {
     VERIFY(msg->AddAttribute(
@@ -499,7 +498,7 @@ void TurnServer::SendStun(TurnServerConnection* conn, StunMessage* msg) {
 }
 
 void TurnServer::Send(TurnServerConnection* conn,
-                      const rtc::ByteBuffer& buf) {
+                      const rtc::ByteBufferWriter& buf) {
   rtc::PacketOptions options;
   conn->socket()->SendTo(buf.Data(), buf.Length(), conn->src(), options);
 }
@@ -508,16 +507,19 @@ void TurnServer::OnAllocationDestroyed(TurnServerAllocation* allocation) {
   // Removing the internal socket if the connection is not udp.
   rtc::AsyncPacketSocket* socket = allocation->conn()->socket();
   InternalSocketMap::iterator iter = server_sockets_.find(socket);
-  ASSERT(iter != server_sockets_.end());
   // Skip if the socket serving this allocation is UDP, as this will be shared
   // by all allocations.
-  if (iter->second != cricket::PROTO_UDP) {
+  // Note: We may not find a socket if it's a TCP socket that was closed, and
+  // the allocation is only now timing out.
+  if (iter != server_sockets_.end() && iter->second != cricket::PROTO_UDP) {
     DestroyInternalSocket(socket);
   }
 
   AllocationMap::iterator it = allocations_.find(*(allocation->conn()));
-  if (it != allocations_.end())
+  if (it != allocations_.end()) {
+    it->second.release();
     allocations_.erase(it);
+  }
 }
 
 #if defined WINRT
@@ -528,11 +530,19 @@ void TurnServer::DestroyInternalSocket(rtc::AsyncPacketSocket* socket) {
   InternalSocketMap::iterator iter = server_sockets_.find(socket);
   if (iter != server_sockets_.end()) {
     rtc::AsyncPacketSocket* socket = iter->first;
-    // We must destroy the socket async to avoid invalidating the sigslot
-    // callback list iterator inside a sigslot callback.
-    rtc::Thread::Current()->Dispose(socket);
     server_sockets_.erase(iter);
+    // We must destroy the socket async to avoid invalidating the sigslot
+    // callback list iterator inside a sigslot callback. (In other words,
+    // deleting an object from within a callback from that object).
+    sockets_to_delete_.push_back(
+        std::unique_ptr<rtc::AsyncPacketSocket>(socket));
+    invoker_.AsyncInvoke<void>(RTC_FROM_HERE, rtc::Thread::Current(),
+                               rtc::Bind(&TurnServer::FreeSockets, this));
   }
+}
+
+void TurnServer::FreeSockets() {
+  sockets_to_delete_.clear();
 }
 
 TurnServerConnection::TurnServerConnection(const rtc::SocketAddress& src,
@@ -549,7 +559,7 @@ bool TurnServerConnection::operator==(const TurnServerConnection& c) const {
 }
 
 bool TurnServerConnection::operator<(const TurnServerConnection& c) const {
-  return src_ < c.src_ || dst_ < c.dst_ || proto_ < c.proto_;
+  return std::tie(src_, dst_, proto_) < std::tie(c.src_, c.dst_, c.proto_);
 }
 
 std::string TurnServerConnection::ToString() const {
@@ -634,7 +644,8 @@ void TurnServerAllocation::HandleAllocateRequest(const TurnMessage* msg) {
 
   // Figure out the lifetime and start the allocation timer.
   int lifetime_secs = ComputeLifetime(msg);
-  thread_->PostDelayed(lifetime_secs * 1000, this, MSG_ALLOCATION_TIMEOUT);
+  thread_->PostDelayed(RTC_FROM_HERE, lifetime_secs * 1000, this,
+                       MSG_ALLOCATION_TIMEOUT);
 
   LOG_J(LS_INFO, this) << "Created allocation, lifetime=" << lifetime_secs;
 
@@ -662,7 +673,8 @@ void TurnServerAllocation::HandleRefreshRequest(const TurnMessage* msg) {
 
   // Reset the expiration timer.
   thread_->Clear(this, MSG_ALLOCATION_TIMEOUT);
-  thread_->PostDelayed(lifetime_secs * 1000, this, MSG_ALLOCATION_TIMEOUT);
+  thread_->PostDelayed(RTC_FROM_HERE, lifetime_secs * 1000, this,
+                       MSG_ALLOCATION_TIMEOUT);
 
   LOG_J(LS_INFO, this) << "Refreshed allocation, lifetime=" << lifetime_secs;
 
@@ -797,12 +809,13 @@ void TurnServerAllocation::OnExternalPacket(
   Channel* channel = FindChannel(addr);
   if (channel) {
     // There is a channel bound to this address. Send as a channel message.
-    rtc::ByteBuffer buf;
+    rtc::ByteBufferWriter buf;
     buf.WriteUInt16(channel->id());
     buf.WriteUInt16(static_cast<uint16_t>(size));
     buf.WriteBytes(data, size);
     server_->Send(&conn_, buf);
-  } else if (HasPermission(addr.ipaddr())) {
+  } else if (!server_->enable_permission_checks_ ||
+             HasPermission(addr.ipaddr())) {
     // No channel, but a permission exists. Send as a data indication.
     TurnMessage msg;
     msg.SetType(TURN_DATA_INDICATION);
@@ -821,10 +834,10 @@ void TurnServerAllocation::OnExternalPacket(
 
 int TurnServerAllocation::ComputeLifetime(const TurnMessage* msg) {
   // Return the smaller of our default lifetime and the requested lifetime.
-  uint32_t lifetime = kDefaultAllocationTimeout / 1000;  // convert to seconds
+  int lifetime = kDefaultAllocationTimeout / 1000;  // convert to seconds
   const StunUInt32Attribute* lifetime_attr = msg->GetUInt32(STUN_ATTR_LIFETIME);
-  if (lifetime_attr && lifetime_attr->value() < lifetime) {
-    lifetime = lifetime_attr->value();
+  if (lifetime_attr && static_cast<int>(lifetime_attr->value()) < lifetime) {
+    lifetime = static_cast<int>(lifetime_attr->value());
   }
   return lifetime;
 }
@@ -927,7 +940,8 @@ TurnServerAllocation::Permission::~Permission() {
 
 void TurnServerAllocation::Permission::Refresh() {
   thread_->Clear(this, MSG_ALLOCATION_TIMEOUT);
-  thread_->PostDelayed(kPermissionTimeout, this, MSG_ALLOCATION_TIMEOUT);
+  thread_->PostDelayed(RTC_FROM_HERE, kPermissionTimeout, this,
+                       MSG_ALLOCATION_TIMEOUT);
 }
 
 void TurnServerAllocation::Permission::OnMessage(rtc::Message* msg) {
@@ -948,7 +962,8 @@ TurnServerAllocation::Channel::~Channel() {
 
 void TurnServerAllocation::Channel::Refresh() {
   thread_->Clear(this, MSG_ALLOCATION_TIMEOUT);
-  thread_->PostDelayed(kChannelTimeout, this, MSG_ALLOCATION_TIMEOUT);
+  thread_->PostDelayed(RTC_FROM_HERE, kChannelTimeout, this,
+                       MSG_ALLOCATION_TIMEOUT);
 }
 
 void TurnServerAllocation::Channel::OnMessage(rtc::Message* msg) {

@@ -12,7 +12,6 @@
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/thread.h"
-#include "webrtc/media/base/fakecapturemanager.h"
 #include "webrtc/media/base/fakemediaengine.h"
 #include "webrtc/media/base/fakevideocapturer.h"
 #include "webrtc/media/base/testutils.h"
@@ -23,14 +22,12 @@
 namespace cricket {
 
 static const AudioCodec kAudioCodecs[] = {
-  AudioCodec(97, "voice", 1, 2, 3, 0),
-  AudioCodec(111, "OPUS", 48000, 32000, 2, 0),
+    AudioCodec(97, "voice", 1, 2, 3), AudioCodec(111, "OPUS", 48000, 32000, 2),
 };
 
 static const VideoCodec kVideoCodecs[] = {
-  VideoCodec(99, "H264", 100, 200, 300, 0),
-  VideoCodec(100, "VP8", 100, 200, 300, 0),
-  VideoCodec(96, "rtx", 100, 200, 300, 0),
+    VideoCodec(99, "H264", 100, 200, 300),
+    VideoCodec(100, "VP8", 100, 200, 300), VideoCodec(96, "rtx", 100, 200, 300),
 };
 
 class ChannelManagerTest : public testing::Test {
@@ -38,10 +35,8 @@ class ChannelManagerTest : public testing::Test {
   ChannelManagerTest()
       : fme_(new cricket::FakeMediaEngine()),
         fdme_(new cricket::FakeDataEngine()),
-        fcm_(new cricket::FakeCaptureManager()),
         cm_(new cricket::ChannelManager(fme_,
                                         fdme_,
-                                        fcm_,
                                         rtc::Thread::Current())),
         fake_call_(webrtc::Call::Config()),
         fake_mc_(cm_, &fake_call_),
@@ -57,15 +52,14 @@ class ChannelManagerTest : public testing::Test {
     delete transport_controller_;
     delete cm_;
     cm_ = NULL;
-    fcm_ = NULL;
     fdme_ = NULL;
     fme_ = NULL;
   }
 
+  rtc::Thread network_;
   rtc::Thread worker_;
   cricket::FakeMediaEngine* fme_;
   cricket::FakeDataEngine* fdme_;
-  cricket::FakeCaptureManager* fcm_;
   cricket::ChannelManager* cm_;
   cricket::FakeCall fake_call_;
   cricket::FakeMediaController fake_mc_;
@@ -84,14 +78,18 @@ TEST_F(ChannelManagerTest, StartupShutdown) {
 
 // Test that we startup/shutdown properly with a worker thread.
 TEST_F(ChannelManagerTest, StartupShutdownOnThread) {
+  network_.Start();
   worker_.Start();
   EXPECT_FALSE(cm_->initialized());
   EXPECT_EQ(rtc::Thread::Current(), cm_->worker_thread());
+  EXPECT_TRUE(cm_->set_network_thread(&network_));
+  EXPECT_EQ(&network_, cm_->network_thread());
   EXPECT_TRUE(cm_->set_worker_thread(&worker_));
   EXPECT_EQ(&worker_, cm_->worker_thread());
   EXPECT_TRUE(cm_->Init());
   EXPECT_TRUE(cm_->initialized());
-  // Setting the worker thread while initialized should fail.
+  // Setting the network or worker thread while initialized should fail.
+  EXPECT_FALSE(cm_->set_network_thread(rtc::Thread::Current()));
   EXPECT_FALSE(cm_->set_worker_thread(rtc::Thread::Current()));
   cm_->Terminate();
   EXPECT_FALSE(cm_->initialized());
@@ -100,16 +98,17 @@ TEST_F(ChannelManagerTest, StartupShutdownOnThread) {
 // Test that we can create and destroy a voice and video channel.
 TEST_F(ChannelManagerTest, CreateDestroyChannels) {
   EXPECT_TRUE(cm_->Init());
-  cricket::VoiceChannel* voice_channel =
-      cm_->CreateVoiceChannel(&fake_mc_, transport_controller_,
-                              cricket::CN_AUDIO, false, AudioOptions());
+  cricket::VoiceChannel* voice_channel = cm_->CreateVoiceChannel(
+      &fake_mc_, transport_controller_, cricket::CN_AUDIO, nullptr, false,
+      AudioOptions());
   EXPECT_TRUE(voice_channel != nullptr);
-  cricket::VideoChannel* video_channel =
-      cm_->CreateVideoChannel(&fake_mc_, transport_controller_,
-                              cricket::CN_VIDEO, false, VideoOptions());
+  cricket::VideoChannel* video_channel = cm_->CreateVideoChannel(
+      &fake_mc_, transport_controller_, cricket::CN_VIDEO, nullptr, false,
+      VideoOptions());
   EXPECT_TRUE(video_channel != nullptr);
-  cricket::DataChannel* data_channel = cm_->CreateDataChannel(
-      transport_controller_, cricket::CN_DATA, false, cricket::DCT_RTP);
+  cricket::DataChannel* data_channel =
+      cm_->CreateDataChannel(transport_controller_, cricket::CN_DATA, nullptr,
+                             false, cricket::DCT_RTP);
   EXPECT_TRUE(data_channel != nullptr);
   cm_->DestroyVideoChannel(video_channel);
   cm_->DestroyVoiceChannel(voice_channel);
@@ -119,22 +118,25 @@ TEST_F(ChannelManagerTest, CreateDestroyChannels) {
 
 // Test that we can create and destroy a voice and video channel with a worker.
 TEST_F(ChannelManagerTest, CreateDestroyChannelsOnThread) {
+  network_.Start();
   worker_.Start();
   EXPECT_TRUE(cm_->set_worker_thread(&worker_));
+  EXPECT_TRUE(cm_->set_network_thread(&network_));
   EXPECT_TRUE(cm_->Init());
   delete transport_controller_;
   transport_controller_ =
-      new cricket::FakeTransportController(&worker_, ICEROLE_CONTROLLING);
-  cricket::VoiceChannel* voice_channel =
-      cm_->CreateVoiceChannel(&fake_mc_, transport_controller_,
-                              cricket::CN_AUDIO, false, AudioOptions());
+      new cricket::FakeTransportController(&network_, ICEROLE_CONTROLLING);
+  cricket::VoiceChannel* voice_channel = cm_->CreateVoiceChannel(
+      &fake_mc_, transport_controller_, cricket::CN_AUDIO, nullptr, false,
+      AudioOptions());
   EXPECT_TRUE(voice_channel != nullptr);
-  cricket::VideoChannel* video_channel =
-      cm_->CreateVideoChannel(&fake_mc_, transport_controller_,
-                              cricket::CN_VIDEO, false, VideoOptions());
+  cricket::VideoChannel* video_channel = cm_->CreateVideoChannel(
+      &fake_mc_, transport_controller_, cricket::CN_VIDEO, nullptr, false,
+      VideoOptions());
   EXPECT_TRUE(video_channel != nullptr);
-  cricket::DataChannel* data_channel = cm_->CreateDataChannel(
-      transport_controller_, cricket::CN_DATA, false, cricket::DCT_RTP);
+  cricket::DataChannel* data_channel =
+      cm_->CreateDataChannel(transport_controller_, cricket::CN_DATA, nullptr,
+                             false, cricket::DCT_RTP);
   EXPECT_TRUE(data_channel != nullptr);
   cm_->DestroyVideoChannel(video_channel);
   cm_->DestroyVoiceChannel(voice_channel);
@@ -149,61 +151,27 @@ TEST_F(ChannelManagerTest, NoTransportChannelTest) {
   transport_controller_->set_fail_channel_creation(true);
   // The test is useless unless the session does not fail creating
   // cricket::TransportChannel.
-  ASSERT_TRUE(transport_controller_->CreateTransportChannel_w(
+  ASSERT_TRUE(transport_controller_->CreateTransportChannel_n(
                   "audio", cricket::ICE_CANDIDATE_COMPONENT_RTP) == nullptr);
 
-  cricket::VoiceChannel* voice_channel =
-      cm_->CreateVoiceChannel(&fake_mc_, transport_controller_,
-                              cricket::CN_AUDIO, false, AudioOptions());
+  cricket::VoiceChannel* voice_channel = cm_->CreateVoiceChannel(
+      &fake_mc_, transport_controller_, cricket::CN_AUDIO, nullptr, false,
+      AudioOptions());
   EXPECT_TRUE(voice_channel == nullptr);
-  cricket::VideoChannel* video_channel =
-      cm_->CreateVideoChannel(&fake_mc_, transport_controller_,
-                              cricket::CN_VIDEO, false, VideoOptions());
+  cricket::VideoChannel* video_channel = cm_->CreateVideoChannel(
+      &fake_mc_, transport_controller_, cricket::CN_VIDEO, nullptr, false,
+      VideoOptions());
   EXPECT_TRUE(video_channel == nullptr);
-  cricket::DataChannel* data_channel = cm_->CreateDataChannel(
-      transport_controller_, cricket::CN_DATA, false, cricket::DCT_RTP);
+  cricket::DataChannel* data_channel =
+      cm_->CreateDataChannel(transport_controller_, cricket::CN_DATA, nullptr,
+                             false, cricket::DCT_RTP);
   EXPECT_TRUE(data_channel == nullptr);
   cm_->Terminate();
 }
 
-TEST_F(ChannelManagerTest, GetSetOutputVolumeBeforeInit) {
-  int level;
-  // Before init, SetOutputVolume() remembers the volume but does not change the
-  // volume of the engine. GetOutputVolume() should fail.
-  EXPECT_EQ(-1, fme_->output_volume());
-  EXPECT_FALSE(cm_->GetOutputVolume(&level));
-  EXPECT_FALSE(cm_->SetOutputVolume(-1));  // Invalid volume.
-  EXPECT_TRUE(cm_->SetOutputVolume(99));
-  EXPECT_EQ(-1, fme_->output_volume());
-
-  // Init() will apply the remembered volume.
-  EXPECT_TRUE(cm_->Init());
-  EXPECT_TRUE(cm_->GetOutputVolume(&level));
-  EXPECT_EQ(99, level);
-  EXPECT_EQ(level, fme_->output_volume());
-
-  EXPECT_TRUE(cm_->SetOutputVolume(60));
-  EXPECT_TRUE(cm_->GetOutputVolume(&level));
-  EXPECT_EQ(60, level);
-  EXPECT_EQ(level, fme_->output_volume());
-}
-
-TEST_F(ChannelManagerTest, GetSetOutputVolume) {
-  int level;
-  EXPECT_TRUE(cm_->Init());
-  EXPECT_TRUE(cm_->GetOutputVolume(&level));
-  EXPECT_EQ(level, fme_->output_volume());
-
-  EXPECT_FALSE(cm_->SetOutputVolume(-1));  // Invalid volume.
-  EXPECT_TRUE(cm_->SetOutputVolume(60));
-  EXPECT_EQ(60, fme_->output_volume());
-  EXPECT_TRUE(cm_->GetOutputVolume(&level));
-  EXPECT_EQ(60, level);
-}
-
 TEST_F(ChannelManagerTest, SetVideoRtxEnabled) {
   std::vector<VideoCodec> codecs;
-  const VideoCodec rtx_codec(96, "rtx", 0, 0, 0, 0);
+  const VideoCodec rtx_codec(96, "rtx", 0, 0, 0);
 
   // By default RTX is disabled.
   cm_->GetSupportedVideoCodecs(&codecs);

@@ -10,11 +10,12 @@
 
 #include "webrtc/modules/remote_bitrate_estimator/transport_feedback_adapter.h"
 
+#include <algorithm>
 #include <limits>
 
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
-#include "webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.h"
+#include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
 #include "webrtc/modules/utility/include/process_thread.h"
 
@@ -25,6 +26,17 @@ const int64_t kSendTimeHistoryWindowMs = 10000;
 const int64_t kBaseTimestampScaleFactor =
     rtcp::TransportFeedback::kDeltaScaleFactor * (1 << 8);
 const int64_t kBaseTimestampRangeSizeUs = kBaseTimestampScaleFactor * (1 << 24);
+
+class PacketInfoComparator {
+ public:
+  inline bool operator()(const PacketInfo& lhs, const PacketInfo& rhs) {
+    if (lhs.arrival_time_ms != rhs.arrival_time_ms)
+      return lhs.arrival_time_ms < rhs.arrival_time_ms;
+    if (lhs.send_time_ms != rhs.send_time_ms)
+      return lhs.send_time_ms < rhs.send_time_ms;
+    return lhs.sequence_number < rhs.sequence_number;
+  }
+};
 
 TransportFeedbackAdapter::TransportFeedbackAdapter(
     BitrateController* bitrate_controller,
@@ -47,9 +59,9 @@ void TransportFeedbackAdapter::SetBitrateEstimator(
 
 void TransportFeedbackAdapter::AddPacket(uint16_t sequence_number,
                                          size_t length,
-                                         bool was_paced) {
+                                         int probe_cluster_id) {
   rtc::CritScope cs(&lock_);
-  send_time_history_.AddAndRemoveOld(sequence_number, length, was_paced);
+  send_time_history_.AddAndRemoveOld(sequence_number, length, probe_cluster_id);
 }
 
 void TransportFeedbackAdapter::OnSentPacket(uint16_t sequence_number,
@@ -58,7 +70,7 @@ void TransportFeedbackAdapter::OnSentPacket(uint16_t sequence_number,
   send_time_history_.OnSentPacket(sequence_number, send_time_ms);
 }
 
-void TransportFeedbackAdapter::OnTransportFeedback(
+const std::vector<PacketInfo> TransportFeedbackAdapter::GetPacketFeedbackVector(
     const rtcp::TransportFeedback& feedback) {
   int64_t timestamp_us = feedback.GetBaseTimeUs();
   // Add timestamp deltas to a local time base selected on first packet arrival.
@@ -104,6 +116,8 @@ void TransportFeedbackAdapter::OnTransportFeedback(
       }
       ++sequence_number;
     }
+    std::sort(packet_feedback_vector.begin(), packet_feedback_vector.end(),
+              PacketInfoComparator());
     RTC_DCHECK(delta_it == delta_vec.end());
     if (failed_lookups > 0) {
       LOG(LS_WARNING) << "Failed to lookup send time for " << failed_lookups
@@ -111,7 +125,13 @@ void TransportFeedbackAdapter::OnTransportFeedback(
                       << ". Send time history too small?";
     }
   }
+  return packet_feedback_vector;
+}
 
+void TransportFeedbackAdapter::OnTransportFeedback(
+    const rtcp::TransportFeedback& feedback) {
+  const std::vector<PacketInfo> packet_feedback_vector =
+      GetPacketFeedbackVector(feedback);
   RTC_DCHECK(bitrate_estimator_.get() != nullptr);
   bitrate_estimator_->IncomingPacketFeedbackVector(packet_feedback_vector);
 }
@@ -120,6 +140,10 @@ void TransportFeedbackAdapter::OnReceiveBitrateChanged(
     const std::vector<uint32_t>& ssrcs,
     uint32_t bitrate) {
   bitrate_controller_->UpdateDelayBasedEstimate(bitrate);
+}
+
+void TransportFeedbackAdapter::OnProbeBitrate(uint32_t bitrate) {
+  bitrate_controller_->UpdateProbeBitrate(bitrate);
 }
 
 void TransportFeedbackAdapter::OnRttUpdate(int64_t avg_rtt_ms,

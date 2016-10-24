@@ -17,34 +17,28 @@
         '<(webrtc_root)/api/api.gyp:libjingle_peerconnection',
         '<(webrtc_root)/base/base_tests.gyp:rtc_base_tests_utils',
         '<(webrtc_root)/common.gyp:webrtc_common',
-        '<(webrtc_root)/webrtc.gyp:rtc_unittest_main',
+        '<(webrtc_root)/media/media.gyp:rtc_unittest_main',
         '<(webrtc_root)/pc/pc.gyp:rtc_pc',
+        '<(webrtc_root)/system_wrappers/system_wrappers.gyp:metrics_default',
       ],
-      'direct_dependent_settings': {
-        'include_dirs': [
-          '<(DEPTH)/testing/gmock/include',
-        ],
-      },
       'defines': [
         # Feature selection.
         'HAVE_SCTP',
       ],
       'sources': [
         'datachannel_unittest.cc',
-        'dtlsidentitystore_unittest.cc',
         'dtmfsender_unittest.cc',
         'fakemetricsobserver.cc',
         'fakemetricsobserver.h',
         'jsepsessiondescription_unittest.cc',
         'localaudiosource_unittest.cc',
-	'mediaconstraintsinterface_unittest.cc',
+        'mediaconstraintsinterface_unittest.cc',
         'mediastream_unittest.cc',
         'peerconnection_unittest.cc',
         'peerconnectionendtoend_unittest.cc',
         'peerconnectionfactory_unittest.cc',
         'peerconnectioninterface_unittest.cc',
-        # 'peerconnectionproxy_unittest.cc',
-        'remotevideocapturer_unittest.cc',
+        'proxy_unittest.cc',
         'rtpsenderreceiver_unittest.cc',
         'statscollector_unittest.cc',
         'test/fakeaudiocapturemodule.cc',
@@ -52,14 +46,17 @@
         'test/fakeaudiocapturemodule_unittest.cc',
         'test/fakeconstraints.h',
         'test/fakedatachannelprovider.h',
-        'test/fakedtlsidentitystore.h',
         'test/fakeperiodicvideocapturer.h',
+        'test/fakertccertificategenerator.h',
         'test/fakevideotrackrenderer.h',
+        'test/mock_datachannel.h',
+        'test/mock_peerconnection.h',
+        'test/mock_webrtcsession.h',
         'test/mockpeerconnectionobservers.h',
         'test/peerconnectiontestwrapper.h',
         'test/peerconnectiontestwrapper.cc',
         'test/testsdpstrings.h',
-        'videosource_unittest.cc',
+        'videocapturertracksource_unittest.cc',
         'videotrack_unittest.cc',
         'webrtcsdp_unittest.cc',
         'webrtcsession_unittest.cc',
@@ -73,7 +70,6 @@
         '-Wextra',
       ],
       'cflags_cc!': [
-        '-Wnon-virtual-dtor',
         '-Woverloaded-virtual',
       ],
       'msvs_disabled_warnings': [
@@ -114,6 +110,18 @@
             },
           },
         }],
+        ['use_quic==1', {
+          'dependencies': [
+            '<(DEPTH)/third_party/libquic/libquic.gyp:libquic',
+          ],
+          'sources': [
+            'quicdatachannel_unittest.cc',
+            'quicdatatransport_unittest.cc',
+          ],
+          'export_dependent_settings': [
+            '<(DEPTH)/third_party/libquic/libquic.gyp:libquic',
+          ],
+        }],
       ],  # conditions
     },  # target peerconnection_unittests
   ],  # targets
@@ -124,7 +132,7 @@
           'target_name': 'libjingle_peerconnection_android_unittest',
           'type': 'none',
           'dependencies': [
-            '<(webrtc_root)/api/api.gyp:libjingle_peerconnection_java',
+            '<(webrtc_root)/api/api_java.gyp:libjingle_peerconnection_java',
           ],
           'variables': {
             'apk_name': 'libjingle_peerconnection_android_unittest',
@@ -132,50 +140,47 @@
             'resource_dir': 'androidtests/res',
             'native_lib_target': 'libjingle_peerconnection_so',
             'is_test_apk': 1,
+            'test_type': 'instrumentation',
+            'tested_apk_path': '',
             'never_lint': 1,
           },
-          'includes': [ '../../build/java_apk.gypi' ],
+          'includes': [
+            '../../build/java_apk.gypi',
+            '../../build/android/test_runner.gypi',
+          ],
         },
       ],  # targets
     }],  # OS=="android"
-    ['OS=="ios" or (OS=="mac" and mac_deployment_target=="10.7")', {
-      'targets': [
-        {
-          'target_name': 'rtc_api_objc_tests',
-          'type': 'executable',
-          'includes': [
-            '../build/objc_common.gypi',
-          ],
-          'dependencies': [
-            '<(webrtc_root)/api/api.gyp:rtc_api_objc',
-            '<(webrtc_root)/base/base_tests.gyp:rtc_base_tests_utils',
-          ],
-          'sources': [
-            'objctests/RTCConfigurationTest.mm',
-            'objctests/RTCDataChannelConfigurationTest.mm',
-            'objctests/RTCIceCandidateTest.mm',
-            'objctests/RTCIceServerTest.mm',
-            'objctests/RTCMediaConstraintsTest.mm',
-            'objctests/RTCSessionDescriptionTest.mm',
-          ],
-          'xcode_settings': {
-            # |-ObjC| flag needed to make sure category method implementations
-            # are included:
-            # https://developer.apple.com/library/mac/qa/qa1490/_index.html
-            'OTHER_LDFLAGS': ['-ObjC'],
-          },
-        },
-      ],
-    }],  # OS=="ios"
     ['OS=="android"', {
       'targets': [
         {
           'target_name': 'peerconnection_unittests_apk_target',
           'type': 'none',
           'dependencies': [
-            '<(apk_tests_path):peerconnection_unittests_apk',
+            '<(android_tests_path):peerconnection_unittests_apk',
           ],
         },
+      ],
+      'conditions': [
+        ['test_isolation_mode != "noop"',
+          {
+            'targets': [
+              {
+                'target_name': 'peerconnection_unittests_apk_run',
+                'type': 'none',
+                'dependencies': [
+                  '<(android_tests_path):peerconnection_unittests_apk',
+                ],
+                'includes': [
+                  '../build/isolate.gypi',
+                ],
+                'sources': [
+                  'peerconnection_unittests_apk.isolate',
+                ],
+              },
+            ]
+          }
+        ],
       ],
     }],  # OS=="android"
     ['test_isolation_mode != "noop"', {

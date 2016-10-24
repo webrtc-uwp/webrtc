@@ -14,6 +14,7 @@
 #include "webrtc/base/logging.h"
 #include "webrtc/common.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/modules/audio_coding/codecs/builtin_audio_decoder_factory.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module.h"
 #include "webrtc/modules/audio_device/audio_device_impl.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
@@ -106,43 +107,6 @@ int32_t VoEBaseImpl::NeedMorePlayData(const size_t nSamples,
   return 0;
 }
 
-int VoEBaseImpl::OnDataAvailable(const int voe_channels[],
-                                 size_t number_of_voe_channels,
-                                 const int16_t* audio_data, int sample_rate,
-                                 size_t number_of_channels,
-                                 size_t number_of_frames,
-                                 int audio_delay_milliseconds, int volume,
-                                 bool key_pressed, bool need_audio_processing) {
-  if (number_of_voe_channels == 0) return 0;
-
-  if (need_audio_processing) {
-    return ProcessRecordedDataWithAPM(
-        voe_channels, number_of_voe_channels, audio_data, sample_rate,
-        number_of_channels, number_of_frames, audio_delay_milliseconds, 0,
-        volume, key_pressed);
-  }
-
-  // No need to go through the APM, demultiplex the data to each VoE channel,
-  // encode and send to the network.
-  for (size_t i = 0; i < number_of_voe_channels; ++i) {
-    // TODO(ajm): In the case where multiple channels are using the same codec
-    // rate, this path needlessly does extra conversions. We should convert once
-    // and share between channels.
-    PushCaptureData(voe_channels[i], audio_data, 16, sample_rate,
-                    number_of_channels, number_of_frames);
-  }
-
-  // Return 0 to indicate no need to change the volume.
-  return 0;
-}
-
-void VoEBaseImpl::OnData(int voe_channel, const void* audio_data,
-                         int bits_per_sample, int sample_rate,
-                         size_t number_of_channels, size_t number_of_frames) {
-  PushCaptureData(voe_channel, audio_data, bits_per_sample, sample_rate,
-                  number_of_channels, number_of_frames);
-}
-
 void VoEBaseImpl::PushCaptureData(int voe_channel, const void* audio_data,
                                   int bits_per_sample, int sample_rate,
                                   size_t number_of_channels,
@@ -211,8 +175,10 @@ int VoEBaseImpl::DeRegisterVoiceEngineObserver() {
   return 0;
 }
 
-int VoEBaseImpl::Init(AudioDeviceModule* external_adm,
-                      AudioProcessing* audioproc) {
+int VoEBaseImpl::Init(
+    AudioDeviceModule* external_adm,
+    AudioProcessing* audioproc,
+    const rtc::scoped_refptr<AudioDecoderFactory>& decoder_factory) {
   rtc::CritScope cs(shared_->crit_sec());
   WebRtcSpl_Init();
   if (shared_->statistics().Initialized()) {
@@ -229,14 +195,14 @@ int VoEBaseImpl::Init(AudioDeviceModule* external_adm,
     return -1;
 #else
     // Create the internal ADM implementation.
-#if defined (WINRT)
+#if defined(WINRT)
     // Use AudioDeviceModule::kWindowsWasapiAudio for WinRT
     shared_->set_audio_device(AudioDeviceModuleImpl::Create(
         VoEId(shared_->instance_id(), -1), AudioDeviceModule::kWindowsWasapiAudio));
-#else
-    shared_->set_audio_device(AudioDeviceModuleImpl::Create(
+#else // defined(WINRT)
+    shared_->set_audio_device(AudioDeviceModule::Create(
         VoEId(shared_->instance_id(), -1), shared_->audio_device_layer()));
-#endif
+#endif // defined(WINRT)
 
     if (shared_->audio_device() == nullptr) {
       shared_->SetLastError(VE_NO_MEMORY, kTraceCritical,
@@ -381,6 +347,11 @@ int VoEBaseImpl::Init(AudioDeviceModule* external_adm,
   }
 #endif
 
+  if (decoder_factory)
+    decoder_factory_ = decoder_factory;
+  else
+    decoder_factory_ = CreateBuiltinAudioDecoderFactory();
+
   return shared_->statistics().SetInitialized();
 }
 
@@ -396,7 +367,8 @@ int VoEBaseImpl::CreateChannel() {
     return -1;
   }
 
-  voe::ChannelOwner channel_owner = shared_->channel_manager().CreateChannel();
+  voe::ChannelOwner channel_owner =
+      shared_->channel_manager().CreateChannel(decoder_factory_);
   return InitializeChannel(&channel_owner);
 }
 
@@ -407,7 +379,7 @@ int VoEBaseImpl::CreateChannel(const Config& config) {
     return -1;
   }
   voe::ChannelOwner channel_owner =
-      shared_->channel_manager().CreateChannel(config);
+      shared_->channel_manager().CreateChannel(config, decoder_factory_);
   return InitializeChannel(&channel_owner);
 }
 
@@ -626,11 +598,14 @@ int32_t VoEBaseImpl::StopPlayout() {
 }
 
 int32_t VoEBaseImpl::StartSend() {
-  if (!shared_->audio_device()->Recording()) {
+  if (!shared_->audio_device()->RecordingIsInitialized() &&
+      !shared_->audio_device()->Recording()) {
     if (shared_->audio_device()->InitRecording() != 0) {
       LOG_F(LS_ERROR) << "Failed to initialize recording";
       return -1;
     }
+  }
+  if (!shared_->audio_device()->Recording()) {
     if (shared_->audio_device()->StartRecording() != 0) {
       LOG_F(LS_ERROR) << "Failed to start recording";
       return -1;

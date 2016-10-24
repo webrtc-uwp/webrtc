@@ -13,9 +13,9 @@
 #include <algorithm>
 
 #include "webrtc/base/checks.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "webrtc/system_wrappers/include/metrics.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
 
 namespace webrtc {
 namespace {
@@ -181,7 +181,7 @@ void CallStats::UpdateHistograms() {
       (clock_->TimeInMilliseconds() - time_of_first_rtt_ms_) / 1000;
   if (elapsed_sec >= metrics::kMinRunTimeInSeconds) {
     int64_t avg_rtt_ms = (sum_avg_rtt_ms_ + num_avg_rtt_ / 2) / num_avg_rtt_;
-    RTC_HISTOGRAM_COUNTS_10000(
+    RTC_LOGGED_HISTOGRAM_COUNTS_10000(
         "WebRTC.Video.AverageRoundTripTimeInMilliseconds", avg_rtt_ms);
   }
 }

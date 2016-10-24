@@ -8,16 +8,12 @@
 
 import("../../build/webrtc.gni")
 
-source_set("video_coding") {
+rtc_source_set("video_coding") {
   sources = [
-    "bitrate_adjuster.cc",
-    "bitrate_adjuster.h",
     "codec_database.cc",
     "codec_database.h",
     "codec_timer.cc",
     "codec_timer.h",
-    "content_metrics_processing.cc",
-    "content_metrics_processing.h",
     "decoding_state.cc",
     "decoding_state.h",
     "encoded_frame.cc",
@@ -25,10 +21,16 @@ source_set("video_coding") {
     "fec_tables_xor.h",
     "frame_buffer.cc",
     "frame_buffer.h",
+    "frame_buffer2.cc",
+    "frame_buffer2.h",
+    "frame_object.cc",
+    "frame_object.h",
     "generic_decoder.cc",
     "generic_decoder.h",
     "generic_encoder.cc",
     "generic_encoder.h",
+    "histogram.cc",
+    "histogram.h",
     "include/video_coding.h",
     "include/video_coding_defines.h",
     "inter_frame_delay.cc",
@@ -44,13 +46,20 @@ source_set("video_coding") {
     "media_optimization.cc",
     "media_optimization.h",
     "nack_fec_tables.h",
+    "nack_module.cc",
+    "nack_module.h",
     "packet.cc",
     "packet.h",
-    "qm_select.cc",
-    "qm_select.h",
-    "qm_select_data.h",
+    "packet_buffer.cc",
+    "packet_buffer.h",
+    "percentile_filter.cc",
+    "percentile_filter.h",
+    "protection_bitrate_calculator.cc",
+    "protection_bitrate_calculator.h",
     "receiver.cc",
     "receiver.h",
+    "rtp_frame_reference_finder.cc",
+    "rtp_frame_reference_finder.h",
     "rtt_filter.cc",
     "rtt_filter.h",
     "session_info.cc",
@@ -65,20 +74,13 @@ source_set("video_coding") {
     "video_sender.cc",
   ]
 
-  configs += [ "../..:common_config" ]
-  public_configs = [ "../..:common_inherited_config" ]
-
-  if (is_win) {
-    cflags = [
-      # TODO(jschuh): Bug 1348: fix this warning.
-      "/wd4267",  # size_t to int truncation.
-    ]
-  }
+  # TODO(jschuh): Bug 1348: fix this warning.
+  configs += [ "//build/config/compiler:no_size_t_to_int_warning" ]
 
   if (is_clang) {
     # Suppress warnings from Chrome's Clang plugins.
     # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 
   deps = [
@@ -93,10 +95,14 @@ source_set("video_coding") {
   ]
 }
 
-source_set("video_coding_utility") {
+rtc_source_set("video_coding_utility") {
   sources = [
     "utility/frame_dropper.cc",
     "utility/frame_dropper.h",
+    "utility/h264_bitstream_parser.cc",
+    "utility/h264_bitstream_parser.h",
+    "utility/ivf_file_writer.cc",
+    "utility/ivf_file_writer.h",
     "utility/moving_average.h",
     "utility/qp_parser.cc",
     "utility/qp_parser.h",
@@ -106,39 +112,39 @@ source_set("video_coding_utility") {
     "utility/vp8_header_parser.h",
   ]
 
-  configs += [ "../..:common_config" ]
-  public_configs = [ "../..:common_inherited_config" ]
-
   if (is_clang) {
     # Suppress warnings from Chrome's Clang plugins.
     # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 
   deps = [
+    "../../common_video",
     "../../system_wrappers",
   ]
 }
 
-source_set("webrtc_h264") {
+rtc_source_set("webrtc_h264") {
   sources = [
     "codecs/h264/h264.cc",
     "codecs/h264/include/h264.h",
   ]
 
-  configs += [ "../..:common_config" ]
-  public_configs = [ "../..:common_inherited_config" ]
-
   if (is_clang) {
     # Suppress warnings from Chrome's Clang plugins.
     # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 
   defines = []
   deps = [
     "../../system_wrappers",
   ]
+
+  if (is_ios) {
+    sources += [ "codecs/h264/h264_objc.mm" ]
+    deps += [ ":webrtc_h264_video_toolbox" ]
+  }
 
   if (rtc_use_h264) {
     defines += [ "WEBRTC_USE_H264" ]
@@ -159,22 +165,66 @@ source_set("webrtc_h264") {
   }
 }
 
-# TODO(tkchin): Source set for webrtc_h264_video_toolbox. Currently not
-# possible to add, see https://crbug.com/297668.
+if (is_ios) {
+  rtc_source_set("webrtc_h264_video_toolbox") {
+    sources = [
+      "codecs/h264/h264_video_toolbox_decoder.cc",
+      "codecs/h264/h264_video_toolbox_decoder.h",
+      "codecs/h264/h264_video_toolbox_encoder.h",
+      "codecs/h264/h264_video_toolbox_encoder.mm",
+      "codecs/h264/h264_video_toolbox_nalu.cc",
+      "codecs/h264/h264_video_toolbox_nalu.h",
+    ]
 
-source_set("webrtc_i420") {
+    configs += [
+      "../..:common_objc",
+      "//build/config/compiler:enable_arc",
+    ]
+
+    # TODO(hbos): Make webrtc_h264_video_toolbox compile with the standard set
+    # of warnings.
+    # See https://bugs.chromium.org/p/webrtc/issues/detail?id=6307
+    suppressed_configs += [ rtc_common_config ]
+
+    deps = [
+      "../../sdk:rtc_sdk_common_objc",
+    ]
+
+    libs = [
+      "CoreFoundation.framework",
+      "CoreMedia.framework",
+      "CoreVideo.framework",
+      "VideoToolbox.framework",
+    ]
+
+    if (is_clang) {
+      # Suppress warnings from Chrome's Clang plugins.
+      # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+
+    if (rtc_build_libyuv) {
+      deps += [ "$rtc_libyuv_dir" ]
+      public_deps = [
+        "$rtc_libyuv_dir",
+      ]
+    } else {
+      # Need to add a directory normally exported by libyuv.
+      include_dirs += [ "$rtc_libyuv_dir/include" ]
+    }
+  }
+}
+
+rtc_source_set("webrtc_i420") {
   sources = [
     "codecs/i420/i420.cc",
     "codecs/i420/include/i420.h",
   ]
 
-  configs += [ "../..:common_config" ]
-  public_configs = [ "../..:common_inherited_config" ]
-
   if (is_clang) {
     # Suppress warnings from Chrome's Clang plugins.
     # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 
   deps = [
@@ -182,7 +232,7 @@ source_set("webrtc_i420") {
   ]
 }
 
-source_set("webrtc_vp8") {
+rtc_source_set("webrtc_vp8") {
   sources = [
     "codecs/vp8/default_temporal_layers.cc",
     "codecs/vp8/default_temporal_layers.h",
@@ -200,20 +250,13 @@ source_set("webrtc_vp8") {
     "codecs/vp8/vp8_impl.h",
   ]
 
-  configs += [ "../..:common_config" ]
-  public_configs = [ "../..:common_inherited_config" ]
+  # TODO(jschuh): Bug 1348: fix this warning.
+  configs += [ "//build/config/compiler:no_size_t_to_int_warning" ]
 
   if (is_clang) {
     # Suppress warnings from Chrome's Clang plugins.
     # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
-  }
-
-  if (is_win) {
-    cflags = [
-      # TODO(jschuh): Bug 1348: fix this warning.
-      "/wd4267",  # size_t to int truncation.
-    ]
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 
   deps = [
@@ -227,7 +270,7 @@ source_set("webrtc_vp8") {
   }
 }
 
-source_set("webrtc_vp9") {
+rtc_source_set("webrtc_vp9") {
   sources = [
     "codecs/vp9/include/vp9.h",
     "codecs/vp9/screenshare_layers.cc",
@@ -238,13 +281,10 @@ source_set("webrtc_vp9") {
     "codecs/vp9/vp9_impl.h",
   ]
 
-  configs += [ "../..:common_config" ]
-  public_configs = [ "../..:common_inherited_config" ]
-
   if (is_clang) {
     # Suppress warnings from Chrome's Clang plugins.
     # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 
   deps = [
@@ -254,5 +294,32 @@ source_set("webrtc_vp9") {
   ]
   if (rtc_build_libvpx) {
     deps += [ rtc_libvpx_dir ]
+  }
+}
+
+if (rtc_include_tests) {
+  rtc_source_set("video_codecs_test_framework") {
+    testonly = true
+    sources = [
+      "codecs/test/mock/mock_packet_manipulator.h",
+      "codecs/test/packet_manipulator.cc",
+      "codecs/test/packet_manipulator.h",
+      "codecs/test/predictive_packet_manipulator.cc",
+      "codecs/test/predictive_packet_manipulator.h",
+      "codecs/test/stats.cc",
+      "codecs/test/stats.h",
+      "codecs/test/videoprocessor.cc",
+      "codecs/test/videoprocessor.h",
+    ]
+
+    if (is_clang) {
+      # Suppress warnings from Chrome's Clang plugins.
+      # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+
+    deps = [
+      "../../test:test_support",
+    ]
   }
 }

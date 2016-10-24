@@ -10,6 +10,8 @@
 
 package org.webrtc.voiceengine;
 
+import org.webrtc.Logging;
+
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -19,9 +21,8 @@ import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.os.Build;
 
-import org.webrtc.Logging;
-
-import java.lang.Math;
+import java.util.Timer;
+import java.util.TimerTask;
 
 // WebRtcAudioManager handles tasks that uses android.media.AudioManager.
 // At construction, storeAudioParameters() is called and it retrieves
@@ -32,8 +33,6 @@ import java.lang.Math;
 // dispose(). This class can also be used without calling init() if the user
 // prefers to set up the audio environment separately. However, it is
 // recommended to always use AudioManager.MODE_IN_COMMUNICATION.
-// This class also adds support for output volume control of the
-// STREAM_VOICE_CALL-type stream.
 public class WebRtcAudioManager {
   private static final boolean DEBUG = false;
 
@@ -69,6 +68,60 @@ public class WebRtcAudioManager {
       "MODE_IN_COMMUNICATION",
   };
 
+  // Private utility class that periodically checks and logs the volume level
+  // of the audio stream that is currently controlled by the volume control.
+  // A timer triggers logs once every 10 seconds and the timer's associated
+  // thread is named "WebRtcVolumeLevelLoggerThread".
+  private static class VolumeLogger {
+    private static final String THREAD_NAME = "WebRtcVolumeLevelLoggerThread";
+    private static final int TIMER_PERIOD_IN_SECONDS = 10;
+
+    private final AudioManager audioManager;
+    private Timer timer;
+
+    public VolumeLogger(AudioManager audioManager) {
+      this.audioManager = audioManager;
+    }
+
+    public void start() {
+      timer = new Timer(THREAD_NAME);
+      timer.schedule(new LogVolumeTask(
+          audioManager.getStreamMaxVolume(AudioManager.STREAM_RING),
+          audioManager.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL)),
+          0, TIMER_PERIOD_IN_SECONDS * 1000);
+    }
+
+    private class LogVolumeTask extends TimerTask {
+      private final int maxRingVolume;
+      private final int maxVoiceCallVolume;
+
+      LogVolumeTask(int maxRingVolume, int maxVoiceCallVolume) {
+        this.maxRingVolume = maxRingVolume;
+        this.maxVoiceCallVolume = maxVoiceCallVolume;
+      }
+
+      public void run() {
+        final int mode = audioManager.getMode();
+        if (mode == AudioManager.MODE_RINGTONE) {
+          Logging.d(TAG, "STREAM_RING stream volume: "
+              + audioManager.getStreamVolume(AudioManager.STREAM_RING)
+              + " (max=" + maxRingVolume + ")");
+        } else if (mode == AudioManager.MODE_IN_COMMUNICATION) {
+          Logging.d(TAG, "VOICE_CALL stream volume: "
+              + audioManager.getStreamVolume(AudioManager.STREAM_VOICE_CALL)
+              + " (max=" + maxVoiceCallVolume + ")");
+        }
+      }
+    }
+
+    private void stop() {
+      if (timer != null) {
+        timer.cancel();
+        timer = null;
+      }
+    }
+  }
+
   private final long nativeAudioManager;
   private final Context context;
   private final AudioManager audioManager;
@@ -81,10 +134,13 @@ public class WebRtcAudioManager {
   private boolean hardwareAGC;
   private boolean hardwareNS;
   private boolean lowLatencyOutput;
+  private boolean proAudio;
   private int sampleRate;
   private int channels;
   private int outputBufferSize;
   private int inputBufferSize;
+
+  private final VolumeLogger volumeLogger;
 
   WebRtcAudioManager(Context context, long nativeAudioManager) {
     Logging.d(TAG, "ctor" + WebRtcAudioUtils.getThreadInfo());
@@ -95,10 +151,11 @@ public class WebRtcAudioManager {
     if (DEBUG) {
       WebRtcAudioUtils.logDeviceInfo(TAG);
     }
+    volumeLogger = new VolumeLogger(audioManager);
     storeAudioParameters();
     nativeCacheAudioParameters(
         sampleRate, channels, hardwareAEC, hardwareAGC, hardwareNS,
-        lowLatencyOutput, outputBufferSize, inputBufferSize,
+        lowLatencyOutput, proAudio, outputBufferSize, inputBufferSize,
         nativeAudioManager);
   }
 
@@ -109,6 +166,7 @@ public class WebRtcAudioManager {
     }
     Logging.d(TAG, "audio mode is: " + AUDIO_MODES[audioManager.getMode()]);
     initialized = true;
+    volumeLogger.start();
     return true;
   }
 
@@ -117,6 +175,7 @@ public class WebRtcAudioManager {
     if (!initialized) {
       return;
     }
+    volumeLogger.stop();
   }
 
   private boolean isCommunicationModeEnabled() {
@@ -142,6 +201,7 @@ public class WebRtcAudioManager {
     hardwareAGC = isAutomaticGainControlSupported();
     hardwareNS = isNoiseSuppressorSupported();
     lowLatencyOutput = isLowLatencyOutputSupported();
+    proAudio = isProAudioSupported();
     outputBufferSize = lowLatencyOutput ?
         getLowLatencyOutputFramesPerBuffer() :
         getMinOutputFrameSize(sampleRate, channels);
@@ -168,8 +228,16 @@ public class WebRtcAudioManager {
     // as well. The NDK doc states that: "As of API level 21, lower latency
     // audio input is supported on select devices. To take advantage of this
     // feature, first confirm that lower latency output is available".
-    return WebRtcAudioUtils.runningOnLollipopOrHigher() &&
-        isLowLatencyOutputSupported();
+    return WebRtcAudioUtils.runningOnLollipopOrHigher()
+        && isLowLatencyOutputSupported();
+  }
+
+  // Returns true if the device has professional audio level of functionality
+  // and therefore supports the lowest possible round-trip latency.
+  private boolean isProAudioSupported() {
+    return WebRtcAudioUtils.runningOnMarshmallowOrHigher()
+        && context.getPackageManager().hasSystemFeature(
+            PackageManager.FEATURE_AUDIO_PRO);
   }
 
   // Returns the native output sample rate for this device's output stream.
@@ -287,6 +355,6 @@ public class WebRtcAudioManager {
 
   private native void nativeCacheAudioParameters(
     int sampleRate, int channels, boolean hardwareAEC, boolean hardwareAGC,
-    boolean hardwareNS, boolean lowLatencyOutput, int outputBufferSize,
-    int inputBufferSize, long nativeAudioManager);
+    boolean hardwareNS, boolean lowLatencyOutput, boolean proAudio,
+    int outputBufferSize, int inputBufferSize, long nativeAudioManager);
 }

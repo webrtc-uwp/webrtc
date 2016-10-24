@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
 #include <string>
 
 #include "webrtc/api/jsepicecandidate.h"
 #include "webrtc/api/jsepsessiondescription.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/helpers.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/ssladapter.h"
 #include "webrtc/base/stringencode.h"
 #include "webrtc/p2p/base/candidate.h"
@@ -27,7 +27,6 @@ using webrtc::IceCandidateInterface;
 using webrtc::JsepIceCandidate;
 using webrtc::JsepSessionDescription;
 using webrtc::SessionDescriptionInterface;
-using rtc::scoped_ptr;
 
 static const char kCandidateUfrag[] = "ufrag";
 static const char kCandidatePwd[] = "pwd";
@@ -41,18 +40,18 @@ static const char kCandidatePwdVideo[] = "pwd_video";
 static cricket::SessionDescription* CreateCricketSessionDescription() {
   cricket::SessionDescription* desc(new cricket::SessionDescription());
   // AudioContentDescription
-  scoped_ptr<cricket::AudioContentDescription> audio(
+  std::unique_ptr<cricket::AudioContentDescription> audio(
       new cricket::AudioContentDescription());
 
   // VideoContentDescription
-  scoped_ptr<cricket::VideoContentDescription> video(
+  std::unique_ptr<cricket::VideoContentDescription> video(
       new cricket::VideoContentDescription());
 
-  audio->AddCodec(cricket::AudioCodec(103, "ISAC", 16000, 0, 0, 0));
+  audio->AddCodec(cricket::AudioCodec(103, "ISAC", 16000, 0, 0));
   desc->AddContent(cricket::CN_AUDIO, cricket::NS_JINGLE_RTP,
                    audio.release());
 
-  video->AddCodec(cricket::VideoCodec(120, "VP8", 640, 480, 30, 0));
+  video->AddCodec(cricket::VideoCodec(120, "VP8", 640, 480, 30));
   desc->AddContent(cricket::CN_VIDEO, cricket::NS_JINGLE_RTP,
                    video.release());
 
@@ -100,7 +99,7 @@ class JsepSessionDescriptionTest : public testing::Test {
   }
 
   cricket::Candidate candidate_;
-  rtc::scoped_ptr<JsepSessionDescription> jsep_desc_;
+  std::unique_ptr<JsepSessionDescription> jsep_desc_;
 };
 
 // Test that number_of_mediasections() returns the number of media contents in
@@ -109,7 +108,7 @@ TEST_F(JsepSessionDescriptionTest, CheckSessionDescription) {
   EXPECT_EQ(2u, jsep_desc_->number_of_mediasections());
 }
 
-// Test that we can add a candidate to a session description.
+// Test that we can add a candidate to a session description without MID.
 TEST_F(JsepSessionDescriptionTest, AddCandidateWithoutMid) {
   JsepIceCandidate jsep_candidate("", 0, candidate_);
   EXPECT_TRUE(jsep_desc_->AddCandidate(&jsep_candidate));
@@ -125,9 +124,12 @@ TEST_F(JsepSessionDescriptionTest, AddCandidateWithoutMid) {
   EXPECT_EQ(0u, jsep_desc_->candidates(1)->count());
 }
 
-TEST_F(JsepSessionDescriptionTest, AddCandidateWithMid) {
+// Test that we can add and remove candidates to a session description with
+// MID. Removing candidates requires MID (transport_name).
+TEST_F(JsepSessionDescriptionTest, AddAndRemoveCandidatesWithMid) {
   // mid and m-line index don't match, in this case mid is preferred.
-  JsepIceCandidate jsep_candidate("video", 0, candidate_);
+  std::string mid = "video";
+  JsepIceCandidate jsep_candidate(mid, 0, candidate_);
   EXPECT_TRUE(jsep_desc_->AddCandidate(&jsep_candidate));
   EXPECT_EQ(0u, jsep_desc_->candidates(0)->count());
   const IceCandidateCollection* ice_candidates = jsep_desc_->candidates(1);
@@ -140,6 +142,12 @@ TEST_F(JsepSessionDescriptionTest, AddCandidateWithMid) {
   EXPECT_TRUE(ice_candidate->candidate().IsEquivalent(candidate_));
   // The mline index should have been updated according to mid.
   EXPECT_EQ(1, ice_candidate->sdp_mline_index());
+
+  std::vector<cricket::Candidate> candidates(1, candidate_);
+  candidates[0].set_transport_name(mid);
+  EXPECT_EQ(1u, jsep_desc_->RemoveCandidates(candidates));
+  EXPECT_EQ(0u, jsep_desc_->candidates(0)->count());
+  EXPECT_EQ(0u, jsep_desc_->candidates(1)->count());
 }
 
 TEST_F(JsepSessionDescriptionTest, AddCandidateAlreadyHasUfrag) {
@@ -195,7 +203,8 @@ TEST_F(JsepSessionDescriptionTest, AddCandidateDuplicates) {
 TEST_F(JsepSessionDescriptionTest, SerializeDeserialize) {
   std::string sdp = Serialize(jsep_desc_.get());
 
-  scoped_ptr<SessionDescriptionInterface> parsed_jsep_desc(DeSerialize(sdp));
+  std::unique_ptr<SessionDescriptionInterface> parsed_jsep_desc(
+      DeSerialize(sdp));
   EXPECT_EQ(2u, parsed_jsep_desc->number_of_mediasections());
 
   std::string parsed_sdp = Serialize(parsed_jsep_desc.get());
@@ -213,7 +222,7 @@ TEST_F(JsepSessionDescriptionTest, SerializeDeserializeWithCandidates) {
   std::string sdp_with_candidate = Serialize(jsep_desc_.get());
   EXPECT_NE(sdp, sdp_with_candidate);
 
-  scoped_ptr<SessionDescriptionInterface> parsed_jsep_desc(
+  std::unique_ptr<SessionDescriptionInterface> parsed_jsep_desc(
       DeSerialize(sdp_with_candidate));
   std::string parsed_sdp_with_candidate = Serialize(parsed_jsep_desc.get());
 

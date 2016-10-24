@@ -10,15 +10,14 @@
 
 // Types and classes used in media session descriptions.
 
-#ifndef TALK_SESSION_MEDIA_MEDIASESSION_H_
-#define TALK_SESSION_MEDIA_MEDIASESSION_H_
+#ifndef WEBRTC_PC_MEDIASESSION_H_
+#define WEBRTC_PC_MEDIASESSION_H_
 
 #include <algorithm>
 #include <map>
 #include <string>
 #include <vector>
 
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/media/base/codec.h"
 #include "webrtc/media/base/cryptoparams.h"
 #include "webrtc/media/base/mediachannel.h"
@@ -36,7 +35,7 @@ typedef std::vector<AudioCodec> AudioCodecs;
 typedef std::vector<VideoCodec> VideoCodecs;
 typedef std::vector<DataCodec> DataCodecs;
 typedef std::vector<CryptoParams> CryptoParamsVec;
-typedef std::vector<RtpHeaderExtension> RtpHeaderExtensions;
+typedef std::vector<webrtc::RtpExtension> RtpHeaderExtensions;
 
 enum MediaType {
   MEDIA_TYPE_AUDIO,
@@ -52,6 +51,8 @@ enum MediaContentDirection {
   MD_RECVONLY,
   MD_SENDRECV
 };
+
+std::string MediaContentDirectionToString(MediaContentDirection direction);
 
 enum CryptoType {
   CT_NONE,
@@ -77,18 +78,45 @@ extern const char kMediaProtocolTcpDtlsSctp[];
 const int kAutoBandwidth = -1;
 const int kBufferedModeDisabled = 0;
 
-struct MediaSessionOptions {
-  MediaSessionOptions() :
-      recv_audio(true),
-      recv_video(false),
-      data_channel_type(DCT_NONE),
-      is_muc(false),
-      vad_enabled(true),  // When disabled, removes all CN codecs from SDP.
-      rtcp_mux_enabled(true),
-      bundle_enabled(false),
-      video_bandwidth(kAutoBandwidth),
-      data_bandwidth(kDataMaxBandwidth) {
+// Default RTCP CNAME for unit tests.
+const char kDefaultRtcpCname[] = "DefaultRtcpCname";
+
+struct RtpTransceiverDirection {
+  bool send;
+  bool recv;
+
+  RtpTransceiverDirection(bool send, bool recv) : send(send), recv(recv) {}
+
+  bool operator==(const RtpTransceiverDirection& o) const {
+    return send == o.send && recv == o.recv;
   }
+
+  bool operator!=(const RtpTransceiverDirection& o) const {
+    return !(*this == o);
+  }
+
+  static RtpTransceiverDirection FromMediaContentDirection(
+      MediaContentDirection md);
+
+  MediaContentDirection ToMediaContentDirection() const;
+};
+
+RtpTransceiverDirection
+NegotiateRtpTransceiverDirection(RtpTransceiverDirection offer,
+                                 RtpTransceiverDirection wants);
+
+struct MediaSessionOptions {
+  MediaSessionOptions()
+      : recv_audio(true),
+        recv_video(false),
+        data_channel_type(DCT_NONE),
+        is_muc(false),
+        vad_enabled(true),  // When disabled, removes all CN codecs from SDP.
+        rtcp_mux_enabled(true),
+        bundle_enabled(false),
+        video_bandwidth(kAutoBandwidth),
+        data_bandwidth(kDataMaxBandwidth),
+        rtcp_cname(kDefaultRtcpCname) {}
 
   bool has_audio() const {
     return recv_audio || HasSendMediaStream(MEDIA_TYPE_AUDIO);
@@ -132,8 +160,11 @@ struct MediaSessionOptions {
   // bps. -1 == auto.
   int video_bandwidth;
   int data_bandwidth;
+  bool enable_ice_renomination = false;
   // content name ("mid") => options.
   std::map<std::string, TransportOptions> transport_options;
+  std::string rtcp_cname;
+  rtc::CryptoOptions crypto_options;
 
   struct Stream {
     Stream(MediaType type,
@@ -202,8 +233,15 @@ class MediaContentDescription : public ContentDescription {
     rtp_header_extensions_ = extensions;
     rtp_header_extensions_set_ = true;
   }
-  void AddRtpHeaderExtension(const RtpHeaderExtension& ext) {
+  void AddRtpHeaderExtension(const webrtc::RtpExtension& ext) {
     rtp_header_extensions_.push_back(ext);
+    rtp_header_extensions_set_ = true;
+  }
+  void AddRtpHeaderExtension(const cricket::RtpHeaderExtension& ext) {
+    webrtc::RtpExtension webrtc_extension;
+    webrtc_extension.uri = ext.uri;
+    webrtc_extension.id = ext.id;
+    rtp_header_extensions_.push_back(webrtc_extension);
     rtp_header_extensions_set_ = true;
   }
   void ClearRtpHeaderExtensions() {
@@ -281,7 +319,7 @@ class MediaContentDescription : public ContentDescription {
   std::string protocol_;
   std::vector<CryptoParams> cryptos_;
   CryptoType crypto_required_ = CT_NONE;
-  std::vector<RtpHeaderExtension> rtp_header_extensions_;
+  std::vector<webrtc::RtpExtension> rtp_header_extensions_;
   bool rtp_header_extensions_set_ = false;
   bool multistream_ = false;
   StreamParamsVec streams_;
@@ -294,10 +332,9 @@ class MediaContentDescription : public ContentDescription {
 template <class C>
 class MediaContentDescriptionImpl : public MediaContentDescription {
  public:
-  struct PreferenceSort {
-    bool operator()(C a, C b) { return a.preference > b.preference; }
-  };
+  typedef C CodecType;
 
+  // Codecs should be in preference order (most preferred codec first).
   const std::vector<C>& codecs() const { return codecs_; }
   void set_codecs(const std::vector<C>& codecs) { codecs_ = codecs; }
   virtual bool has_codecs() const { return !codecs_.empty(); }
@@ -330,9 +367,6 @@ class MediaContentDescriptionImpl : public MediaContentDescription {
     for (codec = codecs.begin(); codec != codecs.end(); ++codec) {
       AddCodec(*codec);
     }
-  }
-  void SortCodecs() {
-    std::sort(codecs_.begin(), codecs_.end(), PreferenceSort());
   }
 
  private:
@@ -396,8 +430,11 @@ class MediaSessionDescriptionFactory {
   MediaSessionDescriptionFactory(ChannelManager* cmanager,
                                  const TransportDescriptionFactory* factory);
 
-  const AudioCodecs& audio_codecs() const { return audio_codecs_; }
-  void set_audio_codecs(const AudioCodecs& codecs) { audio_codecs_ = codecs; }
+  const AudioCodecs& audio_sendrecv_codecs() const;
+  const AudioCodecs& audio_send_codecs() const;
+  const AudioCodecs& audio_recv_codecs() const;
+  void set_audio_codecs(const AudioCodecs& send_codecs,
+                        const AudioCodecs& recv_codecs);
   void set_audio_rtp_header_extensions(const RtpHeaderExtensions& extensions) {
     audio_rtp_extensions_ = extensions;
   }
@@ -431,7 +468,15 @@ class MediaSessionDescriptionFactory {
         const SessionDescription* current_description) const;
 
  private:
+  const AudioCodecs& GetAudioCodecsForOffer(
+      const RtpTransceiverDirection& direction) const;
+  const AudioCodecs& GetAudioCodecsForAnswer(
+      const RtpTransceiverDirection& offer,
+      const RtpTransceiverDirection& answer) const;
   void GetCodecsToOffer(const SessionDescription* current_description,
+                        const AudioCodecs& supported_audio_codecs,
+                        const VideoCodecs& supported_video_codecs,
+                        const DataCodecs& supported_data_codecs,
                         AudioCodecs* audio_codecs,
                         VideoCodecs* video_codecs,
                         DataCodecs* data_codecs) const;
@@ -503,7 +548,9 @@ class MediaSessionDescriptionFactory {
       StreamParamsVec* current_streams,
       SessionDescription* answer) const;
 
-  AudioCodecs audio_codecs_;
+  AudioCodecs audio_send_codecs_;
+  AudioCodecs audio_recv_codecs_;
+  AudioCodecs audio_sendrecv_codecs_;
   RtpHeaderExtensions audio_rtp_extensions_;
   VideoCodecs video_codecs_;
   RtpHeaderExtensions video_rtp_extensions_;
@@ -533,20 +580,39 @@ const VideoContentDescription* GetFirstVideoContentDescription(
     const SessionDescription* sdesc);
 const DataContentDescription* GetFirstDataContentDescription(
     const SessionDescription* sdesc);
+// Non-const versions of the above functions.
+// Useful when modifying an existing description.
+ContentInfo* GetFirstMediaContent(ContentInfos& contents, MediaType media_type);
+ContentInfo* GetFirstAudioContent(ContentInfos& contents);
+ContentInfo* GetFirstVideoContent(ContentInfos& contents);
+ContentInfo* GetFirstDataContent(ContentInfos& contents);
+ContentInfo* GetFirstAudioContent(SessionDescription* sdesc);
+ContentInfo* GetFirstVideoContent(SessionDescription* sdesc);
+ContentInfo* GetFirstDataContent(SessionDescription* sdesc);
+AudioContentDescription* GetFirstAudioContentDescription(
+    SessionDescription* sdesc);
+VideoContentDescription* GetFirstVideoContentDescription(
+    SessionDescription* sdesc);
+DataContentDescription* GetFirstDataContentDescription(
+    SessionDescription* sdesc);
 
-void GetSupportedAudioCryptoSuites(std::vector<int>* crypto_suites);
-void GetSupportedVideoCryptoSuites(std::vector<int>* crypto_suites);
-void GetSupportedDataCryptoSuites(std::vector<int>* crypto_suites);
-void GetDefaultSrtpCryptoSuites(std::vector<int>* crypto_suites);
-void GetSupportedAudioCryptoSuiteNames(
+void GetSupportedAudioCryptoSuites(const rtc::CryptoOptions& crypto_options,
+    std::vector<int>* crypto_suites);
+void GetSupportedVideoCryptoSuites(const rtc::CryptoOptions& crypto_options,
+    std::vector<int>* crypto_suites);
+void GetSupportedDataCryptoSuites(const rtc::CryptoOptions& crypto_options,
+    std::vector<int>* crypto_suites);
+void GetDefaultSrtpCryptoSuites(const rtc::CryptoOptions& crypto_options,
+    std::vector<int>* crypto_suites);
+void GetSupportedAudioCryptoSuiteNames(const rtc::CryptoOptions& crypto_options,
     std::vector<std::string>* crypto_suite_names);
-void GetSupportedVideoCryptoSuiteNames(
+void GetSupportedVideoCryptoSuiteNames(const rtc::CryptoOptions& crypto_options,
     std::vector<std::string>* crypto_suite_names);
-void GetSupportedDataCryptoSuiteNames(
+void GetSupportedDataCryptoSuiteNames(const rtc::CryptoOptions& crypto_options,
     std::vector<std::string>* crypto_suite_names);
-void GetDefaultSrtpCryptoSuiteNames(
+void GetDefaultSrtpCryptoSuiteNames(const rtc::CryptoOptions& crypto_options,
     std::vector<std::string>* crypto_suite_names);
 
 }  // namespace cricket
 
-#endif  // TALK_SESSION_MEDIA_MEDIASESSION_H_
+#endif  // WEBRTC_PC_MEDIASESSION_H_

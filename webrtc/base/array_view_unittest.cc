@@ -20,8 +20,10 @@
 namespace rtc {
 
 namespace {
+
 template <typename T>
 void Call(ArrayView<T>) {}
+
 }  // namespace
 
 TEST(ArrayViewTest, TestConstructFromPtrAndArray) {

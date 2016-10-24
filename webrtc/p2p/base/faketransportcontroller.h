@@ -12,9 +12,11 @@
 #define WEBRTC_P2P_BASE_FAKETRANSPORTCONTROLLER_H_
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "webrtc/p2p/base/candidatepairinterface.h"
 #include "webrtc/p2p/base/transport.h"
 #include "webrtc/p2p/base/transportchannel.h"
 #include "webrtc/p2p/base/transportcontroller.h"
@@ -26,6 +28,10 @@
 #include "webrtc/base/sigslot.h"
 #include "webrtc/base/sslfingerprint.h"
 #include "webrtc/base/thread.h"
+
+#ifdef HAVE_QUIC
+#include "webrtc/p2p/quic/quictransport.h"
+#endif
 
 namespace cricket {
 
@@ -82,15 +88,13 @@ class FakeTransportChannel : public TransportChannelImpl,
   void SetIceTiebreaker(uint64_t tiebreaker) override {
     tiebreaker_ = tiebreaker;
   }
-  void SetIceCredentials(const std::string& ice_ufrag,
-                         const std::string& ice_pwd) override {
-    ice_ufrag_ = ice_ufrag;
-    ice_pwd_ = ice_pwd;
+  void SetIceParameters(const IceParameters& ice_params) override {
+    ice_ufrag_ = ice_params.ufrag;
+    ice_pwd_ = ice_params.pwd;
   }
-  void SetRemoteIceCredentials(const std::string& ice_ufrag,
-                               const std::string& ice_pwd) override {
-    remote_ice_ufrag_ = ice_ufrag;
-    remote_ice_pwd_ = ice_pwd;
+  void SetRemoteIceParameters(const IceParameters& params) override {
+    remote_ice_ufrag_ = params.ufrag;
+    remote_ice_pwd_ = params.pwd;
   }
 
   void SetRemoteIceMode(IceMode mode) override { remote_ice_mode_ = mode; }
@@ -107,12 +111,6 @@ class FakeTransportChannel : public TransportChannelImpl,
   bool GetSslRole(rtc::SSLRole* role) const override {
     *role = ssl_role_;
     return true;
-  }
-
-  void Connect() override {
-    if (state_ == STATE_INIT) {
-      state_ = STATE_CONNECTING;
-    }
   }
 
   void MaybeStartGathering() override {
@@ -139,24 +137,26 @@ class FakeTransportChannel : public TransportChannelImpl,
 
   void SetWritable(bool writable) { set_writable(writable); }
 
-  void SetDestination(FakeTransportChannel* dest) {
-    if (state_ == STATE_CONNECTING && dest) {
+  // Simulates the two transport channels connecting to each other.
+  // If |asymmetric| is true this method only affects this FakeTransportChannel.
+  // If false, it affects |dest| as well.
+  void SetDestination(FakeTransportChannel* dest, bool asymmetric = false) {
+    if (state_ == STATE_INIT && dest) {
       // This simulates the delivery of candidates.
       dest_ = dest;
-      dest_->dest_ = this;
       if (local_cert_ && dest_->local_cert_) {
         do_dtls_ = true;
-        dest_->do_dtls_ = true;
         NegotiateSrtpCiphers();
       }
       state_ = STATE_CONNECTED;
-      dest_->state_ = STATE_CONNECTED;
       set_writable(true);
-      dest_->set_writable(true);
+      if (!asymmetric) {
+        dest->SetDestination(this, true);
+      }
     } else if (state_ == STATE_CONNECTED && !dest) {
       // Simulates loss of connectivity, by asymmetrically forgetting dest_.
       dest_ = nullptr;
-      state_ = STATE_CONNECTING;
+      state_ = STATE_INIT;
       set_writable(false);
     }
   }
@@ -166,8 +166,10 @@ class FakeTransportChannel : public TransportChannelImpl,
     connection_count_ = connection_count;
     if (connection_count)
       had_connection_ = true;
+    // In this fake transport channel, |connection_count_| determines the
+    // transport channel state.
     if (connection_count_ < old_connection_count)
-      SignalConnectionRemoved(this);
+      SignalStateChanged(this);
   }
 
   void SetCandidatesGatheringComplete() {
@@ -179,13 +181,10 @@ class FakeTransportChannel : public TransportChannelImpl,
 
   void SetReceiving(bool receiving) { set_receiving(receiving); }
 
-  void SetIceConfig(const IceConfig& config) override {
-    receiving_timeout_ = config.receiving_timeout_ms;
-    gather_continually_ = config.gather_continually;
-  }
+  void SetIceConfig(const IceConfig& config) override { ice_config_ = config; }
 
-  int receiving_timeout() const { return receiving_timeout_; }
-  bool gather_continually() const { return gather_continually_; }
+  int receiving_timeout() const { return ice_config_.receiving_timeout; }
+  bool gather_continually() const { return ice_config_.gather_continually(); }
 
   int SendPacket(const char* data,
                  size_t len,
@@ -201,11 +200,11 @@ class FakeTransportChannel : public TransportChannelImpl,
 
     PacketMessageData* packet = new PacketMessageData(data, len);
     if (async_) {
-      rtc::Thread::Current()->Post(this, 0, packet);
+      rtc::Thread::Current()->Post(RTC_FROM_HERE, this, 0, packet);
     } else {
-      rtc::Thread::Current()->Send(this, 0, packet);
+      rtc::Thread::Current()->Send(RTC_FROM_HERE, this, 0, packet);
     }
-    rtc::SentPacket sent_packet(options.packet_id, rtc::Time());
+    rtc::SentPacket sent_packet(options.packet_id, rtc::TimeMillis());
     SignalSentPacket(this, sent_packet);
     return static_cast<int>(len);
   }
@@ -216,6 +215,9 @@ class FakeTransportChannel : public TransportChannelImpl,
   void AddRemoteCandidate(const Candidate& candidate) override {
     remote_candidates_.push_back(candidate);
   }
+
+  void RemoveRemoteCandidate(const Candidate& candidate) override {}
+
   const Candidates& remote_candidates() const { return remote_candidates_; }
 
   void OnMessage(rtc::Message* msg) override {
@@ -226,7 +228,7 @@ class FakeTransportChannel : public TransportChannelImpl,
   }
 
   bool SetLocalCertificate(
-      const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) {
+      const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) override {
     local_cert_ = certificate;
     return true;
   }
@@ -252,16 +254,15 @@ class FakeTransportChannel : public TransportChannelImpl,
 
   bool GetSslCipherSuite(int* cipher_suite) override { return false; }
 
-  rtc::scoped_refptr<rtc::RTCCertificate> GetLocalCertificate() const {
+  rtc::scoped_refptr<rtc::RTCCertificate> GetLocalCertificate() const override {
     return local_cert_;
   }
 
-  bool GetRemoteSSLCertificate(rtc::SSLCertificate** cert) const override {
-    if (!remote_cert_)
-      return false;
-
-    *cert = remote_cert_->GetReference();
-    return true;
+  std::unique_ptr<rtc::SSLCertificate> GetRemoteSSLCertificate()
+      const override {
+    return remote_cert_ ? std::unique_ptr<rtc::SSLCertificate>(
+                              remote_cert_->GetReference())
+                        : nullptr;
   }
 
   bool ExportKeyingMaterial(const std::string& label,
@@ -276,20 +277,6 @@ class FakeTransportChannel : public TransportChannelImpl,
     }
 
     return false;
-  }
-
-  void NegotiateSrtpCiphers() {
-    for (std::vector<int>::const_iterator it1 = srtp_ciphers_.begin();
-         it1 != srtp_ciphers_.end(); ++it1) {
-      for (std::vector<int>::const_iterator it2 = dest_->srtp_ciphers_.begin();
-           it2 != dest_->srtp_ciphers_.end(); ++it2) {
-        if (*it1 == *it2) {
-          chosen_crypto_suite_ = *it1;
-          dest_->chosen_crypto_suite_ = *it2;
-          return;
-        }
-      }
-    }
   }
 
   bool GetStats(ConnectionInfos* infos) override {
@@ -307,7 +294,20 @@ class FakeTransportChannel : public TransportChannelImpl,
   }
 
  private:
-  enum State { STATE_INIT, STATE_CONNECTING, STATE_CONNECTED };
+  void NegotiateSrtpCiphers() {
+    for (std::vector<int>::const_iterator it1 = srtp_ciphers_.begin();
+         it1 != srtp_ciphers_.end(); ++it1) {
+      for (std::vector<int>::const_iterator it2 = dest_->srtp_ciphers_.begin();
+           it2 != dest_->srtp_ciphers_.end(); ++it2) {
+        if (*it1 == *it2) {
+          chosen_crypto_suite_ = *it1;
+          return;
+        }
+      }
+    }
+  }
+
+  enum State { STATE_INIT, STATE_CONNECTED };
   FakeTransportChannel* dest_ = nullptr;
   State state_ = STATE_INIT;
   bool async_ = false;
@@ -317,8 +317,7 @@ class FakeTransportChannel : public TransportChannelImpl,
   bool do_dtls_ = false;
   std::vector<int> srtp_ciphers_;
   int chosen_crypto_suite_ = rtc::SRTP_INVALID_CRYPTO_SUITE;
-  int receiving_timeout_ = -1;
-  bool gather_continually_ = false;
+  IceConfig ice_config_;
   IceRole role_ = ICEROLE_UNKNOWN;
   uint64_t tiebreaker_ = 0;
   std::string ice_ufrag_;
@@ -355,11 +354,14 @@ class FakeTransport : public Transport {
   // If async, will send packets by "Post"-ing to message queue instead of
   // synchronously "Send"-ing.
   void SetAsync(bool async) { async_ = async; }
-  void SetDestination(FakeTransport* dest) {
+
+  // If |asymmetric| is true, only set the destination for this transport, and
+  // not |dest|.
+  void SetDestination(FakeTransport* dest, bool asymmetric = false) {
     dest_ = dest;
     for (const auto& kv : channels_) {
       kv.second->SetLocalCertificate(certificate_);
-      SetChannelDestination(kv.first, kv.second);
+      SetChannelDestination(kv.first, kv.second, asymmetric);
     }
   }
 
@@ -402,6 +404,8 @@ class FakeTransport : public Transport {
 
   using Transport::local_description;
   using Transport::remote_description;
+  using Transport::VerifyCertificateFingerprint;
+  using Transport::NegotiateRole;
 
  protected:
   TransportChannelImpl* CreateTransportChannel(int component) override {
@@ -411,7 +415,7 @@ class FakeTransport : public Transport {
     FakeTransportChannel* channel = new FakeTransportChannel(name(), component);
     channel->set_ssl_max_protocol_version(ssl_max_version_);
     channel->SetAsync(async_);
-    SetChannelDestination(component, channel);
+    SetChannelDestination(component, channel, false);
     channels_[component] = channel;
     return channel;
   }
@@ -427,15 +431,17 @@ class FakeTransport : public Transport {
     return (it != channels_.end()) ? it->second : nullptr;
   }
 
-  void SetChannelDestination(int component, FakeTransportChannel* channel) {
+  void SetChannelDestination(int component,
+                             FakeTransportChannel* channel,
+                             bool asymmetric) {
     FakeTransportChannel* dest_channel = nullptr;
     if (dest_) {
       dest_channel = dest_->GetFakeChannel(component);
-      if (dest_channel) {
+      if (dest_channel && !asymmetric) {
         dest_channel->SetLocalCertificate(dest_->certificate_);
       }
     }
-    channel->SetDestination(dest_channel);
+    channel->SetDestination(dest_channel, asymmetric);
   }
 
   // Note, this is distinct from the Channel map owned by Transport.
@@ -447,6 +453,39 @@ class FakeTransport : public Transport {
   bool async_ = false;
   rtc::scoped_refptr<rtc::RTCCertificate> certificate_;
   rtc::SSLProtocolVersion ssl_max_version_ = rtc::SSL_PROTOCOL_DTLS_12;
+};
+
+#ifdef HAVE_QUIC
+class FakeQuicTransport : public QuicTransport {
+ public:
+  FakeQuicTransport(const std::string& transport_name)
+      : QuicTransport(transport_name, nullptr, nullptr) {}
+
+ protected:
+  QuicTransportChannel* CreateTransportChannel(int component) override {
+    FakeTransportChannel* fake_ice_transport_channel =
+        new FakeTransportChannel(name(), component);
+    return new QuicTransportChannel(fake_ice_transport_channel);
+  }
+};
+#endif
+
+// Fake candidate pair class, which can be passed to BaseChannel for testing
+// purposes.
+class FakeCandidatePair : public CandidatePairInterface {
+ public:
+  FakeCandidatePair(const Candidate& local_candidate,
+                    const Candidate& remote_candidate)
+      : local_candidate_(local_candidate),
+        remote_candidate_(remote_candidate) {}
+  const Candidate& local_candidate() const override { return local_candidate_; }
+  const Candidate& remote_candidate() const override {
+    return remote_candidate_;
+  }
+
+ private:
+  Candidate local_candidate_;
+  Candidate remote_candidate_;
 };
 
 // Fake TransportController class, which can be passed into a BaseChannel object
@@ -461,6 +500,13 @@ class FakeTransportController : public TransportController {
       : TransportController(rtc::Thread::Current(),
                             rtc::Thread::Current(),
                             nullptr),
+        fail_create_channel_(false) {}
+
+  explicit FakeTransportController(bool redetermine_role_on_ice_restart)
+      : TransportController(rtc::Thread::Current(),
+                            rtc::Thread::Current(),
+                            nullptr,
+                            redetermine_role_on_ice_restart),
         fail_create_channel_(false) {}
 
   explicit FakeTransportController(IceRole role)
@@ -481,23 +527,36 @@ class FakeTransportController : public TransportController {
     SetIceRole(role);
   }
 
-  FakeTransport* GetTransport_w(const std::string& transport_name) {
+  FakeTransport* GetTransport_n(const std::string& transport_name) {
     return static_cast<FakeTransport*>(
-        TransportController::GetTransport_w(transport_name));
+        TransportController::GetTransport_n(transport_name));
   }
 
   void Connect(FakeTransportController* dest) {
-    worker_thread()->Invoke<void>(
-        rtc::Bind(&FakeTransportController::Connect_w, this, dest));
+    network_thread()->Invoke<void>(
+        RTC_FROM_HERE,
+        rtc::Bind(&FakeTransportController::Connect_n, this, dest));
   }
 
-  TransportChannel* CreateTransportChannel_w(const std::string& transport_name,
+  TransportChannel* CreateTransportChannel_n(const std::string& transport_name,
                                              int component) override {
     if (fail_create_channel_) {
       return nullptr;
     }
-    return TransportController::CreateTransportChannel_w(transport_name,
+    return TransportController::CreateTransportChannel_n(transport_name,
                                                          component);
+  }
+
+  FakeCandidatePair* CreateFakeCandidatePair(
+      const rtc::SocketAddress& local_address,
+      int16_t local_network_id,
+      const rtc::SocketAddress& remote_address,
+      int16_t remote_network_id) {
+    Candidate local_candidate(0, "udp", local_address, 0u, "", "", "local", 0,
+                              "foundation", local_network_id, 0);
+    Candidate remote_candidate(0, "udp", remote_address, 0u, "", "", "local", 0,
+                               "foundation", remote_network_id, 0);
+    return new FakeCandidatePair(local_candidate, remote_candidate);
   }
 
   void set_fail_channel_creation(bool fail_channel_creation) {
@@ -505,24 +564,39 @@ class FakeTransportController : public TransportController {
   }
 
  protected:
-  Transport* CreateTransport_w(const std::string& transport_name) override {
+  Transport* CreateTransport_n(const std::string& transport_name) override {
+#ifdef HAVE_QUIC
+    if (quic()) {
+      return new FakeQuicTransport(transport_name);
+    }
+#endif
     return new FakeTransport(transport_name);
   }
 
-  void Connect_w(FakeTransportController* dest) {
+  void Connect_n(FakeTransportController* dest) {
     // Simulate the exchange of candidates.
-    ConnectChannels_w();
-    dest->ConnectChannels_w();
+    ConnectChannels_n();
+    dest->ConnectChannels_n();
     for (auto& kv : transports()) {
       FakeTransport* transport = static_cast<FakeTransport*>(kv.second);
-      transport->SetDestination(dest->GetTransport_w(kv.first));
+      transport->SetDestination(dest->GetTransport_n(kv.first));
     }
   }
 
-  void ConnectChannels_w() {
+  void ConnectChannels_n() {
+    TransportDescription faketransport_desc(
+        std::vector<std::string>(),
+        rtc::CreateRandomString(cricket::ICE_UFRAG_LENGTH),
+        rtc::CreateRandomString(cricket::ICE_PWD_LENGTH), cricket::ICEMODE_FULL,
+        cricket::CONNECTIONROLE_NONE, nullptr);
     for (auto& kv : transports()) {
       FakeTransport* transport = static_cast<FakeTransport*>(kv.second);
-      transport->ConnectChannels();
+      // Set local transport description for FakeTransport before connecting.
+      // Otherwise, the RTC_CHECK in Transport.ConnectChannel will fail.
+      if (!transport->local_description()) {
+        transport->SetLocalTransportDescription(faketransport_desc,
+                                                cricket::CA_OFFER, nullptr);
+      }
       transport->MaybeStartGathering();
     }
   }

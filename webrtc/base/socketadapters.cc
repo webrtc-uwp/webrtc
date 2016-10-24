@@ -38,7 +38,7 @@
 
 #if defined(WEBRTC_WIN) && !defined(WINRT)
 #include "webrtc/base/sec_buffer.h"
-#endif  // WEBRTC_WIN 
+#endif  // WEBRTC_WIN
 
 namespace rtc {
 
@@ -61,7 +61,7 @@ int BufferedReadAdapter::Send(const void *pv, size_t cb) {
   return AsyncSocketAdapter::Send(pv, cb);
 }
 
-int BufferedReadAdapter::Recv(void *pv, size_t cb) {
+int BufferedReadAdapter::Recv(void* pv, size_t cb, int64_t* timestamp) {
   if (buffering_) {
     socket_->SetError(EWOULDBLOCK);
     return -1;
@@ -82,7 +82,7 @@ int BufferedReadAdapter::Recv(void *pv, size_t cb) {
 
   // FIX: If cb == 0, we won't generate another read event
 
-  int res = AsyncSocketAdapter::Recv(pv, cb);
+  int res = AsyncSocketAdapter::Recv(pv, cb, timestamp);
   if (res >= 0) {
     // Read from socket and possibly buffer; return combined length
     return res + static_cast<int>(read);
@@ -115,7 +115,8 @@ void BufferedReadAdapter::OnReadEvent(AsyncSocket * socket) {
     data_len_ = 0;
   }
 
-  int len = socket_->Recv(buffer_ + data_len_, buffer_size_ - data_len_);
+  int len =
+      socket_->Recv(buffer_ + data_len_, buffer_size_ - data_len_, nullptr);
   if (len < 0) {
     // TODO: Do something better like forwarding the error to the user.
     LOG_ERR(INFO) << "Recv";
@@ -563,7 +564,7 @@ void AsyncSocksProxySocket::OnConnectEvent(AsyncSocket* socket) {
 void AsyncSocksProxySocket::ProcessInput(char* data, size_t* len) {
   ASSERT(state_ < SS_TUNNEL);
 
-  ByteBuffer response(data, *len);
+  ByteBufferReader response(data, *len);
 
   if (state_ == SS_HELLO) {
     uint8_t ver, method;
@@ -640,7 +641,7 @@ void AsyncSocksProxySocket::ProcessInput(char* data, size_t* len) {
 
   // Consume parsed data
   *len = response.Length();
-  memcpy(data, response.Data(), *len);
+  memmove(data, response.Data(), *len);
 
   if (state_ != SS_TUNNEL)
     return;
@@ -655,7 +656,7 @@ void AsyncSocksProxySocket::ProcessInput(char* data, size_t* len) {
 }
 
 void AsyncSocksProxySocket::SendHello() {
-  ByteBuffer request;
+  ByteBufferWriter request;
   request.WriteUInt8(5);    // Socks Version
   if (user_.empty()) {
     request.WriteUInt8(1);  // Authentication Mechanisms
@@ -670,7 +671,7 @@ void AsyncSocksProxySocket::SendHello() {
 }
 
 void AsyncSocksProxySocket::SendAuth() {
-  ByteBuffer request;
+  ByteBufferWriter request;
   request.WriteUInt8(1);           // Negotiation Version
   request.WriteUInt8(static_cast<uint8_t>(user_.size()));
   request.WriteString(user_);      // Username
@@ -686,7 +687,7 @@ void AsyncSocksProxySocket::SendAuth() {
 }
 
 void AsyncSocksProxySocket::SendConnect() {
-  ByteBuffer request;
+  ByteBufferWriter request;
   request.WriteUInt8(5);              // Socks Version
   request.WriteUInt8(1);              // CONNECT
   request.WriteUInt8(0);              // Reserved
@@ -721,7 +722,7 @@ void AsyncSocksProxyServerSocket::ProcessInput(char* data, size_t* len) {
   // TODO: See if the whole message has arrived
   ASSERT(state_ < SS_CONNECT_PENDING);
 
-  ByteBuffer response(data, *len);
+  ByteBufferReader response(data, *len);
   if (state_ == SS_HELLO) {
     HandleHello(&response);
   } else if (state_ == SS_AUTH) {
@@ -732,14 +733,14 @@ void AsyncSocksProxyServerSocket::ProcessInput(char* data, size_t* len) {
 
   // Consume parsed data
   *len = response.Length();
-  memcpy(data, response.Data(), *len);
+  memmove(data, response.Data(), *len);
 }
 
-void AsyncSocksProxyServerSocket::DirectSend(const ByteBuffer& buf) {
+void AsyncSocksProxyServerSocket::DirectSend(const ByteBufferWriter& buf) {
   BufferedReadAdapter::DirectSend(buf.Data(), buf.Length());
 }
 
-void AsyncSocksProxyServerSocket::HandleHello(ByteBuffer* request) {
+void AsyncSocksProxyServerSocket::HandleHello(ByteBufferReader* request) {
   uint8_t ver, num_methods;
   if (!request->ReadUInt8(&ver) ||
       !request->ReadUInt8(&num_methods)) {
@@ -771,13 +772,13 @@ void AsyncSocksProxyServerSocket::HandleHello(ByteBuffer* request) {
 }
 
 void AsyncSocksProxyServerSocket::SendHelloReply(uint8_t method) {
-  ByteBuffer response;
+  ByteBufferWriter response;
   response.WriteUInt8(5);  // Socks Version
   response.WriteUInt8(method);  // Auth method
   DirectSend(response);
 }
 
-void AsyncSocksProxyServerSocket::HandleAuth(ByteBuffer* request) {
+void AsyncSocksProxyServerSocket::HandleAuth(ByteBufferReader* request) {
   uint8_t ver, user_len, pass_len;
   std::string user, pass;
   if (!request->ReadUInt8(&ver) ||
@@ -795,13 +796,13 @@ void AsyncSocksProxyServerSocket::HandleAuth(ByteBuffer* request) {
 }
 
 void AsyncSocksProxyServerSocket::SendAuthReply(uint8_t result) {
-  ByteBuffer response;
+  ByteBufferWriter response;
   response.WriteUInt8(1);  // Negotiation Version
   response.WriteUInt8(result);
   DirectSend(response);
 }
 
-void AsyncSocksProxyServerSocket::HandleConnect(ByteBuffer* request) {
+void AsyncSocksProxyServerSocket::HandleConnect(ByteBufferReader* request) {
   uint8_t ver, command, reserved, addr_type;
   uint32_t ip;
   uint16_t port;
@@ -830,7 +831,7 @@ void AsyncSocksProxyServerSocket::SendConnectResult(int result,
   if (state_ != SS_CONNECT_PENDING)
     return;
 
-  ByteBuffer response;
+  ByteBufferWriter response;
   response.WriteUInt8(5);  // Socks version
   response.WriteUInt8((result != 0));  // 0x01 is generic error
   response.WriteUInt8(0);  // reserved
@@ -876,15 +877,18 @@ int LoggingSocketAdapter::SendTo(const void *pv, size_t cb,
   return res;
 }
 
-int LoggingSocketAdapter::Recv(void *pv, size_t cb) {
-  int res = AsyncSocketAdapter::Recv(pv, cb);
+int LoggingSocketAdapter::Recv(void* pv, size_t cb, int64_t* timestamp) {
+  int res = AsyncSocketAdapter::Recv(pv, cb, timestamp);
   if (res > 0)
     LogMultiline(level_, label_.c_str(), true, pv, res, hex_mode_, &lms_);
   return res;
 }
 
-int LoggingSocketAdapter::RecvFrom(void *pv, size_t cb, SocketAddress *paddr) {
-  int res = AsyncSocketAdapter::RecvFrom(pv, cb, paddr);
+int LoggingSocketAdapter::RecvFrom(void* pv,
+                                   size_t cb,
+                                   SocketAddress* paddr,
+                                   int64_t* timestamp) {
+  int res = AsyncSocketAdapter::RecvFrom(pv, cb, paddr, timestamp);
   if (res > 0)
     LogMultiline(level_, label_.c_str(), true, pv, res, hex_mode_, &lms_);
   return res;

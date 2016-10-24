@@ -8,159 +8,87 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
 #include <string>
 
-#include "webrtc/api/remotevideocapturer.h"
 #include "webrtc/api/test/fakevideotrackrenderer.h"
-#include "webrtc/api/videosource.h"
+#include "webrtc/api/videocapturertracksource.h"
 #include "webrtc/api/videotrack.h"
 #include "webrtc/base/gunit.h"
-#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/media/base/fakevideocapturer.h"
 #include "webrtc/media/base/fakemediaengine.h"
 #include "webrtc/media/engine/webrtcvideoframe.h"
-#include "webrtc/pc/channelmanager.h"
 
 using webrtc::FakeVideoTrackRenderer;
-using webrtc::FakeVideoTrackRendererOld;
-using webrtc::VideoSource;
+using webrtc::MediaSourceInterface;
+using webrtc::MediaStreamTrackInterface;
+using webrtc::VideoTrackSource;
 using webrtc::VideoTrack;
 using webrtc::VideoTrackInterface;
-
-namespace {
-
-class WebRtcVideoTestFrame : public cricket::WebRtcVideoFrame {
- public:
-  using cricket::WebRtcVideoFrame::SetRotation;
-};
-
-}  // namespace
 
 class VideoTrackTest : public testing::Test {
  public:
   VideoTrackTest() {
     static const char kVideoTrackId[] = "track_id";
-    video_track_ = VideoTrack::Create(
-        kVideoTrackId,
-        VideoSource::Create(rtc::Thread::Current(),
-                            new webrtc::RemoteVideoCapturer(), NULL, true));
+    video_track_source_ = new rtc::RefCountedObject<VideoTrackSource>(
+        &capturer_, true /* remote */);
+    video_track_ = VideoTrack::Create(kVideoTrackId, video_track_source_);
+    capturer_.Start(
+        cricket::VideoFormat(640, 480, cricket::VideoFormat::FpsToInterval(30),
+                             cricket::FOURCC_I420));
   }
 
  protected:
+  cricket::FakeVideoCapturer capturer_;
+  rtc::scoped_refptr<VideoTrackSource> video_track_source_;
   rtc::scoped_refptr<VideoTrackInterface> video_track_;
 };
+
+// Test changing the source state also changes the track state.
+TEST_F(VideoTrackTest, SourceStateChangeTrackState) {
+  EXPECT_EQ(MediaStreamTrackInterface::kLive, video_track_->state());
+  video_track_source_->SetState(MediaSourceInterface::kEnded);
+  EXPECT_EQ(MediaStreamTrackInterface::kEnded, video_track_->state());
+}
 
 // Test adding renderers to a video track and render to them by providing
 // frames to the source.
 TEST_F(VideoTrackTest, RenderVideo) {
   // FakeVideoTrackRenderer register itself to |video_track_|
-  rtc::scoped_ptr<FakeVideoTrackRenderer> renderer_1(
+  std::unique_ptr<FakeVideoTrackRenderer> renderer_1(
       new FakeVideoTrackRenderer(video_track_.get()));
 
-  rtc::VideoSinkInterface<cricket::VideoFrame>* renderer_input =
-      video_track_->GetSink();
-  ASSERT_FALSE(renderer_input == NULL);
-
-  cricket::WebRtcVideoFrame frame;
-  frame.InitToBlack(123, 123, 0);
-  renderer_input->OnFrame(frame);
+  capturer_.CaptureFrame();
   EXPECT_EQ(1, renderer_1->num_rendered_frames());
 
-  EXPECT_EQ(123, renderer_1->width());
-  EXPECT_EQ(123, renderer_1->height());
-
   // FakeVideoTrackRenderer register itself to |video_track_|
-  rtc::scoped_ptr<FakeVideoTrackRenderer> renderer_2(
+  std::unique_ptr<FakeVideoTrackRenderer> renderer_2(
       new FakeVideoTrackRenderer(video_track_.get()));
-
-  renderer_input->OnFrame(frame);
-
-  EXPECT_EQ(123, renderer_1->width());
-  EXPECT_EQ(123, renderer_1->height());
-  EXPECT_EQ(123, renderer_2->width());
-  EXPECT_EQ(123, renderer_2->height());
-
+  capturer_.CaptureFrame();
   EXPECT_EQ(2, renderer_1->num_rendered_frames());
   EXPECT_EQ(1, renderer_2->num_rendered_frames());
 
-  video_track_->RemoveSink(renderer_1.get());
-  renderer_input->OnFrame(frame);
-
-  EXPECT_EQ(2, renderer_1->num_rendered_frames());
-  EXPECT_EQ(2, renderer_2->num_rendered_frames());
-}
-
-// Test adding renderers to a video track and render to them by
-// providing frames to the source. Uses the old VideoTrack interface
-// with AddRenderer and RemoveRenderer.
-TEST_F(VideoTrackTest, RenderVideoOld) {
-  // FakeVideoTrackRenderer register itself to |video_track_|
-  rtc::scoped_ptr<FakeVideoTrackRendererOld> renderer_1(
-      new FakeVideoTrackRendererOld(video_track_.get()));
-
-  rtc::VideoSinkInterface<cricket::VideoFrame>* renderer_input =
-      video_track_->GetSink();
-  ASSERT_FALSE(renderer_input == NULL);
-
-  cricket::WebRtcVideoFrame frame;
-  frame.InitToBlack(123, 123, 0);
-  renderer_input->OnFrame(frame);
-  EXPECT_EQ(1, renderer_1->num_rendered_frames());
-
-  EXPECT_EQ(123, renderer_1->width());
-  EXPECT_EQ(123, renderer_1->height());
-
-  // FakeVideoTrackRenderer register itself to |video_track_|
-  rtc::scoped_ptr<FakeVideoTrackRenderer> renderer_2(
-      new FakeVideoTrackRenderer(video_track_.get()));
-
-  renderer_input->OnFrame(frame);
-
-  EXPECT_EQ(123, renderer_1->width());
-  EXPECT_EQ(123, renderer_1->height());
-  EXPECT_EQ(123, renderer_2->width());
-  EXPECT_EQ(123, renderer_2->height());
-
-  EXPECT_EQ(2, renderer_1->num_rendered_frames());
-  EXPECT_EQ(1, renderer_2->num_rendered_frames());
-
-  video_track_->RemoveRenderer(renderer_1.get());
-  renderer_input->OnFrame(frame);
-
-  EXPECT_EQ(2, renderer_1->num_rendered_frames());
+  renderer_1.reset(nullptr);
+  capturer_.CaptureFrame();
   EXPECT_EQ(2, renderer_2->num_rendered_frames());
 }
 
 // Test that disabling the track results in blacked out frames.
 TEST_F(VideoTrackTest, DisableTrackBlackout) {
-  rtc::scoped_ptr<FakeVideoTrackRenderer> renderer(
+  std::unique_ptr<FakeVideoTrackRenderer> renderer(
       new FakeVideoTrackRenderer(video_track_.get()));
 
-  rtc::VideoSinkInterface<cricket::VideoFrame>* renderer_input =
-      video_track_->GetSink();
-  ASSERT_FALSE(renderer_input == NULL);
-
-  cricket::WebRtcVideoFrame frame;
-  frame.InitToBlack(100, 200, 0);
-  // Make it not all-black
-  frame.GetUPlane()[0] = 0;
-
-  renderer_input->OnFrame(frame);
+  capturer_.CaptureFrame();
   EXPECT_EQ(1, renderer->num_rendered_frames());
   EXPECT_FALSE(renderer->black_frame());
-  EXPECT_EQ(100, renderer->width());
-  EXPECT_EQ(200, renderer->height());
 
   video_track_->set_enabled(false);
-  renderer_input->OnFrame(frame);
+  capturer_.CaptureFrame();
   EXPECT_EQ(2, renderer->num_rendered_frames());
   EXPECT_TRUE(renderer->black_frame());
-  EXPECT_EQ(100, renderer->width());
-  EXPECT_EQ(200, renderer->height());
 
   video_track_->set_enabled(true);
-  renderer_input->OnFrame(frame);
+  capturer_.CaptureFrame();
   EXPECT_EQ(3, renderer->num_rendered_frames());
   EXPECT_FALSE(renderer->black_frame());
-  EXPECT_EQ(100, renderer->width());
-  EXPECT_EQ(200, renderer->height());
 }

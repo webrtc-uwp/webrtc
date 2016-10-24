@@ -16,6 +16,8 @@
         '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
       ],
       'sources': [
+        'test/audio_buffer_tools.cc',
+        'test/audio_buffer_tools.h',
         'test/test_utils.cc',
         'test/test_utils.h',
       ],
@@ -59,22 +61,29 @@
         'beamformer/nonlinear_beamformer_test.cc',
       ],
     }, # nonlinear_beamformer_test
-    {
-      'target_name': 'intelligibility_proc',
-      'type': 'executable',
-      'dependencies': [
-        'audioproc_test_utils',
-        '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
-        '<(DEPTH)/testing/gtest.gyp:gtest',
-        '<(webrtc_root)/modules/modules.gyp:audio_processing',
-        '<(webrtc_root)/test/test.gyp:test_support',
-      ],
-      'sources': [
-        'intelligibility/test/intelligibility_proc.cc',
-      ],
-    }, # intelligibility_proc
   ],
   'conditions': [
+    ['enable_intelligibility_enhancer==1', {
+      'defines': ['WEBRTC_INTELLIGIBILITY_ENHANCER=1',],
+      'targets': [
+        {
+          'target_name': 'intelligibility_proc',
+          'type': 'executable',
+          'dependencies': [
+            'audioproc_test_utils',
+            '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
+            '<(DEPTH)/testing/gtest.gyp:gtest',
+            '<(webrtc_root)/modules/modules.gyp:audio_processing',
+            '<(webrtc_root)/test/test.gyp:test_support',
+          ],
+          'sources': [
+            'intelligibility/test/intelligibility_proc.cc',
+          ],
+        },
+      ],
+    }, {
+      'defines': ['WEBRTC_INTELLIGIBILITY_ENHANCER=0',],
+    }],
     ['enable_protobuf==1', {
       'targets': [
         {
@@ -129,8 +138,12 @@
             '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
           ],
           'sources': [
-            'test/audio_file_processor.cc',
-            'test/audio_file_processor.h',
+            'test/audio_processing_simulator.cc',
+            'test/audio_processing_simulator.h',
+            'test/aec_dump_based_simulator.cc',
+            'test/aec_dump_based_simulator.h',
+            'test/wav_based_simulator.cc',
+            'test/wav_based_simulator.h',
             'test/audioproc_float.cc',
           ],
         },

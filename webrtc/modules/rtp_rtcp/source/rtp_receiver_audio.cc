@@ -16,17 +16,14 @@
 
 #include "webrtc/base/logging.h"
 #include "webrtc/base/trace_event.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 namespace webrtc {
 RTPReceiverStrategy* RTPReceiverStrategy::CreateAudioStrategy(
-    RtpData* data_callback,
-    RtpAudioFeedback* incoming_messages_callback) {
-  return new RTPReceiverAudio(data_callback, incoming_messages_callback);
+    RtpData* data_callback) {
+  return new RTPReceiverAudio(data_callback);
 }
 
-RTPReceiverAudio::RTPReceiverAudio(RtpData* data_callback,
-                                   RtpAudioFeedback* incoming_messages_callback)
+RTPReceiverAudio::RTPReceiverAudio(RtpData* data_callback)
     : RTPReceiverStrategy(data_callback),
       TelephoneEventHandler(),
       last_received_frequency_(8000),
@@ -40,8 +37,7 @@ RTPReceiverAudio::RTPReceiverAudio(RtpData* data_callback,
       g722_payload_type_(-1),
       last_received_g722_(false),
       num_energy_(0),
-      current_remote_energy_(),
-      cb_audio_feedback_(incoming_messages_callback) {
+      current_remote_energy_() {
   last_payload_.Audio.channels = 1;
   memset(current_remote_energy_, 0, sizeof(current_remote_energy_));
 }
@@ -49,26 +45,26 @@ RTPReceiverAudio::RTPReceiverAudio(RtpData* data_callback,
 // Outband TelephoneEvent(DTMF) detection
 void RTPReceiverAudio::SetTelephoneEventForwardToDecoder(
     bool forward_to_decoder) {
-  CriticalSectionScoped lock(crit_sect_.get());
+  rtc::CritScope lock(&crit_sect_);
   telephone_event_forward_to_decoder_ = forward_to_decoder;
 }
 
 // Is forwarding of outband telephone events turned on/off?
 bool RTPReceiverAudio::TelephoneEventForwardToDecoder() const {
-  CriticalSectionScoped lock(crit_sect_.get());
+  rtc::CritScope lock(&crit_sect_);
   return telephone_event_forward_to_decoder_;
 }
 
 bool RTPReceiverAudio::TelephoneEventPayloadType(
     int8_t payload_type) const {
-  CriticalSectionScoped lock(crit_sect_.get());
+  rtc::CritScope lock(&crit_sect_);
   return telephone_event_payload_type_ == payload_type;
 }
 
 bool RTPReceiverAudio::CNGPayloadType(int8_t payload_type,
                                       uint32_t* frequency,
                                       bool* cng_payload_type_has_changed) {
-  CriticalSectionScoped lock(crit_sect_.get());
+  rtc::CritScope lock(&crit_sect_);
   *cng_payload_type_has_changed = false;
 
   //  We can have four CNG on 8000Hz, 16000Hz, 32000Hz and 48000Hz.
@@ -155,7 +151,7 @@ int32_t RTPReceiverAudio::OnNewPayloadTypeCreated(
     const char payload_name[RTP_PAYLOAD_NAME_SIZE],
     int8_t payload_type,
     uint32_t frequency) {
-  CriticalSectionScoped lock(crit_sect_.get());
+  rtc::CritScope lock(&crit_sect_);
 
   if (RtpUtility::StringCompare(payload_name, "telephone-event", 15)) {
     telephone_event_payload_type_ = payload_type;
@@ -197,6 +193,10 @@ int32_t RTPReceiverAudio::ParseRtpPacket(WebRtcRTPHeader* rtp_header,
            rtp_header->type.Audio.numEnergy);
   }
 
+  if (first_packet_received_()) {
+    LOG(LS_INFO) << "Received first audio RTP packet";
+  }
+
   return ParseAudioCodecSpecific(rtp_header,
                                  payload,
                                  payload_length,
@@ -205,7 +205,7 @@ int32_t RTPReceiverAudio::ParseRtpPacket(WebRtcRTPHeader* rtp_header,
 }
 
 int RTPReceiverAudio::GetPayloadTypeFrequency() const {
-  CriticalSectionScoped lock(crit_sect_.get());
+  rtc::CritScope lock(&crit_sect_);
   if (last_received_g722_) {
     return 8000;
   }
@@ -248,7 +248,7 @@ void RTPReceiverAudio::CheckPayloadChanged(int8_t payload_type,
 }
 
 int RTPReceiverAudio::Energy(uint8_t array_of_energy[kRtpCsrcSize]) const {
-  CriticalSectionScoped cs(crit_sect_.get());
+  rtc::CritScope cs(&crit_sect_);
 
   assert(num_energy_ <= kRtpCsrcSize);
 
@@ -290,7 +290,7 @@ int32_t RTPReceiverAudio::ParseAudioCodecSpecific(
   bool telephone_event_packet =
       TelephoneEventPayloadType(rtp_header->header.payloadType);
   if (telephone_event_packet) {
-    CriticalSectionScoped lock(crit_sect_.get());
+    rtc::CritScope lock(&crit_sect_);
 
     // RFC 4733 2.3
     // 0                   1                   2                   3
@@ -335,7 +335,7 @@ int32_t RTPReceiverAudio::ParseAudioCodecSpecific(
   }
 
   {
-    CriticalSectionScoped lock(crit_sect_.get());
+    rtc::CritScope lock(&crit_sect_);
 
     if (!telephone_event_packet) {
       last_received_frequency_ = audio_specific.frequency;

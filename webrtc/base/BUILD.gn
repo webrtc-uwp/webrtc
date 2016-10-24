@@ -10,11 +10,17 @@ import("//build/config/crypto.gni")
 import("//build/config/ui.gni")
 import("../build/webrtc.gni")
 
-# Enable OpenSSL (BoringSSL) for iOS. This is covered in webrtc/supplement.gypi
-# for the GYP build.
 import("//build_overrides/webrtc.gni")
-if (is_ios && !build_with_chromium) {
-  use_openssl = true
+
+if (is_android) {
+  import("//build/config/android/config.gni")
+  import("//build/config/android/rules.gni")
+}
+
+config("rtc_base_approved_all_dependent_config") {
+  if (is_mac && !build_with_chromium) {
+    libs = [ "Foundation.framework" ]  # needed for logging_mac.mm
+  }
 }
 
 config("rtc_base_config") {
@@ -27,12 +33,6 @@ config("rtc_base_config") {
     "FEATURE_ENABLE_SSL",
     "LOGGING=1",
   ]
-
-  if (is_posix) {
-    # TODO(henrike): issue 3307, make rtc_base build without disabling
-    # these flags.
-    cflags_cc = [ "-Wno-non-virtual-dtor" ]
-  }
 }
 
 config("rtc_base_chromium_config") {
@@ -46,49 +46,42 @@ config("openssl_config") {
   ]
 }
 
-config("ios_config") {
-  libs = [
-    "AVFoundation.framework",
-    "CFNetwork.framework",
+config("rtc_base_all_dependent_config") {
+  if (is_ios) {
+    libs = [
+      "CFNetwork.framework",
 
-    #"Foundation.framework",  # Already included in //build/config:default_libs.
-    "Security.framework",
-    "SystemConfiguration.framework",
-
-    #"UIKit.framework",  # Already included in //build/config:default_libs.
-  ]
-}
-
-config("mac_config") {
-  libs = [
-    "Cocoa.framework",
-
-    #"Foundation.framework",  # Already included in //build/config:default_libs.
-    #"IOKit.framework",  # Already included in //build/config:default_libs.
-    #"Security.framework",  # Already included in //build/config:default_libs.
-    "SystemConfiguration.framework",
-  ]
-}
-
-config("mac_x86_config") {
-  libs = [
-    #"Carbon.framework",  # Already included in //build/config:default_libs.
-  ]
+      #"Foundation.framework",  # Already in //build/config:default_libs.
+      "Security.framework",
+      "SystemConfiguration.framework",
+      "UIKit.framework",
+    ]
+  }
+  if (is_mac) {
+    libs = [
+      "Cocoa.framework",
+      "Foundation.framework",
+      "IOKit.framework",
+      "Security.framework",
+      "SystemConfiguration.framework",
+    ]
+    if (current_cpu == "x86") {
+      libs += [ "Carbon.framework" ]
+    }
+  }
 }
 
 if (is_linux && !build_with_chromium) {
   # Provides the same functionality as the //crypto:platform target, which
   # WebRTC cannot use as we don't sync src/crypto from Chromium.
   group("linux_system_ssl") {
-    if (use_openssl) {
-      deps = [
-        "//third_party/boringssl",
-      ]
-    }
+    deps = [
+      "//third_party/boringssl",
+    ]
   }
 }
 
-if (rtc_build_ssl == 0) {
+if (!rtc_build_ssl) {
   config("external_ssl_library") {
     assert(rtc_ssl_root != "",
            "You must specify rtc_ssl_root when rtc_build_ssl==0.")
@@ -97,17 +90,18 @@ if (rtc_build_ssl == 0) {
 }
 
 # The subset of rtc_base approved for use outside of libjingle.
-static_library("rtc_base_approved") {
+rtc_static_library("rtc_base_approved") {
+  defines = []
+  libs = []
   deps = []
-  configs += [ "..:common_config" ]
-  public_configs = [ "..:common_inherited_config" ]
+  all_dependent_configs = [ ":rtc_base_approved_all_dependent_config" ]
 
   sources = [
     "array_view.h",
     "atomicops.h",
+    "bind.h",
     "bitbuffer.cc",
     "bitbuffer.h",
-    "buffer.cc",
     "buffer.h",
     "bufferqueue.cc",
     "bufferqueue.h",
@@ -117,6 +111,8 @@ static_library("rtc_base_approved") {
     "checks.cc",
     "checks.h",
     "constructormagic.h",
+    "copyonwritebuffer.cc",
+    "copyonwritebuffer.h",
     "criticalsection.cc",
     "criticalsection.h",
     "deprecation.h",
@@ -126,29 +122,43 @@ static_library("rtc_base_approved") {
     "event_tracer.h",
     "exp_filter.cc",
     "exp_filter.h",
+    "file.cc",
+    "file.h",
+    "format_macros.h",
+    "location.cc",
+    "location.h",
     "md5.cc",
     "md5.h",
     "md5digest.cc",
     "md5digest.h",
+    "mod_ops.h",
+    "onetimeevent.h",
     "optional.h",
     "platform_file.cc",
     "platform_file.h",
     "platform_thread.cc",
     "platform_thread.h",
     "platform_thread_types.h",
+    "race_checker.cc",
+    "race_checker.h",
     "random.cc",
     "random.h",
+    "rate_limiter.cc",
+    "rate_limiter.h",
     "rate_statistics.cc",
     "rate_statistics.h",
+    "ratetracker.cc",
+    "ratetracker.h",
     "refcount.h",
     "safe_conversions.h",
     "safe_conversions_impl.h",
-    "scoped_ptr.h",
+    "sanitizer.h",
     "scoped_ref_ptr.h",
     "stringencode.cc",
     "stringencode.h",
     "stringutils.cc",
     "stringutils.h",
+    "swap_queue.h",
     "systeminfo.cc",
     "systeminfo.h",
     "template_util.h",
@@ -156,10 +166,25 @@ static_library("rtc_base_approved") {
     "thread_checker.h",
     "thread_checker_impl.cc",
     "thread_checker_impl.h",
+    "timestampaligner.cc",
+    "timestampaligner.h",
     "timeutils.cc",
     "timeutils.h",
     "trace_event.h",
+    "type_traits.h",
   ]
+
+  if (is_android) {
+    libs += [ "log" ]
+  }
+
+  if (is_posix) {
+    sources += [ "file_posix.cc" ]
+  }
+
+  if (is_win) {
+    sources += [ "file_win.cc" ]
+  }
 
   if (build_with_chromium) {
     # Dependency on chromium's logging (in //base).
@@ -173,29 +198,96 @@ static_library("rtc_base_approved") {
     sources += [
       "logging.cc",
       "logging.h",
+      "logging_mac.mm",
     ]
   }
 }
 
-static_library("rtc_base") {
+config("enable_libevent_config") {
+  defines = [ "WEBRTC_BUILD_LIBEVENT" ]
+}
+
+rtc_static_library("rtc_task_queue") {
+  public_deps = [
+    ":rtc_base_approved",
+  ]
+
+  sources = [
+    "sequenced_task_checker.h",
+    "sequenced_task_checker_impl.cc",
+    "sequenced_task_checker_impl.h",
+  ]
+
+  if (build_with_chromium) {
+    sources += [
+      "../../webrtc_overrides/webrtc/base/task_queue.cc",
+      "../../webrtc_overrides/webrtc/base/task_queue.h",
+    ]
+    include_dirs = [ "../../webrtc_overrides" ]
+  } else {
+    sources += [
+      "task_queue.h",
+      "task_queue_posix.h",
+    ]
+    if (rtc_build_libevent) {
+      deps = [
+        "//base/third_party/libevent",
+      ]
+    }
+
+    if (rtc_enable_libevent) {
+      sources += [
+        "task_queue_libevent.cc",
+        "task_queue_posix.cc",
+      ]
+      all_dependent_configs = [ ":enable_libevent_config" ]
+    } else {
+      if (is_mac || is_ios) {
+        sources += [
+          "task_queue_gcd.cc",
+          "task_queue_posix.cc",
+        ]
+      }
+      if (is_win) {
+        sources += [ "task_queue_win.cc" ]
+      }
+    }
+  }
+}
+
+config("rtc_base_warnings_config") {
+  if (is_win && is_clang) {
+    cflags = [
+      # Disable warnings failing when compiling with Clang on Windows.
+      # https://bugs.chromium.org/p/webrtc/issues/detail?id=5366
+      "-Wno-sign-compare",
+      "-Wno-missing-braces",
+    ]
+  }
+}
+
+rtc_static_library("rtc_base") {
   cflags = []
   cflags_cc = []
   libs = []
-  deps = []
+  deps = [
+    "..:webrtc_common",
+  ]
   public_deps = [
     ":rtc_base_approved",
   ]
 
   configs += [
-    "..:common_config",
+    ":openssl_config",
     ":rtc_base_config",
   ]
 
   public_configs = [
-    "..:common_inherited_config",
+    ":openssl_config",
     ":rtc_base_config",
   ]
 
+  all_dependent_configs = [ ":rtc_base_all_dependent_config" ]
   defines = [ "LOGGING=1" ]
 
   sources = [
@@ -221,8 +313,6 @@ static_library("rtc_base") {
     "base64.h",
     "common.cc",
     "common.h",
-    "copyonwritebuffer.cc",
-    "copyonwritebuffer.h",
     "crc32.cc",
     "crc32.h",
     "cryptstring.cc",
@@ -237,7 +327,6 @@ static_library("rtc_base") {
     "firewallsocketserver.h",
     "flags.cc",
     "flags.h",
-    "format_macros.h",
     "gunit_prod.h",
     "helpers.cc",
     "helpers.h",
@@ -254,7 +343,6 @@ static_library("rtc_base") {
     "ipaddress.cc",
     "ipaddress.h",
     "linked_ptr.h",
-    "mathutils.h",
     "messagedigest.cc",
     "messagedigest.h",
     "messagehandler.cc",
@@ -267,7 +355,17 @@ static_library("rtc_base") {
     "network.h",
     "networkmonitor.cc",
     "networkmonitor.h",
+    "nullsocketserver.cc",
     "nullsocketserver.h",
+    "openssl.h",
+    "openssladapter.cc",
+    "openssladapter.h",
+    "openssldigest.cc",
+    "openssldigest.h",
+    "opensslidentity.cc",
+    "opensslidentity.h",
+    "opensslstreamadapter.cc",
+    "opensslstreamadapter.h",
     "pathutils.cc",
     "pathutils.h",
     "physicalsocketserver.cc",
@@ -278,12 +376,10 @@ static_library("rtc_base") {
     "proxyinfo.h",
     "ratelimiter.cc",
     "ratelimiter.h",
-    "ratetracker.cc",
-    "ratetracker.h",
     "rtccertificate.cc",
     "rtccertificate.h",
-    "scoped_autorelease_pool.h",
-    "scoped_autorelease_pool.mm",
+    "rtccertificategenerator.cc",
+    "rtccertificategenerator.h",
     "sha1.cc",
     "sha1.h",
     "sha1digest.cc",
@@ -318,8 +414,6 @@ static_library("rtc_base") {
     "sslsocketfactory.h",
     "sslstreamadapter.cc",
     "sslstreamadapter.h",
-    "sslstreamadapterhelper.cc",
-    "sslstreamadapterhelper.h",
     "stream.cc",
     "stream.h",
     "task.cc",
@@ -338,22 +432,15 @@ static_library("rtc_base") {
     "worker.h",
   ]
 
-  if (is_posix) {
-    sources += [
-      "ifaddrs-android.h",
-      "ifaddrs_converter.cc",
-      "unixfilesystem.cc",
-      "unixfilesystem.h",
-    ]
+  # TODO(henrike): issue 3307, make rtc_base build with the Chromium default
+  # compiler settings.
+  suppressed_configs += [ "//build/config/compiler:chromium_code" ]
+  configs += [ "//build/config/compiler:no_chromium_code" ]
+  if (!is_win) {
+    cflags += [ "-Wno-uninitialized" ]
   }
 
   if (build_with_chromium) {
-    deps += [ "..:webrtc_common" ]
-
-    if (is_mac) {
-      sources += [ "macifaddrs_converter.cc" ]
-    }
-
     if (is_win) {
       sources += [ "../../webrtc_overrides/webrtc/base/win32socketinit.cc" ]
     }
@@ -365,16 +452,12 @@ static_library("rtc_base") {
 
     public_configs += [ ":rtc_base_chromium_config" ]
   } else {
+    configs += [ ":rtc_base_warnings_config" ]
     sources += [
       "bandwidthsmoother.cc",
       "bandwidthsmoother.h",
-      "bind.h",
-      "bind.h.pump",
       "callback.h",
-      "callback.h.pump",
       "fileutils_mock.h",
-      "genericslot.h",
-      "genericslot.h.pump",
       "httpserver.cc",
       "httpserver.h",
       "json.cc",
@@ -402,6 +485,7 @@ static_library("rtc_base") {
       "sec_buffer.h",
       "sslconfig.h",
       "sslroots.h",
+      "testbase64.h",
       "testclient.cc",
       "testclient.h",
       "transformadapter.cc",
@@ -415,19 +499,6 @@ static_library("rtc_base") {
       "windowpickerfactory.h",
     ]
 
-    deps += [ "..:webrtc_common" ]
-
-    if (is_posix) {
-      sources += [
-        "latebindingsymboltable.cc",
-        "latebindingsymboltable.cc.def",
-        "latebindingsymboltable.h",
-        "latebindingsymboltable.h.def",
-        "posix.cc",
-        "posix.h",
-      ]
-    }
-
     if (is_linux) {
       sources += [
         "dbus.cc",
@@ -436,6 +507,15 @@ static_library("rtc_base") {
         "libdbusglibsymboltable.h",
         "linuxfdwalk.c",
         "linuxfdwalk.h",
+      ]
+    }
+
+    if (is_posix) {
+      sources += [
+        "latebindingsymboltable.cc",
+        "latebindingsymboltable.h",
+        "posix.cc",
+        "posix.h",
       ]
     }
 
@@ -471,10 +551,11 @@ static_library("rtc_base") {
         "win32socketinit.h",
       ]
     }
+
     if (rtc_build_json) {
       deps += [ "//third_party/jsoncpp" ]
     } else {
-      include_dirs += [ rtc_jsoncpp_root ]
+      include_dirs = [ "$rtc_jsoncpp_root" ]
 
       # When defined changes the include path for json.h to where it is
       # expected to be when building json outside of the standalone build.
@@ -482,33 +563,10 @@ static_library("rtc_base") {
     }
   }  # !build_with_chromium
 
-  # TODO(henrike): issue 3307, make rtc_base build with the Chromium default
-  # compiler settings.
-  configs -= [ "//build/config/compiler:chromium_code" ]
-  configs += [ "//build/config/compiler:no_chromium_code" ]
-  if (!is_win) {
-    cflags += [ "-Wno-uninitialized" ]
-    cflags_cc += [ "-Wno-non-virtual-dtor" ]
-  }
-
-  if (use_openssl) {
-    public_configs += [ ":openssl_config" ]
-    if (rtc_build_ssl) {
-      deps += [ "//third_party/boringssl" ]
-    } else {
-      configs += [ "external_ssl_library" ]
-    }
-    sources += [
-      "openssl.h",
-      "openssladapter.cc",
-      "openssladapter.h",
-      "openssldigest.cc",
-      "openssldigest.h",
-      "opensslidentity.cc",
-      "opensslidentity.h",
-      "opensslstreamadapter.cc",
-      "opensslstreamadapter.h",
-    ]
+  if (rtc_build_ssl) {
+    deps += [ "//third_party/boringssl" ]
+  } else {
+    configs += [ ":external_ssl_library" ]
   }
 
   if (is_android) {
@@ -523,12 +581,15 @@ static_library("rtc_base") {
     ]
   }
 
-  if (is_ios) {
-    all_dependent_configs = [ ":ios_config" ]
-
+  if (is_ios || is_mac) {
     sources += [
+      "maccocoathreadhelper.h",
+      "maccocoathreadhelper.mm",
       "macconversion.cc",
       "macconversion.h",
+      "macifaddrs_converter.cc",
+      "scoped_autorelease_pool.h",
+      "scoped_autorelease_pool.mm",
     ]
   }
 
@@ -556,19 +617,16 @@ static_library("rtc_base") {
 
   if (is_mac) {
     sources += [
-      "maccocoathreadhelper.h",
-      "maccocoathreadhelper.mm",
-      "macconversion.cc",
-      "macconversion.h",
       "macutils.cc",
       "macutils.h",
     ]
+    libs += [
+      # For ProcessInformationCopyDictionary in unixfilesystem.cc.
+      "ApplicationServices.framework",
 
-    all_dependent_configs = [ ":mac_config" ]
-
-    if (current_cpu == "x86") {
-      all_dependent_configs += [ ":mac_x86_config" ]
-    }
+      # For GetGestalt in macutils.cc.
+      "CoreServices.framework",
+    ]
   }
 
   if (is_win && target_runtime == "win32") {
@@ -627,11 +685,19 @@ static_library("rtc_base") {
     defines += [ "_CRT_NONSTDC_NO_DEPRECATE" ]
   }
 
-  if (is_posix && is_debug) {
-    # The Chromium build/common.gypi defines this for all posix
-    # _except_ for ios & mac.  We want it there as well, e.g.
-    # because ASSERT and friends trigger off of it.
-    defines += [ "_DEBUG" ]
+  if (is_posix) {
+    sources += [
+      "ifaddrs_converter.cc",
+      "ifaddrs_converter.h",
+      "unixfilesystem.cc",
+      "unixfilesystem.h",
+    ]
+    if (is_debug) {
+      # The Chromium build/common.gypi defines this for all posix
+      # _except_ for ios & mac.  We want it there as well, e.g.
+      # because ASSERT and friends trigger off of it.
+      defines += [ "_DEBUG" ]
+    }
   }
 
   if (is_ios || (is_mac && current_cpu != "x86")) {
@@ -650,41 +716,79 @@ static_library("rtc_base") {
     defines += [ "timezone=_timezone" ]
     sources -= [ "ifaddrs_converter.cc" ]
   }
-}
-
-if (is_ios) {
-  source_set("rtc_base_objc") {
-    deps = [
-      ":rtc_base",
-    ]
-    cflags = [ "-fobjc-arc" ]
-    configs += [ "..:common_config" ]
-    public_configs = [ "..:common_inherited_config" ]
-
-    sources = [
-      "objc/NSString+StdString.h",
-      "objc/NSString+StdString.mm",
-      "objc/RTCCameraPreviewView.h",
-      "objc/RTCCameraPreviewView.m",
-      "objc/RTCDispatcher.h",
-      "objc/RTCDispatcher.m",
-      "objc/RTCFieldTrials.h",
-      "objc/RTCFieldTrials.mm",
-      "objc/RTCFileLogger.h",
-      "objc/RTCFileLogger.mm",
-      "objc/RTCLogging.h",
-      "objc/RTCLogging.mm",
-      "objc/RTCMacros.h",
-      "objc/RTCSSLAdapter.h",
-      "objc/RTCSSLAdapter.mm",
-      "objc/RTCTracing.h",
-      "objc/RTCTracing.mm",
-    ]
+  if (is_win && is_clang) {
+    # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 }
 
-source_set("gtest_prod") {
+rtc_source_set("gtest_prod") {
   sources = [
     "gtest_prod_util.h",
   ]
+}
+
+if (rtc_include_tests) {
+  config("rtc_base_tests_utils_exported_config") {
+    defines = [ "GTEST_RELATIVE_PATH" ]
+  }
+
+  config("rtc_base_tests_utils_warnings_config") {
+    if (is_win && is_clang) {
+      cflags = [
+        # See https://bugs.chromium.org/p/webrtc/issues/detail?id=6270
+        "-Wno-reorder",
+        "-Wno-sign-compare",
+      ]
+    }
+  }
+
+  rtc_source_set("rtc_base_tests_utils") {
+    testonly = true
+    sources = [
+      # Also use this as a convenient dumping ground for misc files that are
+      # included by multiple targets below.
+      "fakeclock.cc",
+      "fakeclock.h",
+      "fakenetwork.h",
+      "fakesslidentity.h",
+      "faketaskrunner.h",
+      "gunit.h",
+      "test/faketiming.h",
+      "testbase64.h",
+      "testechoserver.h",
+      "testutils.h",
+      "timedelta.h",
+      "unittest_main.cc",
+    ]
+    configs += [ ":rtc_base_tests_utils_warnings_config" ]
+    public_configs = [ ":rtc_base_tests_utils_exported_config" ]
+    deps = [
+      ":rtc_base",
+      "../test:field_trial",
+      "../test:test_support",
+    ]
+    public_deps = [
+      "//testing/gtest",
+    ]
+
+    if (is_clang) {
+      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+  }
+}
+
+if (is_android) {
+  android_library("base_java") {
+    java_files = [
+      "java/src/org/webrtc/Logging.java",
+      "java/src/org/webrtc/Size.java",
+      "java/src/org/webrtc/ThreadUtils.java",
+    ]
+
+    deps = [
+      "//base:base_java",
+    ]
+  }
 }

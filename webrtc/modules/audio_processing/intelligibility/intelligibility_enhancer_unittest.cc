@@ -16,9 +16,14 @@
 #include <vector>
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/array_view.h"
 #include "webrtc/base/arraysize.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/modules/audio_processing/audio_buffer.h"
 #include "webrtc/modules/audio_processing/intelligibility/intelligibility_enhancer.h"
+#include "webrtc/modules/audio_processing/noise_suppression_impl.h"
+#include "webrtc/modules/audio_processing/test/audio_buffer_tools.h"
+#include "webrtc/modules/audio_processing/test/bitexactness_tools.h"
 
 namespace webrtc {
 
@@ -201,6 +206,114 @@ const int kSamples = 1000;
 const int kSampleRate = 4000;
 const int kNumChannels = 1;
 const int kFragmentSize = kSampleRate / 100;
+const size_t kNumNoiseBins = 129;
+
+// Number of frames to process in the bitexactness tests.
+const size_t kNumFramesToProcess = 1000;
+
+int IntelligibilityEnhancerSampleRate(int sample_rate_hz) {
+  return (sample_rate_hz > AudioProcessing::kSampleRate16kHz
+              ? AudioProcessing::kSampleRate16kHz
+              : sample_rate_hz);
+}
+
+// Process one frame of data and produce the output.
+void ProcessOneFrame(int sample_rate_hz,
+                     AudioBuffer* render_audio_buffer,
+                     AudioBuffer* capture_audio_buffer,
+                     NoiseSuppressionImpl* noise_suppressor,
+                     IntelligibilityEnhancer* intelligibility_enhancer) {
+  if (sample_rate_hz > AudioProcessing::kSampleRate16kHz) {
+    render_audio_buffer->SplitIntoFrequencyBands();
+    capture_audio_buffer->SplitIntoFrequencyBands();
+  }
+
+  intelligibility_enhancer->ProcessRenderAudio(
+      render_audio_buffer->split_channels_f(kBand0To8kHz),
+      IntelligibilityEnhancerSampleRate(sample_rate_hz),
+      render_audio_buffer->num_channels());
+
+  noise_suppressor->AnalyzeCaptureAudio(capture_audio_buffer);
+  noise_suppressor->ProcessCaptureAudio(capture_audio_buffer);
+
+  intelligibility_enhancer->SetCaptureNoiseEstimate(
+      noise_suppressor->NoiseEstimate(), 0);
+
+  if (sample_rate_hz > AudioProcessing::kSampleRate16kHz) {
+    render_audio_buffer->MergeFrequencyBands();
+  }
+}
+
+// Processes a specified amount of frames, verifies the results and reports
+// any errors.
+void RunBitexactnessTest(int sample_rate_hz,
+                         size_t num_channels,
+                         rtc::ArrayView<const float> output_reference) {
+  const StreamConfig render_config(sample_rate_hz, num_channels, false);
+  AudioBuffer render_buffer(
+      render_config.num_frames(), render_config.num_channels(),
+      render_config.num_frames(), render_config.num_channels(),
+      render_config.num_frames());
+  test::InputAudioFile render_file(
+      test::GetApmRenderTestVectorFileName(sample_rate_hz));
+  std::vector<float> render_input(render_buffer.num_frames() *
+                                  render_buffer.num_channels());
+
+  const StreamConfig capture_config(sample_rate_hz, num_channels, false);
+  AudioBuffer capture_buffer(
+      capture_config.num_frames(), capture_config.num_channels(),
+      capture_config.num_frames(), capture_config.num_channels(),
+      capture_config.num_frames());
+  test::InputAudioFile capture_file(
+      test::GetApmCaptureTestVectorFileName(sample_rate_hz));
+  std::vector<float> capture_input(render_buffer.num_frames() *
+                                   capture_buffer.num_channels());
+
+  rtc::CriticalSection crit_capture;
+  NoiseSuppressionImpl noise_suppressor(&crit_capture);
+  noise_suppressor.Initialize(capture_config.num_channels(), sample_rate_hz);
+  noise_suppressor.Enable(true);
+
+  IntelligibilityEnhancer intelligibility_enhancer(
+      IntelligibilityEnhancerSampleRate(sample_rate_hz),
+      render_config.num_channels(), NoiseSuppressionImpl::num_noise_bins());
+
+  for (size_t frame_no = 0u; frame_no < kNumFramesToProcess; ++frame_no) {
+    ReadFloatSamplesFromStereoFile(render_buffer.num_frames(),
+                                   render_buffer.num_channels(), &render_file,
+                                   render_input);
+    ReadFloatSamplesFromStereoFile(capture_buffer.num_frames(),
+                                   capture_buffer.num_channels(), &capture_file,
+                                   capture_input);
+
+    test::CopyVectorToAudioBuffer(render_config, render_input, &render_buffer);
+    test::CopyVectorToAudioBuffer(capture_config, capture_input,
+                                  &capture_buffer);
+
+    ProcessOneFrame(sample_rate_hz, &render_buffer, &capture_buffer,
+                    &noise_suppressor, &intelligibility_enhancer);
+  }
+
+  // Extract and verify the test results.
+  std::vector<float> render_output;
+  test::ExtractVectorFromAudioBuffer(render_config, &render_buffer,
+                                     &render_output);
+
+  const float kElementErrorBound = 1.f / static_cast<float>(1 << 15);
+
+  // Compare the output with the reference. Only the first values of the output
+  // from last frame processed are compared in order not having to specify all
+  // preceeding frames as testvectors. As the algorithm being tested has a
+  // memory, testing only the last frame implicitly also tests the preceeding
+  // frames.
+  EXPECT_TRUE(test::VerifyDeinterleavedArray(
+      render_buffer.num_frames(), render_config.num_channels(),
+      output_reference, render_output, kElementErrorBound));
+}
+
+float float_rand() {
+  return std::rand() * 2.f / RAND_MAX - 1;
+}
 
 }  // namespace
 
@@ -208,11 +321,14 @@ class IntelligibilityEnhancerTest : public ::testing::Test {
  protected:
   IntelligibilityEnhancerTest()
       : clear_data_(kSamples), noise_data_(kSamples), orig_data_(kSamples) {
-    enh_.reset(new IntelligibilityEnhancer(kSampleRate, kNumChannels));
+    std::srand(1);
+    enh_.reset(
+        new IntelligibilityEnhancer(kSampleRate, kNumChannels, kNumNoiseBins));
   }
 
   bool CheckUpdate() {
-    enh_.reset(new IntelligibilityEnhancer(kSampleRate, kNumChannels));
+    enh_.reset(
+        new IntelligibilityEnhancer(kSampleRate, kNumChannels, kNumNoiseBins));
     float* clear_cursor = clear_data_.data();
     float* noise_cursor = noise_data_.data();
     for (int i = 0; i < kSamples; i += kFragmentSize) {
@@ -241,8 +357,6 @@ TEST_F(IntelligibilityEnhancerTest, TestRenderUpdate) {
   std::fill(orig_data_.begin(), orig_data_.end(), 0.f);
   std::fill(clear_data_.begin(), clear_data_.end(), 0.f);
   EXPECT_FALSE(CheckUpdate());
-  std::srand(1);
-  auto float_rand = []() { return std::rand() * 2.f / RAND_MAX - 1; };
   std::generate(noise_data_.begin(), noise_data_.end(), float_rand);
   EXPECT_FALSE(CheckUpdate());
   std::generate(clear_data_.begin(), clear_data_.end(), float_rand);
@@ -290,6 +404,80 @@ TEST_F(IntelligibilityEnhancerTest, TestSolveForGains) {
   for (size_t i = 0; i < enh_->bank_size_; i++) {
     EXPECT_NEAR(kTestNonZeroVarLambdaTop[i], sols[i], kMaxTestError);
   }
+}
+
+TEST_F(IntelligibilityEnhancerTest, TestNoiseGainHasExpectedResult) {
+  const float kGain = 2.f;
+  const float kTolerance = 0.007f;
+  std::vector<float> noise(kNumNoiseBins);
+  std::vector<float> noise_psd(kNumNoiseBins);
+  std::generate(noise.begin(), noise.end(), float_rand);
+  for (size_t i = 0; i < kNumNoiseBins; ++i) {
+    noise_psd[i] = kGain * kGain * noise[i] * noise[i];
+  }
+  float* clear_cursor = clear_data_.data();
+  for (size_t i = 0; i < kNumFramesToProcess; ++i) {
+    enh_->SetCaptureNoiseEstimate(noise, kGain);
+    enh_->ProcessRenderAudio(&clear_cursor, kSampleRate, kNumChannels);
+  }
+  const std::vector<float>& estimated_psd =
+      enh_->noise_power_estimator_.power();
+  for (size_t i = 0; i < kNumNoiseBins; ++i) {
+    EXPECT_LT(std::abs(estimated_psd[i] - noise_psd[i]) / noise_psd[i],
+              kTolerance);
+  }
+}
+
+TEST(IntelligibilityEnhancerBitExactnessTest, DISABLED_Mono8kHz) {
+  const float kOutputReference[] = {-0.001892f, -0.003296f, -0.001953f};
+
+  RunBitexactnessTest(AudioProcessing::kSampleRate8kHz, 1, kOutputReference);
+}
+
+TEST(IntelligibilityEnhancerBitExactnessTest, DISABLED_Mono16kHz) {
+  const float kOutputReference[] = {-0.000977f, -0.003296f, -0.002441f};
+
+  RunBitexactnessTest(AudioProcessing::kSampleRate16kHz, 1, kOutputReference);
+}
+
+TEST(IntelligibilityEnhancerBitExactnessTest, DISABLED_Mono32kHz) {
+  const float kOutputReference[] = {0.003021f, -0.011780f, -0.008209f};
+
+  RunBitexactnessTest(AudioProcessing::kSampleRate32kHz, 1, kOutputReference);
+}
+
+TEST(IntelligibilityEnhancerBitExactnessTest, DISABLED_Mono48kHz) {
+  const float kOutputReference[] = {-0.027696f, -0.026253f, -0.018001f};
+
+  RunBitexactnessTest(AudioProcessing::kSampleRate48kHz, 1, kOutputReference);
+}
+
+TEST(IntelligibilityEnhancerBitExactnessTest, DISABLED_Stereo8kHz) {
+  const float kOutputReference[] = {0.021454f,  0.035919f, 0.026428f,
+                                    -0.000641f, 0.000366f, 0.000641f};
+
+  RunBitexactnessTest(AudioProcessing::kSampleRate8kHz, 2, kOutputReference);
+}
+
+TEST(IntelligibilityEnhancerBitExactnessTest, DISABLED_Stereo16kHz) {
+  const float kOutputReference[] = {0.021362f,  0.035736f,  0.023895f,
+                                    -0.001404f, -0.001465f, 0.000549f};
+
+  RunBitexactnessTest(AudioProcessing::kSampleRate16kHz, 2, kOutputReference);
+}
+
+TEST(IntelligibilityEnhancerBitExactnessTest, DISABLED_Stereo32kHz) {
+  const float kOutputReference[] = {0.030641f,  0.027406f,  0.028321f,
+                                    -0.001343f, -0.004578f, 0.000977f};
+
+  RunBitexactnessTest(AudioProcessing::kSampleRate32kHz, 2, kOutputReference);
+}
+
+TEST(IntelligibilityEnhancerBitExactnessTest, DISABLED_Stereo48kHz) {
+  const float kOutputReference[] = {-0.009276f, -0.001601f, -0.008255f,
+                                    -0.012975f, -0.015940f, -0.017820f};
+
+  RunBitexactnessTest(AudioProcessing::kSampleRate48kHz, 2, kOutputReference);
 }
 
 }  // namespace webrtc

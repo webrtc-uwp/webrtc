@@ -21,22 +21,19 @@
 
 namespace webrtc {
 
-// Deleter for use with unique_ptr.
-struct CngInstDeleter {
-  void operator()(CNG_enc_inst* ptr) const { WebRtcCng_FreeEnc(ptr); }
-};
-
 class Vad;
 
 class AudioEncoderCng final : public AudioEncoder {
  public:
   struct Config {
+    Config();
+    Config(Config&&);
+    ~Config();
     bool IsOk() const;
 
     size_t num_channels = 1;
     int payload_type = 13;
-    // Caller keeps ownership of the AudioEncoder object.
-    AudioEncoder* speech_encoder = nullptr;
+    std::unique_ptr<AudioEncoder> speech_encoder;
     Vad::Aggressiveness vad_mode = Vad::kVadNormal;
     int sid_frame_interval_ms = 100;
     int num_cng_coefficients = 8;
@@ -47,10 +44,9 @@ class AudioEncoderCng final : public AudioEncoder {
     Vad* vad = nullptr;
   };
 
-  explicit AudioEncoderCng(const Config& config);
+  explicit AudioEncoderCng(Config&& config);
   ~AudioEncoderCng() override;
 
-  size_t MaxEncodedBytes() const override;
   int SampleRateHz() const override;
   size_t NumChannels() const override;
   int RtpTimestampRateHz() const override;
@@ -67,6 +63,8 @@ class AudioEncoderCng final : public AudioEncoder {
   void SetMaxPlaybackRate(int frequency_hz) override;
   void SetProjectedPacketLossRate(double fraction) override;
   void SetTargetBitrate(int target_bps) override;
+  rtc::ArrayView<std::unique_ptr<AudioEncoder>> ReclaimContainedEncoders()
+      override;
 
  private:
   EncodedInfo EncodePassive(size_t frames_to_encode,
@@ -75,7 +73,7 @@ class AudioEncoderCng final : public AudioEncoder {
                            rtc::Buffer* encoded);
   size_t SamplesPer10msFrame() const;
 
-  AudioEncoder* speech_encoder_;
+  std::unique_ptr<AudioEncoder> speech_encoder_;
   const int cng_payload_type_;
   const int num_cng_coefficients_;
   const int sid_frame_interval_ms_;
@@ -83,7 +81,7 @@ class AudioEncoderCng final : public AudioEncoder {
   std::vector<uint32_t> rtp_timestamps_;
   bool last_frame_active_;
   std::unique_ptr<Vad> vad_;
-  std::unique_ptr<CNG_enc_inst, CngInstDeleter> cng_inst_;
+  std::unique_ptr<ComfortNoiseEncoder> cng_encoder_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(AudioEncoderCng);
 };

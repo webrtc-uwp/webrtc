@@ -10,9 +10,9 @@
 
 #include "webrtc/api/datachannel.h"
 
+#include <memory>
 #include <string>
 
-#include "webrtc/api/mediastreamprovider.h"
 #include "webrtc/api/sctputils.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/refcount.h"
@@ -57,7 +57,8 @@ void SctpSidAllocator::ReleaseSid(int sid) {
 }
 
 bool SctpSidAllocator::IsSidAvailable(int sid) const {
-  if (sid < 0 || sid > static_cast<int>(cricket::kMaxSctpSid)) {
+  if (sid < static_cast<int>(cricket::kMinSctpSid) ||
+      sid > static_cast<int>(cricket::kMaxSctpSid)) {
     return false;
   }
   return used_sids_.find(sid) == used_sids_.end();
@@ -186,7 +187,7 @@ bool DataChannel::Init(const InternalDataChannelInit& config) {
     // Chrome glue and WebKit) are not wired up properly until after this
     // function returns.
     if (provider_->ReadyToSendData()) {
-      rtc::Thread::Current()->Post(this, MSG_CHANNELREADY, NULL);
+      rtc::Thread::Current()->Post(RTC_FROM_HERE, this, MSG_CHANNELREADY, NULL);
     }
   }
 
@@ -297,10 +298,11 @@ void DataChannel::OnTransportChannelCreated() {
   }
 }
 
-// The underlying transport channel was destroyed.
-// This function makes sure the DataChannel is disconnected and changes state to
-// kClosed.
 void DataChannel::OnTransportChannelDestroyed() {
+  // This method needs to synchronously close the data channel, which means any
+  // queued data needs to be discarded.
+  queued_send_data_.Clear();
+  queued_control_data_.Clear();
   DoClose();
 }
 
@@ -324,7 +326,7 @@ void DataChannel::OnMessage(rtc::Message* msg) {
 
 void DataChannel::OnDataReceived(cricket::DataChannel* channel,
                                  const cricket::ReceiveDataParams& params,
-                                 const rtc::Buffer& payload) {
+                                 const rtc::CopyOnWriteBuffer& payload) {
   uint32_t expected_ssrc =
       (data_channel_type_ == cricket::DCT_RTP) ? receive_ssrc_ : config_.id;
   if (params.ssrc != expected_ssrc) {
@@ -363,7 +365,7 @@ void DataChannel::OnDataReceived(cricket::DataChannel* channel,
   }
 
   bool binary = (params.type == cricket::DMT_BINARY);
-  rtc::scoped_ptr<DataBuffer> buffer(new DataBuffer(payload, binary));
+  std::unique_ptr<DataBuffer> buffer(new DataBuffer(payload, binary));
   if (state_ == kOpen && observer_) {
     observer_->OnMessage(*buffer.get());
   } else {
@@ -383,7 +385,8 @@ void DataChannel::OnDataReceived(cricket::DataChannel* channel,
 }
 
 void DataChannel::OnStreamClosedRemotely(uint32_t sid) {
-  if (data_channel_type_ == cricket::DCT_SCTP && sid == config_.id) {
+  if (data_channel_type_ == cricket::DCT_SCTP &&
+      sid == static_cast<uint32_t>(config_.id)) {
     Close();
   }
 }
@@ -422,11 +425,11 @@ void DataChannel::UpdateState() {
         }
         if (connected_to_provider_) {
           if (handshake_state_ == kHandshakeShouldSendOpen) {
-            rtc::Buffer payload;
+            rtc::CopyOnWriteBuffer payload;
             WriteDataChannelOpenMessage(label_, config_, &payload);
             SendControlMessage(payload);
           } else if (handshake_state_ == kHandshakeShouldSendAck) {
-            rtc::Buffer payload;
+            rtc::CopyOnWriteBuffer payload;
             WriteDataChannelOpenAckMessage(&payload);
             SendControlMessage(payload);
           }
@@ -494,7 +497,7 @@ void DataChannel::DeliverQueuedReceivedData() {
   }
 
   while (!queued_received_data_.Empty()) {
-    rtc::scoped_ptr<DataBuffer> buffer(queued_received_data_.Front());
+    std::unique_ptr<DataBuffer> buffer(queued_received_data_.Front());
     observer_->OnMessage(*buffer);
     queued_received_data_.Pop();
   }
@@ -589,17 +592,17 @@ void DataChannel::SendQueuedControlMessages() {
   control_packets.Swap(&queued_control_data_);
 
   while (!control_packets.Empty()) {
-    rtc::scoped_ptr<DataBuffer> buf(control_packets.Front());
+    std::unique_ptr<DataBuffer> buf(control_packets.Front());
     SendControlMessage(buf->data);
     control_packets.Pop();
   }
 }
 
-void DataChannel::QueueControlMessage(const rtc::Buffer& buffer) {
+void DataChannel::QueueControlMessage(const rtc::CopyOnWriteBuffer& buffer) {
   queued_control_data_.Push(new DataBuffer(buffer, true));
 }
 
-bool DataChannel::SendControlMessage(const rtc::Buffer& buffer) {
+bool DataChannel::SendControlMessage(const rtc::CopyOnWriteBuffer& buffer) {
   bool is_open_message = handshake_state_ == kHandshakeShouldSendOpen;
 
   ASSERT(data_channel_type_ == cricket::DCT_SCTP &&

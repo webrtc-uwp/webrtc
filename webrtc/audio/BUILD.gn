@@ -8,7 +8,7 @@
 
 import("../build/webrtc.gni")
 
-source_set("audio") {
+rtc_source_set("audio") {
   sources = [
     "audio_receive_stream.cc",
     "audio_receive_stream.h",
@@ -20,18 +20,36 @@ source_set("audio") {
     "scoped_voe_interface.h",
   ]
 
-  configs += [ "..:common_config" ]
-  public_configs = [ "..:common_inherited_config" ]
-
   if (is_clang) {
     # Suppress warnings from Chrome's Clang plugins.
     # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 
   deps = [
     "..:webrtc_common",
+    "../api:call_api",
     "../system_wrappers",
     "../voice_engine",
   ]
+}
+if (rtc_include_tests) {
+  rtc_source_set("audio_tests") {
+    testonly = true
+    sources = [
+      "audio_receive_stream_unittest.cc",
+      "audio_send_stream_unittest.cc",
+      "audio_state_unittest.cc",
+    ]
+    deps = [
+      ":audio",
+      "//testing/gmock",
+      "//testing/gtest",
+    ]
+    if (is_clang) {
+      # Suppress warnings from the Chromium Clang plugin.
+      # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+  }
 }

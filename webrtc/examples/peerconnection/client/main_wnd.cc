@@ -12,10 +12,12 @@
 
 #include <math.h>
 
+#include "libyuv/convert_argb.h"
 #include "webrtc/examples/peerconnection/client/defaults.h"
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/logging.h"
+#include "webrtc/media/engine/webrtcvideoframe.h"
 
 ATOM MainWnd::wnd_class_ = 0;
 const wchar_t MainWnd::kClassName[] = L"WebRTC_MainWnd";
@@ -576,11 +578,11 @@ MainWnd::VideoRenderer::VideoRenderer(
   bmi_.bmiHeader.biHeight = -height;
   bmi_.bmiHeader.biSizeImage = width * height *
                               (bmi_.bmiHeader.biBitCount >> 3);
-  rendered_track_->AddRenderer(this);
+  rendered_track_->AddOrUpdateSink(this, rtc::VideoSinkWants());
 }
 
 MainWnd::VideoRenderer::~VideoRenderer() {
-  rendered_track_->RemoveRenderer(this);
+  rendered_track_->RemoveSink(this);
   ::DeleteCriticalSection(&buffer_lock_);
 }
 
@@ -598,26 +600,29 @@ void MainWnd::VideoRenderer::SetSize(int width, int height) {
   image_.reset(new uint8_t[bmi_.bmiHeader.biSizeImage]);
 }
 
-void MainWnd::VideoRenderer::RenderFrame(
-    const cricket::VideoFrame* video_frame) {
-  if (!video_frame)
-    return;
+void MainWnd::VideoRenderer::OnFrame(
+    const cricket::VideoFrame& video_frame) {
 
   {
     AutoLock<VideoRenderer> lock(this);
 
-    const cricket::VideoFrame* frame =
-        video_frame->GetCopyWithRotationApplied();
+    const cricket::WebRtcVideoFrame frame(
+        webrtc::I420Buffer::Rotate(video_frame.video_frame_buffer(),
+                                   video_frame.rotation()),
+        webrtc::kVideoRotation_0, video_frame.timestamp_us());
 
-    SetSize(static_cast<int>(frame->GetWidth()),
-            static_cast<int>(frame->GetHeight()));
+    SetSize(frame.width(), frame.height());
 
     ASSERT(image_.get() != NULL);
-    frame->ConvertToRgbBuffer(cricket::FOURCC_ARGB,
-                              image_.get(),
-                              bmi_.bmiHeader.biSizeImage,
-                              bmi_.bmiHeader.biWidth *
-                              bmi_.bmiHeader.biBitCount / 8);
+    rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer(
+        frame.video_frame_buffer());
+    libyuv::I420ToARGB(buffer->DataY(), buffer->StrideY(),
+                       buffer->DataU(), buffer->StrideU(),
+                       buffer->DataV(), buffer->StrideV(),
+                       image_.get(),
+                       bmi_.bmiHeader.biWidth *
+                           bmi_.bmiHeader.biBitCount / 8,
+                       buffer->width(), buffer->height());
   }
   InvalidateRect(wnd_, NULL, TRUE);
 }

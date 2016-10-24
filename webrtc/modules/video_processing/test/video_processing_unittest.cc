@@ -15,8 +15,8 @@
 #include <memory>
 #include <string>
 
+#include "webrtc/base/timeutils.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
@@ -51,8 +51,6 @@ static void TestSize(const VideoFrame& source_frame,
                      int target_height,
                      double expected_psnr,
                      VideoProcessing* vpm);
-static bool CompareFrames(const webrtc::VideoFrame& frame1,
-                          const webrtc::VideoFrame& frame2);
 static void WriteProcessedFrameForVisualInspection(const VideoFrame& source,
                                                    const VideoFrame& processed);
 
@@ -73,9 +71,12 @@ void VideoProcessingTest::SetUp() {
   video_frame_.CreateEmptyFrame(width_, height_, width_,
                                 half_width_, half_width_);
   // Clear video frame so DrMemory/Valgrind will allow reads of the buffer.
-  memset(video_frame_.buffer(kYPlane), 0, video_frame_.allocated_size(kYPlane));
-  memset(video_frame_.buffer(kUPlane), 0, video_frame_.allocated_size(kUPlane));
-  memset(video_frame_.buffer(kVPlane), 0, video_frame_.allocated_size(kVPlane));
+  memset(video_frame_.video_frame_buffer()->MutableDataY(), 0,
+         video_frame_.allocated_size(kYPlane));
+  memset(video_frame_.video_frame_buffer()->MutableDataU(), 0,
+         video_frame_.allocated_size(kUPlane));
+  memset(video_frame_.video_frame_buffer()->MutableDataV(), 0,
+         video_frame_.allocated_size(kVPlane));
   const std::string video_file =
       webrtc::test::ResourcePath("foreman_cif", "yuv");
   source_file_ = fopen(video_file.c_str(), "rb");
@@ -90,108 +91,6 @@ void VideoProcessingTest::TearDown() {
   source_file_ = NULL;
   delete vp_;
   vp_ = NULL;
-}
-
-#if defined(WEBRTC_IOS)
-TEST_F(VideoProcessingTest, DISABLED_HandleNullBuffer) {
-#else
-TEST_F(VideoProcessingTest, HandleNullBuffer) {
-#endif
-  // TODO(mikhal/stefan): Do we need this one?
-  VideoProcessing::FrameStats stats;
-  // Video frame with unallocated buffer.
-  VideoFrame videoFrame;
-
-  vp_->GetFrameStats(videoFrame, &stats);
-  EXPECT_EQ(stats.num_pixels, 0u);
-
-  EXPECT_EQ(-1, vp_->Deflickering(&videoFrame, &stats));
-
-  EXPECT_EQ(-3, vp_->BrightnessDetection(videoFrame, stats));
-}
-
-#if defined(WEBRTC_IOS)
-TEST_F(VideoProcessingTest, DISABLED_HandleBadStats) {
-#else
-TEST_F(VideoProcessingTest, HandleBadStats) {
-#endif
-  VideoProcessing::FrameStats stats;
-  vp_->ClearFrameStats(&stats);
-  std::unique_ptr<uint8_t[]> video_buffer(new uint8_t[frame_length_]);
-  ASSERT_EQ(frame_length_,
-            fread(video_buffer.get(), 1, frame_length_, source_file_));
-  EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0, width_, height_,
-                             0, kVideoRotation_0, &video_frame_));
-
-  EXPECT_EQ(-1, vp_->Deflickering(&video_frame_, &stats));
-
-  EXPECT_EQ(-3, vp_->BrightnessDetection(video_frame_, stats));
-}
-
-#if defined(WEBRTC_IOS)
-TEST_F(VideoProcessingTest, DISABLED_IdenticalResultsAfterReset) {
-#else
-TEST_F(VideoProcessingTest, IdenticalResultsAfterReset) {
-#endif
-  VideoFrame video_frame2;
-  VideoProcessing::FrameStats stats;
-  // Only testing non-static functions here.
-  std::unique_ptr<uint8_t[]> video_buffer(new uint8_t[frame_length_]);
-  ASSERT_EQ(frame_length_,
-            fread(video_buffer.get(), 1, frame_length_, source_file_));
-  EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0, width_, height_,
-                             0, kVideoRotation_0, &video_frame_));
-  vp_->GetFrameStats(video_frame_, &stats);
-  EXPECT_GT(stats.num_pixels, 0u);
-  video_frame2.CopyFrame(video_frame_);
-  ASSERT_EQ(0, vp_->Deflickering(&video_frame_, &stats));
-
-  // Retrieve frame stats again in case Deflickering() has zeroed them.
-  vp_->GetFrameStats(video_frame2, &stats);
-  EXPECT_GT(stats.num_pixels, 0u);
-  ASSERT_EQ(0, vp_->Deflickering(&video_frame2, &stats));
-  EXPECT_TRUE(CompareFrames(video_frame_, video_frame2));
-
-  ASSERT_EQ(frame_length_,
-            fread(video_buffer.get(), 1, frame_length_, source_file_));
-  EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0, width_, height_,
-                             0, kVideoRotation_0, &video_frame_));
-  vp_->GetFrameStats(video_frame_, &stats);
-  EXPECT_GT(stats.num_pixels, 0u);
-  video_frame2.CopyFrame(video_frame_);
-  ASSERT_EQ(0, vp_->BrightnessDetection(video_frame_, stats));
-
-  ASSERT_EQ(0, vp_->BrightnessDetection(video_frame2, stats));
-  EXPECT_TRUE(CompareFrames(video_frame_, video_frame2));
-}
-
-#if defined(WEBRTC_IOS)
-TEST_F(VideoProcessingTest, DISABLED_FrameStats) {
-#else
-TEST_F(VideoProcessingTest, FrameStats) {
-#endif
-  VideoProcessing::FrameStats stats;
-  vp_->ClearFrameStats(&stats);
-  std::unique_ptr<uint8_t[]> video_buffer(new uint8_t[frame_length_]);
-  ASSERT_EQ(frame_length_,
-            fread(video_buffer.get(), 1, frame_length_, source_file_));
-  EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0, width_, height_,
-                             0, kVideoRotation_0, &video_frame_));
-
-  EXPECT_FALSE(vp_->ValidFrameStats(stats));
-  vp_->GetFrameStats(video_frame_, &stats);
-  EXPECT_GT(stats.num_pixels, 0u);
-  EXPECT_TRUE(vp_->ValidFrameStats(stats));
-
-  printf("\nFrameStats\n");
-  printf("mean: %u\nnum_pixels: %u\nsubSamplFactor: %u\nsum: %u\n\n",
-         static_cast<unsigned int>(stats.mean),
-         static_cast<unsigned int>(stats.num_pixels),
-         static_cast<unsigned int>(stats.sub_sampling_factor),
-         static_cast<unsigned int>(stats.sum));
-
-  vp_->ClearFrameStats(&stats);
-  EXPECT_FALSE(vp_->ValidFrameStats(stats));
 }
 
 #if defined(WEBRTC_IOS)
@@ -230,8 +129,6 @@ TEST_F(VideoProcessingTest, Resampler) {
   rewind(source_file_);
   ASSERT_TRUE(source_file_ != NULL) << "Cannot read input file \n";
 
-  // CA not needed here
-  vp_->EnableContentAnalysis(false);
   // no temporal decimation
   vp_->EnableTemporalDecimation(false);
 
@@ -248,11 +145,12 @@ TEST_F(VideoProcessingTest, Resampler) {
 
   for (uint32_t run_idx = 0; run_idx < NumRuns; run_idx++) {
     // Initiate test timer.
-    const TickTime time_start = TickTime::Now();
+    const int64_t time_start = rtc::TimeNanos();
 
     // Init the sourceFrame with a timestamp.
-    video_frame_.set_render_time_ms(time_start.MillisecondTimestamp());
-    video_frame_.set_timestamp(time_start.MillisecondTimestamp() * 90);
+    int64_t time_start_ms = time_start / rtc::kNumNanosecsPerMillisec;
+    video_frame_.set_render_time_ms(time_start_ms);
+    video_frame_.set_timestamp(time_start_ms * 90);
 
     // Test scaling to different sizes: source is of |width|/|height| = 352/288.
     // Pure scaling:
@@ -295,7 +193,8 @@ TEST_F(VideoProcessingTest, Resampler) {
     TestSize(video_frame_, cropped_source_frame, 281, 175, 29.3, vp_);
 
     // Stop timer.
-    const int64_t runtime = (TickTime::Now() - time_start).Microseconds();
+    const int64_t runtime =
+        (rtc::TimeNanos() - time_start) / rtc::kNumNanosecsPerMicrosec;
     if (runtime < min_runtime || run_idx == 0) {
       min_runtime = runtime;
     }
@@ -376,22 +275,6 @@ void TestSize(const VideoFrame& source_frame,
       "source which is scaled down/up to: %d %d, and back to source size \n",
       psnr, source_frame.width(), source_frame.height(), target_width,
       target_height);
-}
-
-bool CompareFrames(const webrtc::VideoFrame& frame1,
-                   const webrtc::VideoFrame& frame2) {
-  for (int plane = 0; plane < webrtc::kNumOfPlanes; plane++) {
-    webrtc::PlaneType plane_type = static_cast<webrtc::PlaneType>(plane);
-    int allocated_size1 = frame1.allocated_size(plane_type);
-    int allocated_size2 = frame2.allocated_size(plane_type);
-    if (allocated_size1 != allocated_size2)
-      return false;
-    const uint8_t* plane_buffer1 = frame1.buffer(plane_type);
-    const uint8_t* plane_buffer2 = frame2.buffer(plane_type);
-    if (memcmp(plane_buffer1, plane_buffer2, allocated_size1))
-      return false;
-  }
-  return true;
 }
 
 void WriteProcessedFrameForVisualInspection(const VideoFrame& source,

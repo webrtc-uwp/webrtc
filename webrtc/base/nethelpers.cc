@@ -10,11 +10,20 @@
 
 #include "webrtc/base/nethelpers.h"
 
+#include <memory>
+
 #if defined(WEBRTC_WIN)
 #include <ws2spi.h>
 #include <ws2tcpip.h>
 #include "webrtc/base/win32.h"
 #endif
+#if defined(WEBRTC_POSIX) && !defined(__native_client__)
+#if defined(WEBRTC_ANDROID)
+#include "webrtc/base/ifaddrs-android.h"
+#else
+#include <ifaddrs.h>
+#endif
+#endif  // defined(WEBRTC_POSIX) && !defined(__native_client__)
 
 #include "webrtc/base/byteorder.h"
 #include "webrtc/base/logging.h"
@@ -35,8 +44,24 @@ int ResolveHostname(const std::string& hostname, int family,
   addresses->clear();
   struct addrinfo* result = NULL;
   struct addrinfo hints = {0};
-  // TODO(djw): For now this is IPv4 only so existing users remain unaffected.
-  hints.ai_family = AF_INET;
+  hints.ai_family = family;
+  // |family| here will almost always be AF_UNSPEC, because |family| comes from
+  // AsyncResolver::addr_.family(), which comes from a SocketAddress constructed
+  // with a hostname. When a SocketAddress is constructed with a hostname, its
+  // family is AF_UNSPEC. However, if someday in the future we construct
+  // a SocketAddress with both a hostname and a family other than AF_UNSPEC,
+  // then it would be possible to get a specific family value here.
+
+  // The behavior of AF_UNSPEC is roughly "get both ipv4 and ipv6", as
+  // documented by the various operating systems:
+  // Linux: http://man7.org/linux/man-pages/man3/getaddrinfo.3.html
+  // Windows: https://msdn.microsoft.com/en-us/library/windows/desktop/
+  // ms738520(v=vs.85).aspx
+  // Mac: https://developer.apple.com/legacy/library/documentation/Darwin/
+  // Reference/ManPages/man3/getaddrinfo.3.html
+  // Android (source code, not documentation):
+  // https://android.googlesource.com/platform/bionic/+/
+  // 7e0bfb511e85834d7c6cb9631206b62f82701d60/libc/netbsd/net/getaddrinfo.c#1657
   hints.ai_flags = AI_ADDRCONFIG;
   int ret = getaddrinfo(hostname.c_str(), NULL, &hints, &result);
   if (ret != 0) {
@@ -57,8 +82,8 @@ int ResolveHostname(const std::string& hostname, int family,
 }
 
 // AsyncResolver
-AsyncResolver::AsyncResolver() : error_(-1) {
-}
+AsyncResolver::AsyncResolver()
+    : SignalThread(false /* use_socket_server */), error_(-1) {}
 
 AsyncResolver::~AsyncResolver() = default;
 
@@ -118,10 +143,7 @@ int inet_pton(int af, const char* src, void *dst) {
 bool HasIPv6Enabled() {
 #if defined(WINRT)
     return true;
-#elif !defined(WEBRTC_WIN)
-  // We only need to check this for Windows XP (so far).
-  return true;
-#else
+#elif defined(WEBRTC_WIN)
   if (IsWindowsVistaOrLater()) {
     return true;
   }
@@ -129,7 +151,7 @@ bool HasIPv6Enabled() {
     return false;
   }
   DWORD protbuff_size = 4096;
-  scoped_ptr<char[]> protocols;
+  std::unique_ptr<char[]> protocols;
   LPWSAPROTOCOL_INFOW protocol_infos = NULL;
   int requested_protocols[2] = {AF_INET6, 0};
 
@@ -157,6 +179,22 @@ bool HasIPv6Enabled() {
     }
   }
   return false;
+#elif defined(WEBRTC_POSIX) && !defined(__native_client__)
+  bool has_ipv6 = false;
+  struct ifaddrs* ifa;
+  if (getifaddrs(&ifa) < 0) {
+    return false;
+  }
+  for (struct ifaddrs* cur = ifa; cur != nullptr; cur = cur->ifa_next) {
+    if (cur->ifa_addr->sa_family == AF_INET6) {
+      has_ipv6 = true;
+      break;
+    }
+  }
+  freeifaddrs(ifa);
+  return has_ipv6;
+#else
+  return true;
 #endif
 }
 }  // namespace rtc

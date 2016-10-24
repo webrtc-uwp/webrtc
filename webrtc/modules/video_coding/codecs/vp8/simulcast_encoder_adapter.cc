@@ -120,12 +120,12 @@ class AdapterEncodedImageCallback : public webrtc::EncodedImageCallback {
                               size_t stream_idx)
       : adapter_(adapter), stream_idx_(stream_idx) {}
 
-  int32_t Encoded(
-      const webrtc::EncodedImage& encodedImage,
-      const webrtc::CodecSpecificInfo* codecSpecificInfo = NULL,
-      const webrtc::RTPFragmentationHeader* fragmentation = NULL) override {
-    return adapter_->Encoded(stream_idx_, encodedImage, codecSpecificInfo,
-                             fragmentation);
+  EncodedImageCallback::Result OnEncodedImage(
+      const webrtc::EncodedImage& encoded_image,
+      const webrtc::CodecSpecificInfo* codec_specific_info,
+      const webrtc::RTPFragmentationHeader* fragmentation) override {
+    return adapter_->OnEncodedImage(stream_idx_, encoded_image,
+                                    codec_specific_info, fragmentation);
   }
 
  private:
@@ -182,7 +182,7 @@ int SimulcastEncoderAdapter::InitEncode(const VideoCodec* inst,
   }
 
   int number_of_streams = NumberOfStreams(*inst);
-  bool doing_simulcast = (number_of_streams > 1);
+  const bool doing_simulcast = (number_of_streams > 1);
 
   if (doing_simulcast && !ValidSimulcastResolutions(*inst, number_of_streams)) {
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
@@ -230,8 +230,12 @@ int SimulcastEncoderAdapter::InitEncode(const VideoCodec* inst,
       implementation_name += ", ";
     implementation_name += streaminfos_[i].encoder->ImplementationName();
   }
-  implementation_name_ =
-      "SimulcastEncoderAdapter (" + implementation_name + ")";
+  if (doing_simulcast) {
+    implementation_name_ =
+        "SimulcastEncoderAdapter (" + implementation_name + ")";
+  } else {
+    implementation_name_ = implementation_name;
+  }
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -285,30 +289,49 @@ int SimulcastEncoderAdapter::Encode(
     // If scaling isn't required, because the input resolution
     // matches the destination or the input image is empty (e.g.
     // a keyframe request for encoders with internal camera
-    // sources), pass the image on directly. Otherwise, we'll
-    // scale it to match what the encoder expects (below).
+    // sources) or the source image has a native handle, pass the image on
+    // directly. Otherwise, we'll scale it to match what the encoder expects
+    // (below).
+    // For texture frames, the underlying encoder is expected to be able to
+    // correctly sample/scale the source texture.
+    // TODO(perkj): ensure that works going forward, and figure out how this
+    // affects webrtc:5683.
     if ((dst_width == src_width && dst_height == src_height) ||
-        input_image.IsZeroSize()) {
-      streaminfos_[stream_idx].encoder->Encode(input_image, codec_specific_info,
-                                               &stream_frame_types);
+        input_image.IsZeroSize() ||
+        input_image.video_frame_buffer()->native_handle()) {
+      int ret = streaminfos_[stream_idx].encoder->Encode(
+          input_image, codec_specific_info, &stream_frame_types);
+      if (ret != WEBRTC_VIDEO_CODEC_OK) {
+        return ret;
+      }
     } else {
       VideoFrame dst_frame;
       // Making sure that destination frame is of sufficient size.
       // Aligning stride values based on width.
       dst_frame.CreateEmptyFrame(dst_width, dst_height, dst_width,
                                  (dst_width + 1) / 2, (dst_width + 1) / 2);
-      libyuv::I420Scale(
-          input_image.buffer(kYPlane), input_image.stride(kYPlane),
-          input_image.buffer(kUPlane), input_image.stride(kUPlane),
-          input_image.buffer(kVPlane), input_image.stride(kVPlane), src_width,
-          src_height, dst_frame.buffer(kYPlane), dst_frame.stride(kYPlane),
-          dst_frame.buffer(kUPlane), dst_frame.stride(kUPlane),
-          dst_frame.buffer(kVPlane), dst_frame.stride(kVPlane), dst_width,
-          dst_height, libyuv::kFilterBilinear);
+      libyuv::I420Scale(input_image.video_frame_buffer()->DataY(),
+                        input_image.video_frame_buffer()->StrideY(),
+                        input_image.video_frame_buffer()->DataU(),
+                        input_image.video_frame_buffer()->StrideU(),
+                        input_image.video_frame_buffer()->DataV(),
+                        input_image.video_frame_buffer()->StrideV(),
+                        src_width, src_height,
+                        dst_frame.video_frame_buffer()->MutableDataY(),
+                        dst_frame.video_frame_buffer()->StrideY(),
+                        dst_frame.video_frame_buffer()->MutableDataU(),
+                        dst_frame.video_frame_buffer()->StrideU(),
+                        dst_frame.video_frame_buffer()->MutableDataV(),
+                        dst_frame.video_frame_buffer()->StrideV(),
+                        dst_width, dst_height,
+                        libyuv::kFilterBilinear);
       dst_frame.set_timestamp(input_image.timestamp());
       dst_frame.set_render_time_ms(input_image.render_time_ms());
-      streaminfos_[stream_idx].encoder->Encode(dst_frame, codec_specific_info,
-                                               &stream_frame_types);
+      int ret = streaminfos_[stream_idx].encoder->Encode(
+          dst_frame, codec_specific_info, &stream_frame_types);
+      if (ret != WEBRTC_VIDEO_CODEC_OK) {
+        return ret;
+      }
     }
   }
 
@@ -381,16 +404,17 @@ int SimulcastEncoderAdapter::SetRates(uint32_t new_bitrate_kbit,
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t SimulcastEncoderAdapter::Encoded(
+EncodedImageCallback::Result SimulcastEncoderAdapter::OnEncodedImage(
     size_t stream_idx,
     const EncodedImage& encodedImage,
     const CodecSpecificInfo* codecSpecificInfo,
     const RTPFragmentationHeader* fragmentation) {
   CodecSpecificInfo stream_codec_specific = *codecSpecificInfo;
+  stream_codec_specific.codec_name = implementation_name_.c_str();
   CodecSpecificInfoVP8* vp8Info = &(stream_codec_specific.codecSpecific.VP8);
   vp8Info->simulcastIdx = stream_idx;
 
-  return encoded_complete_callback_->Encoded(
+  return encoded_complete_callback_->OnEncodedImage(
       encodedImage, &stream_codec_specific, fragmentation);
 }
 
@@ -490,17 +514,14 @@ void SimulcastEncoderAdapter::OnDroppedFrame(uint32_t timestamp) {
   streaminfos_[0].encoder->OnDroppedFrame(timestamp);
 }
 
-int SimulcastEncoderAdapter::GetTargetFramerate() {
-  return streaminfos_[0].encoder->GetTargetFramerate();
-}
-
 bool SimulcastEncoderAdapter::SupportsNativeHandle() const {
   // We should not be calling this method before streaminfos_ are configured.
   RTC_DCHECK(!streaminfos_.empty());
-  // TODO(pbos): Support textures when using more than one encoder.
-  if (streaminfos_.size() != 1)
-    return false;
-  return streaminfos_[0].encoder->SupportsNativeHandle();
+  for (const auto& streaminfo : streaminfos_) {
+    if (!streaminfo.encoder->SupportsNativeHandle())
+      return false;
+  }
+  return true;
 }
 
 const char* SimulcastEncoderAdapter::ImplementationName() const {

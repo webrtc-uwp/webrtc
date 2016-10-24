@@ -16,27 +16,11 @@
 #include "webrtc/media/engine/webrtcvideoframe.h"
 #include "webrtc/test/fake_texture_frame.h"
 
-namespace {
+namespace cricket {
 
-class WebRtcVideoTestFrame : public cricket::WebRtcVideoFrame {
+class WebRtcVideoFrameTest : public VideoFrameTest<WebRtcVideoFrame> {
  public:
-  using cricket::WebRtcVideoFrame::SetRotation;
-
-  virtual VideoFrame* CreateEmptyFrame(int w,
-                                       int h,
-                                       int64_t time_stamp) const override {
-    WebRtcVideoTestFrame* frame = new WebRtcVideoTestFrame();
-    frame->InitToBlack(w, h, time_stamp);
-    return frame;
-  }
-};
-
-}  // namespace
-
-class WebRtcVideoFrameTest : public VideoFrameTest<cricket::WebRtcVideoFrame> {
- public:
-  WebRtcVideoFrameTest() {
-  }
+  WebRtcVideoFrameTest() {}
 
   void TestInit(int cropped_width, int cropped_height,
                 webrtc::VideoRotation frame_rotation,
@@ -45,9 +29,9 @@ class WebRtcVideoFrameTest : public VideoFrameTest<cricket::WebRtcVideoFrame> {
     const int frame_height = 1080;
 
     // Build the CapturedFrame.
-    cricket::CapturedFrame captured_frame;
-    captured_frame.fourcc = cricket::FOURCC_I420;
-    captured_frame.time_stamp = 5678;
+    CapturedFrame captured_frame;
+    captured_frame.fourcc = FOURCC_I420;
+    captured_frame.time_stamp = rtc::TimeNanos();
     captured_frame.rotation = frame_rotation;
     captured_frame.width = frame_width;
     captured_frame.height = frame_height;
@@ -60,33 +44,38 @@ class WebRtcVideoFrameTest : public VideoFrameTest<cricket::WebRtcVideoFrame> {
     captured_frame.data = captured_frame_buffer.get();
 
     // Create the new frame from the CapturedFrame.
-    cricket::WebRtcVideoFrame frame;
+    WebRtcVideoFrame frame;
     EXPECT_TRUE(
         frame.Init(&captured_frame, cropped_width, cropped_height,
                    apply_rotation));
 
     // Verify the new frame.
-    EXPECT_EQ(5678, frame.GetTimeStamp());
+    EXPECT_EQ(captured_frame.time_stamp / rtc::kNumNanosecsPerMicrosec,
+              frame.timestamp_us());
     if (apply_rotation)
-      EXPECT_EQ(webrtc::kVideoRotation_0, frame.GetVideoRotation());
+      EXPECT_EQ(webrtc::kVideoRotation_0, frame.rotation());
     else
-      EXPECT_EQ(frame_rotation, frame.GetVideoRotation());
+      EXPECT_EQ(frame_rotation, frame.rotation());
     // If |apply_rotation| and the frame rotation is 90 or 270, width and
     // height are flipped.
     if (apply_rotation && (frame_rotation == webrtc::kVideoRotation_90
         || frame_rotation == webrtc::kVideoRotation_270)) {
-      EXPECT_EQ(static_cast<size_t>(cropped_width), frame.GetHeight());
-      EXPECT_EQ(static_cast<size_t>(cropped_height), frame.GetWidth());
+      EXPECT_EQ(cropped_width, frame.height());
+      EXPECT_EQ(cropped_height, frame.width());
     } else {
-      EXPECT_EQ(static_cast<size_t>(cropped_width), frame.GetWidth());
-      EXPECT_EQ(static_cast<size_t>(cropped_height), frame.GetHeight());
+      EXPECT_EQ(cropped_width, frame.width());
+      EXPECT_EQ(cropped_height, frame.height());
     }
+  }
+
+  void SetFrameRotation(WebRtcVideoFrame* frame,
+                        webrtc::VideoRotation rotation) {
+    frame->rotation_ = rotation;
   }
 };
 
-#define TEST_WEBRTCVIDEOFRAME(X) TEST_F(WebRtcVideoFrameTest, X) { \
-  VideoFrameTest<cricket::WebRtcVideoFrame>::X(); \
-}
+#define TEST_WEBRTCVIDEOFRAME(X) \
+  TEST_F(WebRtcVideoFrameTest, X) { VideoFrameTest<WebRtcVideoFrame>::X(); }
 
 TEST_WEBRTCVIDEOFRAME(ConstructI420)
 TEST_WEBRTCVIDEOFRAME(ConstructI422)
@@ -104,9 +93,6 @@ TEST_WEBRTCVIDEOFRAME(ConstructARGBWide)
 TEST_WEBRTCVIDEOFRAME(ConstructBGRA)
 TEST_WEBRTCVIDEOFRAME(Construct24BG)
 TEST_WEBRTCVIDEOFRAME(ConstructRaw)
-TEST_WEBRTCVIDEOFRAME(ConstructRGB565)
-TEST_WEBRTCVIDEOFRAME(ConstructARGB1555)
-TEST_WEBRTCVIDEOFRAME(ConstructARGB4444)
 
 TEST_WEBRTCVIDEOFRAME(ConstructI420Mirror)
 TEST_WEBRTCVIDEOFRAME(ConstructI420Rotate0)
@@ -143,7 +129,6 @@ TEST_WEBRTCVIDEOFRAME(ConstructI420CropVertical)
 // TODO(juberti): WebRtcVideoFrame is not currently refcounted.
 // TEST_WEBRTCVIDEOFRAME(ConstructCopy)
 // TEST_WEBRTCVIDEOFRAME(ConstructCopyIsRef)
-TEST_WEBRTCVIDEOFRAME(ConstructBlack)
 // TODO(fbarchard): Implement Jpeg
 // TEST_WEBRTCVIDEOFRAME(ConstructMjpgI420)
 TEST_WEBRTCVIDEOFRAME(ConstructMjpgI422)
@@ -166,82 +151,8 @@ TEST_WEBRTCVIDEOFRAME(ValidateI420HugeSize)
 // Re-evaluate once WebRTC switches to libyuv
 // TEST_WEBRTCVIDEOFRAME(ConstructYuy2AllSizes)
 // TEST_WEBRTCVIDEOFRAME(ConstructARGBAllSizes)
-TEST_WEBRTCVIDEOFRAME(ResetAndApplyRotation)
-TEST_WEBRTCVIDEOFRAME(ResetAndDontApplyRotation)
-TEST_WEBRTCVIDEOFRAME(ConvertToABGRBuffer)
-TEST_WEBRTCVIDEOFRAME(ConvertToABGRBufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertToABGRBufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertToARGB1555Buffer)
-TEST_WEBRTCVIDEOFRAME(ConvertToARGB1555BufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertToARGB1555BufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertToARGB4444Buffer)
-TEST_WEBRTCVIDEOFRAME(ConvertToARGB4444BufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertToARGB4444BufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertToARGBBuffer)
-TEST_WEBRTCVIDEOFRAME(ConvertToARGBBufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertToARGBBufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertToBGRABuffer)
-TEST_WEBRTCVIDEOFRAME(ConvertToBGRABufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertToBGRABufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertToRAWBuffer)
-TEST_WEBRTCVIDEOFRAME(ConvertToRAWBufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertToRAWBufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertToRGB24Buffer)
-TEST_WEBRTCVIDEOFRAME(ConvertToRGB24BufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertToRGB24BufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertToRGB565Buffer)
-TEST_WEBRTCVIDEOFRAME(ConvertToRGB565BufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertToRGB565BufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertToI400Buffer)
-TEST_WEBRTCVIDEOFRAME(ConvertToI400BufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertToI400BufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertToYUY2Buffer)
-TEST_WEBRTCVIDEOFRAME(ConvertToYUY2BufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertToYUY2BufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertToUYVYBuffer)
-TEST_WEBRTCVIDEOFRAME(ConvertToUYVYBufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertToUYVYBufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertFromABGRBuffer)
-TEST_WEBRTCVIDEOFRAME(ConvertFromABGRBufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertFromABGRBufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertFromARGB1555Buffer)
-TEST_WEBRTCVIDEOFRAME(ConvertFromARGB1555BufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertFromARGB1555BufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertFromARGB4444Buffer)
-TEST_WEBRTCVIDEOFRAME(ConvertFromARGB4444BufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertFromARGB4444BufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertFromARGBBuffer)
-TEST_WEBRTCVIDEOFRAME(ConvertFromARGBBufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertFromARGBBufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertFromBGRABuffer)
-TEST_WEBRTCVIDEOFRAME(ConvertFromBGRABufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertFromBGRABufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertFromRAWBuffer)
-TEST_WEBRTCVIDEOFRAME(ConvertFromRAWBufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertFromRAWBufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertFromRGB24Buffer)
-TEST_WEBRTCVIDEOFRAME(ConvertFromRGB24BufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertFromRGB24BufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertFromRGB565Buffer)
-TEST_WEBRTCVIDEOFRAME(ConvertFromRGB565BufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertFromRGB565BufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertFromI400Buffer)
-TEST_WEBRTCVIDEOFRAME(ConvertFromI400BufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertFromI400BufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertFromYUY2Buffer)
-TEST_WEBRTCVIDEOFRAME(ConvertFromYUY2BufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertFromYUY2BufferInverted)
-TEST_WEBRTCVIDEOFRAME(ConvertFromUYVYBuffer)
-TEST_WEBRTCVIDEOFRAME(ConvertFromUYVYBufferStride)
-TEST_WEBRTCVIDEOFRAME(ConvertFromUYVYBufferInverted)
 // TEST_WEBRTCVIDEOFRAME(ConvertToI422Buffer)
-TEST_WEBRTCVIDEOFRAME(CopyToFrame)
 // TEST_WEBRTCVIDEOFRAME(ConstructARGBBlackWhitePixel)
-
-TEST_WEBRTCVIDEOFRAME(StretchToFrame)
-TEST_WEBRTCVIDEOFRAME(Copy)
-TEST_WEBRTCVIDEOFRAME(CopyIsRef)
-TEST_WEBRTCVIDEOFRAME(MakeExclusive)
 
 // These functions test implementation-specific details.
 // Tests the Init function with different cropped size.
@@ -275,54 +186,46 @@ TEST_F(WebRtcVideoFrameTest, TextureInitialValues) {
   webrtc::NativeHandleBuffer* buffer =
       new rtc::RefCountedObject<webrtc::test::FakeNativeHandleBuffer>(
           dummy_handle, 640, 480);
-  cricket::WebRtcVideoFrame frame(buffer, 200, webrtc::kVideoRotation_0);
-  EXPECT_EQ(dummy_handle, frame.GetNativeHandle());
-  EXPECT_EQ(640u, frame.GetWidth());
-  EXPECT_EQ(480u, frame.GetHeight());
-  EXPECT_EQ(200, frame.GetTimeStamp());
-  frame.SetTimeStamp(400);
-  EXPECT_EQ(400, frame.GetTimeStamp());
-}
-
-TEST_F(WebRtcVideoFrameTest, CopyTextureFrame) {
-  webrtc::test::FakeNativeHandle* dummy_handle =
-      new webrtc::test::FakeNativeHandle();
-  webrtc::NativeHandleBuffer* buffer =
-      new rtc::RefCountedObject<webrtc::test::FakeNativeHandleBuffer>(
-          dummy_handle, 640, 480);
-  cricket::WebRtcVideoFrame frame1(buffer, 200, webrtc::kVideoRotation_0);
-  cricket::VideoFrame* frame2 = frame1.Copy();
-  EXPECT_EQ(frame1.GetNativeHandle(), frame2->GetNativeHandle());
-  EXPECT_EQ(frame1.GetWidth(), frame2->GetWidth());
-  EXPECT_EQ(frame1.GetHeight(), frame2->GetHeight());
-  EXPECT_EQ(frame1.GetTimeStamp(), frame2->GetTimeStamp());
-  delete frame2;
+  // Timestamp is converted from ns to us, so last three digits are lost.
+  WebRtcVideoFrame frame(buffer, 20000, webrtc::kVideoRotation_0);
+  EXPECT_EQ(dummy_handle, frame.video_frame_buffer()->native_handle());
+  EXPECT_EQ(640, frame.width());
+  EXPECT_EQ(480, frame.height());
+  EXPECT_EQ(20000, frame.GetTimeStamp());
+  EXPECT_EQ(20, frame.timestamp_us());
+  frame.set_timestamp_us(40);
+  EXPECT_EQ(40000, frame.GetTimeStamp());
+  EXPECT_EQ(40, frame.timestamp_us());
 }
 
 TEST_F(WebRtcVideoFrameTest, ApplyRotationToFrame) {
-  WebRtcVideoTestFrame applied0;
+  WebRtcVideoFrame applied0;
   EXPECT_TRUE(IsNull(applied0));
-  std::unique_ptr<rtc::MemoryStream> ms(CreateYuvSample(kWidth, kHeight, 12));
-  EXPECT_TRUE(
-      LoadFrame(ms.get(), cricket::FOURCC_I420, kWidth, kHeight, &applied0));
+  EXPECT_TRUE(LoadFrame(CreateYuvSample(kWidth, kHeight, 12).get(), FOURCC_I420,
+                        kWidth, kHeight, &applied0));
 
   // Claim that this frame needs to be rotated for 90 degree.
-  applied0.SetRotation(webrtc::kVideoRotation_90);
+  SetFrameRotation(&applied0, webrtc::kVideoRotation_90);
+  EXPECT_EQ(applied0.rotation(), webrtc::kVideoRotation_90);
 
   // Apply rotation on frame 1. Output should be different from frame 1.
-  WebRtcVideoTestFrame* applied90 = const_cast<WebRtcVideoTestFrame*>(
-      static_cast<const WebRtcVideoTestFrame*>(
-          applied0.GetCopyWithRotationApplied()));
-  EXPECT_TRUE(applied90);
-  EXPECT_EQ(applied90->GetVideoRotation(), webrtc::kVideoRotation_0);
-  EXPECT_FALSE(IsEqual(applied0, *applied90, 0));
+  WebRtcVideoFrame applied90(
+      webrtc::I420Buffer::Rotate(applied0.video_frame_buffer(),
+                                 applied0.rotation()),
+      webrtc::kVideoRotation_0, applied0.timestamp_us());
+
+  EXPECT_EQ(applied90.rotation(), webrtc::kVideoRotation_0);
+  EXPECT_FALSE(IsEqual(applied0, applied90, 0));
 
   // Claim the frame 2 needs to be rotated for another 270 degree. The output
   // from frame 2 rotation should be the same as frame 1.
-  applied90->SetRotation(webrtc::kVideoRotation_270);
-  const cricket::VideoFrame* applied360 =
-      applied90->GetCopyWithRotationApplied();
-  EXPECT_TRUE(applied360);
-  EXPECT_EQ(applied360->GetVideoRotation(), webrtc::kVideoRotation_0);
-  EXPECT_TRUE(IsEqual(applied0, *applied360, 0));
+  SetFrameRotation(&applied90, webrtc::kVideoRotation_270);
+  WebRtcVideoFrame applied360(
+      webrtc::I420Buffer::Rotate(applied90.video_frame_buffer(),
+                                 applied90.rotation()),
+      webrtc::kVideoRotation_0, applied90.timestamp_us());
+  EXPECT_EQ(applied360.rotation(), webrtc::kVideoRotation_0);
+  EXPECT_TRUE(IsEqual(applied0, applied360, 0));
 }
+
+}  // namespace cricket

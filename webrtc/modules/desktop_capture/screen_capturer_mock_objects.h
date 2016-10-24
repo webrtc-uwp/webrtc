@@ -12,6 +12,7 @@
 #define WEBRTC_MODULES_DESKTOP_CAPTURE_SCREEN_CAPTURER_MOCK_OBJECTS_H_
 
 #include "testing/gmock/include/gmock/gmock.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/desktop_capture/screen_capturer.h"
 
 namespace webrtc {
@@ -35,7 +36,13 @@ class MockScreenCapturerCallback : public ScreenCapturer::Callback {
   MockScreenCapturerCallback() {}
   virtual ~MockScreenCapturerCallback() {}
 
-  MOCK_METHOD1(OnCaptureCompleted, void(DesktopFrame*));
+  MOCK_METHOD2(OnCaptureResultPtr,
+               void(DesktopCapturer::Result result,
+                    std::unique_ptr<DesktopFrame>* frame));
+  void OnCaptureResult(DesktopCapturer::Result result,
+                       std::unique_ptr<DesktopFrame> frame) override {
+    OnCaptureResultPtr(result, &frame);
+  }
 
  private:
   RTC_DISALLOW_COPY_AND_ASSIGN(MockScreenCapturerCallback);

@@ -10,12 +10,13 @@
 
 #include "webrtc/api/jsepsessiondescription.h"
 
+#include <memory>
+
 #include "webrtc/api/webrtcsdp.h"
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/stringencode.h"
 #include "webrtc/pc/mediasession.h"
 
-using rtc::scoped_ptr;
 using cricket::SessionDescription;
 
 namespace webrtc {
@@ -57,7 +58,6 @@ const int JsepSessionDescription::kMaxVideoCodecHeight = 1280;
 const int JsepSessionDescription::kMaxVideoCodecWidth = 1920;
 const int JsepSessionDescription::kMaxVideoCodecHeight = 1080;
 #endif
-const int JsepSessionDescription::kDefaultVideoCodecPreference = 1;
 
 SessionDescriptionInterface* CreateSessionDescription(const std::string& type,
                                                       const std::string& sdp,
@@ -125,7 +125,7 @@ bool JsepSessionDescription::AddCandidate(
     updated_candidate.set_password(transport_info->description.ice_pwd);
   }
 
-  scoped_ptr<JsepIceCandidate> updated_candidate_wrapper(
+  std::unique_ptr<JsepIceCandidate> updated_candidate_wrapper(
       new JsepIceCandidate(candidate->sdp_mid(),
                            static_cast<int>(mediasection_index),
                            updated_candidate));
@@ -135,6 +135,20 @@ bool JsepSessionDescription::AddCandidate(
         updated_candidate_wrapper.release());
 
   return true;
+}
+
+size_t JsepSessionDescription::RemoveCandidates(
+    const std::vector<cricket::Candidate>& candidates) {
+  size_t num_removed = 0;
+  for (auto& candidate : candidates) {
+    int mediasection_index = GetMediasectionIndex(candidate);
+    if (mediasection_index < 0) {
+      // Not found.
+      continue;
+    }
+    num_removed += candidate_collection_[mediasection_index].remove(candidate);
+  }
+  return num_removed;
 }
 
 size_t JsepSessionDescription::number_of_mediasections() const {
@@ -182,6 +196,18 @@ bool JsepSessionDescription::GetMediasectionIndex(
     }
   }
   return true;
+}
+
+int JsepSessionDescription::GetMediasectionIndex(
+    const cricket::Candidate& candidate) {
+  // Find the description with a matching transport name of the candidate.
+  const std::string& transport_name = candidate.transport_name();
+  for (size_t i = 0; i < description_->contents().size(); ++i) {
+    if (transport_name == description_->contents().at(i).name) {
+      return static_cast<int>(i);
+    }
+  }
+  return -1;
 }
 
 }  // namespace webrtc

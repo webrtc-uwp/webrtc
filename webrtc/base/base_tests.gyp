@@ -15,13 +15,17 @@
         'unittest_main.cc',
         # Also use this as a convenient dumping ground for misc files that are
         # included by multiple targets below.
+        'fakeclock.cc',
+        'fakeclock.h',
         'fakenetwork.h',
         'fakesslidentity.h',
         'faketaskrunner.h',
         'gunit.h',
+        'test/faketiming.h',
         'testbase64.h',
         'testechoserver.h',
         'testutils.h',
+        'timedelta.h',
       ],
       'defines': [
         'GTEST_RELATIVE_PATH',
@@ -30,6 +34,7 @@
         'base.gyp:rtc_base',
         '<(DEPTH)/testing/gtest.gyp:gtest',
         '<(webrtc_root)/test/test.gyp:field_trial',
+        '<(webrtc_root)/test/test.gyp:test_support',
       ],
       'direct_dependent_settings': {
         'defines': [
@@ -38,160 +43,6 @@
       },
       'export_dependent_settings': [
         '<(DEPTH)/testing/gtest.gyp:gtest',
-      ],
-      'conditions': [
-        # On WinRT we define the entrypoint in the wrapper app.
-        ['OS=="win" and OS_RUNTIME=="winrt"', {
-          'sources!': [
-            'unittest_main.cc'
-          ]
-        }]
-      ],
-    },
-    {
-      'target_name': 'rtc_base_tests',
-      'type': 'none',
-      'direct_dependent_settings': {
-        'sources': [
-          'array_view_unittest.cc',
-          'atomicops_unittest.cc',
-          'autodetectproxy_unittest.cc',
-          'bandwidthsmoother_unittest.cc',
-          'base64_unittest.cc',
-          'basictypes_unittest.cc',
-          'bind_unittest.cc',
-          'bitbuffer_unittest.cc',
-          'buffer_unittest.cc',
-          'bufferqueue_unittest.cc',
-          'bytebuffer_unittest.cc',
-          'byteorder_unittest.cc',
-          'callback_unittest.cc',
-          'copyonwritebuffer_unittest.cc',
-          'crc32_unittest.cc',
-          'criticalsection_unittest.cc',
-          'event_tracer_unittest.cc',
-          'event_unittest.cc',
-          'exp_filter_unittest.cc',
-          'filerotatingstream_unittest.cc',
-          'fileutils_unittest.cc',
-          'helpers_unittest.cc',
-          'httpbase_unittest.cc',
-          'httpcommon_unittest.cc',
-          'httpserver_unittest.cc',
-          'ipaddress_unittest.cc',
-          'logging_unittest.cc',
-          'md5digest_unittest.cc',
-          'messagedigest_unittest.cc',
-          'messagequeue_unittest.cc',
-          'multipart_unittest.cc',
-          'nat_unittest.cc',
-          'network_unittest.cc',
-          'optional_unittest.cc',
-          'optionsfile_unittest.cc',
-          'pathutils_unittest.cc',
-          'platform_thread_unittest.cc',
-          'profiler_unittest.cc',
-          'proxy_unittest.cc',
-          'proxydetect_unittest.cc',
-          'random_unittest.cc',
-          'rate_statistics_unittest.cc',
-          'ratelimiter_unittest.cc',
-          'ratetracker_unittest.cc',
-          'referencecountedsingletonfactory_unittest.cc',
-          'rollingaccumulator_unittest.cc',
-          'rtccertificate_unittests.cc',
-          'scopedptrcollection_unittest.cc',
-          'sha1digest_unittest.cc',
-          'sharedexclusivelock_unittest.cc',
-          'signalthread_unittest.cc',
-          'sigslot_unittest.cc',
-          'sigslottester.h',
-          'sigslottester.h.pump',
-          'stream_unittest.cc',
-          'stringencode_unittest.cc',
-          'stringutils_unittest.cc',
-          # TODO(ronghuawu): Reenable this test.
-          # 'systeminfo_unittest.cc',
-          'task_unittest.cc',
-          'testclient_unittest.cc',
-          'thread_checker_unittest.cc',
-          'thread_unittest.cc',
-          'timeutils_unittest.cc',
-          'urlencode_unittest.cc',
-          'versionparsing_unittest.cc',
-          # TODO(ronghuawu): Reenable this test.
-          # 'windowpicker_unittest.cc',
-        ],
-        'conditions': [
-          ['OS=="linux"', {
-            'sources': [
-              'latebindingsymboltable_unittest.cc',
-              # TODO(ronghuawu): Reenable this test.
-              # 'linux_unittest.cc',
-              'linuxfdwalk_unittest.cc',
-            ],
-          }],
-          ['OS=="win" and OS_RUNTIME!="winrt"', {
-            'sources': [
-              'win32_unittest.cc',
-              'win32regkey_unittest.cc',
-              'win32window_unittest.cc',
-              'win32windowpicker_unittest.cc',
-              'winfirewall_unittest.cc',
-            ],
-            'sources!': [
-              # TODO(pbos): Reenable this test.
-              'win32windowpicker_unittest.cc',
-            ],
-          }],
-          ['OS=="win" and OS_RUNTIME=="winrt"', {
-            'sources': [
-              'win32_unittest.cc',
-            ],
-          }],
-          ['OS=="win" and clang==1', {
-            'msvs_settings': {
-              'VCCLCompilerTool': {
-                'AdditionalOptions': [
-                  # Disable warnings failing when compiling with Clang on Windows.
-                  # https://bugs.chromium.org/p/webrtc/issues/detail?id=5366
-                  '-Wno-missing-braces',
-                  '-Wno-sign-compare',
-                  '-Wno-unused-const-variable',
-                ],
-              },
-            },
-          }],
-          ['OS=="mac"', {
-            'sources': [
-              'macutils_unittest.cc',
-            ],
-          }],
-          ['os_posix==1', {
-            'sources': [
-              'ssladapter_unittest.cc',
-              'sslidentity_unittest.cc',
-              'sslstreamadapter_unittest.cc',
-            ],
-          }],
-          ['OS=="ios" or (OS=="mac" and target_arch!="ia32")', {
-            'defines': [
-              'CARBON_DEPRECATED=YES',
-            ],
-          }],
-        ],  # conditions
-      },
-    },
-    {
-      'target_name': 'rtc_base_unittests',
-      'type': 'static_library',
-      'dependencies': [
-        'rtc_base_tests',
-        'base.gyp:rtc_base',
-        '<(DEPTH)/testing/gtest.gyp:gtest',
-      ],
-      'defines': [
-        'GTEST_RELATIVE_PATH',
       ],
     },
   ],

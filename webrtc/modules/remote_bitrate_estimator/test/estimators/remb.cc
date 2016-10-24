@@ -25,7 +25,9 @@ namespace bwe {
 
 RembBweSender::RembBweSender(int kbps, BitrateObserver* observer, Clock* clock)
     : bitrate_controller_(
-          BitrateController::CreateBitrateController(clock, observer)),
+          BitrateController::CreateBitrateController(clock,
+                                                     observer,
+                                                     &event_log_)),
       feedback_observer_(bitrate_controller_->CreateRtcpBandwidthObserver()),
       clock_(clock) {
   assert(kbps >= kMinBitrateKbps);
@@ -95,7 +97,7 @@ void RembReceiver::ReceivePacket(int64_t arrival_time_ms,
     step_ms = std::max<int64_t>(estimator_->TimeUntilNextProcess(), 0);
   }
   estimator_->IncomingPacket(arrival_time_ms, media_packet.payload_size(),
-                             media_packet.header(), true);
+                             media_packet.header());
   clock_.AdvanceTimeMilliseconds(arrival_time_ms - clock_.TimeInMilliseconds());
   ASSERT_TRUE(arrival_time_ms == clock_.TimeInMilliseconds());
 
@@ -111,11 +113,11 @@ FeedbackPacket* RembReceiver::GetFeedback(int64_t now_ms) {
     StatisticianMap statisticians = recv_stats_->GetActiveStatisticians();
     RTCPReportBlock report_block;
     if (!statisticians.empty()) {
-      report_block = BuildReportBlock(statisticians.begin()->second);
+      latest_report_block_ = BuildReportBlock(statisticians.begin()->second);
     }
 
     feedback = new RembFeedback(flow_id_, now_ms * 1000, last_feedback_ms_,
-                                estimated_bps, report_block);
+                                estimated_bps, latest_report_block_);
     last_feedback_ms_ = now_ms;
 
     double estimated_kbps = static_cast<double>(estimated_bps) / 1000.0;
@@ -135,8 +137,7 @@ RTCPReportBlock RembReceiver::BuildReportBlock(
     StreamStatistician* statistician) {
   RTCPReportBlock report_block;
   RtcpStatistics stats;
-  if (!statistician->GetStatistics(&stats, true))
-    return report_block;
+  RTC_DCHECK(statistician->GetStatistics(&stats, true));
   report_block.fractionLost = stats.fraction_lost;
   report_block.cumulativeLost = stats.cumulative_lost;
   report_block.extendedHighSeqNum = stats.extended_max_sequence_number;

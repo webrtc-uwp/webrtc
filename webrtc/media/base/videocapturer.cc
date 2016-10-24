@@ -30,11 +30,6 @@ static const int64_t kMaxDistance = ~(static_cast<int64_t>(1) << 63);
 #ifdef WEBRTC_LINUX
 static const int kYU12Penalty = 16;  // Needs to be higher than MJPG index.
 #endif
-static const int kDefaultScreencastFps = 5;
-
-// Limit stats data collections to ~20 seconds of 30fps data before dropping
-// old data in case stats aren't reset for long periods of time.
-static const size_t kMaxAccumulatorSize = 600;
 
 }  // namespace
 
@@ -64,30 +59,18 @@ bool CapturedFrame::GetDataSize(uint32_t* size) const {
 /////////////////////////////////////////////////////////////////////
 // Implementation of class VideoCapturer
 /////////////////////////////////////////////////////////////////////
-VideoCapturer::VideoCapturer()
-    : adapt_frame_drops_data_(kMaxAccumulatorSize),
-      frame_time_data_(kMaxAccumulatorSize),
-      apply_rotation_(true) {
+VideoCapturer::VideoCapturer() : apply_rotation_(false) {
   thread_checker_.DetachFromThread();
   Construct();
 }
 
 void VideoCapturer::Construct() {
-  ratio_w_ = 0;
-  ratio_h_ = 0;
   enable_camera_list_ = false;
-  square_pixel_aspect_ratio_ = false;
   capture_state_ = CS_STOPPED;
   SignalFrameCaptured.connect(this, &VideoCapturer::OnFrameCaptured);
-  // TODO(perkj) SignalVideoFrame is used directly by Chrome remoting.
-  // Before that is refactored, SignalVideoFrame must forward frames to the
-  // |VideoBroadcaster|;
-  SignalVideoFrame.connect(this, &VideoCapturer::OnFrame);
   scaled_width_ = 0;
   scaled_height_ = 0;
   enable_video_adapter_ = true;
-  adapt_frame_drops_ = 0;
-  previous_frame_time_ = 0.0;
   // There are lots of video capturers out there that don't call
   // set_frame_factory.  We can either go change all of them, or we
   // can set this default.
@@ -102,7 +85,6 @@ const std::vector<VideoFormat>* VideoCapturer::GetSupportedFormats() const {
 
 bool VideoCapturer::StartCapturing(const VideoFormat& capture_format) {
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
-  previous_frame_time_ = frame_length_time_reporter_.TimerNow();
   CaptureState result = Start(capture_format);
   const bool success = (result == CS_RUNNING) || (result == CS_STARTING);
   if (!success) {
@@ -193,17 +175,15 @@ void VideoCapturer::set_frame_factory(VideoFrameFactory* frame_factory) {
   }
 }
 
-void VideoCapturer::GetStats(VariableInfo<int>* adapt_drops_stats,
-                             VariableInfo<int>* effect_drops_stats,
-                             VariableInfo<double>* frame_time_stats,
-                             VideoFormat* last_captured_frame_format) {
+bool VideoCapturer::GetInputSize(int* width, int* height) {
   rtc::CritScope cs(&frame_stats_crit_);
-  GetVariableSnapshot(adapt_frame_drops_data_, adapt_drops_stats);
-  GetVariableSnapshot(frame_time_data_, frame_time_stats);
-  *last_captured_frame_format = last_captured_frame_format_;
+  if (!input_size_valid_) {
+    return false;
+  }
+  *width = input_width_;
+  *height = input_height_;
 
-  adapt_frame_drops_data_.Reset();
-  frame_time_data_.Reset();
+  return true;
 }
 
 void VideoCapturer::RemoveSink(
@@ -229,170 +209,77 @@ void VideoCapturer::OnSinkWantsChanged(const rtc::VideoSinkWants& wants) {
   }
 
   if (video_adapter()) {
-    video_adapter()->OnCpuResolutionRequest(wants.max_pixel_count,
-                                            wants.max_pixel_count_step_up);
+    video_adapter()->OnResolutionRequest(wants.max_pixel_count,
+                                         wants.max_pixel_count_step_up);
   }
+}
+
+bool VideoCapturer::AdaptFrame(int width,
+                               int height,
+                               int64_t camera_time_us,
+                               int64_t system_time_us,
+                               int* out_width,
+                               int* out_height,
+                               int* crop_width,
+                               int* crop_height,
+                               int* crop_x,
+                               int* crop_y,
+                               int64_t* translated_camera_time_us) {
+  int64_t offset_us =
+      translated_camera_time_us
+          ? timestamp_aligner_.UpdateOffset(camera_time_us, system_time_us)
+          : 0;
+
+  if (!broadcaster_.frame_wanted()) {
+    return false;
+  }
+
+  if (enable_video_adapter_ && !IsScreencast()) {
+    if (!video_adapter_.AdaptFrameResolution(
+            width, height, camera_time_us * rtc::kNumNanosecsPerMicrosec,
+            crop_width, crop_height, out_width, out_height)) {
+      // VideoAdapter dropped the frame.
+      return false;
+    }
+    *crop_x = (width - *crop_width) / 2;
+    *crop_y = (height - *crop_height) / 2;
+  } else {
+    *out_width = width;
+    *out_height = height;
+    *crop_width = width;
+    *crop_height = height;
+    *crop_x = 0;
+    *crop_y = 0;
+  }
+
+  if (translated_camera_time_us) {
+    *translated_camera_time_us = timestamp_aligner_.ClipTimestamp(
+        camera_time_us + offset_us, system_time_us);
+  }
+  return true;
 }
 
 void VideoCapturer::OnFrameCaptured(VideoCapturer*,
                                     const CapturedFrame* captured_frame) {
-  if (!broadcaster_.frame_wanted()) {
+  int out_width;
+  int out_height;
+  int crop_width;
+  int crop_height;
+  int crop_x;
+  int crop_y;
+
+  // TODO(nisse): We don't do timestamp translation on this input
+  // path. It seems straight-forward to enable translation, but that
+  // breaks the WebRtcVideoEngine2Test.PropagatesInputFrameTimestamp
+  // test. Probably not worth the effort to fix, instead, try to
+  // delete or refactor all code using VideoFrameFactory and
+  // SignalCapturedFrame.
+  if (!AdaptFrame(captured_frame->width, captured_frame->height,
+                  captured_frame->time_stamp / rtc::kNumNanosecsPerMicrosec,
+                  0,
+                  &out_width, &out_height,
+                  &crop_width, &crop_height, &crop_x, &crop_y, nullptr)) {
     return;
-  }
-
-  // Use a temporary buffer to scale
-  std::unique_ptr<uint8_t[]> scale_buffer;
-  if (IsScreencast()) {
-    int scaled_width, scaled_height;
-    int desired_screencast_fps =
-        capture_format_.get()
-            ? VideoFormat::IntervalToFps(capture_format_->interval)
-            : kDefaultScreencastFps;
-    ComputeScale(captured_frame->width, captured_frame->height,
-                 desired_screencast_fps, &scaled_width, &scaled_height);
-
-    if (FOURCC_ARGB == captured_frame->fourcc &&
-        (scaled_width != captured_frame->width ||
-         scaled_height != captured_frame->height)) {
-      if (scaled_width != scaled_width_ || scaled_height != scaled_height_) {
-        LOG(LS_INFO) << "Scaling Screencast from " << captured_frame->width
-                     << "x" << captured_frame->height << " to " << scaled_width
-                     << "x" << scaled_height;
-        scaled_width_ = scaled_width;
-        scaled_height_ = scaled_height;
-      }
-      CapturedFrame* modified_frame =
-          const_cast<CapturedFrame*>(captured_frame);
-      const int modified_frame_size = scaled_width * scaled_height * 4;
-      scale_buffer.reset(new uint8_t[modified_frame_size]);
-      // Compute new width such that width * height is less than maximum but
-      // maintains original captured frame aspect ratio.
-      // Round down width to multiple of 4 so odd width won't round up beyond
-      // maximum, and so chroma channel is even width to simplify spatial
-      // resampling.
-      libyuv::ARGBScale(reinterpret_cast<const uint8_t*>(captured_frame->data),
-                        captured_frame->width * 4, captured_frame->width,
-                        captured_frame->height, scale_buffer.get(),
-                        scaled_width * 4, scaled_width, scaled_height,
-                        libyuv::kFilterBilinear);
-      modified_frame->width = scaled_width;
-      modified_frame->height = scaled_height;
-      modified_frame->data_size = scaled_width * 4 * scaled_height;
-      modified_frame->data = scale_buffer.get();
-    }
-  }
-
-  const int kYuy2Bpp = 2;
-  const int kArgbBpp = 4;
-  // TODO(fbarchard): Make a helper function to adjust pixels to square.
-  // TODO(fbarchard): Hook up experiment to scaling.
-  // Temporary buffer is scoped here so it will persist until i420_frame.Init()
-  // makes a copy of the frame, converting to I420.
-  std::unique_ptr<uint8_t[]> temp_buffer;
-  // YUY2 can be scaled vertically using an ARGB scaler.  Aspect ratio is only
-  // a problem on OSX.  OSX always converts webcams to YUY2 or UYVY.
-  bool can_scale =
-      FOURCC_YUY2 == CanonicalFourCC(captured_frame->fourcc) ||
-      FOURCC_UYVY == CanonicalFourCC(captured_frame->fourcc);
-
-  // If pixels are not square, optionally use vertical scaling to make them
-  // square.  Square pixels simplify the rest of the pipeline, including
-  // effects and rendering.
-  if (can_scale && square_pixel_aspect_ratio_ &&
-      captured_frame->pixel_width != captured_frame->pixel_height) {
-    int scaled_width, scaled_height;
-    // modified_frame points to the captured_frame but with const casted away
-    // so it can be modified.
-    CapturedFrame* modified_frame = const_cast<CapturedFrame*>(captured_frame);
-    // Compute the frame size that makes pixels square pixel aspect ratio.
-    ComputeScaleToSquarePixels(captured_frame->width, captured_frame->height,
-                               captured_frame->pixel_width,
-                               captured_frame->pixel_height,
-                               &scaled_width, &scaled_height);
-
-    if (scaled_width != scaled_width_ || scaled_height != scaled_height_) {
-      LOG(LS_INFO) << "Scaling WebCam from "
-                   << captured_frame->width << "x"
-                   << captured_frame->height << " to "
-                   << scaled_width << "x" << scaled_height
-                   << " for PAR "
-                   << captured_frame->pixel_width << "x"
-                   << captured_frame->pixel_height;
-      scaled_width_ = scaled_width;
-      scaled_height_ = scaled_height;
-    }
-    const int modified_frame_size = scaled_width * scaled_height * kYuy2Bpp;
-    uint8_t* temp_buffer_data;
-    // Pixels are wide and short; Increasing height. Requires temporary buffer.
-    if (scaled_height > captured_frame->height) {
-      temp_buffer.reset(new uint8_t[modified_frame_size]);
-      temp_buffer_data = temp_buffer.get();
-    } else {
-      // Pixels are narrow and tall; Decreasing height. Scale will be done
-      // in place.
-      temp_buffer_data = reinterpret_cast<uint8_t*>(captured_frame->data);
-    }
-
-    // Use ARGBScaler to vertically scale the YUY2 image, adjusting for 16 bpp.
-    libyuv::ARGBScale(reinterpret_cast<const uint8_t*>(captured_frame->data),
-                      captured_frame->width * kYuy2Bpp,  // Stride for YUY2.
-                      captured_frame->width * kYuy2Bpp / kArgbBpp,  // Width.
-                      abs(captured_frame->height),                  // Height.
-                      temp_buffer_data,
-                      scaled_width * kYuy2Bpp,             // Stride for YUY2.
-                      scaled_width * kYuy2Bpp / kArgbBpp,  // Width.
-                      abs(scaled_height),                  // New height.
-                      libyuv::kFilterBilinear);
-    modified_frame->width = scaled_width;
-    modified_frame->height = scaled_height;
-    modified_frame->pixel_width = 1;
-    modified_frame->pixel_height = 1;
-    modified_frame->data_size = modified_frame_size;
-    modified_frame->data = temp_buffer_data;
-  }
-
-  // Size to crop captured frame to.  This adjusts the captured frames
-  // aspect ratio to match the final view aspect ratio, considering pixel
-  // aspect ratio and rotation.  The final size may be scaled down by video
-  // adapter to better match ratio_w_ x ratio_h_.
-  // Note that abs() of frame height is passed in, because source may be
-  // inverted, but output will be positive.
-  int cropped_width = captured_frame->width;
-  int cropped_height = captured_frame->height;
-
-  // TODO(fbarchard): Improve logic to pad or crop.
-  // MJPG can crop vertically, but not horizontally.  This logic disables crop.
-  // Alternatively we could pad the image with black, or implement a 2 step
-  // crop.
-  bool can_crop = true;
-  if (captured_frame->fourcc == FOURCC_MJPG) {
-    float cam_aspect = static_cast<float>(captured_frame->width) /
-        static_cast<float>(captured_frame->height);
-    float view_aspect = static_cast<float>(ratio_w_) /
-        static_cast<float>(ratio_h_);
-    can_crop = cam_aspect <= view_aspect;
-  }
-  if (can_crop && !IsScreencast()) {
-    // TODO(ronghuawu): The capturer should always produce the native
-    // resolution and the cropping should be done in downstream code.
-    ComputeCrop(ratio_w_, ratio_h_, captured_frame->width,
-                abs(captured_frame->height), captured_frame->pixel_width,
-                captured_frame->pixel_height, captured_frame->rotation,
-                &cropped_width, &cropped_height);
-  }
-
-  int adapted_width = cropped_width;
-  int adapted_height = cropped_height;
-  if (enable_video_adapter_ && !IsScreencast()) {
-    const VideoFormat adapted_format =
-        video_adapter_.AdaptFrameResolution(cropped_width, cropped_height);
-    if (adapted_format.IsSize0x0()) {
-      // VideoAdapter dropped the frame.
-      ++adapt_frame_drops_;
-      return;
-    }
-    adapted_width = adapted_format.width;
-    adapted_height = adapted_format.height;
   }
 
   if (!frame_factory_) {
@@ -400,25 +287,27 @@ void VideoCapturer::OnFrameCaptured(VideoCapturer*,
     return;
   }
 
-  std::unique_ptr<VideoFrame> adapted_frame(
-      frame_factory_->CreateAliasedFrame(captured_frame,
-                                         cropped_width, cropped_height,
-                                         adapted_width, adapted_height));
+  // TODO(nisse): Reorganize frame factory methods. crop_x and crop_y
+  // are ignored for now.
+  std::unique_ptr<VideoFrame> adapted_frame(frame_factory_->CreateAliasedFrame(
+      captured_frame, crop_width, crop_height, out_width, out_height));
 
   if (!adapted_frame) {
     // TODO(fbarchard): LOG more information about captured frame attributes.
     LOG(LS_ERROR) << "Couldn't convert to I420! "
                   << "From " << ToString(captured_frame) << " To "
-                  << cropped_width << " x " << cropped_height;
+                  << out_width << " x " << out_height;
     return;
   }
 
-  SignalVideoFrame(this, adapted_frame.get());
-  UpdateStats(captured_frame);
+  OnFrame(*adapted_frame, captured_frame->width, captured_frame->height);
 }
 
-void VideoCapturer::OnFrame(VideoCapturer* capturer, const VideoFrame* frame) {
-  broadcaster_.OnFrame(*frame);
+void VideoCapturer::OnFrame(const VideoFrame& frame,
+                            int orig_width,
+                            int orig_height) {
+  broadcaster_.OnFrame(frame);
+  UpdateInputSize(orig_width, orig_height);
 }
 
 void VideoCapturer::SetCaptureState(CaptureState state) {
@@ -559,33 +448,13 @@ bool VideoCapturer::ShouldFilterFormat(const VideoFormat& format) const {
          format.height > max_format_->height;
 }
 
-void VideoCapturer::UpdateStats(const CapturedFrame* captured_frame) {
+void VideoCapturer::UpdateInputSize(int width, int height) {
   // Update stats protected from fetches from different thread.
   rtc::CritScope cs(&frame_stats_crit_);
 
-  last_captured_frame_format_.width = captured_frame->width;
-  last_captured_frame_format_.height = captured_frame->height;
-  // TODO(ronghuawu): Useful to report interval as well?
-  last_captured_frame_format_.interval = 0;
-  last_captured_frame_format_.fourcc = captured_frame->fourcc;
-
-  double time_now = frame_length_time_reporter_.TimerNow();
-  if (previous_frame_time_ != 0.0) {
-    adapt_frame_drops_data_.AddSample(adapt_frame_drops_);
-    frame_time_data_.AddSample(time_now - previous_frame_time_);
-  }
-  previous_frame_time_ = time_now;
-  adapt_frame_drops_ = 0;
-}
-
-template<class T>
-void VideoCapturer::GetVariableSnapshot(
-    const rtc::RollingAccumulator<T>& data,
-    VariableInfo<T>* stats) {
-  stats->max_val = data.ComputeMax();
-  stats->mean = data.ComputeMean();
-  stats->min_val = data.ComputeMin();
-  stats->variance = data.ComputeVariance();
+  input_size_valid_ = true;
+  input_width_ = width;
+  input_height_ = height;
 }
 
 }  // namespace cricket

@@ -14,18 +14,19 @@
 
 #include <iostream>
 #include <map>
+#include <memory>
+
 #include "webrtc/base/checks.h"
 #include "webrtc/base/flags.h"
 #include "webrtc/base/helpers.h"
 #include "webrtc/base/nethelpers.h"
 #include "webrtc/base/network.h"
 #include "webrtc/base/logging.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/ssladapter.h"
 #include "webrtc/base/stringutils.h"
 #include "webrtc/base/thread.h"
 #include "webrtc/base/timeutils.h"
-#include "webrtc/p2p/base/basicpacketsocketfactory.cc"
+#include "webrtc/p2p/base/basicpacketsocketfactory.h"
 #include "webrtc/p2p/stunprober/stunprober.h"
 
 using stunprober::StunProber;
@@ -117,11 +118,11 @@ int main(int argc, char** argv) {
   }
 
   rtc::InitializeSSL();
-  rtc::InitRandom(rtc::Time());
+  rtc::InitRandom(rtc::Time32());
   rtc::Thread* thread = rtc::ThreadManager::Instance()->WrapCurrentThread();
-  rtc::scoped_ptr<rtc::BasicPacketSocketFactory> socket_factory(
+  std::unique_ptr<rtc::BasicPacketSocketFactory> socket_factory(
       new rtc::BasicPacketSocketFactory());
-  rtc::scoped_ptr<rtc::BasicNetworkManager> network_manager(
+  std::unique_ptr<rtc::BasicNetworkManager> network_manager(
       new rtc::BasicNetworkManager());
   rtc::NetworkManager::NetworkList networks;
   network_manager->GetNetworks(&networks);

@@ -11,14 +11,17 @@
 #ifndef WEBRTC_MEDIA_BASE_VIDEOSINKINTERFACE_H_
 #define WEBRTC_MEDIA_BASE_VIDEOSINKINTERFACE_H_
 
+// TODO(nisse): Consider moving this interface (and possibly
+// VideoSourceInterface too) from media/base to common_video, to
+// reduce dependency cycles.
 namespace rtc {
 
 template <typename VideoFrameT>
 class VideoSinkInterface {
  public:
-  virtual void OnFrame(const VideoFrameT& frame) = 0;
- protected:
   virtual ~VideoSinkInterface() {}
+
+  virtual void OnFrame(const VideoFrameT& frame) = 0;
 };
 
 }  // namespace rtc

@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
 #include <utility>  // for std::pair
 
 #include "webrtc/p2p/base/transport.h"
@@ -57,12 +58,6 @@ bool IceCredentialsChanged(const std::string& old_ufrag,
   return (old_ufrag != new_ufrag) || (old_pwd != new_pwd);
 }
 
-static bool IceCredentialsChanged(const TransportDescription& old_desc,
-                                  const TransportDescription& new_desc) {
-  return IceCredentialsChanged(old_desc.ice_ufrag, old_desc.ice_pwd,
-                               new_desc.ice_ufrag, new_desc.ice_pwd);
-}
-
 Transport::Transport(const std::string& name, PortAllocator* allocator)
     : name_(name), allocator_(allocator) {}
 
@@ -77,13 +72,13 @@ void Transport::SetIceRole(IceRole role) {
   }
 }
 
-bool Transport::GetRemoteSSLCertificate(rtc::SSLCertificate** cert) {
+std::unique_ptr<rtc::SSLCertificate> Transport::GetRemoteSSLCertificate() {
   if (channels_.empty()) {
-    return false;
+    return nullptr;
   }
 
   auto iter = channels_.begin();
-  return iter->second->GetRemoteSSLCertificate(cert);
+  return iter->second->GetRemoteSSLCertificate();
 }
 
 void Transport::SetIceConfig(const IceConfig& config) {
@@ -104,16 +99,6 @@ bool Transport::SetLocalTransportDescription(
                                    error_desc);
   }
 
-  if (local_description_ &&
-      IceCredentialsChanged(*local_description_, description)) {
-    IceRole new_ice_role =
-        (action == CA_OFFER) ? ICEROLE_CONTROLLING : ICEROLE_CONTROLLED;
-
-    // It must be called before ApplyLocalTransportDescription, which may
-    // trigger an ICE restart and depends on the new ICE role.
-    SetIceRole(new_ice_role);
-  }
-
   local_description_.reset(new TransportDescription(description));
 
   for (const auto& kv : channels_) {
@@ -129,7 +114,6 @@ bool Transport::SetLocalTransportDescription(
   }
   if (ret) {
     local_description_set_ = true;
-    ConnectChannels();
   }
 
   return ret;
@@ -196,9 +180,6 @@ TransportChannelImpl* Transport::CreateChannel(int component) {
   if (local_description_ && remote_description_)
     ApplyNegotiatedTransportDescription(channel, nullptr);
 
-  if (connect_requested_) {
-    channel->Connect();
-  }
   return channel;
 }
 
@@ -221,35 +202,8 @@ void Transport::DestroyChannel(int component) {
   DestroyTransportChannel(channel);
 }
 
-void Transport::ConnectChannels() {
-  if (connect_requested_ || channels_.empty())
-    return;
-
-  connect_requested_ = true;
-
-  if (!local_description_) {
-    // TOOD(mallinath) : TransportDescription(TD) shouldn't be generated here.
-    // As Transport must know TD is offer or answer and cricket::Transport
-    // doesn't have the capability to decide it. This should be set by the
-    // Session.
-    // Session must generate local TD before remote candidates pushed when
-    // initiate request initiated by the remote.
-    LOG(LS_INFO) << "Transport::ConnectChannels: No local description has "
-                 << "been set. Will generate one.";
-    TransportDescription desc(std::vector<std::string>(),
-                              rtc::CreateRandomString(ICE_UFRAG_LENGTH),
-                              rtc::CreateRandomString(ICE_PWD_LENGTH),
-                              ICEMODE_FULL, CONNECTIONROLE_NONE, nullptr);
-    SetLocalTransportDescription(desc, CA_OFFER, nullptr);
-  }
-
-  CallChannels(&TransportChannelImpl::Connect);
-}
-
 void Transport::MaybeStartGathering() {
-  if (connect_requested_) {
-    CallChannels(&TransportChannelImpl::MaybeStartGathering);
-  }
+  CallChannels(&TransportChannelImpl::MaybeStartGathering);
 }
 
 void Transport::DestroyAllChannels() {
@@ -294,6 +248,22 @@ bool Transport::VerifyCandidate(const Candidate& cand, std::string* error) {
     }
   }
 
+  if (!HasChannel(cand.component())) {
+    *error = "Candidate has an unknown component: " + cand.ToString() +
+             " for content: " + name();
+    return false;
+  }
+
+  return true;
+}
+
+bool Transport::VerifyCandidates(const Candidates& candidates,
+                                 std::string* error) {
+  for (const Candidate& candidate : candidates) {
+    if (!VerifyCandidate(candidate, error)) {
+      return false;
+    }
+  }
   return true;
 }
 
@@ -318,16 +288,9 @@ bool Transport::GetStats(TransportStats* stats) {
 bool Transport::AddRemoteCandidates(const std::vector<Candidate>& candidates,
                                     std::string* error) {
   ASSERT(!channels_destroyed_);
-  // Verify each candidate before passing down to transport layer.
-  for (const Candidate& cand : candidates) {
-    if (!VerifyCandidate(cand, error)) {
-      return false;
-    }
-    if (!HasChannel(cand.component())) {
-      *error = "Candidate has unknown component: " + cand.ToString() +
-               " for content: " + name();
-      return false;
-    }
+  // Verify each candidate before passing down to the transport layer.
+  if (!VerifyCandidates(candidates, error)) {
+    return false;
   }
 
   for (const Candidate& candidate : candidates) {
@@ -339,17 +302,32 @@ bool Transport::AddRemoteCandidates(const std::vector<Candidate>& candidates,
   return true;
 }
 
+bool Transport::RemoveRemoteCandidates(const std::vector<Candidate>& candidates,
+                                       std::string* error) {
+  ASSERT(!channels_destroyed_);
+  // Verify each candidate before passing down to the transport layer.
+  if (!VerifyCandidates(candidates, error)) {
+    return false;
+  }
+
+  for (const Candidate& candidate : candidates) {
+    TransportChannelImpl* channel = GetChannel(candidate.component());
+    if (channel != nullptr) {
+      channel->RemoveRemoteCandidate(candidate);
+    }
+  }
+  return true;
+}
+
 bool Transport::ApplyLocalTransportDescription(TransportChannelImpl* ch,
                                                std::string* error_desc) {
-  ch->SetIceCredentials(local_description_->ice_ufrag,
-                        local_description_->ice_pwd);
+  ch->SetIceParameters(local_description_->GetIceParameters());
   return true;
 }
 
 bool Transport::ApplyRemoteTransportDescription(TransportChannelImpl* ch,
                                                 std::string* error_desc) {
-  ch->SetRemoteIceCredentials(remote_description_->ice_ufrag,
-                              remote_description_->ice_pwd);
+  ch->SetRemoteIceParameters(remote_description_->GetIceParameters());
   return true;
 }
 
@@ -385,6 +363,109 @@ bool Transport::NegotiateTransportDescription(ContentAction local_role,
       return false;
     }
   }
+  return true;
+}
+
+bool Transport::VerifyCertificateFingerprint(
+    const rtc::RTCCertificate* certificate,
+    const rtc::SSLFingerprint* fingerprint,
+    std::string* error_desc) const {
+  if (!fingerprint) {
+    return BadTransportDescription("No fingerprint.", error_desc);
+  }
+  if (!certificate) {
+    return BadTransportDescription(
+        "Fingerprint provided but no identity available.", error_desc);
+  }
+  std::unique_ptr<rtc::SSLFingerprint> fp_tmp(rtc::SSLFingerprint::Create(
+      fingerprint->algorithm, certificate->identity()));
+  ASSERT(fp_tmp.get() != NULL);
+  if (*fp_tmp == *fingerprint) {
+    return true;
+  }
+  std::ostringstream desc;
+  desc << "Local fingerprint does not match identity. Expected: ";
+  desc << fp_tmp->ToString();
+  desc << " Got: " << fingerprint->ToString();
+  return BadTransportDescription(desc.str(), error_desc);
+}
+
+bool Transport::NegotiateRole(ContentAction local_role,
+                              rtc::SSLRole* ssl_role,
+                              std::string* error_desc) const {
+  RTC_DCHECK(ssl_role);
+  if (!local_description() || !remote_description()) {
+    const std::string msg =
+        "Local and Remote description must be set before "
+        "transport descriptions are negotiated";
+    return BadTransportDescription(msg, error_desc);
+  }
+
+  // From RFC 4145, section-4.1, The following are the values that the
+  // 'setup' attribute can take in an offer/answer exchange:
+  //       Offer      Answer
+  //      ________________
+  //      active     passive / holdconn
+  //      passive    active / holdconn
+  //      actpass    active / passive / holdconn
+  //      holdconn   holdconn
+  //
+  // Set the role that is most conformant with RFC 5763, Section 5, bullet 1
+  // The endpoint MUST use the setup attribute defined in [RFC4145].
+  // The endpoint that is the offerer MUST use the setup attribute
+  // value of setup:actpass and be prepared to receive a client_hello
+  // before it receives the answer.  The answerer MUST use either a
+  // setup attribute value of setup:active or setup:passive.  Note that
+  // if the answerer uses setup:passive, then the DTLS handshake will
+  // not begin until the answerer is received, which adds additional
+  // latency. setup:active allows the answer and the DTLS handshake to
+  // occur in parallel.  Thus, setup:active is RECOMMENDED.  Whichever
+  // party is active MUST initiate a DTLS handshake by sending a
+  // ClientHello over each flow (host/port quartet).
+  // IOW - actpass and passive modes should be treated as server and
+  // active as client.
+  ConnectionRole local_connection_role = local_description()->connection_role;
+  ConnectionRole remote_connection_role = remote_description()->connection_role;
+
+  bool is_remote_server = false;
+  if (local_role == CA_OFFER) {
+    if (local_connection_role != CONNECTIONROLE_ACTPASS) {
+      return BadTransportDescription(
+          "Offerer must use actpass value for setup attribute.", error_desc);
+    }
+
+    if (remote_connection_role == CONNECTIONROLE_ACTIVE ||
+        remote_connection_role == CONNECTIONROLE_PASSIVE ||
+        remote_connection_role == CONNECTIONROLE_NONE) {
+      is_remote_server = (remote_connection_role == CONNECTIONROLE_PASSIVE);
+    } else {
+      const std::string msg =
+          "Answerer must use either active or passive value "
+          "for setup attribute.";
+      return BadTransportDescription(msg, error_desc);
+    }
+    // If remote is NONE or ACTIVE it will act as client.
+  } else {
+    if (remote_connection_role != CONNECTIONROLE_ACTPASS &&
+        remote_connection_role != CONNECTIONROLE_NONE) {
+      return BadTransportDescription(
+          "Offerer must use actpass value for setup attribute.", error_desc);
+    }
+
+    if (local_connection_role == CONNECTIONROLE_ACTIVE ||
+        local_connection_role == CONNECTIONROLE_PASSIVE) {
+      is_remote_server = (local_connection_role == CONNECTIONROLE_ACTIVE);
+    } else {
+      const std::string msg =
+          "Answerer must use either active or passive value "
+          "for setup attribute.";
+      return BadTransportDescription(msg, error_desc);
+    }
+
+    // If local is passive, local will act as server.
+  }
+
+  *ssl_role = is_remote_server ? rtc::SSL_CLIENT : rtc::SSL_SERVER;
   return true;
 }
 

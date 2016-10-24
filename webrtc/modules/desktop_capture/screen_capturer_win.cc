@@ -10,9 +10,11 @@
 
 #include "webrtc/modules/desktop_capture/screen_capturer.h"
 
+#include <memory>
 #include <utility>
 
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
+#include "webrtc/modules/desktop_capture/win/screen_capturer_win_directx.h"
 #include "webrtc/modules/desktop_capture/win/screen_capturer_win_gdi.h"
 #include "webrtc/modules/desktop_capture/win/screen_capturer_win_magnifier.h"
 
@@ -20,13 +22,18 @@ namespace webrtc {
 
 // static
 ScreenCapturer* ScreenCapturer::Create(const DesktopCaptureOptions& options) {
-  rtc::scoped_ptr<ScreenCapturer> gdi_capturer(
-      new ScreenCapturerWinGdi(options));
+  std::unique_ptr<ScreenCapturer> capturer;
+  if (options.allow_directx_capturer() &&
+      ScreenCapturerWinDirectx::IsSupported()) {
+    capturer.reset(new ScreenCapturerWinDirectx(options));
+  } else {
+    capturer.reset(new ScreenCapturerWinGdi(options));
+  }
 
   if (options.allow_use_magnification_api())
-    return new ScreenCapturerWinMagnifier(std::move(gdi_capturer));
+    return new ScreenCapturerWinMagnifier(std::move(capturer));
 
-  return gdi_capturer.release();
+  return capturer.release();
 }
 
 }  // namespace webrtc

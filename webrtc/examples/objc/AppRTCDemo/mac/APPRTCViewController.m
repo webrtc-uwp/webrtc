@@ -11,14 +11,17 @@
 #import "APPRTCViewController.h"
 
 #import <AVFoundation/AVFoundation.h>
+
+#import "WebRTC/RTCNSGLVideoView.h"
+#import "WebRTC/RTCVideoTrack.h"
+
 #import "ARDAppClient.h"
-#import "RTCNSGLVideoView.h"
-#import "RTCVideoTrack.h"
 
 static NSUInteger const kContentWidth = 1280;
 static NSUInteger const kContentHeight = 720;
 static NSUInteger const kRoomFieldWidth = 80;
 static NSUInteger const kLogViewHeight = 280;
+static NSUInteger const kPreviewWidth = 490;
 
 @class APPRTCMainView;
 @protocol APPRTCMainViewDelegate
@@ -45,11 +48,13 @@ static NSUInteger const kLogViewHeight = 280;
   NSTextField* _roomLabel;
   NSTextField* _roomField;
   NSTextView* _logView;
-  RTCNSGLVideoView* _localVideoView;
-  RTCNSGLVideoView* _remoteVideoView;
   CGSize _localVideoSize;
   CGSize _remoteVideoSize;
 }
+
+@synthesize delegate = _delegate;
+@synthesize localVideoView = _localVideoView;
+@synthesize remoteVideoView = _remoteVideoView;
 
 + (BOOL)requiresConstraintBasedLayout {
   return YES;
@@ -70,14 +75,18 @@ static NSUInteger const kLogViewHeight = 280;
       NSDictionaryOfVariableBindings(_roomLabel,
                                      _roomField,
                                      _scrollView,
-                                     _remoteVideoView);
+                                     _remoteVideoView,
+                                     _localVideoView);
 
   NSSize remoteViewSize = [self remoteVideoViewSize];
   NSDictionary* metrics = @{
     @"kLogViewHeight" : @(kLogViewHeight),
+    @"kPreviewWidth" : @(kPreviewWidth),
     @"kRoomFieldWidth" : @(kRoomFieldWidth),
     @"remoteViewWidth" : @(remoteViewSize.width),
     @"remoteViewHeight" : @(remoteViewSize.height),
+    @"localViewHeight" : @(remoteViewSize.height),
+    @"scrollViewWidth" : @(kContentWidth - kPreviewWidth),
   };
   // Declare this separately to avoid compiler warning about splitting string
   // within an NSArray expression.
@@ -86,10 +95,14 @@ static NSUInteger const kLogViewHeight = 280;
        "-[_remoteVideoView(remoteViewHeight)]-|";
   NSArray* constraintFormats = @[
       verticalConstraint,
+      @"V:[_localVideoView]-[_remoteVideoView]",
+      @"V:[_localVideoView(kLogViewHeight)]",
       @"|-[_roomLabel]",
       @"|-[_roomField(kRoomFieldWidth)]",
-      @"|-[_scrollView(remoteViewWidth)]-|",
+      @"|-[_scrollView(scrollViewWidth)]",
+      @"[_scrollView]-[_localVideoView]",
       @"|-[_remoteVideoView(remoteViewWidth)]-|",
+      @"[_localVideoView(kPreviewWidth)]-|",
   ];
   for (NSString* constraintFormat in constraintFormats) {
     NSArray* constraints =
@@ -186,20 +199,17 @@ static NSUInteger const kLogViewHeight = 280;
   _remoteVideoView.delegate = self;
   [self addSubview:_remoteVideoView];
 
-  // TODO(tkchin): create local video view.
-  // https://code.google.com/p/webrtc/issues/detail?id=3417.
+  _localVideoView = [[RTCNSGLVideoView alloc] initWithFrame:NSZeroRect
+                                                 pixelFormat:pixelFormat];
+  [_localVideoView setTranslatesAutoresizingMaskIntoConstraints:NO];
+  _localVideoView.delegate = self;
+  [self addSubview:_localVideoView];
 }
 
 - (NSSize)remoteVideoViewSize {
-  if (_remoteVideoSize.width > 0 && _remoteVideoSize.height > 0) {
-    return _remoteVideoSize;
-  } else {
-    return NSMakeSize(kContentWidth, kContentHeight);
-  }
-}
-
-- (NSSize)localVideoViewSize {
-  return NSZeroSize;
+  NSInteger width = MAX(_remoteVideoSize.width, kContentWidth);
+  NSInteger height = (width/16) * 9;
+  return NSMakeSize(width, height);
 }
 
 @end
@@ -250,12 +260,13 @@ static NSUInteger const kLogViewHeight = 280;
 }
 
 - (void)appClient:(ARDAppClient *)client
-    didChangeConnectionState:(RTCICEConnectionState)state {
+    didChangeConnectionState:(RTCIceConnectionState)state {
 }
 
 - (void)appClient:(ARDAppClient *)client
     didReceiveLocalVideoTrack:(RTCVideoTrack *)localVideoTrack {
   _localVideoTrack = localVideoTrack;
+  [_localVideoTrack addRenderer:self.mainView.localVideoView];
 }
 
 - (void)appClient:(ARDAppClient *)client
@@ -280,7 +291,11 @@ static NSUInteger const kLogViewHeight = 280;
         didEnterRoomId:(NSString*)roomId {
   [_client disconnect];
   ARDAppClient *client = [[ARDAppClient alloc] initWithDelegate:self];
-  [client connectToRoomWithId:roomId isLoopback:NO isAudioOnly:NO];
+  [client connectToRoomWithId:roomId
+                   isLoopback:NO
+                  isAudioOnly:NO
+            shouldMakeAecDump:NO
+        shouldUseLevelControl:NO];
   _client = client;
 }
 
@@ -298,8 +313,11 @@ static NSUInteger const kLogViewHeight = 280;
 
 - (void)resetUI {
   [_remoteVideoTrack removeRenderer:self.mainView.remoteVideoView];
+  [_localVideoTrack removeRenderer:self.mainView.localVideoView];
   _remoteVideoTrack = nil;
+  _localVideoTrack = nil;
   [self.mainView.remoteVideoView renderFrame:nil];
+  [self.mainView.localVideoView renderFrame:nil];
 }
 
 - (void)disconnect {

@@ -10,33 +10,45 @@
 
 #import "webrtc/modules/audio_device/ios/objc/RTCAudioSession.h"
 
-#include "webrtc/base/checks.h"
+#import <UIKit/UIKit.h>
 
-#import "webrtc/base/objc/RTCLogging.h"
+#include "webrtc/base/atomicops.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/criticalsection.h"
+#include "webrtc/modules/audio_device/ios/audio_device_ios.h"
+
+#import "WebRTC/RTCLogging.h"
 #import "webrtc/modules/audio_device/ios/objc/RTCAudioSession+Private.h"
+#import "webrtc/modules/audio_device/ios/objc/RTCAudioSessionConfiguration.h"
 
 NSString * const kRTCAudioSessionErrorDomain = @"org.webrtc.RTCAudioSession";
 NSInteger const kRTCAudioSessionErrorLockRequired = -1;
+NSInteger const kRTCAudioSessionErrorConfiguration = -2;
 
 // This class needs to be thread-safe because it is accessed from many threads.
 // TODO(tkchin): Consider more granular locking. We're not expecting a lot of
 // lock contention so coarse locks should be fine for now.
 @implementation RTCAudioSession {
+  rtc::CriticalSection _crit;
   AVAudioSession *_session;
-  NSHashTable *_delegates;
-  NSInteger _activationCount;
+  volatile int _activationCount;
+  volatile int _lockRecursionCount;
+  volatile int _webRTCSessionCount;
   BOOL _isActive;
-  BOOL _isLocked;
+  BOOL _useManualAudio;
+  BOOL _isAudioEnabled;
+  BOOL _canPlayOrRecord;
+  BOOL _isInterrupted;
 }
 
 @synthesize session = _session;
-@synthesize lock = _lock;
+@synthesize delegates = _delegates;
 
 + (instancetype)sharedInstance {
   static dispatch_once_t onceToken;
   static RTCAudioSession *sharedInstance = nil;
   dispatch_once(&onceToken, ^{
-    sharedInstance = [[RTCAudioSession alloc] init];
+    sharedInstance = [[self alloc] init];
   });
   return sharedInstance;
 }
@@ -44,8 +56,7 @@ NSInteger const kRTCAudioSessionErrorLockRequired = -1;
 - (instancetype)init {
   if (self = [super init]) {
     _session = [AVAudioSession sharedInstance];
-    _delegates = [NSHashTable weakObjectsHashTable];
-    _lock = [[NSRecursiveLock alloc] init];
+
     NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
     [center addObserver:self
                selector:@selector(handleInterruptionNotification:)
@@ -64,12 +75,39 @@ NSInteger const kRTCAudioSessionErrorLockRequired = -1;
                selector:@selector(handleMediaServicesWereReset:)
                    name:AVAudioSessionMediaServicesWereResetNotification
                  object:nil];
+    // Also track foreground event in order to deal with interruption ended situation.
+    [center addObserver:self
+               selector:@selector(handleApplicationDidBecomeActive:)
+                   name:UIApplicationDidBecomeActiveNotification
+                 object:nil];
   }
   return self;
 }
 
 - (void)dealloc {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (NSString *)description {
+  NSString *format =
+      @"RTCAudioSession: {\n"
+       "  category: %@\n"
+       "  categoryOptions: %ld\n"
+       "  mode: %@\n"
+       "  isActive: %d\n"
+       "  sampleRate: %.2f\n"
+       "  IOBufferDuration: %f\n"
+       "  outputNumberOfChannels: %ld\n"
+       "  inputNumberOfChannels: %ld\n"
+       "  outputLatency: %f\n"
+       "  inputLatency: %f\n"
+       "}";
+  NSString *description = [NSString stringWithFormat:format,
+      self.category, (long)self.categoryOptions, self.mode,
+      self.isActive, self.sampleRate, self.IOBufferDuration,
+      self.outputNumberOfChannels, self.inputNumberOfChannels,
+      self.outputLatency, self.inputLatency];
+  return description;
 }
 
 - (void)setIsActive:(BOOL)isActive {
@@ -85,42 +123,79 @@ NSInteger const kRTCAudioSessionErrorLockRequired = -1;
 }
 
 - (BOOL)isLocked {
+  return _lockRecursionCount > 0;
+}
+
+- (void)setUseManualAudio:(BOOL)useManualAudio {
   @synchronized(self) {
-    return _isLocked;
+    if (_useManualAudio == useManualAudio) {
+      return;
+    }
+    _useManualAudio = useManualAudio;
+  }
+  [self updateCanPlayOrRecord];
+}
+
+- (BOOL)useManualAudio {
+  @synchronized(self) {
+    return _useManualAudio;
   }
 }
 
-- (void)addDelegate:(id<RTCAudioSessionDelegate>)delegate {
+- (void)setIsAudioEnabled:(BOOL)isAudioEnabled {
   @synchronized(self) {
-    [_delegates addObject:delegate];
+    if (_isAudioEnabled == isAudioEnabled) {
+      return;
+    }
+    _isAudioEnabled = isAudioEnabled;
+  }
+  [self updateCanPlayOrRecord];
+}
+
+- (BOOL)isAudioEnabled {
+  @synchronized(self) {
+    return _isAudioEnabled;
+  }
+}
+
+// TODO(tkchin): Check for duplicates.
+- (void)addDelegate:(id<RTCAudioSessionDelegate>)delegate {
+  if (!delegate) {
+    return;
+  }
+  @synchronized(self) {
+    _delegates.push_back(delegate);
+    [self removeZeroedDelegates];
   }
 }
 
 - (void)removeDelegate:(id<RTCAudioSessionDelegate>)delegate {
+  if (!delegate) {
+    return;
+  }
   @synchronized(self) {
-    [_delegates removeObject:delegate];
+    _delegates.erase(std::remove(_delegates.begin(),
+                                 _delegates.end(),
+                                 delegate),
+                     _delegates.end());
+    [self removeZeroedDelegates];
   }
 }
 
 - (void)lockForConfiguration {
-  [_lock lock];
-  @synchronized(self) {
-    _isLocked = YES;
-  }
+  _crit.Enter();
+  rtc::AtomicOps::Increment(&_lockRecursionCount);
 }
 
 - (void)unlockForConfiguration {
   // Don't let threads other than the one that called lockForConfiguration
   // unlock.
-  if ([_lock tryLock]) {
-    @synchronized(self) {
-      _isLocked = NO;
-    }
+  if (_crit.TryEnter()) {
+    rtc::AtomicOps::Decrement(&_lockRecursionCount);
     // One unlock for the tryLock, and another one to actually unlock. If this
-    // was called without anyone calling lock, the underlying NSRecursiveLock
-    // should spit out an error.
-    [_lock unlock];
-    [_lock unlock];
+    // was called without anyone calling lock, we will hit an assertion.
+    _crit.Leave();
+    _crit.Leave();
   }
 }
 
@@ -186,6 +261,10 @@ NSInteger const kRTCAudioSessionErrorLockRequired = -1;
   return self.session.sampleRate;
 }
 
+- (double)preferredSampleRate {
+  return self.session.preferredSampleRate;
+}
+
 - (NSInteger)inputNumberOfChannels {
   return self.session.inputNumberOfChannels;
 }
@@ -210,12 +289,18 @@ NSInteger const kRTCAudioSessionErrorLockRequired = -1;
   return self.session.IOBufferDuration;
 }
 
+- (NSTimeInterval)preferredIOBufferDuration {
+  return self.session.preferredIOBufferDuration;
+}
+
+// TODO(tkchin): Simplify the amount of locking happening here. Likely that we
+// can just do atomic increments / decrements.
 - (BOOL)setActive:(BOOL)active
             error:(NSError **)outError {
   if (![self checkLock:outError]) {
     return NO;
   }
-  NSInteger activationCount = self.activationCount;
+  int activationCount = _activationCount;
   if (!active && activationCount == 0) {
     RTCLogWarning(@"Attempting to deactivate without prior activation.");
   }
@@ -250,13 +335,14 @@ NSInteger const kRTCAudioSessionErrorLockRequired = -1;
       [self incrementActivationCount];
     }
   } else {
-    RTCLogError(@"Failed to setActive:%d. Error: %@", active, error);
+    RTCLogError(@"Failed to setActive:%d. Error: %@",
+                active, error.localizedDescription);
   }
   // Decrement activation count on deactivation whether or not it succeeded.
   if (!active) {
     [self decrementActivationCount];
   }
-  RTCLog(@"Number of current activations: %ld", (long)self.activationCount);
+  RTCLog(@"Number of current activations: %d", _activationCount);
   return success;
 }
 
@@ -356,10 +442,12 @@ NSInteger const kRTCAudioSessionErrorLockRequired = -1;
     case AVAudioSessionInterruptionTypeBegan:
       RTCLog(@"Audio session interruption began.");
       self.isActive = NO;
+      self.isInterrupted = YES;
       [self notifyDidBeginInterruption];
       break;
     case AVAudioSessionInterruptionTypeEnded: {
       RTCLog(@"Audio session interruption ended.");
+      self.isInterrupted = NO;
       [self updateAudioSessionAfterEvent];
       NSNumber *optionsNumber =
           notification.userInfo[AVAudioSessionInterruptionOptionKey];
@@ -427,6 +515,15 @@ NSInteger const kRTCAudioSessionErrorLockRequired = -1;
   [self notifyMediaServicesWereReset];
 }
 
+- (void)handleApplicationDidBecomeActive:(NSNotification *)notification {
+  if (self.isInterrupted) {
+    RTCLog(@"Application became active after an interruption. Treating as interruption end.");
+    self.isInterrupted = NO;
+    [self updateAudioSessionAfterEvent];
+    [self notifyDidEndInterruptionWithShouldResumeSession:YES];
+  }
+}
+
 #pragma mark - Private
 
 + (NSError *)lockError {
@@ -441,6 +538,67 @@ NSInteger const kRTCAudioSessionErrorLockRequired = -1;
   return error;
 }
 
+- (std::vector<__weak id<RTCAudioSessionDelegate> >)delegates {
+  @synchronized(self) {
+    // Note: this returns a copy.
+    return _delegates;
+  }
+}
+
+// TODO(tkchin): check for duplicates.
+- (void)pushDelegate:(id<RTCAudioSessionDelegate>)delegate {
+  @synchronized(self) {
+    _delegates.insert(_delegates.begin(), delegate);
+  }
+}
+
+- (void)removeZeroedDelegates {
+  @synchronized(self) {
+    _delegates.erase(
+        std::remove_if(_delegates.begin(),
+                       _delegates.end(),
+                       [](id delegate) -> bool { return delegate == nil; }),
+        _delegates.end());
+  }
+}
+
+- (int)activationCount {
+  return _activationCount;
+}
+
+- (int)incrementActivationCount {
+  RTCLog(@"Incrementing activation count.");
+  return rtc::AtomicOps::Increment(&_activationCount);
+}
+
+- (NSInteger)decrementActivationCount {
+  RTCLog(@"Decrementing activation count.");
+  return rtc::AtomicOps::Decrement(&_activationCount);
+}
+
+- (int)webRTCSessionCount {
+  return _webRTCSessionCount;
+}
+
+- (BOOL)canPlayOrRecord {
+  return !self.useManualAudio || self.isAudioEnabled;
+}
+
+- (BOOL)isInterrupted {
+  @synchronized(self) {
+    return _isInterrupted;
+  }
+}
+
+- (void)setIsInterrupted:(BOOL)isInterrupted {
+  @synchronized(self) {
+    if (_isInterrupted == isInterrupted) {
+      return;
+   }
+   _isInterrupted = isInterrupted;
+  }
+}
+
 - (BOOL)checkLock:(NSError **)outError {
   // Check ivar instead of trying to acquire lock so that we won't accidentally
   // acquire lock if it hasn't already been called.
@@ -453,30 +611,113 @@ NSInteger const kRTCAudioSessionErrorLockRequired = -1;
   return YES;
 }
 
-- (NSSet *)delegates {
-  @synchronized(self) {
-    return _delegates.setRepresentation;
+- (BOOL)beginWebRTCSession:(NSError **)outError {
+  if (outError) {
+    *outError = nil;
   }
+  if (![self checkLock:outError]) {
+    return NO;
+  }
+  rtc::AtomicOps::Increment(&_webRTCSessionCount);
+  [self notifyDidStartPlayOrRecord];
+  return YES;
 }
 
-- (NSInteger)activationCount {
-  @synchronized(self) {
-    return _activationCount;
+- (BOOL)endWebRTCSession:(NSError **)outError {
+  if (outError) {
+    *outError = nil;
   }
+  if (![self checkLock:outError]) {
+    return NO;
+  }
+  rtc::AtomicOps::Decrement(&_webRTCSessionCount);
+  [self notifyDidStopPlayOrRecord];
+  return YES;
 }
 
-- (NSInteger)incrementActivationCount {
-  RTCLog(@"Incrementing activation count.");
-  @synchronized(self) {
-    return ++_activationCount;
+- (BOOL)configureWebRTCSession:(NSError **)outError {
+  if (outError) {
+    *outError = nil;
   }
+  if (![self checkLock:outError]) {
+    return NO;
+  }
+  RTCLog(@"Configuring audio session for WebRTC.");
+
+  // Configure the AVAudioSession and activate it.
+  // Provide an error even if there isn't one so we can log it.
+  NSError *error = nil;
+  RTCAudioSessionConfiguration *webRTCConfig =
+      [RTCAudioSessionConfiguration webRTCConfiguration];
+  if (![self setConfiguration:webRTCConfig active:YES error:&error]) {
+    RTCLogError(@"Failed to set WebRTC audio configuration: %@",
+                error.localizedDescription);
+    [self unconfigureWebRTCSession:nil];
+    if (outError) {
+      *outError = error;
+    }
+    return NO;
+  }
+
+  // Ensure that the device currently supports audio input.
+  // TODO(tkchin): Figure out if this is really necessary.
+  if (!self.inputAvailable) {
+    RTCLogError(@"No audio input path is available!");
+    [self unconfigureWebRTCSession:nil];
+    if (outError) {
+      *outError = [self configurationErrorWithDescription:@"No input path."];
+    }
+    return NO;
+  }
+
+  // It can happen (e.g. in combination with BT devices) that the attempt to set
+  // the preferred sample rate for WebRTC (48kHz) fails. If so, make a new
+  // configuration attempt using the sample rate that worked using the active
+  // audio session. A typical case is that only 8 or 16kHz can be set, e.g. in
+  // combination with BT headsets. Using this "trick" seems to avoid a state
+  // where Core Audio asks for a different number of audio frames than what the
+  // session's I/O buffer duration corresponds to.
+  // TODO(henrika): this fix resolves bugs.webrtc.org/6004 but it has only been
+  // tested on a limited set of iOS devices and BT devices.
+  double sessionSampleRate = self.sampleRate;
+  double preferredSampleRate = webRTCConfig.sampleRate;
+  if (sessionSampleRate != preferredSampleRate) {
+    RTCLogWarning(
+        @"Current sample rate (%.2f) is not the preferred rate (%.2f)",
+        sessionSampleRate, preferredSampleRate);
+    if (![self setPreferredSampleRate:sessionSampleRate
+                                error:&error]) {
+      RTCLogError(@"Failed to set preferred sample rate: %@",
+                  error.localizedDescription);
+      if (outError) {
+        *outError = error;
+      }
+    }
+  }
+
+  return YES;
 }
 
-- (NSInteger)decrementActivationCount {
-  RTCLog(@"Decrementing activation count.");
-  @synchronized(self) {
-    return --_activationCount;
+- (BOOL)unconfigureWebRTCSession:(NSError **)outError {
+  if (outError) {
+    *outError = nil;
   }
+  if (![self checkLock:outError]) {
+    return NO;
+  }
+  RTCLog(@"Unconfiguring audio session for WebRTC.");
+  [self setActive:NO error:outError];
+
+  return YES;
+}
+
+- (NSError *)configurationErrorWithDescription:(NSString *)description {
+  NSDictionary* userInfo = @{
+    NSLocalizedDescriptionKey: description,
+  };
+  return [[NSError alloc] initWithDomain:kRTCAudioSessionErrorDomain
+                                    code:kRTCAudioSessionErrorConfiguration
+                                userInfo:userInfo];
 }
 
 - (void)updateAudioSessionAfterEvent {
@@ -494,39 +735,96 @@ NSInteger const kRTCAudioSessionErrorLockRequired = -1;
   }
 }
 
+- (void)updateCanPlayOrRecord {
+  BOOL canPlayOrRecord = NO;
+  BOOL shouldNotify = NO;
+  @synchronized(self) {
+    canPlayOrRecord = !self.useManualAudio || self.isAudioEnabled;
+    if (_canPlayOrRecord == canPlayOrRecord) {
+      return;
+    }
+    _canPlayOrRecord = canPlayOrRecord;
+    shouldNotify = YES;
+  }
+  if (shouldNotify) {
+    [self notifyDidChangeCanPlayOrRecord:canPlayOrRecord];
+  }
+}
+
 - (void)notifyDidBeginInterruption {
-  for (id<RTCAudioSessionDelegate> delegate in self.delegates) {
-    [delegate audioSessionDidBeginInterruption:self];
+  for (auto delegate : self.delegates) {
+    SEL sel = @selector(audioSessionDidBeginInterruption:);
+    if ([delegate respondsToSelector:sel]) {
+      [delegate audioSessionDidBeginInterruption:self];
+    }
   }
 }
 
 - (void)notifyDidEndInterruptionWithShouldResumeSession:
     (BOOL)shouldResumeSession {
-  for (id<RTCAudioSessionDelegate> delegate in self.delegates) {
-    [delegate audioSessionDidEndInterruption:self
-                         shouldResumeSession:shouldResumeSession];
+  for (auto delegate : self.delegates) {
+    SEL sel = @selector(audioSessionDidEndInterruption:shouldResumeSession:);
+    if ([delegate respondsToSelector:sel]) {
+      [delegate audioSessionDidEndInterruption:self
+                           shouldResumeSession:shouldResumeSession];
+    }
   }
-
 }
 
 - (void)notifyDidChangeRouteWithReason:(AVAudioSessionRouteChangeReason)reason
     previousRoute:(AVAudioSessionRouteDescription *)previousRoute {
-  for (id<RTCAudioSessionDelegate> delegate in self.delegates) {
-    [delegate audioSessionDidChangeRoute:self
-                                  reason:reason
-                           previousRoute:previousRoute];
+  for (auto delegate : self.delegates) {
+    SEL sel = @selector(audioSessionDidChangeRoute:reason:previousRoute:);
+    if ([delegate respondsToSelector:sel]) {
+      [delegate audioSessionDidChangeRoute:self
+                                    reason:reason
+                             previousRoute:previousRoute];
+    }
   }
 }
 
 - (void)notifyMediaServicesWereLost {
-  for (id<RTCAudioSessionDelegate> delegate in self.delegates) {
-    [delegate audioSessionMediaServicesWereLost:self];
+  for (auto delegate : self.delegates) {
+    SEL sel = @selector(audioSessionMediaServicesWereLost:);
+    if ([delegate respondsToSelector:sel]) {
+      [delegate audioSessionMediaServicesWereLost:self];
+    }
   }
 }
 
 - (void)notifyMediaServicesWereReset {
-  for (id<RTCAudioSessionDelegate> delegate in self.delegates) {
-    [delegate audioSessionMediaServicesWereReset:self];
+  for (auto delegate : self.delegates) {
+    SEL sel = @selector(audioSessionMediaServicesWereReset:);
+    if ([delegate respondsToSelector:sel]) {
+      [delegate audioSessionMediaServicesWereReset:self];
+    }
+  }
+}
+
+- (void)notifyDidChangeCanPlayOrRecord:(BOOL)canPlayOrRecord {
+  for (auto delegate : self.delegates) {
+    SEL sel = @selector(audioSession:didChangeCanPlayOrRecord:);
+    if ([delegate respondsToSelector:sel]) {
+      [delegate audioSession:self didChangeCanPlayOrRecord:canPlayOrRecord];
+    }
+  }
+}
+
+- (void)notifyDidStartPlayOrRecord {
+  for (auto delegate : self.delegates) {
+    SEL sel = @selector(audioSessionDidStartPlayOrRecord:);
+    if ([delegate respondsToSelector:sel]) {
+      [delegate audioSessionDidStartPlayOrRecord:self];
+    }
+  }
+}
+
+- (void)notifyDidStopPlayOrRecord {
+  for (auto delegate : self.delegates) {
+    SEL sel = @selector(audioSessionDidStopPlayOrRecord:);
+    if ([delegate respondsToSelector:sel]) {
+      [delegate audioSessionDidStopPlayOrRecord:self];
+    }
   }
 }
 

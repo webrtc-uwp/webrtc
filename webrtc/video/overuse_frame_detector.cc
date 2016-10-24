@@ -20,13 +20,13 @@
 #include "webrtc/base/checks.h"
 #include "webrtc/base/exp_filter.h"
 #include "webrtc/base/logging.h"
-#include "webrtc/frame_callback.h"
+#include "webrtc/common_video/include/frame_callback.h"
 #include "webrtc/system_wrappers/include/clock.h"
 #include "webrtc/video_frame.h"
 
-#if defined(WEBRTC_MAC)
+#if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
 #include <mach/mach.h>
-#endif
+#endif  // defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
 
 namespace webrtc {
 
@@ -56,7 +56,7 @@ CpuOveruseOptions::CpuOveruseOptions()
       min_frame_samples(120),
       min_process_count(3),
       high_threshold_consecutive_count(2) {
-#if defined(WEBRTC_MAC)
+#if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
   // This is proof-of-concept code for letting the physical core count affect
   // the interval into which we attempt to scale. For now, the code is Mac OS
   // specific, since that's the platform were we saw most problems.
@@ -90,8 +90,8 @@ CpuOveruseOptions::CpuOveruseOptions()
     high_encode_usage_threshold_percent = 20;  // Roughly 1/4 of 100%.
   else if (n_physical_cores == 2)
     high_encode_usage_threshold_percent = 40;  // Roughly 1/4 of 200%.
+#endif  // defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
 
-#endif  // WEBRTC_MAC
   // Note that we make the interval 2x+epsilon wide, since libyuv scaling steps
   // are close to that (when squared). This wide interval makes sure that
   // scaling up or down does not jump all the way across the interval.
@@ -193,7 +193,6 @@ OveruseFrameDetector::OveruseFrameDetector(
       in_quick_rampup_(false),
       current_rampup_delay_ms_(kStandardRampUpDelayMs),
       usage_(new SendProcessingUsage(options)) {
-  RTC_DCHECK(metrics_observer != nullptr);
   processing_thread_.DetachFromThread();
 }
 
@@ -341,13 +340,13 @@ void OveruseFrameDetector::Process() {
     checks_above_threshold_ = 0;
     ++num_overuse_detections_;
 
-    if (observer_ != NULL)
+    if (observer_)
       observer_->OveruseDetected();
   } else if (IsUnderusing(current_metrics, now)) {
     last_rampup_time_ms_ = now;
     in_quick_rampup_ = true;
 
-    if (observer_ != NULL)
+    if (observer_)
       observer_->NormalUsage();
   }
 

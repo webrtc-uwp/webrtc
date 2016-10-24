@@ -12,9 +12,6 @@
     'build_with_chromium': 0,
     'conditions': [
       ['OS=="ios"', {
-        # Default to using BoringSSL on iOS.
-        'use_openssl%': 1,
-
         # Set target_subarch for if not already set. This is needed because the
         # Chromium iOS toolchain relies on target_subarch being set.
         'conditions': [
@@ -25,6 +22,11 @@
             'target_subarch%': 'arm64',
           }],
         ],
+      }],
+      ['OS=="android"', {
+        # MJPEG capture is not used on Android. Disable to reduce
+        # libjingle_peerconnection_so file size.
+        'libyuv_disable_jpeg%': 1,
       }],
     ],
   },

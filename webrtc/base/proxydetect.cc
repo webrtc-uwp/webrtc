@@ -15,10 +15,6 @@
 #include <shlobj.h>
 #endif  // WEBRTC_WIN
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
 #include <SystemConfiguration/SystemConfiguration.h>
 #include <CoreFoundation/CoreFoundation.h>
@@ -33,6 +29,7 @@
 #endif
 
 #include <map>
+#include <memory>
 
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/fileutils.h"
@@ -444,7 +441,7 @@ bool GetDefaultFirefoxProfile(Pathname* profile_path) {
   // Note: we are looking for the first entry with "Default=1", or the last
   // entry in the file
   path.SetFilename("profiles.ini");
-  scoped_ptr<FileStream> fs(Filesystem::OpenFile(path, "r"));
+  std::unique_ptr<FileStream> fs(Filesystem::OpenFile(path, "r"));
   if (!fs) {
     return false;
   }
@@ -509,7 +506,7 @@ bool GetDefaultFirefoxProfile(Pathname* profile_path) {
 bool ReadFirefoxPrefs(const Pathname& filename,
                       const char * prefix,
                       StringMap* settings) {
-  scoped_ptr<FileStream> fs(Filesystem::OpenFile(filename, "r"));
+  std::unique_ptr<FileStream> fs(Filesystem::OpenFile(filename, "r"));
   if (!fs) {
     LOG(LS_ERROR) << "Failed to open file: " << filename.pathname();
     return false;

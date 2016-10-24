@@ -21,9 +21,9 @@
 
 #include "webrtc/base/basictypes.h"
 #include "webrtc/base/common.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/linked_ptr.h"
 #include "webrtc/base/refcount.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/scoped_ref_ptr.h"
 #include "webrtc/base/stringencode.h"
 #include "webrtc/base/thread_checker.h"
@@ -99,6 +99,7 @@ class StatsReport {
 
   enum StatsValueName {
     kStatsValueNameActiveConnection,
+    kStatsValueNameAecDivergentFilterFraction,
     kStatsValueNameAudioInputLevel,
     kStatsValueNameAudioOutputLevel,
     kStatsValueNameBytesReceived,
@@ -115,6 +116,11 @@ class StatsReport {
     kStatsValueNameSsrc,
     kStatsValueNameState,
     kStatsValueNameTransportId,
+    kStatsValueNameSentPingRequestsTotal,
+    kStatsValueNameSentPingRequestsBeforeFirstResponse,
+    kStatsValueNameSentPingResponses,
+    kStatsValueNameRecvPingRequests,
+    kStatsValueNameRecvPingResponses,
 
     // Internal StatsValue names.
     kStatsValueNameAccelerateRate,

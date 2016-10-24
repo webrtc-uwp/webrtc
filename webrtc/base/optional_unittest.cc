@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -28,14 +29,14 @@ namespace {
 // constructor) or given as an argument (explicit constructor).
 class Logger {
  public:
-  Logger() : id_(next_id_++), origin_(id_) { Log("default constructor"); }
-  explicit Logger(int origin) : id_(next_id_++), origin_(origin) {
+  Logger() : id_(g_next_id++), origin_(id_) { Log("default constructor"); }
+  explicit Logger(int origin) : id_(g_next_id++), origin_(origin) {
     Log("explicit constructor");
   }
-  Logger(const Logger& other) : id_(next_id_++), origin_(other.origin_) {
+  Logger(const Logger& other) : id_(g_next_id++), origin_(other.origin_) {
     LogFrom("copy constructor", other);
   }
-  Logger(Logger&& other) : id_(next_id_++), origin_(other.origin_) {
+  Logger(Logger&& other) : id_(g_next_id++), origin_(other.origin_) {
     LogFrom("move constructor", other);
   }
   ~Logger() { Log("destructor"); }
@@ -64,39 +65,39 @@ class Logger {
   }
   void Foo() { Log("Foo()"); }
   void Foo() const { Log("Foo() const"); }
-  static rtc::scoped_ptr<std::vector<std::string>> Setup() {
-    auto s = rtc_make_scoped_ptr(new std::vector<std::string>);
-    Logger::log_ = s.get();
-    Logger::next_id_ = 0;
+  static std::unique_ptr<std::vector<std::string>> Setup() {
+    std::unique_ptr<std::vector<std::string>> s(new std::vector<std::string>);
+    g_log = s.get();
+    g_next_id = 0;
     return s;
   }
 
  private:
   int id_;
   int origin_;
-  static std::vector<std::string>* log_;
-  static int next_id_;
+  static std::vector<std::string>* g_log;
+  static int g_next_id;
   void Log(const char* msg) const {
     std::ostringstream oss;
     oss << id_ << ':' << origin_ << ". " << msg;
-    log_->push_back(oss.str());
+    g_log->push_back(oss.str());
   }
   void LogFrom(const char* msg, const Logger& other) const {
     std::ostringstream oss;
     oss << id_ << ':' << origin_ << ". " << msg << " (from " << other.id_ << ':'
         << other.origin_ << ")";
-    log_->push_back(oss.str());
+    g_log->push_back(oss.str());
   }
   static void Log2(const char* msg, const Logger& a, const Logger& b) {
     std::ostringstream oss;
     oss << msg << ' ' << a.id_ << ':' << a.origin_ << ", " << b.id_ << ':'
         << b.origin_;
-    log_->push_back(oss.str());
+    g_log->push_back(oss.str());
   }
 };
 
-std::vector<std::string>* Logger::log_ = nullptr;
-int Logger::next_id_ = 0;
+std::vector<std::string>* Logger::g_log = nullptr;
+int Logger::g_next_id = 0;
 
 // Append all the other args to the vector pointed to by the first arg.
 template <typename T>
@@ -124,7 +125,7 @@ TEST(OptionalTest, TestConstructDefault) {
     Optional<Logger> x;
     EXPECT_FALSE(x);
   }
-  EXPECT_EQ(V("0:0. default constructor", "0:0. destructor"), *log);
+  EXPECT_EQ(V(), *log);
 }
 
 TEST(OptionalTest, TestConstructCopyEmpty) {
@@ -135,9 +136,7 @@ TEST(OptionalTest, TestConstructCopyEmpty) {
     auto y = x;
     EXPECT_FALSE(y);
   }
-  EXPECT_EQ(V("0:0. default constructor", "1:0. copy constructor (from 0:0)",
-              "1:0. destructor", "0:0. destructor"),
-            *log);
+  EXPECT_EQ(V(), *log);
 }
 
 TEST(OptionalTest, TestConstructCopyFull) {
@@ -165,9 +164,7 @@ TEST(OptionalTest, TestConstructMoveEmpty) {
     auto y = std::move(x);
     EXPECT_FALSE(y);
   }
-  EXPECT_EQ(V("0:0. default constructor", "1:0. move constructor (from 0:0)",
-              "1:0. destructor", "0:0. destructor"),
-            *log);
+  EXPECT_EQ(V(), *log);
 }
 
 TEST(OptionalTest, TestConstructMoveFull) {
@@ -194,10 +191,7 @@ TEST(OptionalTest, TestCopyAssignToEmptyFromEmpty) {
     Optional<Logger> x, y;
     x = y;
   }
-  EXPECT_EQ(
-      V("0:0. default constructor", "1:1. default constructor",
-        "0:1. operator= copy (from 1:1)", "1:1. destructor", "0:1. destructor"),
-      *log);
+  EXPECT_EQ(V(), *log);
 }
 
 TEST(OptionalTest, TestCopyAssignToFullFromEmpty) {
@@ -211,9 +205,7 @@ TEST(OptionalTest, TestCopyAssignToFullFromEmpty) {
   }
   EXPECT_EQ(
       V("0:17. explicit constructor", "1:17. move constructor (from 0:17)",
-        "0:17. destructor", "2:2. default constructor", "---",
-        "1:2. operator= copy (from 2:2)", "---", "2:2. destructor",
-        "1:2. destructor"),
+        "0:17. destructor", "---", "1:17. destructor", "---"),
       *log);
 }
 
@@ -226,11 +218,11 @@ TEST(OptionalTest, TestCopyAssignToEmptyFromFull) {
     x = y;
     log->push_back("---");
   }
-  EXPECT_EQ(V("0:0. default constructor", "1:17. explicit constructor",
-              "2:17. move constructor (from 1:17)", "1:17. destructor", "---",
-              "0:17. operator= copy (from 2:17)", "---", "2:17. destructor",
-              "0:17. destructor"),
-            *log);
+  EXPECT_EQ(
+      V("0:17. explicit constructor", "1:17. move constructor (from 0:17)",
+        "0:17. destructor", "---", "2:17. copy constructor (from 1:17)", "---",
+        "1:17. destructor", "2:17. destructor"),
+      *log);
 }
 
 TEST(OptionalTest, TestCopyAssignToFullFromFull) {
@@ -260,10 +252,10 @@ TEST(OptionalTest, TestCopyAssignToEmptyFromT) {
     x = Optional<Logger>(y);
     log->push_back("---");
   }
-  EXPECT_EQ(V("0:0. default constructor", "1:17. explicit constructor", "---",
-              "2:17. copy constructor (from 1:17)",
-              "0:17. operator= move (from 2:17)", "2:17. destructor", "---",
-              "1:17. destructor", "0:17. destructor"),
+  EXPECT_EQ(V("0:17. explicit constructor", "---",
+              "1:17. copy constructor (from 0:17)",
+              "2:17. move constructor (from 1:17)", "1:17. destructor", "---",
+              "0:17. destructor", "2:17. destructor"),
             *log);
 }
 
@@ -291,10 +283,7 @@ TEST(OptionalTest, TestMoveAssignToEmptyFromEmpty) {
     Optional<Logger> x, y;
     x = std::move(y);
   }
-  EXPECT_EQ(
-      V("0:0. default constructor", "1:1. default constructor",
-        "0:1. operator= move (from 1:1)", "1:1. destructor", "0:1. destructor"),
-      *log);
+  EXPECT_EQ(V(), *log);
 }
 
 TEST(OptionalTest, TestMoveAssignToFullFromEmpty) {
@@ -308,9 +297,7 @@ TEST(OptionalTest, TestMoveAssignToFullFromEmpty) {
   }
   EXPECT_EQ(
       V("0:17. explicit constructor", "1:17. move constructor (from 0:17)",
-        "0:17. destructor", "2:2. default constructor", "---",
-        "1:2. operator= move (from 2:2)", "---", "2:2. destructor",
-        "1:2. destructor"),
+        "0:17. destructor", "---", "1:17. destructor", "---"),
       *log);
 }
 
@@ -323,11 +310,11 @@ TEST(OptionalTest, TestMoveAssignToEmptyFromFull) {
     x = std::move(y);
     log->push_back("---");
   }
-  EXPECT_EQ(V("0:0. default constructor", "1:17. explicit constructor",
-              "2:17. move constructor (from 1:17)", "1:17. destructor", "---",
-              "0:17. operator= move (from 2:17)", "---", "2:17. destructor",
-              "0:17. destructor"),
-            *log);
+  EXPECT_EQ(
+      V("0:17. explicit constructor", "1:17. move constructor (from 0:17)",
+        "0:17. destructor", "---", "2:17. move constructor (from 1:17)", "---",
+        "1:17. destructor", "2:17. destructor"),
+      *log);
 }
 
 TEST(OptionalTest, TestMoveAssignToFullFromFull) {
@@ -357,10 +344,10 @@ TEST(OptionalTest, TestMoveAssignToEmptyFromT) {
     x = Optional<Logger>(std::move(y));
     log->push_back("---");
   }
-  EXPECT_EQ(V("0:0. default constructor", "1:17. explicit constructor", "---",
-              "2:17. move constructor (from 1:17)",
-              "0:17. operator= move (from 2:17)", "2:17. destructor", "---",
-              "1:17. destructor", "0:17. destructor"),
+  EXPECT_EQ(V("0:17. explicit constructor", "---",
+              "1:17. move constructor (from 0:17)",
+              "2:17. move constructor (from 1:17)", "1:17. destructor", "---",
+              "0:17. destructor", "2:17. destructor"),
             *log);
 }
 
@@ -425,14 +412,13 @@ TEST(OptionalTest, TestDereferenceWithDefault) {
   }
   EXPECT_EQ(
       V("0:17. explicit constructor", "1:42. explicit constructor",
-        "2:17. copy constructor (from 0:17)", "3:3. default constructor", "-1-",
-        "4:42. explicit constructor", "operator== 0:17, 2:17",
-        "4:42. destructor", "-2-", "5:42. explicit constructor",
-        "operator== 1:42, 5:42", "5:42. destructor", "-3-",
-        "6:17. explicit constructor", "7:17. move constructor (from 6:17)",
-        "operator== 0:17, 7:17", "7:17. destructor", "6:17. destructor", "-4-",
-        "8:8. default constructor", "operator== 1:42, 1:42", "8:8. destructor",
-        "-5-", "3:3. destructor", "2:17. destructor", "1:42. destructor",
+        "2:17. copy constructor (from 0:17)", "-1-",
+        "3:42. explicit constructor", "operator== 0:17, 2:17",
+        "3:42. destructor", "-2-", "4:42. explicit constructor",
+        "operator== 1:42, 4:42", "4:42. destructor", "-3-",
+        "5:17. explicit constructor", "6:17. move constructor (from 5:17)",
+        "operator== 0:17, 6:17", "6:17. destructor", "5:17. destructor", "-4-",
+        "operator== 1:42, 1:42", "-5-", "2:17. destructor", "1:42. destructor",
         "0:17. destructor"),
       *log);
 }
@@ -451,16 +437,15 @@ TEST(OptionalTest, TestEquality) {
     EXPECT_EQ(me1, me2);
     log->push_back("---");
   }
-  EXPECT_EQ(V("0:17. explicit constructor", "1:42. explicit constructor",
-              "2:17. copy constructor (from 0:17)",
-              "3:17. copy constructor (from 0:17)",
-              "4:42. copy constructor (from 1:42)", "5:5. default constructor",
-              "6:6. default constructor", "---", "operator== 2:17, 2:17",
-              "operator== 2:17, 3:17", "operator!= 2:17, 4:42", "---",
-              "6:6. destructor", "5:5. destructor", "4:42. destructor",
-              "3:17. destructor", "2:17. destructor", "1:42. destructor",
-              "0:17. destructor"),
-            *log);
+  EXPECT_EQ(
+      V("0:17. explicit constructor", "1:42. explicit constructor",
+        "2:17. copy constructor (from 0:17)",
+        "3:17. copy constructor (from 0:17)",
+        "4:42. copy constructor (from 1:42)", "---", "operator== 2:17, 2:17",
+        "operator== 2:17, 3:17", "operator!= 2:17, 4:42", "---",
+        "4:42. destructor", "3:17. destructor", "2:17. destructor",
+        "1:42. destructor", "0:17. destructor"),
+      *log);
 }
 
 TEST(OptionalTest, TestSwap) {
@@ -477,11 +462,9 @@ TEST(OptionalTest, TestSwap) {
   EXPECT_EQ(V("0:17. explicit constructor", "1:42. explicit constructor",
               "2:17. copy constructor (from 0:17)",
               "3:42. copy constructor (from 1:42)",
-              "4:17. copy constructor (from 0:17)", "5:5. default constructor",
-              "6:6. default constructor", "7:7. default constructor", "---",
-              "swap 2:42, 3:17", "swap 4:5, 5:17", "swap 6:7, 7:6", "---",
-              "7:6. destructor", "6:7. destructor", "5:17. destructor",
-              "4:5. destructor", "3:17. destructor", "2:42. destructor",
+              "4:17. copy constructor (from 0:17)", "---", "swap 2:42, 3:17",
+              "5:17. move constructor (from 4:17)", "4:17. destructor", "---",
+              "5:17. destructor", "3:17. destructor", "2:42. destructor",
               "1:42. destructor", "0:17. destructor"),
             *log);
 }

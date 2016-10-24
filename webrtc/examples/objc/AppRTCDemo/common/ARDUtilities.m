@@ -12,7 +12,7 @@
 
 #import <mach/mach.h>
 
-#import "RTCLogging.h"
+#import "WebRTC/RTCLogging.h"
 
 @implementation NSDictionary (ARDUtilites)
 

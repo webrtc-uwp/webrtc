@@ -14,6 +14,7 @@
 
 #include <algorithm>
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
 #include "webrtc/modules/video_coding/test/test_util.h"
 #include "webrtc/system_wrappers/include/clock.h"
@@ -46,7 +47,7 @@ class VcmPayloadSinkFactory::VcmPayloadSink : public PayloadSinkInterface,
 
   // PayloadSinkInterface
   int32_t OnReceivedPayloadData(const uint8_t* payload_data,
-                                const size_t payload_size,
+                                size_t payload_size,
                                 const WebRtcRTPHeader* rtp_header) override {
     return vcm_->IncomingPacket(payload_data, payload_size, *rtp_header);
   }

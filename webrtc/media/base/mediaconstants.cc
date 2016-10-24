@@ -64,7 +64,7 @@ const int kOpusDefaultUseInbandFec = 0;
 const int kOpusDefaultUseDtx = 0;
 const int kOpusDefaultMaxPlaybackRate = 48000;
 
-const int kPreferredMaxPTime = 60;
+const int kPreferredMaxPTime = 120;
 const int kPreferredMinPTime = 10;
 const int kPreferredSPropStereo = 0;
 const int kPreferredStereo = 0;
@@ -91,30 +91,15 @@ const char kGoogleSctpDataCodecName[] = "google-sctp-data";
 
 const char kComfortNoiseCodecName[] = "CN";
 
-const int kRtpAudioLevelHeaderExtensionDefaultId = 1;
-const char kRtpAudioLevelHeaderExtension[] =
-    "urn:ietf:params:rtp-hdrext:ssrc-audio-level";
-
-const int kRtpTimestampOffsetHeaderExtensionDefaultId = 2;
-const char kRtpTimestampOffsetHeaderExtension[] =
-    "urn:ietf:params:rtp-hdrext:toffset";
-
-const int kRtpAbsoluteSenderTimeHeaderExtensionDefaultId = 3;
-const char kRtpAbsoluteSenderTimeHeaderExtension[] =
-    "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time";
-
-const int kRtpVideoRotationHeaderExtensionDefaultId = 4;
-const char kRtpVideoRotationHeaderExtension[] = "urn:3gpp:video-orientation";
-const char kRtpVideoRotation6BitsHeaderExtensionForTesting[] =
-    "urn:3gpp:video-orientation:6";
-
-const int kRtpTransportSequenceNumberHeaderExtensionDefaultId = 5;
-const char kRtpTransportSequenceNumberHeaderExtension[] =
-    "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01";
-
 const char kVp8CodecName[] = "VP8";
 const char kVp9CodecName[] = "VP9";
 const char kH264CodecName[] = "H264";
+
+// RFC 6184 RTP Payload Format for H.264 video
+const char kH264FmtpProfileLevelId[] = "profile-level-id";
+const char kH264FmtpLevelAsymmetryAllowed[] = "level-asymmetry-allowed";
+const char kH264FmtpPacketizationMode[] = "packetization-mode";
+const char kH264ProfileLevelConstrainedBaseline[] = "42e01f";
 
 const int kDefaultVp8PlType = 100;
 const int kDefaultVp9PlType = 101;

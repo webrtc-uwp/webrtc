@@ -8,7 +8,7 @@
 
 import("../build/webrtc.gni")
 
-source_set("call") {
+rtc_source_set("call") {
   sources = [
     "bitrate_allocator.cc",
     "call.cc",
@@ -16,20 +16,44 @@ source_set("call") {
     "transport_adapter.h",
   ]
 
-  configs += [ "..:common_config" ]
-  public_configs = [ "..:common_inherited_config" ]
-
   if (is_clang) {
     # Suppress warnings from Chrome's Clang plugins.
     # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 
   deps = [
     "..:rtc_event_log",
     "..:webrtc_common",
+    "../api:call_api",
+    "../audio",
+    "../base:rtc_task_queue",
     "../modules/congestion_controller",
     "../modules/rtp_rtcp",
     "../system_wrappers",
+    "../video",
   ]
+}
+
+if (rtc_include_tests) {
+  rtc_source_set("call_tests") {
+    testonly = true
+    sources = [
+      "bitrate_allocator_unittest.cc",
+      "bitrate_estimator_tests.cc",
+      "call_unittest.cc",
+      "packet_injection_tests.cc",
+      "ringbuffer_unittest.cc",
+    ]
+    deps = [
+      ":call",
+      "//testing/gmock",
+      "//testing/gtest",
+    ]
+    if (is_clang) {
+      # Suppress warnings from the Chromium Clang plugin.
+      # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+  }
 }

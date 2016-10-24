@@ -12,8 +12,12 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_H264_H264_VIDEO_TOOLBOX_ENCODER_H_
 #define WEBRTC_MODULES_VIDEO_CODING_CODECS_H264_H264_VIDEO_TOOLBOX_ENCODER_H_
 
+#include "webrtc/base/criticalsection.h"
+#include "webrtc/common_video/include/bitrate_adjuster.h"
+#include "webrtc/common_video/rotation.h"
 #include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
-#include "webrtc/modules/video_coding/include/bitrate_adjuster.h"
+#include "webrtc/modules/video_coding/utility/h264_bitstream_parser.h"
+#include "webrtc/modules/video_coding/utility/quality_scaler.h"
 
 #if defined(WEBRTC_VIDEO_TOOLBOX_SUPPORTED)
 
@@ -43,6 +47,7 @@ class H264VideoToolboxEncoder : public H264Encoder {
 
   int RegisterEncodeCompleteCallback(EncodedImageCallback* callback) override;
 
+  void OnDroppedFrame() override;
   int SetChannelParameters(uint32_t packet_loss, int64_t rtt) override;
 
   int SetRates(uint32_t new_bitrate_kbit, uint32_t frame_rate) override;
@@ -51,6 +56,8 @@ class H264VideoToolboxEncoder : public H264Encoder {
 
   const char* ImplementationName() const override;
 
+  bool SupportsNativeHandle() const override;
+
   void OnEncodedFrame(OSStatus status,
                       VTEncodeInfoFlags info_flags,
                       CMSampleBufferRef sample_buffer,
@@ -58,12 +65,15 @@ class H264VideoToolboxEncoder : public H264Encoder {
                       int32_t width,
                       int32_t height,
                       int64_t render_time_ms,
-                      uint32_t timestamp);
+                      uint32_t timestamp,
+                      VideoRotation rotation);
 
  private:
   int ResetCompressionSession();
   void ConfigureCompressionSession();
   void DestroyCompressionSession();
+  rtc::scoped_refptr<VideoFrameBuffer> GetScaledBufferOnEncode(
+      const rtc::scoped_refptr<VideoFrameBuffer>& frame);
   void SetBitrateBps(uint32_t bitrate_bps);
   void SetEncoderBitrateBps(uint32_t bitrate_bps);
 
@@ -74,6 +84,11 @@ class H264VideoToolboxEncoder : public H264Encoder {
   uint32_t encoder_bitrate_bps_;
   int32_t width_;
   int32_t height_;
+
+  rtc::CriticalSection quality_scaler_crit_;
+  QualityScaler quality_scaler_ GUARDED_BY(quality_scaler_crit_);
+  H264BitstreamParser h264_bitstream_parser_;
+  bool enable_scaling_;
 };  // H264VideoToolboxEncoder
 
 }  // namespace webrtc

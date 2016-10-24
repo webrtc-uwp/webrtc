@@ -99,31 +99,71 @@
     }, # force_mic_volume_max
   ],
   'conditions': [
-    ['include_tests==1', {
-      'targets' : [
+    ['enable_protobuf==1', {
+      'targets': [
         {
-          'target_name': 'agc_test_utils',
+          'target_name': 'graph_proto',
           'type': 'static_library',
           'sources': [
-            'agc/test_utils.cc',
-            'agc/test_utils.h',
+            'event_log_visualizer/graph.proto',
           ],
+          'variables': {
+            'proto_in_dir': 'event_log_visualizer',
+            'proto_out_dir': 'webrtc/tools/event_log_visualizer',
+          },
+          'includes': ['../build/protoc.gypi'],
         },
         {
-          'target_name': 'agc_harness',
-          'type': 'executable',
+          # RTC event log visualization library
+          'target_name': 'event_log_visualizer_utils',
+          'type': 'static_library',
           'dependencies': [
-            '<(DEPTH)/testing/gtest.gyp:gtest',
-            '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
-            '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers_default',
-            '<(webrtc_root)/test/test.gyp:channel_transport',
-            '<(webrtc_root)/test/test.gyp:test_support',
-            '<(webrtc_root)/voice_engine/voice_engine.gyp:voice_engine',
+            '<(webrtc_root)/webrtc.gyp:rtc_event_log',
+            '<(webrtc_root)/webrtc.gyp:rtc_event_log_parser',
+            '<(webrtc_root)/modules/modules.gyp:congestion_controller',
+            '<(webrtc_root)/modules/modules.gyp:rtp_rtcp',
+            '<(webrtc_root)/system_wrappers/system_wrappers.gyp:metrics_default',
+            ':graph_proto',
           ],
           'sources': [
-            'agc/agc_harness.cc',
+            'event_log_visualizer/analyzer.cc',
+            'event_log_visualizer/analyzer.h',
+            'event_log_visualizer/plot_base.cc',
+            'event_log_visualizer/plot_base.h',
+            'event_log_visualizer/plot_protobuf.cc',
+            'event_log_visualizer/plot_protobuf.h',
+            'event_log_visualizer/plot_python.cc',
+            'event_log_visualizer/plot_python.h',
           ],
-        },  # agc_harness
+          'export_dependent_settings': [
+            '<(webrtc_root)/webrtc.gyp:rtc_event_log_parser',
+            ':graph_proto',
+          ],
+        },
+      ],
+    }],
+    ['enable_protobuf==1 and include_tests==1', {
+      # TODO(terelius): This tool requires the include_test condition to
+      # prevent build errors when gflags isn't found in downstream projects.
+      # There should be a cleaner way to do this. The tool is not test related.
+      'targets': [
+        {
+          # Command line tool for RTC event log visualization
+          'target_name': 'event_log_visualizer',
+          'type': 'executable',
+          'dependencies': [
+            'event_log_visualizer_utils',
+            '<(webrtc_root)/test/test.gyp:field_trial',
+            '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
+          ],
+          'sources': [
+            'event_log_visualizer/main.cc',
+          ],
+        },
+      ],
+    }],
+    ['include_tests==1', {
+      'targets' : [
         {
           'target_name': 'activity_metric',
           'type': 'executable',
@@ -177,6 +217,26 @@
             }],
           ],
         }, # tools_unittests
+        {
+          'target_name': 'rtp_analyzer',
+          'type': 'none',
+          'variables': {
+            'copy_output_dir%': '<(PRODUCT_DIR)',
+          },
+          'copies': [
+            {
+              'destination': '<(copy_output_dir)/',
+              'files': [
+                'py_event_log_analyzer/misc.py',
+                'py_event_log_analyzer/pb_parse.py',
+                'py_event_log_analyzer/rtp_analyzer.py',
+                'py_event_log_analyzer/rtp_analyzer.sh',
+              ]
+            },
+          ],
+          'dependencies': [ '<(webrtc_root)/webrtc.gyp:rtc_event_log_proto' ],
+          'process_outputs_as_sources': 1,
+        }, # rtp_analyzer
       ], # targets
       'conditions': [
         ['OS=="android"', {
@@ -185,9 +245,30 @@
               'target_name': 'tools_unittests_apk_target',
               'type': 'none',
               'dependencies': [
-                '<(apk_tests_path):tools_unittests_apk',
+                '<(android_tests_path):tools_unittests_apk',
               ],
             },
+          ],
+          'conditions': [
+            ['test_isolation_mode != "noop"',
+              {
+                'targets': [
+                  {
+                    'target_name': 'tools_unittests_apk_run',
+                    'type': 'none',
+                    'dependencies': [
+                      '<(android_tests_path):tools_unittests_apk',
+                    ],
+                    'includes': [
+                      '../build/isolate.gypi',
+                    ],
+                    'sources': [
+                      'tools_unittests_apk.isolate',
+                    ],
+                  },
+                ],
+              },
+            ],
           ],
         }],
         ['test_isolation_mode != "noop"', {

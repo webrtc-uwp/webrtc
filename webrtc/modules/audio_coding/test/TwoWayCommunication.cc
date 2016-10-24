@@ -23,6 +23,7 @@
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/engine_configurations.h"
 #include "webrtc/common_types.h"
+#include "webrtc/modules/audio_coding/codecs/builtin_audio_decoder_factory.h"
 #include "webrtc/modules/audio_coding/test/PCMFile.h"
 #include "webrtc/modules/audio_coding/test/utility.h"
 #include "webrtc/system_wrappers/include/trace.h"
@@ -40,6 +41,7 @@ TwoWayCommunication::TwoWayCommunication(int testMode)
   // The clicks will be more obvious in FAX mode. TODO(henrik.lundin) Really?
   config.neteq_config.playout_mode = kPlayoutFax;
   config.id = 2;
+  config.decoder_factory = CreateBuiltinAudioDecoderFactory();
   _acmB.reset(AudioCodingModule::Create(config));
   config.id = 4;
   _acmRefB.reset(AudioCodingModule::Create(config));
@@ -50,14 +52,6 @@ TwoWayCommunication::~TwoWayCommunication() {
   delete _channel_B2A;
   delete _channelRef_A2B;
   delete _channelRef_B2A;
-#ifdef WEBRTC_DTMF_DETECTION
-  if (_dtmfDetectorA != NULL) {
-    delete _dtmfDetectorA;
-  }
-  if (_dtmfDetectorB != NULL) {
-    delete _dtmfDetectorB;
-  }
-#endif
   _inFileA.Close();
   _inFileB.Close();
   _outFileA.Close();
@@ -269,13 +263,18 @@ void TwoWayCommunication::Perform() {
 
     EXPECT_GE(_acmB->Add10MsData(audioFrame), 0);
     EXPECT_GE(_acmRefB->Add10MsData(audioFrame), 0);
-    EXPECT_EQ(0, _acmA->PlayoutData10Ms(outFreqHzA, &audioFrame));
+    bool muted;
+    EXPECT_EQ(0, _acmA->PlayoutData10Ms(outFreqHzA, &audioFrame, &muted));
+    ASSERT_FALSE(muted);
     _outFileA.Write10MsData(audioFrame);
-    EXPECT_EQ(0, _acmRefA->PlayoutData10Ms(outFreqHzA, &audioFrame));
+    EXPECT_EQ(0, _acmRefA->PlayoutData10Ms(outFreqHzA, &audioFrame, &muted));
+    ASSERT_FALSE(muted);
     _outFileRefA.Write10MsData(audioFrame);
-    EXPECT_EQ(0, _acmB->PlayoutData10Ms(outFreqHzB, &audioFrame));
+    EXPECT_EQ(0, _acmB->PlayoutData10Ms(outFreqHzB, &audioFrame, &muted));
+    ASSERT_FALSE(muted);
     _outFileB.Write10MsData(audioFrame);
-    EXPECT_EQ(0, _acmRefB->PlayoutData10Ms(outFreqHzB, &audioFrame));
+    EXPECT_EQ(0, _acmRefB->PlayoutData10Ms(outFreqHzB, &audioFrame, &muted));
+    ASSERT_FALSE(muted);
     _outFileRefB.Write10MsData(audioFrame);
 
     // Update time counters each time a second of data has passed.

@@ -10,13 +10,14 @@
 
 #import "ARDSignalingMessage.h"
 
-#import "RTCLogging.h"
+#import "WebRTC/RTCLogging.h"
 
 #import "ARDUtilities.h"
-#import "RTCICECandidate+JSON.h"
+#import "RTCIceCandidate+JSON.h"
 #import "RTCSessionDescription+JSON.h"
 
-static NSString const *kARDSignalingMessageTypeKey = @"type";
+static NSString * const kARDSignalingMessageTypeKey = @"type";
+static NSString * const kARDTypeValueRemoveCandidates = @"remove-candidates";
 
 @implementation ARDSignalingMessage
 
@@ -44,9 +45,15 @@ static NSString const *kARDSignalingMessageTypeKey = @"type";
   NSString *typeString = values[kARDSignalingMessageTypeKey];
   ARDSignalingMessage *message = nil;
   if ([typeString isEqualToString:@"candidate"]) {
-    RTCICECandidate *candidate =
-        [RTCICECandidate candidateFromJSONDictionary:values];
+    RTCIceCandidate *candidate =
+        [RTCIceCandidate candidateFromJSONDictionary:values];
     message = [[ARDICECandidateMessage alloc] initWithCandidate:candidate];
+  } else if ([typeString isEqualToString:kARDTypeValueRemoveCandidates]) {
+    RTCLogInfo(@"Received remove-candidates message");
+    NSArray<RTCIceCandidate *> *candidates =
+        [RTCIceCandidate candidatesFromJSONDictionary:values];
+    message = [[ARDICECandidateRemovalMessage alloc]
+                  initWithRemovedCandidates:candidates];
   } else if ([typeString isEqualToString:@"offer"] ||
              [typeString isEqualToString:@"answer"]) {
     RTCSessionDescription *description =
@@ -71,7 +78,7 @@ static NSString const *kARDSignalingMessageTypeKey = @"type";
 
 @synthesize candidate = _candidate;
 
-- (instancetype)initWithCandidate:(RTCICECandidate *)candidate {
+- (instancetype)initWithCandidate:(RTCIceCandidate *)candidate {
   if (self = [super initWithType:kARDSignalingMessageTypeCandidate]) {
     _candidate = candidate;
   }
@@ -84,21 +91,47 @@ static NSString const *kARDSignalingMessageTypeKey = @"type";
 
 @end
 
+@implementation ARDICECandidateRemovalMessage
+
+@synthesize candidates = _candidates;
+
+- (instancetype)initWithRemovedCandidates:(
+    NSArray<RTCIceCandidate *> *)candidates {
+  NSParameterAssert(candidates.count);
+  if (self = [super initWithType:kARDSignalingMessageTypeCandidateRemoval]) {
+    _candidates = candidates;
+  }
+  return self;
+}
+
+- (NSData *)JSONData {
+  return
+      [RTCIceCandidate JSONDataForIceCandidates:_candidates
+                                       withType:kARDTypeValueRemoveCandidates];
+}
+
+@end
+
 @implementation ARDSessionDescriptionMessage
 
 @synthesize sessionDescription = _sessionDescription;
 
 - (instancetype)initWithDescription:(RTCSessionDescription *)description {
-  ARDSignalingMessageType type = kARDSignalingMessageTypeOffer;
-  NSString *typeString = description.type;
-  if ([typeString isEqualToString:@"offer"]) {
-    type = kARDSignalingMessageTypeOffer;
-  } else if ([typeString isEqualToString:@"answer"]) {
-    type = kARDSignalingMessageTypeAnswer;
-  } else {
-    NSAssert(NO, @"Unexpected type: %@", typeString);
+  ARDSignalingMessageType messageType = kARDSignalingMessageTypeOffer;
+  RTCSdpType sdpType = description.type;
+  switch (sdpType) {
+    case RTCSdpTypeOffer:
+      messageType = kARDSignalingMessageTypeOffer;
+      break;
+    case RTCSdpTypeAnswer:
+      messageType = kARDSignalingMessageTypeAnswer;
+      break;
+    case RTCSdpTypePrAnswer:
+      NSAssert(NO, @"Unexpected type: %@",
+          [RTCSessionDescription stringForType:sdpType]);
+      break;
   }
-  if (self = [super initWithType:type]) {
+  if (self = [super initWithType:messageType]) {
     _sessionDescription = description;
   }
   return self;

@@ -16,10 +16,6 @@
 #include "webrtc/media/engine/webrtcmediaengine.h"
 #endif  // HAVE_WEBRTC_VOICE && HAVE_WEBRTC_VIDEO
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif  // HAVE_CONFIG
-
 namespace cricket {
 
 MediaEngineFactory::MediaEngineCreateFunction
@@ -35,3 +31,14 @@ MediaEngineFactory::MediaEngineCreateFunction
 };  // namespace cricket
 
 #endif  // DISABLE_MEDIA_ENGINE_FACTORY
+
+namespace cricket {
+
+webrtc::RtpParameters CreateRtpParametersWithOneEncoding() {
+  webrtc::RtpParameters parameters;
+  webrtc::RtpEncodingParameters encoding;
+  parameters.encodings.push_back(encoding);
+  return parameters;
+}
+
+};  // namespace cricket

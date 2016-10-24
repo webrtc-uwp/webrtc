@@ -363,6 +363,8 @@ bool StatsReport::Value::bool_val() const {
 
 const char* StatsReport::Value::display_name() const {
   switch (name) {
+    case kStatsValueNameAecDivergentFilterFraction:
+      return "aecDivergentFilterFraction";
     case kStatsValueNameAudioOutputLevel:
       return "audioOutputLevel";
     case kStatsValueNameAudioInputLevel:
@@ -412,6 +414,18 @@ const char* StatsReport::Value::display_name() const {
       return "googBucketDelay";
     case kStatsValueNameBandwidthLimitedResolution:
       return "googBandwidthLimitedResolution";
+    // STUN ping related attributes.
+    // TODO(zhihuang) Rename these stats to follow the standards.
+    case kStatsValueNameSentPingRequestsTotal:
+      return "requestsSent";
+    case kStatsValueNameSentPingRequestsBeforeFirstResponse:
+      return "consentRequestsSent";
+    case kStatsValueNameSentPingResponses:
+      return "responsesSent";
+    case kStatsValueNameRecvPingRequests:
+      return "requestsReceived";
+    case kStatsValueNameRecvPingResponses:
+      return "responsesReceived";
 
     // Candidate related attributes. Values are taken from
     // http://w3c.github.io/webrtc-stats/#rtcstatstype-enum*.

@@ -13,30 +13,41 @@
 
 #include <stddef.h>
 
-#include "webrtc/base/scoped_ptr.h"
+#include <memory>
+
+#include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_types.h"
 #include "webrtc/modules/desktop_capture/shared_memory.h"
 
 namespace webrtc {
 
 class DesktopFrame;
-class DesktopRegion;
 
 // Abstract interface for screen and window capturers.
 class DesktopCapturer {
  public:
+  enum class Result {
+    // The frame was captured successfully.
+    SUCCESS,
+
+    // There was a temporary error. The caller should continue calling
+    // Capture(), in the expectation that it will eventually recover.
+    ERROR_TEMPORARY,
+
+    // Capture has failed and will keep failing if the caller tries calling
+    // Capture() again.
+    ERROR_PERMANENT,
+
+    MAX_VALUE = ERROR_PERMANENT
+  };
+
   // Interface that must be implemented by the DesktopCapturer consumers.
   class Callback {
    public:
-    // Deprecated.
-    // TODO(sergeyu): Remove this method once all references to it are removed
-    // from chromium.
-    virtual SharedMemory* CreateSharedMemory(size_t size) { return nullptr; }
-
-    // Called after a frame has been captured. Handler must take ownership of
-    // |frame|. If capture has failed for any reason |frame| is set to NULL
-    // (e.g. the window has been closed).
-    virtual void OnCaptureCompleted(DesktopFrame* frame) = 0;
+    // Called after a frame has been captured. |frame| is not nullptr if and
+    // only if |result| is SUCCESS.
+    virtual void OnCaptureResult(Result result,
+                                 std::unique_ptr<DesktopFrame> frame) = 0;
 
    protected:
     virtual ~Callback() {}
@@ -53,7 +64,7 @@ class DesktopCapturer {
   // where Capture() is called. It will be destroyed on the same thread. Shared
   // memory is currently supported only by some DesktopCapturer implementations.
   virtual void SetSharedMemoryFactory(
-      rtc::scoped_ptr<SharedMemoryFactory> shared_memory_factory) {}
+      std::unique_ptr<SharedMemoryFactory> shared_memory_factory) {}
 
   // Captures next frame. |region| specifies region of the capture target that
   // should be fresh in the resulting frame. The frame may also include fresh

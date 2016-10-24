@@ -37,9 +37,10 @@ void void_main(int argc, char* argv[]) {
   WavReader noise_file(FLAGS_noise_file);
   WavWriter out_file(FLAGS_out_file, in_file.sample_rate(),
                      in_file.num_channels());
-  IntelligibilityEnhancer enh(in_file.sample_rate(), in_file.num_channels());
   rtc::CriticalSection crit;
   NoiseSuppressionImpl ns(&crit);
+  IntelligibilityEnhancer enh(in_file.sample_rate(), in_file.num_channels(),
+                              NoiseSuppressionImpl::num_noise_bins());
   ns.Initialize(noise_file.num_channels(), noise_file.sample_rate());
   ns.Enable(true);
   const size_t in_samples = noise_file.sample_rate() / 100;
@@ -55,7 +56,6 @@ void void_main(int argc, char* argv[]) {
                              noise_file.num_channels());
   while (in_file.ReadSamples(in.size(), in.data()) == in.size() &&
          noise_file.ReadSamples(noise.size(), noise.data()) == noise.size()) {
-    FloatS16ToFloat(in.data(), in.size(), in.data());
     FloatS16ToFloat(noise.data(), noise.size(), noise.data());
     Deinterleave(in.data(), in_buf.num_frames(), in_buf.num_channels(),
                  in_buf.channels());
@@ -64,12 +64,11 @@ void void_main(int argc, char* argv[]) {
     capture_audio.CopyFrom(noise_buf.channels(), stream_config);
     ns.AnalyzeCaptureAudio(&capture_audio);
     ns.ProcessCaptureAudio(&capture_audio);
-    enh.SetCaptureNoiseEstimate(ns.NoiseEstimate());
+    enh.SetCaptureNoiseEstimate(ns.NoiseEstimate(), 0);
     enh.ProcessRenderAudio(in_buf.channels(), in_file.sample_rate(),
                            in_file.num_channels());
     Interleave(in_buf.channels(), in_buf.num_frames(), in_buf.num_channels(),
                in.data());
-    FloatToFloatS16(in.data(), in.size(), in.data());
     out_file.WriteSamples(in.data(), in.size());
   }
 }

@@ -18,9 +18,9 @@ namespace rtc {
 // SignalThread
 ///////////////////////////////////////////////////////////////////////////////
 
-SignalThread::SignalThread()
+SignalThread::SignalThread(bool use_socket_server)
     : main_(Thread::Current()),
-      worker_(this),
+      worker_(this, use_socket_server),
       state_(kInit),
       refcount_(1) {
   main_->SignalQueueDestroyed.connect(this,
@@ -137,7 +137,7 @@ void SignalThread::Run() {
   {
     EnterExit ee(this);
     if (main_) {
-      main_->Post(this, ST_MSG_WORKER_DONE);
+      main_->Post(RTC_FROM_HERE, this, ST_MSG_WORKER_DONE);
     }
   }
 }

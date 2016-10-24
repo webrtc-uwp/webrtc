@@ -15,11 +15,16 @@
       'target_name': 'video_coding_utility',
       'type': 'static_library',
       'dependencies': [
+        '<(webrtc_root)/common_video/common_video.gyp:common_video',
         '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
       ],
       'sources': [
         'frame_dropper.cc',
         'frame_dropper.h',
+        'h264_bitstream_parser.cc',
+        'h264_bitstream_parser.h',
+        'ivf_file_writer.cc',
+        'ivf_file_writer.h',
         'moving_average.h',
         'qp_parser.cc',
         'qp_parser.h',

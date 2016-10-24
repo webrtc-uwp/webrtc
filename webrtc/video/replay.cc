@@ -136,9 +136,10 @@ static std::string Codec() { return static_cast<std::string>(FLAGS_codec); }
 
 static const uint32_t kReceiverLocalSsrc = 0x123456;
 
-class FileRenderPassthrough : public VideoRenderer {
+class FileRenderPassthrough : public rtc::VideoSinkInterface<VideoFrame> {
  public:
-  FileRenderPassthrough(const std::string& basename, VideoRenderer* renderer)
+  FileRenderPassthrough(const std::string& basename,
+                        rtc::VideoSinkInterface<VideoFrame>* renderer)
       : basename_(basename),
         renderer_(renderer),
         file_(nullptr),
@@ -147,20 +148,19 @@ class FileRenderPassthrough : public VideoRenderer {
         last_height_(0) {}
 
   ~FileRenderPassthrough() {
-    if (file_ != nullptr)
+    if (file_)
       fclose(file_);
   }
 
  private:
-  void RenderFrame(const VideoFrame& video_frame,
-                   int time_to_render_ms) override {
-    if (renderer_ != nullptr)
-      renderer_->RenderFrame(video_frame, time_to_render_ms);
+  void OnFrame(const VideoFrame& video_frame) override {
+    if (renderer_)
+      renderer_->OnFrame(video_frame);
     if (basename_.empty())
       return;
     if (last_width_ != video_frame.width() ||
         last_height_ != video_frame.height()) {
-      if (file_ != nullptr)
+      if (file_)
         fclose(file_);
       std::stringstream filename;
       filename << basename_;
@@ -169,7 +169,7 @@ class FileRenderPassthrough : public VideoRenderer {
       filename << '_' << video_frame.width() << 'x' << video_frame.height()
                << ".yuv";
       file_ = fopen(filename.str().c_str(), "wb");
-      if (file_ == nullptr) {
+      if (!file_) {
         fprintf(stderr,
                 "Couldn't open file for writing: %s\n",
                 filename.str().c_str());
@@ -177,15 +177,13 @@ class FileRenderPassthrough : public VideoRenderer {
     }
     last_width_ = video_frame.width();
     last_height_ = video_frame.height();
-    if (file_ == nullptr)
+    if (!file_)
       return;
     PrintVideoFrame(video_frame, file_);
   }
 
-  bool IsTextureSupported() const override { return false; }
-
   const std::string basename_;
-  VideoRenderer* const renderer_;
+  rtc::VideoSinkInterface<VideoFrame>* const renderer_;
   FILE* file_;
   size_t count_;
   int last_width_;
@@ -196,7 +194,7 @@ class DecoderBitstreamFileWriter : public EncodedFrameObserver {
  public:
   explicit DecoderBitstreamFileWriter(const char* filename)
       : file_(fopen(filename, "wb")) {
-    RTC_DCHECK(file_ != nullptr);
+    RTC_DCHECK(file_);
   }
   ~DecoderBitstreamFileWriter() { fclose(file_); }
 
@@ -224,12 +222,12 @@ void RtpReplay() {
   receive_config.rtp.fec.red_payload_type = flags::RedPayloadType();
   receive_config.rtp.nack.rtp_history_ms = 1000;
   if (flags::TransmissionOffsetId() != -1) {
-    receive_config.rtp.extensions.push_back(
-        RtpExtension(RtpExtension::kTOffset, flags::TransmissionOffsetId()));
+    receive_config.rtp.extensions.push_back(RtpExtension(
+        RtpExtension::kTimestampOffsetUri, flags::TransmissionOffsetId()));
   }
   if (flags::AbsSendTimeId() != -1) {
     receive_config.rtp.extensions.push_back(
-        RtpExtension(RtpExtension::kAbsSendTime, flags::AbsSendTimeId()));
+        RtpExtension(RtpExtension::kAbsSendTimeUri, flags::AbsSendTimeId()));
   }
   receive_config.renderer = &file_passthrough;
 
@@ -253,21 +251,21 @@ void RtpReplay() {
   receive_config.decoders.push_back(decoder);
 
   VideoReceiveStream* receive_stream =
-      call->CreateVideoReceiveStream(receive_config);
+      call->CreateVideoReceiveStream(std::move(receive_config));
 
   std::unique_ptr<test::RtpFileReader> rtp_reader(test::RtpFileReader::Create(
       test::RtpFileReader::kRtpDump, flags::InputFile()));
-  if (rtp_reader.get() == nullptr) {
+  if (!rtp_reader) {
     rtp_reader.reset(test::RtpFileReader::Create(test::RtpFileReader::kPcap,
                                                  flags::InputFile()));
-    if (rtp_reader.get() == nullptr) {
+    if (!rtp_reader) {
       fprintf(stderr,
               "Couldn't open input file as either a rtpdump or .pcap. Note "
               "that .pcapng is not supported.\nTrying to interpret the file as "
               "length/packet interleaved.\n");
       rtp_reader.reset(test::RtpFileReader::Create(
           test::RtpFileReader::kLengthPacketInterleaved, flags::InputFile()));
-      if (rtp_reader.get() == nullptr) {
+      if (!rtp_reader) {
         fprintf(stderr,
                 "Unable to open input file with any supported format\n");
         return;

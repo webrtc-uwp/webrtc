@@ -11,9 +11,11 @@
 #ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_FRAME_WIN_H_
 #define WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_FRAME_WIN_H_
 
+#include <memory>
+
 #include <windows.h>
 
-#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/typedefs.h"
 
@@ -24,9 +26,9 @@ namespace webrtc {
 class DesktopFrameWin : public DesktopFrame {
  public:
   virtual ~DesktopFrameWin();
-  static DesktopFrameWin* Create(DesktopSize size,
-                                 SharedMemoryFactory* shared_memory_factory,
-                                 HDC hdc);
+
+  static std::unique_ptr<DesktopFrameWin>
+  Create(DesktopSize size, SharedMemoryFactory* shared_memory_factory, HDC hdc);
 
   HBITMAP bitmap() { return bitmap_; }
 
@@ -34,11 +36,11 @@ class DesktopFrameWin : public DesktopFrame {
   DesktopFrameWin(DesktopSize size,
                   int stride,
                   uint8_t* data,
-                  rtc::scoped_ptr<SharedMemory> shared_memory,
+                  std::unique_ptr<SharedMemory> shared_memory,
                   HBITMAP bitmap);
 
   HBITMAP bitmap_;
-  rtc::scoped_ptr<SharedMemory> owned_shared_memory_;
+  std::unique_ptr<SharedMemory> owned_shared_memory_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(DesktopFrameWin);
 };

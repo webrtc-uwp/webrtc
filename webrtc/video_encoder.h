@@ -30,10 +30,47 @@ class EncodedImageCallback {
  public:
   virtual ~EncodedImageCallback() {}
 
+  struct Result {
+    enum Error {
+      OK,
+
+      // Failed to send the packet.
+      ERROR_SEND_FAILED,
+    };
+
+    Result(Error error) : error(error) {}
+    Result(Error error, uint32_t frame_id) : error(error), frame_id(frame_id) {}
+
+    Error error;
+
+    // Frame ID assigned to the frame. The frame ID should be the same as the ID
+    // seen by the receiver for this frame. RTP timestamp of the frame is used
+    // as frame ID when RTP is used to send video. Must be used only when
+    // error=OK.
+    uint32_t frame_id = 0;
+
+    // Tells the encoder that the next frame is should be dropped.
+    bool drop_next_frame = false;
+  };
+
   // Callback function which is called when an image has been encoded.
+  virtual Result OnEncodedImage(const EncodedImage& encoded_image,
+                                const CodecSpecificInfo* codec_specific_info,
+                                const RTPFragmentationHeader* fragmentation) {
+    return (Encoded(encoded_image, codec_specific_info, fragmentation) == 0)
+               ? Result(Result::OK, 0)
+               : Result(Result::ERROR_SEND_FAILED);
+  }
+
+  // DEPRECATED.
+  // TODO(sergeyu): Remove this method.
   virtual int32_t Encoded(const EncodedImage& encoded_image,
                           const CodecSpecificInfo* codec_specific_info,
-                          const RTPFragmentationHeader* fragmentation) = 0;
+                          const RTPFragmentationHeader* fragmentation) {
+    Result result =
+        OnEncodedImage(encoded_image, codec_specific_info, fragmentation);
+    return (result.error != Result::OK) ? -1 : (result.drop_next_frame ? 1 : 0);
+  }
 };
 
 class VideoEncoder {
@@ -124,7 +161,6 @@ class VideoEncoder {
 
   virtual int32_t SetPeriodicKeyFrames(bool enable) { return -1; }
   virtual void OnDroppedFrame(uint32_t timestamp) {}
-  virtual int GetTargetFramerate() { return -1; }
   virtual bool SupportsNativeHandle() const { return false; }
   virtual const char* ImplementationName() const { return "unknown"; }
 };
@@ -152,9 +188,7 @@ class VideoEncoderSoftwareFallbackWrapper : public VideoEncoder {
 
   int32_t SetRates(uint32_t bitrate, uint32_t framerate) override;
   void OnDroppedFrame(uint32_t timestamp) override;
-  int GetTargetFramerate() override;
   bool SupportsNativeHandle() const override;
-  const char* ImplementationName() const override;
 
  private:
   bool InitFallbackEncoder();

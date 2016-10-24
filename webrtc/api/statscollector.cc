@@ -10,17 +10,15 @@
 
 #include "webrtc/api/statscollector.h"
 
+#include <memory>
 #include <utility>
 #include <vector>
 
 #include "webrtc/api/peerconnection.h"
 #include "webrtc/base/base64.h"
 #include "webrtc/base/checks.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/timing.h"
 #include "webrtc/pc/channel.h"
-
-using rtc::scoped_ptr;
 
 namespace webrtc {
 namespace {
@@ -90,7 +88,9 @@ void ExtractCommonSendProperties(const cricket::MediaSenderInfo& info,
                                  StatsReport* report) {
   report->AddString(StatsReport::kStatsValueNameCodecName, info.codec_name);
   report->AddInt64(StatsReport::kStatsValueNameBytesSent, info.bytes_sent);
-  report->AddInt64(StatsReport::kStatsValueNameRtt, info.rtt_ms);
+  if (info.rtt_ms >= 0) {
+    report->AddInt64(StatsReport::kStatsValueNameRtt, info.rtt_ms);
+  }
 }
 
 void ExtractCommonReceiveProperties(const cricket::MediaReceiverInfo& info,
@@ -107,17 +107,23 @@ void SetAudioProcessingStats(StatsReport* report,
                              int echo_delay_std_ms) {
   report->AddBoolean(StatsReport::kStatsValueNameTypingNoiseState,
                      typing_noise_detected);
-  report->AddFloat(StatsReport::kStatsValueNameEchoCancellationQualityMin,
-                   aec_quality_min);
+  if (aec_quality_min >= 0.0f) {
+    report->AddFloat(StatsReport::kStatsValueNameEchoCancellationQualityMin,
+                     aec_quality_min);
+  }
   const IntForAdd ints[] = {
-    { StatsReport::kStatsValueNameEchoReturnLoss, echo_return_loss },
-    { StatsReport::kStatsValueNameEchoReturnLossEnhancement,
-      echo_return_loss_enhancement },
     { StatsReport::kStatsValueNameEchoDelayMedian, echo_delay_median_ms },
     { StatsReport::kStatsValueNameEchoDelayStdDev, echo_delay_std_ms },
   };
-  for (const auto& i : ints)
-    report->AddInt(i.name, i.value);
+  for (const auto& i : ints) {
+    if (i.value >= 0) {
+      report->AddInt(i.name, i.value);
+    }
+  }
+  // These can take on valid negative values.
+  report->AddInt(StatsReport::kStatsValueNameEchoReturnLoss, echo_return_loss);
+  report->AddInt(StatsReport::kStatsValueNameEchoReturnLossEnhancement,
+                 echo_return_loss_enhancement);
 }
 
 void ExtractStats(const cricket::VoiceReceiverInfo& info, StatsReport* report) {
@@ -133,7 +139,6 @@ void ExtractStats(const cricket::VoiceReceiverInfo& info, StatsReport* report) {
   };
 
   const IntForAdd ints[] = {
-    { StatsReport::kStatsValueNameAudioOutputLevel, info.audio_level },
     { StatsReport::kStatsValueNameCurrentDelayMs, info.delay_estimate_ms },
 #ifdef WINRT
     { StatsReport::kStatsValueNameCurrentEndToEndDelayMs, info.end_to_end_delayMs },
@@ -158,11 +163,17 @@ void ExtractStats(const cricket::VoiceReceiverInfo& info, StatsReport* report) {
 
   for (const auto& i : ints)
     report->AddInt(i.name, i.value);
+  if (info.audio_level >= 0) {
+    report->AddInt(StatsReport::kStatsValueNameAudioOutputLevel,
+                   info.audio_level);
+  }
 
   report->AddInt64(StatsReport::kStatsValueNameBytesReceived,
                    info.bytes_rcvd);
-  report->AddInt64(StatsReport::kStatsValueNameCaptureStartNtpTimeMs,
-                   info.capture_start_ntp_time_ms);
+  if (info.capture_start_ntp_time_ms >= 0) {
+    report->AddInt64(StatsReport::kStatsValueNameCaptureStartNtpTimeMs,
+                     info.capture_start_ntp_time_ms);
+  }
   report->AddString(StatsReport::kStatsValueNameMediaType, "audio");
 }
 
@@ -182,8 +193,11 @@ void ExtractStats(const cricket::VoiceSenderInfo& info, StatsReport* report) {
     { StatsReport::kStatsValueNamePacketsSent, info.packets_sent },
   };
 
-  for (const auto& i : ints)
-    report->AddInt(i.name, i.value);
+  for (const auto& i : ints) {
+    if (i.value >= 0) {
+      report->AddInt(i.name, i.value);
+    }
+  }
   report->AddString(StatsReport::kStatsValueNameMediaType, "audio");
 }
 
@@ -193,8 +207,10 @@ void ExtractStats(const cricket::VideoReceiverInfo& info, StatsReport* report) {
                     info.decoder_implementation_name);
   report->AddInt64(StatsReport::kStatsValueNameBytesReceived,
                    info.bytes_rcvd);
-  report->AddInt64(StatsReport::kStatsValueNameCaptureStartNtpTimeMs,
-                   info.capture_start_ntp_time_ms);
+  if (info.capture_start_ntp_time_ms >= 0) {
+    report->AddInt64(StatsReport::kStatsValueNameCaptureStartNtpTimeMs,
+                     info.capture_start_ntp_time_ms);
+  }
   const IntForAdd ints[] = {
     { StatsReport::kStatsValueNameCurrentDelayMs, info.current_delay_ms },
 #ifdef WINRT
@@ -242,11 +258,9 @@ void ExtractStats(const cricket::VideoSenderInfo& info, StatsReport* report) {
     { StatsReport::kStatsValueNameEncodeUsagePercent,
       info.encode_usage_percent },
     { StatsReport::kStatsValueNameFirsReceived, info.firs_rcvd },
-    { StatsReport::kStatsValueNameFrameHeightInput, info.input_frame_height },
     { StatsReport::kStatsValueNameFrameHeightSent, info.send_frame_height },
     { StatsReport::kStatsValueNameFrameRateInput, info.framerate_input },
     { StatsReport::kStatsValueNameFrameRateSent, info.framerate_sent },
-    { StatsReport::kStatsValueNameFrameWidthInput, info.input_frame_width },
     { StatsReport::kStatsValueNameFrameWidthSent, info.send_frame_width },
     { StatsReport::kStatsValueNameNacksReceived, info.nacks_rcvd },
     { StatsReport::kStatsValueNamePacketsLost, info.packets_lost },
@@ -480,6 +494,7 @@ StatsCollector::UpdateStats(PeerConnectionInterface::StatsOutputLevel level) {
     ExtractSessionInfo();
     ExtractVoiceInfo();
     ExtractVideoInfo(level);
+    ExtractSenderInfo();
     ExtractDataInfo();
     UpdateTrackReports();
   }
@@ -527,73 +542,34 @@ StatsReport* StatsCollector::PrepareReport(
   return report;
 }
 
-StatsReport* StatsCollector::AddOneCertificateReport(
-    const rtc::SSLCertificate* cert, const StatsReport* issuer) {
-  RTC_DCHECK(pc_->session()->signaling_thread()->IsCurrent());
-
-  // TODO(bemasc): Move this computation to a helper class that caches these
-  // values to reduce CPU use in GetStats.  This will require adding a fast
-  // SSLCertificate::Equals() method to detect certificate changes.
-
-  std::string digest_algorithm;
-  if (!cert->GetSignatureDigestAlgorithm(&digest_algorithm))
-    return nullptr;
-
-  rtc::scoped_ptr<rtc::SSLFingerprint> ssl_fingerprint(
-      rtc::SSLFingerprint::Create(digest_algorithm, cert));
-
-  // SSLFingerprint::Create can fail if the algorithm returned by
-  // SSLCertificate::GetSignatureDigestAlgorithm is not supported by the
-  // implementation of SSLCertificate::ComputeDigest.  This currently happens
-  // with MD5- and SHA-224-signed certificates when linked to libNSS.
-  if (!ssl_fingerprint)
-    return nullptr;
-
-  std::string fingerprint = ssl_fingerprint->GetRfc4572Fingerprint();
-
-  rtc::Buffer der_buffer;
-  cert->ToDER(&der_buffer);
-  std::string der_base64;
-  rtc::Base64::EncodeFromArray(der_buffer.data(), der_buffer.size(),
-                               &der_base64);
-
-  StatsReport::Id id(StatsReport::NewTypedId(
-      StatsReport::kStatsReportTypeCertificate, fingerprint));
-  StatsReport* report = reports_.ReplaceOrAddNew(id);
-  report->set_timestamp(stats_gathering_started_);
-  report->AddString(StatsReport::kStatsValueNameFingerprint, fingerprint);
-  report->AddString(StatsReport::kStatsValueNameFingerprintAlgorithm,
-                    digest_algorithm);
-  report->AddString(StatsReport::kStatsValueNameDer, der_base64);
-  if (issuer)
-    report->AddId(StatsReport::kStatsValueNameIssuerId, issuer->id());
-  return report;
-}
-
 StatsReport* StatsCollector::AddCertificateReports(
     const rtc::SSLCertificate* cert) {
   RTC_DCHECK(pc_->session()->signaling_thread()->IsCurrent());
-  // Produces a chain of StatsReports representing this certificate and the rest
-  // of its chain, and adds those reports to |reports_|.  The return value is
-  // the id of the leaf report.  The provided cert must be non-null, so at least
-  // one report will always be provided and the returned string will never be
-  // empty.
   RTC_DCHECK(cert != NULL);
 
-  StatsReport* issuer = nullptr;
-  rtc::scoped_ptr<rtc::SSLCertChain> chain;
-  if (cert->GetChain(chain.accept())) {
-    // This loop runs in reverse, i.e. from root to leaf, so that each
-    // certificate's issuer's report ID is known before the child certificate's
-    // report is generated.  The root certificate does not have an issuer ID
-    // value.
-    for (ptrdiff_t i = chain->GetSize() - 1; i >= 0; --i) {
-      const rtc::SSLCertificate& cert_i = chain->Get(i);
-      issuer = AddOneCertificateReport(&cert_i, issuer);
-    }
+  std::unique_ptr<rtc::SSLCertificateStats> first_stats = cert->GetStats();
+  StatsReport* first_report = nullptr;
+  StatsReport* prev_report = nullptr;
+  for (rtc::SSLCertificateStats* stats = first_stats.get(); stats;
+       stats = stats->issuer.get()) {
+    StatsReport::Id id(StatsReport::NewTypedId(
+        StatsReport::kStatsReportTypeCertificate, stats->fingerprint));
+
+    StatsReport* report = reports_.ReplaceOrAddNew(id);
+    report->set_timestamp(stats_gathering_started_);
+    report->AddString(StatsReport::kStatsValueNameFingerprint,
+                      stats->fingerprint);
+    report->AddString(StatsReport::kStatsValueNameFingerprintAlgorithm,
+                      stats->fingerprint_algorithm);
+    report->AddString(StatsReport::kStatsValueNameDer,
+                      stats->base64_certificate);
+    if (!first_report)
+      first_report = report;
+    else
+      prev_report->AddId(StatsReport::kStatsValueNameIssuerId, id);
+    prev_report = report;
   }
-  // Add the leaf certificate.
-  return AddOneCertificateReport(cert, issuer);
+  return first_report;
 }
 
 StatsReport* StatsCollector::AddConnectionInfoReport(
@@ -620,12 +596,19 @@ StatsReport* StatsCollector::AddConnectionInfoReport(
                 AddCandidateReport(info.remote_candidate, false)->id());
 
   const Int64ForAdd int64s[] = {
-    { StatsReport::kStatsValueNameBytesReceived, info.recv_total_bytes },
-    { StatsReport::kStatsValueNameBytesSent, info.sent_total_bytes },
-    { StatsReport::kStatsValueNamePacketsSent, info.sent_total_packets },
-    { StatsReport::kStatsValueNameRtt, info.rtt },
-    { StatsReport::kStatsValueNameSendPacketsDiscarded,
-      info.sent_discarded_packets },
+      {StatsReport::kStatsValueNameBytesReceived, info.recv_total_bytes},
+      {StatsReport::kStatsValueNameBytesSent, info.sent_total_bytes},
+      {StatsReport::kStatsValueNamePacketsSent, info.sent_total_packets},
+      {StatsReport::kStatsValueNameRtt, info.rtt},
+      {StatsReport::kStatsValueNameSendPacketsDiscarded,
+       info.sent_discarded_packets},
+      {StatsReport::kStatsValueNameSentPingRequestsTotal,
+       info.sent_ping_requests_total},
+      {StatsReport::kStatsValueNameSentPingRequestsBeforeFirstResponse,
+       info.sent_ping_requests_before_first_response},
+      {StatsReport::kStatsValueNameSentPingResponses, info.sent_ping_responses},
+      {StatsReport::kStatsValueNameRecvPingRequests, info.recv_ping_requests},
+      {StatsReport::kStatsValueNameRecvPingResponses, info.recv_ping_responses},
   };
   for (const auto& i : int64s)
     report->AddInt64(i.name, i.value);
@@ -709,9 +692,10 @@ void StatsCollector::ExtractSessionInfo() {
         local_cert_report_id = r->id();
     }
 
-    rtc::scoped_ptr<rtc::SSLCertificate> cert;
-    if (pc_->session()->GetRemoteSSLCertificate(
-            transport_iter.second.transport_name, cert.accept())) {
+    std::unique_ptr<rtc::SSLCertificate> cert =
+        pc_->session()->GetRemoteSSLCertificate(
+            transport_iter.second.transport_name);
+    if (cert) {
       StatsReport* r = AddCertificateReports(cert.get());
       if (r)
         remote_cert_report_id = r->id();
@@ -834,6 +818,39 @@ void StatsCollector::ExtractVideoInfo(
   }
 }
 
+void StatsCollector::ExtractSenderInfo() {
+  RTC_DCHECK(pc_->session()->signaling_thread()->IsCurrent());
+
+  for (const auto& sender : pc_->GetSenders()) {
+    // TODO(nisse): SSRC == 0 currently means none. Delete check when
+    // that is fixed.
+    if (!sender->ssrc()) {
+      continue;
+    }
+    const rtc::scoped_refptr<MediaStreamTrackInterface> track(sender->track());
+    if (!track || track->kind() != MediaStreamTrackInterface::kVideoKind) {
+      continue;
+    }
+    // Safe, because kind() == kVideoKind implies a subclass of
+    // VideoTrackInterface; see mediastreaminterface.h.
+    VideoTrackSourceInterface* source =
+        static_cast<VideoTrackInterface*>(track.get())->GetSource();
+
+    VideoTrackSourceInterface::Stats stats;
+    if (!source->GetStats(&stats)) {
+      continue;
+    }
+    const StatsReport::Id stats_id = StatsReport::NewIdWithDirection(
+        StatsReport::kStatsReportTypeSsrc,
+        rtc::ToString<uint32_t>(sender->ssrc()), StatsReport::kSend);
+    StatsReport* report = reports_.FindOrAddNew(stats_id);
+    report->AddInt(StatsReport::kStatsValueNameFrameWidthInput,
+                   stats.input_width);
+    report->AddInt(StatsReport::kStatsValueNameFrameHeightInput,
+                   stats.input_height);
+  }
+}
+
 void StatsCollector::ExtractDataInfo() {
   RTC_DCHECK(pc_->session()->signaling_thread()->IsCurrent());
 
@@ -845,7 +862,10 @@ void StatsCollector::ExtractDataInfo() {
     StatsReport* report = reports_.ReplaceOrAddNew(id);
     report->set_timestamp(stats_gathering_started_);
     report->AddString(StatsReport::kStatsValueNameLabel, dc->label());
-    report->AddInt(StatsReport::kStatsValueNameDataChannelId, dc->id());
+    // Filter out the initial id (-1).
+    if (dc->id() >= 0) {
+      report->AddInt(StatsReport::kStatsValueNameDataChannelId, dc->id());
+    }
     report->AddString(StatsReport::kStatsValueNameProtocol, dc->protocol());
     report->AddString(StatsReport::kStatsValueNameState,
                       DataChannelInterface::DataStateString(dc->state()));
@@ -910,6 +930,9 @@ void StatsCollector::UpdateReportFromAudioTrack(AudioTrackInterface* track,
         report, stats.typing_noise_detected, stats.echo_return_loss,
         stats.echo_return_loss_enhancement, stats.echo_delay_median_ms,
         stats.aec_quality_min, stats.echo_delay_std_ms);
+
+    report->AddFloat(StatsReport::kStatsValueNameAecDivergentFilterFraction,
+                     stats.aec_divergent_filter_fraction);
   }
 }
 

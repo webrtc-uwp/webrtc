@@ -10,5 +10,6 @@
 group("root") {
   deps = [
     "//webrtc",
+    "//webrtc/examples",
   ]
 }

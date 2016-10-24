@@ -42,15 +42,10 @@ class AudioDeviceModuleImpl : public AudioDeviceModule {
   int32_t AttachAudioBuffer();
 
   AudioDeviceModuleImpl(const int32_t id, const AudioLayer audioLayer);
-  virtual ~AudioDeviceModuleImpl();
+  ~AudioDeviceModuleImpl() override;
 
   int64_t TimeUntilNextProcess() override;
   void Process() override;
-
-  // Factory methods (resource allocation/deallocation)
-  static AudioDeviceModule* Create(
-      const int32_t id,
-      const AudioLayer audioLayer = kPlatformDefaultAudio);
 
   // Retrieve the currently utilized audio layer
   int32_t ActiveAudioLayer(AudioLayer* audioLayer) const override;
@@ -183,7 +178,6 @@ class AudioDeviceModuleImpl : public AudioDeviceModule {
   int32_t SetLoudspeakerStatus(bool enable) override;
   int32_t GetLoudspeakerStatus(bool* enabled) const override;
 
-  bool BuiltInAECIsEnabled() const override;
   bool BuiltInAECIsAvailable() const override;
   int32_t EnableBuiltInAEC(bool enable) override;
   bool BuiltInAGCIsAvailable() const override;
@@ -191,8 +185,10 @@ class AudioDeviceModuleImpl : public AudioDeviceModule {
   bool BuiltInNSIsAvailable() const override;
   int32_t EnableBuiltInNS(bool enable) override;
 
+#if defined(WEBRTC_IOS)
   int GetPlayoutAudioParameters(AudioParameters* params) const override;
   int GetRecordAudioParameters(AudioParameters* params) const override;
+#endif  // WEBRTC_IOS
 
   int32_t Id() { return _id; }
 #if defined(WEBRTC_ANDROID)

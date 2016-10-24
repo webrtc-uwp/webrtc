@@ -11,6 +11,8 @@
 #ifndef WEBRTC_API_TEST_PEERCONNECTIONTESTWRAPPER_H_
 #define WEBRTC_API_TEST_PEERCONNECTIONTESTWRAPPER_H_
 
+#include <memory>
+
 #include "webrtc/api/peerconnectioninterface.h"
 #include "webrtc/api/test/fakeaudiocapturemodule.h"
 #include "webrtc/api/test/fakeconstraints.h"
@@ -25,10 +27,14 @@ class PeerConnectionTestWrapper
   static void Connect(PeerConnectionTestWrapper* caller,
                       PeerConnectionTestWrapper* callee);
 
-  explicit PeerConnectionTestWrapper(const std::string& name);
+  PeerConnectionTestWrapper(const std::string& name,
+                            rtc::Thread* network_thread,
+                            rtc::Thread* worker_thread);
   virtual ~PeerConnectionTestWrapper();
 
-  bool CreatePc(const webrtc::MediaConstraintsInterface* constraints);
+  bool CreatePc(
+      const webrtc::MediaConstraintsInterface* constraints,
+      const webrtc::PeerConnectionInterface::RTCConfiguration& config);
 
   rtc::scoped_refptr<webrtc::DataChannelInterface> CreateDataChannel(
       const std::string& label,
@@ -39,9 +45,12 @@ class PeerConnectionTestWrapper
      webrtc::PeerConnectionInterface::SignalingState new_state) {}
   virtual void OnStateChange(
       webrtc::PeerConnectionObserver::StateType state_changed) {}
-  virtual void OnAddStream(webrtc::MediaStreamInterface* stream);
-  virtual void OnRemoveStream(webrtc::MediaStreamInterface* stream) {}
-  virtual void OnDataChannel(webrtc::DataChannelInterface* data_channel);
+  virtual void OnAddStream(
+      rtc::scoped_refptr<webrtc::MediaStreamInterface> stream);
+  virtual void OnRemoveStream(
+      rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) {}
+  virtual void OnDataChannel(
+      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel);
   virtual void OnRenegotiationNeeded() {}
   virtual void OnIceConnectionChange(
       webrtc::PeerConnectionInterface::IceConnectionState new_state) {}
@@ -88,11 +97,13 @@ class PeerConnectionTestWrapper
       bool video, const webrtc::FakeConstraints& video_constraints);
 
   std::string name_;
+  rtc::Thread* const network_thread_;
+  rtc::Thread* const worker_thread_;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
       peer_connection_factory_;
   rtc::scoped_refptr<FakeAudioCaptureModule> fake_audio_capture_module_;
-  rtc::scoped_ptr<webrtc::FakeVideoTrackRenderer> renderer_;
+  std::unique_ptr<webrtc::FakeVideoTrackRenderer> renderer_;
 };
 
 #endif  // WEBRTC_API_TEST_PEERCONNECTIONTESTWRAPPER_H_

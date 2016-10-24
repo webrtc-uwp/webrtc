@@ -26,6 +26,14 @@ const size_t kAudioLevelLength = 2;
 const size_t kAbsoluteSendTimeLength = 4;
 const size_t kVideoRotationLength = 2;
 const size_t kTransportSequenceNumberLength = 3;
+const size_t kPlayoutDelayLength = 4;
+
+// Playout delay in milliseconds. A playout delay limit (min or max)
+// has 12 bits allocated. This allows a range of 0-4095 values which translates
+// to a range of 0-40950 in milliseconds.
+const int kPlayoutDelayGranularityMs = 10;
+// Maximum playout delay value in milliseconds.
+const int kPlayoutDelayMaxMs = 40950;
 
 struct HeaderExtension {
   explicit HeaderExtension(RTPExtensionType extension_type)
@@ -58,6 +66,9 @@ struct HeaderExtension {
       case kRtpExtensionTransportSequenceNumber:
         length = kTransportSequenceNumberLength;
         break;
+      case kRtpExtensionPlayoutDelay:
+        length = kPlayoutDelayLength;
+        break;
       default:
         assert(false);
     }
@@ -70,6 +81,8 @@ struct HeaderExtension {
 
 class RtpHeaderExtensionMap {
  public:
+  static constexpr RTPExtensionType kInvalidType = kRtpExtensionNone;
+  static constexpr uint8_t kInvalidId = 0;
   RtpHeaderExtensionMap();
   ~RtpHeaderExtensionMap();
 
@@ -77,10 +90,9 @@ class RtpHeaderExtensionMap {
 
   int32_t Register(const RTPExtensionType type, const uint8_t id);
 
-  // Active is a concept for a registered rtp header extension which doesn't
-  // take effect yet until being activated. Inactive RTP header extensions do
-  // not take effect and should not be included in size calculations until they
-  // are activated.
+  // Active on an extension indicates whether it is currently being added on
+  // on the RTP packets. The active/inactive status on an extension can change
+  // dynamically depending on the need to convey new information.
   int32_t RegisterInactive(const RTPExtensionType type, const uint8_t id);
   bool SetActive(const RTPExtensionType type, bool active);
 
@@ -89,8 +101,12 @@ class RtpHeaderExtensionMap {
   bool IsRegistered(RTPExtensionType type) const;
 
   int32_t GetType(const uint8_t id, RTPExtensionType* type) const;
+  // Return kInvalidType if not found.
+  RTPExtensionType GetType(uint8_t id) const;
 
   int32_t GetId(const RTPExtensionType type, uint8_t* id) const;
+  // Return kInvalidId if not found.
+  uint8_t GetId(RTPExtensionType type) const;
 
   //
   // Methods below ignore any inactive rtp header extensions.

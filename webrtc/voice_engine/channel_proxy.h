@@ -11,6 +11,7 @@
 #ifndef WEBRTC_VOICE_ENGINE_CHANNEL_PROXY_H_
 #define WEBRTC_VOICE_ENGINE_CHANNEL_PROXY_H_
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/thread_checker.h"
 #include "webrtc/voice_engine/channel_manager.h"
 #include "webrtc/voice_engine/include/voe_rtp_rtcp.h"
@@ -23,7 +24,9 @@ namespace webrtc {
 
 class AudioSinkInterface;
 class PacketRouter;
+class RtcEventLog;
 class RtpPacketSender;
+class Transport;
 class TransportFeedbackObserver;
 
 namespace voe {
@@ -46,6 +49,7 @@ class ChannelProxy {
   virtual void SetRTCPStatus(bool enable);
   virtual void SetLocalSSRC(uint32_t ssrc);
   virtual void SetRTCP_CNAME(const std::string& c_name);
+  virtual void SetNACKStatus(bool enable, int max_packets);
   virtual void SetSendAbsoluteSenderTimeStatus(bool enable, int id);
   virtual void SetSendAudioLevelIndicationStatus(bool enable, int id);
   virtual void SetReceiveAbsoluteSenderTimeStatus(bool enable, int id);
@@ -68,15 +72,32 @@ class ChannelProxy {
   virtual uint32_t GetDelayEstimate() const;
 
   virtual bool SetSendTelephoneEventPayloadType(int payload_type);
-  virtual bool SendTelephoneEventOutband(uint8_t event, uint32_t duration_ms);
-
+  virtual bool SendTelephoneEventOutband(int event, int duration_ms);
+  virtual void SetBitrate(int bitrate_bps);
   virtual void SetSink(std::unique_ptr<AudioSinkInterface> sink);
+  virtual void SetInputMute(bool muted);
+
+  virtual void RegisterExternalTransport(Transport* transport);
+  virtual void DeRegisterExternalTransport();
+  virtual bool ReceivedRTPPacket(const uint8_t* packet,
+                                 size_t length,
+                                 const PacketTime& packet_time);
+  virtual bool ReceivedRTCPPacket(const uint8_t* packet, size_t length);
+
+  virtual const rtc::scoped_refptr<AudioDecoderFactory>&
+      GetAudioDecoderFactory() const;
+
+  virtual void SetChannelOutputVolumeScaling(float scaling);
+
+  virtual void SetRtcEventLog(RtcEventLog* event_log);
 
  private:
   Channel* channel() const;
 
   rtc::ThreadChecker thread_checker_;
   ChannelOwner channel_owner_;
+
+  RTC_DISALLOW_COPY_AND_ASSIGN(ChannelProxy);
 };
 }  // namespace voe
 }  // namespace webrtc

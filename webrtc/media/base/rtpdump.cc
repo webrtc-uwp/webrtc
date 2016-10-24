@@ -28,15 +28,14 @@ namespace cricket {
 
 const char RtpDumpFileHeader::kFirstLine[] = "#!rtpplay1.0 0.0.0.0/0\n";
 
-RtpDumpFileHeader::RtpDumpFileHeader(uint32_t start_ms, uint32_t s, uint16_t p)
-    : start_sec(start_ms / 1000),
-      start_usec(start_ms % 1000 * 1000),
+RtpDumpFileHeader::RtpDumpFileHeader(int64_t start_ms, uint32_t s, uint16_t p)
+    : start_sec(static_cast<uint32_t>(start_ms / 1000)),
+      start_usec(static_cast<uint32_t>(start_ms % 1000 * 1000)),
       source(s),
       port(p),
-      padding(0) {
-}
+      padding(0) {}
 
-void RtpDumpFileHeader::WriteToByteBuffer(rtc::ByteBuffer* buf) {
+void RtpDumpFileHeader::WriteToByteBuffer(rtc::ByteBufferWriter* buf) {
   buf->WriteUInt32(start_sec);
   buf->WriteUInt32(start_usec);
   buf->WriteUInt32(source);
@@ -44,7 +43,7 @@ void RtpDumpFileHeader::WriteToByteBuffer(rtc::ByteBuffer* buf) {
   buf->WriteUInt16(padding);
 }
 
-static const uint32_t kDefaultTimeIncrease = 30;
+static const int kDefaultTimeIncrease = 30;
 
 bool RtpDumpPacket::IsValidRtpPacket() const {
   return original_data_len >= data.size() &&
@@ -113,7 +112,7 @@ rtc::StreamResult RtpDumpReader::ReadPacket(RtpDumpPacket* packet) {
   if (res != rtc::SR_SUCCESS) {
     return res;
   }
-  rtc::ByteBuffer buf(header, sizeof(header));
+  rtc::ByteBufferReader buf(header, sizeof(header));
   uint16_t dump_packet_len;
   uint16_t data_len;
   // Read the full length of the rtpdump packet, including the rtpdump header.
@@ -157,12 +156,12 @@ rtc::StreamResult RtpDumpReader::ReadFileHeader() {
   char header[RtpDumpFileHeader::kHeaderLength];
   res = stream_->ReadAll(header, sizeof(header), NULL, NULL);
   if (res == rtc::SR_SUCCESS) {
-    rtc::ByteBuffer buf(header, sizeof(header));
+    rtc::ByteBufferReader buf(header, sizeof(header));
     uint32_t start_sec;
     uint32_t start_usec;
     buf.ReadUInt32(&start_sec);
     buf.ReadUInt32(&start_usec);
-    start_time_ms_ = start_sec * 1000 + start_usec / 1000;
+    start_time_ms_ = static_cast<int64_t>(start_sec * 1000 + start_usec / 1000);
     // Increase the length by 1 since first_line does not contain the ending \n.
     first_line_and_file_header_len_ = first_line.size() + 1 + sizeof(header);
   }
@@ -290,7 +289,7 @@ void RtpDumpLoopReader::UpdateDumpPacket(RtpDumpPacket* packet) {
     sequence += loop_count_ * rtp_seq_num_increase_;
     timestamp += loop_count_ * rtp_timestamp_increase_;
     // Write the updated sequence number and timestamp back to the RTP packet.
-    rtc::ByteBuffer buffer;
+    rtc::ByteBufferWriter buffer;
     buffer.WriteUInt16(sequence);
     buffer.WriteUInt32(timestamp);
     memcpy(&packet->data[2], buffer.Data(), buffer.Length());
@@ -305,9 +304,8 @@ RtpDumpWriter::RtpDumpWriter(rtc::StreamInterface* stream)
     : stream_(stream),
       packet_filter_(PF_ALL),
       file_header_written_(false),
-      start_time_ms_(rtc::Time()),
-      warn_slow_writes_delay_(kWarnSlowWritesDelayMs) {
-}
+      start_time_ms_(rtc::TimeMillis()),
+      warn_slow_writes_delay_(kWarnSlowWritesDelayMs) {}
 
 void RtpDumpWriter::set_packet_filter(int filter) {
   packet_filter_ = filter;
@@ -315,7 +313,7 @@ void RtpDumpWriter::set_packet_filter(int filter) {
 }
 
 uint32_t RtpDumpWriter::GetElapsedTime() const {
-  return rtc::TimeSince(start_time_ms_);
+  return static_cast<uint32_t>(rtc::TimeSince(start_time_ms_));
 }
 
 rtc::StreamResult RtpDumpWriter::WriteFileHeader() {
@@ -326,8 +324,8 @@ rtc::StreamResult RtpDumpWriter::WriteFileHeader() {
     return res;
   }
 
-  rtc::ByteBuffer buf;
-  RtpDumpFileHeader file_header(rtc::Time(), 0, 0);
+  rtc::ByteBufferWriter buf;
+  RtpDumpFileHeader file_header(rtc::TimeMillis(), 0, 0);
   file_header.WriteToByteBuffer(&buf);
   return WriteToStream(buf.Data(), buf.Length());
 }
@@ -355,7 +353,7 @@ rtc::StreamResult RtpDumpWriter::WritePacket(const void* data,
   }
 
   // Write the dump packet header.
-  rtc::ByteBuffer buf;
+  rtc::ByteBufferWriter buf;
   buf.WriteUInt16(
       static_cast<uint16_t>(RtpDumpPacket::kHeaderLength + write_len));
   buf.WriteUInt16(static_cast<uint16_t>(rtcp ? 0 : data_len));
@@ -395,10 +393,10 @@ size_t RtpDumpWriter::FilterPacket(const void* data, size_t data_len,
 
 rtc::StreamResult RtpDumpWriter::WriteToStream(
     const void* data, size_t data_len) {
-  uint32_t before = rtc::Time();
+  int64_t before = rtc::TimeMillis();
   rtc::StreamResult result =
       stream_->WriteAll(data, data_len, NULL, NULL);
-  uint32_t delay = rtc::TimeSince(before);
+  int64_t delay = rtc::TimeSince(before);
   if (delay >= warn_slow_writes_delay_) {
     LOG(LS_WARNING) << "Slow RtpDump: took " << delay << "ms to write "
                     << data_len << " bytes.";

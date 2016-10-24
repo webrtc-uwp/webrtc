@@ -23,6 +23,7 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/ioctl.h>
 #include <sys/time.h>
 #include <sys/select.h>
 #include <unistd.h>
@@ -48,26 +49,51 @@
 #include "webrtc/base/common.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/networkmonitor.h"
+#include "webrtc/base/nullsocketserver.h"
 #include "webrtc/base/timeutils.h"
 #include "webrtc/base/winping.h"
 #include "webrtc/base/win32socketinit.h"
-
-// stm: this will tell us if we are on OSX
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
 #if defined(WEBRTC_POSIX)
 #include <netinet/tcp.h>  // for TCP_NODELAY
 #define IP_MTU 14 // Until this is integrated from linux/in.h to netinet/in.h
 typedef void* SockOptArg;
+
 #endif  // WEBRTC_POSIX
+
+#if defined(WEBRTC_POSIX) && !defined(WEBRTC_MAC) && !defined(__native_client__)
+
+int64_t GetSocketRecvTimestamp(int socket) {
+  struct timeval tv_ioctl;
+  int ret = ioctl(socket, SIOCGSTAMP, &tv_ioctl);
+  if (ret != 0)
+    return -1;
+  int64_t timestamp =
+      rtc::kNumMicrosecsPerSec * static_cast<int64_t>(tv_ioctl.tv_sec) +
+      static_cast<int64_t>(tv_ioctl.tv_usec);
+  return timestamp;
+}
+
+#else
+
+int64_t GetSocketRecvTimestamp(int socket) {
+  return -1;
+}
+#endif
 
 #if defined(WEBRTC_WIN)
 typedef char* SockOptArg;
 #endif
 
 namespace rtc {
+
+std::unique_ptr<SocketServer> SocketServer::CreateDefault() {
+#if defined(__native_client__)
+  return std::unique_ptr<SocketServer>(new rtc::NullSocketServer);
+#else
+  return std::unique_ptr<SocketServer>(new rtc::PhysicalSocketServer);
+#endif
+}
 
 #if defined(WEBRTC_WIN)
 // Standard MTUs, from RFC 1191
@@ -322,7 +348,7 @@ int PhysicalSocket::SendTo(const void* buffer,
   return sent;
 }
 
-int PhysicalSocket::Recv(void* buffer, size_t length) {
+int PhysicalSocket::Recv(void* buffer, size_t length, int64_t* timestamp) {
   int received = ::recv(s_, static_cast<char*>(buffer),
                         static_cast<int>(length), 0);
   if ((received == 0) && (length != 0)) {
@@ -335,6 +361,9 @@ int PhysicalSocket::Recv(void* buffer, size_t length) {
     enabled_events_ |= DE_READ;
     SetError(EWOULDBLOCK);
     return SOCKET_ERROR;
+  }
+  if (timestamp) {
+    *timestamp = GetSocketRecvTimestamp(s_);
   }
   UpdateLastError();
   int error = GetError();
@@ -350,12 +379,16 @@ int PhysicalSocket::Recv(void* buffer, size_t length) {
 
 int PhysicalSocket::RecvFrom(void* buffer,
                              size_t length,
-                             SocketAddress* out_addr) {
+                             SocketAddress* out_addr,
+                             int64_t* timestamp) {
   sockaddr_storage addr_storage;
   socklen_t addr_len = sizeof(addr_storage);
   sockaddr* addr = reinterpret_cast<sockaddr*>(&addr_storage);
   int received = ::recvfrom(s_, static_cast<char*>(buffer),
                             static_cast<int>(length), 0, addr, &addr_len);
+  if (timestamp) {
+    *timestamp = GetSocketRecvTimestamp(s_);
+  }
   UpdateLastError();
   if ((received >= 0) && (out_addr != nullptr))
     SocketAddressFromSockAddrStorage(addr_storage, out_addr);
@@ -1468,9 +1501,9 @@ bool PhysicalSocketServer::InstallSignal(int signum, void (*handler)(int)) {
 
 #if defined(WEBRTC_WIN)
 bool PhysicalSocketServer::Wait(int cmsWait, bool process_io) {
-  int cmsTotal = cmsWait;
-  int cmsElapsed = 0;
-  uint32_t msStart = Time();
+  int64_t cmsTotal = cmsWait;
+  int64_t cmsElapsed = 0;
+  int64_t msStart = Time();
 
   fWait_ = true;
   while (fWait_) {
@@ -1507,18 +1540,18 @@ bool PhysicalSocketServer::Wait(int cmsWait, bool process_io) {
 
     // Which is shorter, the delay wait or the asked wait?
 
-    int cmsNext;
+    int64_t cmsNext;
     if (cmsWait == kForever) {
       cmsNext = cmsWait;
     } else {
-      cmsNext = std::max(0, cmsTotal - cmsElapsed);
+      cmsNext = std::max<int64_t>(0, cmsTotal - cmsElapsed);
     }
 
     // Wait for one of the events to signal
     DWORD dw = WSAWaitForMultipleEvents(static_cast<DWORD>(events.size()),
                                         &events[0],
                                         false,
-                                        cmsNext,
+                                        static_cast<DWORD>(cmsNext),
                                         false);
 
     if (dw == WSA_WAIT_FAILED) {

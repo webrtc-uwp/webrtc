@@ -11,13 +11,14 @@
 #ifndef WEBRTC_P2P_BASE_DTLSTRANSPORTCHANNEL_H_
 #define WEBRTC_P2P_BASE_DTLSTRANSPORTCHANNEL_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "webrtc/p2p/base/transportchannelimpl.h"
 #include "webrtc/base/buffer.h"
 #include "webrtc/base/bufferqueue.h"
-#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/sslstreamadapter.h"
 #include "webrtc/base/stream.h"
 
@@ -117,7 +118,6 @@ class DtlsTransportChannelWrapper : public TransportChannelImpl {
   bool GetStats(ConnectionInfos* infos) override {
     return channel_->GetStats(infos);
   }
-  const std::string SessionId() const override { return channel_->SessionId(); }
 
   virtual bool SetSslMaxProtocolVersion(rtc::SSLProtocolVersion version);
 
@@ -137,7 +137,7 @@ class DtlsTransportChannelWrapper : public TransportChannelImpl {
 
   // Once DTLS has been established, this method retrieves the certificate in
   // use by the remote peer, for use in external identity verification.
-  bool GetRemoteSSLCertificate(rtc::SSLCertificate** cert) const override;
+  std::unique_ptr<rtc::SSLCertificate> GetRemoteSSLCertificate() const override;
 
   // Once DTLS has established (i.e., this channel is writable), this method
   // extracts the keys negotiated during the DTLS handshake, for use in external
@@ -163,19 +163,15 @@ class DtlsTransportChannelWrapper : public TransportChannelImpl {
   void SetIceTiebreaker(uint64_t tiebreaker) override {
     channel_->SetIceTiebreaker(tiebreaker);
   }
-  void SetIceCredentials(const std::string& ice_ufrag,
-                         const std::string& ice_pwd) override {
-    channel_->SetIceCredentials(ice_ufrag, ice_pwd);
+  void SetIceParameters(const IceParameters& ice_params) override {
+    channel_->SetIceParameters(ice_params);
   }
-  void SetRemoteIceCredentials(const std::string& ice_ufrag,
-                               const std::string& ice_pwd) override {
-    channel_->SetRemoteIceCredentials(ice_ufrag, ice_pwd);
+  void SetRemoteIceParameters(const IceParameters& ice_params) override {
+    channel_->SetRemoteIceParameters(ice_params);
   }
   void SetRemoteIceMode(IceMode mode) override {
     channel_->SetRemoteIceMode(mode);
   }
-
-  void Connect() override;
 
   void MaybeStartGathering() override { channel_->MaybeStartGathering(); }
 
@@ -185,6 +181,9 @@ class DtlsTransportChannelWrapper : public TransportChannelImpl {
 
   void AddRemoteCandidate(const Candidate& candidate) override {
     channel_->AddRemoteCandidate(candidate);
+  }
+  void RemoveRemoteCandidate(const Candidate& candidate) override {
+    channel_->RemoveRemoteCandidate(candidate);
   }
 
   void SetIceConfig(const IceConfig& config) override {
@@ -205,19 +204,26 @@ class DtlsTransportChannelWrapper : public TransportChannelImpl {
   void OnReceivingState(TransportChannel* channel);
   void OnDtlsEvent(rtc::StreamInterface* stream_, int sig, int err);
   bool SetupDtls();
-  bool MaybeStartDtls();
+  void MaybeStartDtls();
   bool HandleDtlsPacket(const char* data, size_t size);
   void OnGatheringState(TransportChannelImpl* channel);
   void OnCandidateGathered(TransportChannelImpl* channel, const Candidate& c);
+  void OnCandidatesRemoved(TransportChannelImpl* channel,
+                           const Candidates& candidates);
   void OnRoleConflict(TransportChannelImpl* channel);
   void OnRouteChange(TransportChannel* channel, const Candidate& candidate);
-  void OnConnectionRemoved(TransportChannelImpl* channel);
-  void Reconnect();
+  void OnSelectedCandidatePairChanged(
+      TransportChannel* channel,
+      CandidatePairInterface* selected_candidate_pair,
+      int last_sent_packet_id,
+      bool ready_to_send);
+  void OnChannelStateChanged(TransportChannelImpl* channel);
+  void OnDtlsHandshakeError(rtc::SSLHandshakeError error);
 
   rtc::Thread* worker_thread_;  // Everything should occur on this thread.
   // Underlying channel, not owned by this class.
   TransportChannelImpl* const channel_;
-  rtc::scoped_ptr<rtc::SSLStreamAdapter> dtls_;  // The DTLS stream
+  std::unique_ptr<rtc::SSLStreamAdapter> dtls_;  // The DTLS stream
   StreamInterfaceChannel* downward_;  // Wrapper for channel_, owned by dtls_.
   std::vector<int> srtp_ciphers_;     // SRTP ciphers to use with DTLS.
   bool dtls_active_ = false;
@@ -226,6 +232,12 @@ class DtlsTransportChannelWrapper : public TransportChannelImpl {
   rtc::SSLProtocolVersion ssl_max_version_;
   rtc::Buffer remote_fingerprint_value_;
   std::string remote_fingerprint_algorithm_;
+
+  // Cached DTLS ClientHello packet that was received before we started the
+  // DTLS handshake. This could happen if the hello was received before the
+  // transport channel became writable, or before a remote fingerprint was
+  // received.
+  rtc::Buffer cached_client_hello_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(DtlsTransportChannelWrapper);
 };

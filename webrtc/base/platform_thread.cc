@@ -55,6 +55,17 @@ bool IsThreadRefEqual(const PlatformThreadRef& a, const PlatformThreadRef& b) {
 #endif
 }
 
+#if defined(WEBRTC_WIN)
+void SetCurrentThreadNameHelper(THREADNAME_INFO threadname_info) {
+  __try {
+    ::RaiseException(0x406D1388, 0, sizeof(threadname_info) / sizeof(DWORD),
+      reinterpret_cast<ULONG_PTR*>(&threadname_info));
+  }
+  __except (EXCEPTION_EXECUTE_HANDLER) {
+  }
+}
+#endif  // WEBRTC_WIN
+
 void SetCurrentThreadName(const char* name) {
 #if defined(WEBRTC_WIN)
   THREADNAME_INFO threadname_info;
@@ -69,17 +80,6 @@ void SetCurrentThreadName(const char* name) {
   pthread_setname_np(name);
 #endif
 }
-
-#if defined(WEBRTC_WIN)
-void SetCurrentThreadNameHelper(THREADNAME_INFO threadname_info) {
-  __try {
-    ::RaiseException(0x406D1388, 0, sizeof(threadname_info) / sizeof(DWORD),
-      reinterpret_cast<ULONG_PTR*>(&threadname_info));
-  }
-  __except (EXCEPTION_EXECUTE_HANDLER) {
-  }
-}
-#endif  // WEBRTC_WIN
 
 namespace {
 #if defined(WEBRTC_WIN)
@@ -104,7 +104,8 @@ PlatformThread::PlatformThread(ThreadRunFunction func,
       name_(thread_name ? thread_name : "webrtc"),
 #if defined(WEBRTC_WIN)
       stop_(false),
-      thread_(NULL) {
+      thread_(NULL),
+      thread_id_(0) {
 #else
       stop_event_(false, false),
       thread_(0) {
@@ -117,6 +118,7 @@ PlatformThread::~PlatformThread() {
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
 #if defined(WEBRTC_WIN)
   RTC_DCHECK(!thread_);
+  RTC_DCHECK(!thread_id_);
 #endif  // defined(WEBRTC_WIN)
 }
 
@@ -141,10 +143,10 @@ void PlatformThread::Start() {
   // See bug 2902 for background on STACK_SIZE_PARAM_IS_A_RESERVATION.
   // Set the reserved stack stack size to 1M, which is the default on Windows
   // and Linux.
-  DWORD thread_id;
   thread_ = ::CreateThread(NULL, 1024 * 1024, &StartThread, this,
-                           STACK_SIZE_PARAM_IS_A_RESERVATION, &thread_id);
+                           STACK_SIZE_PARAM_IS_A_RESERVATION, &thread_id_);
   RTC_CHECK(thread_) << "CreateThread failed";
+  RTC_DCHECK(thread_id_);
 #else
   ThreadAttributes attr;
   // Set the stack stack size to 1M.
@@ -162,6 +164,14 @@ bool PlatformThread::IsRunning() const {
 #endif  // defined(WEBRTC_WIN)
 }
 
+PlatformThreadRef PlatformThread::GetThreadRef() const {
+#if defined(WEBRTC_WIN)
+  return thread_id_;
+#else
+  return thread_;
+#endif  // defined(WEBRTC_WIN)
+}
+
 void PlatformThread::Stop() {
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
   if (!IsRunning())
@@ -170,13 +180,16 @@ void PlatformThread::Stop() {
 #if defined(WEBRTC_WIN)
 #if defined(WINRT)
   stop_ = true;
-#else
+#else // WINRT
   // Set stop_ to |true| on the worker thread.
-  QueueUserAPC(&RaiseFlag, thread_, reinterpret_cast<ULONG_PTR>(&stop_));
-#endif
+  bool queued = QueueAPC(&RaiseFlag, reinterpret_cast<ULONG_PTR>(&stop_));
+  // Queuing the APC can fail if the thread is being terminated.
+  RTC_CHECK(queued || GetLastError() == ERROR_GEN_FAILURE);
+#endif // WINRT
   WaitForSingleObject(thread_, INFINITE);
   CloseHandle(thread_);
   thread_ = nullptr;
+  thread_id_ = 0;
 #else
   stop_event_.Set();
   RTC_CHECK_EQ(0, pthread_join(thread_, nullptr));
@@ -255,5 +268,14 @@ bool PlatformThread::SetPriority(ThreadPriority priority) {
   return pthread_setschedparam(thread_, policy, &param) == 0;
 #endif  // defined(WEBRTC_WIN)
 }
+
+#if defined(WEBRTC_WIN)
+bool PlatformThread::QueueAPC(PAPCFUNC function, ULONG_PTR data) {
+  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(IsRunning());
+
+  return QueueUserAPC(function, thread_, data) != FALSE;
+}
+#endif
 
 }  // namespace rtc

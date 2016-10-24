@@ -34,20 +34,30 @@
 
           ['build_with_chromium==1', {
             'webrtc_root%': '<(DEPTH)/third_party/webrtc',
-            'apk_tests_path%': '<(DEPTH)/third_party/webrtc/build/apk_tests_noop.gyp',
-            'modules_java_gyp_path%': '<(DEPTH)/third_party/webrtc/modules/modules_java_chromium.gyp',
+            'android_tests_path%': '<(DEPTH)/third_party/webrtc/build/android_tests_noop.gyp',
           }, {
             'webrtc_root%': '<(DEPTH)/webrtc',
-            'apk_tests_path%': '<(DEPTH)/webrtc/build/apk_tests.gyp',
-            'modules_java_gyp_path%': '<(DEPTH)/webrtc/modules/modules_java.gyp',
+            'android_tests_path%': '<(DEPTH)/webrtc/build/android_tests.gyp',
+          }],
+
+          # Controls whether we use libevent on posix platforms.
+          # TODO(phoglund): should arguably be controlled by platform #ifdefs
+          # in the code instead.
+          ['OS=="win" or OS=="mac" or OS=="ios"', {
+            'build_libevent%': 0,
+            'enable_libevent%': 0,
+          }, {
+            'build_libevent%': 1,
+            'enable_libevent%': 1,
           }],
         ],
       },
       'build_with_chromium%': '<(build_with_chromium)',
       'build_with_mozilla%': '<(build_with_mozilla)',
+      'build_libevent%': '<(build_libevent)',
+      'enable_libevent%': '<(enable_libevent)',
       'webrtc_root%': '<(webrtc_root)',
-      'apk_tests_path%': '<(apk_tests_path)',
-      'modules_java_gyp_path%': '<(modules_java_gyp_path)',
+      'android_tests_path%': '<(android_tests_path)',
       'webrtc_vp8_dir%': '<(webrtc_root)/modules/video_coding/codecs/vp8',
       'webrtc_vp9_dir%': '<(webrtc_root)/modules/video_coding/codecs/vp9',
       'include_ilbc%': '<(include_ilbc)',
@@ -56,9 +66,11 @@
     },
     'build_with_chromium%': '<(build_with_chromium)',
     'build_with_mozilla%': '<(build_with_mozilla)',
+    'build_libevent%': '<(build_libevent)',
+    'enable_libevent%': '<(enable_libevent)',
     'webrtc_root%': '<(webrtc_root)',
-    'apk_tests_path%': '<(apk_tests_path)',
-    'modules_java_gyp_path%': '<(modules_java_gyp_path)',
+    'android_tests_path%': '<(android_tests_path)',
+    'test_runner_path': '<(DEPTH)/webrtc/build/android/test_runner.py',
     'webrtc_vp8_dir%': '<(webrtc_vp8_dir)',
     'webrtc_vp9_dir%': '<(webrtc_vp9_dir)',
     'include_ilbc%': '<(include_ilbc)',
@@ -79,8 +91,19 @@
     # third party code will still have the reduced warning settings.
     'chromium_code': 1,
 
+    # Targets are by default not NaCl untrusted code. Use this variable exclude
+    # code that uses libraries that aren't available in the NaCl sandbox.
+    'nacl_untrusted_build%': 0,
+
     # Set to 1 to enable code coverage on Linux using the gcov library.
     'coverage%': 0,
+
+    # Set to "func", "block", "edge" for coverage generation.
+    # At unit test runtime set UBSAN_OPTIONS="coverage=1".
+    # It is recommend to set include_examples=0.
+    # Use llvm's sancov -html-report for human readable reports.
+    # See http://clang.llvm.org/docs/SanitizerCoverage.html .
+    'webrtc_sanitize_coverage%': "",
 
     # Remote bitrate estimator logging/plotting.
     'enable_bwe_test_logging%': 0,
@@ -95,12 +118,19 @@
     # Enables the use of protocol buffers for debug recordings.
     'enable_protobuf%': 1,
 
+    # Disable the code for the intelligibility enhancer by default.
+    'enable_intelligibility_enhancer%': 0,
+
+    # Selects whether debug dumps for the audio processing module
+    # should be generated.
+    'apm_debug_dump%': 0,
+
     # Disable these to not build components which can be externally provided.
     'build_expat%': 1,
     'build_json%': 1,
-    'build_libjpeg%': 1,
     'build_libsrtp%': 1,
     'build_libvpx%': 1,
+    'libvpx_build_vp9%': 1,
     'build_libyuv%': 1,
     'build_openmax_dl%': 1,
     'build_opus%': 1,
@@ -112,7 +142,7 @@
     'have_dbus_glib%': 0,
 
     # Make it possible to provide custom locations for some libraries.
-    'libvpx_dir%': '<(DEPTH)/third_party/libvpx_new',
+    'libvpx_dir%': '<(DEPTH)/third_party/libvpx',
     'libyuv_dir%': '<(DEPTH)/third_party/libyuv',
     'opus_dir%': '<(opus_dir)',
 
@@ -141,8 +171,18 @@
     # Enabling this may break interop with Android clients that support H264.
     'use_objc_h264%': 0,
 
+    # Enable this to prevent extern symbols from being hidden on iOS builds.
+    # The chromium settings we inherit hide symbols by default on Release
+    # builds. We want our symbols to be visible when distributing WebRTC via
+    # static libraries to avoid linker warnings.
+    'ios_override_visibility%': 0,
+
     # Determines whether QUIC code will be built.
     'use_quic%': 0,
+
+    # By default, use normal platform audio support or dummy audio, but don't
+    # use file-based audio playout and record.
+    'use_dummy_audio_file_devices%': 0,
 
     'conditions': [
       # Enable this to build OpenH264 encoder/FFmpeg decoder. This is supported
@@ -181,9 +221,6 @@
         # Exclude internal ADM since Chromium uses its own IO handling.
         'include_internal_audio_device%': 0,
 
-        # Exclude device management code since Chromium has its own.
-        'include_internal_device_management%': 0,
-
         # Remove tests for Chromium to avoid slowing down GYP generation.
         'include_tests%': 0,
         'restrict_webrtc_logging%': 1,
@@ -196,12 +233,8 @@
 
         'include_pulse_audio%': 1,
         'include_internal_audio_device%': 1,
-        'include_internal_device_management%': 1,
         'include_tests%': 1,
         'restrict_webrtc_logging%': 0,
-      }],
-      ['OS=="ios"', {
-        'build_libjpeg%': 0,
       }],
       ['winrt_platform=="win_phone" or  winrt_platform=="win10_arm"', {
         'enable_protobuf%': 0,
@@ -209,7 +242,7 @@
       ['target_arch=="arm" or target_arch=="arm64" or target_arch=="mipsel"', {
         'prefer_fixed_point%': 1,
       }],
-      ['(target_arch=="arm" and (arm_neon==1 or arm_neon_optional==1)) or target_arch=="arm64" or (winrt_platform=="win_phone" or  winrt_platform=="win10_arm")', {
+      ['(target_arch=="arm" and arm_neon==1) or target_arch=="arm64" or (winrt_platform=="win_phone" or  winrt_platform=="win10_arm")', {
         'build_with_neon%': 1,
       }],
       ['(OS!="ios" and (target_arch!="arm" or arm_version>=7) and target_arch!="mips64el") or (winrt_platform=="win_phone" or  winrt_platform=="win10_arm")', {
@@ -264,8 +297,22 @@
       ['build_with_chromium==1', {
         'defines': [
           # Changes settings for Chromium build.
-          'WEBRTC_CHROMIUM_BUILD',
+          # TODO(kjellander): Cleanup unused ones and move defines closer to the
+          # source when webrtc:4256 is completed.
+          'ENABLE_EXTERNAL_AUTH',
+          'FEATURE_ENABLE_SSL',
+          'HAVE_OPENSSL_SSL_H',
+          'HAVE_SCTP',
+          'HAVE_SRTP',
+          'HAVE_WEBRTC_VIDEO',
+          'HAVE_WEBRTC_VOICE',
           'LOGGING_INSIDE_WEBRTC',
+          'NO_MAIN_THREAD_WRAPPING',
+          'NO_SOUND_SYSTEM',
+          'SRTP_RELATIVE_PATH',
+          'SSL_USE_OPENSSL',
+          'USE_WEBRTC_DEV_BRANCH',
+          'WEBRTC_CHROMIUM_BUILD',
         ],
         'include_dirs': [
           # Include the top-level directory when building in Chrome, so we can
@@ -313,6 +360,7 @@
             'cflags': [
               '-Wimplicit-fallthrough',
               '-Wthread-safety',
+              '-Winconsistent-missing-override',
             ],
           }],
         ],
@@ -333,9 +381,6 @@
             'conditions': [
               ['arm_neon==1', {
                 'defines': ['WEBRTC_HAS_NEON',],
-              }],
-              ['arm_neon==0 and arm_neon_optional==1', {
-                'defines': ['WEBRTC_DETECT_NEON',],
               }],
             ],
           }],
@@ -372,7 +417,19 @@
       ['coverage==1 and OS=="linux"', {
         'cflags': [ '-ftest-coverage',
                     '-fprofile-arcs' ],
+        'ldflags': [ '--coverage' ],
         'link_settings': { 'libraries': [ '-lgcov' ] },
+      }],
+     ['webrtc_sanitize_coverage!=""', {
+        'cflags': [ '-fsanitize-coverage=<(webrtc_sanitize_coverage)' ],
+        'ldflags': [ '-fsanitize-coverage=<(webrtc_sanitize_coverage)' ],
+     }],
+     ['webrtc_sanitize_coverage!="" and OS=="mac"', {
+        'xcode_settings': {
+            'OTHER_CFLAGS': [
+               '-fsanitize-coverage=func',
+            ],
+         },
       }],
       ['os_posix==1', {
         # For access to standard POSIXish features, use WEBRTC_POSIX instead of
@@ -386,6 +443,12 @@
           'WEBRTC_MAC',
           'WEBRTC_IOS',
         ],
+      }],
+      ['OS=="ios" and ios_override_visibility==1', {
+        'xcode_settings': {
+          'GCC_INLINES_ARE_PRIVATE_EXTERN': 'NO',
+          'GCC_SYMBOLS_PRIVATE_EXTERN': 'NO',
+        }
       }],
       ['OS=="ios" and use_objc_h264==1', {
         'defines': [
@@ -441,9 +504,34 @@
            }],
          ],
       }],
+      ['chromeos==1', {
+        'defines': [
+          'CHROMEOS',
+        ],
+      }],
+      ['os_bsd==1', {
+        'defines': [
+          'BSD',
+        ],
+      }],
+      ['OS=="openbsd"', {
+        'defines': [
+          'OPENBSD',
+        ],
+      }],
+      ['OS=="freebsd"', {
+        'defines': [
+          'FREEBSD',
+        ],
+      }],
       ['include_internal_audio_device==1', {
         'defines': [
           'WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE',
+        ],
+      }],
+      ['libvpx_build_vp9==0', {
+        'defines': [
+          'RTC_DISABLE_VP9',
         ],
       }],
     ], # conditions
@@ -458,6 +546,14 @@
         ['build_with_chromium==1', {
           'defines': [
             # Changes settings for Chromium build.
+            # TODO(kjellander): Cleanup unused ones and move defines closer to
+            # the source when webrtc:4256 is completed.
+            'FEATURE_ENABLE_SSL',
+            'FEATURE_ENABLE_VOICEMAIL',
+            'EXPAT_RELATIVE_PATH',
+            'GTEST_RELATIVE_PATH',
+            'NO_MAIN_THREAD_WRAPPING',
+            'NO_SOUND_SYSTEM',
             'WEBRTC_CHROMIUM_BUILD',
           ],
           'include_dirs': [
@@ -485,6 +581,7 @@
         ['OS=="win"', {
           'defines': [
             'WEBRTC_WIN',
+            '_CRT_SECURE_NO_WARNINGS',  # Suppress warnings about _vsnprinf
           ],
         }],
         ['OS=="linux"', {
@@ -503,6 +600,26 @@
           # of a more specific macro.
           'defines': [
             'WEBRTC_POSIX',
+          ],
+        }],
+        ['chromeos==1', {
+          'defines': [
+            'CHROMEOS',
+          ],
+        }],
+        ['os_bsd==1', {
+          'defines': [
+            'BSD',
+          ],
+        }],
+        ['OS=="openbsd"', {
+          'defines': [
+            'OPENBSD',
+          ],
+        }],
+        ['OS=="freebsd"', {
+          'defines': [
+            'FREEBSD',
           ],
         }],
       ],

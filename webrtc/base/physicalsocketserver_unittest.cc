@@ -8,18 +8,24 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
 #include <signal.h>
 #include <stdarg.h>
 
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/physicalsocketserver.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/socket_unittest.h"
 #include "webrtc/base/testutils.h"
 #include "webrtc/base/thread.h"
 
 namespace rtc {
+
+#define MAYBE_SKIP_IPV6                    \
+  if (!HasIPv6Enabled()) {                 \
+    LOG(LS_INFO) << "No IPv6... skipping"; \
+    return;                                \
+  }
 
 class PhysicalSocketTest;
 
@@ -100,7 +106,7 @@ class PhysicalSocketTest : public SocketTest {
   void ConnectInternalAcceptError(const IPAddress& loopback);
   void WritableAfterPartialWrite(const IPAddress& loopback);
 
-  rtc::scoped_ptr<FakePhysicalSocketServer> server_;
+  std::unique_ptr<FakePhysicalSocketServer> server_;
   SocketServerScope scope_;
   bool fail_accept_;
   int max_send_size_;
@@ -145,13 +151,7 @@ TEST_F(PhysicalSocketTest, TestConnectIPv4) {
   SocketTest::TestConnectIPv4();
 }
 
-// Crashes on Linux. See webrtc:4923.
-#if defined(WEBRTC_LINUX)
-#define MAYBE_TestConnectIPv6 DISABLED_TestConnectIPv6
-#else
-#define MAYBE_TestConnectIPv6 TestConnectIPv6
-#endif
-TEST_F(PhysicalSocketTest, MAYBE_TestConnectIPv6) {
+TEST_F(PhysicalSocketTest, TestConnectIPv6) {
   SocketTest::TestConnectIPv6();
 }
 
@@ -172,20 +172,20 @@ void PhysicalSocketTest::ConnectInternalAcceptError(const IPAddress& loopback) {
   SocketAddress accept_addr;
 
   // Create two clients.
-  scoped_ptr<AsyncSocket> client1(server_->CreateAsyncSocket(loopback.family(),
-                                                             SOCK_STREAM));
+  std::unique_ptr<AsyncSocket> client1(
+      server_->CreateAsyncSocket(loopback.family(), SOCK_STREAM));
   sink.Monitor(client1.get());
   EXPECT_EQ(AsyncSocket::CS_CLOSED, client1->GetState());
   EXPECT_PRED1(IsUnspecOrEmptyIP, client1->GetLocalAddress().ipaddr());
 
-  scoped_ptr<AsyncSocket> client2(server_->CreateAsyncSocket(loopback.family(),
-                                                             SOCK_STREAM));
+  std::unique_ptr<AsyncSocket> client2(
+      server_->CreateAsyncSocket(loopback.family(), SOCK_STREAM));
   sink.Monitor(client2.get());
   EXPECT_EQ(AsyncSocket::CS_CLOSED, client2->GetState());
   EXPECT_PRED1(IsUnspecOrEmptyIP, client2->GetLocalAddress().ipaddr());
 
   // Create server and listen.
-  scoped_ptr<AsyncSocket> server(
+  std::unique_ptr<AsyncSocket> server(
       server_->CreateAsyncSocket(loopback.family(), SOCK_STREAM));
   sink.Monitor(server.get());
   EXPECT_EQ(0, server->Bind(SocketAddress(loopback, 0)));
@@ -211,7 +211,7 @@ void PhysicalSocketTest::ConnectInternalAcceptError(const IPAddress& loopback) {
   EXPECT_TRUE_WAIT((sink.Check(server.get(), testing::SSE_READ)), kTimeout);
   // Simulate "::accept" returning an error.
   SetFailAccept(true);
-  scoped_ptr<AsyncSocket> accepted(server->Accept(&accept_addr));
+  std::unique_ptr<AsyncSocket> accepted(server->Accept(&accept_addr));
   EXPECT_FALSE(accepted);
   ASSERT_TRUE(accept_addr.IsNil());
 
@@ -233,7 +233,7 @@ void PhysicalSocketTest::ConnectInternalAcceptError(const IPAddress& loopback) {
   // Server has pending connection, try to accept it (will succeed).
   EXPECT_TRUE_WAIT((sink.Check(server.get(), testing::SSE_READ)), kTimeout);
   SetFailAccept(false);
-  scoped_ptr<AsyncSocket> accepted2(server->Accept(&accept_addr));
+  std::unique_ptr<AsyncSocket> accepted2(server->Accept(&accept_addr));
   ASSERT_TRUE(accepted2);
   EXPECT_FALSE(accept_addr.IsNil());
   EXPECT_EQ(accepted2->GetRemoteAddress(), accept_addr);
@@ -243,13 +243,8 @@ TEST_F(PhysicalSocketTest, TestConnectAcceptErrorIPv4) {
   ConnectInternalAcceptError(kIPv4Loopback);
 }
 
-// Crashes on Linux. See webrtc:4923.
-#if defined(WEBRTC_LINUX)
-#define MAYBE_TestConnectAcceptErrorIPv6 DISABLED_TestConnectAcceptErrorIPv6
-#else
-#define MAYBE_TestConnectAcceptErrorIPv6 TestConnectAcceptErrorIPv6
-#endif
-TEST_F(PhysicalSocketTest, MAYBE_TestConnectAcceptErrorIPv6) {
+TEST_F(PhysicalSocketTest, TestConnectAcceptErrorIPv6) {
+  MAYBE_SKIP_IPV6;
   ConnectInternalAcceptError(kIPv6Loopback);
 }
 
@@ -264,29 +259,28 @@ void PhysicalSocketTest::WritableAfterPartialWrite(const IPAddress& loopback) {
   TcpInternal(loopback, kDataSize, kMaxSendSize);
 }
 
-TEST_F(PhysicalSocketTest, TestWritableAfterPartialWriteIPv4) {
+// https://bugs.chromium.org/p/webrtc/issues/detail?id=6167
+#if defined(WEBRTC_WIN)
+#define MAYBE_TestWritableAfterPartialWriteIPv4 DISABLED_TestWritableAfterPartialWriteIPv4
+#else
+#define MAYBE_TestWritableAfterPartialWriteIPv4 TestWritableAfterPartialWriteIPv4
+#endif
+TEST_F(PhysicalSocketTest, MAYBE_TestWritableAfterPartialWriteIPv4) {
   WritableAfterPartialWrite(kIPv4Loopback);
 }
 
-// Crashes on Linux. See webrtc:4923.
-#if defined(WEBRTC_LINUX)
-#define MAYBE_TestWritableAfterPartialWriteIPv6 \
-    DISABLED_TestWritableAfterPartialWriteIPv6
+// https://bugs.chromium.org/p/webrtc/issues/detail?id=6167
+#if defined(WEBRTC_WIN)
+#define MAYBE_TestWritableAfterPartialWriteIPv6 DISABLED_TestWritableAfterPartialWriteIPv6
 #else
-#define MAYBE_TestWritableAfterPartialWriteIPv6 \
-    TestWritableAfterPartialWriteIPv6
+#define MAYBE_TestWritableAfterPartialWriteIPv6 TestWritableAfterPartialWriteIPv6
 #endif
 TEST_F(PhysicalSocketTest, MAYBE_TestWritableAfterPartialWriteIPv6) {
+  MAYBE_SKIP_IPV6;
   WritableAfterPartialWrite(kIPv6Loopback);
 }
 
-// Crashes on Linux. See webrtc:4923.
-#if defined(WEBRTC_LINUX)
-#define MAYBE_TestConnectFailIPv6 DISABLED_TestConnectFailIPv6
-#else
-#define MAYBE_TestConnectFailIPv6 TestConnectFailIPv6
-#endif
-TEST_F(PhysicalSocketTest, MAYBE_TestConnectFailIPv6) {
+TEST_F(PhysicalSocketTest, TestConnectFailIPv6) {
   SocketTest::TestConnectFailIPv6();
 }
 
@@ -294,15 +288,7 @@ TEST_F(PhysicalSocketTest, TestConnectWithDnsLookupFailIPv4) {
   SocketTest::TestConnectWithDnsLookupFailIPv4();
 }
 
-// Crashes on Linux. See webrtc:4923.
-#if defined(WEBRTC_LINUX)
-#define MAYBE_TestConnectWithDnsLookupFailIPv6 \
-  DISABLED_TestConnectWithDnsLookupFailIPv6
-#else
-#define MAYBE_TestConnectWithDnsLookupFailIPv6 \
-  TestConnectWithDnsLookupFailIPv6
-#endif
-TEST_F(PhysicalSocketTest, MAYBE_TestConnectWithDnsLookupFailIPv6) {
+TEST_F(PhysicalSocketTest, TestConnectWithDnsLookupFailIPv6) {
   SocketTest::TestConnectWithDnsLookupFailIPv6();
 }
 
@@ -311,14 +297,7 @@ TEST_F(PhysicalSocketTest, TestConnectWithClosedSocketIPv4) {
   SocketTest::TestConnectWithClosedSocketIPv4();
 }
 
-// Crashes on Linux. See webrtc:4923.
-#if defined(WEBRTC_LINUX)
-#define MAYBE_TestConnectWithClosedSocketIPv6 \
-  DISABLED_TestConnectWithClosedSocketIPv6
-#else
-#define MAYBE_TestConnectWithClosedSocketIPv6 TestConnectWithClosedSocketIPv6
-#endif
-TEST_F(PhysicalSocketTest, MAYBE_TestConnectWithClosedSocketIPv6) {
+TEST_F(PhysicalSocketTest, TestConnectWithClosedSocketIPv6) {
   SocketTest::TestConnectWithClosedSocketIPv6();
 }
 
@@ -326,14 +305,7 @@ TEST_F(PhysicalSocketTest, TestConnectWhileNotClosedIPv4) {
   SocketTest::TestConnectWhileNotClosedIPv4();
 }
 
-// Crashes on Linux. See webrtc:4923.
-#if defined(WEBRTC_LINUX)
-#define MAYBE_TestConnectWhileNotClosedIPv6 \
-  DISABLED_TestConnectWhileNotClosedIPv6
-#else
-#define MAYBE_TestConnectWhileNotClosedIPv6 TestConnectWhileNotClosedIPv6
-#endif
-TEST_F(PhysicalSocketTest, MAYBE_TestConnectWhileNotClosedIPv6) {
+TEST_F(PhysicalSocketTest, TestConnectWhileNotClosedIPv6) {
   SocketTest::TestConnectWhileNotClosedIPv6();
 }
 
@@ -341,14 +313,7 @@ TEST_F(PhysicalSocketTest, TestServerCloseDuringConnectIPv4) {
   SocketTest::TestServerCloseDuringConnectIPv4();
 }
 
-// Crashes on Linux. See webrtc:4923.
-#if defined(WEBRTC_LINUX)
-#define MAYBE_TestServerCloseDuringConnectIPv6 \
-  DISABLED_TestServerCloseDuringConnectIPv6
-#else
-#define MAYBE_TestServerCloseDuringConnectIPv6 TestServerCloseDuringConnectIPv6
-#endif
-TEST_F(PhysicalSocketTest, MAYBE_TestServerCloseDuringConnectIPv6) {
+TEST_F(PhysicalSocketTest, TestServerCloseDuringConnectIPv6) {
   SocketTest::TestServerCloseDuringConnectIPv6();
 }
 
@@ -356,14 +321,7 @@ TEST_F(PhysicalSocketTest, TestClientCloseDuringConnectIPv4) {
   SocketTest::TestClientCloseDuringConnectIPv4();
 }
 
-// Crashes on Linux. See webrtc:4923.
-#if defined(WEBRTC_LINUX)
-#define MAYBE_TestClientCloseDuringConnectIPv6 \
-  DISABLED_TestClientCloseDuringConnectIPv6
-#else
-#define MAYBE_TestClientCloseDuringConnectIPv6 TestClientCloseDuringConnectIPv6
-#endif
-TEST_F(PhysicalSocketTest, MAYBE_TestClientCloseDuringConnectIPv6) {
+TEST_F(PhysicalSocketTest, TestClientCloseDuringConnectIPv6) {
   SocketTest::TestClientCloseDuringConnectIPv6();
 }
 
@@ -371,13 +329,7 @@ TEST_F(PhysicalSocketTest, TestServerCloseIPv4) {
   SocketTest::TestServerCloseIPv4();
 }
 
-// Crashes on Linux. See webrtc:4923.
-#if defined(WEBRTC_LINUX)
-#define MAYBE_TestServerCloseIPv6 DISABLED_TestServerCloseIPv6
-#else
-#define MAYBE_TestServerCloseIPv6 TestServerCloseIPv6
-#endif
-TEST_F(PhysicalSocketTest, MAYBE_TestServerCloseIPv6) {
+TEST_F(PhysicalSocketTest, TestServerCloseIPv6) {
   SocketTest::TestServerCloseIPv6();
 }
 
@@ -385,14 +337,7 @@ TEST_F(PhysicalSocketTest, TestCloseInClosedCallbackIPv4) {
   SocketTest::TestCloseInClosedCallbackIPv4();
 }
 
-// Crashes on Linux. See webrtc:4923.
-#if defined(WEBRTC_LINUX)
-#define MAYBE_TestCloseInClosedCallbackIPv6 \
-  DISABLED_TestCloseInClosedCallbackIPv6
-#else
-#define MAYBE_TestCloseInClosedCallbackIPv6 TestCloseInClosedCallbackIPv6
-#endif
-TEST_F(PhysicalSocketTest, MAYBE_TestCloseInClosedCallbackIPv6) {
+TEST_F(PhysicalSocketTest, TestCloseInClosedCallbackIPv6) {
   SocketTest::TestCloseInClosedCallbackIPv6();
 }
 
@@ -400,13 +345,7 @@ TEST_F(PhysicalSocketTest, TestSocketServerWaitIPv4) {
   SocketTest::TestSocketServerWaitIPv4();
 }
 
-// Crashes on Linux. See webrtc:4923.
-#if defined(WEBRTC_LINUX)
-#define MAYBE_TestSocketServerWaitIPv6 DISABLED_TestSocketServerWaitIPv6
-#else
-#define MAYBE_TestSocketServerWaitIPv6 TestSocketServerWaitIPv6
-#endif
-TEST_F(PhysicalSocketTest, MAYBE_TestSocketServerWaitIPv6) {
+TEST_F(PhysicalSocketTest, TestSocketServerWaitIPv6) {
   SocketTest::TestSocketServerWaitIPv6();
 }
 
@@ -414,13 +353,7 @@ TEST_F(PhysicalSocketTest, TestTcpIPv4) {
   SocketTest::TestTcpIPv4();
 }
 
-// Crashes on Linux. See webrtc:4923.
-#if defined(WEBRTC_LINUX)
-#define MAYBE_TestTcpIPv6 DISABLED_TestTcpIPv6
-#else
-#define MAYBE_TestTcpIPv6 TestTcpIPv6
-#endif
-TEST_F(PhysicalSocketTest, MAYBE_TestTcpIPv6) {
+TEST_F(PhysicalSocketTest, TestTcpIPv6) {
   SocketTest::TestTcpIPv6();
 }
 
@@ -428,13 +361,7 @@ TEST_F(PhysicalSocketTest, TestUdpIPv4) {
   SocketTest::TestUdpIPv4();
 }
 
-// Crashes on Linux. See webrtc:4923.
-#if defined(WEBRTC_LINUX)
-#define MAYBE_TestUdpIPv6 DISABLED_TestUdpIPv6
-#else
-#define MAYBE_TestUdpIPv6 TestUdpIPv6
-#endif
-TEST_F(PhysicalSocketTest, MAYBE_TestUdpIPv6) {
+TEST_F(PhysicalSocketTest, TestUdpIPv6) {
   SocketTest::TestUdpIPv6();
 }
 
@@ -457,7 +384,13 @@ TEST_F(PhysicalSocketTest, MAYBE_TestUdpReadyToSendIPv4) {
   SocketTest::TestUdpReadyToSendIPv4();
 }
 
-TEST_F(PhysicalSocketTest, TestUdpReadyToSendIPv6) {
+// https://bugs.chromium.org/p/webrtc/issues/detail?id=6167
+#if defined(WEBRTC_WIN)
+#define MAYBE_TestUdpReadyToSendIPv6 DISABLED_TestUdpReadyToSendIPv6
+#else
+#define MAYBE_TestUdpReadyToSendIPv6 TestUdpReadyToSendIPv6
+#endif
+TEST_F(PhysicalSocketTest, MAYBE_TestUdpReadyToSendIPv6) {
   SocketTest::TestUdpReadyToSendIPv6();
 }
 
@@ -470,6 +403,17 @@ TEST_F(PhysicalSocketTest, TestGetSetOptionsIPv6) {
 }
 
 #if defined(WEBRTC_POSIX)
+
+// We don't get recv timestamps on Mac.
+#if !defined(WEBRTC_MAC)
+TEST_F(PhysicalSocketTest, TestSocketRecvTimestampIPv4) {
+  SocketTest::TestSocketRecvTimestampIPv4();
+}
+
+TEST_F(PhysicalSocketTest, TestSocketRecvTimestampIPv6) {
+  SocketTest::TestSocketRecvTimestampIPv6();
+}
+#endif
 
 class PosixSignalDeliveryTest : public testing::Test {
  public:
@@ -515,7 +459,7 @@ class PosixSignalDeliveryTest : public testing::Test {
   static std::vector<int> signals_received_;
   static Thread *signaled_thread_;
 
-  scoped_ptr<PhysicalSocketServer> ss_;
+  std::unique_ptr<PhysicalSocketServer> ss_;
 };
 
 std::vector<int> PosixSignalDeliveryTest::signals_received_;
@@ -583,8 +527,8 @@ TEST_F(PosixSignalDeliveryTest, SignalOnDifferentThread) {
   // Start a new thread that raises it. It will have to be delivered to that
   // thread. Our implementation should safely handle it and dispatch
   // RecordSignal() on this thread.
-  scoped_ptr<Thread> thread(new Thread());
-  scoped_ptr<RaiseSigTermRunnable> runnable(new RaiseSigTermRunnable());
+  std::unique_ptr<Thread> thread(new Thread());
+  std::unique_ptr<RaiseSigTermRunnable> runnable(new RaiseSigTermRunnable());
   thread->Start(runnable.get());
   EXPECT_TRUE(ss_->Wait(1500, true));
   EXPECT_TRUE(ExpectSignal(SIGTERM));

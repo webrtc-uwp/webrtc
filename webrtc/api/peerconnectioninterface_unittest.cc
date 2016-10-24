@@ -8,9 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
 #include <string>
 #include <utility>
 
+#include "testing/gmock/include/gmock/gmock.h"
 #include "webrtc/api/audiotrack.h"
 #include "webrtc/api/jsepsessiondescription.h"
 #include "webrtc/api/mediastream.h"
@@ -24,20 +26,21 @@
 #include "webrtc/api/test/androidtestinitializer.h"
 #endif
 #include "webrtc/api/test/fakeconstraints.h"
-#include "webrtc/api/test/fakedtlsidentitystore.h"
+#include "webrtc/api/test/fakertccertificategenerator.h"
+#include "webrtc/api/test/fakevideotracksource.h"
 #include "webrtc/api/test/mockpeerconnectionobservers.h"
 #include "webrtc/api/test/testsdpstrings.h"
-#include "webrtc/api/videosource.h"
+#include "webrtc/api/videocapturertracksource.h"
 #include "webrtc/api/videotrack.h"
 #include "webrtc/base/gunit.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/ssladapter.h"
 #include "webrtc/base/sslstreamadapter.h"
 #include "webrtc/base/stringutils.h"
 #include "webrtc/base/thread.h"
 #include "webrtc/media/base/fakevideocapturer.h"
 #include "webrtc/media/sctp/sctpdataengine.h"
-#include "webrtc/p2p/client/fakeportallocator.h"
+#include "webrtc/p2p/base/fakeportallocator.h"
+#include "webrtc/p2p/base/faketransportcontroller.h"
 #include "webrtc/pc/mediasession.h"
 
 static const char kStreamLabel1[] = "local_stream_1";
@@ -237,8 +240,8 @@ static const char kSdpStringMs1Video1[] =
     return;                                         \
   }
 
-using rtc::scoped_ptr;
-using rtc::scoped_refptr;
+using ::testing::Exactly;
+using cricket::StreamParams;
 using webrtc::AudioSourceInterface;
 using webrtc::AudioTrack;
 using webrtc::AudioTrackInterface;
@@ -246,6 +249,7 @@ using webrtc::DataBuffer;
 using webrtc::DataChannelInterface;
 using webrtc::FakeConstraints;
 using webrtc::IceCandidateInterface;
+using webrtc::JsepSessionDescription;
 using webrtc::MediaConstraintsInterface;
 using webrtc::MediaStream;
 using webrtc::MediaStreamInterface;
@@ -254,6 +258,8 @@ using webrtc::MockCreateSessionDescriptionObserver;
 using webrtc::MockDataChannelObserver;
 using webrtc::MockSetSessionDescriptionObserver;
 using webrtc::MockStatsObserver;
+using webrtc::NotifierInterface;
+using webrtc::ObserverInterface;
 using webrtc::PeerConnectionInterface;
 using webrtc::PeerConnectionObserver;
 using webrtc::RtpReceiverInterface;
@@ -262,7 +268,7 @@ using webrtc::SdpParseError;
 using webrtc::SessionDescriptionInterface;
 using webrtc::StreamCollection;
 using webrtc::StreamCollectionInterface;
-using webrtc::VideoSourceInterface;
+using webrtc::VideoTrackSourceInterface;
 using webrtc::VideoTrack;
 using webrtc::VideoTrackInterface;
 
@@ -321,12 +327,26 @@ bool ContainsSender(
   return false;
 }
 
+// Check if |senders| contains the specified sender, by id and stream id.
+bool ContainsSender(
+    const std::vector<rtc::scoped_refptr<RtpSenderInterface>>& senders,
+    const std::string& id,
+    const std::string& stream_id) {
+  for (const auto& sender : senders) {
+    if (sender->id() == id && sender->stream_ids()[0] == stream_id) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Create a collection of streams.
 // CreateStreamCollection(1) creates a collection that
 // correspond to kSdpStringWithStream1.
 // CreateStreamCollection(2) correspond to kSdpStringWithStream1And2.
 rtc::scoped_refptr<StreamCollection> CreateStreamCollection(
-    int number_of_streams) {
+    int number_of_streams,
+    int tracks_per_stream) {
   rtc::scoped_refptr<StreamCollection> local_collection(
       StreamCollection::Create());
 
@@ -334,15 +354,19 @@ rtc::scoped_refptr<StreamCollection> CreateStreamCollection(
     rtc::scoped_refptr<webrtc::MediaStreamInterface> stream(
         webrtc::MediaStream::Create(kStreams[i]));
 
-    // Add a local audio track.
-    rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
-        webrtc::AudioTrack::Create(kAudioTracks[i], nullptr));
-    stream->AddTrack(audio_track);
+    for (int j = 0; j < tracks_per_stream; ++j) {
+      // Add a local audio track.
+      rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
+          webrtc::AudioTrack::Create(kAudioTracks[i * tracks_per_stream + j],
+                                     nullptr));
+      stream->AddTrack(audio_track);
 
-    // Add a local video track.
-    rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
-        webrtc::VideoTrack::Create(kVideoTracks[i], nullptr));
-    stream->AddTrack(video_track);
+      // Add a local video track.
+      rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
+          webrtc::VideoTrack::Create(kVideoTracks[i * tracks_per_stream + j],
+                                     webrtc::FakeVideoTrackSource::Create()));
+      stream->AddTrack(video_track);
+    }
 
     local_collection->AddStream(stream);
   }
@@ -385,10 +409,33 @@ bool CompareStreamCollections(StreamCollectionInterface* s1,
   return true;
 }
 
+// Helper class to test Observer.
+class MockTrackObserver : public ObserverInterface {
+ public:
+  explicit MockTrackObserver(NotifierInterface* notifier)
+      : notifier_(notifier) {
+    notifier_->RegisterObserver(this);
+  }
+
+  ~MockTrackObserver() { Unregister(); }
+
+  void Unregister() {
+    if (notifier_) {
+      notifier_->UnregisterObserver(this);
+      notifier_ = nullptr;
+    }
+  }
+
+  MOCK_METHOD0(OnChanged, void());
+
+ private:
+  NotifierInterface* notifier_;
+};
+
 class MockPeerConnectionObserver : public PeerConnectionObserver {
  public:
   MockPeerConnectionObserver() : remote_streams_(StreamCollection::Create()) {}
-  ~MockPeerConnectionObserver() {
+  virtual ~MockPeerConnectionObserver() {
   }
   void SetPeerConnectionInterface(PeerConnectionInterface* pc) {
     pc_ = pc;
@@ -396,8 +443,8 @@ class MockPeerConnectionObserver : public PeerConnectionObserver {
       state_ = pc_->signaling_state();
     }
   }
-  virtual void OnSignalingChange(
-      PeerConnectionInterface::SignalingState new_state) {
+  void OnSignalingChange(
+      PeerConnectionInterface::SignalingState new_state) override {
     EXPECT_EQ(pc_->signaling_state(), new_state);
     state_ = new_state;
   }
@@ -426,27 +473,31 @@ class MockPeerConnectionObserver : public PeerConnectionObserver {
     return remote_streams_->find(label);
   }
   StreamCollectionInterface* remote_streams() const { return remote_streams_; }
-  void OnAddStream(MediaStreamInterface* stream) override {
+  void OnAddStream(rtc::scoped_refptr<MediaStreamInterface> stream) override {
     last_added_stream_ = stream;
     remote_streams_->AddStream(stream);
   }
-  void OnRemoveStream(MediaStreamInterface* stream) override {
+  void OnRemoveStream(
+      rtc::scoped_refptr<MediaStreamInterface> stream) override {
     last_removed_stream_ = stream;
     remote_streams_->RemoveStream(stream);
   }
   void OnRenegotiationNeeded() override { renegotiation_needed_ = true; }
-  void OnDataChannel(DataChannelInterface* data_channel) override {
+  void OnDataChannel(
+      rtc::scoped_refptr<DataChannelInterface> data_channel) override {
     last_datachannel_ = data_channel;
   }
 
   void OnIceConnectionChange(
       PeerConnectionInterface::IceConnectionState new_state) override {
     EXPECT_EQ(pc_->ice_connection_state(), new_state);
+    callback_triggered = true;
   }
   void OnIceGatheringChange(
       PeerConnectionInterface::IceGatheringState new_state) override {
     EXPECT_EQ(pc_->ice_gathering_state(), new_state);
     ice_complete_ = new_state == PeerConnectionInterface::kIceGatheringComplete;
+    callback_triggered = true;
   }
   void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override {
     EXPECT_NE(PeerConnectionInterface::kIceGatheringNew,
@@ -458,6 +509,16 @@ class MockPeerConnectionObserver : public PeerConnectionObserver {
     last_candidate_.reset(webrtc::CreateIceCandidate(candidate->sdp_mid(),
         candidate->sdp_mline_index(), sdp, NULL));
     EXPECT_TRUE(last_candidate_.get() != NULL);
+    callback_triggered = true;
+  }
+
+  void OnIceCandidatesRemoved(
+      const std::vector<cricket::Candidate>& candidates) override {
+    callback_triggered = true;
+  }
+
+  void OnIceConnectionReceivingChange(bool receiving) override {
+    callback_triggered = true;
   }
 
   // Returns the label of the last added stream.
@@ -473,20 +534,53 @@ class MockPeerConnectionObserver : public PeerConnectionObserver {
     return "";
   }
 
-  scoped_refptr<PeerConnectionInterface> pc_;
+  rtc::scoped_refptr<PeerConnectionInterface> pc_;
   PeerConnectionInterface::SignalingState state_;
-  scoped_ptr<IceCandidateInterface> last_candidate_;
-  scoped_refptr<DataChannelInterface> last_datachannel_;
+  std::unique_ptr<IceCandidateInterface> last_candidate_;
+  rtc::scoped_refptr<DataChannelInterface> last_datachannel_;
   rtc::scoped_refptr<StreamCollection> remote_streams_;
   bool renegotiation_needed_ = false;
   bool ice_complete_ = false;
+  bool callback_triggered = false;
 
  private:
-  scoped_refptr<MediaStreamInterface> last_added_stream_;
-  scoped_refptr<MediaStreamInterface> last_removed_stream_;
+  rtc::scoped_refptr<MediaStreamInterface> last_added_stream_;
+  rtc::scoped_refptr<MediaStreamInterface> last_removed_stream_;
 };
 
 }  // namespace
+
+// The PeerConnectionMediaConfig tests below verify that configuration
+// and constraints are propagated into the MediaConfig passed to
+// CreateMediaController. These settings are intended for MediaChannel
+// constructors, but that is not exercised by these unittest.
+class PeerConnectionFactoryForTest : public webrtc::PeerConnectionFactory {
+ public:
+  webrtc::MediaControllerInterface* CreateMediaController(
+      const cricket::MediaConfig& config) const override {
+    create_media_controller_called_ = true;
+    create_media_controller_config_ = config;
+
+    webrtc::MediaControllerInterface* mc =
+        PeerConnectionFactory::CreateMediaController(config);
+    EXPECT_TRUE(mc != nullptr);
+    return mc;
+  }
+
+  cricket::TransportController* CreateTransportController(
+      cricket::PortAllocator* port_allocator,
+      bool redetermine_role_on_ice_restart) override {
+    transport_controller = new cricket::TransportController(
+        rtc::Thread::Current(), rtc::Thread::Current(), port_allocator,
+        redetermine_role_on_ice_restart);
+    return transport_controller;
+  }
+
+  cricket::TransportController* transport_controller;
+  // Mutable, so they can be modified in the above const-declared method.
+  mutable bool create_media_controller_called_ = false;
+  mutable cricket::MediaConfig create_media_controller_config_;
+};
 
 class PeerConnectionInterfaceTest : public testing::Test {
  protected:
@@ -498,31 +592,43 @@ class PeerConnectionInterfaceTest : public testing::Test {
 
   virtual void SetUp() {
     pc_factory_ = webrtc::CreatePeerConnectionFactory(
-        rtc::Thread::Current(), rtc::Thread::Current(), NULL, NULL,
-        NULL);
-    ASSERT_TRUE(pc_factory_.get() != NULL);
+        rtc::Thread::Current(), rtc::Thread::Current(), rtc::Thread::Current(),
+        nullptr, nullptr, nullptr);
+    ASSERT_TRUE(pc_factory_);
+    pc_factory_for_test_ =
+        new rtc::RefCountedObject<PeerConnectionFactoryForTest>();
+    pc_factory_for_test_->Initialize();
   }
 
   void CreatePeerConnection() {
-    CreatePeerConnection("", "", NULL);
+    CreatePeerConnection(PeerConnectionInterface::RTCConfiguration(), nullptr);
   }
 
   void CreatePeerConnection(webrtc::MediaConstraintsInterface* constraints) {
-    CreatePeerConnection("", "", constraints);
+    CreatePeerConnection(PeerConnectionInterface::RTCConfiguration(),
+                         constraints);
   }
 
-  void CreatePeerConnection(const std::string& uri,
-                            const std::string& password,
-                            webrtc::MediaConstraintsInterface* constraints) {
+  void CreatePeerConnectionWithIceTransportsType(
+      PeerConnectionInterface::IceTransportsType type) {
+    PeerConnectionInterface::RTCConfiguration config;
+    config.type = type;
+    return CreatePeerConnection(config, nullptr);
+  }
+
+  void CreatePeerConnectionWithIceServer(const std::string& uri,
+                                         const std::string& password) {
     PeerConnectionInterface::RTCConfiguration config;
     PeerConnectionInterface::IceServer server;
-    if (!uri.empty()) {
-      server.uri = uri;
-      server.password = password;
-      config.servers.push_back(server);
-    }
+    server.uri = uri;
+    server.password = password;
+    config.servers.push_back(server);
+    CreatePeerConnection(config, nullptr);
+  }
 
-    rtc::scoped_ptr<cricket::FakePortAllocator> port_allocator(
+  void CreatePeerConnection(PeerConnectionInterface::RTCConfiguration config,
+                            webrtc::MediaConstraintsInterface* constraints) {
+    std::unique_ptr<cricket::FakePortAllocator> port_allocator(
         new cricket::FakePortAllocator(rtc::Thread::Current(), nullptr));
     port_allocator_ = port_allocator.get();
 
@@ -537,17 +643,17 @@ class PeerConnectionInterfaceTest : public testing::Test {
           webrtc::MediaConstraintsInterface::kEnableDtlsSrtp, false);
     }
 
-    scoped_ptr<webrtc::DtlsIdentityStoreInterface> dtls_identity_store;
+    std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator;
     bool dtls;
     if (FindConstraint(constraints,
                        webrtc::MediaConstraintsInterface::kEnableDtlsSrtp,
                        &dtls,
                        nullptr) && dtls) {
-      dtls_identity_store.reset(new FakeDtlsIdentityStore());
+      cert_generator.reset(new FakeRTCCertificateGenerator());
     }
     pc_ = pc_factory_->CreatePeerConnection(
         config, constraints, std::move(port_allocator),
-        std::move(dtls_identity_store), &observer_);
+        std::move(cert_generator), &observer_);
     ASSERT_TRUE(pc_.get() != NULL);
     observer_.SetPeerConnectionInterface(pc_.get());
     EXPECT_EQ(PeerConnectionInterface::kStable, observer_.state_);
@@ -559,14 +665,14 @@ class PeerConnectionInterfaceTest : public testing::Test {
     server.uri = uri;
     config.servers.push_back(server);
 
-    scoped_refptr<PeerConnectionInterface> pc;
+    rtc::scoped_refptr<PeerConnectionInterface> pc;
     pc = pc_factory_->CreatePeerConnection(config, nullptr, nullptr, nullptr,
                                            &observer_);
     EXPECT_EQ(nullptr, pc);
   }
 
   void CreatePeerConnectionWithDifferentConfigurations() {
-    CreatePeerConnection(kStunAddressOnly, "", NULL);
+    CreatePeerConnectionWithIceServer(kStunAddressOnly, "");
     EXPECT_EQ(1u, port_allocator_->stun_servers().size());
     EXPECT_EQ(0u, port_allocator_->turn_servers().size());
     EXPECT_EQ("address", port_allocator_->stun_servers().begin()->hostname());
@@ -577,7 +683,7 @@ class PeerConnectionInterfaceTest : public testing::Test {
     CreatePeerConnectionExpectFail(kStunAddressPortAndMore1);
     CreatePeerConnectionExpectFail(kStunAddressPortAndMore2);
 
-    CreatePeerConnection(kTurnIceServerUri, kTurnPassword, NULL);
+    CreatePeerConnectionWithIceServer(kTurnIceServerUri, kTurnPassword);
     EXPECT_EQ(0u, port_allocator_->stun_servers().size());
     EXPECT_EQ(1u, port_allocator_->turn_servers().size());
     EXPECT_EQ(kTurnUsername,
@@ -595,11 +701,11 @@ class PeerConnectionInterfaceTest : public testing::Test {
 
   void AddVideoStream(const std::string& label) {
     // Create a local stream.
-    scoped_refptr<MediaStreamInterface> stream(
+    rtc::scoped_refptr<MediaStreamInterface> stream(
         pc_factory_->CreateLocalMediaStream(label));
-    scoped_refptr<VideoSourceInterface> video_source(
+    rtc::scoped_refptr<VideoTrackSourceInterface> video_source(
         pc_factory_->CreateVideoSource(new cricket::FakeVideoCapturer(), NULL));
-    scoped_refptr<VideoTrackInterface> video_track(
+    rtc::scoped_refptr<VideoTrackInterface> video_track(
         pc_factory_->CreateVideoTrack(label + "v0", video_source));
     stream->AddTrack(video_track.get());
     EXPECT_TRUE(pc_->AddStream(stream));
@@ -609,9 +715,9 @@ class PeerConnectionInterfaceTest : public testing::Test {
 
   void AddVoiceStream(const std::string& label) {
     // Create a local stream.
-    scoped_refptr<MediaStreamInterface> stream(
+    rtc::scoped_refptr<MediaStreamInterface> stream(
         pc_factory_->CreateLocalMediaStream(label));
-    scoped_refptr<AudioTrackInterface> audio_track(
+    rtc::scoped_refptr<AudioTrackInterface> audio_track(
         pc_factory_->CreateAudioTrack(label + "a0", NULL));
     stream->AddTrack(audio_track.get());
     EXPECT_TRUE(pc_->AddStream(stream));
@@ -623,21 +729,23 @@ class PeerConnectionInterfaceTest : public testing::Test {
                            const std::string& audio_track_label,
                            const std::string& video_track_label) {
     // Create a local stream.
-    scoped_refptr<MediaStreamInterface> stream(
+    rtc::scoped_refptr<MediaStreamInterface> stream(
         pc_factory_->CreateLocalMediaStream(stream_label));
-    scoped_refptr<AudioTrackInterface> audio_track(
+    rtc::scoped_refptr<AudioTrackInterface> audio_track(
         pc_factory_->CreateAudioTrack(
             audio_track_label, static_cast<AudioSourceInterface*>(NULL)));
     stream->AddTrack(audio_track.get());
-    scoped_refptr<VideoTrackInterface> video_track(
-        pc_factory_->CreateVideoTrack(video_track_label, NULL));
+    rtc::scoped_refptr<VideoTrackInterface> video_track(
+        pc_factory_->CreateVideoTrack(
+            video_track_label,
+            pc_factory_->CreateVideoSource(new cricket::FakeVideoCapturer())));
     stream->AddTrack(video_track.get());
     EXPECT_TRUE(pc_->AddStream(stream));
     EXPECT_TRUE_WAIT(observer_.renegotiation_needed_, kTimeout);
     observer_.renegotiation_needed_ = false;
   }
 
-  bool DoCreateOfferAnswer(SessionDescriptionInterface** desc,
+  bool DoCreateOfferAnswer(std::unique_ptr<SessionDescriptionInterface>* desc,
                            bool offer,
                            MediaConstraintsInterface* constraints) {
     rtc::scoped_refptr<MockCreateSessionDescriptionObserver>
@@ -649,16 +757,16 @@ class PeerConnectionInterfaceTest : public testing::Test {
       pc_->CreateAnswer(observer, constraints);
     }
     EXPECT_EQ_WAIT(true, observer->called(), kTimeout);
-    *desc = observer->release_desc();
+    desc->reset(observer->release_desc());
     return observer->result();
   }
 
-  bool DoCreateOffer(SessionDescriptionInterface** desc,
+  bool DoCreateOffer(std::unique_ptr<SessionDescriptionInterface>* desc,
                      MediaConstraintsInterface* constraints) {
     return DoCreateOfferAnswer(desc, true, constraints);
   }
 
-  bool DoCreateAnswer(SessionDescriptionInterface** desc,
+  bool DoCreateAnswer(std::unique_ptr<SessionDescriptionInterface>* desc,
                       MediaConstraintsInterface* constraints) {
     return DoCreateOfferAnswer(desc, false, constraints);
   }
@@ -672,7 +780,9 @@ class PeerConnectionInterfaceTest : public testing::Test {
     } else {
       pc_->SetRemoteDescription(observer, desc);
     }
-    EXPECT_EQ_WAIT(true, observer->called(), kTimeout);
+    if (pc_->signaling_state() != PeerConnectionInterface::kClosed) {
+      EXPECT_EQ_WAIT(true, observer->called(), kTimeout);
+    }
     return observer->result();
   }
 
@@ -719,8 +829,8 @@ class PeerConnectionInterfaceTest : public testing::Test {
   }
 
   void CreateOfferAsRemoteDescription() {
-    rtc::scoped_ptr<SessionDescriptionInterface> offer;
-    ASSERT_TRUE(DoCreateOffer(offer.use(), nullptr));
+    std::unique_ptr<SessionDescriptionInterface> offer;
+    ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
     std::string sdp;
     EXPECT_TRUE(offer->ToString(&sdp));
     SessionDescriptionInterface* remote_offer =
@@ -739,8 +849,8 @@ class PeerConnectionInterfaceTest : public testing::Test {
   }
 
   void CreateAnswerAsLocalDescription() {
-    scoped_ptr<SessionDescriptionInterface> answer;
-    ASSERT_TRUE(DoCreateAnswer(answer.use(), nullptr));
+    std::unique_ptr<SessionDescriptionInterface> answer;
+    ASSERT_TRUE(DoCreateAnswer(&answer, nullptr));
 
     // TODO(perkj): Currently SetLocalDescription fails if any parameters in an
     // audio codec change, even if the parameter has nothing to do with
@@ -759,8 +869,8 @@ class PeerConnectionInterfaceTest : public testing::Test {
   }
 
   void CreatePrAnswerAsLocalDescription() {
-    scoped_ptr<SessionDescriptionInterface> answer;
-    ASSERT_TRUE(DoCreateAnswer(answer.use(), nullptr));
+    std::unique_ptr<SessionDescriptionInterface> answer;
+    ASSERT_TRUE(DoCreateAnswer(&answer, nullptr));
 
     std::string sdp;
     EXPECT_TRUE(answer->ToString(&sdp));
@@ -779,8 +889,8 @@ class PeerConnectionInterfaceTest : public testing::Test {
   }
 
   void CreateOfferAsLocalDescription() {
-    rtc::scoped_ptr<SessionDescriptionInterface> offer;
-    ASSERT_TRUE(DoCreateOffer(offer.use(), nullptr));
+    std::unique_ptr<SessionDescriptionInterface> offer;
+    ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
     // TODO(perkj): Currently SetLocalDescription fails if any parameters in an
     // audio codec change, even if the parameter has nothing to do with
     // receiving. Not all parameters are serialized to SDP.
@@ -847,15 +957,13 @@ class PeerConnectionInterfaceTest : public testing::Test {
   // This function creates a MediaStream with label kStreams[0] and
   // |number_of_audio_tracks| and |number_of_video_tracks| tracks and the
   // corresponding SessionDescriptionInterface. The SessionDescriptionInterface
-  // is returned in |desc| and the MediaStream is stored in
+  // is returned and the MediaStream is stored in
   // |reference_collection_|
-  void CreateSessionDescriptionAndReference(
-      size_t number_of_audio_tracks,
-      size_t number_of_video_tracks,
-      SessionDescriptionInterface** desc) {
-    ASSERT_TRUE(desc != nullptr);
-    ASSERT_LE(number_of_audio_tracks, 2u);
-    ASSERT_LE(number_of_video_tracks, 2u);
+  std::unique_ptr<SessionDescriptionInterface>
+  CreateSessionDescriptionAndReference(size_t number_of_audio_tracks,
+                                       size_t number_of_video_tracks) {
+    EXPECT_LE(number_of_audio_tracks, 2u);
+    EXPECT_LE(number_of_video_tracks, 2u);
 
     reference_collection_ = StreamCollection::Create();
     std::string sdp_ms1 = std::string(kSdpStringInit);
@@ -886,8 +994,9 @@ class PeerConnectionInterfaceTest : public testing::Test {
       AddVideoTrack(kVideoTracks[1], stream);
     }
 
-    *desc = webrtc::CreateSessionDescription(
-        SessionDescriptionInterface::kOffer, sdp_ms1, nullptr);
+    return std::unique_ptr<SessionDescriptionInterface>(
+        webrtc::CreateSessionDescription(SessionDescriptionInterface::kOffer,
+                                         sdp_ms1, nullptr));
   }
 
   void AddAudioTrack(const std::string& track_id,
@@ -900,20 +1009,159 @@ class PeerConnectionInterfaceTest : public testing::Test {
   void AddVideoTrack(const std::string& track_id,
                      MediaStreamInterface* stream) {
     rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
-        webrtc::VideoTrack::Create(track_id, nullptr));
+        webrtc::VideoTrack::Create(track_id,
+                                   webrtc::FakeVideoTrackSource::Create()));
     ASSERT_TRUE(stream->AddTrack(video_track));
   }
 
+  std::unique_ptr<SessionDescriptionInterface> CreateOfferWithOneAudioStream() {
+    CreatePeerConnection();
+    AddVoiceStream(kStreamLabel1);
+    std::unique_ptr<SessionDescriptionInterface> offer;
+    EXPECT_TRUE(DoCreateOffer(&offer, nullptr));
+    return offer;
+  }
+
+  std::unique_ptr<SessionDescriptionInterface>
+  CreateAnswerWithOneAudioStream() {
+    std::unique_ptr<SessionDescriptionInterface> offer =
+        CreateOfferWithOneAudioStream();
+    EXPECT_TRUE(DoSetRemoteDescription(offer.release()));
+    std::unique_ptr<SessionDescriptionInterface> answer;
+    EXPECT_TRUE(DoCreateAnswer(&answer, nullptr));
+    return answer;
+  }
+
+  const std::string& GetFirstAudioStreamCname(
+      const SessionDescriptionInterface* desc) {
+    const cricket::ContentInfo* audio_content =
+        cricket::GetFirstAudioContent(desc->description());
+    const cricket::AudioContentDescription* audio_desc =
+        static_cast<const cricket::AudioContentDescription*>(
+            audio_content->description);
+    return audio_desc->streams()[0].cname;
+  }
+
   cricket::FakePortAllocator* port_allocator_ = nullptr;
-  scoped_refptr<webrtc::PeerConnectionFactoryInterface> pc_factory_;
-  scoped_refptr<PeerConnectionInterface> pc_;
+  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> pc_factory_;
+  rtc::scoped_refptr<PeerConnectionFactoryForTest> pc_factory_for_test_;
+  rtc::scoped_refptr<PeerConnectionInterface> pc_;
   MockPeerConnectionObserver observer_;
   rtc::scoped_refptr<StreamCollection> reference_collection_;
 };
 
+// Test that no callbacks on the PeerConnectionObserver are called after the
+// PeerConnection is closed.
+TEST_F(PeerConnectionInterfaceTest, CloseAndTestCallbackFunctions) {
+  rtc::scoped_refptr<PeerConnectionInterface> pc(
+      pc_factory_for_test_->CreatePeerConnection(
+          PeerConnectionInterface::RTCConfiguration(), nullptr, nullptr,
+          nullptr, &observer_));
+  observer_.SetPeerConnectionInterface(pc.get());
+  pc->Close();
+
+  // No callbacks is expected to be called.
+  observer_.callback_triggered = false;
+  std::vector<cricket::Candidate> candidates;
+  pc_factory_for_test_->transport_controller->SignalGatheringState(
+      cricket::IceGatheringState{});
+  pc_factory_for_test_->transport_controller->SignalCandidatesGathered(
+      "", candidates);
+  pc_factory_for_test_->transport_controller->SignalConnectionState(
+      cricket::IceConnectionState{});
+  pc_factory_for_test_->transport_controller->SignalCandidatesRemoved(
+      candidates);
+  pc_factory_for_test_->transport_controller->SignalReceiving(false);
+  EXPECT_FALSE(observer_.callback_triggered);
+}
+
+// Generate different CNAMEs when PeerConnections are created.
+// The CNAMEs are expected to be generated randomly. It is possible
+// that the test fails, though the possibility is very low.
+TEST_F(PeerConnectionInterfaceTest, CnameGenerationInOffer) {
+  std::unique_ptr<SessionDescriptionInterface> offer1 =
+      CreateOfferWithOneAudioStream();
+  std::unique_ptr<SessionDescriptionInterface> offer2 =
+      CreateOfferWithOneAudioStream();
+  EXPECT_NE(GetFirstAudioStreamCname(offer1.get()),
+            GetFirstAudioStreamCname(offer2.get()));
+}
+
+TEST_F(PeerConnectionInterfaceTest, CnameGenerationInAnswer) {
+  std::unique_ptr<SessionDescriptionInterface> answer1 =
+      CreateAnswerWithOneAudioStream();
+  std::unique_ptr<SessionDescriptionInterface> answer2 =
+      CreateAnswerWithOneAudioStream();
+  EXPECT_NE(GetFirstAudioStreamCname(answer1.get()),
+            GetFirstAudioStreamCname(answer2.get()));
+}
+
 TEST_F(PeerConnectionInterfaceTest,
        CreatePeerConnectionWithDifferentConfigurations) {
   CreatePeerConnectionWithDifferentConfigurations();
+}
+
+TEST_F(PeerConnectionInterfaceTest,
+       CreatePeerConnectionWithDifferentIceTransportsTypes) {
+  CreatePeerConnectionWithIceTransportsType(PeerConnectionInterface::kNone);
+  EXPECT_EQ(cricket::CF_NONE, port_allocator_->candidate_filter());
+  CreatePeerConnectionWithIceTransportsType(PeerConnectionInterface::kRelay);
+  EXPECT_EQ(cricket::CF_RELAY, port_allocator_->candidate_filter());
+  CreatePeerConnectionWithIceTransportsType(PeerConnectionInterface::kNoHost);
+  EXPECT_EQ(cricket::CF_ALL & ~cricket::CF_HOST,
+            port_allocator_->candidate_filter());
+  CreatePeerConnectionWithIceTransportsType(PeerConnectionInterface::kAll);
+  EXPECT_EQ(cricket::CF_ALL, port_allocator_->candidate_filter());
+}
+
+// Test that when a PeerConnection is created with a nonzero candidate pool
+// size, the pooled PortAllocatorSession is created with all the attributes
+// in the RTCConfiguration.
+TEST_F(PeerConnectionInterfaceTest, CreatePeerConnectionWithPooledCandidates) {
+  PeerConnectionInterface::RTCConfiguration config;
+  PeerConnectionInterface::IceServer server;
+  server.uri = kStunAddressOnly;
+  config.servers.push_back(server);
+  config.type = PeerConnectionInterface::kRelay;
+  config.disable_ipv6 = true;
+  config.tcp_candidate_policy =
+      PeerConnectionInterface::kTcpCandidatePolicyDisabled;
+  config.candidate_network_policy =
+      PeerConnectionInterface::kCandidateNetworkPolicyLowCost;
+  config.ice_candidate_pool_size = 1;
+  CreatePeerConnection(config, nullptr);
+
+  const cricket::FakePortAllocatorSession* session =
+      static_cast<const cricket::FakePortAllocatorSession*>(
+          port_allocator_->GetPooledSession());
+  ASSERT_NE(nullptr, session);
+  EXPECT_EQ(1UL, session->stun_servers().size());
+  EXPECT_EQ(0U, session->flags() & cricket::PORTALLOCATOR_ENABLE_IPV6);
+  EXPECT_LT(0U, session->flags() & cricket::PORTALLOCATOR_DISABLE_TCP);
+  EXPECT_LT(0U,
+            session->flags() & cricket::PORTALLOCATOR_DISABLE_COSTLY_NETWORKS);
+}
+
+// Test that the PeerConnection initializes the port allocator passed into it,
+// and on the correct thread.
+TEST_F(PeerConnectionInterfaceTest,
+       CreatePeerConnectionInitializesPortAllocator) {
+  rtc::Thread network_thread;
+  network_thread.Start();
+  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> pc_factory(
+      webrtc::CreatePeerConnectionFactory(
+          &network_thread, rtc::Thread::Current(), rtc::Thread::Current(),
+          nullptr, nullptr, nullptr));
+  std::unique_ptr<cricket::FakePortAllocator> port_allocator(
+      new cricket::FakePortAllocator(&network_thread, nullptr));
+  cricket::FakePortAllocator* raw_port_allocator = port_allocator.get();
+  PeerConnectionInterface::RTCConfiguration config;
+  rtc::scoped_refptr<PeerConnectionInterface> pc(
+      pc_factory->CreatePeerConnection(
+          config, nullptr, std::move(port_allocator), nullptr, &observer_));
+  // FakePortAllocator RTC_CHECKs that it's initialized on the right thread,
+  // so all we have to do here is check that it's initialized.
+  EXPECT_TRUE(raw_port_allocator->initialized());
 }
 
 TEST_F(PeerConnectionInterfaceTest, AddStreams) {
@@ -923,11 +1171,11 @@ TEST_F(PeerConnectionInterfaceTest, AddStreams) {
   ASSERT_EQ(2u, pc_->local_streams()->count());
 
   // Test we can add multiple local streams to one peerconnection.
-  scoped_refptr<MediaStreamInterface> stream(
+  rtc::scoped_refptr<MediaStreamInterface> stream(
       pc_factory_->CreateLocalMediaStream(kStreamLabel3));
-  scoped_refptr<AudioTrackInterface> audio_track(
-      pc_factory_->CreateAudioTrack(
-          kStreamLabel3, static_cast<AudioSourceInterface*>(NULL)));
+  rtc::scoped_refptr<AudioTrackInterface> audio_track(
+      pc_factory_->CreateAudioTrack(kStreamLabel3,
+                                    static_cast<AudioSourceInterface*>(NULL)));
   stream->AddTrack(audio_track.get());
   EXPECT_TRUE(pc_->AddStream(stream));
   EXPECT_EQ(3u, pc_->local_streams()->count());
@@ -949,8 +1197,8 @@ TEST_F(PeerConnectionInterfaceTest, AddStreams) {
 TEST_F(PeerConnectionInterfaceTest, AddedStreamsPresentInOffer) {
   CreatePeerConnection();
   AddAudioVideoStream(kStreamLabel1, "audio_track", "video_track");
-  scoped_ptr<SessionDescriptionInterface> offer;
-  ASSERT_TRUE(DoCreateOffer(offer.accept(), nullptr));
+  std::unique_ptr<SessionDescriptionInterface> offer;
+  ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
 
   const cricket::ContentInfo* audio_content =
       cricket::GetFirstAudioContent(offer->description());
@@ -971,7 +1219,7 @@ TEST_F(PeerConnectionInterfaceTest, AddedStreamsPresentInOffer) {
   // Add another stream and ensure the offer includes both the old and new
   // streams.
   AddAudioVideoStream(kStreamLabel2, "audio_track2", "video_track2");
-  ASSERT_TRUE(DoCreateOffer(offer.accept(), nullptr));
+  ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
 
   audio_content = cricket::GetFirstAudioContent(offer->description());
   audio_desc = static_cast<const cricket::AudioContentDescription*>(
@@ -1005,26 +1253,30 @@ TEST_F(PeerConnectionInterfaceTest, RemoveStream) {
 TEST_F(PeerConnectionInterfaceTest, AddTrackRemoveTrack) {
   CreatePeerConnection();
   // Create a dummy stream, so tracks share a stream label.
-  scoped_refptr<MediaStreamInterface> stream(
+  rtc::scoped_refptr<MediaStreamInterface> stream(
       pc_factory_->CreateLocalMediaStream(kStreamLabel1));
   std::vector<MediaStreamInterface*> stream_list;
   stream_list.push_back(stream.get());
-  scoped_refptr<AudioTrackInterface> audio_track(
+  rtc::scoped_refptr<AudioTrackInterface> audio_track(
       pc_factory_->CreateAudioTrack("audio_track", nullptr));
-  scoped_refptr<VideoTrackInterface> video_track(
-      pc_factory_->CreateVideoTrack("video_track", nullptr));
+  rtc::scoped_refptr<VideoTrackInterface> video_track(
+      pc_factory_->CreateVideoTrack(
+          "video_track",
+          pc_factory_->CreateVideoSource(new cricket::FakeVideoCapturer())));
   auto audio_sender = pc_->AddTrack(audio_track, stream_list);
   auto video_sender = pc_->AddTrack(video_track, stream_list);
-  EXPECT_EQ(kStreamLabel1, audio_sender->stream_id());
+  EXPECT_EQ(1UL, audio_sender->stream_ids().size());
+  EXPECT_EQ(kStreamLabel1, audio_sender->stream_ids()[0]);
   EXPECT_EQ("audio_track", audio_sender->id());
   EXPECT_EQ(audio_track, audio_sender->track());
-  EXPECT_EQ(kStreamLabel1, video_sender->stream_id());
+  EXPECT_EQ(1UL, video_sender->stream_ids().size());
+  EXPECT_EQ(kStreamLabel1, video_sender->stream_ids()[0]);
   EXPECT_EQ("video_track", video_sender->id());
   EXPECT_EQ(video_track, video_sender->track());
 
   // Now create an offer and check for the senders.
-  scoped_ptr<SessionDescriptionInterface> offer;
-  ASSERT_TRUE(DoCreateOffer(offer.accept(), nullptr));
+  std::unique_ptr<SessionDescriptionInterface> offer;
+  ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
 
   const cricket::ContentInfo* audio_content =
       cricket::GetFirstAudioContent(offer->description());
@@ -1049,7 +1301,7 @@ TEST_F(PeerConnectionInterfaceTest, AddTrackRemoveTrack) {
   EXPECT_TRUE(pc_->RemoveTrack(video_sender));
 
   // Create a new offer and ensure it doesn't contain the removed senders.
-  ASSERT_TRUE(DoCreateOffer(offer.accept(), nullptr));
+  ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
 
   audio_content = cricket::GetFirstAudioContent(offer->description());
   audio_desc = static_cast<const cricket::AudioContentDescription*>(
@@ -1076,10 +1328,12 @@ TEST_F(PeerConnectionInterfaceTest, AddTrackRemoveTrack) {
 TEST_F(PeerConnectionInterfaceTest, AddTrackWithoutStream) {
   CreatePeerConnection();
   // Create a dummy stream, so tracks share a stream label.
-  scoped_refptr<AudioTrackInterface> audio_track(
+  rtc::scoped_refptr<AudioTrackInterface> audio_track(
       pc_factory_->CreateAudioTrack("audio_track", nullptr));
-  scoped_refptr<VideoTrackInterface> video_track(
-      pc_factory_->CreateVideoTrack("video_track", nullptr));
+  rtc::scoped_refptr<VideoTrackInterface> video_track(
+      pc_factory_->CreateVideoTrack(
+          "video_track",
+          pc_factory_->CreateVideoSource(new cricket::FakeVideoCapturer())));
   auto audio_sender =
       pc_->AddTrack(audio_track, std::vector<MediaStreamInterface*>());
   auto video_sender =
@@ -1090,7 +1344,7 @@ TEST_F(PeerConnectionInterfaceTest, AddTrackWithoutStream) {
   EXPECT_EQ(video_track, video_sender->track());
   // If the ID is truly a random GUID, it should be infinitely unlikely they
   // will be the same.
-  EXPECT_NE(video_sender->stream_id(), audio_sender->stream_id());
+  EXPECT_NE(video_sender->stream_ids(), audio_sender->stream_ids());
 }
 
 TEST_F(PeerConnectionInterfaceTest, CreateOfferReceiveAnswer) {
@@ -1160,15 +1414,15 @@ TEST_F(PeerConnectionInterfaceTest, IceCandidates) {
 
   EXPECT_FALSE(pc_->AddIceCandidate(observer_.last_candidate_.get()));
   // SetRemoteDescription takes ownership of offer.
-  SessionDescriptionInterface* offer = NULL;
+  std::unique_ptr<SessionDescriptionInterface> offer;
   AddVideoStream(kStreamLabel1);
   EXPECT_TRUE(DoCreateOffer(&offer, nullptr));
-  EXPECT_TRUE(DoSetRemoteDescription(offer));
+  EXPECT_TRUE(DoSetRemoteDescription(offer.release()));
 
   // SetLocalDescription takes ownership of answer.
-  SessionDescriptionInterface* answer = NULL;
+  std::unique_ptr<SessionDescriptionInterface> answer;
   EXPECT_TRUE(DoCreateAnswer(&answer, nullptr));
-  EXPECT_TRUE(DoSetLocalDescription(answer));
+  EXPECT_TRUE(DoSetLocalDescription(answer.release()));
 
   EXPECT_TRUE_WAIT(observer_.last_candidate_.get() != NULL, kTimeout);
   EXPECT_TRUE_WAIT(observer_.ice_complete_, kTimeout);
@@ -1181,11 +1435,10 @@ TEST_F(PeerConnectionInterfaceTest, IceCandidates) {
 TEST_F(PeerConnectionInterfaceTest, CreateOfferAnswerWithInvalidStream) {
   CreatePeerConnection();
   // Create a regular offer for the CreateAnswer test later.
-  SessionDescriptionInterface* offer = NULL;
+  std::unique_ptr<SessionDescriptionInterface> offer;
   EXPECT_TRUE(DoCreateOffer(&offer, nullptr));
-  EXPECT_TRUE(offer != NULL);
-  delete offer;
-  offer = NULL;
+  EXPECT_TRUE(offer);
+  offer.reset();
 
   // Create a local stream with audio&video tracks having same label.
   AddAudioVideoStream(kStreamLabel1, "track_label", "track_label");
@@ -1194,7 +1447,7 @@ TEST_F(PeerConnectionInterfaceTest, CreateOfferAnswerWithInvalidStream) {
   EXPECT_FALSE(DoCreateOffer(&offer, nullptr));
 
   // Test CreateAnswer
-  SessionDescriptionInterface* answer = NULL;
+  std::unique_ptr<SessionDescriptionInterface> answer;
   EXPECT_FALSE(DoCreateAnswer(&answer, nullptr));
 }
 
@@ -1206,8 +1459,8 @@ TEST_F(PeerConnectionInterfaceTest, SsrcInOfferAnswer) {
   AddAudioVideoStream(kStreamLabel1, "audio_label", "video_label");
 
   // Test CreateOffer
-  scoped_ptr<SessionDescriptionInterface> offer;
-  ASSERT_TRUE(DoCreateOffer(offer.use(), nullptr));
+  std::unique_ptr<SessionDescriptionInterface> offer;
+  ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
   int audio_ssrc = 0;
   int video_ssrc = 0;
   EXPECT_TRUE(GetFirstSsrc(GetFirstAudioContent(offer->description()),
@@ -1218,8 +1471,8 @@ TEST_F(PeerConnectionInterfaceTest, SsrcInOfferAnswer) {
 
   // Test CreateAnswer
   EXPECT_TRUE(DoSetRemoteDescription(offer.release()));
-  scoped_ptr<SessionDescriptionInterface> answer;
-  ASSERT_TRUE(DoCreateAnswer(answer.use(), nullptr));
+  std::unique_ptr<SessionDescriptionInterface> answer;
+  ASSERT_TRUE(DoCreateAnswer(&answer, nullptr));
   audio_ssrc = 0;
   video_ssrc = 0;
   EXPECT_TRUE(GetFirstSsrc(GetFirstAudioContent(answer->description()),
@@ -1239,12 +1492,14 @@ TEST_F(PeerConnectionInterfaceTest, AddTrackAfterAddStream) {
   MediaStreamInterface* stream = pc_->local_streams()->at(0);
 
   // Add video track to the audio-only stream.
-  scoped_refptr<VideoTrackInterface> video_track(
-      pc_factory_->CreateVideoTrack("video_label", nullptr));
+  rtc::scoped_refptr<VideoTrackInterface> video_track(
+      pc_factory_->CreateVideoTrack(
+          "video_label",
+          pc_factory_->CreateVideoSource(new cricket::FakeVideoCapturer())));
   stream->AddTrack(video_track.get());
 
-  scoped_ptr<SessionDescriptionInterface> offer;
-  ASSERT_TRUE(DoCreateOffer(offer.use(), nullptr));
+  std::unique_ptr<SessionDescriptionInterface> offer;
+  ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
 
   const cricket::MediaContentDescription* video_desc =
       cricket::GetFirstVideoContentDescription(offer->description());
@@ -1263,8 +1518,8 @@ TEST_F(PeerConnectionInterfaceTest, RemoveTrackAfterAddStream) {
   // Remove the video track.
   stream->RemoveTrack(stream->GetVideoTracks()[0]);
 
-  scoped_ptr<SessionDescriptionInterface> offer;
-  ASSERT_TRUE(DoCreateOffer(offer.use(), nullptr));
+  std::unique_ptr<SessionDescriptionInterface> offer;
+  ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
 
   const cricket::MediaContentDescription* video_desc =
       cricket::GetFirstVideoContentDescription(offer->description());
@@ -1277,8 +1532,8 @@ TEST_F(PeerConnectionInterfaceTest, CreateSenderWithStream) {
   CreatePeerConnection();
   pc_->CreateSender("video", kStreamLabel1);
 
-  scoped_ptr<SessionDescriptionInterface> offer;
-  ASSERT_TRUE(DoCreateOffer(offer.use(), nullptr));
+  std::unique_ptr<SessionDescriptionInterface> offer;
+  ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
 
   const cricket::MediaContentDescription* video_desc =
       cricket::GetFirstVideoContentDescription(offer->description());
@@ -1292,7 +1547,7 @@ TEST_F(PeerConnectionInterfaceTest, GetStatsForSpecificTrack) {
   InitiateCall();
   ASSERT_LT(0u, pc_->remote_streams()->count());
   ASSERT_LT(0u, pc_->remote_streams()->at(0)->GetAudioTracks().size());
-  scoped_refptr<MediaStreamTrackInterface> remote_audio =
+  rtc::scoped_refptr<MediaStreamTrackInterface> remote_audio =
       pc_->remote_streams()->at(0)->GetAudioTracks()[0];
   EXPECT_TRUE(DoGetStats(remote_audio));
 
@@ -1314,7 +1569,7 @@ TEST_F(PeerConnectionInterfaceTest, GetStatsForVideoTrack) {
   InitiateCall();
   ASSERT_LT(0u, pc_->remote_streams()->count());
   ASSERT_LT(0u, pc_->remote_streams()->at(0)->GetVideoTracks().size());
-  scoped_refptr<MediaStreamTrackInterface> remote_video =
+  rtc::scoped_refptr<MediaStreamTrackInterface> remote_video =
       pc_->remote_streams()->at(0)->GetVideoTracks()[0];
   EXPECT_TRUE(DoGetStats(remote_video));
 }
@@ -1325,7 +1580,7 @@ TEST_F(PeerConnectionInterfaceTest, GetStatsForVideoTrack) {
 // data is returned for the track.
 TEST_F(PeerConnectionInterfaceTest, DISABLED_GetStatsForInvalidTrack) {
   InitiateCall();
-  scoped_refptr<AudioTrackInterface> unknown_audio_track(
+  rtc::scoped_refptr<AudioTrackInterface> unknown_audio_track(
       pc_factory_->CreateAudioTrack("unknown track", NULL));
   EXPECT_FALSE(DoGetStats(unknown_audio_track));
 }
@@ -1335,14 +1590,14 @@ TEST_F(PeerConnectionInterfaceTest, TestDataChannel) {
   FakeConstraints constraints;
   constraints.SetAllowRtpDataChannels();
   CreatePeerConnection(&constraints);
-  scoped_refptr<DataChannelInterface> data1  =
+  rtc::scoped_refptr<DataChannelInterface> data1 =
       pc_->CreateDataChannel("test1", NULL);
-  scoped_refptr<DataChannelInterface> data2  =
+  rtc::scoped_refptr<DataChannelInterface> data2 =
       pc_->CreateDataChannel("test2", NULL);
   ASSERT_TRUE(data1 != NULL);
-  rtc::scoped_ptr<MockDataChannelObserver> observer1(
+  std::unique_ptr<MockDataChannelObserver> observer1(
       new MockDataChannelObserver(data1));
-  rtc::scoped_ptr<MockDataChannelObserver> observer2(
+  std::unique_ptr<MockDataChannelObserver> observer2(
       new MockDataChannelObserver(data2));
 
   EXPECT_EQ(DataChannelInterface::kConnecting, data1->state());
@@ -1382,14 +1637,14 @@ TEST_F(PeerConnectionInterfaceTest, TestSendBinaryOnRtpDataChannel) {
   FakeConstraints constraints;
   constraints.SetAllowRtpDataChannels();
   CreatePeerConnection(&constraints);
-  scoped_refptr<DataChannelInterface> data1  =
+  rtc::scoped_refptr<DataChannelInterface> data1 =
       pc_->CreateDataChannel("test1", NULL);
-  scoped_refptr<DataChannelInterface> data2  =
+  rtc::scoped_refptr<DataChannelInterface> data2 =
       pc_->CreateDataChannel("test2", NULL);
   ASSERT_TRUE(data1 != NULL);
-  rtc::scoped_ptr<MockDataChannelObserver> observer1(
+  std::unique_ptr<MockDataChannelObserver> observer1(
       new MockDataChannelObserver(data1));
-  rtc::scoped_ptr<MockDataChannelObserver> observer2(
+  std::unique_ptr<MockDataChannelObserver> observer2(
       new MockDataChannelObserver(data2));
 
   EXPECT_EQ(DataChannelInterface::kConnecting, data1->state());
@@ -1402,7 +1657,7 @@ TEST_F(PeerConnectionInterfaceTest, TestSendBinaryOnRtpDataChannel) {
   EXPECT_EQ(DataChannelInterface::kOpen, data1->state());
   EXPECT_EQ(DataChannelInterface::kOpen, data2->state());
 
-  rtc::Buffer buffer("test", 4);
+  rtc::CopyOnWriteBuffer buffer("test", 4);
   EXPECT_FALSE(data1->Send(DataBuffer(buffer, true)));
 }
 
@@ -1412,9 +1667,9 @@ TEST_F(PeerConnectionInterfaceTest, TestSendOnlyDataChannel) {
   FakeConstraints constraints;
   constraints.SetAllowRtpDataChannels();
   CreatePeerConnection(&constraints);
-  scoped_refptr<DataChannelInterface> data1  =
+  rtc::scoped_refptr<DataChannelInterface> data1 =
       pc_->CreateDataChannel("test1", NULL);
-  rtc::scoped_ptr<MockDataChannelObserver> observer1(
+  std::unique_ptr<MockDataChannelObserver> observer1(
       new MockDataChannelObserver(data1));
 
   CreateOfferReceiveAnswerWithoutSsrc();
@@ -1436,7 +1691,7 @@ TEST_F(PeerConnectionInterfaceTest, TestReceiveOnlyDataChannel) {
   CreatePeerConnection(&constraints);
 
   std::string offer_label = "offer_channel";
-  scoped_refptr<DataChannelInterface> offer_channel  =
+  rtc::scoped_refptr<DataChannelInterface> offer_channel =
       pc_->CreateDataChannel(offer_label, NULL);
 
   CreateOfferAsLocalDescription();
@@ -1479,7 +1734,7 @@ TEST_F(PeerConnectionInterfaceTest, CreateReliableRtpDataChannelShouldFail) {
   std::string label = "test";
   webrtc::DataChannelInit config;
   config.reliable = true;
-  scoped_refptr<DataChannelInterface> channel  =
+  rtc::scoped_refptr<DataChannelInterface> channel =
       pc_->CreateDataChannel(label, &config);
   EXPECT_TRUE(channel == NULL);
 }
@@ -1491,11 +1746,11 @@ TEST_F(PeerConnectionInterfaceTest, RtpDuplicatedLabelNotAllowed) {
   CreatePeerConnection(&constraints);
 
   std::string label = "test";
-  scoped_refptr<DataChannelInterface> channel =
+  rtc::scoped_refptr<DataChannelInterface> channel =
       pc_->CreateDataChannel(label, nullptr);
   EXPECT_NE(channel, nullptr);
 
-  scoped_refptr<DataChannelInterface> dup_channel =
+  rtc::scoped_refptr<DataChannelInterface> dup_channel =
       pc_->CreateDataChannel(label, nullptr);
   EXPECT_EQ(dup_channel, nullptr);
 }
@@ -1509,7 +1764,7 @@ TEST_F(PeerConnectionInterfaceTest, CreateSctpDataChannel) {
 
   webrtc::DataChannelInit config;
 
-  scoped_refptr<DataChannelInterface> channel =
+  rtc::scoped_refptr<DataChannelInterface> channel =
       pc_->CreateDataChannel("1", &config);
   EXPECT_TRUE(channel != NULL);
   EXPECT_TRUE(channel->reliable());
@@ -1550,7 +1805,7 @@ TEST_F(PeerConnectionInterfaceTest,
   config.maxRetransmits = 0;
   config.maxRetransmitTime = 0;
 
-  scoped_refptr<DataChannelInterface> channel =
+  rtc::scoped_refptr<DataChannelInterface> channel =
       pc_->CreateDataChannel(label, &config);
   EXPECT_TRUE(channel == NULL);
 }
@@ -1564,7 +1819,7 @@ TEST_F(PeerConnectionInterfaceTest,
   CreatePeerConnection(&constraints);
 
   webrtc::DataChannelInit config;
-  scoped_refptr<DataChannelInterface> channel;
+  rtc::scoped_refptr<DataChannelInterface> channel;
 
   config.id = 1;
   channel = pc_->CreateDataChannel("1", &config);
@@ -1592,11 +1847,11 @@ TEST_F(PeerConnectionInterfaceTest, SctpDuplicatedLabelAllowed) {
   CreatePeerConnection(&constraints);
 
   std::string label = "test";
-  scoped_refptr<DataChannelInterface> channel =
+  rtc::scoped_refptr<DataChannelInterface> channel =
       pc_->CreateDataChannel(label, nullptr);
   EXPECT_NE(channel, nullptr);
 
-  scoped_refptr<DataChannelInterface> dup_channel =
+  rtc::scoped_refptr<DataChannelInterface> dup_channel =
       pc_->CreateDataChannel(label, nullptr);
   EXPECT_NE(dup_channel, nullptr);
 }
@@ -1608,12 +1863,12 @@ TEST_F(PeerConnectionInterfaceTest, RenegotiationNeededForNewRtpDataChannel) {
   constraints.SetAllowRtpDataChannels();
   CreatePeerConnection(&constraints);
 
-  scoped_refptr<DataChannelInterface> dc1  =
+  rtc::scoped_refptr<DataChannelInterface> dc1 =
       pc_->CreateDataChannel("test1", NULL);
   EXPECT_TRUE(observer_.renegotiation_needed_);
   observer_.renegotiation_needed_ = false;
 
-  scoped_refptr<DataChannelInterface> dc2  =
+  rtc::scoped_refptr<DataChannelInterface> dc2 =
       pc_->CreateDataChannel("test2", NULL);
   EXPECT_TRUE(observer_.renegotiation_needed_);
 }
@@ -1624,14 +1879,14 @@ TEST_F(PeerConnectionInterfaceTest, DataChannelCloseWhenPeerConnectionClose) {
   constraints.SetAllowRtpDataChannels();
   CreatePeerConnection(&constraints);
 
-  scoped_refptr<DataChannelInterface> data1  =
+  rtc::scoped_refptr<DataChannelInterface> data1 =
       pc_->CreateDataChannel("test1", NULL);
-  scoped_refptr<DataChannelInterface> data2  =
+  rtc::scoped_refptr<DataChannelInterface> data2 =
       pc_->CreateDataChannel("test2", NULL);
   ASSERT_TRUE(data1 != NULL);
-  rtc::scoped_ptr<MockDataChannelObserver> observer1(
+  std::unique_ptr<MockDataChannelObserver> observer1(
       new MockDataChannelObserver(data1));
-  rtc::scoped_ptr<MockDataChannelObserver> observer2(
+  std::unique_ptr<MockDataChannelObserver> observer2(
       new MockDataChannelObserver(data2));
 
   CreateOfferReceiveAnswer();
@@ -1649,7 +1904,7 @@ TEST_F(PeerConnectionInterfaceTest, TestRejectDataChannelInAnswer) {
   constraints.SetAllowRtpDataChannels();
   CreatePeerConnection(&constraints);
 
-  scoped_refptr<DataChannelInterface> offer_channel(
+  rtc::scoped_refptr<DataChannelInterface> offer_channel(
       pc_->CreateDataChannel("offer_channel", NULL));
 
   CreateOfferAsLocalDescription();
@@ -1736,7 +1991,7 @@ TEST_F(PeerConnectionInterfaceTest, CreateSubsequentRecvOnlyOffer) {
 
   // At this point we should be receiving stream 1, but not sending anything.
   // A new offer should be recvonly.
-  SessionDescriptionInterface* offer;
+  std::unique_ptr<SessionDescriptionInterface> offer;
   DoCreateOffer(&offer, nullptr);
 
   const cricket::ContentInfo* video_content =
@@ -1768,7 +2023,7 @@ TEST_F(PeerConnectionInterfaceTest, CreateSubsequentInactiveOffer) {
   // At this point we should be receiving stream 1, but not sending anything.
   // A new offer would be recvonly, but we'll set the "no receive" constraints
   // to make it inactive.
-  SessionDescriptionInterface* offer;
+  std::unique_ptr<SessionDescriptionInterface> offer;
   FakeConstraints offer_constraints;
   offer_constraints.AddMandatory(
       webrtc::MediaConstraintsInterface::kOfferToReceiveVideo, false);
@@ -1807,6 +2062,34 @@ TEST_F(PeerConnectionInterfaceTest, SetConfigurationChangesIceServers) {
             port_allocator_->stun_servers().begin()->hostname());
 }
 
+TEST_F(PeerConnectionInterfaceTest, SetConfigurationChangesCandidateFilter) {
+  CreatePeerConnection();
+  PeerConnectionInterface::RTCConfiguration config;
+  config.type = PeerConnectionInterface::kRelay;
+  EXPECT_TRUE(pc_->SetConfiguration(config));
+  EXPECT_EQ(cricket::CF_RELAY, port_allocator_->candidate_filter());
+}
+
+// Test that when SetConfiguration changes both the pool size and other
+// attributes, the pooled session is created with the updated attributes.
+TEST_F(PeerConnectionInterfaceTest,
+       SetConfigurationCreatesPooledSessionCorrectly) {
+  CreatePeerConnection();
+  PeerConnectionInterface::RTCConfiguration config;
+  config.ice_candidate_pool_size = 1;
+  PeerConnectionInterface::IceServer server;
+  server.uri = kStunAddressOnly;
+  config.servers.push_back(server);
+  config.type = PeerConnectionInterface::kRelay;
+  EXPECT_TRUE(pc_->SetConfiguration(config));
+
+  const cricket::FakePortAllocatorSession* session =
+      static_cast<const cricket::FakePortAllocatorSession*>(
+          port_allocator_->GetPooledSession());
+  ASSERT_NE(nullptr, session);
+  EXPECT_EQ(1UL, session->stun_servers().size());
+}
+
 // Test that PeerConnection::Close changes the states to closed and all remote
 // tracks change state to ended.
 TEST_F(PeerConnectionInterfaceTest, CloseAndTestStreamsAndStates) {
@@ -1827,12 +2110,13 @@ TEST_F(PeerConnectionInterfaceTest, CloseAndTestStreamsAndStates) {
   EXPECT_EQ(1u, pc_->local_streams()->count());
   EXPECT_EQ(1u, pc_->remote_streams()->count());
 
-  scoped_refptr<MediaStreamInterface> remote_stream =
-          pc_->remote_streams()->at(0);
-  EXPECT_EQ(MediaStreamTrackInterface::kEnded,
-            remote_stream->GetVideoTracks()[0]->state());
-  EXPECT_EQ(MediaStreamTrackInterface::kEnded,
-            remote_stream->GetAudioTracks()[0]->state());
+  rtc::scoped_refptr<MediaStreamInterface> remote_stream =
+      pc_->remote_streams()->at(0);
+  // Track state may be updated asynchronously.
+  EXPECT_EQ_WAIT(MediaStreamTrackInterface::kEnded,
+                 remote_stream->GetAudioTracks()[0]->state(), kTimeout);
+  EXPECT_EQ_WAIT(MediaStreamTrackInterface::kEnded,
+                 remote_stream->GetVideoTracks()[0]->state(), kTimeout);
 }
 
 // Test that PeerConnection methods fails gracefully after
@@ -1844,7 +2128,7 @@ TEST_F(PeerConnectionInterfaceTest, CloseAndTestMethods) {
   CreateAnswerAsLocalDescription();
 
   ASSERT_EQ(1u, pc_->local_streams()->count());
-  scoped_refptr<MediaStreamInterface> local_stream =
+  rtc::scoped_refptr<MediaStreamInterface> local_stream =
       pc_->local_streams()->at(0);
 
   pc_->Close();
@@ -1862,10 +2146,10 @@ TEST_F(PeerConnectionInterfaceTest, CloseAndTestMethods) {
   EXPECT_TRUE(pc_->local_description() != NULL);
   EXPECT_TRUE(pc_->remote_description() != NULL);
 
-  rtc::scoped_ptr<SessionDescriptionInterface> offer;
-  EXPECT_TRUE(DoCreateOffer(offer.use(), nullptr));
-  rtc::scoped_ptr<SessionDescriptionInterface> answer;
-  EXPECT_TRUE(DoCreateAnswer(answer.use(), nullptr));
+  std::unique_ptr<SessionDescriptionInterface> offer;
+  EXPECT_TRUE(DoCreateOffer(&offer, nullptr));
+  std::unique_ptr<SessionDescriptionInterface> answer;
+  EXPECT_TRUE(DoCreateAnswer(&answer, nullptr));
 
   std::string sdp;
   ASSERT_TRUE(pc_->remote_description()->ToString(&sdp));
@@ -1902,7 +2186,7 @@ TEST_F(PeerConnectionInterfaceTest, UpdateRemoteStreams) {
   CreatePeerConnection(&constraints);
   CreateAndSetRemoteOffer(kSdpStringWithStream1);
 
-  rtc::scoped_refptr<StreamCollection> reference(CreateStreamCollection(1));
+  rtc::scoped_refptr<StreamCollection> reference(CreateStreamCollection(1, 1));
   EXPECT_TRUE(
       CompareStreamCollections(observer_.remote_streams(), reference.get()));
   MediaStreamInterface* remote_stream = observer_.remote_streams()->at(0);
@@ -1912,7 +2196,7 @@ TEST_F(PeerConnectionInterfaceTest, UpdateRemoteStreams) {
   // MediaStream.
   CreateAndSetRemoteOffer(kSdpStringWithStream1And2);
 
-  rtc::scoped_refptr<StreamCollection> reference2(CreateStreamCollection(2));
+  rtc::scoped_refptr<StreamCollection> reference2(CreateStreamCollection(2, 1));
   EXPECT_TRUE(
       CompareStreamCollections(observer_.remote_streams(), reference2.get()));
 }
@@ -1925,25 +2209,41 @@ TEST_F(PeerConnectionInterfaceTest,
   constraints.AddMandatory(webrtc::MediaConstraintsInterface::kEnableDtlsSrtp,
                            true);
   CreatePeerConnection(&constraints);
-  rtc::scoped_ptr<SessionDescriptionInterface> desc_ms1;
-  CreateSessionDescriptionAndReference(1, 1, desc_ms1.accept());
+  std::unique_ptr<SessionDescriptionInterface> desc_ms1 =
+      CreateSessionDescriptionAndReference(1, 1);
   EXPECT_TRUE(DoSetRemoteDescription(desc_ms1.release()));
   EXPECT_TRUE(CompareStreamCollections(observer_.remote_streams(),
                                        reference_collection_));
 
   // Add extra audio and video tracks to the same MediaStream.
-  rtc::scoped_ptr<SessionDescriptionInterface> desc_ms1_two_tracks;
-  CreateSessionDescriptionAndReference(2, 2, desc_ms1_two_tracks.accept());
+  std::unique_ptr<SessionDescriptionInterface> desc_ms1_two_tracks =
+      CreateSessionDescriptionAndReference(2, 2);
   EXPECT_TRUE(DoSetRemoteDescription(desc_ms1_two_tracks.release()));
   EXPECT_TRUE(CompareStreamCollections(observer_.remote_streams(),
                                        reference_collection_));
+  rtc::scoped_refptr<AudioTrackInterface> audio_track2 =
+      observer_.remote_streams()->at(0)->GetAudioTracks()[1];
+  EXPECT_EQ(webrtc::MediaStreamTrackInterface::kLive, audio_track2->state());
+  rtc::scoped_refptr<VideoTrackInterface> video_track2 =
+      observer_.remote_streams()->at(0)->GetVideoTracks()[1];
+  EXPECT_EQ(webrtc::MediaStreamTrackInterface::kLive, video_track2->state());
 
   // Remove the extra audio and video tracks.
-  rtc::scoped_ptr<SessionDescriptionInterface> desc_ms2;
-  CreateSessionDescriptionAndReference(1, 1, desc_ms2.accept());
+  std::unique_ptr<SessionDescriptionInterface> desc_ms2 =
+      CreateSessionDescriptionAndReference(1, 1);
+  MockTrackObserver audio_track_observer(audio_track2);
+  MockTrackObserver video_track_observer(video_track2);
+
+  EXPECT_CALL(audio_track_observer, OnChanged()).Times(Exactly(1));
+  EXPECT_CALL(video_track_observer, OnChanged()).Times(Exactly(1));
   EXPECT_TRUE(DoSetRemoteDescription(desc_ms2.release()));
   EXPECT_TRUE(CompareStreamCollections(observer_.remote_streams(),
                                        reference_collection_));
+  // Track state may be updated asynchronously.
+  EXPECT_EQ_WAIT(webrtc::MediaStreamTrackInterface::kEnded,
+                 audio_track2->state(), kTimeout);
+  EXPECT_EQ_WAIT(webrtc::MediaStreamTrackInterface::kEnded,
+                 video_track2->state(), kTimeout);
 }
 
 // This tests that remote tracks are ended if a local session description is set
@@ -1968,8 +2268,8 @@ TEST_F(PeerConnectionInterfaceTest, RejectMediaContent) {
       remote_stream->GetAudioTracks()[0];
   EXPECT_EQ(webrtc::MediaStreamTrackInterface::kLive, remote_audio->state());
 
-  rtc::scoped_ptr<SessionDescriptionInterface> local_answer;
-  EXPECT_TRUE(DoCreateAnswer(local_answer.accept(), nullptr));
+  std::unique_ptr<SessionDescriptionInterface> local_answer;
+  EXPECT_TRUE(DoCreateAnswer(&local_answer, nullptr));
   cricket::ContentInfo* video_info =
       local_answer->description()->GetContentByName("video");
   video_info->rejected = true;
@@ -1978,8 +2278,8 @@ TEST_F(PeerConnectionInterfaceTest, RejectMediaContent) {
   EXPECT_EQ(webrtc::MediaStreamTrackInterface::kLive, remote_audio->state());
 
   // Now create an offer where we reject both video and audio.
-  rtc::scoped_ptr<SessionDescriptionInterface> local_offer;
-  EXPECT_TRUE(DoCreateOffer(local_offer.accept(), nullptr));
+  std::unique_ptr<SessionDescriptionInterface> local_offer;
+  EXPECT_TRUE(DoCreateOffer(&local_offer, nullptr));
   video_info = local_offer->description()->GetContentByName("video");
   ASSERT_TRUE(video_info != nullptr);
   video_info->rejected = true;
@@ -1988,8 +2288,11 @@ TEST_F(PeerConnectionInterfaceTest, RejectMediaContent) {
   ASSERT_TRUE(audio_info != nullptr);
   audio_info->rejected = true;
   EXPECT_TRUE(DoSetLocalDescription(local_offer.release()));
-  EXPECT_EQ(webrtc::MediaStreamTrackInterface::kEnded, remote_video->state());
-  EXPECT_EQ(webrtc::MediaStreamTrackInterface::kEnded, remote_audio->state());
+  // Track state may be updated asynchronously.
+  EXPECT_EQ_WAIT(webrtc::MediaStreamTrackInterface::kEnded,
+                 remote_audio->state(), kTimeout);
+  EXPECT_EQ_WAIT(webrtc::MediaStreamTrackInterface::kEnded,
+                 remote_video->state(), kTimeout);
 }
 
 // This tests that we won't crash if the remote track has been removed outside
@@ -2004,7 +2307,7 @@ TEST_F(PeerConnectionInterfaceTest, RemoveTrackThenRejectMediaContent) {
   remote_stream->RemoveTrack(remote_stream->GetVideoTracks()[0]);
   remote_stream->RemoveTrack(remote_stream->GetAudioTracks()[0]);
 
-  rtc::scoped_ptr<SessionDescriptionInterface> local_answer(
+  std::unique_ptr<SessionDescriptionInterface> local_answer(
       webrtc::CreateSessionDescription(SessionDescriptionInterface::kAnswer,
                                        kSdpStringWithStream1, nullptr));
   cricket::ContentInfo* video_info =
@@ -2131,7 +2434,8 @@ TEST_F(PeerConnectionInterfaceTest, SdpWithMsidDontCreatesDefaultStream) {
 // This tests that when setting a new description, the old default tracks are
 // not destroyed and recreated.
 // See: https://bugs.chromium.org/p/webrtc/issues/detail?id=5250
-TEST_F(PeerConnectionInterfaceTest, DefaultTracksNotDestroyedAndRecreated) {
+TEST_F(PeerConnectionInterfaceTest,
+       DefaultTracksNotDestroyedAndRecreated) {
   FakeConstraints constraints;
   constraints.AddMandatory(webrtc::MediaConstraintsInterface::kEnableDtlsSrtp,
                            true);
@@ -2158,7 +2462,7 @@ TEST_F(PeerConnectionInterfaceTest, VerifyDefaultStreamIsNotCreated) {
                            true);
   CreatePeerConnection(&constraints);
   CreateAndSetRemoteOffer(kSdpStringWithStream1);
-  rtc::scoped_refptr<StreamCollection> reference(CreateStreamCollection(1));
+  rtc::scoped_refptr<StreamCollection> reference(CreateStreamCollection(1, 1));
   EXPECT_TRUE(
       CompareStreamCollections(observer_.remote_streams(), reference.get()));
 
@@ -2175,16 +2479,15 @@ TEST_F(PeerConnectionInterfaceTest, LocalDescriptionChanged) {
   constraints.AddMandatory(webrtc::MediaConstraintsInterface::kEnableDtlsSrtp,
                            true);
   CreatePeerConnection(&constraints);
-  // Create an offer just to ensure we have an identity before we manually
-  // call SetLocalDescription.
-  rtc::scoped_ptr<SessionDescriptionInterface> throwaway;
-  ASSERT_TRUE(DoCreateOffer(throwaway.accept(), nullptr));
 
-  rtc::scoped_ptr<SessionDescriptionInterface> desc_1;
-  CreateSessionDescriptionAndReference(2, 2, desc_1.accept());
+  // Create an offer with 1 stream with 2 tracks of each type.
+  rtc::scoped_refptr<StreamCollection> stream_collection =
+      CreateStreamCollection(1, 2);
+  pc_->AddStream(stream_collection->at(0));
+  std::unique_ptr<SessionDescriptionInterface> offer;
+  ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
+  EXPECT_TRUE(DoSetLocalDescription(offer.release()));
 
-  pc_->AddStream(reference_collection_->at(0));
-  EXPECT_TRUE(DoSetLocalDescription(desc_1.release()));
   auto senders = pc_->GetSenders();
   EXPECT_EQ(4u, senders.size());
   EXPECT_TRUE(ContainsSender(senders, kAudioTracks[0]));
@@ -2193,11 +2496,12 @@ TEST_F(PeerConnectionInterfaceTest, LocalDescriptionChanged) {
   EXPECT_TRUE(ContainsSender(senders, kVideoTracks[1]));
 
   // Remove an audio and video track.
-  pc_->RemoveStream(reference_collection_->at(0));
-  rtc::scoped_ptr<SessionDescriptionInterface> desc_2;
-  CreateSessionDescriptionAndReference(1, 1, desc_2.accept());
-  pc_->AddStream(reference_collection_->at(0));
-  EXPECT_TRUE(DoSetLocalDescription(desc_2.release()));
+  pc_->RemoveStream(stream_collection->at(0));
+  stream_collection = CreateStreamCollection(1, 1);
+  pc_->AddStream(stream_collection->at(0));
+  ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
+  EXPECT_TRUE(DoSetLocalDescription(offer.release()));
+
   senders = pc_->GetSenders();
   EXPECT_EQ(2u, senders.size());
   EXPECT_TRUE(ContainsSender(senders, kAudioTracks[0]));
@@ -2214,19 +2518,20 @@ TEST_F(PeerConnectionInterfaceTest,
   constraints.AddMandatory(webrtc::MediaConstraintsInterface::kEnableDtlsSrtp,
                            true);
   CreatePeerConnection(&constraints);
-  // Create an offer just to ensure we have an identity before we manually
-  // call SetLocalDescription.
-  rtc::scoped_ptr<SessionDescriptionInterface> throwaway;
-  ASSERT_TRUE(DoCreateOffer(throwaway.accept(), nullptr));
 
-  rtc::scoped_ptr<SessionDescriptionInterface> desc_1;
-  CreateSessionDescriptionAndReference(2, 2, desc_1.accept());
+  rtc::scoped_refptr<StreamCollection> stream_collection =
+      CreateStreamCollection(1, 2);
+  // Add a stream to create the offer, but remove it afterwards.
+  pc_->AddStream(stream_collection->at(0));
+  std::unique_ptr<SessionDescriptionInterface> offer;
+  ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
+  pc_->RemoveStream(stream_collection->at(0));
 
-  EXPECT_TRUE(DoSetLocalDescription(desc_1.release()));
+  EXPECT_TRUE(DoSetLocalDescription(offer.release()));
   auto senders = pc_->GetSenders();
   EXPECT_EQ(0u, senders.size());
 
-  pc_->AddStream(reference_collection_->at(0));
+  pc_->AddStream(stream_collection->at(0));
   senders = pc_->GetSenders();
   EXPECT_EQ(4u, senders.size());
   EXPECT_TRUE(ContainsSender(senders, kAudioTracks[0]));
@@ -2243,37 +2548,44 @@ TEST_F(PeerConnectionInterfaceTest,
   constraints.AddMandatory(webrtc::MediaConstraintsInterface::kEnableDtlsSrtp,
                            true);
   CreatePeerConnection(&constraints);
-  // Create an offer just to ensure we have an identity before we manually
-  // call SetLocalDescription.
-  rtc::scoped_ptr<SessionDescriptionInterface> throwaway;
-  ASSERT_TRUE(DoCreateOffer(throwaway.accept(), nullptr));
 
-  rtc::scoped_ptr<SessionDescriptionInterface> desc;
-  CreateSessionDescriptionAndReference(1, 1, desc.accept());
-  std::string sdp;
-  desc->ToString(&sdp);
+  rtc::scoped_refptr<StreamCollection> stream_collection =
+      CreateStreamCollection(2, 1);
+  pc_->AddStream(stream_collection->at(0));
+  std::unique_ptr<SessionDescriptionInterface> offer;
+  ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
+  // Grab a copy of the offer before it gets passed into the PC.
+  std::unique_ptr<JsepSessionDescription> modified_offer(
+      new JsepSessionDescription(JsepSessionDescription::kOffer));
+  modified_offer->Initialize(offer->description()->Copy(), offer->session_id(),
+                             offer->session_version());
+  EXPECT_TRUE(DoSetLocalDescription(offer.release()));
 
-  pc_->AddStream(reference_collection_->at(0));
-  EXPECT_TRUE(DoSetLocalDescription(desc.release()));
   auto senders = pc_->GetSenders();
   EXPECT_EQ(2u, senders.size());
   EXPECT_TRUE(ContainsSender(senders, kAudioTracks[0]));
   EXPECT_TRUE(ContainsSender(senders, kVideoTracks[0]));
 
   // Change the ssrc of the audio and video track.
-  std::string ssrc_org = "a=ssrc:1";
-  std::string ssrc_to = "a=ssrc:97";
-  rtc::replace_substrs(ssrc_org.c_str(), ssrc_org.length(), ssrc_to.c_str(),
-                       ssrc_to.length(), &sdp);
-  ssrc_org = "a=ssrc:2";
-  ssrc_to = "a=ssrc:98";
-  rtc::replace_substrs(ssrc_org.c_str(), ssrc_org.length(), ssrc_to.c_str(),
-                       ssrc_to.length(), &sdp);
-  rtc::scoped_ptr<SessionDescriptionInterface> updated_desc(
-      webrtc::CreateSessionDescription(SessionDescriptionInterface::kOffer, sdp,
-                                       nullptr));
+  cricket::MediaContentDescription* desc =
+      cricket::GetFirstAudioContentDescription(modified_offer->description());
+  ASSERT_TRUE(desc != NULL);
+  for (StreamParams& stream : desc->mutable_streams()) {
+    for (unsigned int& ssrc : stream.ssrcs) {
+      ++ssrc;
+    }
+  }
 
-  EXPECT_TRUE(DoSetLocalDescription(updated_desc.release()));
+  desc =
+      cricket::GetFirstVideoContentDescription(modified_offer->description());
+  ASSERT_TRUE(desc != NULL);
+  for (StreamParams& stream : desc->mutable_streams()) {
+    for (unsigned int& ssrc : stream.ssrcs) {
+      ++ssrc;
+    }
+  }
+
+  EXPECT_TRUE(DoSetLocalDescription(modified_offer.release()));
   senders = pc_->GetSenders();
   EXPECT_EQ(2u, senders.size());
   EXPECT_TRUE(ContainsSender(senders, kAudioTracks[0]));
@@ -2284,76 +2596,48 @@ TEST_F(PeerConnectionInterfaceTest,
 
 // This tests that the expected behavior occurs if a new session description is
 // set with the same tracks, but on a different MediaStream.
-TEST_F(PeerConnectionInterfaceTest, SignalSameTracksInSeparateMediaStream) {
+TEST_F(PeerConnectionInterfaceTest,
+       SignalSameTracksInSeparateMediaStream) {
   FakeConstraints constraints;
   constraints.AddMandatory(webrtc::MediaConstraintsInterface::kEnableDtlsSrtp,
                            true);
   CreatePeerConnection(&constraints);
-  // Create an offer just to ensure we have an identity before we manually
-  // call SetLocalDescription.
-  rtc::scoped_ptr<SessionDescriptionInterface> throwaway;
-  ASSERT_TRUE(DoCreateOffer(throwaway.accept(), nullptr));
 
-  rtc::scoped_ptr<SessionDescriptionInterface> desc;
-  CreateSessionDescriptionAndReference(1, 1, desc.accept());
-  std::string sdp;
-  desc->ToString(&sdp);
+  rtc::scoped_refptr<StreamCollection> stream_collection =
+      CreateStreamCollection(2, 1);
+  pc_->AddStream(stream_collection->at(0));
+  std::unique_ptr<SessionDescriptionInterface> offer;
+  ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
+  EXPECT_TRUE(DoSetLocalDescription(offer.release()));
 
-  pc_->AddStream(reference_collection_->at(0));
-  EXPECT_TRUE(DoSetLocalDescription(desc.release()));
   auto senders = pc_->GetSenders();
   EXPECT_EQ(2u, senders.size());
-  EXPECT_TRUE(ContainsSender(senders, kAudioTracks[0]));
-  EXPECT_TRUE(ContainsSender(senders, kVideoTracks[0]));
+  EXPECT_TRUE(ContainsSender(senders, kAudioTracks[0], kStreams[0]));
+  EXPECT_TRUE(ContainsSender(senders, kVideoTracks[0], kStreams[0]));
 
   // Add a new MediaStream but with the same tracks as in the first stream.
   rtc::scoped_refptr<webrtc::MediaStreamInterface> stream_1(
       webrtc::MediaStream::Create(kStreams[1]));
-  stream_1->AddTrack(reference_collection_->at(0)->GetVideoTracks()[0]);
-  stream_1->AddTrack(reference_collection_->at(0)->GetAudioTracks()[0]);
+  stream_1->AddTrack(stream_collection->at(0)->GetVideoTracks()[0]);
+  stream_1->AddTrack(stream_collection->at(0)->GetAudioTracks()[0]);
   pc_->AddStream(stream_1);
 
-  // Replace msid in the original SDP.
-  rtc::replace_substrs(kStreams[0], strlen(kStreams[0]), kStreams[1],
-                       strlen(kStreams[1]), &sdp);
+  ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
+  EXPECT_TRUE(DoSetLocalDescription(offer.release()));
 
-  rtc::scoped_ptr<SessionDescriptionInterface> updated_desc(
-      webrtc::CreateSessionDescription(SessionDescriptionInterface::kOffer, sdp,
-                                       nullptr));
-
-  EXPECT_TRUE(DoSetLocalDescription(updated_desc.release()));
-  senders = pc_->GetSenders();
-  EXPECT_EQ(2u, senders.size());
-  EXPECT_TRUE(ContainsSender(senders, kAudioTracks[0]));
-  EXPECT_TRUE(ContainsSender(senders, kVideoTracks[0]));
+  auto new_senders = pc_->GetSenders();
+  // Should be the same senders as before, but with updated stream id.
+  // Note that this behavior is subject to change in the future.
+  // We may decide the PC should ignore existing tracks in AddStream.
+  EXPECT_EQ(senders, new_senders);
+  EXPECT_TRUE(ContainsSender(new_senders, kAudioTracks[0], kStreams[1]));
+  EXPECT_TRUE(ContainsSender(new_senders, kVideoTracks[0], kStreams[1]));
 }
-
-// The PeerConnectionMediaConfig tests below verify that configuration
-// and constraints are propagated into the MediaConfig passed to
-// CreateMediaController. These settings are intended for MediaChannel
-// constructors, but that is not exercised by these unittest.
-class PeerConnectionFactoryForTest : public webrtc::PeerConnectionFactory {
- public:
-  webrtc::MediaControllerInterface* CreateMediaController(
-      const cricket::MediaConfig& config) const override {
-    create_media_controller_called_ = true;
-    create_media_controller_config_ = config;
-
-    webrtc::MediaControllerInterface* mc =
-        PeerConnectionFactory::CreateMediaController(config);
-    EXPECT_TRUE(mc != nullptr);
-    return mc;
-  }
-
-  // Mutable, so they can be modified in the above const-declared method.
-  mutable bool create_media_controller_called_ = false;
-  mutable cricket::MediaConfig create_media_controller_config_;
-};
 
 class PeerConnectionMediaConfigTest : public testing::Test {
  protected:
   void SetUp() override {
-    pcf_= new rtc::RefCountedObject<PeerConnectionFactoryForTest>();
+    pcf_ = new rtc::RefCountedObject<PeerConnectionFactoryForTest>();
     pcf_->Initialize();
   }
   const cricket::MediaConfig& TestCreatePeerConnection(
@@ -2361,15 +2645,14 @@ class PeerConnectionMediaConfigTest : public testing::Test {
       const MediaConstraintsInterface *constraints) {
     pcf_->create_media_controller_called_ = false;
 
-    scoped_refptr<PeerConnectionInterface> pc(
-        pcf_->CreatePeerConnection(config, constraints, nullptr, nullptr,
-                                   &observer_));
+    rtc::scoped_refptr<PeerConnectionInterface> pc(pcf_->CreatePeerConnection(
+        config, constraints, nullptr, nullptr, &observer_));
     EXPECT_TRUE(pc.get());
     EXPECT_TRUE(pcf_->create_media_controller_called_);
     return pcf_->create_media_controller_config_;
   }
 
-  scoped_refptr<PeerConnectionFactoryForTest> pcf_;
+  rtc::scoped_refptr<PeerConnectionFactoryForTest> pcf_;
   MockPeerConnectionObserver observer_;
 };
 
@@ -2421,7 +2704,7 @@ TEST_F(PeerConnectionMediaConfigTest, TestDisablePrerendererSmoothingTrue) {
   PeerConnectionInterface::RTCConfiguration config;
   FakeConstraints constraints;
 
-  config.disable_prerenderer_smoothing = true;
+  config.set_prerenderer_smoothing(false);
   const cricket::MediaConfig& media_config =
       TestCreatePeerConnection(config, &constraints);
 
@@ -2454,11 +2737,11 @@ TEST(CreateSessionOptionsTest, GetOptionsForOfferWithInvalidAudioOption) {
   rtc_options.offer_to_receive_audio = RTCOfferAnswerOptions::kUndefined - 1;
 
   cricket::MediaSessionOptions options;
-  EXPECT_FALSE(ExtractMediaSessionOptions(rtc_options, &options));
+  EXPECT_FALSE(ExtractMediaSessionOptions(rtc_options, true, &options));
 
   rtc_options.offer_to_receive_audio =
       RTCOfferAnswerOptions::kMaxOfferToReceiveMedia + 1;
-  EXPECT_FALSE(ExtractMediaSessionOptions(rtc_options, &options));
+  EXPECT_FALSE(ExtractMediaSessionOptions(rtc_options, true, &options));
 }
 
 TEST(CreateSessionOptionsTest, GetOptionsForOfferWithInvalidVideoOption) {
@@ -2466,11 +2749,11 @@ TEST(CreateSessionOptionsTest, GetOptionsForOfferWithInvalidVideoOption) {
   rtc_options.offer_to_receive_video = RTCOfferAnswerOptions::kUndefined - 1;
 
   cricket::MediaSessionOptions options;
-  EXPECT_FALSE(ExtractMediaSessionOptions(rtc_options, &options));
+  EXPECT_FALSE(ExtractMediaSessionOptions(rtc_options, true, &options));
 
   rtc_options.offer_to_receive_video =
       RTCOfferAnswerOptions::kMaxOfferToReceiveMedia + 1;
-  EXPECT_FALSE(ExtractMediaSessionOptions(rtc_options, &options));
+  EXPECT_FALSE(ExtractMediaSessionOptions(rtc_options, true, &options));
 }
 
 // Test that a MediaSessionOptions is created for an offer if
@@ -2481,7 +2764,7 @@ TEST(CreateSessionOptionsTest, GetMediaSessionOptionsForOfferWithAudioVideo) {
   rtc_options.offer_to_receive_video = 1;
 
   cricket::MediaSessionOptions options;
-  EXPECT_TRUE(ExtractMediaSessionOptions(rtc_options, &options));
+  EXPECT_TRUE(ExtractMediaSessionOptions(rtc_options, true, &options));
   EXPECT_TRUE(options.has_audio());
   EXPECT_TRUE(options.has_video());
   EXPECT_TRUE(options.bundle_enabled);
@@ -2494,7 +2777,7 @@ TEST(CreateSessionOptionsTest, GetMediaSessionOptionsForOfferWithAudio) {
   rtc_options.offer_to_receive_audio = 1;
 
   cricket::MediaSessionOptions options;
-  EXPECT_TRUE(ExtractMediaSessionOptions(rtc_options, &options));
+  EXPECT_TRUE(ExtractMediaSessionOptions(rtc_options, true, &options));
   EXPECT_TRUE(options.has_audio());
   EXPECT_FALSE(options.has_video());
   EXPECT_TRUE(options.bundle_enabled);
@@ -2508,7 +2791,7 @@ TEST(CreateSessionOptionsTest, GetDefaultMediaSessionOptionsForOffer) {
   cricket::MediaSessionOptions options;
   options.transport_options["audio"] = cricket::TransportOptions();
   options.transport_options["video"] = cricket::TransportOptions();
-  EXPECT_TRUE(ExtractMediaSessionOptions(rtc_options, &options));
+  EXPECT_TRUE(ExtractMediaSessionOptions(rtc_options, true, &options));
   EXPECT_TRUE(options.has_audio());
   EXPECT_FALSE(options.has_video());
   EXPECT_TRUE(options.bundle_enabled);
@@ -2525,7 +2808,7 @@ TEST(CreateSessionOptionsTest, GetMediaSessionOptionsForOfferWithVideo) {
   rtc_options.offer_to_receive_video = 1;
 
   cricket::MediaSessionOptions options;
-  EXPECT_TRUE(ExtractMediaSessionOptions(rtc_options, &options));
+  EXPECT_TRUE(ExtractMediaSessionOptions(rtc_options, true, &options));
   EXPECT_FALSE(options.has_audio());
   EXPECT_TRUE(options.has_video());
   EXPECT_TRUE(options.bundle_enabled);
@@ -2541,7 +2824,7 @@ TEST(CreateSessionOptionsTest,
   rtc_options.use_rtp_mux = false;
 
   cricket::MediaSessionOptions options;
-  EXPECT_TRUE(ExtractMediaSessionOptions(rtc_options, &options));
+  EXPECT_TRUE(ExtractMediaSessionOptions(rtc_options, true, &options));
   EXPECT_TRUE(options.has_audio());
   EXPECT_TRUE(options.has_video());
   EXPECT_FALSE(options.bundle_enabled);
@@ -2557,12 +2840,12 @@ TEST(CreateSessionOptionsTest, GetMediaSessionOptionsForOfferWithIceRestart) {
   cricket::MediaSessionOptions options;
   options.transport_options["audio"] = cricket::TransportOptions();
   options.transport_options["video"] = cricket::TransportOptions();
-  EXPECT_TRUE(ExtractMediaSessionOptions(rtc_options, &options));
+  EXPECT_TRUE(ExtractMediaSessionOptions(rtc_options, true, &options));
   EXPECT_TRUE(options.transport_options["audio"].ice_restart);
   EXPECT_TRUE(options.transport_options["video"].ice_restart);
 
   rtc_options = RTCOfferAnswerOptions();
-  EXPECT_TRUE(ExtractMediaSessionOptions(rtc_options, &options));
+  EXPECT_TRUE(ExtractMediaSessionOptions(rtc_options, true, &options));
   EXPECT_FALSE(options.transport_options["audio"].ice_restart);
   EXPECT_FALSE(options.transport_options["video"].ice_restart);
 }
@@ -2584,16 +2867,17 @@ TEST(CreateSessionOptionsTest, MediaConstraintsInAnswer) {
   RTCOfferAnswerOptions rtc_offer_options;
 
   cricket::MediaSessionOptions offer_options;
-  EXPECT_TRUE(ExtractMediaSessionOptions(rtc_offer_options, &offer_options));
+  EXPECT_TRUE(
+      ExtractMediaSessionOptions(rtc_offer_options, false, &offer_options));
   EXPECT_TRUE(offer_options.has_audio());
-  EXPECT_FALSE(offer_options.has_video());
+  EXPECT_TRUE(offer_options.has_video());
 
   RTCOfferAnswerOptions updated_rtc_offer_options;
   updated_rtc_offer_options.offer_to_receive_audio = 1;
   updated_rtc_offer_options.offer_to_receive_video = 1;
 
   cricket::MediaSessionOptions updated_offer_options;
-  EXPECT_TRUE(ExtractMediaSessionOptions(updated_rtc_offer_options,
+  EXPECT_TRUE(ExtractMediaSessionOptions(updated_rtc_offer_options, false,
                                          &updated_offer_options));
   EXPECT_TRUE(updated_offer_options.has_audio());
   EXPECT_TRUE(updated_offer_options.has_video());

@@ -14,7 +14,6 @@
 #include <stdlib.h>  // NULL
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/modules/audio_coding/codecs/cng/webrtc_cng.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -94,10 +93,12 @@ class AudioDecoder {
   // Returns true if the packet has FEC and false otherwise.
   virtual bool PacketHasFec(const uint8_t* encoded, size_t encoded_len) const;
 
-  // If this is a CNG decoder, return the underlying CNG_dec_inst*. If this
-  // isn't a CNG decoder, don't call this method.
-  virtual CNG_dec_inst* CngDecoderInstance();
+  // Returns the actual sample rate of the decoder's output. This value may not
+  // change during the lifetime of the decoder.
+  virtual int SampleRateHz() const = 0;
 
+  // The number of channels in the decoder's output. This value may not change
+  // during the lifetime of the decoder.
   virtual size_t Channels() const = 0;
 
  protected:

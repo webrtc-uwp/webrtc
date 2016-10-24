@@ -1,3 +1,5 @@
+deadbeef@webrtc.org
+honghaiz@webrtc.org
 hta@webrtc.org
 jiayl@webrtc.org
 juberti@webrtc.org
@@ -10,3 +12,5 @@ tommi@webrtc.org
 # structural changes, please get a review from a reviewer in this file.
 per-file *.gyp=*
 per-file *.gypi=*
+
+per-file BUILD.gn=kjellander@webrtc.org

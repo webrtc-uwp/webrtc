@@ -13,6 +13,8 @@
 #include "webrtc/modules/utility/include/file_player.h"
 
 #include <stdio.h>
+
+#include <memory>
 #include <string>
 
 #include "gflags/gflags.h"
@@ -32,7 +34,7 @@ class FilePlayerTest : public ::testing::Test {
   static const int kSampleRateHz = 8000;
 
   FilePlayerTest()
-      : player_(FilePlayer::CreateFilePlayer(kId, kFileFormat)),
+      : player_(FilePlayer::NewFilePlayer(kId, kFileFormat)),
         output_file_(NULL) {}
 
   void SetUp() override {
@@ -49,21 +51,18 @@ class FilePlayerTest : public ::testing::Test {
       fclose(output_file_);
   }
 
-  ~FilePlayerTest() { FilePlayer::DestroyFilePlayer(player_); }
-
   void PlayFileAndCheck(const std::string& input_file,
                         const std::string& ref_checksum,
                         int output_length_ms) {
     const float kScaling = 1;
-    ASSERT_EQ(0,
-              player_->StartPlayingFile(
-                  input_file.c_str(), false, 0, kScaling, 0, 0, NULL));
+    ASSERT_EQ(0, player_->StartPlayingFile(input_file.c_str(), false, 0,
+                                           kScaling, 0, 0, NULL));
     rtc::Md5Digest checksum;
     for (int i = 0; i < output_length_ms / 10; ++i) {
       int16_t out[10 * kSampleRateHz / 1000] = {0};
       size_t num_samples;
-      EXPECT_EQ(0,
-                player_->Get10msAudioFromFile(out, num_samples, kSampleRateHz));
+      EXPECT_EQ(
+          0, player_->Get10msAudioFromFile(out, &num_samples, kSampleRateHz));
       checksum.Update(out, num_samples * sizeof(out[0]));
       if (FLAGS_file_player_output) {
         ASSERT_EQ(num_samples,
@@ -77,7 +76,7 @@ class FilePlayerTest : public ::testing::Test {
               rtc::hex_encode(checksum_result, sizeof(checksum_result)));
   }
 
-  FilePlayer* player_;
+  std::unique_ptr<FilePlayer> player_;
   FILE* output_file_;
 };
 

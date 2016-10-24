@@ -31,7 +31,7 @@ class FakeAdmTest : public testing::Test,
     memset(rec_buffer_, 0, sizeof(rec_buffer_));
   }
 
-  virtual void SetUp() {
+  void SetUp() override {
     fake_audio_capture_module_ = FakeAudioCaptureModule::Create();
     EXPECT_TRUE(fake_audio_capture_module_.get() != NULL);
   }
@@ -61,6 +61,21 @@ class FakeAdmTest : public testing::Test,
     newMicLevel = currentMicLevel;
     return 0;
   }
+
+  void PushCaptureData(int voe_channel,
+                       const void* audio_data,
+                       int bits_per_sample,
+                       int sample_rate,
+                       size_t number_of_channels,
+                       size_t number_of_frames) override {}
+
+  void PullRenderData(int bits_per_sample,
+                      int sample_rate,
+                      size_t number_of_channels,
+                      size_t number_of_frames,
+                      void* audio_data,
+                      int64_t* elapsed_time_ms,
+                      int64_t* ntp_time_ms) override {}
 
   // ADM is pulling data.
   int32_t NeedMorePlayData(const size_t nSamples,
@@ -119,7 +134,7 @@ class FakeAdmTest : public testing::Test,
   size_t rec_buffer_bytes_;
 };
 
-TEST_F(FakeAdmTest, TestProccess) {
+TEST_F(FakeAdmTest, TestProcess) {
   // Next process call must be some time in the future (or now).
   EXPECT_LE(0, fake_audio_capture_module_->TimeUntilNextProcess());
   // Process call updates TimeUntilNextProcess() but there are no guarantees on

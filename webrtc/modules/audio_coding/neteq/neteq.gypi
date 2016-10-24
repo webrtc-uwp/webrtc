@@ -51,6 +51,8 @@
       'dependencies': [
         '<@(neteq_dependencies)',
         '<(webrtc_root)/common.gyp:webrtc_common',
+        'builtin_audio_decoder_factory',
+        'rent_a_codec',
       ],
       'defines': [
         '<@(neteq_defines)',
@@ -73,6 +75,8 @@
         'buffer_level_filter.h',
         'comfort_noise.cc',
         'comfort_noise.h',
+        'cross_correlation.cc',
+        'cross_correlation.h',
         'decision_logic.cc',
         'decision_logic.h',
         'decision_logic_fax.cc',
@@ -96,8 +100,8 @@
         'expand.h',
         'merge.cc',
         'merge.h',
-        'nack.h',
-        'nack.cc',
+        'nack_tracker.h',
+        'nack_tracker.cc',
         'neteq_impl.cc',
         'neteq_impl.h',
         'neteq.cc',
@@ -105,6 +109,8 @@
         'statistics_calculator.h',
         'normal.cc',
         'normal.h',
+        'packet.cc',
+        'packet.h',
         'packet_buffer.cc',
         'packet_buffer.h',
         'payload_splitter.cc',
@@ -119,6 +125,8 @@
         'rtcp.h',
         'sync_buffer.cc',
         'sync_buffer.h',
+        'tick_timer.cc',
+        'tick_timer.h',
         'timestamp_scaler.cc',
         'timestamp_scaler.h',
         'time_stretch.cc',
@@ -149,8 +157,6 @@
             '<@(neteq_defines)',
           ],
           'sources': [
-            'audio_decoder_impl.cc',
-            'audio_decoder_impl.h',
             'audio_decoder_unittest.cc',
           ],
           'conditions': [
@@ -168,10 +174,44 @@
         }, # audio_decoder_unittests
 
         {
+          'target_name': 'rtc_event_log_source',
+          'type': 'static_library',
+          'dependencies': [
+            '<(webrtc_root)/webrtc.gyp:rtc_event_log_parser',
+            '<(webrtc_root)/webrtc.gyp:rtc_event_log_proto',
+          ],
+          'export_dependent_settings': [
+            '<(webrtc_root)/webrtc.gyp:rtc_event_log_parser',
+          ],
+          'sources': [
+            'tools/rtc_event_log_source.h',
+            'tools/rtc_event_log_source.cc',
+          ],
+        },
+
+        {
+          'target_name': 'neteq_unittest_proto',
+          'type': 'static_library',
+          'sources': [
+            'neteq_unittest.proto',
+          ],
+          'variables': {
+            'proto_in_dir': '.',
+            # Workaround to protect against gyp's pathname relativization when
+            # this file is included by modules.gyp.
+            'proto_out_protected': 'webrtc/audio_coding/neteq',
+            'proto_out_dir': '<(proto_out_protected)',
+          },
+          'includes': ['../../../build/protoc.gypi',],
+        },
+
+        {
           'target_name': 'neteq_unittest_tools',
           'type': 'static_library',
           'dependencies': [
+            'neteq',
             'rtp_rtcp',
+            'rtc_event_log_source',
             '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
             '<(webrtc_root)/test/test.gyp:rtp_test_utils',
           ],
@@ -188,14 +228,25 @@
             'tools/audio_loop.cc',
             'tools/audio_loop.h',
             'tools/audio_sink.h',
+            'tools/audio_sink.cc',
             'tools/constant_pcm_packet_source.cc',
             'tools/constant_pcm_packet_source.h',
+            'tools/fake_decode_from_file.cc',
+            'tools/fake_decode_from_file.h',
             'tools/input_audio_file.cc',
             'tools/input_audio_file.h',
+            'tools/neteq_input.h',
+            'tools/neteq_packet_source_input.cc',
+            'tools/neteq_packet_source_input.h',
+            'tools/neteq_replacement_input.cc',
+            'tools/neteq_replacement_input.h',
+            'tools/neteq_test.cc',
+            'tools/neteq_test.h',
             'tools/output_audio_file.h',
             'tools/output_wav_file.h',
             'tools/packet.cc',
             'tools/packet.h',
+            'tools/packet_source.cc',
             'tools/packet_source.h',
             'tools/resample_input_audio_file.cc',
             'tools/resample_input_audio_file.h',
@@ -206,19 +257,6 @@
           ],
         }, # neteq_unittest_tools
       ], # targets
-      'conditions': [
-        ['OS=="android"', {
-          'targets': [
-            {
-              'target_name': 'audio_decoder_unittests_apk_target',
-              'type': 'none',
-              'dependencies': [
-                '<(apk_tests_path):audio_decoder_unittests_apk',
-              ],
-            },
-          ],
-        }],
-      ],
     }], # include_tests
   ], # conditions
 }

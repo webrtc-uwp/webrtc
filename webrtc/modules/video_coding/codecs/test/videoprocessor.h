@@ -14,12 +14,10 @@
 #include <string>
 
 #include "webrtc/base/checks.h"
-#include "webrtc/common_video/libyuv/include/scaler.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/modules/video_coding/codecs/test/packet_manipulator.h"
 #include "webrtc/modules/video_coding/codecs/test/stats.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/test/testsupport/frame_reader.h"
 #include "webrtc/test/testsupport/frame_writer.h"
 #include "webrtc/video_frame.h"
@@ -179,8 +177,7 @@ class VideoProcessorImpl : public VideoProcessor {
   void FrameDecoded(const webrtc::VideoFrame& image);
   // Used for getting a 32-bit integer representing time
   // (checks the size is within signed 32-bit bounds before casting it)
-  int GetElapsedTimeMicroseconds(const webrtc::TickTime& start,
-                                 const webrtc::TickTime& stop);
+  int GetElapsedTimeMicroseconds(int64_t start, int64_t stop);
   // Updates the encoder with the target bit rate and the frame rate.
   void SetRates(int bit_rate, int frame_rate) override;
   // Return the size of the encoded frame in bytes.
@@ -221,12 +218,11 @@ class VideoProcessorImpl : public VideoProcessor {
   int num_spatial_resizes_;
   int last_encoder_frame_width_;
   int last_encoder_frame_height_;
-  Scaler scaler_;
 
   // Statistics
   double bit_rate_factor_;  // multiply frame length with this to get bit rate
-  webrtc::TickTime encode_start_;
-  webrtc::TickTime decode_start_;
+  int64_t encode_start_ns_;
+  int64_t decode_start_ns_;
 
   // Callback class required to implement according to the VideoEncoder API.
   class VideoProcessorEncodeCompleteCallback
@@ -234,7 +230,7 @@ class VideoProcessorImpl : public VideoProcessor {
    public:
     explicit VideoProcessorEncodeCompleteCallback(VideoProcessorImpl* vp)
         : video_processor_(vp) {}
-    int32_t Encoded(
+    Result OnEncodedImage(
         const webrtc::EncodedImage& encoded_image,
         const webrtc::CodecSpecificInfo* codec_specific_info,
         const webrtc::RTPFragmentationHeader* fragmentation) override;

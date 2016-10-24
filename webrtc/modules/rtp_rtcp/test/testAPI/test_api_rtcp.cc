@@ -9,10 +9,12 @@
  */
 
 #include <algorithm>
+#include <memory>
 #include <vector>
 
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/rate_limiter.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/rtp_rtcp/include/receive_statistics.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
@@ -65,7 +67,8 @@ class TestRtpFeedback : public NullRtpFeedback {
 
 class RtpRtcpRtcpTest : public ::testing::Test {
  protected:
-  RtpRtcpRtcpTest() : fake_clock(123456) {
+  RtpRtcpRtcpTest()
+      : fake_clock(123456), retransmission_rate_limiter_(&fake_clock, 1000) {
     test_csrcs.push_back(1234);
     test_csrcs.push_back(2345);
     test_ssrc = 3456;
@@ -90,6 +93,7 @@ class RtpRtcpRtcpTest : public ::testing::Test {
     configuration.receive_statistics = receive_statistics1_.get();
     configuration.outgoing_transport = transport1;
     configuration.intra_frame_callback = myRTCPFeedback1;
+    configuration.retransmission_rate_limiter = &retransmission_rate_limiter_;
 
     rtp_payload_registry1_.reset(new RTPPayloadRegistry(
             RTPPayloadStrategy::CreateStrategy(true)));
@@ -101,7 +105,7 @@ class RtpRtcpRtcpTest : public ::testing::Test {
     rtp_feedback1_.reset(new TestRtpFeedback(module1));
 
     rtp_receiver1_.reset(RtpReceiver::CreateAudioReceiver(
-        &fake_clock, NULL, receiver, rtp_feedback1_.get(),
+        &fake_clock, receiver, rtp_feedback1_.get(),
         rtp_payload_registry1_.get()));
 
     configuration.receive_statistics = receive_statistics2_.get();
@@ -113,7 +117,7 @@ class RtpRtcpRtcpTest : public ::testing::Test {
     rtp_feedback2_.reset(new TestRtpFeedback(module2));
 
     rtp_receiver2_.reset(RtpReceiver::CreateAudioReceiver(
-        &fake_clock, NULL, receiver, rtp_feedback2_.get(),
+        &fake_clock, receiver, rtp_feedback2_.get(),
         rtp_payload_registry2_.get()));
 
     transport1->SetSendModule(module2, rtp_payload_registry2_.get(),
@@ -161,8 +165,9 @@ class RtpRtcpRtcpTest : public ::testing::Test {
     // the receiving module.
     // send RTP packet with the data "testtest"
     const uint8_t test[9] = "testtest";
-    EXPECT_EQ(0, module1->SendOutgoingData(webrtc::kAudioFrameSpeech, 96,
-                                           0, -1, test, 8));
+    EXPECT_EQ(true,
+              module1->SendOutgoingData(webrtc::kAudioFrameSpeech, 96, 0, -1,
+                                        test, 8, nullptr, nullptr, nullptr));
   }
 
   virtual void TearDown() {
@@ -175,14 +180,14 @@ class RtpRtcpRtcpTest : public ::testing::Test {
     delete receiver;
   }
 
-  rtc::scoped_ptr<TestRtpFeedback> rtp_feedback1_;
-  rtc::scoped_ptr<TestRtpFeedback> rtp_feedback2_;
-  rtc::scoped_ptr<ReceiveStatistics> receive_statistics1_;
-  rtc::scoped_ptr<ReceiveStatistics> receive_statistics2_;
-  rtc::scoped_ptr<RTPPayloadRegistry> rtp_payload_registry1_;
-  rtc::scoped_ptr<RTPPayloadRegistry> rtp_payload_registry2_;
-  rtc::scoped_ptr<RtpReceiver> rtp_receiver1_;
-  rtc::scoped_ptr<RtpReceiver> rtp_receiver2_;
+  std::unique_ptr<TestRtpFeedback> rtp_feedback1_;
+  std::unique_ptr<TestRtpFeedback> rtp_feedback2_;
+  std::unique_ptr<ReceiveStatistics> receive_statistics1_;
+  std::unique_ptr<ReceiveStatistics> receive_statistics2_;
+  std::unique_ptr<RTPPayloadRegistry> rtp_payload_registry1_;
+  std::unique_ptr<RTPPayloadRegistry> rtp_payload_registry2_;
+  std::unique_ptr<RtpReceiver> rtp_receiver1_;
+  std::unique_ptr<RtpReceiver> rtp_receiver2_;
   RtpRtcp* module1;
   RtpRtcp* module2;
   TestRtpReceiver* receiver;
@@ -196,6 +201,7 @@ class RtpRtcpRtcpTest : public ::testing::Test {
   uint16_t test_sequence_number;
   std::vector<uint32_t> test_csrcs;
   SimulatedClock fake_clock;
+  RateLimiter retransmission_rate_limiter_;
 };
 
 TEST_F(RtpRtcpRtcpTest, RTCP_PLI_RPSI) {

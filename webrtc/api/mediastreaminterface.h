@@ -23,17 +23,11 @@
 #include "webrtc/base/basictypes.h"
 #include "webrtc/base/refcount.h"
 #include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/base/optional.h"
+#include "webrtc/media/base/mediachannel.h"
+#include "webrtc/media/base/videoframe.h"
 #include "webrtc/media/base/videosinkinterface.h"
 #include "webrtc/media/base/videosourceinterface.h"
-
-namespace cricket {
-
-class AudioRenderer;
-class VideoCapturer;
-class VideoRenderer;
-class VideoFrame;
-
-}  // namespace cricket
 
 namespace webrtc {
 
@@ -79,95 +73,73 @@ class MediaStreamTrackInterface : public rtc::RefCountInterface,
                                   public NotifierInterface {
  public:
   enum TrackState {
-    kInitializing,  // Track is beeing negotiated.
-    kLive = 1,  // Track alive
-    kEnded = 2,  // Track have ended
-    kFailed = 3,  // Track negotiation failed.
+    kLive,
+    kEnded,
   };
 
   static const char kAudioKind[];
   static const char kVideoKind[];
 
+  // The kind() method must return kAudioKind only if the object is a
+  // subclass of AudioTrackInterface, and kVideoKind only if the
+  // object is a subclass of VideoTrackInterface. It is typically used
+  // to protect a static_cast<> to the corresponding subclass.
   virtual std::string kind() const = 0;
   virtual std::string id() const = 0;
   virtual bool enabled() const = 0;
   virtual TrackState state() const = 0;
   virtual bool set_enabled(bool enable) = 0;
-  // These methods should be called by implementation only.
-  virtual bool set_state(TrackState new_state) = 0;
 
  protected:
   virtual ~MediaStreamTrackInterface() {}
 };
 
-// Interface for rendering VideoFrames from a VideoTrack
-class VideoRendererInterface
-    : public rtc::VideoSinkInterface<cricket::VideoFrame> {
+// VideoTrackSourceInterface is a reference counted source used for VideoTracks.
+// The same source can be used in multiple VideoTracks.
+class VideoTrackSourceInterface
+    : public MediaSourceInterface,
+      public rtc::VideoSourceInterface<cricket::VideoFrame> {
  public:
-  // |frame| may have pending rotation. For clients which can't apply rotation,
-  // |frame|->GetCopyWithRotationApplied() will return a frame that has the
-  // rotation applied.
-  virtual void RenderFrame(const cricket::VideoFrame* frame) = 0;
-  // Intended to replace RenderFrame.
-  void OnFrame(const cricket::VideoFrame& frame) override {
-    RenderFrame(&frame);
-  }
+  struct Stats {
+    // Original size of captured frame, before video adaptation.
+    int input_width;
+    int input_height;
+  };
+
+  // Indicates that parameters suitable for screencasts should be automatically
+  // applied to RtpSenders.
+  // TODO(perkj): Remove these once all known applications have moved to
+  // explicitly setting suitable parameters for screencasts and dont' need this
+  // implicit behavior.
+  virtual bool is_screencast() const = 0;
+
+  // Indicates that the encoder should denoise video before encoding it.
+  // If it is not set, the default configuration is used which is different
+  // depending on video codec.
+  // TODO(perkj): Remove this once denoising is done by the source, and not by
+  // the encoder.
+  virtual rtc::Optional<bool> needs_denoising() const = 0;
+
+  // Returns false if no stats are available, e.g, for a remote
+  // source, or a source which has not seen its first frame yet.
+  // Should avoid blocking.
+  virtual bool GetStats(Stats* stats) = 0;
 
  protected:
-  // The destructor is protected to prevent deletion via the interface.
-  // This is so that we allow reference counted classes, where the destructor
-  // should never be public, to implement the interface.
-  virtual ~VideoRendererInterface() {}
+  virtual ~VideoTrackSourceInterface() {}
 };
-
-class VideoSourceInterface;
 
 class VideoTrackInterface
     : public MediaStreamTrackInterface,
       public rtc::VideoSourceInterface<cricket::VideoFrame> {
  public:
-  // Make an unqualified VideoSourceInterface resolve to
-  // webrtc::VideoSourceInterface, not our base class
-  // rtc::VideoSourceInterface<cricket::VideoFrame>.
-  using VideoSourceInterface = webrtc::VideoSourceInterface;
-
-  // AddRenderer and RemoveRenderer are for backwards compatibility
-  // only. They are obsoleted by the methods of
-  // rtc::VideoSourceInterface.
-  virtual void AddRenderer(VideoRendererInterface* renderer) {
-    AddOrUpdateSink(renderer, rtc::VideoSinkWants());
-  }
-  virtual void RemoveRenderer(VideoRendererInterface* renderer) {
-    RemoveSink(renderer);
-  }
-
   // Register a video sink for this track.
   void AddOrUpdateSink(rtc::VideoSinkInterface<cricket::VideoFrame>* sink,
                        const rtc::VideoSinkWants& wants) override{};
   void RemoveSink(
       rtc::VideoSinkInterface<cricket::VideoFrame>* sink) override{};
 
-  virtual VideoSourceInterface* GetSource() const = 0;
-
-  // Return the track input sink. I.e., frames sent to this sink are
-  // propagated to all renderers registered with the track. The
-  // returned sink must not change between calls. Currently, this
-  // method is used for remote tracks (VideoRtpReceiver); further
-  // refactoring is planned for this path, it's unclear if this method
-  // belongs here long term.
-
-  // We do this instead of simply implementing the
-  // VideoSourceInterface directly, because if we did the latter, we'd
-  // need an OnFrame method in VideoTrackProxy, with a thread jump on
-  // each call.
-
-  // TODO(nisse): It has a default implementation so that mock
-  // objects, in particular, chrome's MockWebRtcVideoTrack, doesn't
-  // need to know about it. Consider removing the implementation (or
-  // this comment) after refactoring dust settles.
-  virtual rtc::VideoSinkInterface<cricket::VideoFrame>* GetSink() {
-    return nullptr;
-  };
+  virtual VideoTrackSourceInterface* GetSource() const = 0;
 
  protected:
   virtual ~VideoTrackInterface() {}
@@ -224,7 +196,8 @@ class AudioProcessorInterface : public rtc::RefCountInterface {
                             echo_return_loss_enhancement(0),
                             echo_delay_median_ms(0),
                             aec_quality_min(0.0),
-                            echo_delay_std_ms(0) {}
+                            echo_delay_std_ms(0),
+                            aec_divergent_filter_fraction(0.0) {}
     ~AudioProcessorStats() {}
 
     bool typing_noise_detected;
@@ -233,6 +206,7 @@ class AudioProcessorInterface : public rtc::RefCountInterface {
     int echo_delay_median_ms;
     float aec_quality_min;
     int echo_delay_std_ms;
+    float aec_divergent_filter_fraction;
   };
 
   // Get audio processor statistics.

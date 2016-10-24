@@ -72,8 +72,7 @@ LappedTransform::LappedTransform(size_t num_in_channels,
                window,
                shift_amount,
                &blocker_callback_),
-      fft_(rtc::ScopedToUnique(
-          RealFourier::Create(RealFourier::FftOrder(block_length_)))),
+      fft_(RealFourier::Create(RealFourier::FftOrder(block_length_))),
       cplx_length_(RealFourier::ComplexLength(fft_->order())),
       real_buf_(num_in_channels,
                 block_length_,
@@ -84,7 +83,7 @@ LappedTransform::LappedTransform(size_t num_in_channels,
       cplx_post_(num_out_channels,
                  cplx_length_,
                  RealFourier::kFftBufferAlignment) {
-  RTC_CHECK(num_in_channels_ > 0 && num_out_channels_ > 0);
+  RTC_CHECK(num_in_channels_ > 0);
   RTC_CHECK_GT(block_length_, 0u);
   RTC_CHECK_GT(chunk_length_, 0u);
   RTC_CHECK(block_processor_);
@@ -92,6 +91,8 @@ LappedTransform::LappedTransform(size_t num_in_channels,
   // block_length_ power of 2?
   RTC_CHECK_EQ(0u, block_length_ & (block_length_ - 1));
 }
+
+LappedTransform::~LappedTransform() = default;
 
 void LappedTransform::ProcessChunk(const float* const* in_chunk,
                                    float* const* out_chunk) {

@@ -21,7 +21,6 @@
 #include "gflags/gflags.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/format_macros.h"
-#include "webrtc/call/rtc_event_log.h"
 #include "webrtc/engine_configurations.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/test/channel_transport/channel_transport.h"
@@ -30,7 +29,6 @@
 #include "webrtc/voice_engine/include/voe_audio_processing.h"
 #include "webrtc/voice_engine/include/voe_base.h"
 #include "webrtc/voice_engine/include/voe_codec.h"
-#include "webrtc/voice_engine/include/voe_dtmf.h"
 #include "webrtc/voice_engine/include/voe_errors.h"
 #include "webrtc/voice_engine/include/voe_external_media.h"
 #include "webrtc/voice_engine/include/voe_file.h"
@@ -57,7 +55,6 @@ VoiceEngine* m_voe = NULL;
 VoEBase* base1 = NULL;
 VoECodec* codec = NULL;
 VoEVolumeControl* volume = NULL;
-VoEDtmf* dtmf = NULL;
 VoERTP_RTCP* rtp_rtcp = NULL;
 VoEAudioProcessing* apm = NULL;
 VoENetwork* netw = NULL;
@@ -131,7 +128,6 @@ int main(int argc, char** argv) {
   codec = VoECodec::GetInterface(m_voe);
   apm = VoEAudioProcessing::GetInterface(m_voe);
   volume = VoEVolumeControl::GetInterface(m_voe);
-  dtmf = VoEDtmf::GetInterface(m_voe);
   rtp_rtcp = VoERTP_RTCP::GetInterface(m_voe);
   netw = VoENetwork::GetInterface(m_voe);
   file = VoEFile::GetInterface(m_voe);
@@ -189,9 +185,6 @@ int main(int argc, char** argv) {
 
   if (volume)
     volume->Release();
-
-  if (dtmf)
-    dtmf->Release();
 
   if (rtp_rtcp)
     rtp_rtcp->Release();
@@ -454,7 +447,6 @@ void RunTest(std::string out_path) {
       printf("%i. Set bit rate (only take effect on codecs that allow the "
              "change) \n", option_index++);
       printf("%i. Toggle AECdump recording \n", option_index++);
-      printf("%i. Record RtcEventLog file of 30 seconds \n", option_index++);
 
       printf("Select action or %i to stop the call: ", option_index);
       int option_selection;
@@ -464,14 +456,9 @@ void RunTest(std::string out_path) {
       if (option_selection < option_index) {
         res = codec->GetCodec(option_selection, cinst);
         VALIDATE;
-        if (strcmp(cinst.plname, "red") == 0) {
-          printf("Enabling RED\n");
-          res = rtp_rtcp->SetREDStatus(chan, true, cinst.pltype);
-        } else {
-          SetStereoIfOpus(opus_stereo, &cinst);
-          printf("Set primary codec\n");
-          res = codec->SetSendCodec(chan, cinst);
-        }
+        SetStereoIfOpus(opus_stereo, &cinst);
+        printf("Set primary codec\n");
+        res = codec->SetSendCodec(chan, cinst);
         VALIDATE;
       } else if (option_selection == option_index++) {
         enable_cng = !enable_cng;
@@ -801,9 +788,6 @@ void RunTest(std::string out_path) {
           printf("Debug recording named %s started\n", kDebugFileName);
         }
         debug_recording_started = !debug_recording_started;
-      } else if (option_selection == option_index++) {
-        const char* kDebugFileName = "eventlog.rel";
-        codec->GetEventLog()->StartLogging(kDebugFileName, 30000);
       } else {
         break;
       }

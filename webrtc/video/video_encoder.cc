@@ -25,6 +25,7 @@ VideoEncoder* VideoEncoder::Create(VideoEncoder::EncoderType codec_type) {
     case kVp8:
       return VP8Encoder::Create();
     case kVp9:
+      RTC_DCHECK(VP9Encoder::IsSupported());
       return VP9Encoder::Create();
     case kUnsupportedCodec:
       RTC_NOTREACHED();
@@ -183,18 +184,6 @@ bool VideoEncoderSoftwareFallbackWrapper::SupportsNativeHandle() const {
   if (fallback_encoder_)
     return fallback_encoder_->SupportsNativeHandle();
   return encoder_->SupportsNativeHandle();
-}
-
-const char* VideoEncoderSoftwareFallbackWrapper::ImplementationName() const {
-  if (fallback_encoder_)
-    return fallback_implementation_name_.c_str();
-  return encoder_->ImplementationName();
-}
-
-int VideoEncoderSoftwareFallbackWrapper::GetTargetFramerate() {
-  if (fallback_encoder_)
-    return fallback_encoder_->GetTargetFramerate();
-  return encoder_->GetTargetFramerate();
 }
 
 }  // namespace webrtc

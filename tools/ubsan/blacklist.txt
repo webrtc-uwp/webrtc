@@ -10,6 +10,10 @@
 # https://crbug.com/489901
 src:*/third_party/yasm/*
 
+# OpenH264 triggers some errors that are out of our control.
+src:*/third_party/ffmpeg/libavcodec/*
+src:*/third_party/openh264/*
+
 #############################################################################
 # Ignore system libraries.
 src:*/usr/*
@@ -17,12 +21,6 @@ src:*/usr/*
 #############################################################################
 # https://bugs.chromium.org/p/webrtc/issues/detail?id=5513
 fun:*FilterBanksTest*CalculateResidualEnergyTester*
-
-#############################################################################
-# The audio processing AGC submodule exhibits a few problems (overflows).
-# https://bugs.chromium.org/p/webrtc/issues/detail?id=5530
-src:*/webrtc/modules/audio_processing/agc/legacy/analog_agc.c
-src:*/webrtc/modules/audio_processing/agc/legacy/digital_agc.c
 
 #############################################################################
 # Ignore errors in common_audio.
@@ -33,3 +31,8 @@ fun:*WebRtcSpl_AddSatW32*
 fun:*WebRtcSpl_SubSatW32*
 fun:*WebRtcSpl_DivW32HiLow*
 fun:*GmmProbability*
+
+#############################################################################
+# Ignore errors in peerconnection_unittests.
+# https://bugs.chromium.org/p/webrtc/issues/detail?id=5889
+src:*/webrtc/modules/audio_coding/neteq/delay_manager.cc

@@ -22,10 +22,10 @@ extern "C" {
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 }
 #include "webrtc/modules/audio_processing/aec/aec_common.h"
-#include "webrtc/modules/audio_processing/aec/aec_core_internal.h"
-extern "C" {
+#include "webrtc/modules/audio_processing/aec/aec_core_optimized_methods.h"
 #include "webrtc/modules/audio_processing/aec/aec_rdft.h"
-}
+
+namespace webrtc {
 
 enum { kShiftExponentIntoTopMantissa = 8 };
 enum { kFloatExponentShift = 23 };
@@ -127,15 +127,10 @@ static float32x4_t vsqrtq_f32(float32x4_t s) {
 }
 #endif  // WEBRTC_ARCH_ARM64
 
-static void ScaleErrorSignalNEON(int extended_filter_enabled,
-                                 float normal_mu,
-                                 float normal_error_threshold,
+static void ScaleErrorSignalNEON(float mu,
+                                 float error_threshold,
                                  float x_pow[PART_LEN1],
                                  float ef[2][PART_LEN1]) {
-  const float mu = extended_filter_enabled ? kExtendedMu : normal_mu;
-  const float error_threshold = extended_filter_enabled
-                                    ? kExtendedErrorThreshold
-                                    : normal_error_threshold;
   const float32x4_t k1e_10f = vdupq_n_f32(1e-10f);
   const float32x4_t kMu = vmovq_n_f32(mu);
   const float32x4_t kThresh = vmovq_n_f32(error_threshold);
@@ -379,15 +374,13 @@ static float32x4_t vpowq_f32(float32x4_t a, float32x4_t b) {
   return a_exp_b;
 }
 
-static void OverdriveAndSuppressNEON(AecCore* aec,
-                                     float hNl[PART_LEN1],
-                                     const float hNlFb,
-                                     float efw[2][PART_LEN1]) {
+static void OverdriveNEON(float overdrive_scaling,
+                          float hNlFb,
+                          float hNl[PART_LEN1]) {
   int i;
   const float32x4_t vec_hNlFb = vmovq_n_f32(hNlFb);
   const float32x4_t vec_one = vdupq_n_f32(1.0f);
-  const float32x4_t vec_minus_one = vdupq_n_f32(-1.0f);
-  const float32x4_t vec_overDriveSm = vmovq_n_f32(aec->overDriveSm);
+  const float32x4_t vec_overdrive_scaling = vmovq_n_f32(overdrive_scaling);
 
   // vectorized code (four at once)
   for (i = 0; i + 3 < PART_LEN1; i += 4) {
@@ -409,28 +402,12 @@ static void OverdriveAndSuppressNEON(AecCore* aec,
 
     vec_hNl = vreinterpretq_f32_u32(vorrq_u32(vec_if0, vec_if1));
 
-    {
-      const float32x4_t vec_overDriveCurve =
-          vld1q_f32(&WebRtcAec_overDriveCurve[i]);
-      const float32x4_t vec_overDriveSm_overDriveCurve =
-          vmulq_f32(vec_overDriveSm, vec_overDriveCurve);
-      vec_hNl = vpowq_f32(vec_hNl, vec_overDriveSm_overDriveCurve);
-      vst1q_f32(&hNl[i], vec_hNl);
-    }
-
-    // Suppress error signal
-    {
-      float32x4_t vec_efw_re = vld1q_f32(&efw[0][i]);
-      float32x4_t vec_efw_im = vld1q_f32(&efw[1][i]);
-      vec_efw_re = vmulq_f32(vec_efw_re, vec_hNl);
-      vec_efw_im = vmulq_f32(vec_efw_im, vec_hNl);
-
-      // Ooura fft returns incorrect sign on imaginary component. It matters
-      // here because we are making an additive change with comfort noise.
-      vec_efw_im = vmulq_f32(vec_efw_im, vec_minus_one);
-      vst1q_f32(&efw[0][i], vec_efw_re);
-      vst1q_f32(&efw[1][i], vec_efw_im);
-    }
+    const float32x4_t vec_overDriveCurve =
+        vld1q_f32(&WebRtcAec_overDriveCurve[i]);
+    const float32x4_t vec_overDriveSm_overDriveCurve =
+        vmulq_f32(vec_overdrive_scaling, vec_overDriveCurve);
+    vec_hNl = vpowq_f32(vec_hNl, vec_overDriveSm_overDriveCurve);
+    vst1q_f32(&hNl[i], vec_hNl);
   }
 
   // scalar code for the remaining items.
@@ -441,9 +418,30 @@ static void OverdriveAndSuppressNEON(AecCore* aec,
                (1 - WebRtcAec_weightCurve[i]) * hNl[i];
     }
 
-    hNl[i] = powf(hNl[i], aec->overDriveSm * WebRtcAec_overDriveCurve[i]);
+    hNl[i] = powf(hNl[i], overdrive_scaling * WebRtcAec_overDriveCurve[i]);
+  }
+}
 
-    // Suppress error signal
+static void SuppressNEON(const float hNl[PART_LEN1], float efw[2][PART_LEN1]) {
+  int i;
+  const float32x4_t vec_minus_one = vdupq_n_f32(-1.0f);
+  // vectorized code (four at once)
+  for (i = 0; i + 3 < PART_LEN1; i += 4) {
+    float32x4_t vec_hNl = vld1q_f32(&hNl[i]);
+    float32x4_t vec_efw_re = vld1q_f32(&efw[0][i]);
+    float32x4_t vec_efw_im = vld1q_f32(&efw[1][i]);
+    vec_efw_re = vmulq_f32(vec_efw_re, vec_hNl);
+    vec_efw_im = vmulq_f32(vec_efw_im, vec_hNl);
+
+    // Ooura fft returns incorrect sign on imaginary component. It matters
+    // here because we are making an additive change with comfort noise.
+    vec_efw_im = vmulq_f32(vec_efw_im, vec_minus_one);
+    vst1q_f32(&efw[0][i], vec_efw_re);
+    vst1q_f32(&efw[1][i], vec_efw_im);
+  }
+
+  // scalar code for the remaining items.
+  for (; i < PART_LEN1; i++) {
     efw[0][i] *= hNl[i];
     efw[1][i] *= hNl[i];
 
@@ -453,7 +451,9 @@ static void OverdriveAndSuppressNEON(AecCore* aec,
   }
 }
 
-static int PartitionDelayNEON(const AecCore* aec) {
+static int PartitionDelayNEON(
+    int num_partitions,
+    float h_fft_buf[2][kExtendedNumPartitions * PART_LEN1]) {
   // Measures the energy in each filter partition and returns the partition with
   // highest energy.
   // TODO(bjornv): Spread computational cost by computing one partition per
@@ -462,15 +462,15 @@ static int PartitionDelayNEON(const AecCore* aec) {
   int i;
   int delay = 0;
 
-  for (i = 0; i < aec->num_partitions; i++) {
+  for (i = 0; i < num_partitions; i++) {
     int j;
     int pos = i * PART_LEN1;
     float wfEn = 0;
     float32x4_t vec_wfEn = vdupq_n_f32(0.0f);
     // vectorized code (four at once)
     for (j = 0; j + 3 < PART_LEN1; j += 4) {
-      const float32x4_t vec_wfBuf0 = vld1q_f32(&aec->wfBuf[0][pos + j]);
-      const float32x4_t vec_wfBuf1 = vld1q_f32(&aec->wfBuf[1][pos + j]);
+      const float32x4_t vec_wfBuf0 = vld1q_f32(&h_fft_buf[0][pos + j]);
+      const float32x4_t vec_wfBuf1 = vld1q_f32(&h_fft_buf[1][pos + j]);
       vec_wfEn = vmlaq_f32(vec_wfEn, vec_wfBuf0, vec_wfBuf0);
       vec_wfEn = vmlaq_f32(vec_wfEn, vec_wfBuf1, vec_wfBuf1);
     }
@@ -486,8 +486,8 @@ static int PartitionDelayNEON(const AecCore* aec) {
 
     // scalar code for the remaining items.
     for (; j < PART_LEN1; j++) {
-      wfEn += aec->wfBuf[0][pos + j] * aec->wfBuf[0][pos + j] +
-              aec->wfBuf[1][pos + j] * aec->wfBuf[1][pos + j];
+      wfEn += h_fft_buf[0][pos + j] * h_fft_buf[0][pos + j] +
+              h_fft_buf[1][pos + j] * h_fft_buf[1][pos + j];
     }
 
     if (wfEn > wfEnMax) {
@@ -507,16 +507,19 @@ static int PartitionDelayNEON(const AecCore* aec) {
 //
 // In addition to updating the PSDs, also the filter diverge state is determined
 // upon actions are taken.
-static void SmoothedPSD(AecCore* aec,
-                        float efw[2][PART_LEN1],
-                        float dfw[2][PART_LEN1],
-                        float xfw[2][PART_LEN1],
-                        int* extreme_filter_divergence) {
+static void UpdateCoherenceSpectraNEON(int mult,
+                                       bool extended_filter_enabled,
+                                       float efw[2][PART_LEN1],
+                                       float dfw[2][PART_LEN1],
+                                       float xfw[2][PART_LEN1],
+                                       CoherenceState* coherence_state,
+                                       short* filter_divergence_state,
+                                       int* extreme_filter_divergence) {
   // Power estimate smoothing coefficients.
   const float* ptrGCoh =
-      aec->extended_filter_enabled
-          ? WebRtcAec_kExtendedSmoothingCoefficients[aec->mult - 1]
-          : WebRtcAec_kNormalSmoothingCoefficients[aec->mult - 1];
+      extended_filter_enabled
+          ? WebRtcAec_kExtendedSmoothingCoefficients[mult - 1]
+          : WebRtcAec_kNormalSmoothingCoefficients[mult - 1];
   int i;
   float sdSum = 0, seSum = 0;
   const float32x4_t vec_15 = vdupq_n_f32(WebRtcAec_kMinFarendPSD);
@@ -530,9 +533,12 @@ static void SmoothedPSD(AecCore* aec,
     const float32x4_t vec_efw1 = vld1q_f32(&efw[1][i]);
     const float32x4_t vec_xfw0 = vld1q_f32(&xfw[0][i]);
     const float32x4_t vec_xfw1 = vld1q_f32(&xfw[1][i]);
-    float32x4_t vec_sd = vmulq_n_f32(vld1q_f32(&aec->sd[i]), ptrGCoh[0]);
-    float32x4_t vec_se = vmulq_n_f32(vld1q_f32(&aec->se[i]), ptrGCoh[0]);
-    float32x4_t vec_sx = vmulq_n_f32(vld1q_f32(&aec->sx[i]), ptrGCoh[0]);
+    float32x4_t vec_sd =
+        vmulq_n_f32(vld1q_f32(&coherence_state->sd[i]), ptrGCoh[0]);
+    float32x4_t vec_se =
+        vmulq_n_f32(vld1q_f32(&coherence_state->se[i]), ptrGCoh[0]);
+    float32x4_t vec_sx =
+        vmulq_n_f32(vld1q_f32(&coherence_state->sx[i]), ptrGCoh[0]);
     float32x4_t vec_dfw_sumsq = vmulq_f32(vec_dfw0, vec_dfw0);
     float32x4_t vec_efw_sumsq = vmulq_f32(vec_efw0, vec_efw0);
     float32x4_t vec_xfw_sumsq = vmulq_f32(vec_xfw0, vec_xfw0);
@@ -545,12 +551,12 @@ static void SmoothedPSD(AecCore* aec,
     vec_se = vmlaq_n_f32(vec_se, vec_efw_sumsq, ptrGCoh[1]);
     vec_sx = vmlaq_n_f32(vec_sx, vec_xfw_sumsq, ptrGCoh[1]);
 
-    vst1q_f32(&aec->sd[i], vec_sd);
-    vst1q_f32(&aec->se[i], vec_se);
-    vst1q_f32(&aec->sx[i], vec_sx);
+    vst1q_f32(&coherence_state->sd[i], vec_sd);
+    vst1q_f32(&coherence_state->se[i], vec_se);
+    vst1q_f32(&coherence_state->sx[i], vec_sx);
 
     {
-      float32x4x2_t vec_sde = vld2q_f32(&aec->sde[i][0]);
+      float32x4x2_t vec_sde = vld2q_f32(&coherence_state->sde[i][0]);
       float32x4_t vec_dfwefw0011 = vmulq_f32(vec_dfw0, vec_efw0);
       float32x4_t vec_dfwefw0110 = vmulq_f32(vec_dfw0, vec_efw1);
       vec_sde.val[0] = vmulq_n_f32(vec_sde.val[0], ptrGCoh[0]);
@@ -559,11 +565,11 @@ static void SmoothedPSD(AecCore* aec,
       vec_dfwefw0110 = vmlsq_f32(vec_dfwefw0110, vec_dfw1, vec_efw0);
       vec_sde.val[0] = vmlaq_n_f32(vec_sde.val[0], vec_dfwefw0011, ptrGCoh[1]);
       vec_sde.val[1] = vmlaq_n_f32(vec_sde.val[1], vec_dfwefw0110, ptrGCoh[1]);
-      vst2q_f32(&aec->sde[i][0], vec_sde);
+      vst2q_f32(&coherence_state->sde[i][0], vec_sde);
     }
 
     {
-      float32x4x2_t vec_sxd = vld2q_f32(&aec->sxd[i][0]);
+      float32x4x2_t vec_sxd = vld2q_f32(&coherence_state->sxd[i][0]);
       float32x4_t vec_dfwxfw0011 = vmulq_f32(vec_dfw0, vec_xfw0);
       float32x4_t vec_dfwxfw0110 = vmulq_f32(vec_dfw0, vec_xfw1);
       vec_sxd.val[0] = vmulq_n_f32(vec_sxd.val[0], ptrGCoh[0]);
@@ -572,7 +578,7 @@ static void SmoothedPSD(AecCore* aec,
       vec_dfwxfw0110 = vmlsq_f32(vec_dfwxfw0110, vec_dfw1, vec_xfw0);
       vec_sxd.val[0] = vmlaq_n_f32(vec_sxd.val[0], vec_dfwxfw0011, ptrGCoh[1]);
       vec_sxd.val[1] = vmlaq_n_f32(vec_sxd.val[1], vec_dfwxfw0110, ptrGCoh[1]);
-      vst2q_f32(&aec->sxd[i][0], vec_sxd);
+      vst2q_f32(&coherence_state->sxd[i][0], vec_sxd);
     }
 
     vec_sdSum = vaddq_f32(vec_sdSum, vec_sd);
@@ -596,39 +602,43 @@ static void SmoothedPSD(AecCore* aec,
 
   // scalar code for the remaining items.
   for (; i < PART_LEN1; i++) {
-    aec->sd[i] = ptrGCoh[0] * aec->sd[i] +
-                 ptrGCoh[1] * (dfw[0][i] * dfw[0][i] + dfw[1][i] * dfw[1][i]);
-    aec->se[i] = ptrGCoh[0] * aec->se[i] +
-                 ptrGCoh[1] * (efw[0][i] * efw[0][i] + efw[1][i] * efw[1][i]);
+    coherence_state->sd[i] =
+        ptrGCoh[0] * coherence_state->sd[i] +
+        ptrGCoh[1] * (dfw[0][i] * dfw[0][i] + dfw[1][i] * dfw[1][i]);
+    coherence_state->se[i] =
+        ptrGCoh[0] * coherence_state->se[i] +
+        ptrGCoh[1] * (efw[0][i] * efw[0][i] + efw[1][i] * efw[1][i]);
     // We threshold here to protect against the ill-effects of a zero farend.
     // The threshold is not arbitrarily chosen, but balances protection and
     // adverse interaction with the algorithm's tuning.
     // TODO(bjornv): investigate further why this is so sensitive.
-    aec->sx[i] = ptrGCoh[0] * aec->sx[i] +
-                 ptrGCoh[1] * WEBRTC_SPL_MAX(
-                                  xfw[0][i] * xfw[0][i] + xfw[1][i] * xfw[1][i],
-                                  WebRtcAec_kMinFarendPSD);
+    coherence_state->sx[i] =
+        ptrGCoh[0] * coherence_state->sx[i] +
+        ptrGCoh[1] *
+            WEBRTC_SPL_MAX(xfw[0][i] * xfw[0][i] + xfw[1][i] * xfw[1][i],
+                           WebRtcAec_kMinFarendPSD);
 
-    aec->sde[i][0] =
-        ptrGCoh[0] * aec->sde[i][0] +
+    coherence_state->sde[i][0] =
+        ptrGCoh[0] * coherence_state->sde[i][0] +
         ptrGCoh[1] * (dfw[0][i] * efw[0][i] + dfw[1][i] * efw[1][i]);
-    aec->sde[i][1] =
-        ptrGCoh[0] * aec->sde[i][1] +
+    coherence_state->sde[i][1] =
+        ptrGCoh[0] * coherence_state->sde[i][1] +
         ptrGCoh[1] * (dfw[0][i] * efw[1][i] - dfw[1][i] * efw[0][i]);
 
-    aec->sxd[i][0] =
-        ptrGCoh[0] * aec->sxd[i][0] +
+    coherence_state->sxd[i][0] =
+        ptrGCoh[0] * coherence_state->sxd[i][0] +
         ptrGCoh[1] * (dfw[0][i] * xfw[0][i] + dfw[1][i] * xfw[1][i]);
-    aec->sxd[i][1] =
-        ptrGCoh[0] * aec->sxd[i][1] +
+    coherence_state->sxd[i][1] =
+        ptrGCoh[0] * coherence_state->sxd[i][1] +
         ptrGCoh[1] * (dfw[0][i] * xfw[1][i] - dfw[1][i] * xfw[0][i]);
 
-    sdSum += aec->sd[i];
-    seSum += aec->se[i];
+    sdSum += coherence_state->sd[i];
+    seSum += coherence_state->se[i];
   }
 
   // Divergent filter safeguard update.
-  aec->divergeState = (aec->divergeState ? 1.05f : 1.0f) * seSum > sdSum;
+  *filter_divergence_state =
+      (*filter_divergence_state ? 1.05f : 1.0f) * seSum > sdSum;
 
   // Signal extreme filter divergence if the error is significantly larger
   // than the nearend (13 dB).
@@ -672,30 +682,23 @@ static void StoreAsComplexNEON(const float* data,
   data_complex[0][PART_LEN] = data[1];
 }
 
-static void SubbandCoherenceNEON(AecCore* aec,
-                                 float efw[2][PART_LEN1],
-                                 float dfw[2][PART_LEN1],
-                                 float xfw[2][PART_LEN1],
-                                 float* fft,
+static void ComputeCoherenceNEON(const CoherenceState* coherence_state,
                                  float* cohde,
-                                 float* cohxd,
-                                 int* extreme_filter_divergence) {
+                                 float* cohxd) {
   int i;
-
-  SmoothedPSD(aec, efw, dfw, xfw, extreme_filter_divergence);
 
   {
     const float32x4_t vec_1eminus10 = vdupq_n_f32(1e-10f);
 
     // Subband coherence
     for (i = 0; i + 3 < PART_LEN1; i += 4) {
-      const float32x4_t vec_sd = vld1q_f32(&aec->sd[i]);
-      const float32x4_t vec_se = vld1q_f32(&aec->se[i]);
-      const float32x4_t vec_sx = vld1q_f32(&aec->sx[i]);
+      const float32x4_t vec_sd = vld1q_f32(&coherence_state->sd[i]);
+      const float32x4_t vec_se = vld1q_f32(&coherence_state->se[i]);
+      const float32x4_t vec_sx = vld1q_f32(&coherence_state->sx[i]);
       const float32x4_t vec_sdse = vmlaq_f32(vec_1eminus10, vec_sd, vec_se);
       const float32x4_t vec_sdsx = vmlaq_f32(vec_1eminus10, vec_sd, vec_sx);
-      float32x4x2_t vec_sde = vld2q_f32(&aec->sde[i][0]);
-      float32x4x2_t vec_sxd = vld2q_f32(&aec->sxd[i][0]);
+      float32x4x2_t vec_sde = vld2q_f32(&coherence_state->sde[i][0]);
+      float32x4x2_t vec_sxd = vld2q_f32(&coherence_state->sxd[i][0]);
       float32x4_t vec_cohde = vmulq_f32(vec_sde.val[0], vec_sde.val[0]);
       float32x4_t vec_cohxd = vmulq_f32(vec_sxd.val[0], vec_sxd.val[0]);
       vec_cohde = vmlaq_f32(vec_cohde, vec_sde.val[1], vec_sde.val[1]);
@@ -709,12 +712,12 @@ static void SubbandCoherenceNEON(AecCore* aec,
   }
   // scalar code for the remaining items.
   for (; i < PART_LEN1; i++) {
-    cohde[i] =
-        (aec->sde[i][0] * aec->sde[i][0] + aec->sde[i][1] * aec->sde[i][1]) /
-        (aec->sd[i] * aec->se[i] + 1e-10f);
-    cohxd[i] =
-        (aec->sxd[i][0] * aec->sxd[i][0] + aec->sxd[i][1] * aec->sxd[i][1]) /
-        (aec->sx[i] * aec->sd[i] + 1e-10f);
+    cohde[i] = (coherence_state->sde[i][0] * coherence_state->sde[i][0] +
+                coherence_state->sde[i][1] * coherence_state->sde[i][1]) /
+               (coherence_state->sd[i] * coherence_state->se[i] + 1e-10f);
+    cohxd[i] = (coherence_state->sxd[i][0] * coherence_state->sxd[i][0] +
+                coherence_state->sxd[i][1] * coherence_state->sxd[i][1]) /
+               (coherence_state->sx[i] * coherence_state->sd[i] + 1e-10f);
   }
 }
 
@@ -722,9 +725,12 @@ void WebRtcAec_InitAec_neon(void) {
   WebRtcAec_FilterFar = FilterFarNEON;
   WebRtcAec_ScaleErrorSignal = ScaleErrorSignalNEON;
   WebRtcAec_FilterAdaptation = FilterAdaptationNEON;
-  WebRtcAec_OverdriveAndSuppress = OverdriveAndSuppressNEON;
-  WebRtcAec_SubbandCoherence = SubbandCoherenceNEON;
+  WebRtcAec_Overdrive = OverdriveNEON;
+  WebRtcAec_Suppress = SuppressNEON;
+  WebRtcAec_ComputeCoherence = ComputeCoherenceNEON;
+  WebRtcAec_UpdateCoherenceSpectra = UpdateCoherenceSpectraNEON;
   WebRtcAec_StoreAsComplex = StoreAsComplexNEON;
   WebRtcAec_PartitionDelay = PartitionDelayNEON;
   WebRtcAec_WindowData = WindowDataNEON;
 }
+}  // namespace webrtc

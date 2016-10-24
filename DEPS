@@ -6,15 +6,14 @@
 vars = {
   'extra_gyp_flag': '-Dextra_gyp_flag=0',
   'chromium_git': 'https://chromium.googlesource.com',
-  'chromium_uwp_git': 'git+https://github.com/webrtc-uwp',
-  'chromium_revision': '03fca1bd133899f6065d8dbff2c2e4f2a2524a3f',
+  'chromium_revision': 'cf9457edb7c734f509dd12149acd78410c518570',
 }
 
 # NOTE: Use http rather than https; the latter can cause problems for users
 # behind proxies.
 deps = {
   'src/third_party/gflags/src':
-    Var('chromium_uwp_git') + '/gflags.git' + '@' + '516f2ecf10805b9aed9f1feed69b4cf3a380141a',
+    Var('chromium_git') + '/external/github.com/gflags/gflags@03bebcb065c83beff83d50ae025a55a4bf94dfca',
 }
 
 deps_os = {
@@ -23,25 +22,6 @@ deps_os = {
       Var('chromium_git') + '/external/webrtc/deps/third_party/winsdk_samples_v71@e71b549167a665d7424d6f1dadfbff4b4aad1589',
   },
 }
-
-# Define rules for which include paths are allowed in our source.
-include_rules = [
-  # Base is only used to build Android APK tests and may not be referenced by
-  # WebRTC production code.
-  '-base',
-  '-chromium',
-  '+external/webrtc/webrtc',  # Android platform build.
-  '+gflags',
-  '+libyuv',
-  '+net',
-  '+talk',
-  '+testing',
-  '+third_party',
-  '+unicode',
-  '+usrsctplib',
-  '+webrtc',
-  '+vpx',
-]
 
 hooks = [
   {
@@ -102,13 +82,6 @@ hooks = [
                '--quiet',
                '--bucket', 'chromium-webrtc-resources',
                'src/resources'],
-  },
-  {
-    # A change to a .gyp, .gypi, or to GYP itself should run the generator.
-    'name': 'gyp',
-    'pattern': '.',
-    'action': ['python', 'src/webrtc/build/gyp_webrtc',
-               Var('extra_gyp_flag')],
   },
 ]
 

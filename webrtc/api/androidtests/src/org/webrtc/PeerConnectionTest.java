@@ -10,10 +10,12 @@
 
 package org.webrtc;
 
+import org.webrtc.Metrics.HistogramInfo;
 import org.webrtc.PeerConnection.IceConnectionState;
 import org.webrtc.PeerConnection.IceGatheringState;
 import org.webrtc.PeerConnection.SignalingState;
 
+import android.test.ActivityTestCase;
 import android.test.suitebuilder.annotation.MediumTest;
 
 import java.io.File;
@@ -21,18 +23,16 @@ import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /** End-to-end tests for PeerConnection.java. */
-import android.test.ActivityTestCase;
-
 public class PeerConnectionTest extends ActivityTestCase {
   private static final int TIMEOUT_SECONDS = 20;
   private TreeSet<String> threadsBeforeTest = null;
@@ -108,6 +108,9 @@ public class PeerConnectionTest extends ActivityTestCase {
         gotIceCandidates.notifyAll();
       }
     }
+
+    @Override
+    public void onIceCandidatesRemoved(IceCandidate[] candidates) {}
 
     public synchronized void setExpectedResolution(int width, int height) {
       expectedWidth = width;
@@ -527,6 +530,7 @@ public class PeerConnectionTest extends ActivityTestCase {
 
   @MediumTest
   public void testCompleteSession() throws Exception {
+    Metrics.enable();
     // Allow loopback interfaces too since our Android devices often don't
     // have those.
     PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
@@ -563,8 +567,11 @@ public class PeerConnectionTest extends ActivityTestCase {
 
     // We want to use the same camera for offerer & answerer, so create it here
     // instead of in addTracksToPC.
-    VideoSource videoSource = factory.createVideoSource(
-        VideoCapturerAndroid.create("", null), new MediaConstraints());
+    final CameraEnumerator enumerator = new Camera1Enumerator(false /* captureToTexture */);
+    final VideoCapturer videoCapturer =
+        enumerator.createCapturer(enumerator.getDeviceNames()[0], null);
+    final VideoSource videoSource = factory.createVideoSource(videoCapturer);
+    videoCapturer.startCapture(640, 480, 30);
 
     offeringExpectations.expectRenegotiationNeeded();
     WeakReference<MediaStream> oLMS = addTracksToPC(
@@ -691,6 +698,26 @@ public class PeerConnectionTest extends ActivityTestCase {
     assertEquals(
         PeerConnection.SignalingState.STABLE, answeringPC.signalingState());
 
+    // Set a bitrate limit for the outgoing video stream for the offerer.
+    RtpSender videoSender = null;
+    for (RtpSender sender : offeringPC.getSenders()) {
+      if (sender.track().kind().equals("video")) {
+        videoSender = sender;
+      }
+    }
+    assertNotNull(videoSender);
+    RtpParameters rtpParameters = videoSender.getParameters();
+    assertNotNull(rtpParameters);
+    assertEquals(1, rtpParameters.encodings.size());
+    assertNull(rtpParameters.encodings.get(0).maxBitrateBps);
+
+    rtpParameters.encodings.get(0).maxBitrateBps = 300000;
+    assertTrue(videoSender.setParameters(rtpParameters));
+
+    // Verify that we can read back the updated value.
+    rtpParameters = videoSender.getParameters();
+    assertEquals(300000, (int) rtpParameters.encodings.get(0).maxBitrateBps);
+
     // Test send & receive UTF-8 text.
     answeringExpectations.expectMessage(
         ByteBuffer.wrap("hello!".getBytes(Charset.forName("UTF-8"))), false);
@@ -719,13 +746,14 @@ public class PeerConnectionTest extends ActivityTestCase {
     answeringExpectations.dataChannel.close();
     offeringExpectations.dataChannel.close();
 
-    // Free the Java-land objects, collect them, and sleep a bit to make sure we
-    // don't get late-arrival crashes after the Java-land objects have been
-    // freed.
+    // Free the Java-land objects and collect them.
     shutdownPC(offeringPC, offeringExpectations);
     offeringPC = null;
     shutdownPC(answeringPC, answeringExpectations);
     answeringPC = null;
+    getMetrics();
+    videoCapturer.stopCapture();
+    videoCapturer.dispose();
     videoSource.dispose();
     factory.dispose();
     System.gc();
@@ -762,8 +790,11 @@ public class PeerConnectionTest extends ActivityTestCase {
 
     // We want to use the same camera for offerer & answerer, so create it here
     // instead of in addTracksToPC.
-    VideoSource videoSource = factory.createVideoSource(
-        VideoCapturerAndroid.create("", null), new MediaConstraints());
+    final CameraEnumerator enumerator = new Camera1Enumerator(false /* captureToTexture */);
+    final VideoCapturer videoCapturer =
+        enumerator.createCapturer(enumerator.getDeviceNames()[0], null);
+    final VideoSource videoSource = factory.createVideoSource(videoCapturer);
+    videoCapturer.startCapture(640, 480, 30);
 
     // Add offerer media stream.
     offeringExpectations.expectRenegotiationNeeded();
@@ -932,17 +963,82 @@ public class PeerConnectionTest extends ActivityTestCase {
     MediaStream aRMS = answeringExpectations.gotRemoteStreams.iterator().next();
     assertEquals(aRMS.videoTracks.get(0).state(), MediaStreamTrack.State.ENDED);
 
-    // Free the Java-land objects, collect them, and sleep a bit to make sure we
-    // don't get late-arrival crashes after the Java-land objects have been
-    // freed.
+    // Finally, remove the audio track as well, which should completely remove
+    // the remote stream. This used to trigger an assert.
+    // See: https://bugs.chromium.org/p/webrtc/issues/detail?id=5128
+    AudioTrack offererAudioTrack = oLMS.get().audioTracks.get(0);
+    oLMS.get().removeTrack(offererAudioTrack);
+
+    // Create offer.
+    sdpLatch = new SdpObserverLatch();
+    offeringPC.createOffer(sdpLatch, new MediaConstraints());
+    assertTrue(sdpLatch.await());
+    offerSdp = sdpLatch.getSdp();
+    assertEquals(offerSdp.type, SessionDescription.Type.OFFER);
+    assertFalse(offerSdp.description.isEmpty());
+
+    // Set local description for offerer.
+    sdpLatch = new SdpObserverLatch();
+    offeringExpectations.expectSignalingChange(SignalingState.HAVE_LOCAL_OFFER);
+    offeringPC.setLocalDescription(sdpLatch, offerSdp);
+    assertTrue(sdpLatch.await());
+    assertNull(sdpLatch.getSdp());
+
+    // Set remote description for answerer.
+    sdpLatch = new SdpObserverLatch();
+    answeringExpectations.expectSignalingChange(SignalingState.HAVE_REMOTE_OFFER);
+    answeringExpectations.expectRemoveStream("offeredMediaStream");
+    answeringPC.setRemoteDescription(sdpLatch, offerSdp);
+    assertTrue(sdpLatch.await());
+    assertNull(sdpLatch.getSdp());
+
+    // Create answer.
+    sdpLatch = new SdpObserverLatch();
+    answeringPC.createAnswer(sdpLatch, new MediaConstraints());
+    assertTrue(sdpLatch.await());
+    answerSdp = sdpLatch.getSdp();
+    assertEquals(answerSdp.type, SessionDescription.Type.ANSWER);
+    assertFalse(answerSdp.description.isEmpty());
+
+    // Set local description for answerer.
+    sdpLatch = new SdpObserverLatch();
+    answeringExpectations.expectSignalingChange(SignalingState.STABLE);
+    answeringPC.setLocalDescription(sdpLatch, answerSdp);
+    assertTrue(sdpLatch.await());
+    assertNull(sdpLatch.getSdp());
+
+    // Set remote description for offerer.
+    sdpLatch = new SdpObserverLatch();
+    offeringExpectations.expectSignalingChange(SignalingState.STABLE);
+    offeringPC.setRemoteDescription(sdpLatch, answerSdp);
+    assertTrue(sdpLatch.await());
+    assertNull(sdpLatch.getSdp());
+
+    // Make sure the stream was really removed.
+    assertTrue(answeringExpectations.gotRemoteStreams.isEmpty());
+
+    // Free the Java-land objects and collect them.
     shutdownPC(offeringPC, offeringExpectations);
     offeringPC = null;
     shutdownPC(answeringPC, answeringExpectations);
     answeringPC = null;
     offererVideoTrack.dispose();
+    offererAudioTrack.dispose();
+    videoCapturer.stopCapture();
+    videoCapturer.dispose();
     videoSource.dispose();
     factory.dispose();
     System.gc();
+  }
+
+  private static void getMetrics() {
+    Metrics metrics = Metrics.getAndReset();
+    assertTrue(metrics.map.size() > 0);
+    // Test for example that the lifetime of a Call is recorded.
+    String name = "WebRTC.Call.LifetimeInSeconds";
+    assertTrue(metrics.map.containsKey(name));
+    HistogramInfo info = metrics.map.get(name);
+    assertTrue(info.samples.size() > 0);
   }
 
   private static void shutdownPC(

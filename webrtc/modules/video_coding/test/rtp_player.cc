@@ -12,9 +12,11 @@
 
 #include <stdio.h>
 
+#include <cstdlib>
 #include <map>
 #include <memory>
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_payload_registry.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_receiver.h"
@@ -227,7 +229,6 @@ class SsrcHandlers {
       return -1;
     }
 
-    handler->rtp_module_->SetNACKStatus(kNackOff);
     handler->rtp_header_parser_->RegisterRtpHeaderExtension(
         kRtpExtensionTransmissionTimeOffset,
         kDefaultTransmissionTimeOffsetExtensionId);
@@ -341,7 +342,7 @@ class RtpPlayerImpl : public RtpPlayerInterface {
     assert(packet_source);
     assert(packet_source->get());
     packet_source_.swap(*packet_source);
-    srand(321);
+    std::srand(321);
   }
 
   virtual ~RtpPlayerImpl() {}
@@ -434,7 +435,8 @@ class RtpPlayerImpl : public RtpPlayerInterface {
 
       if (no_loss_startup_ > 0) {
         no_loss_startup_--;
-      } else if ((rand() + 1.0) / (RAND_MAX + 1.0) < loss_rate_) {  // NOLINT
+      } else if ((std::rand() + 1.0) / (RAND_MAX + 1.0) <
+                 loss_rate_) {  // NOLINT
         uint16_t seq_num = header.sequenceNumber;
         lost_packets_.AddPacket(new RawRtpPacket(data, length, ssrc, seq_num));
         DEBUG_LOG1("Dropped packet: %d!", header.header.sequenceNumber);

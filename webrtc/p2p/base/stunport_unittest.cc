@@ -8,13 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include "webrtc/p2p/base/basicpacketsocketfactory.h"
 #include "webrtc/p2p/base/stunport.h"
 #include "webrtc/p2p/base/teststunserver.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/helpers.h"
 #include "webrtc/base/physicalsocketserver.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/socketaddress.h"
 #include "webrtc/base/ssladapter.h"
 #include "webrtc/base/virtualsocketserver.h"
@@ -25,10 +26,15 @@ using rtc::SocketAddress;
 static const SocketAddress kLocalAddr("127.0.0.1", 0);
 static const SocketAddress kStunAddr1("127.0.0.1", 5000);
 static const SocketAddress kStunAddr2("127.0.0.1", 4000);
+static const SocketAddress kStunAddr3("127.0.0.1", 3000);
 static const SocketAddress kBadAddr("0.0.0.1", 5000);
 static const SocketAddress kStunHostnameAddr("localhost", 5000);
 static const SocketAddress kBadHostnameAddr("not-a-real-hostname", 5000);
-static const int kTimeoutMs = 10000;
+// STUN timeout (with all retries) is 9500ms.
+// Add some margin of error for slow bots.
+// TODO(deadbeef): Use simulated clock instead of just increasing timeouts to
+// fix flaky tests.
+static const int kTimeoutMs = 15000;
 // stun prio = 100 << 24 | 30 (IPV4) << 8 | 256 - 0
 static const uint32_t kStunCandidatePriority = 1677729535;
 static const int kInfiniteLifetime = -1;
@@ -86,7 +92,7 @@ class StunPortTest : public testing::Test,
         &StunPortTest::OnPortError);
   }
 
-  void CreateSharedStunPort(const rtc::SocketAddress& server_addr) {
+  void CreateSharedUdpPort(const rtc::SocketAddress& server_addr) {
     socket_.reset(socket_factory_.CreateUdpSocket(
         rtc::SocketAddress(kLocalAddr.ipaddr(), 0), 0, 0));
     ASSERT_TRUE(socket_ != NULL);
@@ -155,25 +161,32 @@ class StunPortTest : public testing::Test,
   }
 
  private:
-  rtc::scoped_ptr<rtc::PhysicalSocketServer> pss_;
-  rtc::scoped_ptr<rtc::VirtualSocketServer> ss_;
+  std::unique_ptr<rtc::PhysicalSocketServer> pss_;
+  std::unique_ptr<rtc::VirtualSocketServer> ss_;
   rtc::SocketServerScope ss_scope_;
   rtc::Network network_;
   rtc::BasicPacketSocketFactory socket_factory_;
-  rtc::scoped_ptr<cricket::UDPPort> stun_port_;
-  rtc::scoped_ptr<cricket::TestStunServer> stun_server_1_;
-  rtc::scoped_ptr<cricket::TestStunServer> stun_server_2_;
-  rtc::scoped_ptr<rtc::AsyncPacketSocket> socket_;
+  std::unique_ptr<cricket::UDPPort> stun_port_;
+  std::unique_ptr<cricket::TestStunServer> stun_server_1_;
+  std::unique_ptr<cricket::TestStunServer> stun_server_2_;
+  std::unique_ptr<rtc::AsyncPacketSocket> socket_;
   bool done_;
   bool error_;
   int stun_keepalive_delay_;
   int stun_keepalive_lifetime_;
 };
 
-// Test that we can create a STUN port
-TEST_F(StunPortTest, TestBasic) {
+// Test that we can create a STUN port.
+TEST_F(StunPortTest, TestCreateStunPort) {
   CreateStunPort(kStunAddr1);
   EXPECT_EQ("stun", port()->Type());
+  EXPECT_EQ(0U, port()->Candidates().size());
+}
+
+// Test that we can create a UDP port.
+TEST_F(StunPortTest, TestCreateUdpPort) {
+  CreateSharedUdpPort(kStunAddr1);
+  EXPECT_EQ("local", port()->Type());
   EXPECT_EQ(0U, port()->Candidates().size());
 }
 
@@ -234,7 +247,7 @@ TEST_F(StunPortTest, TestKeepAliveResponse) {
 
 // Test that a local candidate can be generated using a shared socket.
 TEST_F(StunPortTest, TestSharedSocketPrepareAddress) {
-  CreateSharedStunPort(kStunAddr1);
+  CreateSharedUdpPort(kStunAddr1);
   PrepareAddress();
   EXPECT_TRUE_WAIT(done(), kTimeoutMs);
   ASSERT_EQ(1U, port()->Candidates().size());
@@ -245,7 +258,7 @@ TEST_F(StunPortTest, TestSharedSocketPrepareAddress) {
 // Also verifing that UDPPort can receive packets when stun address can't be
 // resolved.
 TEST_F(StunPortTest, TestSharedSocketPrepareAddressInvalidHostname) {
-  CreateSharedStunPort(kBadHostnameAddr);
+  CreateSharedUdpPort(kBadHostnameAddr);
   PrepareAddress();
   EXPECT_TRUE_WAIT(done(), kTimeoutMs);
   ASSERT_EQ(1U, port()->Candidates().size());
@@ -305,31 +318,39 @@ TEST_F(StunPortTest, TestTwoCandidatesWithTwoStunServersAcrossNat) {
 }
 
 // Test that the stun_keepalive_lifetime is set correctly based on the network
-// type on a STUN port.
+// type on a STUN port. Also test that it will be updated if the network type
+// changes.
 TEST_F(StunPortTest, TestStunPortGetStunKeepaliveLifetime) {
-  // Lifetime for the default network type is |kInfiniteLifetime|.
+  // Lifetime for the default (unknown) network type is |kInfiniteLifetime|.
   CreateStunPort(kStunAddr1);
   EXPECT_EQ(kInfiniteLifetime, port()->stun_keepalive_lifetime());
-
   // Lifetime for the cellular network is |kHighCostPortKeepaliveLifetimeMs|
   SetNetworkType(rtc::ADAPTER_TYPE_CELLULAR);
-  CreateStunPort(kStunAddr2);
   EXPECT_EQ(kHighCostPortKeepaliveLifetimeMs,
             port()->stun_keepalive_lifetime());
+
+  // Lifetime for the wifi network is |kInfiniteLifetime|.
+  SetNetworkType(rtc::ADAPTER_TYPE_WIFI);
+  CreateStunPort(kStunAddr2);
+  EXPECT_EQ(kInfiniteLifetime, port()->stun_keepalive_lifetime());
 }
 
 // Test that the stun_keepalive_lifetime is set correctly based on the network
-// type on a shared STUN port (UDPPort).
+// type on a shared STUN port (UDPPort). Also test that it will be updated
+// if the network type changes.
 TEST_F(StunPortTest, TestUdpPortGetStunKeepaliveLifetime) {
-  // Lifetime for the default network type is |kInfiniteLifetime|.
-  CreateSharedStunPort(kStunAddr1);
+  // Lifetime for the default (unknown) network type is |kInfiniteLifetime|.
+  CreateSharedUdpPort(kStunAddr1);
   EXPECT_EQ(kInfiniteLifetime, port()->stun_keepalive_lifetime());
-
-  // Lifetime for the cellular network is |kHighCostPortKeepaliveLifetimeMs|
+  // Lifetime for the cellular network is |kHighCostPortKeepaliveLifetimeMs|.
   SetNetworkType(rtc::ADAPTER_TYPE_CELLULAR);
-  CreateSharedStunPort(kStunAddr2);
   EXPECT_EQ(kHighCostPortKeepaliveLifetimeMs,
             port()->stun_keepalive_lifetime());
+
+  // Lifetime for the wifi network type is |kInfiniteLifetime|.
+  SetNetworkType(rtc::ADAPTER_TYPE_WIFI);
+  CreateSharedUdpPort(kStunAddr2);
+  EXPECT_EQ(kInfiniteLifetime, port()->stun_keepalive_lifetime());
 }
 
 // Test that STUN binding requests will be stopped shortly if the keep-alive

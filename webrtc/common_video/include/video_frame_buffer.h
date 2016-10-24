@@ -18,6 +18,7 @@
 #include "webrtc/base/callback.h"
 #include "webrtc/base/refcount.h"
 #include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/common_video/rotation.h"
 #include "webrtc/system_wrappers/include/aligned_malloc.h"
 
 namespace webrtc {
@@ -33,9 +34,6 @@ enum PlaneType {
 // not contain any frame metadata such as rotation, timestamp, pixel_width, etc.
 class VideoFrameBuffer : public rtc::RefCountInterface {
  public:
-  // Returns true if this buffer has a single exclusive owner.
-  virtual bool HasOneRef() const = 0;
-
   // The resolution of the frame in pixels. For formats where some planes are
   // subsampled, this is the highest-resolution plane.
   virtual int width() const = 0;
@@ -43,14 +41,20 @@ class VideoFrameBuffer : public rtc::RefCountInterface {
 
   // Returns pointer to the pixel data for a given plane. The memory is owned by
   // the VideoFrameBuffer object and must not be freed by the caller.
-  virtual const uint8_t* data(PlaneType type) const = 0;
+  virtual const uint8_t* DataY() const = 0;
+  virtual const uint8_t* DataU() const = 0;
+  virtual const uint8_t* DataV() const = 0;
 
-  // Non-const data access is disallowed by default. You need to make sure you
-  // have exclusive access and a writable buffer before calling this function.
-  virtual uint8_t* MutableData(PlaneType type);
+  // TODO(nisse): Move MutableData methods to the I420Buffer subclass.
+  // Non-const data access.
+  virtual uint8_t* MutableDataY();
+  virtual uint8_t* MutableDataU();
+  virtual uint8_t* MutableDataV();
 
   // Returns the number of bytes between successive rows for a given plane.
-  virtual int stride(PlaneType type) const = 0;
+  virtual int StrideY() const = 0;
+  virtual int StrideU() const = 0;
+  virtual int StrideV() const = 0;
 
   // Return the handle of the underlying video frame. This is used when the
   // frame is backed by a texture.
@@ -69,17 +73,70 @@ class I420Buffer : public VideoFrameBuffer {
  public:
   I420Buffer(int width, int height);
   I420Buffer(int width, int height, int stride_y, int stride_u, int stride_v);
+
+  static rtc::scoped_refptr<I420Buffer> Create(int width, int height);
+  static rtc::scoped_refptr<I420Buffer> Create(int width,
+                                               int height,
+                                               int stride_y,
+                                               int stride_u,
+                                               int stride_v);
+
+  // Sets all three planes to all zeros. Used to work around for
+  // quirks in memory checkers
+  // (https://bugs.chromium.org/p/libyuv/issues/detail?id=377) and
+  // ffmpeg (http://crbug.com/390941).
+  // TODO(nisse): Should be deleted if/when those issues are resolved
+  // in a better way.
   void InitializeData();
+
+  // Sets the frame buffer to all black.
+  void SetToBlack();
 
   int width() const override;
   int height() const override;
-  const uint8_t* data(PlaneType type) const override;
-  // Non-const data access is only allowed if HasOneRef() is true to protect
-  // against unexpected overwrites.
-  uint8_t* MutableData(PlaneType type) override;
-  int stride(PlaneType type) const override;
+  const uint8_t* DataY() const override;
+  const uint8_t* DataU() const override;
+  const uint8_t* DataV() const override;
+
+  uint8_t* MutableDataY() override;
+  uint8_t* MutableDataU() override;
+  uint8_t* MutableDataV() override;
+  int StrideY() const override;
+  int StrideU() const override;
+  int StrideV() const override;
+
   void* native_handle() const override;
   rtc::scoped_refptr<VideoFrameBuffer> NativeToI420Buffer() override;
+
+  // Create a new buffer and copy the pixel data.
+  static rtc::scoped_refptr<I420Buffer> Copy(
+      const rtc::scoped_refptr<VideoFrameBuffer>& buffer);
+
+  // Scale the cropped area of |src| to the size of |this| buffer, and
+  // write the result into |this|.
+  void CropAndScaleFrom(const rtc::scoped_refptr<VideoFrameBuffer>& src,
+                        int offset_x,
+                        int offset_y,
+                        int crop_width,
+                        int crop_height);
+
+  // The common case of a center crop, when needed to adjust the
+  // aspect ratio without distorting the image.
+  void CropAndScaleFrom(const rtc::scoped_refptr<VideoFrameBuffer>& src);
+
+  // Scale all of |src| to the size of |this| buffer, with no cropping.
+  void ScaleFrom(const rtc::scoped_refptr<VideoFrameBuffer>& src);
+
+  // Create a new buffer with identical strides, and copy the pixel data.
+  static rtc::scoped_refptr<I420Buffer> CopyKeepStride(
+      const rtc::scoped_refptr<VideoFrameBuffer>& buffer);
+
+  // Returns a rotated versions of |src|. Native buffers are not
+  // supported. The reason this function doesn't return an I420Buffer,
+  // is that it returns |src| unchanged in case |rotation| is zero.
+  static rtc::scoped_refptr<VideoFrameBuffer> Rotate(
+      const rtc::scoped_refptr<VideoFrameBuffer>& src,
+      VideoRotation rotation);
 
  protected:
   ~I420Buffer() override;
@@ -103,8 +160,13 @@ class NativeHandleBuffer : public VideoFrameBuffer {
 
   int width() const override;
   int height() const override;
-  const uint8_t* data(PlaneType type) const override;
-  int stride(PlaneType type) const override;
+  const uint8_t* DataY() const override;
+  const uint8_t* DataU() const override;
+  const uint8_t* DataV() const override;
+  int StrideY() const override;
+  int StrideU() const override;
+  int StrideV() const override;
+
   void* native_handle() const override;
 
  protected:
@@ -127,9 +189,13 @@ class WrappedI420Buffer : public webrtc::VideoFrameBuffer {
   int width() const override;
   int height() const override;
 
-  const uint8_t* data(PlaneType type) const override;
+  const uint8_t* DataY() const override;
+  const uint8_t* DataU() const override;
+  const uint8_t* DataV() const override;
+  int StrideY() const override;
+  int StrideU() const override;
+  int StrideV() const override;
 
-  int stride(PlaneType type) const override;
   void* native_handle() const override;
 
   rtc::scoped_refptr<VideoFrameBuffer> NativeToI420Buffer() override;
@@ -148,13 +214,6 @@ class WrappedI420Buffer : public webrtc::VideoFrameBuffer {
   const int v_stride_;
   rtc::Callback0<void> no_longer_used_cb_;
 };
-
-// Helper function to crop |buffer| without making a deep copy. May only be used
-// for non-native frames.
-rtc::scoped_refptr<VideoFrameBuffer> ShallowCenterCrop(
-    const rtc::scoped_refptr<VideoFrameBuffer>& buffer,
-    int cropped_width,
-    int cropped_height);
 
 }  // namespace webrtc
 

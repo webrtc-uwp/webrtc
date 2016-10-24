@@ -75,17 +75,15 @@ AudioBuffer::AudioBuffer(size_t input_num_frames,
 
     if (input_num_frames_ != proc_num_frames_) {
       for (size_t i = 0; i < num_proc_channels_; ++i) {
-        input_resamplers_.push_back(
-            new PushSincResampler(input_num_frames_,
-                                  proc_num_frames_));
+        input_resamplers_.push_back(std::unique_ptr<PushSincResampler>(
+            new PushSincResampler(input_num_frames_, proc_num_frames_)));
       }
     }
 
     if (output_num_frames_ != proc_num_frames_) {
       for (size_t i = 0; i < num_proc_channels_; ++i) {
-        output_resamplers_.push_back(
-            new PushSincResampler(proc_num_frames_,
-                                  output_num_frames_));
+        output_resamplers_.push_back(std::unique_ptr<PushSincResampler>(
+            new PushSincResampler(proc_num_frames_, output_num_frames_)));
       }
     }
   }
@@ -186,6 +184,10 @@ void AudioBuffer::InitForNewData() {
   reference_copied_ = false;
   activity_ = AudioFrame::kVadUnknown;
   num_channels_ = num_proc_channels_;
+  data_->set_num_channels(num_proc_channels_);
+  if (split_data_.get()) {
+    split_data_->set_num_channels(num_proc_channels_);
+  }
 }
 
 const int16_t* const* AudioBuffer::channels_const() const {
@@ -347,6 +349,10 @@ size_t AudioBuffer::num_channels() const {
 
 void AudioBuffer::set_num_channels(size_t num_channels) {
   num_channels_ = num_channels;
+  data_->set_num_channels(num_channels);
+  if (split_data_.get()) {
+    split_data_->set_num_channels(num_channels);
+  }
 }
 
 size_t AudioBuffer::num_frames() const {
@@ -432,10 +438,10 @@ void AudioBuffer::InterleaveTo(AudioFrame* frame, bool data_changed) {
   }
 
   if (frame->num_channels_ == num_channels_) {
-    Interleave(data_ptr->ibuf()->channels(), proc_num_frames_, num_channels_,
+    Interleave(data_ptr->ibuf()->channels(), output_num_frames_, num_channels_,
                frame->data_);
   } else {
-    UpmixMonoToInterleaved(data_ptr->ibuf()->channels()[0], proc_num_frames_,
+    UpmixMonoToInterleaved(data_ptr->ibuf()->channels()[0], output_num_frames_,
                            frame->num_channels_, frame->data_);
   }
 }

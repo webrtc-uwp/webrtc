@@ -42,5 +42,5 @@
         'xmlprinter.h',
       ],
     },
-  ],
+  ],  # targets
 }

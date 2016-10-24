@@ -8,10 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-/*
- * This file includes unit tests for NetEQ.
- */
-
 #include "webrtc/modules/audio_coding/neteq/include/neteq.h"
 
 #include <math.h>
@@ -26,9 +22,13 @@
 
 #include "gflags/gflags.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/sha1digest.h"
+#include "webrtc/base/stringencode.h"
+#include "webrtc/modules/audio_coding/codecs/builtin_audio_decoder_factory.h"
 #include "webrtc/modules/audio_coding/neteq/tools/audio_loop.h"
 #include "webrtc/modules/audio_coding/neteq/tools/rtp_file_source.h"
 #include "webrtc/modules/audio_coding/codecs/pcm16b/pcm16b.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/typedefs.h"
 
@@ -43,6 +43,23 @@
 DEFINE_bool(gen_ref, false, "Generate reference files.");
 
 namespace {
+
+const std::string& PlatformChecksum(const std::string& checksum_general,
+                                    const std::string& checksum_android,
+                                    const std::string& checksum_win_32,
+                                    const std::string& checksum_win_64) {
+#ifdef WEBRTC_ANDROID
+    return checksum_android;
+#elif WEBRTC_WIN
+  #ifdef WEBRTC_ARCH_64_BITS
+    return checksum_win_64;
+  #else
+    return checksum_win_32;
+  #endif  // WEBRTC_ARCH_64_BITS
+#else
+  return checksum_general;
+#endif  // WEBRTC_WIN
+}
 
 bool IsAllZero(const int16_t* buf, size_t buf_length) {
   bool all_zero = true;
@@ -88,186 +105,141 @@ void Convert(const webrtc::RtcpStatistics& stats_raw,
   stats->set_jitter(stats_raw.jitter);
 }
 
-void WriteMessage(FILE* file, const std::string& message) {
+void AddMessage(FILE* file, rtc::MessageDigest* digest,
+                const std::string& message) {
   int32_t size = message.length();
-  ASSERT_EQ(1u, fwrite(&size, sizeof(size), 1, file));
-  if (size <= 0)
-    return;
-  ASSERT_EQ(static_cast<size_t>(size),
-            fwrite(message.data(), sizeof(char), size, file));
+  if (file)
+    ASSERT_EQ(1u, fwrite(&size, sizeof(size), 1, file));
+  digest->Update(&size, sizeof(size));
+
+  if (file)
+    ASSERT_EQ(static_cast<size_t>(size),
+              fwrite(message.data(), sizeof(char), size, file));
+  digest->Update(message.data(), sizeof(char) * size);
 }
 
-void ReadMessage(FILE* file, std::string* message) {
-  int32_t size;
-  ASSERT_EQ(1u, fread(&size, sizeof(size), 1, file));
-  if (size <= 0)
-    return;
-  std::unique_ptr<char[]> buffer(new char[size]);
-  ASSERT_EQ(static_cast<size_t>(size),
-            fread(buffer.get(), sizeof(char), size, file));
-  message->assign(buffer.get(), size);
-}
 #endif  // WEBRTC_NETEQ_UNITTEST_BITEXACT
 
+void LoadDecoders(webrtc::NetEq* neteq) {
+  // Load PCMu.
+  ASSERT_EQ(0, neteq->RegisterPayloadType(webrtc::NetEqDecoder::kDecoderPCMu,
+                                          "pcmu", 0));
+  // Load PCMa.
+  ASSERT_EQ(0, neteq->RegisterPayloadType(webrtc::NetEqDecoder::kDecoderPCMa,
+                                          "pcma", 8));
+#ifdef WEBRTC_CODEC_ILBC
+  // Load iLBC.
+  ASSERT_EQ(0, neteq->RegisterPayloadType(webrtc::NetEqDecoder::kDecoderILBC,
+                                          "ilbc", 102));
+#endif
+#if defined(WEBRTC_CODEC_ISAC) || defined(WEBRTC_CODEC_ISACFX)
+  // Load iSAC.
+  ASSERT_EQ(0, neteq->RegisterPayloadType(webrtc::NetEqDecoder::kDecoderISAC,
+                                          "isac", 103));
+#endif
+#ifdef WEBRTC_CODEC_ISAC
+  // Load iSAC SWB.
+  ASSERT_EQ(0, neteq->RegisterPayloadType(webrtc::NetEqDecoder::kDecoderISACswb,
+                                          "isac-swb", 104));
+#endif
+#ifdef WEBRTC_CODEC_OPUS
+  ASSERT_EQ(0, neteq->RegisterPayloadType(webrtc::NetEqDecoder::kDecoderOpus,
+                                          "opus", 111));
+#endif
+  // Load PCM16B nb.
+  ASSERT_EQ(0, neteq->RegisterPayloadType(webrtc::NetEqDecoder::kDecoderPCM16B,
+                                          "pcm16-nb", 93));
+  // Load PCM16B wb.
+  ASSERT_EQ(0, neteq->RegisterPayloadType(
+                   webrtc::NetEqDecoder::kDecoderPCM16Bwb, "pcm16-wb", 94));
+  // Load PCM16B swb32.
+  ASSERT_EQ(
+      0, neteq->RegisterPayloadType(
+             webrtc::NetEqDecoder::kDecoderPCM16Bswb32kHz, "pcm16-swb32", 95));
+  // Load CNG 8 kHz.
+  ASSERT_EQ(0, neteq->RegisterPayloadType(webrtc::NetEqDecoder::kDecoderCNGnb,
+                                          "cng-nb", 13));
+  // Load CNG 16 kHz.
+  ASSERT_EQ(0, neteq->RegisterPayloadType(webrtc::NetEqDecoder::kDecoderCNGwb,
+                                          "cng-wb", 98));
+}
 }  // namespace
 
 namespace webrtc {
 
-class RefFiles {
+class ResultSink {
  public:
-  RefFiles(const std::string& input_file, const std::string& output_file);
-  ~RefFiles();
-  template<class T> void ProcessReference(const T& test_results);
-  template<typename T, size_t n> void ProcessReference(
-      const T (&test_results)[n],
-      size_t length);
-  template<typename T, size_t n> void WriteToFile(
-      const T (&test_results)[n],
-      size_t length);
-  template<typename T, size_t n> void ReadFromFileAndCompare(
-      const T (&test_results)[n],
-      size_t length);
-  void WriteToFile(const NetEqNetworkStatistics& stats);
-  void ReadFromFileAndCompare(const NetEqNetworkStatistics& stats);
-  void WriteToFile(const RtcpStatistics& stats);
-  void ReadFromFileAndCompare(const RtcpStatistics& stats);
+  explicit ResultSink(const std::string& output_file);
+  ~ResultSink();
 
-  FILE* input_fp_;
+  template<typename T, size_t n> void AddResult(
+      const T (&test_results)[n],
+      size_t length);
+
+  void AddResult(const NetEqNetworkStatistics& stats);
+  void AddResult(const RtcpStatistics& stats);
+
+  void VerifyChecksum(const std::string& ref_check_sum);
+
+ private:
   FILE* output_fp_;
+  std::unique_ptr<rtc::MessageDigest> digest_;
 };
 
-RefFiles::RefFiles(const std::string &input_file,
-                   const std::string &output_file)
-    : input_fp_(NULL),
-      output_fp_(NULL) {
-  if (!input_file.empty()) {
-    input_fp_ = fopen(input_file.c_str(), "rb");
-    EXPECT_TRUE(input_fp_ != NULL);
-  }
+ResultSink::ResultSink(const std::string &output_file)
+    : output_fp_(nullptr),
+      digest_(new rtc::Sha1Digest()) {
   if (!output_file.empty()) {
     output_fp_ = fopen(output_file.c_str(), "wb");
     EXPECT_TRUE(output_fp_ != NULL);
   }
 }
 
-RefFiles::~RefFiles() {
-  if (input_fp_) {
-    EXPECT_EQ(EOF, fgetc(input_fp_));  // Make sure that we reached the end.
-    fclose(input_fp_);
-  }
-  if (output_fp_) fclose(output_fp_);
-}
-
-template<class T>
-void RefFiles::ProcessReference(const T& test_results) {
-  WriteToFile(test_results);
-  ReadFromFileAndCompare(test_results);
+ResultSink::~ResultSink() {
+  if (output_fp_)
+    fclose(output_fp_);
 }
 
 template<typename T, size_t n>
-void RefFiles::ProcessReference(const T (&test_results)[n], size_t length) {
-  WriteToFile(test_results, length);
-  ReadFromFileAndCompare(test_results, length);
-}
-
-template<typename T, size_t n>
-void RefFiles::WriteToFile(const T (&test_results)[n], size_t length) {
+void ResultSink::AddResult(const T (&test_results)[n], size_t length) {
   if (output_fp_) {
     ASSERT_EQ(length, fwrite(&test_results, sizeof(T), length, output_fp_));
   }
+  digest_->Update(&test_results, sizeof(T) * length);
 }
 
-template<typename T, size_t n>
-void RefFiles::ReadFromFileAndCompare(const T (&test_results)[n],
-                                      size_t length) {
-  if (input_fp_) {
-    // Read from ref file.
-    T* ref = new T[length];
-    ASSERT_EQ(length, fread(ref, sizeof(T), length, input_fp_));
-    // Compare
-    ASSERT_EQ(0, memcmp(&test_results, ref, sizeof(T) * length));
-    delete [] ref;
-  }
-}
-
-void RefFiles::WriteToFile(const NetEqNetworkStatistics& stats_raw) {
+void ResultSink::AddResult(const NetEqNetworkStatistics& stats_raw) {
 #ifdef WEBRTC_NETEQ_UNITTEST_BITEXACT
-  if (!output_fp_)
-    return;
   neteq_unittest::NetEqNetworkStatistics stats;
   Convert(stats_raw, &stats);
 
   std::string stats_string;
   ASSERT_TRUE(stats.SerializeToString(&stats_string));
-  WriteMessage(output_fp_, stats_string);
+  AddMessage(output_fp_, digest_.get(), stats_string);
 #else
   FAIL() << "Writing to reference file requires Proto Buffer.";
 #endif  // WEBRTC_NETEQ_UNITTEST_BITEXACT
 }
 
-void RefFiles::ReadFromFileAndCompare(
-    const NetEqNetworkStatistics& stats) {
+void ResultSink::AddResult(const RtcpStatistics& stats_raw) {
 #ifdef WEBRTC_NETEQ_UNITTEST_BITEXACT
-  if (!input_fp_)
-    return;
-
-  std::string stats_string;
-  ReadMessage(input_fp_, &stats_string);
-  neteq_unittest::NetEqNetworkStatistics ref_stats;
-  ASSERT_TRUE(ref_stats.ParseFromString(stats_string));
-
-  // Compare
-  ASSERT_EQ(stats.current_buffer_size_ms, ref_stats.current_buffer_size_ms());
-  ASSERT_EQ(stats.preferred_buffer_size_ms,
-            ref_stats.preferred_buffer_size_ms());
-  ASSERT_EQ(stats.jitter_peaks_found, ref_stats.jitter_peaks_found());
-  ASSERT_EQ(stats.packet_loss_rate, ref_stats.packet_loss_rate());
-  ASSERT_EQ(stats.packet_discard_rate, ref_stats.packet_discard_rate());
-  ASSERT_EQ(stats.expand_rate, ref_stats.expand_rate());
-  ASSERT_EQ(stats.preemptive_rate, ref_stats.preemptive_rate());
-  ASSERT_EQ(stats.accelerate_rate, ref_stats.accelerate_rate());
-  ASSERT_EQ(stats.clockdrift_ppm, ref_stats.clockdrift_ppm());
-  ASSERT_EQ(stats.added_zero_samples, ref_stats.added_zero_samples());
-  ASSERT_EQ(stats.secondary_decoded_rate, ref_stats.secondary_decoded_rate());
-  ASSERT_LE(stats.speech_expand_rate, ref_stats.expand_rate());
-#else
-  FAIL() << "Reading from reference file requires Proto Buffer.";
-#endif  // WEBRTC_NETEQ_UNITTEST_BITEXACT
-}
-
-void RefFiles::WriteToFile(const RtcpStatistics& stats_raw) {
-#ifdef WEBRTC_NETEQ_UNITTEST_BITEXACT
-  if (!output_fp_)
-    return;
   neteq_unittest::RtcpStatistics stats;
   Convert(stats_raw, &stats);
 
   std::string stats_string;
   ASSERT_TRUE(stats.SerializeToString(&stats_string));
-  WriteMessage(output_fp_, stats_string);
+  AddMessage(output_fp_, digest_.get(), stats_string);
 #else
   FAIL() << "Writing to reference file requires Proto Buffer.";
 #endif  // WEBRTC_NETEQ_UNITTEST_BITEXACT
 }
 
-void RefFiles::ReadFromFileAndCompare(const RtcpStatistics& stats) {
-#ifdef WEBRTC_NETEQ_UNITTEST_BITEXACT
-  if (!input_fp_)
-    return;
-  std::string stats_string;
-  ReadMessage(input_fp_, &stats_string);
-  neteq_unittest::RtcpStatistics ref_stats;
-  ASSERT_TRUE(ref_stats.ParseFromString(stats_string));
-
-  // Compare
-  ASSERT_EQ(stats.fraction_lost, ref_stats.fraction_lost());
-  ASSERT_EQ(stats.cumulative_lost, ref_stats.cumulative_lost());
-  ASSERT_EQ(stats.extended_max_sequence_number,
-            ref_stats.extended_max_sequence_number());
-  ASSERT_EQ(stats.jitter, ref_stats.jitter());
-#else
-  FAIL() << "Reading from reference file requires Proto Buffer.";
-#endif  // WEBRTC_NETEQ_UNITTEST_BITEXACT
+void ResultSink::VerifyChecksum(const std::string& checksum) {
+  std::vector<char> buffer;
+  buffer.resize(digest_->Size());
+  digest_->Finish(&buffer[0], buffer.size());
+  const std::string result = rtc::hex_encode(&buffer[0], digest_->Size());
+  EXPECT_EQ(checksum, result);
 }
 
 class NetEqDecodingTest : public ::testing::Test {
@@ -279,21 +251,20 @@ class NetEqDecodingTest : public ::testing::Test {
   static const size_t kBlockSize16kHz = kTimeStepMs * 16;
   static const size_t kBlockSize32kHz = kTimeStepMs * 32;
   static const size_t kBlockSize48kHz = kTimeStepMs * 48;
-  static const size_t kMaxBlockSize = kBlockSize48kHz;
   static const int kInitSampleRateHz = 8000;
 
   NetEqDecodingTest();
   virtual void SetUp();
   virtual void TearDown();
   void SelectDecoders(NetEqDecoder* used_codec);
-  void LoadDecoders();
   void OpenInputFile(const std::string &rtp_file);
-  void Process(size_t* out_len);
+  void Process();
 
   void DecodeAndCompare(const std::string& rtp_file,
-                        const std::string& ref_file,
-                        const std::string& stat_ref_file,
-                        const std::string& rtcp_ref_file);
+                        const std::string& output_checksum,
+                        const std::string& network_stats_checksum,
+                        const std::string& rtcp_stats_checksum,
+                        bool gen_ref);
 
   static void PopulateRtpInfo(int frame_index,
                               int timestamp,
@@ -316,14 +287,14 @@ class NetEqDecodingTest : public ::testing::Test {
 
   void DuplicateCng();
 
-  uint32_t PlayoutTimestamp();
+  rtc::Optional<uint32_t> PlayoutTimestamp();
 
   NetEq* neteq_;
   NetEq::Config config_;
   std::unique_ptr<test::RtpFileSource> rtp_source_;
   std::unique_ptr<test::Packet> packet_;
   unsigned int sim_clock_;
-  int16_t out_data_[kMaxBlockSize];
+  AudioFrame out_frame_;
   int output_sample_rate_;
   int algorithmic_delay_ms_;
 };
@@ -333,7 +304,6 @@ const int NetEqDecodingTest::kTimeStepMs;
 const size_t NetEqDecodingTest::kBlockSize8kHz;
 const size_t NetEqDecodingTest::kBlockSize16kHz;
 const size_t NetEqDecodingTest::kBlockSize32kHz;
-const size_t NetEqDecodingTest::kMaxBlockSize;
 const int NetEqDecodingTest::kInitSampleRateHz;
 
 NetEqDecodingTest::NetEqDecodingTest()
@@ -343,70 +313,26 @@ NetEqDecodingTest::NetEqDecodingTest()
       output_sample_rate_(kInitSampleRateHz),
       algorithmic_delay_ms_(0) {
   config_.sample_rate_hz = kInitSampleRateHz;
-  memset(out_data_, 0, sizeof(out_data_));
 }
 
 void NetEqDecodingTest::SetUp() {
-  neteq_ = NetEq::Create(config_);
+  neteq_ = NetEq::Create(config_, CreateBuiltinAudioDecoderFactory());
   NetEqNetworkStatistics stat;
   ASSERT_EQ(0, neteq_->NetworkStatistics(&stat));
   algorithmic_delay_ms_ = stat.current_buffer_size_ms;
   ASSERT_TRUE(neteq_);
-  LoadDecoders();
+  LoadDecoders(neteq_);
 }
 
 void NetEqDecodingTest::TearDown() {
   delete neteq_;
 }
 
-void NetEqDecodingTest::LoadDecoders() {
-  // Load PCMu.
-  ASSERT_EQ(0,
-            neteq_->RegisterPayloadType(NetEqDecoder::kDecoderPCMu, "pcmu", 0));
-  // Load PCMa.
-  ASSERT_EQ(0,
-            neteq_->RegisterPayloadType(NetEqDecoder::kDecoderPCMa, "pcma", 8));
-#ifdef WEBRTC_CODEC_ILBC
-  // Load iLBC.
-  ASSERT_EQ(
-      0, neteq_->RegisterPayloadType(NetEqDecoder::kDecoderILBC, "ilbc", 102));
-#endif
-#if defined(WEBRTC_CODEC_ISAC) || defined(WEBRTC_CODEC_ISACFX)
-  // Load iSAC.
-  ASSERT_EQ(
-      0, neteq_->RegisterPayloadType(NetEqDecoder::kDecoderISAC, "isac", 103));
-#endif
-#ifdef WEBRTC_CODEC_ISAC
-  // Load iSAC SWB.
-  ASSERT_EQ(0, neteq_->RegisterPayloadType(NetEqDecoder::kDecoderISACswb,
-                                           "isac-swb", 104));
-#endif
-#ifdef WEBRTC_CODEC_OPUS
-  ASSERT_EQ(0, neteq_->RegisterPayloadType(NetEqDecoder::kDecoderOpus,
-                                           "opus", 111));
-#endif
-  // Load PCM16B nb.
-  ASSERT_EQ(0, neteq_->RegisterPayloadType(NetEqDecoder::kDecoderPCM16B,
-                                           "pcm16-nb", 93));
-  // Load PCM16B wb.
-  ASSERT_EQ(0, neteq_->RegisterPayloadType(NetEqDecoder::kDecoderPCM16Bwb,
-                                           "pcm16-wb", 94));
-  // Load PCM16B swb32.
-  ASSERT_EQ(0, neteq_->RegisterPayloadType(NetEqDecoder::kDecoderPCM16Bswb32kHz,
-                                           "pcm16-swb32", 95));
-  // Load CNG 8 kHz.
-  ASSERT_EQ(0, neteq_->RegisterPayloadType(NetEqDecoder::kDecoderCNGnb,
-                                           "cng-nb", 13));
-  // Load CNG 16 kHz.
-  ASSERT_EQ(0, neteq_->RegisterPayloadType(NetEqDecoder::kDecoderCNGwb,
-                                           "cng-wb", 98));
-}
-
 void NetEqDecodingTest::OpenInputFile(const std::string &rtp_file) {
   rtp_source_.reset(test::RtpFileSource::Create(rtp_file));
 }
 
-void NetEqDecodingTest::Process(size_t* out_len) {
+void NetEqDecodingTest::Process() {
   // Check if time to receive.
   while (packet_ && sim_clock_ >= packet_->time_ms()) {
     if (packet_->payload_length_bytes() > 0) {
@@ -424,75 +350,78 @@ void NetEqDecodingTest::Process(size_t* out_len) {
                                              (output_sample_rate_ / 1000))));
     }
     // Get next packet.
-    packet_.reset(rtp_source_->NextPacket());
+    packet_ = rtp_source_->NextPacket();
   }
 
   // Get audio from NetEq.
-  NetEqOutputType type;
-  size_t num_channels;
-  ASSERT_EQ(0, neteq_->GetAudio(kMaxBlockSize, out_data_, out_len,
-                                &num_channels, &type));
-  ASSERT_TRUE((*out_len == kBlockSize8kHz) ||
-              (*out_len == kBlockSize16kHz) ||
-              (*out_len == kBlockSize32kHz) ||
-              (*out_len == kBlockSize48kHz));
-  output_sample_rate_ = static_cast<int>(*out_len / 10 * 1000);
+  bool muted;
+  ASSERT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+  ASSERT_FALSE(muted);
+  ASSERT_TRUE((out_frame_.samples_per_channel_ == kBlockSize8kHz) ||
+              (out_frame_.samples_per_channel_ == kBlockSize16kHz) ||
+              (out_frame_.samples_per_channel_ == kBlockSize32kHz) ||
+              (out_frame_.samples_per_channel_ == kBlockSize48kHz));
+  output_sample_rate_ = out_frame_.sample_rate_hz_;
   EXPECT_EQ(output_sample_rate_, neteq_->last_output_sample_rate_hz());
 
   // Increase time.
   sim_clock_ += kTimeStepMs;
 }
 
-void NetEqDecodingTest::DecodeAndCompare(const std::string& rtp_file,
-                                         const std::string& ref_file,
-                                         const std::string& stat_ref_file,
-                                         const std::string& rtcp_ref_file) {
+void NetEqDecodingTest::DecodeAndCompare(
+    const std::string& rtp_file,
+    const std::string& output_checksum,
+    const std::string& network_stats_checksum,
+    const std::string& rtcp_stats_checksum,
+    bool gen_ref) {
   OpenInputFile(rtp_file);
 
-  std::string ref_out_file = "";
-  if (ref_file.empty()) {
-    ref_out_file = webrtc::test::OutputPath() + "neteq_universal_ref.pcm";
-  }
-  RefFiles ref_files(ref_file, ref_out_file);
+  std::string ref_out_file =
+      gen_ref ? webrtc::test::OutputPath() + "neteq_universal_ref.pcm" : "";
+  ResultSink output(ref_out_file);
 
-  std::string stat_out_file = "";
-  if (stat_ref_file.empty()) {
-    stat_out_file = webrtc::test::OutputPath() + "neteq_network_stats.dat";
-  }
-  RefFiles network_stat_files(stat_ref_file, stat_out_file);
+  std::string stat_out_file =
+      gen_ref ? webrtc::test::OutputPath() + "neteq_network_stats.dat" : "";
+  ResultSink network_stats(stat_out_file);
 
-  std::string rtcp_out_file = "";
-  if (rtcp_ref_file.empty()) {
-    rtcp_out_file = webrtc::test::OutputPath() + "neteq_rtcp_stats.dat";
-  }
-  RefFiles rtcp_stat_files(rtcp_ref_file, rtcp_out_file);
+  std::string rtcp_out_file =
+      gen_ref ? webrtc::test::OutputPath() + "neteq_rtcp_stats.dat" : "";
+  ResultSink rtcp_stats(rtcp_out_file);
 
-  packet_.reset(rtp_source_->NextPacket());
+  packet_ = rtp_source_->NextPacket();
   int i = 0;
   while (packet_) {
     std::ostringstream ss;
     ss << "Lap number " << i++ << " in DecodeAndCompare while loop";
     SCOPED_TRACE(ss.str());  // Print out the parameter values on failure.
-    size_t out_len = 0;
-    ASSERT_NO_FATAL_FAILURE(Process(&out_len));
-    ASSERT_NO_FATAL_FAILURE(ref_files.ProcessReference(out_data_, out_len));
+    ASSERT_NO_FATAL_FAILURE(Process());
+    ASSERT_NO_FATAL_FAILURE(output.AddResult(
+        out_frame_.data_, out_frame_.samples_per_channel_));
 
     // Query the network statistics API once per second
     if (sim_clock_ % 1000 == 0) {
       // Process NetworkStatistics.
-      NetEqNetworkStatistics network_stats;
-      ASSERT_EQ(0, neteq_->NetworkStatistics(&network_stats));
-      ASSERT_NO_FATAL_FAILURE(
-          network_stat_files.ProcessReference(network_stats));
+      NetEqNetworkStatistics current_network_stats;
+      ASSERT_EQ(0, neteq_->NetworkStatistics(&current_network_stats));
+      ASSERT_NO_FATAL_FAILURE(network_stats.AddResult(current_network_stats));
+
       // Compare with CurrentDelay, which should be identical.
-      EXPECT_EQ(network_stats.current_buffer_size_ms, neteq_->CurrentDelayMs());
+      EXPECT_EQ(current_network_stats.current_buffer_size_ms,
+                neteq_->CurrentDelayMs());
 
       // Process RTCPstat.
-      RtcpStatistics rtcp_stats;
-      neteq_->GetRtcpStatistics(&rtcp_stats);
-      ASSERT_NO_FATAL_FAILURE(rtcp_stat_files.ProcessReference(rtcp_stats));
+      RtcpStatistics current_rtcp_stats;
+      neteq_->GetRtcpStatistics(&current_rtcp_stats);
+      ASSERT_NO_FATAL_FAILURE(rtcp_stats.AddResult(current_rtcp_stats));
     }
   }
+
+  SCOPED_TRACE("Check output audio.");
+  output.VerifyChecksum(output_checksum);
+  SCOPED_TRACE("Check network stats.");
+  network_stats.VerifyChecksum(network_stats_checksum);
+  SCOPED_TRACE("Check rtcp stats.");
+  rtcp_stats.VerifyChecksum(rtcp_stats_checksum);
 }
 
 void NetEqDecodingTest::PopulateRtpInfo(int frame_index,
@@ -530,31 +459,30 @@ void NetEqDecodingTest::PopulateCng(int frame_index,
 TEST_F(NetEqDecodingTest, MAYBE_TestBitExactness) {
   const std::string input_rtp_file =
       webrtc::test::ResourcePath("audio_coding/neteq_universal_new", "rtp");
-  // Note that neteq4_universal_ref.pcm and neteq4_universal_ref_win_32.pcm
-  // are identical. The latter could have been removed, but if clients still
-  // have a copy of the file, the test will fail.
-  const std::string input_ref_file =
-      webrtc::test::ResourcePath("audio_coding/neteq4_universal_ref", "pcm");
-#if defined(_MSC_VER) && (_MSC_VER >= 1700)
-  // For Visual Studio 2012 and later, we will have to use the generic reference
-  // file, rather than the windows-specific one.
-  const std::string network_stat_ref_file = webrtc::test::ProjectRootPath() +
-      "resources/audio_coding/neteq4_network_stats.dat";
-#else
-  const std::string network_stat_ref_file =
-      webrtc::test::ResourcePath("audio_coding/neteq4_network_stats", "dat");
-#endif
-  const std::string rtcp_stat_ref_file =
-      webrtc::test::ResourcePath("audio_coding/neteq4_rtcp_stats", "dat");
 
-  if (FLAGS_gen_ref) {
-    DecodeAndCompare(input_rtp_file, "", "", "");
-  } else {
-    DecodeAndCompare(input_rtp_file,
-                     input_ref_file,
-                     network_stat_ref_file,
-                     rtcp_stat_ref_file);
-  }
+  const std::string output_checksum = PlatformChecksum(
+      "acd33f5c73625c1529c412ad59b5565132826f1b",
+      "1a2e82a0410421c1d1d3eb0615334db5e2c63784",
+      "acd33f5c73625c1529c412ad59b5565132826f1b",
+      "52797b781758a1d2303140b80b9c5030c9093d6b");
+
+  const std::string network_stats_checksum = PlatformChecksum(
+      "9c5bb9e74a583be89313b158a19ea10d41bf9de6",
+      "e948ec65cf18852ba2a197189a3186635db34c3b",
+      "9c5bb9e74a583be89313b158a19ea10d41bf9de6",
+      "9c5bb9e74a583be89313b158a19ea10d41bf9de6");
+
+  const std::string rtcp_stats_checksum = PlatformChecksum(
+      "b8880bf9fed2487efbddcb8d94b9937a29ae521d",
+      "f3f7b3d3e71d7e635240b5373b57df6a7e4ce9d4",
+      "b8880bf9fed2487efbddcb8d94b9937a29ae521d",
+      "b8880bf9fed2487efbddcb8d94b9937a29ae521d");
+
+  DecodeAndCompare(input_rtp_file,
+                   output_checksum,
+                   network_stats_checksum,
+                   rtcp_stats_checksum,
+                   FLAGS_gen_ref);
 }
 
 #if !defined(WEBRTC_IOS) && !defined(WEBRTC_ANDROID) &&             \
@@ -567,26 +495,30 @@ TEST_F(NetEqDecodingTest, MAYBE_TestBitExactness) {
 TEST_F(NetEqDecodingTest, MAYBE_TestOpusBitExactness) {
   const std::string input_rtp_file =
       webrtc::test::ResourcePath("audio_coding/neteq_opus", "rtp");
-  const std::string input_ref_file =
-      // The pcm files were generated by using Opus v1.1.2 to decode the RTC
-      // file generated by Opus v1.1
-      webrtc::test::ResourcePath("audio_coding/neteq4_opus_ref", "pcm");
-  const std::string network_stat_ref_file =
-      // The network stats file was generated when using Opus v1.1.2 to decode
-      // the RTC file generated by Opus v1.1
-      webrtc::test::ResourcePath("audio_coding/neteq4_opus_network_stats",
-                                 "dat");
-  const std::string rtcp_stat_ref_file =
-      webrtc::test::ResourcePath("audio_coding/neteq4_opus_rtcp_stats", "dat");
 
-  if (FLAGS_gen_ref) {
-    DecodeAndCompare(input_rtp_file, "", "", "");
-  } else {
-    DecodeAndCompare(input_rtp_file,
-                     input_ref_file,
-                     network_stat_ref_file,
-                     rtcp_stat_ref_file);
-  }
+  const std::string output_checksum = PlatformChecksum(
+      "9d7d52bc94e941d106aa518f324f16a58d231586",
+      "9d7d52bc94e941d106aa518f324f16a58d231586",
+      "9d7d52bc94e941d106aa518f324f16a58d231586",
+      "9d7d52bc94e941d106aa518f324f16a58d231586");
+
+  const std::string network_stats_checksum = PlatformChecksum(
+      "191af29ed3b8b6dd4c4cc94dc3f33bdf48f055ef",
+      "191af29ed3b8b6dd4c4cc94dc3f33bdf48f055ef",
+      "191af29ed3b8b6dd4c4cc94dc3f33bdf48f055ef",
+      "191af29ed3b8b6dd4c4cc94dc3f33bdf48f055ef");
+
+  const std::string rtcp_stats_checksum = PlatformChecksum(
+      "e37c797e3de6a64dda88c9ade7a013d022a2e1e0",
+      "e37c797e3de6a64dda88c9ade7a013d022a2e1e0",
+      "e37c797e3de6a64dda88c9ade7a013d022a2e1e0",
+      "e37c797e3de6a64dda88c9ade7a013d022a2e1e0");
+
+  DecodeAndCompare(input_rtp_file,
+                   output_checksum,
+                   network_stats_checksum,
+                   rtcp_stats_checksum,
+                   FLAGS_gen_ref);
 }
 
 // Use fax mode to avoid time-scaling. This is to simplify the testing of
@@ -615,12 +547,9 @@ TEST_F(NetEqDecodingTestFaxMode, TestFrameWaitingTimeStatistics) {
   }
   // Pull out all data.
   for (size_t i = 0; i < num_frames; ++i) {
-    size_t out_len;
-    size_t num_channels;
-    NetEqOutputType type;
-    ASSERT_EQ(0, neteq_->GetAudio(kMaxBlockSize, out_data_, &out_len,
-                                  &num_channels, &type));
-    ASSERT_EQ(kBlockSize16kHz, out_len);
+    bool muted;
+    ASSERT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+    ASSERT_EQ(kBlockSize16kHz, out_frame_.samples_per_channel_);
   }
 
   NetEqNetworkStatistics stats;
@@ -660,12 +589,9 @@ TEST_F(NetEqDecodingTest, TestAverageInterArrivalTimeNegative) {
     }
 
     // Pull out data once.
-    size_t out_len;
-    size_t num_channels;
-    NetEqOutputType type;
-    ASSERT_EQ(0, neteq_->GetAudio(kMaxBlockSize, out_data_, &out_len,
-                                  &num_channels, &type));
-    ASSERT_EQ(kBlockSize16kHz, out_len);
+    bool muted;
+    ASSERT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+    ASSERT_EQ(kBlockSize16kHz, out_frame_.samples_per_channel_);
   }
 
   NetEqNetworkStatistics network_stats;
@@ -691,12 +617,9 @@ TEST_F(NetEqDecodingTest, TestAverageInterArrivalTimePositive) {
     }
 
     // Pull out data once.
-    size_t out_len;
-    size_t num_channels;
-    NetEqOutputType type;
-    ASSERT_EQ(0, neteq_->GetAudio(kMaxBlockSize, out_data_, &out_len,
-                                  &num_channels, &type));
-    ASSERT_EQ(kBlockSize16kHz, out_len);
+    bool muted;
+    ASSERT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+    ASSERT_EQ(kBlockSize16kHz, out_frame_.samples_per_channel_);
   }
 
   NetEqNetworkStatistics network_stats;
@@ -716,9 +639,7 @@ void NetEqDecodingTest::LongCngWithClockDrift(double drift_factor,
   const size_t kPayloadBytes = kSamples * 2;
   double next_input_time_ms = 0.0;
   double t_ms;
-  size_t out_len;
-  size_t num_channels;
-  NetEqOutputType type;
+  bool muted;
 
   // Insert speech for 5 seconds.
   const int kSpeechDurationMs = 5000;
@@ -735,13 +656,14 @@ void NetEqDecodingTest::LongCngWithClockDrift(double drift_factor,
       next_input_time_ms += static_cast<double>(kFrameSizeMs) * drift_factor;
     }
     // Pull out data once.
-    ASSERT_EQ(0, neteq_->GetAudio(kMaxBlockSize, out_data_, &out_len,
-                                  &num_channels, &type));
-    ASSERT_EQ(kBlockSize16kHz, out_len);
+    ASSERT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+    ASSERT_EQ(kBlockSize16kHz, out_frame_.samples_per_channel_);
   }
 
-  EXPECT_EQ(kOutputNormal, type);
-  int32_t delay_before = timestamp - PlayoutTimestamp();
+  EXPECT_EQ(AudioFrame::kNormalSpeech, out_frame_.speech_type_);
+  rtc::Optional<uint32_t> playout_timestamp = PlayoutTimestamp();
+  ASSERT_TRUE(playout_timestamp);
+  int32_t delay_before = timestamp - *playout_timestamp;
 
   // Insert CNG for 1 minute (= 60000 ms).
   const int kCngPeriodMs = 100;
@@ -763,12 +685,11 @@ void NetEqDecodingTest::LongCngWithClockDrift(double drift_factor,
       next_input_time_ms += static_cast<double>(kCngPeriodMs) * drift_factor;
     }
     // Pull out data once.
-    ASSERT_EQ(0, neteq_->GetAudio(kMaxBlockSize, out_data_, &out_len,
-                                  &num_channels, &type));
-    ASSERT_EQ(kBlockSize16kHz, out_len);
+    ASSERT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+    ASSERT_EQ(kBlockSize16kHz, out_frame_.samples_per_channel_);
   }
 
-  EXPECT_EQ(kOutputCNG, type);
+  EXPECT_EQ(AudioFrame::kCNG, out_frame_.speech_type_);
 
   if (network_freeze_ms > 0) {
     // First keep pulling audio for |network_freeze_ms| without inserting
@@ -777,11 +698,9 @@ void NetEqDecodingTest::LongCngWithClockDrift(double drift_factor,
     const double loop_end_time = t_ms + network_freeze_ms;
     for (; t_ms < loop_end_time; t_ms += 10) {
       // Pull out data once.
-      ASSERT_EQ(0,
-                neteq_->GetAudio(
-                    kMaxBlockSize, out_data_, &out_len, &num_channels, &type));
-      ASSERT_EQ(kBlockSize16kHz, out_len);
-      EXPECT_EQ(kOutputCNG, type);
+      ASSERT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+      ASSERT_EQ(kBlockSize16kHz, out_frame_.samples_per_channel_);
+      EXPECT_EQ(AudioFrame::kCNG, out_frame_.speech_type_);
     }
     bool pull_once = pull_audio_during_freeze;
     // If |pull_once| is true, GetAudio will be called once half-way through
@@ -791,12 +710,9 @@ void NetEqDecodingTest::LongCngWithClockDrift(double drift_factor,
       if (pull_once && next_input_time_ms >= pull_time_ms) {
         pull_once = false;
         // Pull out data once.
-        ASSERT_EQ(
-            0,
-            neteq_->GetAudio(
-                kMaxBlockSize, out_data_, &out_len, &num_channels, &type));
-        ASSERT_EQ(kBlockSize16kHz, out_len);
-        EXPECT_EQ(kOutputCNG, type);
+        ASSERT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+        ASSERT_EQ(kBlockSize16kHz, out_frame_.samples_per_channel_);
+        EXPECT_EQ(AudioFrame::kCNG, out_frame_.speech_type_);
         t_ms += 10;
       }
       // Insert one CNG frame each 100 ms.
@@ -815,7 +731,7 @@ void NetEqDecodingTest::LongCngWithClockDrift(double drift_factor,
 
   // Insert speech again until output type is speech.
   double speech_restart_time_ms = t_ms;
-  while (type != kOutputNormal) {
+  while (out_frame_.speech_type_ != AudioFrame::kNormalSpeech) {
     // Each turn in this for loop is 10 ms.
     while (next_input_time_ms <= t_ms) {
       // Insert one 30 ms speech frame.
@@ -828,9 +744,8 @@ void NetEqDecodingTest::LongCngWithClockDrift(double drift_factor,
       next_input_time_ms += kFrameSizeMs * drift_factor;
     }
     // Pull out data once.
-    ASSERT_EQ(0, neteq_->GetAudio(kMaxBlockSize, out_data_, &out_len,
-                                  &num_channels, &type));
-    ASSERT_EQ(kBlockSize16kHz, out_len);
+    ASSERT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+    ASSERT_EQ(kBlockSize16kHz, out_frame_.samples_per_channel_);
     // Increase clock.
     t_ms += 10;
   }
@@ -838,7 +753,9 @@ void NetEqDecodingTest::LongCngWithClockDrift(double drift_factor,
   // Check that the speech starts again within reasonable time.
   double time_until_speech_returns_ms = t_ms - speech_restart_time_ms;
   EXPECT_LT(time_until_speech_returns_ms, max_time_to_speech_ms);
-  int32_t delay_after = timestamp - PlayoutTimestamp();
+  playout_timestamp = PlayoutTimestamp();
+  ASSERT_TRUE(playout_timestamp);
+  int32_t delay_after = timestamp - *playout_timestamp;
   // Compare delay before and after, and make sure it differs less than 20 ms.
   EXPECT_LE(delay_after, delay_before + delay_tolerance_ms * 16);
   EXPECT_GE(delay_after, delay_before - delay_tolerance_ms * 16);
@@ -950,17 +867,14 @@ TEST_F(NetEqDecodingTest, MAYBE_DecoderError) {
   PopulateRtpInfo(0, 0, &rtp_info);
   rtp_info.header.payloadType = 103;  // iSAC, but the payload is invalid.
   EXPECT_EQ(0, neteq_->InsertPacket(rtp_info, payload, 0));
-  NetEqOutputType type;
   // Set all of |out_data_| to 1, and verify that it was set to 0 by the call
   // to GetAudio.
-  for (size_t i = 0; i < kMaxBlockSize; ++i) {
-    out_data_[i] = 1;
+  for (size_t i = 0; i < AudioFrame::kMaxDataSizeSamples; ++i) {
+    out_frame_.data_[i] = 1;
   }
-  size_t num_channels;
-  size_t samples_per_channel;
-  EXPECT_EQ(NetEq::kFail,
-            neteq_->GetAudio(kMaxBlockSize, out_data_,
-                             &samples_per_channel, &num_channels, &type));
+  bool muted;
+  EXPECT_EQ(NetEq::kFail, neteq_->GetAudio(&out_frame_, &muted));
+  ASSERT_FALSE(muted);
   // Verify that there is a decoder error to check.
   EXPECT_EQ(NetEq::kDecoderErrorCode, neteq_->LastError());
 
@@ -980,28 +894,26 @@ TEST_F(NetEqDecodingTest, MAYBE_DecoderError) {
     std::ostringstream ss;
     ss << "i = " << i;
     SCOPED_TRACE(ss.str());  // Print out the parameter values on failure.
-    EXPECT_EQ(0, out_data_[i]);
+    EXPECT_EQ(0, out_frame_.data_[i]);
   }
-  for (size_t i = kExpectedOutputLength; i < kMaxBlockSize; ++i) {
+  for (size_t i = kExpectedOutputLength; i < AudioFrame::kMaxDataSizeSamples;
+       ++i) {
     std::ostringstream ss;
     ss << "i = " << i;
     SCOPED_TRACE(ss.str());  // Print out the parameter values on failure.
-    EXPECT_EQ(1, out_data_[i]);
+    EXPECT_EQ(1, out_frame_.data_[i]);
   }
 }
 
 TEST_F(NetEqDecodingTest, GetAudioBeforeInsertPacket) {
-  NetEqOutputType type;
   // Set all of |out_data_| to 1, and verify that it was set to 0 by the call
   // to GetAudio.
-  for (size_t i = 0; i < kMaxBlockSize; ++i) {
-    out_data_[i] = 1;
+  for (size_t i = 0; i < AudioFrame::kMaxDataSizeSamples; ++i) {
+    out_frame_.data_[i] = 1;
   }
-  size_t num_channels;
-  size_t samples_per_channel;
-  EXPECT_EQ(0, neteq_->GetAudio(kMaxBlockSize, out_data_,
-                                &samples_per_channel,
-                                &num_channels, &type));
+  bool muted;
+  EXPECT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+  ASSERT_FALSE(muted);
   // Verify that the first block of samples is set to 0.
   static const int kExpectedOutputLength =
       kInitSampleRateHz / 100;  // 10 ms at initial sample rate.
@@ -1009,7 +921,7 @@ TEST_F(NetEqDecodingTest, GetAudioBeforeInsertPacket) {
     std::ostringstream ss;
     ss << "i = " << i;
     SCOPED_TRACE(ss.str());  // Print out the parameter values on failure.
-    EXPECT_EQ(0, out_data_[i]);
+    EXPECT_EQ(0, out_frame_.data_[i]);
   }
   // Verify that the sample rate did not change from the initial configuration.
   EXPECT_EQ(config_.sample_rate_hz, neteq_->last_output_sample_rate_hz());
@@ -1036,8 +948,7 @@ class NetEqBgnTest : public NetEqDecodingTest {
       ASSERT_TRUE(false);  // Unsupported test case.
     }
 
-    NetEqOutputType type;
-    int16_t output[kBlockSize32kHz];  // Maximum size is chosen.
+    AudioFrame output;
     test::AudioLoop input;
     // We are using the same 32 kHz input file for all tests, regardless of
     // |sampling_rate_hz|. The output may sound weird, but the test is still
@@ -1053,10 +964,8 @@ class NetEqBgnTest : public NetEqDecodingTest {
     PopulateRtpInfo(0, 0, &rtp_info);
     rtp_info.header.payloadType = payload_type;
 
-    size_t number_channels = 0;
-    size_t samples_per_channel = 0;
-
     uint32_t receive_timestamp = 0;
+    bool muted;
     for (int n = 0; n < 10; ++n) {  // Insert few packets and get audio.
       auto block = input.GetNextBlock();
       ASSERT_EQ(expected_samples_per_channel, block.size());
@@ -1064,20 +973,14 @@ class NetEqBgnTest : public NetEqDecodingTest {
           WebRtcPcm16b_Encode(block.data(), block.size(), payload);
       ASSERT_EQ(enc_len_bytes, expected_samples_per_channel * 2);
 
-      number_channels = 0;
-      samples_per_channel = 0;
       ASSERT_EQ(0, neteq_->InsertPacket(rtp_info, rtc::ArrayView<const uint8_t>(
                                                       payload, enc_len_bytes),
                                         receive_timestamp));
-      ASSERT_EQ(0,
-                neteq_->GetAudio(kBlockSize32kHz,
-                                 output,
-                                 &samples_per_channel,
-                                 &number_channels,
-                                 &type));
-      ASSERT_EQ(1u, number_channels);
-      ASSERT_EQ(expected_samples_per_channel, samples_per_channel);
-      ASSERT_EQ(kOutputNormal, type);
+      output.Reset();
+      ASSERT_EQ(0, neteq_->GetAudio(&output, &muted));
+      ASSERT_EQ(1u, output.num_channels_);
+      ASSERT_EQ(expected_samples_per_channel, output.samples_per_channel_);
+      ASSERT_EQ(AudioFrame::kNormalSpeech, output.speech_type_);
 
       // Next packet.
       rtp_info.header.timestamp += expected_samples_per_channel;
@@ -1085,20 +988,14 @@ class NetEqBgnTest : public NetEqDecodingTest {
       receive_timestamp += expected_samples_per_channel;
     }
 
-    number_channels = 0;
-    samples_per_channel = 0;
+    output.Reset();
 
     // Get audio without inserting packets, expecting PLC and PLC-to-CNG. Pull
     // one frame without checking speech-type. This is the first frame pulled
     // without inserting any packet, and might not be labeled as PLC.
-    ASSERT_EQ(0,
-              neteq_->GetAudio(kBlockSize32kHz,
-                               output,
-                               &samples_per_channel,
-                               &number_channels,
-                               &type));
-    ASSERT_EQ(1u, number_channels);
-    ASSERT_EQ(expected_samples_per_channel, samples_per_channel);
+    ASSERT_EQ(0, neteq_->GetAudio(&output, &muted));
+    ASSERT_EQ(1u, output.num_channels_);
+    ASSERT_EQ(expected_samples_per_channel, output.samples_per_channel_);
 
     // To be able to test the fading of background noise we need at lease to
     // pull 611 frames.
@@ -1109,25 +1006,21 @@ class NetEqBgnTest : public NetEqDecodingTest {
     const int kNumPlcToCngTestFrames = 20;
     bool plc_to_cng = false;
     for (int n = 0; n < kFadingThreshold + kNumPlcToCngTestFrames; ++n) {
-      number_channels = 0;
-      samples_per_channel = 0;
-      memset(output, 1, sizeof(output));  // Set to non-zero.
-      ASSERT_EQ(0,
-                neteq_->GetAudio(kBlockSize32kHz,
-                                 output,
-                                 &samples_per_channel,
-                                 &number_channels,
-                                 &type));
-      ASSERT_EQ(1u, number_channels);
-      ASSERT_EQ(expected_samples_per_channel, samples_per_channel);
-      if (type == kOutputPLCtoCNG) {
+      output.Reset();
+      memset(output.data_, 1, sizeof(output.data_));  // Set to non-zero.
+      ASSERT_EQ(0, neteq_->GetAudio(&output, &muted));
+      ASSERT_FALSE(muted);
+      ASSERT_EQ(1u, output.num_channels_);
+      ASSERT_EQ(expected_samples_per_channel, output.samples_per_channel_);
+      if (output.speech_type_ == AudioFrame::kPLCCNG) {
         plc_to_cng = true;
         double sum_squared = 0;
-        for (size_t k = 0; k < number_channels * samples_per_channel; ++k)
-          sum_squared += output[k] * output[k];
+        for (size_t k = 0;
+             k < output.num_channels_ * output.samples_per_channel_; ++k)
+          sum_squared += output.data_[k] * output.data_[k];
         TestCondition(sum_squared, n > kFadingThreshold);
       } else {
-        EXPECT_EQ(kOutputPLC, type);
+        EXPECT_EQ(AudioFrame::kPLC, output.speech_type_);
       }
     }
     EXPECT_TRUE(plc_to_cng);  // Just to be sure that PLC-to-CNG has occurred.
@@ -1282,24 +1175,20 @@ TEST_F(NetEqDecodingTest, SyncPacketDecode) {
   PopulateRtpInfo(0, 0, &rtp_info);
   const size_t kPayloadBytes = kBlockSize16kHz * sizeof(int16_t);
   uint8_t payload[kPayloadBytes];
-  int16_t decoded[kBlockSize16kHz];
+  AudioFrame output;
   int algorithmic_frame_delay = algorithmic_delay_ms_ / 10 + 1;
   for (size_t n = 0; n < kPayloadBytes; ++n) {
     payload[n] = (rand() & 0xF0) + 1;  // Non-zero random sequence.
   }
   // Insert some packets which decode to noise. We are not interested in
   // actual decoded values.
-  NetEqOutputType output_type;
-  size_t num_channels;
-  size_t samples_per_channel;
   uint32_t receive_timestamp = 0;
+  bool muted;
   for (int n = 0; n < 100; ++n) {
     ASSERT_EQ(0, neteq_->InsertPacket(rtp_info, payload, receive_timestamp));
-    ASSERT_EQ(0, neteq_->GetAudio(kBlockSize16kHz, decoded,
-                                  &samples_per_channel, &num_channels,
-                                  &output_type));
-    ASSERT_EQ(kBlockSize16kHz, samples_per_channel);
-    ASSERT_EQ(1u, num_channels);
+    ASSERT_EQ(0, neteq_->GetAudio(&output, &muted));
+    ASSERT_EQ(kBlockSize16kHz, output.samples_per_channel_);
+    ASSERT_EQ(1u, output.num_channels_);
 
     rtp_info.header.sequenceNumber++;
     rtp_info.header.timestamp += kBlockSize16kHz;
@@ -1313,13 +1202,13 @@ TEST_F(NetEqDecodingTest, SyncPacketDecode) {
   // Insert sync-packets, the decoded sequence should be all-zero.
   for (int n = 0; n < kNumSyncPackets; ++n) {
     ASSERT_EQ(0, neteq_->InsertSyncPacket(rtp_info, receive_timestamp));
-    ASSERT_EQ(0, neteq_->GetAudio(kBlockSize16kHz, decoded,
-                                  &samples_per_channel, &num_channels,
-                                  &output_type));
-    ASSERT_EQ(kBlockSize16kHz, samples_per_channel);
-    ASSERT_EQ(1u, num_channels);
+    ASSERT_EQ(0, neteq_->GetAudio(&output, &muted));
+    ASSERT_FALSE(muted);
+    ASSERT_EQ(kBlockSize16kHz, output.samples_per_channel_);
+    ASSERT_EQ(1u, output.num_channels_);
     if (n > algorithmic_frame_delay) {
-      EXPECT_TRUE(IsAllZero(decoded, samples_per_channel * num_channels));
+      EXPECT_TRUE(IsAllZero(
+          output.data_, output.samples_per_channel_ * output.num_channels_));
     }
     rtp_info.header.sequenceNumber++;
     rtp_info.header.timestamp += kBlockSize16kHz;
@@ -1330,12 +1219,12 @@ TEST_F(NetEqDecodingTest, SyncPacketDecode) {
   // network statistics would show some packet loss.
   for (int n = 0; n <= algorithmic_frame_delay + 10; ++n) {
     ASSERT_EQ(0, neteq_->InsertPacket(rtp_info, payload, receive_timestamp));
-    ASSERT_EQ(0, neteq_->GetAudio(kBlockSize16kHz, decoded,
-                                  &samples_per_channel, &num_channels,
-                                  &output_type));
+    ASSERT_EQ(0, neteq_->GetAudio(&output, &muted));
+    ASSERT_FALSE(muted);
     if (n >= algorithmic_frame_delay + 1) {
       // Expect that this frame contain samples from regular RTP.
-      EXPECT_TRUE(IsAllNonZero(decoded, samples_per_channel * num_channels));
+      EXPECT_TRUE(IsAllNonZero(
+          output.data_, output.samples_per_channel_ * output.num_channels_));
     }
     rtp_info.header.sequenceNumber++;
     rtp_info.header.timestamp += kBlockSize16kHz;
@@ -1359,24 +1248,20 @@ TEST_F(NetEqDecodingTest, SyncPacketBufferSizeAndOverridenByNetworkPackets) {
   PopulateRtpInfo(0, 0, &rtp_info);
   const size_t kPayloadBytes = kBlockSize16kHz * sizeof(int16_t);
   uint8_t payload[kPayloadBytes];
-  int16_t decoded[kBlockSize16kHz];
+  AudioFrame output;
   for (size_t n = 0; n < kPayloadBytes; ++n) {
     payload[n] = (rand() & 0xF0) + 1;  // Non-zero random sequence.
   }
   // Insert some packets which decode to noise. We are not interested in
   // actual decoded values.
-  NetEqOutputType output_type;
-  size_t num_channels;
-  size_t samples_per_channel;
   uint32_t receive_timestamp = 0;
   int algorithmic_frame_delay = algorithmic_delay_ms_ / 10 + 1;
+  bool muted;
   for (int n = 0; n < algorithmic_frame_delay; ++n) {
     ASSERT_EQ(0, neteq_->InsertPacket(rtp_info, payload, receive_timestamp));
-    ASSERT_EQ(0, neteq_->GetAudio(kBlockSize16kHz, decoded,
-                                  &samples_per_channel, &num_channels,
-                                  &output_type));
-    ASSERT_EQ(kBlockSize16kHz, samples_per_channel);
-    ASSERT_EQ(1u, num_channels);
+    ASSERT_EQ(0, neteq_->GetAudio(&output, &muted));
+    ASSERT_EQ(kBlockSize16kHz, output.samples_per_channel_);
+    ASSERT_EQ(1u, output.num_channels_);
     rtp_info.header.sequenceNumber++;
     rtp_info.header.timestamp += kBlockSize16kHz;
     receive_timestamp += kBlockSize16kHz;
@@ -1411,12 +1296,12 @@ TEST_F(NetEqDecodingTest, SyncPacketBufferSizeAndOverridenByNetworkPackets) {
 
   // Decode.
   for (int n = 0; n < kNumSyncPackets; ++n) {
-    ASSERT_EQ(0, neteq_->GetAudio(kBlockSize16kHz, decoded,
-                                  &samples_per_channel, &num_channels,
-                                  &output_type));
-    ASSERT_EQ(kBlockSize16kHz, samples_per_channel);
-    ASSERT_EQ(1u, num_channels);
-    EXPECT_TRUE(IsAllNonZero(decoded, samples_per_channel * num_channels));
+    ASSERT_EQ(0, neteq_->GetAudio(&output, &muted));
+    ASSERT_FALSE(muted);
+    ASSERT_EQ(kBlockSize16kHz, output.samples_per_channel_);
+    ASSERT_EQ(1u, output.num_channels_);
+    EXPECT_TRUE(IsAllNonZero(
+        output.data_, output.samples_per_channel_ * output.num_channels_));
   }
 }
 
@@ -1432,10 +1317,6 @@ void NetEqDecodingTest::WrapTest(uint16_t start_seq_no,
   const int kSamples = kBlockSize16kHz * kBlocksPerFrame;
   const size_t kPayloadBytes = kSamples * sizeof(int16_t);
   double next_input_time_ms = 0.0;
-  int16_t decoded[kBlockSize16kHz];
-  size_t num_channels;
-  size_t samples_per_channel;
-  NetEqOutputType output_type;
   uint32_t receive_timestamp = 0;
 
   // Insert speech for 2 seconds.
@@ -1482,14 +1363,16 @@ void NetEqDecodingTest::WrapTest(uint16_t start_seq_no,
       timestamp_wrapped |= timestamp < last_timestamp;
     }
     // Pull out data once.
-    ASSERT_EQ(0, neteq_->GetAudio(kBlockSize16kHz, decoded,
-                                  &samples_per_channel, &num_channels,
-                                  &output_type));
-    ASSERT_EQ(kBlockSize16kHz, samples_per_channel);
-    ASSERT_EQ(1u, num_channels);
+    AudioFrame output;
+    bool muted;
+    ASSERT_EQ(0, neteq_->GetAudio(&output, &muted));
+    ASSERT_EQ(kBlockSize16kHz, output.samples_per_channel_);
+    ASSERT_EQ(1u, output.num_channels_);
 
     // Expect delay (in samples) to be less than 2 packets.
-    EXPECT_LE(timestamp - PlayoutTimestamp(),
+    rtc::Optional<uint32_t> playout_timestamp = PlayoutTimestamp();
+    ASSERT_TRUE(playout_timestamp);
+    EXPECT_LE(timestamp - *playout_timestamp,
               static_cast<uint32_t>(kSamples * 2));
   }
   // Make sure we have actually tested wrap-around.
@@ -1536,11 +1419,9 @@ void NetEqDecodingTest::DuplicateCng() {
       algorithmic_delay_ms_ * kSampleRateKhz, 5 * kSampleRateKhz / 8);
   // Insert three speech packets. Three are needed to get the frame length
   // correct.
-  size_t out_len;
-  size_t num_channels;
-  NetEqOutputType type;
   uint8_t payload[kPayloadBytes] = {0};
   WebRtcRTPHeader rtp_info;
+  bool muted;
   for (int i = 0; i < 3; ++i) {
     PopulateRtpInfo(seq_no, timestamp, &rtp_info);
     ASSERT_EQ(0, neteq_->InsertPacket(rtp_info, payload, 0));
@@ -1548,13 +1429,11 @@ void NetEqDecodingTest::DuplicateCng() {
     timestamp += kSamples;
 
     // Pull audio once.
-    ASSERT_EQ(0,
-              neteq_->GetAudio(
-                  kMaxBlockSize, out_data_, &out_len, &num_channels, &type));
-    ASSERT_EQ(kBlockSize16kHz, out_len);
+    ASSERT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+    ASSERT_EQ(kBlockSize16kHz, out_frame_.samples_per_channel_);
   }
   // Verify speech output.
-  EXPECT_EQ(kOutputNormal, type);
+  EXPECT_EQ(AudioFrame::kNormalSpeech, out_frame_.speech_type_);
 
   // Insert same CNG packet twice.
   const int kCngPeriodMs = 100;
@@ -1567,12 +1446,12 @@ void NetEqDecodingTest::DuplicateCng() {
              rtp_info, rtc::ArrayView<const uint8_t>(payload, payload_len), 0));
 
   // Pull audio once and make sure CNG is played.
-  ASSERT_EQ(0,
-            neteq_->GetAudio(
-                kMaxBlockSize, out_data_, &out_len, &num_channels, &type));
-  ASSERT_EQ(kBlockSize16kHz, out_len);
-  EXPECT_EQ(kOutputCNG, type);
-  EXPECT_EQ(timestamp - algorithmic_delay_samples, PlayoutTimestamp());
+  ASSERT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+  ASSERT_EQ(kBlockSize16kHz, out_frame_.samples_per_channel_);
+  EXPECT_EQ(AudioFrame::kCNG, out_frame_.speech_type_);
+  EXPECT_FALSE(PlayoutTimestamp());  // Returns empty value during CNG.
+  EXPECT_EQ(timestamp - algorithmic_delay_samples,
+            out_frame_.timestamp_ + out_frame_.samples_per_channel_);
 
   // Insert the same CNG packet again. Note that at this point it is old, since
   // we have already decoded the first copy of it.
@@ -1583,13 +1462,12 @@ void NetEqDecodingTest::DuplicateCng() {
   // Pull audio until we have played |kCngPeriodMs| of CNG. Start at 10 ms since
   // we have already pulled out CNG once.
   for (int cng_time_ms = 10; cng_time_ms < kCngPeriodMs; cng_time_ms += 10) {
-    ASSERT_EQ(0,
-              neteq_->GetAudio(
-                  kMaxBlockSize, out_data_, &out_len, &num_channels, &type));
-    ASSERT_EQ(kBlockSize16kHz, out_len);
-    EXPECT_EQ(kOutputCNG, type);
+    ASSERT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+    ASSERT_EQ(kBlockSize16kHz, out_frame_.samples_per_channel_);
+    EXPECT_EQ(AudioFrame::kCNG, out_frame_.speech_type_);
+    EXPECT_FALSE(PlayoutTimestamp());  // Returns empty value during CNG.
     EXPECT_EQ(timestamp - algorithmic_delay_samples,
-              PlayoutTimestamp());
+              out_frame_.timestamp_ + out_frame_.samples_per_channel_);
   }
 
   // Insert speech again.
@@ -1599,19 +1477,17 @@ void NetEqDecodingTest::DuplicateCng() {
   ASSERT_EQ(0, neteq_->InsertPacket(rtp_info, payload, 0));
 
   // Pull audio once and verify that the output is speech again.
-  ASSERT_EQ(0,
-            neteq_->GetAudio(
-                kMaxBlockSize, out_data_, &out_len, &num_channels, &type));
-  ASSERT_EQ(kBlockSize16kHz, out_len);
-  EXPECT_EQ(kOutputNormal, type);
+  ASSERT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+  ASSERT_EQ(kBlockSize16kHz, out_frame_.samples_per_channel_);
+  EXPECT_EQ(AudioFrame::kNormalSpeech, out_frame_.speech_type_);
+  rtc::Optional<uint32_t> playout_timestamp = PlayoutTimestamp();
+  ASSERT_TRUE(playout_timestamp);
   EXPECT_EQ(timestamp + kSamples - algorithmic_delay_samples,
-            PlayoutTimestamp());
+            *playout_timestamp);
 }
 
-uint32_t NetEqDecodingTest::PlayoutTimestamp() {
-  uint32_t playout_timestamp = 0;
-  EXPECT_TRUE(neteq_->GetPlayoutTimestamp(&playout_timestamp));
-  return playout_timestamp;
+rtc::Optional<uint32_t> NetEqDecodingTest::PlayoutTimestamp() {
+  return neteq_->GetPlayoutTimestamp();
 }
 
 TEST_F(NetEqDecodingTest, DiscardDuplicateCng) { DuplicateCng(); }
@@ -1639,28 +1515,277 @@ TEST_F(NetEqDecodingTest, CngFirst) {
   timestamp += kCngPeriodSamples;
 
   // Pull audio once and make sure CNG is played.
-  size_t out_len;
-  size_t num_channels;
-  NetEqOutputType type;
-  ASSERT_EQ(0, neteq_->GetAudio(kMaxBlockSize, out_data_, &out_len,
-                                &num_channels, &type));
-  ASSERT_EQ(kBlockSize16kHz, out_len);
-  EXPECT_EQ(kOutputCNG, type);
+  bool muted;
+  ASSERT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+  ASSERT_EQ(kBlockSize16kHz, out_frame_.samples_per_channel_);
+  EXPECT_EQ(AudioFrame::kCNG, out_frame_.speech_type_);
 
   // Insert some speech packets.
-  for (int i = 0; i < 3; ++i) {
+  const uint32_t first_speech_timestamp = timestamp;
+  int timeout_counter = 0;
+  do {
+    ASSERT_LT(timeout_counter++, 20) << "Test timed out";
     PopulateRtpInfo(seq_no, timestamp, &rtp_info);
     ASSERT_EQ(0, neteq_->InsertPacket(rtp_info, payload, 0));
     ++seq_no;
     timestamp += kSamples;
 
     // Pull audio once.
-    ASSERT_EQ(0, neteq_->GetAudio(kMaxBlockSize, out_data_, &out_len,
-                                  &num_channels, &type));
-    ASSERT_EQ(kBlockSize16kHz, out_len);
-  }
+    ASSERT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+    ASSERT_EQ(kBlockSize16kHz, out_frame_.samples_per_channel_);
+  } while (!IsNewerTimestamp(out_frame_.timestamp_, first_speech_timestamp));
   // Verify speech output.
-  EXPECT_EQ(kOutputNormal, type);
+  EXPECT_EQ(AudioFrame::kNormalSpeech, out_frame_.speech_type_);
+}
+
+class NetEqDecodingTestWithMutedState : public NetEqDecodingTest {
+ public:
+  NetEqDecodingTestWithMutedState() : NetEqDecodingTest() {
+    config_.enable_muted_state = true;
+  }
+
+ protected:
+  static constexpr size_t kSamples = 10 * 16;
+  static constexpr size_t kPayloadBytes = kSamples * 2;
+
+  void InsertPacket(uint32_t rtp_timestamp) {
+    uint8_t payload[kPayloadBytes] = {0};
+    WebRtcRTPHeader rtp_info;
+    PopulateRtpInfo(0, rtp_timestamp, &rtp_info);
+    EXPECT_EQ(0, neteq_->InsertPacket(rtp_info, payload, 0));
+  }
+
+  bool GetAudioReturnMuted() {
+    bool muted;
+    EXPECT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+    return muted;
+  }
+
+  void GetAudioUntilMuted() {
+    while (!GetAudioReturnMuted()) {
+      ASSERT_LT(counter_++, 1000) << "Test timed out";
+    }
+  }
+
+  void GetAudioUntilNormal() {
+    bool muted = false;
+    while (out_frame_.speech_type_ != AudioFrame::kNormalSpeech) {
+      EXPECT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+      ASSERT_LT(counter_++, 1000) << "Test timed out";
+    }
+    EXPECT_FALSE(muted);
+  }
+
+  int counter_ = 0;
+};
+
+// Verifies that NetEq goes in and out of muted state as expected.
+TEST_F(NetEqDecodingTestWithMutedState, MutedState) {
+  // Insert one speech packet.
+  InsertPacket(0);
+  // Pull out audio once and expect it not to be muted.
+  EXPECT_FALSE(GetAudioReturnMuted());
+  // Pull data until faded out.
+  GetAudioUntilMuted();
+
+  // Verify that output audio is not written during muted mode. Other parameters
+  // should be correct, though.
+  AudioFrame new_frame;
+  for (auto& d : new_frame.data_) {
+    d = 17;
+  }
+  bool muted;
+  EXPECT_EQ(0, neteq_->GetAudio(&new_frame, &muted));
+  EXPECT_TRUE(muted);
+  for (auto d : new_frame.data_) {
+    EXPECT_EQ(17, d);
+  }
+  EXPECT_EQ(out_frame_.timestamp_ + out_frame_.samples_per_channel_,
+            new_frame.timestamp_);
+  EXPECT_EQ(out_frame_.samples_per_channel_, new_frame.samples_per_channel_);
+  EXPECT_EQ(out_frame_.sample_rate_hz_, new_frame.sample_rate_hz_);
+  EXPECT_EQ(out_frame_.num_channels_, new_frame.num_channels_);
+  EXPECT_EQ(out_frame_.speech_type_, new_frame.speech_type_);
+  EXPECT_EQ(out_frame_.vad_activity_, new_frame.vad_activity_);
+
+  // Insert new data. Timestamp is corrected for the time elapsed since the last
+  // packet. Verify that normal operation resumes.
+  InsertPacket(kSamples * counter_);
+  GetAudioUntilNormal();
+
+  NetEqNetworkStatistics stats;
+  EXPECT_EQ(0, neteq_->NetworkStatistics(&stats));
+  // NetEqNetworkStatistics::expand_rate tells the fraction of samples that were
+  // concealment samples, in Q14 (16384 = 100%) .The vast majority should be
+  // concealment samples in this test.
+  EXPECT_GT(stats.expand_rate, 14000);
+  // And, it should be greater than the speech_expand_rate.
+  EXPECT_GT(stats.expand_rate, stats.speech_expand_rate);
+}
+
+// Verifies that NetEq goes out of muted state when given a delayed packet.
+TEST_F(NetEqDecodingTestWithMutedState, MutedStateDelayedPacket) {
+  // Insert one speech packet.
+  InsertPacket(0);
+  // Pull out audio once and expect it not to be muted.
+  EXPECT_FALSE(GetAudioReturnMuted());
+  // Pull data until faded out.
+  GetAudioUntilMuted();
+  // Insert new data. Timestamp is only corrected for the half of the time
+  // elapsed since the last packet. That is, the new packet is delayed. Verify
+  // that normal operation resumes.
+  InsertPacket(kSamples * counter_ / 2);
+  GetAudioUntilNormal();
+}
+
+// Verifies that NetEq goes out of muted state when given a future packet.
+TEST_F(NetEqDecodingTestWithMutedState, MutedStateFuturePacket) {
+  // Insert one speech packet.
+  InsertPacket(0);
+  // Pull out audio once and expect it not to be muted.
+  EXPECT_FALSE(GetAudioReturnMuted());
+  // Pull data until faded out.
+  GetAudioUntilMuted();
+  // Insert new data. Timestamp is over-corrected for the time elapsed since the
+  // last packet. That is, the new packet is too early. Verify that normal
+  // operation resumes.
+  InsertPacket(kSamples * counter_ * 2);
+  GetAudioUntilNormal();
+}
+
+// Verifies that NetEq goes out of muted state when given an old packet.
+TEST_F(NetEqDecodingTestWithMutedState, MutedStateOldPacket) {
+  // Insert one speech packet.
+  InsertPacket(0);
+  // Pull out audio once and expect it not to be muted.
+  EXPECT_FALSE(GetAudioReturnMuted());
+  // Pull data until faded out.
+  GetAudioUntilMuted();
+
+  EXPECT_NE(AudioFrame::kNormalSpeech, out_frame_.speech_type_);
+  // Insert packet which is older than the first packet.
+  InsertPacket(kSamples * (counter_ - 1000));
+  EXPECT_FALSE(GetAudioReturnMuted());
+  EXPECT_EQ(AudioFrame::kNormalSpeech, out_frame_.speech_type_);
+}
+
+class NetEqDecodingTestTwoInstances : public NetEqDecodingTest {
+ public:
+  NetEqDecodingTestTwoInstances() : NetEqDecodingTest() {}
+
+  void SetUp() override {
+    NetEqDecodingTest::SetUp();
+    config2_ = config_;
+  }
+
+  void CreateSecondInstance() {
+    neteq2_.reset(NetEq::Create(config2_, CreateBuiltinAudioDecoderFactory()));
+    ASSERT_TRUE(neteq2_);
+    LoadDecoders(neteq2_.get());
+  }
+
+ protected:
+  std::unique_ptr<NetEq> neteq2_;
+  NetEq::Config config2_;
+};
+
+namespace {
+::testing::AssertionResult AudioFramesEqualExceptData(const AudioFrame& a,
+                                                      const AudioFrame& b) {
+  if (a.timestamp_ != b.timestamp_)
+    return ::testing::AssertionFailure() << "timestamp_ diff (" << a.timestamp_
+                                         << " != " << b.timestamp_ << ")";
+  if (a.sample_rate_hz_ != b.sample_rate_hz_)
+    return ::testing::AssertionFailure() << "sample_rate_hz_ diff ("
+                                         << a.sample_rate_hz_
+                                         << " != " << b.sample_rate_hz_ << ")";
+  if (a.samples_per_channel_ != b.samples_per_channel_)
+    return ::testing::AssertionFailure()
+           << "samples_per_channel_ diff (" << a.samples_per_channel_
+           << " != " << b.samples_per_channel_ << ")";
+  if (a.num_channels_ != b.num_channels_)
+    return ::testing::AssertionFailure() << "num_channels_ diff ("
+                                         << a.num_channels_
+                                         << " != " << b.num_channels_ << ")";
+  if (a.speech_type_ != b.speech_type_)
+    return ::testing::AssertionFailure() << "speech_type_ diff ("
+                                         << a.speech_type_
+                                         << " != " << b.speech_type_ << ")";
+  if (a.vad_activity_ != b.vad_activity_)
+    return ::testing::AssertionFailure() << "vad_activity_ diff ("
+                                         << a.vad_activity_
+                                         << " != " << b.vad_activity_ << ")";
+  return ::testing::AssertionSuccess();
+}
+
+::testing::AssertionResult AudioFramesEqual(const AudioFrame& a,
+                                            const AudioFrame& b) {
+  ::testing::AssertionResult res = AudioFramesEqualExceptData(a, b);
+  if (!res)
+    return res;
+  if (memcmp(
+      a.data_, b.data_,
+      a.samples_per_channel_ * a.num_channels_ * sizeof(a.data_[0])) != 0) {
+    return ::testing::AssertionFailure() << "data_ diff";
+  }
+  return ::testing::AssertionSuccess();
+}
+
+}  // namespace
+
+TEST_F(NetEqDecodingTestTwoInstances, CompareMutedStateOnOff) {
+  ASSERT_FALSE(config_.enable_muted_state);
+  config2_.enable_muted_state = true;
+  CreateSecondInstance();
+
+  // Insert one speech packet into both NetEqs.
+  const size_t kSamples = 10 * 16;
+  const size_t kPayloadBytes = kSamples * 2;
+  uint8_t payload[kPayloadBytes] = {0};
+  WebRtcRTPHeader rtp_info;
+  PopulateRtpInfo(0, 0, &rtp_info);
+  EXPECT_EQ(0, neteq_->InsertPacket(rtp_info, payload, 0));
+  EXPECT_EQ(0, neteq2_->InsertPacket(rtp_info, payload, 0));
+
+  AudioFrame out_frame1, out_frame2;
+  bool muted;
+  for (int i = 0; i < 1000; ++i) {
+    std::ostringstream ss;
+    ss << "i = " << i;
+    SCOPED_TRACE(ss.str());  // Print out the loop iterator on failure.
+    EXPECT_EQ(0, neteq_->GetAudio(&out_frame1, &muted));
+    EXPECT_FALSE(muted);
+    EXPECT_EQ(0, neteq2_->GetAudio(&out_frame2, &muted));
+    if (muted) {
+      EXPECT_TRUE(AudioFramesEqualExceptData(out_frame1, out_frame2));
+    } else {
+      EXPECT_TRUE(AudioFramesEqual(out_frame1, out_frame2));
+    }
+  }
+  EXPECT_TRUE(muted);
+
+  // Insert new data. Timestamp is corrected for the time elapsed since the last
+  // packet.
+  PopulateRtpInfo(0, kSamples * 1000, &rtp_info);
+  EXPECT_EQ(0, neteq_->InsertPacket(rtp_info, payload, 0));
+  EXPECT_EQ(0, neteq2_->InsertPacket(rtp_info, payload, 0));
+
+  int counter = 0;
+  while (out_frame1.speech_type_ != AudioFrame::kNormalSpeech) {
+    ASSERT_LT(counter++, 1000) << "Test timed out";
+    std::ostringstream ss;
+    ss << "counter = " << counter;
+    SCOPED_TRACE(ss.str());  // Print out the loop iterator on failure.
+    EXPECT_EQ(0, neteq_->GetAudio(&out_frame1, &muted));
+    EXPECT_FALSE(muted);
+    EXPECT_EQ(0, neteq2_->GetAudio(&out_frame2, &muted));
+    if (muted) {
+      EXPECT_TRUE(AudioFramesEqualExceptData(out_frame1, out_frame2));
+    } else {
+      EXPECT_TRUE(AudioFramesEqual(out_frame1, out_frame2));
+    }
+  }
+  EXPECT_FALSE(muted);
 }
 
 }  // namespace webrtc

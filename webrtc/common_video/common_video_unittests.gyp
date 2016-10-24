@@ -20,10 +20,13 @@
          '<(webrtc_root)/test/test.gyp:video_test_common',
       ],
       'sources': [
+        'bitrate_adjuster_unittest.cc',
+        'h264/pps_parser_unittest.cc',
+        'h264/sps_parser_unittest.cc',
+        'h264/sps_vui_rewriter_unittest.cc',
         'i420_buffer_pool_unittest.cc',
         'i420_video_frame_unittest.cc',
         'libyuv/libyuv_unittest.cc',
-        'libyuv/scaler_unittest.cc',
       ],
       # Disable warnings to enable Win64 build, issue 1323.
       'msvs_disabled_warnings': [
@@ -50,11 +53,32 @@
           'target_name': 'common_video_unittests_apk_target',
           'type': 'none',
           'dependencies': [
-            '<(apk_tests_path):common_video_unittests_apk',
+            '<(android_tests_path):common_video_unittests_apk',
           ],
         },
       ],
-    }],
+      'conditions': [
+        ['test_isolation_mode != "noop"',
+          {
+            'targets': [
+              {
+                'target_name': 'common_video_unittests_apk_run',
+                'type': 'none',
+                'dependencies': [
+                  '<(android_tests_path):common_video_unittests_apk',
+                ],
+                'includes': [
+                  '../build/isolate.gypi',
+                ],
+                'sources': [
+                  'common_video_unittests_apk.isolate',
+                ],
+              },
+            ],
+          },
+        ],
+      ],
+    }],  # OS=="android"
     ['test_isolation_mode != "noop"', {
       'targets': [
         {

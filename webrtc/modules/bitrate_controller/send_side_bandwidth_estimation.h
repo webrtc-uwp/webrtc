@@ -26,7 +26,8 @@ class RtcEventLog;
 
 class SendSideBandwidthEstimation {
  public:
-  SendSideBandwidthEstimation();
+  SendSideBandwidthEstimation() = delete;
+  explicit SendSideBandwidthEstimation(RtcEventLog* event_log);
   virtual ~SendSideBandwidthEstimation();
 
   void CurrentEstimate(int* bitrate, uint8_t* loss, int64_t* rtt) const;
@@ -46,11 +47,12 @@ class SendSideBandwidthEstimation {
                            int number_of_packets,
                            int64_t now_ms);
 
+  void SetBitrates(int send_bitrate,
+                   int min_bitrate,
+                   int max_bitrate);
   void SetSendBitrate(int bitrate);
   void SetMinMaxBitrate(int min_bitrate, int max_bitrate);
   int GetMinBitrate() const;
-
-  void SetEventLog(RtcEventLog* event_log);
 
  private:
   enum UmaState { kNoUpdate, kFirstDone, kDone };
@@ -82,6 +84,7 @@ class SendSideBandwidthEstimation {
   bool has_decreased_since_last_fraction_loss_;
   int64_t time_last_receiver_block_ms_;
   uint8_t last_fraction_loss_;
+  uint8_t last_logged_fraction_loss_;
   int64_t last_round_trip_time_ms_;
 
   uint32_t bwe_incoming_;
@@ -93,6 +96,7 @@ class SendSideBandwidthEstimation {
   UmaState uma_update_state_;
   std::vector<bool> rampup_uma_stats_updated_;
   RtcEventLog* event_log_;
+  int64_t last_rtc_event_log_ms_;
 };
 }  // namespace webrtc
 #endif  // WEBRTC_MODULES_BITRATE_CONTROLLER_SEND_SIDE_BANDWIDTH_ESTIMATION_H_

@@ -12,26 +12,26 @@
 #define WEBRTC_MODULES_AUDIO_PROCESSING_ECHO_CANCELLATION_IMPL_H_
 
 #include <memory>
+#include <vector>
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/base/criticalsection.h"
-#include "webrtc/common_audio/swap_queue.h"
+#include "webrtc/base/swap_queue.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
-#include "webrtc/modules/audio_processing/processing_component.h"
+#include "webrtc/modules/audio_processing/render_queue_item_verifier.h"
 
 namespace webrtc {
 
 class AudioBuffer;
 
-class EchoCancellationImpl : public EchoCancellation,
-                             public ProcessingComponent {
+class EchoCancellationImpl : public EchoCancellation {
  public:
-  EchoCancellationImpl(const AudioProcessing* apm,
-                       rtc::CriticalSection* crit_render,
+  EchoCancellationImpl(rtc::CriticalSection* crit_render,
                        rtc::CriticalSection* crit_capture);
-  virtual ~EchoCancellationImpl();
+  ~EchoCancellationImpl() override;
 
   int ProcessRenderAudio(const AudioBuffer* audio);
-  int ProcessCaptureAudio(AudioBuffer* audio);
+  int ProcessCaptureAudio(AudioBuffer* audio, int stream_delay_ms);
 
   // EchoCancellation implementation.
   bool is_enabled() const override;
@@ -39,18 +39,33 @@ class EchoCancellationImpl : public EchoCancellation,
   SuppressionLevel suppression_level() const override;
   bool is_drift_compensation_enabled() const override;
 
-  // ProcessingComponent implementation.
-  int Initialize() override;
-  void SetExtraOptions(const Config& config) override;
+  void Initialize(int sample_rate_hz,
+                  size_t num_reverse_channels_,
+                  size_t num_output_channels_,
+                  size_t num_proc_channels_);
+  void SetExtraOptions(const Config& config);
   bool is_delay_agnostic_enabled() const;
   bool is_extended_filter_enabled() const;
-  bool is_next_generation_aec_enabled() const;
+  bool is_aec3_enabled() const;
+  std::string GetExperimentsDescription();
+  bool is_refined_adaptive_filter_enabled() const;
+
+  // Checks whether the module is enabled. Must only be
+  // called from the render side of APM as otherwise
+  // deadlocks may occur.
+  bool is_enabled_render_side_query() const;
 
   // Reads render side data that has been queued on the render call.
   // Called holding the capture lock.
   void ReadQueuedRenderData();
 
+  // Returns the system delay of the first AEC component.
+  int GetSystemDelayInSamples() const;
+
  private:
+  class Canceller;
+  struct StreamProperties;
+
   // EchoCancellation implementation.
   int Enable(bool enable) override;
   int enable_drift_compensation(bool enable) override;
@@ -69,22 +84,15 @@ class EchoCancellationImpl : public EchoCancellation,
 
   struct AecCore* aec_core() const override;
 
-  // ProcessingComponent implementation.
-  void* CreateHandle() const override;
-  int InitializeHandle(void* handle) const override;
-  int ConfigureHandle(void* handle) const override;
-  void DestroyHandle(void* handle) const override;
-  size_t num_handles_required() const override;
-  int GetHandleError(void* handle) const override;
+  size_t NumCancellersRequired() const;
 
   void AllocateRenderQueue();
-
-  // Not guarded as its public API is thread safe.
-  const AudioProcessing* apm_;
+  int Configure();
 
   rtc::CriticalSection* const crit_render_ ACQUIRED_BEFORE(crit_capture_);
   rtc::CriticalSection* const crit_capture_;
 
+  bool enabled_ = false;
   bool drift_compensation_enabled_ GUARDED_BY(crit_capture_);
   bool metrics_enabled_ GUARDED_BY(crit_capture_);
   SuppressionLevel suppression_level_ GUARDED_BY(crit_capture_);
@@ -94,7 +102,8 @@ class EchoCancellationImpl : public EchoCancellation,
   bool delay_logging_enabled_ GUARDED_BY(crit_capture_);
   bool extended_filter_enabled_ GUARDED_BY(crit_capture_);
   bool delay_agnostic_enabled_ GUARDED_BY(crit_capture_);
-  bool next_generation_aec_enabled_ GUARDED_BY(crit_capture_);
+  bool aec3_enabled_ GUARDED_BY(crit_capture_);
+  bool refined_adaptive_filter_enabled_ GUARDED_BY(crit_capture_) = false;
 
   size_t render_queue_element_max_size_ GUARDED_BY(crit_render_)
       GUARDED_BY(crit_capture_);
@@ -104,6 +113,11 @@ class EchoCancellationImpl : public EchoCancellation,
   // Lock protection not needed.
   std::unique_ptr<SwapQueue<std::vector<float>, RenderQueueItemVerifier<float>>>
       render_signal_queue_;
+
+  std::vector<std::unique_ptr<Canceller>> cancellers_;
+  std::unique_ptr<StreamProperties> stream_properties_;
+
+  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(EchoCancellationImpl);
 };
 
 }  // namespace webrtc

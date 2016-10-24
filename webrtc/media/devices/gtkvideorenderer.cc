@@ -16,8 +16,8 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 
-#include "webrtc/media/base/videocommon.h"
-#include "webrtc/media/base/videoframe.h"
+#include "libyuv/convert_argb.h"
+#include "webrtc/media/engine/webrtcvideoframe.h"
 
 namespace cricket {
 
@@ -59,7 +59,7 @@ GtkVideoRenderer::~GtkVideoRenderer() {
   // implicitly destroyed by the above.
 }
 
-bool GtkVideoRenderer::SetSize(int width, int height, int reserved) {
+bool GtkVideoRenderer::SetSize(int width, int height) {
   ScopedGdkLock lock;
 
   // If the dimension is the same, no-op.
@@ -80,28 +80,30 @@ bool GtkVideoRenderer::SetSize(int width, int height, int reserved) {
   return true;
 }
 
-bool GtkVideoRenderer::RenderFrame(const VideoFrame* video_frame) {
-  if (!video_frame) {
-    return false;
-  }
-
-  const VideoFrame* frame = video_frame->GetCopyWithRotationApplied();
+void GtkVideoRenderer::OnFrame(const VideoFrame& video_frame) {
+  const cricket::WebRtcVideoFrame frame(
+      webrtc::I420Buffer::Rotate(video_frame.video_frame_buffer(),
+                                 video_frame.rotation()),
+      webrtc::kVideoRotation_0, video_frame.timestamp_us());
 
   // Need to set size as the frame might be rotated.
-  if (!SetSize(frame->GetWidth(), frame->GetHeight(), 0)) {
-    return false;
+  if (!SetSize(frame.width(), frame.height())) {
+    return;
   }
 
   // convert I420 frame to ABGR format, which is accepted by GTK
-  frame->ConvertToRgbBuffer(cricket::FOURCC_ABGR,
-                            image_.get(),
-                            frame->GetWidth() * frame->GetHeight() * 4,
-                            frame->GetWidth() * 4);
+  rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer(
+      frame.video_frame_buffer());
+  libyuv::I420ToARGB(buffer->DataY(), buffer->StrideY(),
+                     buffer->DataU(), buffer->StrideU(),
+                     buffer->DataV(), buffer->StrideV(),
+                     image_.get(), frame.width() * 4,
+                     buffer->width(), buffer->height());
 
   ScopedGdkLock lock;
 
   if (IsClosed()) {
-    return false;
+    return;
   }
 
   // draw the ABGR image
@@ -109,15 +111,14 @@ bool GtkVideoRenderer::RenderFrame(const VideoFrame* video_frame) {
                         draw_area_->style->fg_gc[GTK_STATE_NORMAL],
                         0,
                         0,
-                        frame->GetWidth(),
-                        frame->GetHeight(),
+                        frame.width(),
+                        frame.height(),
                         GDK_RGB_DITHER_MAX,
                         image_.get(),
-                        frame->GetWidth() * 4);
+                        frame.width() * 4);
 
   // Run the Gtk main loop to refresh the window.
   Pump();
-  return true;
 }
 
 bool GtkVideoRenderer::Initialize(int width, int height) {

@@ -10,15 +10,15 @@
 
 #import "ARDSDPUtils.h"
 
-#import "RTCLogging.h"
-#import "RTCSessionDescription.h"
+#import "WebRTC/RTCLogging.h"
+#import "WebRTC/RTCSessionDescription.h"
 
 @implementation ARDSDPUtils
 
 + (RTCSessionDescription *)
     descriptionForDescription:(RTCSessionDescription *)description
           preferredVideoCodec:(NSString *)codec {
-  NSString *sdpString = description.description;
+  NSString *sdpString = description.sdp;
   NSString *lineSeparator = @"\n";
   NSString *mLineSeparator = @" ";
   // Copied from PeerConnectionClient.java.

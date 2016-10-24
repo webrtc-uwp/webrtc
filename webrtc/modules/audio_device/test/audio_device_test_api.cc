@@ -48,20 +48,20 @@ using namespace webrtc;
 
 class AudioEventObserverAPI: public AudioDeviceObserver {
  public:
-  AudioEventObserverAPI(AudioDeviceModule* audioDevice)
+  AudioEventObserverAPI(
+      const rtc::scoped_refptr<AudioDeviceModule>& audioDevice)
       : error_(kRecordingError),
         warning_(kRecordingWarning),
-        audio_device_(audioDevice) {
-  }
+        audio_device_(audioDevice) {}
 
-  ~AudioEventObserverAPI() {}
+  ~AudioEventObserverAPI() override {}
 
-  virtual void OnErrorIsReported(const ErrorCode error) {
+  void OnErrorIsReported(const ErrorCode error) override {
     TEST_LOG("\n[*** ERROR ***] => OnErrorIsReported(%d)\n\n", error);
     error_ = error;
   }
 
-  virtual void OnWarningIsReported(const WarningCode warning) {
+  void OnWarningIsReported(const WarningCode warning) override {
     TEST_LOG("\n[*** WARNING ***] => OnWarningIsReported(%d)\n\n", warning);
     warning_ = warning;
     EXPECT_EQ(0, audio_device_->StopRecording());
@@ -72,17 +72,17 @@ class AudioEventObserverAPI: public AudioDeviceObserver {
   ErrorCode error_;
   WarningCode warning_;
  private:
-  AudioDeviceModule* audio_device_;
+  rtc::scoped_refptr<AudioDeviceModule> audio_device_;
 };
 
 class AudioTransportAPI: public AudioTransport {
  public:
-  AudioTransportAPI(AudioDeviceModule* audioDevice)
+  AudioTransportAPI(const rtc::scoped_refptr<AudioDeviceModule>& audioDevice)
       : rec_count_(0),
         play_count_(0) {
   }
 
-  ~AudioTransportAPI() {}
+  ~AudioTransportAPI() override {}
 
   int32_t RecordedDataIsAvailable(const void* audioSamples,
                                   const size_t nSamples,
@@ -130,6 +130,21 @@ class AudioTransportAPI: public AudioTransport {
     return 0;
   }
 
+  void PushCaptureData(int voe_channel,
+                       const void* audio_data,
+                       int bits_per_sample,
+                       int sample_rate,
+                       size_t number_of_channels,
+                       size_t number_of_frames) override {}
+
+  void PullRenderData(int bits_per_sample,
+                      int sample_rate,
+                      size_t number_of_channels,
+                      size_t number_of_frames,
+                      void* audio_data,
+                      int64_t* elapsed_time_ms,
+                      int64_t* ntp_time_ms) override {}
+
  private:
   uint32_t rec_count_;
   uint32_t play_count_;
@@ -139,11 +154,10 @@ class AudioDeviceAPITest: public testing::Test {
  protected:
   AudioDeviceAPITest() {}
 
-  virtual ~AudioDeviceAPITest() {}
+  ~AudioDeviceAPITest() override {}
 
   static void SetUpTestCase() {
-    process_thread_ =
-        rtc::ScopedToUnique(ProcessThread::Create("ProcessThread"));
+    process_thread_ = ProcessThread::Create("ProcessThread");
     process_thread_->Start();
 
     // Windows:
@@ -154,7 +168,7 @@ class AudioDeviceAPITest: public testing::Test {
     const int32_t kId = 444;
 
 #if defined(_WIN32)
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kLinuxAlsaAudio)) == NULL);
 #if defined WINRT
     EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
@@ -162,83 +176,76 @@ class AudioDeviceAPITest: public testing::Test {
 #elif defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
     TEST_LOG("WEBRTC_WINDOWS_CORE_AUDIO_BUILD is defined!\n\n");
     // create default implementation (=Core Audio) instance
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kPlatformDefaultAudio)) != NULL);
-    audio_device_->AddRef();
-    EXPECT_EQ(0, audio_device_->Release());
+    EXPECT_EQ(0, audio_device_.release()->Release());
     // create non-default (=Wave Audio) instance
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kWindowsWaveAudio)) != NULL);
-    audio_device_->AddRef();
-    EXPECT_EQ(0, audio_device_->Release());
+    EXPECT_EQ(0, audio_device_.release()->Release());
     // explicitly specify usage of Core Audio (same as default)
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kWindowsCoreAudio)) != NULL);
 #else
     TEST_LOG("WEBRTC_WINDOWS_CORE_AUDIO_BUILD is *not* defined!\n");
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kWindowsCoreAudio)) == NULL);
     // create default implementation (=Wave Audio) instance
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kPlatformDefaultAudio)) != NULL);
-    audio_device_->AddRef();
-    EXPECT_EQ(0, audio_device_->Release());
+    EXPECT_EQ(0, audio_device_.release()->Release());
     // explicitly specify usage of Wave Audio (same as default)
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kWindowsWaveAudio)) != NULL);
 #endif
 #endif
 
 #if defined(ANDROID)
     // Fails tests
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kWindowsWaveAudio)) == NULL);
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kWindowsCoreAudio)) == NULL);
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kLinuxAlsaAudio)) == NULL);
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kLinuxPulseAudio)) == NULL);
     // Create default implementation instance
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kPlatformDefaultAudio)) != NULL);
 #elif defined(WEBRTC_LINUX)
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kWindowsWaveAudio)) == NULL);
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kWindowsCoreAudio)) == NULL);
     // create default implementation instance
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kPlatformDefaultAudio)) != NULL);
-    audio_device_->AddRef();
     EXPECT_EQ(0, audio_device_->Terminate());
-    EXPECT_EQ(0, audio_device_->Release());
+    EXPECT_EQ(0, audio_device_.release()->Release());
     // explicitly specify usage of Pulse Audio (same as default)
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kLinuxPulseAudio)) != NULL);
 #endif
 
 #if defined(WEBRTC_MAC)
     // Fails tests
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kWindowsWaveAudio)) == NULL);
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kWindowsCoreAudio)) == NULL);
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kLinuxAlsaAudio)) == NULL);
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kLinuxPulseAudio)) == NULL);
     // Create default implementation instance
-    EXPECT_TRUE((audio_device_ = AudioDeviceModuleImpl::Create(
+    EXPECT_TRUE((audio_device_ = AudioDeviceModule::Create(
                 kId, AudioDeviceModule::kPlatformDefaultAudio)) != NULL);
 #endif
 
     if (audio_device_ == NULL) {
       FAIL() << "Failed creating audio device object!";
     }
-
-    // The ADM is reference counted.
-    audio_device_->AddRef();
 
     process_thread_->RegisterModule(audio_device_);
 
@@ -264,13 +271,12 @@ class AudioDeviceAPITest: public testing::Test {
       delete audio_transport_;
       audio_transport_ = NULL;
     }
-    if (audio_device_) {
-      EXPECT_EQ(0, audio_device_->Release());
-    }
+    if (audio_device_)
+      EXPECT_EQ(0, audio_device_.release()->Release());
     PRINT_TEST_RESULTS;
   }
 
-  void SetUp() {
+  void SetUp() override {
     if (linux_alsa_) {
       FAIL() << "API Test is not available on ALSA on Linux!";
     }
@@ -278,9 +284,7 @@ class AudioDeviceAPITest: public testing::Test {
     EXPECT_TRUE(audio_device_->Initialized());
   }
 
-  void TearDown() {
-    EXPECT_EQ(0, audio_device_->Terminate());
-  }
+  void TearDown() override { EXPECT_EQ(0, audio_device_->Terminate()); }
 
   void CheckVolume(uint32_t expected, uint32_t actual) {
     // Mac and Windows have lower resolution on the volume settings.
@@ -307,7 +311,7 @@ class AudioDeviceAPITest: public testing::Test {
   // TODO(henrika): Get rid of globals.
   static bool linux_alsa_;
   static std::unique_ptr<ProcessThread> process_thread_;
-  static AudioDeviceModule* audio_device_;
+  static rtc::scoped_refptr<AudioDeviceModule> audio_device_;
   static AudioTransportAPI* audio_transport_;
   static AudioEventObserverAPI* event_observer_;
 };
@@ -315,7 +319,7 @@ class AudioDeviceAPITest: public testing::Test {
 // Must be initialized like this to handle static SetUpTestCase() above.
 bool AudioDeviceAPITest::linux_alsa_ = false;
 std::unique_ptr<ProcessThread> AudioDeviceAPITest::process_thread_;
-AudioDeviceModule* AudioDeviceAPITest::audio_device_ = NULL;
+rtc::scoped_refptr<AudioDeviceModule> AudioDeviceAPITest::audio_device_;
 AudioTransportAPI* AudioDeviceAPITest::audio_transport_ = NULL;
 AudioEventObserverAPI* AudioDeviceAPITest::event_observer_ = NULL;
 

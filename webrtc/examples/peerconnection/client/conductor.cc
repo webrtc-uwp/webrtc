@@ -10,16 +10,17 @@
 
 #include "webrtc/examples/peerconnection/client/conductor.h"
 
+#include <memory>
 #include <utility>
 #include <vector>
 
-#include "webrtc/api/videosourceinterface.h"
 #include "webrtc/api/test/fakeconstraints.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/json.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/examples/peerconnection/client/defaults.h"
-#include "webrtc/media/devices/devicemanager.h"
+#include "webrtc/media/engine/webrtcvideocapturerfactory.h"
+#include "webrtc/modules/video_capture/video_capture_factory.h"
 
 // Names used for a IceCandidate JSON object.
 const char kCandidateSdpMidName[] = "sdpMid";
@@ -155,19 +156,16 @@ void Conductor::EnsureStreamingUI() {
 //
 
 // Called when a remote stream is added
-void Conductor::OnAddStream(webrtc::MediaStreamInterface* stream) {
+void Conductor::OnAddStream(
+    rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) {
   LOG(INFO) << __FUNCTION__ << " " << stream->label();
-
-  stream->AddRef();
-  main_wnd_->QueueUIThreadCallback(NEW_STREAM_ADDED,
-                                   stream);
+  main_wnd_->QueueUIThreadCallback(NEW_STREAM_ADDED, stream.release());
 }
 
-void Conductor::OnRemoveStream(webrtc::MediaStreamInterface* stream) {
+void Conductor::OnRemoveStream(
+    rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) {
   LOG(INFO) << __FUNCTION__ << " " << stream->label();
-  stream->AddRef();
-  main_wnd_->QueueUIThreadCallback(STREAM_REMOVED,
-                                   stream);
+  main_wnd_->QueueUIThreadCallback(STREAM_REMOVED, stream.release());
 }
 
 void Conductor::OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
@@ -308,7 +306,7 @@ void Conductor::OnMessageFromPeer(int peer_id, const std::string& message) {
       return;
     }
     webrtc::SdpParseError error;
-    rtc::scoped_ptr<webrtc::IceCandidateInterface> candidate(
+    std::unique_ptr<webrtc::IceCandidateInterface> candidate(
         webrtc::CreateIceCandidate(sdp_mid, sdp_mlineindex, sdp, &error));
     if (!candidate.get()) {
       LOG(WARNING) << "Can't parse received candidate message. "
@@ -369,23 +367,31 @@ void Conductor::ConnectToPeer(int peer_id) {
 }
 
 cricket::VideoCapturer* Conductor::OpenVideoCaptureDevice() {
-  rtc::scoped_ptr<cricket::DeviceManagerInterface> dev_manager(
-      cricket::DeviceManagerFactory::Create());
-  if (!dev_manager->Init()) {
-    LOG(LS_ERROR) << "Can't create device manager";
-    return NULL;
+  std::vector<std::string> device_names;
+  {
+    std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
+        webrtc::VideoCaptureFactory::CreateDeviceInfo(0));
+    if (!info) {
+      return nullptr;
+    }
+    int num_devices = info->NumberOfDevices();
+    for (int i = 0; i < num_devices; ++i) {
+      const uint32_t kSize = 256;
+      char name[kSize] = {0};
+      char id[kSize] = {0};
+      if (info->GetDeviceName(i, name, kSize, id, kSize) != -1) {
+        device_names.push_back(name);
+      }
+    }
   }
-  std::vector<cricket::Device> devs;
-  if (!dev_manager->GetVideoCaptureDevices(&devs)) {
-    LOG(LS_ERROR) << "Can't enumerate video devices";
-    return NULL;
-  }
-  std::vector<cricket::Device>::iterator dev_it = devs.begin();
-  cricket::VideoCapturer* capturer = NULL;
-  for (; dev_it != devs.end(); ++dev_it) {
-    capturer = dev_manager->CreateVideoCapturer(*dev_it);
-    if (capturer != NULL)
+
+  cricket::WebRtcVideoDeviceCapturerFactory factory;
+  cricket::VideoCapturer* capturer = nullptr;
+  for (const auto& name : device_names) {
+    capturer = factory.Create(cricket::Device(name, 0));
+    if (capturer) {
       break;
+    }
   }
   return capturer;
 }

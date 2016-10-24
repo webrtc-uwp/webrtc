@@ -123,16 +123,23 @@ int H264DecoderImpl::AVGetBuffer2(
 
   // The video frame is stored in |video_frame|. |av_frame| is FFmpeg's version
   // of a video frame and will be set up to reference |video_frame|'s buffers.
-  VideoFrame* video_frame = new VideoFrame();
+
+  // TODO(nisse): The VideoFrame's timestamp and rotation info is not used.
+  // Refactor to do not use a VideoFrame object at all.
+
   // FFmpeg expects the initial allocation to be zero-initialized according to
   // http://crbug.com/390941. Our pool is set up to zero-initialize new buffers.
-  video_frame->set_video_frame_buffer(
-      decoder->pool_.CreateBuffer(width, height));
+  VideoFrame* video_frame = new VideoFrame(
+      decoder->pool_.CreateBuffer(width, height),
+      0 /* timestamp */, 0 /* render_time_ms */, kVideoRotation_0);
+
   // DCHECK that we have a continuous buffer as is required.
-  RTC_DCHECK_EQ(video_frame->buffer(kUPlane),
-      video_frame->buffer(kYPlane) + video_frame->allocated_size(kYPlane));
-  RTC_DCHECK_EQ(video_frame->buffer(kVPlane),
-      video_frame->buffer(kUPlane) + video_frame->allocated_size(kUPlane));
+  RTC_DCHECK_EQ(video_frame->video_frame_buffer()->DataU(),
+                video_frame->video_frame_buffer()->DataY() +
+                video_frame->allocated_size(kYPlane));
+  RTC_DCHECK_EQ(video_frame->video_frame_buffer()->DataV(),
+                video_frame->video_frame_buffer()->DataU() +
+                video_frame->allocated_size(kUPlane));
   int total_size = video_frame->allocated_size(kYPlane) +
                    video_frame->allocated_size(kUPlane) +
                    video_frame->allocated_size(kVPlane);
@@ -141,12 +148,18 @@ int H264DecoderImpl::AVGetBuffer2(
   av_frame->reordered_opaque = context->reordered_opaque;
 
   // Set |av_frame| members as required by FFmpeg.
-  av_frame->data[kYPlaneIndex] = video_frame->buffer(kYPlane);
-  av_frame->linesize[kYPlaneIndex] = video_frame->stride(kYPlane);
-  av_frame->data[kUPlaneIndex] = video_frame->buffer(kUPlane);
-  av_frame->linesize[kUPlaneIndex] = video_frame->stride(kUPlane);
-  av_frame->data[kVPlaneIndex] = video_frame->buffer(kVPlane);
-  av_frame->linesize[kVPlaneIndex] = video_frame->stride(kVPlane);
+  av_frame->data[kYPlaneIndex] =
+      video_frame->video_frame_buffer()->MutableDataY();
+  av_frame->linesize[kYPlaneIndex] =
+      video_frame->video_frame_buffer()->StrideY();
+  av_frame->data[kUPlaneIndex] =
+      video_frame->video_frame_buffer()->MutableDataU();
+  av_frame->linesize[kUPlaneIndex] =
+      video_frame->video_frame_buffer()->StrideU();
+  av_frame->data[kVPlaneIndex] =
+      video_frame->video_frame_buffer()->MutableDataV();
+  av_frame->linesize[kVPlaneIndex] =
+      video_frame->video_frame_buffer()->StrideV();
   RTC_DCHECK_EQ(av_frame->extended_data, av_frame->data);
 
   av_frame->buf[0] = av_buffer_create(av_frame->data[kYPlaneIndex],
@@ -339,27 +352,38 @@ int32_t H264DecoderImpl::Decode(const EncodedImage& input_image,
   VideoFrame* video_frame = static_cast<VideoFrame*>(
       av_buffer_get_opaque(av_frame_->buf[0]));
   RTC_DCHECK(video_frame);
-  RTC_CHECK_EQ(av_frame_->data[kYPlane], video_frame->buffer(kYPlane));
-  RTC_CHECK_EQ(av_frame_->data[kUPlane], video_frame->buffer(kUPlane));
-  RTC_CHECK_EQ(av_frame_->data[kVPlane], video_frame->buffer(kVPlane));
+  RTC_CHECK_EQ(av_frame_->data[kYPlane],
+               video_frame->video_frame_buffer()->DataY());
+  RTC_CHECK_EQ(av_frame_->data[kUPlane],
+               video_frame->video_frame_buffer()->DataU());
+  RTC_CHECK_EQ(av_frame_->data[kVPlane],
+               video_frame->video_frame_buffer()->DataV());
   video_frame->set_timestamp(input_image._timeStamp);
+
+  int32_t ret;
 
   // The decoded image may be larger than what is supposed to be visible, see
   // |AVGetBuffer2|'s use of |avcodec_align_dimensions|. This crops the image
   // without copying the underlying buffer.
   rtc::scoped_refptr<VideoFrameBuffer> buf = video_frame->video_frame_buffer();
   if (av_frame_->width != buf->width() || av_frame_->height != buf->height()) {
-    video_frame->set_video_frame_buffer(
+    rtc::scoped_refptr<VideoFrameBuffer> cropped_buf(
         new rtc::RefCountedObject<WrappedI420Buffer>(
             av_frame_->width, av_frame_->height,
-            buf->data(kYPlane), buf->stride(kYPlane),
-            buf->data(kUPlane), buf->stride(kUPlane),
-            buf->data(kVPlane), buf->stride(kVPlane),
+            buf->DataY(), buf->StrideY(),
+            buf->DataU(), buf->StrideU(),
+            buf->DataV(), buf->StrideV(),
             rtc::KeepRefUntilDone(buf)));
+    VideoFrame cropped_frame(
+        cropped_buf, video_frame->timestamp(), video_frame->render_time_ms(),
+        video_frame->rotation());
+    // TODO(nisse): Timestamp and rotation are all zero here. Change decoder
+    // interface to pass a VideoFrameBuffer instead of a VideoFrame?
+    ret = decoded_image_callback_->Decoded(cropped_frame);
+  } else {
+    // Return decoded frame.
+    ret = decoded_image_callback_->Decoded(*video_frame);
   }
-
-  // Return decoded frame.
-  int32_t ret = decoded_image_callback_->Decoded(*video_frame);
   // Stop referencing it, possibly freeing |video_frame|.
   av_frame_unref(av_frame_.get());
   video_frame = nullptr;
@@ -369,6 +393,10 @@ int32_t H264DecoderImpl::Decode(const EncodedImage& input_image,
     return ret;
   }
   return WEBRTC_VIDEO_CODEC_OK;
+}
+
+const char* H264DecoderImpl::ImplementationName() const {
+  return "FFmpeg";
 }
 
 bool H264DecoderImpl::IsInitialized() const {

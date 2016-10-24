@@ -19,6 +19,7 @@
 #include "webrtc/modules/audio_coding/neteq/tools/audio_sink.h"
 #include "webrtc/modules/audio_coding/neteq/tools/input_audio_file.h"
 #include "webrtc/modules/audio_coding/neteq/tools/rtp_generator.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/typedefs.h"
 
 using google::RegisterFlagValidator;
@@ -50,6 +51,7 @@ class UniformLoss : public LossModel {
 class GilbertElliotLoss : public LossModel {
  public:
   GilbertElliotLoss(double prob_trans_11, double prob_trans_01);
+  ~GilbertElliotLoss() override;
   bool Lost() override;
 
  private:
@@ -67,7 +69,7 @@ class NetEqQualityTest : public ::testing::Test {
                    int in_sampling_khz,
                    int out_sampling_khz,
                    NetEqDecoder decoder_type);
-  virtual ~NetEqQualityTest();
+  ~NetEqQualityTest() override;
 
   void SetUp() override;
 
@@ -113,9 +115,6 @@ class NetEqQualityTest : public ::testing::Test {
   // Number of samples per channel in a frame.
   const size_t in_size_samples_;
 
-  // Expected output number of samples per channel in a frame.
-  const size_t out_size_samples_;
-
   size_t payload_size_bytes_;
   size_t max_payload_bytes_;
 
@@ -129,7 +128,7 @@ class NetEqQualityTest : public ::testing::Test {
 
   std::unique_ptr<int16_t[]> in_data_;
   rtc::Buffer payload_;
-  std::unique_ptr<int16_t[]> out_data_;
+  AudioFrame out_frame_;
   WebRtcRTPHeader rtp_header_;
 
   size_t total_payload_size_bytes_;

@@ -10,6 +10,8 @@
 
 #include "webrtc/pc/currentspeakermonitor.h"
 
+#include <vector>
+
 #include "webrtc/base/logging.h"
 #include "webrtc/media/base/streamparams.h"
 #include "webrtc/pc/audiomonitor.h"
@@ -61,7 +63,7 @@ void CurrentSpeakerMonitor::Stop() {
 }
 
 void CurrentSpeakerMonitor::set_min_time_between_switches(
-    uint32_t min_time_between_switches) {
+    int min_time_between_switches) {
   min_time_between_switches_ = min_time_between_switches;
 }
 
@@ -163,7 +165,7 @@ void CurrentSpeakerMonitor::OnAudioMonitor(
 
   // We avoid over-switching by disabling switching for a period of time after
   // a switch is done.
-  uint32_t now = rtc::Time();
+  int64_t now = rtc::TimeMillis();
   if (earliest_permitted_switch_time_ <= now &&
       current_speaker_ssrc_ != loudest_speaker_ssrc) {
     current_speaker_ssrc_ = loudest_speaker_ssrc;

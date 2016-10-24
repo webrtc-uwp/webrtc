@@ -12,21 +12,23 @@
 
 #include <string.h>
 
+#include <utility>
+
 #include "webrtc/base/checks.h"
 
 namespace webrtc {
 
-AudioEncoderCopyRed::AudioEncoderCopyRed(const Config& config)
-    : speech_encoder_(config.speech_encoder),
+AudioEncoderCopyRed::Config::Config() = default;
+AudioEncoderCopyRed::Config::Config(Config&&) = default;
+AudioEncoderCopyRed::Config::~Config() = default;
+
+AudioEncoderCopyRed::AudioEncoderCopyRed(Config&& config)
+    : speech_encoder_(std::move(config.speech_encoder)),
       red_payload_type_(config.payload_type) {
   RTC_CHECK(speech_encoder_) << "Speech encoder not provided.";
 }
 
 AudioEncoderCopyRed::~AudioEncoderCopyRed() = default;
-
-size_t AudioEncoderCopyRed::MaxEncodedBytes() const {
-  return 2 * speech_encoder_->MaxEncodedBytes();
-}
 
 int AudioEncoderCopyRed::SampleRateHz() const {
   return speech_encoder_->SampleRateHz();
@@ -119,6 +121,11 @@ void AudioEncoderCopyRed::SetProjectedPacketLossRate(double fraction) {
 
 void AudioEncoderCopyRed::SetTargetBitrate(int bits_per_second) {
   speech_encoder_->SetTargetBitrate(bits_per_second);
+}
+
+rtc::ArrayView<std::unique_ptr<AudioEncoder>>
+AudioEncoderCopyRed::ReclaimContainedEncoders() {
+  return rtc::ArrayView<std::unique_ptr<AudioEncoder>>(&speech_encoder_, 1);
 }
 
 }  // namespace webrtc

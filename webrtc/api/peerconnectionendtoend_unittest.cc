@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include "webrtc/api/test/peerconnectiontestwrapper.h"
 // Notice that mockpeerconnectionobservers.h must be included after the above!
 #include "webrtc/api/test/mockpeerconnectionobservers.h"
@@ -17,6 +19,7 @@
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/ssladapter.h"
+#include "webrtc/base/thread.h"
 #include "webrtc/base/sslstreamadapter.h"
 #include "webrtc/base/stringencode.h"
 #include "webrtc/base/stringutils.h"
@@ -35,7 +38,7 @@ using webrtc::PeerConnectionInterface;
 
 namespace {
 
-const size_t kMaxWait = 10000;
+const int kMaxWait = 10000;
 
 }  // namespace
 
@@ -46,11 +49,17 @@ class PeerConnectionEndToEndTest
   typedef std::vector<rtc::scoped_refptr<DataChannelInterface> >
       DataChannelList;
 
-  PeerConnectionEndToEndTest()
-      : caller_(new rtc::RefCountedObject<PeerConnectionTestWrapper>(
-                    "caller")),
-        callee_(new rtc::RefCountedObject<PeerConnectionTestWrapper>(
-                    "callee")) {
+  PeerConnectionEndToEndTest() {
+    RTC_CHECK(network_thread_.Start());
+    RTC_CHECK(worker_thread_.Start());
+    caller_ = new rtc::RefCountedObject<PeerConnectionTestWrapper>(
+        "caller", &network_thread_, &worker_thread_);
+    callee_ = new rtc::RefCountedObject<PeerConnectionTestWrapper>(
+        "callee", &network_thread_, &worker_thread_);
+    webrtc::PeerConnectionInterface::IceServer ice_server;
+    ice_server.uri = "stun:stun.l.google.com:19302";
+    config_.servers.push_back(ice_server);
+
 #ifdef WEBRTC_ANDROID
     webrtc::InitializeAndroidObjects();
 #endif
@@ -61,8 +70,8 @@ class PeerConnectionEndToEndTest
   }
 
   void CreatePcs(const MediaConstraintsInterface* pc_constraints) {
-    EXPECT_TRUE(caller_->CreatePc(pc_constraints));
-    EXPECT_TRUE(callee_->CreatePc(pc_constraints));
+    EXPECT_TRUE(caller_->CreatePc(pc_constraints, config_));
+    EXPECT_TRUE(callee_->CreatePc(pc_constraints, config_));
     PeerConnectionTestWrapper::Connect(caller_.get(), callee_.get());
 
     caller_->SignalOnDataChannel.connect(
@@ -110,10 +119,10 @@ class PeerConnectionEndToEndTest
   // Tests that |dc1| and |dc2| can send to and receive from each other.
   void TestDataChannelSendAndReceive(
       DataChannelInterface* dc1, DataChannelInterface* dc2) {
-    rtc::scoped_ptr<webrtc::MockDataChannelObserver> dc1_observer(
+    std::unique_ptr<webrtc::MockDataChannelObserver> dc1_observer(
         new webrtc::MockDataChannelObserver(dc1));
 
-    rtc::scoped_ptr<webrtc::MockDataChannelObserver> dc2_observer(
+    std::unique_ptr<webrtc::MockDataChannelObserver> dc2_observer(
         new webrtc::MockDataChannelObserver(dc2));
 
     static const std::string kDummyData = "abcdefg";
@@ -151,10 +160,13 @@ class PeerConnectionEndToEndTest
   }
 
  protected:
+  rtc::Thread network_thread_;
+  rtc::Thread worker_thread_;
   rtc::scoped_refptr<PeerConnectionTestWrapper> caller_;
   rtc::scoped_refptr<PeerConnectionTestWrapper> callee_;
   DataChannelList caller_signaled_data_channels_;
   DataChannelList callee_signaled_data_channels_;
+  webrtc::PeerConnectionInterface::RTCConfiguration config_;
 };
 
 // Disabled for TSan v2, see
@@ -208,14 +220,7 @@ TEST_F(PeerConnectionEndToEndTest, CreateDataChannelBeforeNegotiate) {
 
 // Verifies that a DataChannel created after the negotiation can transition to
 // "OPEN" and transfer data.
-#if defined(MEMORY_SANITIZER)
-// Fails under MemorySanitizer:
-// See https://code.google.com/p/webrtc/issues/detail?id=3980.
-#define MAYBE_CreateDataChannelAfterNegotiate DISABLED_CreateDataChannelAfterNegotiate
-#else
-#define MAYBE_CreateDataChannelAfterNegotiate CreateDataChannelAfterNegotiate
-#endif
-TEST_F(PeerConnectionEndToEndTest, MAYBE_CreateDataChannelAfterNegotiate) {
+TEST_F(PeerConnectionEndToEndTest, CreateDataChannelAfterNegotiate) {
   MAYBE_SKIP_TEST(rtc::SSLStreamAdapter::HaveDtlsSrtp);
 
   CreatePcs();
@@ -228,7 +233,10 @@ TEST_F(PeerConnectionEndToEndTest, MAYBE_CreateDataChannelAfterNegotiate) {
   Negotiate();
   WaitForConnection();
 
-  // Creates new DataChannels after the negotiation and verifies their states.
+  // Wait for the data channel created pre-negotiation to be opened.
+  WaitForDataChannelsToOpen(dummy, callee_signaled_data_channels_, 0);
+
+  // Create new DataChannels after the negotiation and verify their states.
   rtc::scoped_refptr<DataChannelInterface> caller_dc(
       caller_->CreateDataChannel("hello", init));
   rtc::scoped_refptr<DataChannelInterface> callee_dc(
@@ -291,10 +299,10 @@ TEST_F(PeerConnectionEndToEndTest,
   WaitForDataChannelsToOpen(caller_dc_1, callee_signaled_data_channels_, 0);
   WaitForDataChannelsToOpen(caller_dc_2, callee_signaled_data_channels_, 1);
 
-  rtc::scoped_ptr<webrtc::MockDataChannelObserver> dc_1_observer(
+  std::unique_ptr<webrtc::MockDataChannelObserver> dc_1_observer(
       new webrtc::MockDataChannelObserver(callee_signaled_data_channels_[0]));
 
-  rtc::scoped_ptr<webrtc::MockDataChannelObserver> dc_2_observer(
+  std::unique_ptr<webrtc::MockDataChannelObserver> dc_2_observer(
       new webrtc::MockDataChannelObserver(callee_signaled_data_channels_[1]));
 
   const std::string message_1 = "hello 1";
@@ -309,6 +317,82 @@ TEST_F(PeerConnectionEndToEndTest,
   EXPECT_EQ(1U, dc_1_observer->received_message_count());
   EXPECT_EQ(1U, dc_2_observer->received_message_count());
 }
+
+#ifdef HAVE_QUIC
+// Test that QUIC data channels can be used and that messages go to the correct
+// remote data channel when both peers want to use QUIC. It is assumed that the
+// application has externally negotiated the data channel parameters.
+TEST_F(PeerConnectionEndToEndTest, MessageTransferBetweenQuicDataChannels) {
+  config_.enable_quic = true;
+  CreatePcs();
+
+  webrtc::DataChannelInit init_1;
+  init_1.id = 0;
+  init_1.ordered = false;
+  init_1.reliable = true;
+
+  webrtc::DataChannelInit init_2;
+  init_2.id = 1;
+  init_2.ordered = false;
+  init_2.reliable = true;
+
+  rtc::scoped_refptr<DataChannelInterface> caller_dc_1(
+      caller_->CreateDataChannel("data", init_1));
+  ASSERT_NE(nullptr, caller_dc_1);
+  rtc::scoped_refptr<DataChannelInterface> caller_dc_2(
+      caller_->CreateDataChannel("data", init_2));
+  ASSERT_NE(nullptr, caller_dc_2);
+  rtc::scoped_refptr<DataChannelInterface> callee_dc_1(
+      callee_->CreateDataChannel("data", init_1));
+  ASSERT_NE(nullptr, callee_dc_1);
+  rtc::scoped_refptr<DataChannelInterface> callee_dc_2(
+      callee_->CreateDataChannel("data", init_2));
+  ASSERT_NE(nullptr, callee_dc_2);
+
+  Negotiate();
+  WaitForConnection();
+  EXPECT_TRUE_WAIT(caller_dc_1->state() == webrtc::DataChannelInterface::kOpen,
+                   kMaxWait);
+  EXPECT_TRUE_WAIT(callee_dc_1->state() == webrtc::DataChannelInterface::kOpen,
+                   kMaxWait);
+  EXPECT_TRUE_WAIT(caller_dc_2->state() == webrtc::DataChannelInterface::kOpen,
+                   kMaxWait);
+  EXPECT_TRUE_WAIT(callee_dc_2->state() == webrtc::DataChannelInterface::kOpen,
+                   kMaxWait);
+
+  std::unique_ptr<webrtc::MockDataChannelObserver> dc_1_observer(
+      new webrtc::MockDataChannelObserver(callee_dc_1.get()));
+
+  std::unique_ptr<webrtc::MockDataChannelObserver> dc_2_observer(
+      new webrtc::MockDataChannelObserver(callee_dc_2.get()));
+
+  const std::string message_1 = "hello 1";
+  const std::string message_2 = "hello 2";
+
+  // Send data from caller to callee.
+  caller_dc_1->Send(webrtc::DataBuffer(message_1));
+  EXPECT_EQ_WAIT(message_1, dc_1_observer->last_message(), kMaxWait);
+
+  caller_dc_2->Send(webrtc::DataBuffer(message_2));
+  EXPECT_EQ_WAIT(message_2, dc_2_observer->last_message(), kMaxWait);
+
+  EXPECT_EQ(1U, dc_1_observer->received_message_count());
+  EXPECT_EQ(1U, dc_2_observer->received_message_count());
+
+  // Send data from callee to caller.
+  dc_1_observer.reset(new webrtc::MockDataChannelObserver(caller_dc_1.get()));
+  dc_2_observer.reset(new webrtc::MockDataChannelObserver(caller_dc_2.get()));
+
+  callee_dc_1->Send(webrtc::DataBuffer(message_1));
+  EXPECT_EQ_WAIT(message_1, dc_1_observer->last_message(), kMaxWait);
+
+  callee_dc_2->Send(webrtc::DataBuffer(message_2));
+  EXPECT_EQ_WAIT(message_2, dc_2_observer->last_message(), kMaxWait);
+
+  EXPECT_EQ(1U, dc_1_observer->received_message_count());
+  EXPECT_EQ(1U, dc_2_observer->received_message_count());
+}
+#endif  // HAVE_QUIC
 
 // Verifies that a DataChannel added from an OPEN message functions after
 // a channel has been previously closed (webrtc issue 3778).
