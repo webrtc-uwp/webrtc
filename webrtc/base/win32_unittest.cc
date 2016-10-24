@@ -42,7 +42,7 @@ TEST_F(Win32Test, WinPingTest) {
   WinPing ping;
   ASSERT_FALSE(ping.IsValid());
 }
-#else
+#else // defined(WINRT)
 TEST_F(Win32Test, WinPingTest) {
   WinPing ping;
   ASSERT_TRUE(ping.IsValid());
@@ -65,7 +65,7 @@ TEST_F(Win32Test, WinPingTest) {
   ASSERT_EQ(WinPing::PING_INVALID_PARAMS, ping.Ping(
             IPAddress(INADDR_LOOPBACK), 20, 50, 0, false));
 }
-#endif
+#endif // defined(WINRT)
 
 TEST_F(Win32Test, IPv6AddressCompression) {
   IPAddress ipv6;

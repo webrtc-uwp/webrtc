@@ -191,10 +191,10 @@ bool BitBuffer::ReadExponentialGolomb(uint32_t* val) {
       RTC_CHECK(Seek(original_byte_offset, original_bit_offset));
       return false;
     }
-#else
+#else // WINRT
     RTC_CHECK(Seek(original_byte_offset, original_bit_offset));
     return false;
-#endif
+#endif // WINRT
   }
   *val -= 1;
   return true;

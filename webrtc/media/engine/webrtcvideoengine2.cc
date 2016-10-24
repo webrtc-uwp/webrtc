@@ -2569,7 +2569,7 @@ WebRtcVideoChannel2::WebRtcVideoReceiveStream::GetVideoReceiverInfo(
   info.jitter_buffer_ms = stats.jitter_buffer_ms;
   info.min_playout_delay_ms = stats.min_playout_delay_ms;
 #ifdef WINRT
-  info.end_to_end_delayMs = stats.current_endtoend_delay_ms;
+  info.end_to_end_delay_ms = stats.current_endtoend_delay_ms;
 #endif
   info.render_delay_ms = stats.render_delay_ms;
 

@@ -25,7 +25,7 @@
 
 #if defined(WINRT)
 #include <objbase.h>
-#endif
+#endif // defined(WINRT)
 
 // In several places in this file, we test the integrity level of the process
 // before calling GetLongPathName. We do this because calling GetLongPathName
@@ -45,8 +45,7 @@ DWORD WINAPI GetFileAttributes(LPCTSTR lpFileName) {
 
   return attributes.dwFileAttributes;
 }
-
-#endif
+#endif // defined(WINRT)
 
 namespace rtc {
 
@@ -108,7 +107,7 @@ bool Win32Filesystem::CreatePrivateFile(const Pathname &filename) {
   }
   return true;
 }
-#else
+#else // defined(WINRT)
 bool Win32Filesystem::CreatePrivateFile(const Pathname &filename) {
   // To make the file private to the current user, we first must construct a
   // SECURITY_DESCRIPTOR specifying an ACL. This code is mostly based upon
@@ -216,7 +215,7 @@ bool Win32Filesystem::CreatePrivateFile(const Pathname &filename) {
   }
   return true;
 }
-#endif
+#endif // defined(WINRT)
 
 bool Win32Filesystem::DeleteFile(const Pathname &filename) {
   LOG(LS_INFO) << "Deleting file " << filename.pathname();
@@ -254,7 +253,7 @@ bool Win32Filesystem::GetTemporaryFolder(Pathname &pathname, bool create,
   }
   return !create || CreateFolder(pathname);
 }
-#else
+#else // defined(WINRT)
 bool Win32Filesystem::GetTemporaryFolder(Pathname &pathname, bool create,
                                          const std::string *append) {
   wchar_t buffer[MAX_PATH + 1];
@@ -276,7 +275,7 @@ bool Win32Filesystem::GetTemporaryFolder(Pathname &pathname, bool create,
   }
   return !create || CreateFolder(pathname);
 }
-#endif
+#endif // defined(WINRT)
 
 #if defined(WINRT)
 std::string Win32Filesystem::TempFilename(const Pathname &dir,
@@ -298,7 +297,7 @@ std::string Win32Filesystem::TempFilename(const Pathname &dir,
   CreatePrivateFile(fullpath);
   return fullpath.pathname();
 }
-#else
+#else // defined(WINRT)
 std::string Win32Filesystem::TempFilename(const Pathname &dir,
                                           const std::string &prefix) {
   wchar_t filename[MAX_PATH];
@@ -308,7 +307,7 @@ std::string Win32Filesystem::TempFilename(const Pathname &dir,
   ASSERT(false);
   return "";
 }
-#endif
+#endif // defined(WINRT)
 
 bool Win32Filesystem::MoveFile(const Pathname &old_path,
                                const Pathname &new_path) {
@@ -321,10 +320,10 @@ bool Win32Filesystem::MoveFile(const Pathname &old_path,
 #if defined(WINRT)
   return ::MoveFileEx(ToUtf16(old_path.pathname()).c_str(),
                     ToUtf16(new_path.pathname()).c_str(), 0) != 0;
-#else
+#else // defined(WINRT)
   return ::MoveFile(ToUtf16(old_path.pathname()).c_str(),
                     ToUtf16(new_path.pathname()).c_str()) != 0;
-#endif
+#endif // defined(WINRT)
 }
 
 bool Win32Filesystem::MoveFolder(const Pathname &old_path,
@@ -338,10 +337,10 @@ bool Win32Filesystem::MoveFolder(const Pathname &old_path,
 #if defined(WINRT)
   if (::MoveFileEx(ToUtf16(old_path.pathname()).c_str(),
                ToUtf16(new_path.pathname()).c_str(), 0) == 0) {
-#else
+#else // defined(WINRT)
   if (::MoveFile(ToUtf16(old_path.pathname()).c_str(),
                ToUtf16(new_path.pathname()).c_str()) == 0) {
-#endif
+#endif // defined(WINRT)
     if (::GetLastError() != ERROR_NOT_SAME_DEVICE) {
       LOG_GLE(LS_ERROR) << "Failed to move file";
       return false;
@@ -388,10 +387,10 @@ bool Win32Filesystem::CopyFile(const Pathname &old_path,
   params.dwCopyFlags = COPY_FILE_FAIL_IF_EXISTS;
   return ::CopyFile2(ToUtf16(old_path.pathname()).c_str(),
                     ToUtf16(new_path.pathname()).c_str(), &params) != 0;
-#else
+#else // defined(WINRT)
   return ::CopyFile(ToUtf16(old_path.pathname()).c_str(),
                     ToUtf16(new_path.pathname()).c_str(), TRUE) != 0;
-#endif
+#endif // defined(WINRT)
 }
 
 #if defined(WINRT)
@@ -402,7 +401,7 @@ bool Win32Filesystem::IsTemporaryPath(const Pathname& pathname) {
   return (::strnicmp(ToUtf16(pathname.pathname()).c_str(),
                      buffer, strlen(buffer)) == 0);
 }
-#else
+#else // defined(WINRT)
 bool Win32Filesystem::IsTemporaryPath(const Pathname& pathname) {
   TCHAR buffer[MAX_PATH + 1];
   if (!::GetTempPath(arraysize(buffer), buffer))
@@ -413,7 +412,7 @@ bool Win32Filesystem::IsTemporaryPath(const Pathname& pathname) {
   return (::strnicmp(ToUtf16(pathname.pathname()).c_str(),
                      buffer, strlen(buffer)) == 0);
 }
-#endif
+#endif // defined(WINRT)
 
 bool Win32Filesystem::GetFileSize(const Pathname &pathname, size_t *size) {
   WIN32_FILE_ATTRIBUTE_DATA data = {0};
@@ -454,7 +453,7 @@ bool Win32Filesystem::GetAppPathname(Pathname* path) {
   path->SetPathname(ToUtf8(buffer));
   return true;
 }
-#else
+#else // defined(WINRT)
 bool Win32Filesystem::GetAppPathname(Pathname* path) {
   TCHAR buffer[MAX_PATH + 1];
   if (0 == ::GetModuleFileName(NULL, buffer, arraysize(buffer)))
@@ -462,7 +461,7 @@ bool Win32Filesystem::GetAppPathname(Pathname* path) {
   path->SetPathname(ToUtf8(buffer));
   return true;
 }
-#endif
+#endif // defined(WINRT)
 
 #if defined(WINRT)
 bool Win32Filesystem::GetAppDataFolder(Pathname* path, bool per_user) {
@@ -473,7 +472,7 @@ bool Win32Filesystem::GetAppDataFolder(Pathname* path, bool per_user) {
   path->SetPathname(ToUtf8(buffer));
   return true;
 }
-#else
+#else // defined(WINRT)
 bool Win32Filesystem::GetAppDataFolder(Pathname* path, bool per_user) {
   ASSERT(!organization_name_.empty());
   ASSERT(!application_name_.empty());
@@ -501,7 +500,7 @@ bool Win32Filesystem::GetAppDataFolder(Pathname* path, bool per_user) {
   path->SetFolder(ToUtf8(buffer));
   return CreateFolder(*path);
 }
-#endif
+#endif // defined(WINRT)
 
 bool Win32Filesystem::GetAppTempFolder(Pathname* path) {
   if (!GetAppPathname(path))
@@ -522,7 +521,7 @@ bool Win32Filesystem::GetDiskFreeSpace(const Pathname& path,
   *free_bytes = freeBytesAvailable.QuadPart;
   return success == TRUE;
 }
-#else
+#else // defined(WINRT)
 bool Win32Filesystem::GetDiskFreeSpace(const Pathname& path,
                                        int64_t* free_bytes) {
   if (!free_bytes) {
@@ -565,7 +564,7 @@ bool Win32Filesystem::GetDiskFreeSpace(const Pathname& path,
     return false;
   }
 }
-#endif
+#endif // defined(WINRT)
 
 #if defined(WINRT)
 Pathname Win32Filesystem::GetCurrentDirectory() {
@@ -573,7 +572,7 @@ Pathname Win32Filesystem::GetCurrentDirectory() {
   GetAppDataFolder(&cwd, false);
   return cwd;
 }
-#else
+#else // defined(WINRT)
 Pathname Win32Filesystem::GetCurrentDirectory() {
   Pathname cwd;
   int path_len = 0;
@@ -596,7 +595,7 @@ Pathname Win32Filesystem::GetCurrentDirectory() {
   cwd.SetFolder(ToUtf8(path.get()));
   return cwd;
 }
-#endif
+#endif // defined(WINRT)
 
 // TODO: Consider overriding DeleteFolderAndContents for speed and potentially
 // better OS integration (recycle bin?)

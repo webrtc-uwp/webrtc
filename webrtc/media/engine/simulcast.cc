@@ -238,7 +238,7 @@ ScreenshareLayerConfig::ScreenshareLayerConfig(int tl0_bitrate, int tl1_bitrate)
 
 ScreenshareLayerConfig ScreenshareLayerConfig::GetDefault() {
   std::string group =
-    webrtc::field_trial::FindFullName(kScreencastLayerFieldTrialName);
+      webrtc::field_trial::FindFullName(kScreencastLayerFieldTrialName);
 
   ScreenshareLayerConfig config(kScreenshareDefaultTl0BitrateKbps,
                                 kScreenshareDefaultTl1BitrateKbps);

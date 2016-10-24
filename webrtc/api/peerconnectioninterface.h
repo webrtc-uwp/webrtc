@@ -701,8 +701,6 @@ class PeerConnectionFactoryInterface : public rtc::RefCountInterface {
       CreateAudioTrack(const std::string& label,
                        AudioSourceInterface* source) = 0;
 
-  //virtual cricket::ChannelManager* channel_manager() = 0;
-
   // Starts AEC dump using existing file. Takes ownership of |file| and passes
   // it on to VoiceEngine (via other objects) immediately, which will take
   // the ownerhip. If the operation fails, the file will be closed.
@@ -731,8 +729,6 @@ class PeerConnectionFactoryInterface : public rtc::RefCountInterface {
   virtual void StopRtcEventLog() = 0;
 
   virtual cricket::MediaEngineInterface* GetMediaEngine() = 0;
-
-  //virtual VoEHardware* GetVoEHardware() = 0;
 
  protected:
   // Dtor and ctor protected as objects shouldn't be created or deleted via

@@ -538,7 +538,7 @@ struct MediaReceiverInfo {
         packets_rcvd(0),
         packets_lost(0),
 #ifdef WINRT
-        end_to_end_delayMs(0),
+        end_to_end_delay_ms(0),
 #endif
         fraction_lost(0.0) {
   }
@@ -576,7 +576,7 @@ struct MediaReceiverInfo {
   int packets_lost;
   float fraction_lost;
 #ifdef WINRT
-  int end_to_end_delayMs;
+  int end_to_end_delay_ms;
 #endif
   std::string codec_name;
   std::vector<SsrcReceiverInfo> local_stats;

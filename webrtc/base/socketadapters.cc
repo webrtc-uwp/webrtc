@@ -18,7 +18,7 @@
 #if defined(WEBRTC_WIN)
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
-#endif
+#endif //ndef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -338,12 +338,12 @@ void AsyncHttpsProxySocket::ProcessInput(char* data, size_t* len) {
     if (data[pos++] != '\n')
       continue;
 
-    size_t length = pos - start - 1;
-    if ((length > 0) && (data[start + length - 1] == '\r'))
-      --length;
+    size_t len = pos - start - 1;
+    if ((len > 0) && (data[start + len - 1] == '\r'))
+      --len;
 
-    data[start + length] = 0;
-    ProcessLine(data + start, length);
+    data[start + len] = 0;
+    ProcessLine(data + start, len);
     start = pos;
   }
 
@@ -422,7 +422,7 @@ void AsyncHttpsProxySocket::ProcessLine(char * data, size_t len) {
         msg.append(unknown_mechanisms_);
 #if defined(WEBRTC_WIN) && !defined(WINRT)
         MessageBoxA(0, msg.c_str(), "Oops!", MB_OK);
-#endif
+#endif // #defined(WEBRTC_WIN) && !defined(WINRT)
 #if defined(WEBRTC_POSIX)
         // TODO: Raise a signal so the UI can be separated.
         LOG(LS_ERROR) << "Oops!\n\n" << msg;
@@ -618,10 +618,10 @@ void AsyncSocksProxySocket::ProcessInput(char* data, size_t* len) {
         return;
       LOG(LS_VERBOSE) << "Bound on " << addr << ":" << port;
     } else if (atyp == 3) {
-      uint8_t length;
+      uint8_t len;
       std::string addr;
-      if (!response.ReadUInt8(&length) ||
-          !response.ReadString(&addr, length) ||
+      if (!response.ReadUInt8(&len) ||
+          !response.ReadString(&addr, len) ||
           !response.ReadUInt16(&port))
         return;
       LOG(LS_VERBOSE) << "Bound on " << addr << ":" << port;

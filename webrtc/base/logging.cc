@@ -21,7 +21,7 @@
 #if defined(WINRT)
 #include <stdlib.h>
 #include "webrtc/base/win32.h"
-#endif
+#endif // defined(WINRT)
 #endif
 
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
@@ -167,9 +167,9 @@ LogMessage::LogMessage(const char* file,
           mbstowcs_s(&temp, modulew, 255, module, _TRUNCATE);
           hmod = LoadPackagedLibrary(modulew, 0);
         }
-#else
+#else // defined(WINRT)
         HMODULE hmod = GetModuleHandleA(module);
-#endif
+#endif // defined(WINRT)
         if (hmod)
           flags |= FORMAT_MESSAGE_FROM_HMODULE;
         if (DWORD len = FormatMessageW(

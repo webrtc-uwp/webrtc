@@ -102,7 +102,7 @@ inline bool IsWindowsXpOrLater() {
 inline bool IsWindows8OrLater() {
     return true;
 }
-#else
+#else // defined(WINRT)
 enum WindowsMajorVersions {
   kWindows2000 = 5,
   kWindowsVista = 6,
@@ -127,7 +127,7 @@ inline bool IsWindows8OrLater() {
           (major > kWindowsVista ||
           (major == kWindowsVista && minor >= 2)));
 }
-#endif
+#endif // defined(WINRT)
 
 #if !defined(WINRT)
 // Determine the current integrity level of the process.
@@ -138,7 +138,7 @@ inline bool IsCurrentProcessLowIntegrity() {
   return (GetCurrentProcessIntegrityLevel(&level) &&
       level < SECURITY_MANDATORY_MEDIUM_RID);
 }
-#endif
+#endif // !defined(WINRT)
 
 bool AdjustCurrentProcessPrivilege(const TCHAR* privilege, bool to_enable);
 
@@ -149,7 +149,7 @@ bool AdjustCurrentProcessPrivilege(const TCHAR* privilege, bool to_enable);
 #define CreateEvent(lpEventAttributes, bManualReset, bInitialState, lpName) CreateEventEx(lpEventAttributes, lpName, (bManualReset?CREATE_EVENT_MANUAL_RESET:0) | (bInitialState?CREATE_EVENT_INITIAL_SET:0), EVENT_ALL_ACCESS)
 #define WaitForSingleObject(a, b) WaitForSingleObjectEx(a, b, FALSE)
 #define WaitForMultipleObjects(a, b, c, d) WaitForMultipleObjectsEx(a, b, c, d, FALSE) 
-#endif
+#endif // defined(WINRT)
 
 }  // namespace rtc
 

@@ -146,7 +146,7 @@ class StatsReport {
     kStatsValueNameCurrentDelayMs,
 #ifdef WINRT
     kStatsValueNameCurrentEndToEndDelayMs,
-#endif
+#endif // WINRT
     kStatsValueNameDecodeMs,
     kStatsValueNameDecodingCNG,
     kStatsValueNameDecodingCTN,

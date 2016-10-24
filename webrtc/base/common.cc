@@ -38,9 +38,9 @@ void Break() {
 #if WEBRTC_WIN
 #if !defined WINRT
   ::DebugBreak();
-#else
+#else // !defined WINRT
     __debugbreak();
-#endif
+#endif // !defined WINRT
 #else  // !WEBRTC_WIN 
   // On POSIX systems, SIGTRAP signals debuggers to break without killing the
   // process. If a debugger isn't attached, the uncaught SIGTRAP will crash the

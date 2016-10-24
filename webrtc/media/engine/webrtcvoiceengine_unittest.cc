@@ -3498,4 +3498,3 @@ TEST(WebRtcVoiceEngineTest, SetRecvCodecs) {
   parameters.codecs = engine.recv_codecs();
   EXPECT_TRUE(channel.SetRecvParameters(parameters));
 }
-

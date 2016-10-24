@@ -559,7 +559,7 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
   }
   return true;
 }
-#else
+#else // defined(WINRT)
 
 unsigned int GetPrefix(PIP_ADAPTER_PREFIX prefixlist,
               const IPAddress& ip, IPAddress* prefix) {
@@ -705,7 +705,7 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
   }
   return true;
 }
-#endif
+#endif  // defined(WINRT)
 #endif  // WEBRTC_WIN
 
 #if defined(WEBRTC_LINUX)

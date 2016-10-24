@@ -51,7 +51,7 @@ class ByteBufferWriter : public ByteBuffer {
   size_t Capacity() const { return size_ - start_; }
 
   // Write value to the buffer. Resizes the buffer when it is
-  // necessary.
+  // neccessary.
   void WriteUInt8(uint8_t val);
   void WriteUInt16(uint16_t val);
   void WriteUInt24(uint32_t val);

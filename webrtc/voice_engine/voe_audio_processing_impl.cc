@@ -523,7 +523,6 @@ int VoEAudioProcessingImpl::SetEcStatus(bool enable, EcModes mode) {
                             "SetEcStatus() failed to set AEC state");
       return -1;
     }
-
     if (mode == kEcConference) {
       if (_shared->audio_processing()
               ->echo_cancellation()

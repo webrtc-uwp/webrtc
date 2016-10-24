@@ -264,7 +264,7 @@ class WindowsCommandLineArguments {
  private:
   RTC_DISALLOW_COPY_AND_ASSIGN(WindowsCommandLineArguments);
 };
-#endif  // WEBRTC_WIN
+#endif  // defined(WEBRTC_WIN) && !defined(WINRT)
 
 }  // namespace rtc
 

@@ -391,7 +391,7 @@ bool Utf8ToWindowsFilename(const std::string& utf8, std::wstring* filename) {
 #if defined(WINRT)
   // Keep relative paths on WinRT.
   filename->assign(wfilename);
-#else
+#else // defined(WINRT)
   // Convert to complete filename
   DWORD full_len = ::GetFullPathName(wfilename, 0, NULL, NULL);
   if (0 == full_len) {
@@ -421,7 +421,7 @@ bool Utf8ToWindowsFilename(const std::string& utf8, std::wstring* filename) {
     // Already in long-path form.
   }
   filename->assign(start);
-#endif
+#endif // defined(WINRT)
 
   return true;
 }
@@ -461,6 +461,6 @@ bool GetCurrentProcessIntegrityLevel(int* level) {
   }
   return ret;
 }
-#endif
+#endif // !defined(WINRT)
 
 }  // namespace rtc

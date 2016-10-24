@@ -13,7 +13,7 @@
 #if defined(WEBRTC_WIN)
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
-#endif
+#endif //ndef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -476,17 +476,17 @@ HttpData::hasHeader(const std::string& name, std::string* value) const {
 }
 
 void HttpData::setContent(const std::string& content_type,
-                          StreamInterface* siDocument) {
+                          StreamInterface* document) {
   setHeader(HH_CONTENT_TYPE, content_type);
-  setDocumentAndLength(siDocument);
+  setDocumentAndLength(document);
 }
 
-void HttpData::setDocumentAndLength(StreamInterface* siDocument) {
+void HttpData::setDocumentAndLength(StreamInterface* document) {
   // TODO: Consider calling Rewind() here?
   ASSERT(!hasHeader(HH_CONTENT_LENGTH, NULL));
   ASSERT(!hasHeader(HH_TRANSFER_ENCODING, NULL));
-  ASSERT(siDocument != NULL);
-  this->document.reset(siDocument);
+  ASSERT(document != NULL);
+  this->document.reset(document);
   size_t content_length = 0;
   if (this->document->GetAvailable(&content_length)) {
     char buffer[32];
@@ -568,19 +568,19 @@ bool HttpRequestData::getAbsoluteUri(std::string* uri) const {
 }
 
 bool HttpRequestData::getRelativeUri(std::string* host,
-                                     std::string* ppath) const
+                                     std::string* path) const
 {
   if (HV_CONNECT == verb)
     return false;
   Url<char> url(this->path);
   if (url.valid()) {
     host->assign(url.address());
-    ppath->assign(url.full_path());
+    path->assign(url.full_path());
     return true;
   }
   if (!hasHeader(HH_HOST, host))
     return false;
-  ppath->assign(this->path);
+  path->assign(this->path);
   return true;
 }
 
@@ -602,30 +602,30 @@ HttpResponseData::copy(const HttpResponseData& src) {
   HttpData::copy(src);
 }
 
-void HttpResponseData::set_success(uint32_t code) {
-  this->scode = code;
+void HttpResponseData::set_success(uint32_t scode) {
+  this->scode = scode;
   message.clear();
   setHeader(HH_CONTENT_LENGTH, "0", false);
 }
 
 void HttpResponseData::set_success(const std::string& content_type,
-                              StreamInterface* siDocument,
-                              uint32_t code) {
-  this->scode = code;
+                                   StreamInterface* document,
+                                   uint32_t scode) {
+  this->scode = scode;
   message.erase(message.begin(), message.end());
-  setContent(content_type, siDocument);
+  setContent(content_type, document);
 }
 
 void HttpResponseData::set_redirect(const std::string& location,
-                                    uint32_t code) {
-  this->scode = code;
+                                    uint32_t scode) {
+  this->scode = scode;
   message.clear();
   setHeader(HH_LOCATION, location);
   setHeader(HH_CONTENT_LENGTH, "0", false);
 }
 
-void HttpResponseData::set_error(uint32_t code) {
-  this->scode = code;
+void HttpResponseData::set_error(uint32_t scode) {
+  this->scode = scode;
   message.clear();
   setHeader(HH_CONTENT_LENGTH, "0", false);
 }
@@ -773,17 +773,17 @@ HttpAuthResult HttpAuthenticate(
 
     // TODO: convert sensitive to a secure buffer that gets securely deleted
     //std::string decoded = username + ":" + password;
-    size_t length = username.size() + password.GetLength() + 2;
-    char * sensitive = new char[length];
-    size_t pos = strcpyn(sensitive, length, username.data(), username.size());
-    pos += strcpyn(sensitive + pos, length - pos, ":");
+    size_t len = username.size() + password.GetLength() + 2;
+    char * sensitive = new char[len];
+    size_t pos = strcpyn(sensitive, len, username.data(), username.size());
+    pos += strcpyn(sensitive + pos, len - pos, ":");
     password.CopyTo(sensitive + pos, true);
 
     response = auth_method;
     response.append(" ");
     // TODO: create a sensitive-source version of Base64::encode
     response.append(Base64::Encode(sensitive));
-    memset(sensitive, 0, length);
+    memset(sensitive, 0, len);
     delete [] sensitive;
     return HAR_RESPONSE;
   }
@@ -817,12 +817,12 @@ HttpAuthResult HttpAuthenticate(
 
     // TODO: convert sensitive to be secure buffer
     //std::string A1 = username + ":" + realm + ":" + password;
-    size_t length = username.size() + realm.size() + password.GetLength() + 3;
-    char * sensitive = new char[length];  // A1
-    size_t pos = strcpyn(sensitive, length, username.data(), username.size());
-    pos += strcpyn(sensitive + pos, length - pos, ":");
-    pos += strcpyn(sensitive + pos, length - pos, realm.c_str());
-    pos += strcpyn(sensitive + pos, length - pos, ":");
+    size_t len = username.size() + realm.size() + password.GetLength() + 3;
+    char * sensitive = new char[len];  // A1
+    size_t pos = strcpyn(sensitive, len, username.data(), username.size());
+    pos += strcpyn(sensitive + pos, len - pos, ":");
+    pos += strcpyn(sensitive + pos, len - pos, realm.c_str());
+    pos += strcpyn(sensitive + pos, len - pos, ":");
     password.CopyTo(sensitive + pos, true);
 
     std::string A2 = method + ":" + uri;
@@ -834,7 +834,7 @@ HttpAuthResult HttpAuthenticate(
       middle = nonce;
     }
     std::string HA1 = MD5(sensitive);
-    memset(sensitive, 0, length);
+    memset(sensitive, 0, len);
     delete [] sensitive;
     std::string HA2 = MD5(A2);
     std::string dig_response = MD5(HA1 + ":" + middle + ":" + HA2);
@@ -1047,7 +1047,7 @@ HttpAuthResult HttpAuthenticate(
     return HAR_RESPONSE;
   }
 #endif
-#endif // WEBRTC_WIN
+#endif // defined(WEBRTC_WIN) && !defined(WINRT)
 
   return HAR_IGNORE;
 }
