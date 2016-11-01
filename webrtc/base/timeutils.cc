@@ -31,6 +31,7 @@
 
 #include "webrtc/base/checks.h"
 #include "webrtc/base/timeutils.h"
+//#include "third_party/libyuv/include/libyuv/basic_types.h"
 
 #define EFFICIENT_IMPLEMENTATION 1
 
@@ -39,7 +40,7 @@ namespace rtc {
 const uint32_t HALF = 0x80000000;
 
 #if defined(WEBRTC_WIN)
-static const uint64 kFileTimeToUnixTimeEpochOffset = 116444736000000000ULL;
+static const uint64_t kFileTimeToUnixTimeEpochOffset = 116444736000000000ULL;
 #endif
 
 #ifdef WINRT
