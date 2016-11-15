@@ -21,6 +21,7 @@
 #include "webrtc/modules/video_capture/windows/video_capture_sink_winrt.h"
 #include "webrtc/base/Win32.h"
 #include "libyuv/planar_functions.h"
+#include "webrtc/common_video/video_common_winrt.h"
 
 using Microsoft::WRL::ComPtr;
 using Windows::Devices::Enumeration::DeviceClass;
@@ -48,19 +49,17 @@ using Windows::Foundation::TypedEventHandler;
 using Windows::System::Threading::TimerElapsedHandler;
 using Windows::System::Threading::ThreadPoolTimer;
 
-// Necessary to access CoreDispatcher for operations that can
-// only be done on the UI thread.
-extern Windows::UI::Core::CoreDispatcher^ g_windowDispatcher;
 
 namespace webrtc {
 namespace videocapturemodule {
 
 void RunOnCoreDispatcher(std::function<void()> fn, bool async) {
-  if (g_windowDispatcher != nullptr) {
+  Windows::UI::Core::CoreDispatcher^ _windowDispatcher =	VideoCommonWinRT::GetCoreDispatcher();
+  if (_windowDispatcher != nullptr) {
     auto handler = ref new Windows::UI::Core::DispatchedHandler([fn]() {
       fn();
     });
-    auto action = g_windowDispatcher->RunAsync(
+    auto action = _windowDispatcher->RunAsync(
       CoreDispatcherPriority::Normal, handler);
     if (async) {
       Concurrency::create_task(action);
@@ -676,7 +675,7 @@ VideoCaptureWinRT::VideoCaptureWinRT(const int32_t id)
     video_encoding_properties_(nullptr),
     media_encoding_profile_(nullptr) {
   _captureDelay = 120;
-  if (g_windowDispatcher == nullptr) {
+  if (VideoCommonWinRT::GetCoreDispatcher() == nullptr) {
     LOG(LS_INFO) << "Using AppStateDispatcher as orientation source";
     AppStateDispatcher::Instance()->AddObserver(this);
   } else {

@@ -34,6 +34,7 @@
 #include "webrtc/base/timeutils.h"
 #include "third_party/h264_winrt/h264_winrt_factory.h"
 #include "webrtc/base/trace_event.h"
+#include "webrtc/common_video/video_common_winrt.h"
 
 using webrtc_winrt_api_internal::FromCx;
 using webrtc_winrt_api_internal::ToCx;
@@ -42,7 +43,6 @@ using Windows::Media::Capture::MediaCapture;
 using Windows::Media::Capture::MediaCaptureInitializationSettings;
 using rtc::FileStream;
 
-Windows::UI::Core::CoreDispatcher^ g_windowDispatcher;
 
 // Any globals we need to keep around.
 namespace webrtc_winrt_api {
@@ -639,10 +639,8 @@ IAsyncOperation<bool>^  WebRTC::RequestAccessForMediaCapture() {
 }
 
 void WinJSHooks::initialize() {
-  g_windowDispatcher =
-    Windows::UI::Core::CoreWindow::GetForCurrentThread()->Dispatcher;
-
-  webrtc_winrt_api::WebRTC::Initialize(g_windowDispatcher);
+  webrtc::VideoCommonWinRT::SetCoreDispatcher(Windows::UI::Core::CoreWindow::GetForCurrentThread()->Dispatcher);
+  webrtc_winrt_api::WebRTC::Initialize(Windows::UI::Core::CoreWindow::GetForCurrentThread()->Dispatcher);
 }
 
 IAsyncOperation<bool>^ WinJSHooks::requestAccessForMediaCapture() {
@@ -672,7 +670,7 @@ void WebRTC::Initialize(Windows::UI::Core::CoreDispatcher^ dispatcher) {
   if (globals::isInitialized)
     return;
 
-  g_windowDispatcher = dispatcher;
+  webrtc::VideoCommonWinRT::SetCoreDispatcher(dispatcher);
 
   // Create a worker thread
   globals::gThread.SetName("WinRTApiWorker", nullptr);

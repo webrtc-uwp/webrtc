@@ -16,6 +16,7 @@
 
 #include "webrtc/system_wrappers/include/logging.h"
 #include "webrtc/base/Win32.h"
+#include "webrtc/common_video/video_common_winrt.h"
 
 using Windows::Devices::Enumeration::DeviceClass;
 using Windows::Devices::Enumeration::DeviceInformation;
@@ -28,10 +29,6 @@ using Windows::Media::MediaProperties::MediaEncodingSubtypes;
 using Windows::UI::Core::CoreDispatcher;
 using Windows::UI::Core::CoreDispatcherPriority;
 using Windows::UI::Core::DispatchedHandler;
-
-// Necessary to access CoreDispatcher for operations that can
-// only be done on the UI thread.
-extern Windows::UI::Core::CoreDispatcher^ g_windowDispatcher;
 
 namespace webrtc {
 namespace videocapturemodule {
@@ -109,8 +106,9 @@ MediaCaptureDevicesWinRT::GetMediaCapture(Platform::String^ device_id) {
         });
     });
 
-    if (g_windowDispatcher != nullptr) {
-      auto dispatcher_action = g_windowDispatcher->RunAsync(
+	Windows::UI::Core::CoreDispatcher^ _windowDispatcher =	VideoCommonWinRT::GetCoreDispatcher();
+    if (_windowDispatcher != nullptr) {
+      auto dispatcher_action = _windowDispatcher->RunAsync(
         CoreDispatcherPriority::Normal, handler);
       Concurrency::create_task(dispatcher_action).wait();
     } else {

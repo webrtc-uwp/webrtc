@@ -16,17 +16,17 @@
 #include "Marshalling.h"
 #include "Media.h"
 #include "DataChannel.h"
+#include "webrtc/common_video/video_common_winrt.h"
 
 using Platform::Collections::Vector;
-
-extern Windows::UI::Core::CoreDispatcher^ g_windowDispatcher;
 
 namespace webrtc_winrt_api_internal {
 
 #define POST_PC_EVENT(fn, evt) \
   auto pc = _pc;\
-  if (g_windowDispatcher != nullptr) {\
-    g_windowDispatcher->RunAsync(\
+  Windows::UI::Core::CoreDispatcher^ _windowDispatcher = webrtc::VideoCommonWinRT::GetCoreDispatcher();\
+  if (_windowDispatcher != nullptr) {\
+    _windowDispatcher->RunAsync(\
       Windows::UI::Core::CoreDispatcherPriority::Normal, \
       ref new Windows::UI::Core::DispatchedHandler([pc, evt] {\
       if (pc != nullptr) {\
@@ -41,8 +41,9 @@ namespace webrtc_winrt_api_internal {
 
 #define POST_PC_ACTION(fn) \
   auto pc = _pc;\
-  if (g_windowDispatcher != nullptr) {\
-    g_windowDispatcher->RunAsync(\
+  Windows::UI::Core::CoreDispatcher^ _windowDispatcher = webrtc::VideoCommonWinRT::GetCoreDispatcher();\
+  if (_windowDispatcher != nullptr) {\
+    _windowDispatcher->RunAsync(\
       Windows::UI::Core::CoreDispatcherPriority::Normal, \
       ref new Windows::UI::Core::DispatchedHandler([pc] {\
       if (pc != nullptr) {\
@@ -295,10 +296,11 @@ DataChannelObserver::DataChannelObserver(
 }
 
 void DataChannelObserver::OnStateChange() {
+  Windows::UI::Core::CoreDispatcher^ _windowDispatcher = webrtc::VideoCommonWinRT::GetCoreDispatcher();
   switch (_channel->GetImpl()->state()) {
   case webrtc::DataChannelInterface::kOpen:
-    if (g_windowDispatcher != nullptr) {
-      g_windowDispatcher->RunAsync(
+    if (_windowDispatcher != nullptr) {
+      _windowDispatcher->RunAsync(
         Windows::UI::Core::CoreDispatcherPriority::Normal,
         ref new Windows::UI::Core::DispatchedHandler([this] {
         _channel->OnOpen();
@@ -310,8 +312,8 @@ void DataChannelObserver::OnStateChange() {
     break;
   case webrtc::DataChannelInterface::kClosed:
     _channel->_impl->UnregisterObserver();
-    if (g_windowDispatcher != nullptr) {
-      g_windowDispatcher->RunAsync(
+    if (_windowDispatcher != nullptr) {
+      _windowDispatcher->RunAsync(
         Windows::UI::Core::CoreDispatcherPriority::Normal,
         ref new Windows::UI::Core::DispatchedHandler([this] {
         _channel->OnClose();
@@ -349,8 +351,10 @@ void DataChannelObserver::OnMessage(const webrtc::DataBuffer& buffer) {
       convertedBytes);
   }
 
-  if (g_windowDispatcher != nullptr) {
-    g_windowDispatcher->RunAsync(
+  
+  Windows::UI::Core::CoreDispatcher^ _windowDispatcher = webrtc::VideoCommonWinRT::GetCoreDispatcher();
+  if (_windowDispatcher != nullptr) {
+    _windowDispatcher->RunAsync(
       Windows::UI::Core::CoreDispatcherPriority::Normal,
       ref new Windows::UI::Core::DispatchedHandler([this, evt] {
       _channel->OnMessage(evt);

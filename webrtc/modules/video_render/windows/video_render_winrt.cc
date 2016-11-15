@@ -26,8 +26,6 @@
 
 using Microsoft::WRL::ComPtr;
 
-extern Windows::UI::Core::CoreDispatcher^ g_windowDispatcher;
-
 namespace webrtc {
 
 /*

@@ -52,6 +52,8 @@
         'video_frame_buffer.cc',
         'video_render_frames.cc',
         'video_render_frames.h',
+		'video_common_winrt.cc',
+		'video_common_winrt.h',
       ],
     },
   ],  # targets

@@ -15,12 +15,11 @@
 #include "webrtc/base/ssladapter.h"
 #include "webrtc/base/gunit.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/common_video/video_common_winrt.h"
 
 static char stdout_buffer[1024 * 1024] = { 0 };
 
 bool autoClose = false;
-
-Windows::UI::Core::CoreDispatcher^ g_windowDispatcher;
 
 
 namespace gtest_runner {
@@ -45,8 +44,8 @@ namespace gtest_runner {
     virtual void OnLaunched(
       Windows::ApplicationModel::Activation::LaunchActivatedEventArgs^ e)
                                                                      override {
-      g_windowDispatcher = Windows::UI::Xaml::Window::Current->Dispatcher;
-
+      webrtc::VideoCommonWinRT::SetCoreDispatcher(Windows::UI::Xaml::Window::Current->Dispatcher);
+	  
       auto layoutRoot = ref new Windows::UI::Xaml::Controls::Grid();
       layoutRoot->VerticalAlignment = Windows::UI::Xaml::VerticalAlignment::Center;
       layoutRoot->HorizontalAlignment = Windows::UI::Xaml::HorizontalAlignment::Center;

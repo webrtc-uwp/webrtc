@@ -14,6 +14,7 @@
 #include "webrtc/api/videosourceinterface.h"
 #include "libyuv/convert.h"
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/common_video/video_common_winrt.h"
 
 using Microsoft::WRL::ComPtr;
 using Platform::Collections::Vector;
@@ -414,12 +415,12 @@ void RTMediaStreamSource::ResizeSource(uint32 width, uint32 height) {
 
 }  // namespace webrtc_winrt_api_internal
 
-extern Windows::UI::Core::CoreDispatcher^ g_windowDispatcher;
 
 void webrtc_winrt_api::FrameCounterHelper::FireEvent(String^ id,
   Platform::String^ str) {
-  if (g_windowDispatcher != nullptr) {
-    g_windowDispatcher->RunAsync(
+  Windows::UI::Core::CoreDispatcher^ _windowDispatcher =	VideoCommonWinRT::GetCoreDispatcher();
+  if (_windowDispatcher != nullptr) {
+    _windowDispatcher->RunAsync(
       Windows::UI::Core::CoreDispatcherPriority::Normal,
       ref new Windows::UI::Core::DispatchedHandler([id, str] {
       FramesPerSecondChanged(id, str);
@@ -431,8 +432,9 @@ void webrtc_winrt_api::FrameCounterHelper::FireEvent(String^ id,
 
 void webrtc_winrt_api::ResolutionHelper::FireEvent(String^ id,
   unsigned int width, unsigned int heigth) {
-  if (g_windowDispatcher != nullptr) {
-    g_windowDispatcher->RunAsync(
+  Windows::UI::Core::CoreDispatcher^ _windowDispatcher =	VideoCommonWinRT::GetCoreDispatcher();
+  if (_windowDispatcher != nullptr) {
+    _windowDispatcher->RunAsync(
       Windows::UI::Core::CoreDispatcherPriority::Normal,
       ref new Windows::UI::Core::DispatchedHandler([id, width, heigth] {
       ResolutionChanged(id, width, heigth);
