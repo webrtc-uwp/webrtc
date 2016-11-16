@@ -154,8 +154,8 @@ void WebRTCStatsObserver::ToggleRTCStats(WebRTCStatsObserverWinRT* observer) {
 }
 
 void WebRTCStatsObserver::OnComplete(const StatsReports& reports) {
-  webrtc_winrt_api::RTCStatsReports rtcStatsReports =
-                ref new Vector<webrtc_winrt_api::RTCStatsReport^>();
+  Org::WebRtc::RTCStatsReports rtcStatsReports =
+                ref new Vector<Org::WebRtc::RTCStatsReport^>();
 
   for (auto report : reports) {
     std::string sgn = report->id()->ToString();
@@ -245,8 +245,8 @@ void WebRTCStatsObserver::OnComplete(const StatsReports& reports) {
     }
 
     if (rtc_stats_enabled_ && webrtc_stats_observer_winrt_) {
-      webrtc_winrt_api::RTCStatsReport^ rtcReport;
-      webrtc_winrt_api_internal::ToCx(report, &rtcReport);
+      Org::WebRtc::RTCStatsReport^ rtcReport;
+			Org::WebRtc::Internal::ToCx(report, &rtcReport);
       rtcStatsReports->Append(rtcReport);
     }
   }

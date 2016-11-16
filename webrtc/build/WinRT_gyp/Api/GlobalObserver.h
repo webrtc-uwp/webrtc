@@ -18,121 +18,127 @@
 #include "webrtc/base/scoped_ref_ptr.h"
 #include "webrtc/build/WinRT_gyp/stats/webrtc_stats_observer.h"
 
-namespace webrtc_winrt_api {
-ref class RTCPeerConnection;
-ref class RTCDataChannel;
-}  // namespace webrtc_winrt_api
+namespace Org {
+	namespace WebRtc {
+		ref class RTCPeerConnection;
+		ref class RTCDataChannel;
+	}
+}  // namespace Org::WebRtc
 
-namespace webrtc_winrt_api_internal {
+namespace Org {
+	namespace WebRtc {
+		namespace Internal {
 
-class GlobalObserver : public webrtc::PeerConnectionObserver,
-                       public webrtc::WebRTCStatsObserverWinRT {
- public:
-  GlobalObserver();
+			class GlobalObserver : public webrtc::PeerConnectionObserver,
+				public webrtc::WebRTCStatsObserverWinRT {
+			public:
+				GlobalObserver();
 
-  void SetPeerConnection(webrtc_winrt_api::RTCPeerConnection^ pc);
+				void SetPeerConnection(Org::WebRtc::RTCPeerConnection^ pc);
 
-  void EnableETWStats(bool enable);
-  bool AreETWStatsEnabled();
+				void EnableETWStats(bool enable);
+				bool AreETWStatsEnabled();
 
-  void EnableConnectionHealthStats(bool enable);
-  bool AreConnectionHealthStatsEnabled();
+				void EnableConnectionHealthStats(bool enable);
+				bool AreConnectionHealthStatsEnabled();
 
-  void EnableRTCStats(bool enable);
-  bool AreRTCStatsEnabled();
+				void EnableRTCStats(bool enable);
+				bool AreRTCStatsEnabled();
 
-  void EnableSendRtcStatsToRemoteHost(bool enable);
-  bool IsSendRtcStatsToRemoteHostEnabled();
-  void SetRtcStatsDestinationHost(std::string hostname);
-  std::string GetRtcStatsDestinationHost();
-  void SetRtcStatsDestinationPort(int port);
-  int GetRtcStatsDestinationPort();
+				void EnableSendRtcStatsToRemoteHost(bool enable);
+				bool IsSendRtcStatsToRemoteHostEnabled();
+				void SetRtcStatsDestinationHost(std::string hostname);
+				std::string GetRtcStatsDestinationHost();
+				void SetRtcStatsDestinationPort(int port);
+				int GetRtcStatsDestinationPort();
 
-  // PeerConnectionObserver functions
-  virtual void OnSignalingChange(
-    webrtc::PeerConnectionInterface::SignalingState new_state);
+				// PeerConnectionObserver functions
+				virtual void OnSignalingChange(
+					webrtc::PeerConnectionInterface::SignalingState new_state);
 
-  virtual void OnStateChange(StateType state_changed);
+				virtual void OnStateChange(StateType state_changed);
 
-  virtual void OnAddStream(webrtc::MediaStreamInterface* stream);
+				virtual void OnAddStream(webrtc::MediaStreamInterface* stream);
 
-  virtual void OnRemoveStream(webrtc::MediaStreamInterface* stream);
+				virtual void OnRemoveStream(webrtc::MediaStreamInterface* stream);
 
-  virtual void OnDataChannel(webrtc::DataChannelInterface* data_channel);
+				virtual void OnDataChannel(webrtc::DataChannelInterface* data_channel);
 
-  virtual void OnRenegotiationNeeded();
+				virtual void OnRenegotiationNeeded();
 
-  virtual void OnIceConnectionChange(
-    webrtc::PeerConnectionInterface::IceConnectionState new_state);
+				virtual void OnIceConnectionChange(
+					webrtc::PeerConnectionInterface::IceConnectionState new_state);
 
-  virtual void OnIceGatheringChange(
-    webrtc::PeerConnectionInterface::IceGatheringState new_state);
+				virtual void OnIceGatheringChange(
+					webrtc::PeerConnectionInterface::IceGatheringState new_state);
 
-  virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate);
+				virtual void OnIceCandidate(const webrtc::IceCandidateInterface* candidate);
 
-  virtual void OnIceComplete();
+				virtual void OnIceComplete();
 
-  // WebRTCStatsObserverWinRT functions
-  virtual void OnConnectionHealthStats(
-    const webrtc::ConnectionHealthStats& stats);
-  virtual void OnRTCStatsReportsReady(
-    const webrtc_winrt_api::RTCStatsReports& rtcStatsReports);
+				// WebRTCStatsObserverWinRT functions
+				virtual void OnConnectionHealthStats(
+					const webrtc::ConnectionHealthStats& stats);
+				virtual void OnRTCStatsReportsReady(
+					const Org::WebRtc::RTCStatsReports& rtcStatsReports);
 
- private:
-  void ResetStatsConfig();
+			private:
+				void ResetStatsConfig();
 
- private:
-  webrtc_winrt_api::RTCPeerConnection^ _pc;
-  rtc::scoped_refptr<webrtc::WebRTCStatsObserver> _stats_observer;
-  bool _etwStatsEnabled;
-  bool _connectionHealthStatsEnabled;
-  bool _rtcStatsEnabled;
+			private:
+				Org::WebRtc::RTCPeerConnection^ _pc;
+				rtc::scoped_refptr<webrtc::WebRTCStatsObserver> _stats_observer;
+				bool _etwStatsEnabled;
+				bool _connectionHealthStatsEnabled;
+				bool _rtcStatsEnabled;
 
-  bool _sendRtcStatsToRemoteHostEnabled;
-  std::string _rtcStatsDestinationHost;
-  int _rtcStatsDestinationPort;
-};
+				bool _sendRtcStatsToRemoteHostEnabled;
+				std::string _rtcStatsDestinationHost;
+				int _rtcStatsDestinationPort;
+			};
 
-// There is one of those per call to CreateOffer().
-class CreateSdpObserver : public webrtc::CreateSessionDescriptionObserver {
- public:
-  CreateSdpObserver(Concurrency::task_completion_event
-    <webrtc::SessionDescriptionInterface*> tce);
+			// There is one of those per call to CreateOffer().
+			class CreateSdpObserver : public webrtc::CreateSessionDescriptionObserver {
+			public:
+				CreateSdpObserver(Concurrency::task_completion_event
+					<webrtc::SessionDescriptionInterface*> tce);
 
-  // CreateSessionDescriptionObserver implementation
-  virtual void OnSuccess(webrtc::SessionDescriptionInterface* desc);
-  virtual void OnFailure(const std::string& error);
+				// CreateSessionDescriptionObserver implementation
+				virtual void OnSuccess(webrtc::SessionDescriptionInterface* desc);
+				virtual void OnFailure(const std::string& error);
 
- private:
-  Concurrency::task_completion_event<webrtc::SessionDescriptionInterface*> _tce;
-};
+			private:
+				Concurrency::task_completion_event<webrtc::SessionDescriptionInterface*> _tce;
+			};
 
-// There is one of those per call to CreateOffer().
-class SetSdpObserver : public webrtc::SetSessionDescriptionObserver {
- public:
-  explicit SetSdpObserver(Concurrency::task_completion_event<void> tce);
+			// There is one of those per call to CreateOffer().
+			class SetSdpObserver : public webrtc::SetSessionDescriptionObserver {
+			public:
+				explicit SetSdpObserver(Concurrency::task_completion_event<void> tce);
 
-  // SetSessionDescriptionObserver implementation
-  virtual void OnSuccess();
-  virtual void OnFailure(const std::string& error);
+				// SetSessionDescriptionObserver implementation
+				virtual void OnSuccess();
+				virtual void OnFailure(const std::string& error);
 
- private:
-  Concurrency::task_completion_event<void> _tce;
-};
+			private:
+				Concurrency::task_completion_event<void> _tce;
+			};
 
-// There is one of those per call to CreateDataChannel().
-class DataChannelObserver : public webrtc::DataChannelObserver {
- public:
-  explicit DataChannelObserver(webrtc_winrt_api::RTCDataChannel^ channel);
+			// There is one of those per call to CreateDataChannel().
+			class DataChannelObserver : public webrtc::DataChannelObserver {
+			public:
+				explicit DataChannelObserver(Org::WebRtc::RTCDataChannel^ channel);
 
-  // DataChannelObserver implementation
-  virtual void OnStateChange();
-  virtual void OnMessage(const webrtc::DataBuffer& buffer);
+				// DataChannelObserver implementation
+				virtual void OnStateChange();
+				virtual void OnMessage(const webrtc::DataBuffer& buffer);
 
- private:
-  webrtc_winrt_api::RTCDataChannel^ _channel;
-};
-}  // namespace webrtc_winrt_api_internal
+			private:
+				Org::WebRtc::RTCDataChannel^ _channel;
+			};
+		}
+	}
+}  // namespace Org::WebRtc::Internal
 
 #endif  // WEBRTC_BUILD_WINRT_GYP_API_GLOBALOBSERVER_H_
 
