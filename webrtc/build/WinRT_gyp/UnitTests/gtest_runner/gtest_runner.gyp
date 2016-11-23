@@ -16,8 +16,8 @@
       'target_name': 'gtest_runner',
       'type': 'executable',
       'dependencies': [
-        '<(webrtc_root)/webrtc.gyp:rtc_media_unittests',
-        '<(webrtc_root)/webrtc.gyp:rtc_pc_unittests',
+        '<(webrtc_root)/media/media.gyp:rtc_media_unittests',
+        '<(webrtc_root)/pc/pc.gyp:rtc_pc_unittests',
         '<(webrtc_root)/api/api_tests.gyp:peerconnection_unittests',
         '<(webrtc_root)/common_audio/common_audio.gyp:common_audio_unittests',
         '<(webrtc_root)/common_video/common_video_unittests.gyp:common_video_unittests',

@@ -55,7 +55,6 @@
         '../../../../../third_party/boringssl/boringssl_tests.gyp:boringssl_example_mul',
         '../../../../../third_party/boringssl/boringssl_tests.gyp:boringssl_evp_test',
         '../../../../../third_party/boringssl/boringssl_tests.gyp:boringssl_ssl_test',
-        '../../../../../third_party/boringssl/boringssl_tests.gyp:boringssl_pqueue_test',
         '../../../../../third_party/boringssl/boringssl_tests.gyp:boringssl_hkdf_test',
         '../../../../../third_party/boringssl/boringssl_tests.gyp:boringssl_pbkdf_test',
         '../../../../../third_party/boringssl/boringssl_tests.gyp:boringssl_thread_test',

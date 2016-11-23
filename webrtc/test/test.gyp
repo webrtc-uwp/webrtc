@@ -209,7 +209,7 @@
         # duplicate symbols in histogram and metrics_default.
         ['OS=="win" and OS_RUNTIME=="winrt"', {
           'dependencies!': [
-            'histogram',
+            #'histogram',
           ],
         }],
       ],
