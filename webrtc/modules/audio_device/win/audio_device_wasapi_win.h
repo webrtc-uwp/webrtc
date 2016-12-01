@@ -337,9 +337,11 @@ public:
     WAVEFORMATEX* GenerateMixFormatForMediaEngine(
       WAVEFORMATEX* actualMixFormat);
     WAVEFORMATPCMEX* GeneratePCMMixFormat(WAVEFORMATEX* actualMixFormat);
-    template<typename T>void Upmix(T *inSamples, uint32_t numberOfFrames,
-      T *outSamples, uint32_t inChannels, uint32_t outChannels);
- 
+    void Upmix(int16_t *inSamples, uint32_t numberOfFrames,
+      int16_t *outSamples, uint32_t inChannels, uint32_t outChannels);
+    void UpmixAndConvert(int16_t *inSamples, uint32_t numberOfFrames,
+      float *outSamples, uint32_t inChannels, uint32_t outChannels);
+
  private:
     void DefaultAudioCaptureDeviceChanged(
       DefaultAudioCaptureDeviceChangedEventArgs^ args);

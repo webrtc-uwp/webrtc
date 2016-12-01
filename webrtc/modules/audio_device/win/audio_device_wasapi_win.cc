@@ -208,7 +208,6 @@ HRESULT AudioInterfaceActivator::ActivateCompleted(
   WAVEFORMATEX *mixFormat = nullptr;
 
   if (m_DeviceType == eInputDevice) {
-    mixFormat = m_AudioDevice->_mixFormatIn;
 
     // Check for a successful activation result
     hr = pAsyncOp->GetActivateResult(&hrActivateResult, &punkAudioInterface);
@@ -523,33 +522,33 @@ HRESULT AudioInterfaceActivator::ActivateCompleted(
       } else {
         // IsFormatSupported failed, device is probably in surround mode.
         // Firstly generate mix format to initialize media engine
-        Wfx = *m_AudioDevice->GenerateMixFormatForMediaEngine(mixFormat);
+        WAVEFORMATEX *WfxMix = m_AudioDevice->GenerateMixFormatForMediaEngine(mixFormat);
 
         // Secondly initialize media engine with "expected" values
-        m_AudioDevice->_playAudioFrameSize = Wfx.nBlockAlign;
-        m_AudioDevice->_playBlockSize = Wfx.nSamplesPerSec / 100;
-        m_AudioDevice->_playSampleRate = Wfx.nSamplesPerSec;
+        m_AudioDevice->_playAudioFrameSize = WfxMix->nBlockAlign;
+        m_AudioDevice->_playBlockSize = WfxMix->nSamplesPerSec / 100;
+        m_AudioDevice->_playSampleRate = WfxMix->nSamplesPerSec;
         // The device itself continues to run at 44.1 kHz.
-        m_AudioDevice->_devicePlaySampleRate = Wfx.nSamplesPerSec;
-        m_AudioDevice->_devicePlayBlockSize = Wfx.nSamplesPerSec / 100;
-        m_AudioDevice->_playChannels = Wfx.nChannels;
+        m_AudioDevice->_devicePlaySampleRate = WfxMix->nSamplesPerSec;
+        m_AudioDevice->_devicePlayBlockSize = WfxMix->nSamplesPerSec / 100;
+        m_AudioDevice->_playChannels = WfxMix->nChannels;
 
         WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, m_AudioDevice->_id,
           "VoE has been forced to select this rendering format:");
         WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, m_AudioDevice->_id,
-          "wFormatTag         : 0x%X (%u)", Wfx.wFormatTag, Wfx.wFormatTag);
+          "wFormatTag         : 0x%X (%u)", WfxMix->wFormatTag, WfxMix->wFormatTag);
         WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, m_AudioDevice->_id,
-          "nChannels          : %d", Wfx.nChannels);
+          "nChannels          : %d", WfxMix->nChannels);
         WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, m_AudioDevice->_id,
-          "nSamplesPerSec     : %d", Wfx.nSamplesPerSec);
+          "nSamplesPerSec     : %d", WfxMix->nSamplesPerSec);
         WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, m_AudioDevice->_id,
-          "nAvgBytesPerSec    : %d", Wfx.nAvgBytesPerSec);
+          "nAvgBytesPerSec    : %d", WfxMix->nAvgBytesPerSec);
         WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, m_AudioDevice->_id,
-          "nBlockAlign        : %d", Wfx.nBlockAlign);
+          "nBlockAlign        : %d", WfxMix->nBlockAlign);
         WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, m_AudioDevice->_id,
-          "wBitsPerSample     : %d", Wfx.wBitsPerSample);
+          "wBitsPerSample     : %d", WfxMix->wBitsPerSample);
         WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, m_AudioDevice->_id,
-          "cbSize             : %d", Wfx.cbSize);
+          "cbSize             : %d", WfxMix->cbSize);
         WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, m_AudioDevice->_id,
           "Additional settings:");
         WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, m_AudioDevice->_id,
@@ -560,7 +559,7 @@ HRESULT AudioInterfaceActivator::ActivateCompleted(
           "_playChannels      : %d", m_AudioDevice->_playChannels);
 
         // Remember this settings
-        m_AudioDevice->_mixFormatOut = &Wfx;
+        m_AudioDevice->_mixFormatOut = WfxMix;
 
         // Now switch to the real supported mix format to initialize device
         m_AudioDevice->_mixFormatSurroundOut =
@@ -764,6 +763,9 @@ AudioDeviceWindowsWasapi::AudioDeviceWindowsWasapi(const int32_t id) :
     _sndCardPlayDelay(0),
     _sndCardRecDelay(0),
     _sampleDriftAt48kHz(0),
+    _mixFormatIn(NULL),
+    _mixFormatOut(NULL),
+    _mixFormatSurroundOut(NULL),
     _enableUpmix(false),
     _driftAccumulator(0),
     _writtenSamples(0),
@@ -917,6 +919,14 @@ AudioDeviceWindowsWasapi::~AudioDeviceWindowsWasapi() {
     CloseHandle(_hSetCaptureVolumeEvent);
     _hSetCaptureVolumeEvent = NULL;
   }
+
+  if (NULL != _mixFormatIn)
+    delete _mixFormatIn;
+  if (NULL != _mixFormatOut)
+    delete _mixFormatOut;
+  if (NULL != _mixFormatSurroundOut)
+    delete _mixFormatSurroundOut;
+
   delete &_critSect;
   delete &_volumeMutex;
   delete &_recordingControlMutex;
@@ -3572,12 +3582,25 @@ DWORD AudioDeviceWindowsWasapi::DoRenderThread() {
             nSamples = _ptrAudioBuffer->GetPlayoutData(
               reinterpret_cast<int8_t*>(mediaEngineRenderData.get()));
 
-            // Do the upmixing. We are using 16-bit samples only at this point
-            Upmix(reinterpret_cast<int16_t*>(mediaEngineRenderData.get()),
-              _playBlockSize,
-              reinterpret_cast<int16_t*>(pData),
-              _playChannels,
-              _mixFormatSurroundOut->Format.nChannels);
+            if (_mixFormatSurroundOut->SubFormat == KSDATAFORMAT_SUBTYPE_PCM) {
+              // Do the upmixing. We are using 16-bit samples only at this point
+              Upmix(reinterpret_cast<int16_t*>(mediaEngineRenderData.get()),
+                _playBlockSize,
+                reinterpret_cast<int16_t*>(pData),
+                _playChannels,
+                _mixFormatSurroundOut->Format.nChannels);
+            } else if (_mixFormatSurroundOut->SubFormat == KSDATAFORMAT_SUBTYPE_IEEE_FLOAT) {
+              // Do the upmixing. We are using 32-bit samples only at this point
+              UpmixAndConvert(reinterpret_cast<int16_t*>(mediaEngineRenderData.get()),
+                _playBlockSize,
+                reinterpret_cast<float*>(pData),
+                _playChannels,
+                _mixFormatSurroundOut->Format.nChannels);
+            } else {
+              WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
+                "audio data format type is not supported");
+              goto Exit;
+            }
           } else {
             // Get the actual (stored) data
             nSamples = _ptrAudioBuffer->GetPlayoutData(
@@ -4816,17 +4839,18 @@ WAVEFORMATPCMEX* AudioDeviceWindowsWasapi::GeneratePCMMixFormat(
 
   waveFormatPCMEx->Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
   waveFormatPCMEx->Format.nChannels = actualMixFormat->nChannels;
-  waveFormatPCMEx->Format.wBitsPerSample = 16;
+  waveFormatPCMEx->Format.wBitsPerSample = actualMixFormat->wBitsPerSample;
   waveFormatPCMEx->Format.nSamplesPerSec = actualMixFormat->nSamplesPerSec;
 
   waveFormatPCMEx->Format.nBlockAlign = waveFormatPCMEx->Format.nChannels *
     waveFormatPCMEx->Format.wBitsPerSample / 8;  /* Same as the usual */
 
   waveFormatPCMEx->Format.nAvgBytesPerSec =
-    waveFormatPCMEx->Format.nSamplesPerSec*waveFormatPCMEx->Format.nBlockAlign;
+    waveFormatPCMEx->Format.nSamplesPerSec * waveFormatPCMEx->Format.nBlockAlign;
 
   waveFormatPCMEx->Format.cbSize = 22;  /* After this to GUID */
-  waveFormatPCMEx->Samples.wValidBitsPerSample = 16;  /* All bits have data */
+  waveFormatPCMEx->Samples.wValidBitsPerSample =
+    waveFormatPCMEx->Format.wBitsPerSample;  /* All bits have data */
 
   switch (waveFormatPCMEx->Format.nChannels) {
   case 1:
@@ -4849,7 +4873,15 @@ WAVEFORMATPCMEX* AudioDeviceWindowsWasapi::GeneratePCMMixFormat(
     break;
   }
 
-  waveFormatPCMEx->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;  // Specify PCM
+  if (waveFormatPCMEx->Format.wBitsPerSample == 16) {
+    waveFormatPCMEx->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;  // Specify PCM
+  } else if (waveFormatPCMEx->Format.wBitsPerSample == 32) {
+    waveFormatPCMEx->SubFormat = KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;  // Specify FLOAT
+  } else {
+    WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
+      "wrong value for number of bits per sample");
+    return NULL;
+  }
 
   return waveFormatPCMEx;
 }
@@ -4859,14 +4891,14 @@ WAVEFORMATPCMEX* AudioDeviceWindowsWasapi::GeneratePCMMixFormat(
 //  Reference upmixer application found on
 //  https://hg.mozilla.org/releases/mozilla-aurora/file/tip/media/libcubeb/src/cubeb_wasapi.cpp
 // ----------------------------------------------------------------------------
-template<typename T>void AudioDeviceWindowsWasapi::Upmix(
-                                                      T *inSamples,
-                                                      uint32_t numberOfFrames,
-                                                      T *outSamplesReal,
-                                                      uint32_t inChannels,
-                                                      uint32_t outChannels) {
+void AudioDeviceWindowsWasapi::Upmix(
+                                     int16_t *inSamples,
+                                     uint32_t numberOfFrames,
+                                     int16_t *outSamplesReal,
+                                     uint32_t inChannels,
+                                     uint32_t outChannels) {
   // Create temporary array to do the upmix
-  rtc::scoped_ptr<T> outSamples(new T[numberOfFrames * outChannels]);
+  rtc::scoped_ptr<int16_t> outSamples(new int16_t[numberOfFrames * outChannels]);
 
   // Copy over input channels
   for (uint32_t i = 0, o = 0; i < numberOfFrames * inChannels;
@@ -4885,9 +4917,37 @@ template<typename T>void AudioDeviceWindowsWasapi::Upmix(
 
   // Copy over memory to be delivered to the IAudioRenderClient
   memcpy(outSamplesReal, outSamples.get(),
-    _playBlockSize * outChannels * sizeof(T));
+    _playBlockSize * outChannels * sizeof(int16_t));
 }
 
+void AudioDeviceWindowsWasapi::UpmixAndConvert(
+                                               int16_t *inSamples,
+                                               uint32_t numberOfFrames,
+                                               float *outSamplesReal,
+                                               uint32_t inChannels,
+                                               uint32_t outChannels) {
+  // Create temporary array to do the upmix
+  rtc::scoped_ptr<float> outSamples(new float[numberOfFrames * outChannels]);
+
+  // Copy over input channels
+  for (uint32_t i = 0, o = 0; i < numberOfFrames * inChannels;
+    i += inChannels, o += outChannels) {
+    for (uint32_t j = 0; j < inChannels; ++j) {
+      outSamples.get()[o + j] = (float)inSamples[i + j] / (float)INT16_MAX;
+    }
+  }
+
+  // Add 0 to other channels
+  for (uint32_t i = 0, o = 0; i < numberOfFrames; ++i, o += outChannels) {
+    for (uint32_t j = inChannels; j < outChannels; ++j) {
+      outSamples.get()[o + j] = 0.0f;
+    }
+  }
+
+  // Copy over memory to be delivered to the IAudioRenderClient
+  memcpy(outSamplesReal, outSamples.get(),
+    _playBlockSize * outChannels * sizeof(float));
+}
 
 
 // ----------------------------------------------------------------------------
