@@ -8,7 +8,7 @@
 
 {
   'variables': {
-    'include_examples%': 1,
+    'include_examples%': 0,
     'include_tests%': 1,
   },
   'includes': [
