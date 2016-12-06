@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <iterator>
 #include <algorithm>
+#include <assert.h>
 
 #include "webrtc/base/tracelog.h"
 #include "webrtc/base/asyncsocket.h"

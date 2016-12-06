@@ -111,7 +111,7 @@
             'file_posix.cc',
           ],
         }],
-        ['OS=="win"', {
+        ['OS=="win" and OS_RUNTIME!="winrt"', {
           'sources': [
             'file_win.cc',
           ],
@@ -624,26 +624,48 @@
             'win32filesystem.cc',
             'win32filesystem.h',
             'win32securityerrors.cc',
-            'win32window.cc',
-            'win32window.h',
-            'win32windowpicker.cc',
-            'win32windowpicker.h',
-            'winfirewall.cc',
-            'winfirewall.h',
-            'winping.cc',
-            'winping.h',
           ],
-          'link_settings': {
-            'libraries': [
-              '-lcrypt32.lib',
-              '-liphlpapi.lib',
-              '-lsecur32.lib',
-            ],
-          },
-          # Suppress warnings about WIN32_LEAN_AND_MEAN.
-          'msvs_disabled_warnings': [4005, 4703],
-          'defines': [
-            '_CRT_NONSTDC_NO_DEPRECATE',
+          'conditions': [
+            ['OS_RUNTIME=="winrt"', {
+			  'sources': [
+                'loggingserver.cc',
+                'loggingserver.h',
+                'tracelog.cc',
+                'tracelog.h',
+              ],
+			  'sources!': [
+                'sec_buffer.h',
+                'win32regkey.cc',
+                'win32regkey.h',
+                'win32socketserver.cc',
+                'win32socketserver.h',
+              ],
+			} , {
+			  'sources': [
+                'win32window.cc',
+                'win32window.h',
+                'win32windowpicker.cc',
+                'win32windowpicker.h',
+                'winfirewall.cc',
+                'winfirewall.h',
+                'winping.cc',
+                'winping.h',
+              ],
+			}],
+            ['winrt_platform!="win_phone" and  winrt_platform!="win10_arm"', {
+              'link_settings': {
+                'libraries': [
+                  '-lcrypt32.lib',
+                  '-liphlpapi.lib',
+                  '-lsecur32.lib',
+                ],
+              },
+              # Suppress warnings about WIN32_LEAN_AND_MEAN.
+              'msvs_disabled_warnings': [4005, 4703],
+              'defines': [
+                '_CRT_NONSTDC_NO_DEPRECATE',
+              ],
+			}],
           ],
         }],
         ['os_posix==1', {

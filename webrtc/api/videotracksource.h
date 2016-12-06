@@ -39,6 +39,11 @@ class VideoTrackSource : public Notifier<VideoTrackSourceInterface> {
 
   bool GetStats(Stats* stats) override { return false; }
 
+  // Suspend/Resume flow default behavior
+  bool Suspend() override { return false; }
+  bool Resume() override { return false; }
+  bool IsSuspended() override { return false; }
+
   void AddOrUpdateSink(rtc::VideoSinkInterface<cricket::VideoFrame>* sink,
                        const rtc::VideoSinkWants& wants) override;
   void RemoveSink(rtc::VideoSinkInterface<cricket::VideoFrame>* sink) override;

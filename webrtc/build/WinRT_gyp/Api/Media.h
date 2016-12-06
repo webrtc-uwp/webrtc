@@ -15,10 +15,8 @@
 #include "webrtc/api/peerconnectioninterface.h"
 #include "webrtc/api/mediastreaminterface.h"
 #include "webrtc/api/mediaconstraintsinterface.h"
-#include "webrtc/base/scoped_ptr.h"
 #include "GlobalObserver.h"
-#include "webrtc/media/devices/devicemanager.h"
-#include "webrtc/media/devices/winrtdevicemanager.h"
+#include "webrtc/media/base/device.h"
 #include "webrtc/modules/audio_device/include/audio_device.h"
 #include "Delegates.h"
 
@@ -551,7 +549,7 @@ namespace webrtc_winrt_api {
                                            const std::string& name,
                                            const std::string& id);
 
-    rtc::scoped_ptr<cricket::DeviceManagerInterface> _dev_manager;
+    std::unique_ptr<cricket::DeviceManagerInterface> _dev_manager;
     cricket::Device _selectedVideoDevice;
     cricket::Device _selectedAudioCapturerDevice;
     cricket::Device _selectedAudioPlayoutDevice;

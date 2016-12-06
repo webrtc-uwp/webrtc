@@ -3,7 +3,6 @@
 
 #include <list>
 #include <utility>
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/sigslot.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/asyncsocket.h"
@@ -36,7 +35,7 @@ private:
       message.data(), message.size(), nullptr, nullptr);
   }
 
-  scoped_ptr<SocketStream> socketStream_;
+  std::unique_ptr<SocketStream> socketStream_;
 };
 
 // Inherit from has_slots class to use signal and slots.
@@ -55,11 +54,11 @@ class LoggingServer : public sigslot::has_slots<sigslot::multi_threaded_local> {
   static bool processMessages(void* args);
 
  private:
-   LoggingSeverity level_;
-  scoped_ptr<AsyncSocket> listener_;
+  LoggingSeverity level_;
+  std::unique_ptr<AsyncSocket> listener_;
   std::list<std::pair<AsyncSocket*, LogSinkImpl*> > connections_;
   Thread* thread_;
-  scoped_ptr<rtc::PlatformThread> tw_;
+  std::unique_ptr<rtc::PlatformThread> tw_;
 };
 
 }  //  namespace rtc
