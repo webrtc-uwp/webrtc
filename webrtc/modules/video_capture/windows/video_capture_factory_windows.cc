@@ -23,8 +23,12 @@ namespace videocapturemodule {
 // static
 VideoCaptureModule::DeviceInfo* VideoCaptureImpl::CreateDeviceInfo(
     const int32_t id) {
-  // TODO(tommi): Use the Media Foundation version on Vista and up.
-  return DeviceInfoDS::Create(id);
+#ifdef WINRT
+	return DeviceInfoWinRT::Create(id).release();
+#else
+	// TODO(tommi): Use the Media Foundation version on Vista and up.
+	return DeviceInfoDS::Create(id);
+#endif
 }
 
 rtc::scoped_refptr<VideoCaptureModule> VideoCaptureImpl::Create(
@@ -33,14 +37,23 @@ rtc::scoped_refptr<VideoCaptureModule> VideoCaptureImpl::Create(
   if (device_id == nullptr)
     return nullptr;
 
-  // TODO(tommi): Use Media Foundation implementation for Vista and up.
-  rtc::scoped_refptr<VideoCaptureDS> capture(
-      new rtc::RefCountedObject<VideoCaptureDS>(id));
-  if (capture->Init(id, device_id) != 0) {
-    return nullptr;
-  }
+#ifdef WINRT
+	rtc::scoped_refptr<VideoCaptureWinRT> capture(
+		new rtc::RefCountedObject<VideoCaptureWinRT>(id));
+	if (capture->Init(id, device_id) != 0) {
+		return nullptr;
+	}
+	return capture;
+#else
+	// TODO(tommi): Use Media Foundation implementation for Vista and up.
+	rtc::scoped_refptr<VideoCaptureDS> capture(
+		new rtc::RefCountedObject<VideoCaptureDS>(id));
+	if (capture->Init(id, device_id) != 0) {
+		return nullptr;
+	}
 
-  return capture;
+	return capture;
+#endif
 }
 
 }  // namespace videocapturemodule
