@@ -44,7 +44,6 @@
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/system_wrappers/include/logging.h"
 
-#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/win32.h"
 
 using Windows::Foundation::EventRegistrationToken;
@@ -958,11 +957,11 @@ int32_t AudioDeviceWindowsWasapi::ActiveAudioLayer(
 //  Init
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWasapi::Init() {
+AudioDeviceGeneric::InitStatus AudioDeviceWindowsWasapi::Init() {
   CriticalSectionScoped lock(&_critSect);
 
   if (_initialized) {
-      return 0;
+      return AudioDeviceGeneric::InitStatus::OK;
   }
 
   _playWarning = 0;
@@ -975,7 +974,7 @@ int32_t AudioDeviceWindowsWasapi::Init() {
   _initialized = true;
 
   StartObserverThread();
-  return 0;
+	return AudioDeviceGeneric::InitStatus::OK;
 }
 
 // ----------------------------------------------------------------------------
@@ -3566,7 +3565,7 @@ DWORD AudioDeviceWindowsWasapi::DoRenderThread() {
           if (ShouldUpmix()) {
             int size = _playBlockSize * _mixFormatSurroundOut->Format.nChannels;
             // Create temporary array for upmixing procedure
-            rtc::scoped_ptr<BYTE> mediaEngineRenderData(new BYTE[size]);
+            std::unique_ptr<BYTE> mediaEngineRenderData(new BYTE[size]);
 
             // Get the actual (stored) data
             nSamples = _ptrAudioBuffer->GetPlayoutData(
@@ -4866,7 +4865,7 @@ template<typename T>void AudioDeviceWindowsWasapi::Upmix(
                                                       uint32_t inChannels,
                                                       uint32_t outChannels) {
   // Create temporary array to do the upmix
-  rtc::scoped_ptr<T> outSamples(new T[numberOfFrames * outChannels]);
+  std::unique_ptr<T> outSamples(new T[numberOfFrames * outChannels]);
 
   // Copy over input channels
   for (uint32_t i = 0, o = 0; i < numberOfFrames * inChannels;
