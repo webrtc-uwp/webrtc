@@ -35,32 +35,38 @@
 #include <string>
 #include <vector>
 
-#include "webrtc/media/devices/devicemanager.h"
+#include "webrtc/media/base/device.h"
 #include "webrtc/base/sigslot.h"
 #include "webrtc/base/stringencode.h"
 #include "webrtc/base/logging.h"
 
 namespace cricket {
 
-class WinRTDeviceManager : public DeviceManager {
+
+class WinRTDeviceManager {
  public:
   WinRTDeviceManager();
   virtual ~WinRTDeviceManager();
 
+	sigslot::signal0<> SignalDevicesChange;
+	static const char kDefaultDeviceName[];
+
   // Initialization
-  virtual bool Init();
-  virtual void Terminate();
+  bool Init();
+  void Terminate();
 
-  virtual bool GetAudioInputDevices(std::vector<Device>* devices);
-  virtual bool GetAudioOutputDevices(std::vector<Device>* devices);
+  bool GetAudioInputDevices(std::vector<Device>* devices);
+  bool GetAudioOutputDevices(std::vector<Device>* devices);
 
-  virtual bool GetVideoCaptureDevices(std::vector<Device>* devs);
+   bool GetVideoCaptureDevices(std::vector<Device>* devs);
 
  private:
-  virtual bool GetDefaultVideoCaptureDevice(Device* device);
+  bool GetDefaultVideoCaptureDevice(Device* device);
   void OnDeviceChange();
 
   static const char* kUsbDevicePathPrefix;
+	bool initialized_;
+
 
   ref class WinRTWatcher sealed {
    public:
@@ -95,7 +101,13 @@ class WinRTDeviceManager : public DeviceManager {
 
   WinRTWatcher^ watcher_;
 };
+class DeviceManagerFactory {
+	public:
+		static WinRTDeviceManager* Create();
 
+	private:
+		DeviceManagerFactory() {}
+};
 }  // namespace cricket
 
 #endif  // TALK_MEDIA_DEVICES_WINRTDEVICEMANAGER_H_

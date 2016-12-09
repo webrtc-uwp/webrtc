@@ -33,32 +33,32 @@
 namespace cricket {
   const char* WinRTDeviceManager::kUsbDevicePathPrefix = "\\\\?\\usb";
 
-  DeviceManagerInterface* DeviceManagerFactory::Create() {
+	WinRTDeviceManager* DeviceManagerFactory::Create() {
     return new WinRTDeviceManager();
   }
 
-  WinRTDeviceManager::WinRTDeviceManager() :
-    watcher_(ref new WinRTWatcher()) {}
+	WinRTDeviceManager::WinRTDeviceManager() :
+		watcher_(ref new WinRTWatcher()), initialized_(false) {}
 
   WinRTDeviceManager::~WinRTDeviceManager() {
-    if (initialized()) {
+    if (initialized_) {
       Terminate();
     }
   }
 
   bool WinRTDeviceManager::Init() {
-    if (!initialized()) {
+    if (!initialized_) {
       watcher_->deviceManager_ = this;
       watcher_->Start();
-      set_initialized(true);
+			initialized_ = true;
     }
     return true;
   }
 
   void WinRTDeviceManager::Terminate() {
-    if (initialized()) {
+    if (initialized_) {
       watcher_->Stop();
-      set_initialized(false);
+			initialized_ = false;
     }
   }
 
@@ -108,8 +108,8 @@ namespace cricket {
   bool WinRTDeviceManager::GetVideoCaptureDevices(
     std::vector<Device>* devices) {
     devices->clear();
-    rtc::scoped_ptr<webrtc::VideoCaptureModule::DeviceInfo> devInfo =
-      rtc::scoped_ptr<webrtc::VideoCaptureModule::DeviceInfo>(
+		std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> devInfo =
+			std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo>(
       webrtc::VideoCaptureFactory::CreateDeviceInfo(0));
     int deviceCount = devInfo->NumberOfDevices();
     const unsigned int KMaxDeviceNameLength = 128;
