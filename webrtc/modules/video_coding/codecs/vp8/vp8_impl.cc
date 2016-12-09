@@ -306,7 +306,7 @@ int VP8EncoderImpl::SetRates(uint32_t new_bitrate_kbit,
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-void VP8EncoderImpl::OnDroppedFrame() {
+void VP8EncoderImpl::OnDroppedFrame(uint32_t timestamp) {
   if (quality_scaler_enabled_)
     quality_scaler_.ReportDroppedFrame();
 }
