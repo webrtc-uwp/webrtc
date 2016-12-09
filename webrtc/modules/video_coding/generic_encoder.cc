@@ -122,7 +122,7 @@ bool VCMGenericEncoder::InternalSource() const {
 
 void VCMGenericEncoder::OnDroppedFrame(uint32_t timestamp) {
   RTC_DCHECK_RUNS_SERIALIZED(&race_checker_);
-  encoder_->OnDroppedFrame(uint32_t timestamp);
+  encoder_->OnDroppedFrame(timestamp);
 }
 
 bool VCMGenericEncoder::SupportsNativeHandle() const {
