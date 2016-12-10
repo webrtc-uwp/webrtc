@@ -22,8 +22,8 @@
 #include "webrtc/video_encoder.h"
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/modules/video_coding/utility/quality_scaler.h"
-#include "webrtc/modules/rtp_rtcp/source/h264_bitstream_parser.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
+//#include "webrtc/modules/rtp_rtcp/source/h264_bitstream_parser.h"
+//#include "webrtc/system_wrappers/include/tick_util.h"
 
 #pragma comment(lib, "mfreadwrite")
 #pragma comment(lib, "mfplat")
@@ -80,7 +80,7 @@ class H264WinRTEncoderImpl : public VideoEncoder, public IH264EncodingCallback {
   UINT32 currentHeight_;
   UINT32 currentBitrateBps_;
   UINT32 currentFps_;
-  webrtc::TickTime lastTimeSettingsChanged_;
+	int64_t lastTimeSettingsChanged_;
 
   struct CachedFrameAttributes {
     uint32_t timestamp;

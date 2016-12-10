@@ -28,7 +28,7 @@
 #include "H264MediaSink.h"
 #include "Utils/Utils.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
+#include "webrtc/base/timeutils.h"
 #include "webrtc/common_video/libyuv/include/scaler.h"
 #include "libyuv/convert.h"
 #include "webrtc/base/logging.h"
@@ -154,7 +154,7 @@ int H264WinRTEncoderImpl::InitEncoderWithSettings(const VideoCodec* inst) {
 
   if (SUCCEEDED(hr)) {
     inited_ = true;
-    lastTimeSettingsChanged_ = webrtc::TickTime::Now();
+    lastTimeSettingsChanged_ = rtc::TimeMillis();
     return WEBRTC_VIDEO_CODEC_OK;
   } else {
     return hr;
@@ -529,7 +529,7 @@ int H264WinRTEncoderImpl::SetRates(
   quality_scaler_.ReportFramerate(new_framerate);
 
   if (bitrateUpdated || fpsUpdated) {
-    if ((webrtc::TickTime::Now() - lastTimeSettingsChanged_).Milliseconds() < 15000) {
+    if ((rtc::TimeMillis() - lastTimeSettingsChanged_) < 15000) {
       LOG(LS_INFO) << "Last time settings changed was too soon, skipping this SetRates().\n";
       return WEBRTC_VIDEO_CODEC_OK;
     }

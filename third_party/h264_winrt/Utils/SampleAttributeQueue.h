@@ -14,8 +14,8 @@
 #include <stdint.h>
 #include <queue>
 #include <utility>
+#include <memory>
 #include "webrtc/system_wrappers/include/critical_section_wrapper.h"
-#include "webrtc/base/scoped_ptr.h"
 
 // A sorted queue with certain properties which makes it
 // good for mapping attributes to frames and samples.
@@ -65,7 +65,7 @@ class SampleAttributeQueue {
   }
 
 private:
-   rtc::scoped_ptr<webrtc::CriticalSectionWrapper> _lock;
+   std::unique_ptr<webrtc::CriticalSectionWrapper> _lock;
    std::queue<std::pair<uint64_t, const T>> _attributes;
 };
 
