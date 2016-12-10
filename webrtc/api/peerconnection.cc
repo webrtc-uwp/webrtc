@@ -1780,12 +1780,13 @@ void PeerConnection::UpdateRemoteStreamsList(
 			OnRemoteTrackSeen(stream_label, track_id, ssrc, media_type, isH264);
 		}
 		else {
+			// TODO(sergej): Check is this necessary
 			// Update the H264 bypass flag on existing tracks.
-			for (auto receiver : receivers_) {
+			/*for (auto receiver : receivers_) {
 				if (receiver->track()->kind() == MediaStreamTrackInterface::kVideoKind) {
 					((VideoTrackInterface*)receiver->track().get())->GetSource()->SetIsH264Source(isH264);
 				}
-			}
+			}*/
 		}
 
 		// Add default track if necessary.

@@ -36,8 +36,8 @@ BEGIN_PROXY_MAP(VideoTrackSource)
   PROXY_WORKER_METHOD1(void,
                        RemoveSink,
                        rtc::VideoSinkInterface<cricket::VideoFrame>*)
-  PROXY_METHOD1(void, SetIsH264Source, bool)
-  PROXY_METHOD0(bool, IsH264Source)
+  //PROXY_METHOD1(void, SetIsH264Source, bool)
+  //PROXY_METHOD0(bool, IsH264Source)
   PROXY_METHOD1(void, RegisterObserver, ObserverInterface*)
   PROXY_METHOD1(void, UnregisterObserver, ObserverInterface*)
 END_PROXY()
