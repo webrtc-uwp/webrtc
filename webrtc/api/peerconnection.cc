@@ -1730,87 +1730,88 @@ void PeerConnection::RemoveTracks(cricket::MediaType media_type) {
 }
 
 void PeerConnection::UpdateRemoteStreamsList(
-    const cricket::StreamParamsVec& streams,
-    bool default_track_needed,
-    cricket::MediaType media_type,
-    StreamCollection* new_streams, bool isH264) {
-  TrackInfos* current_tracks = GetRemoteTracks(media_type);
+	const cricket::StreamParamsVec& streams,
+	bool default_track_needed,
+	cricket::MediaType media_type,
+	StreamCollection* new_streams, bool isH264) {
+	TrackInfos* current_tracks = GetRemoteTracks(media_type);
 
-  // Find removed tracks. I.e., tracks where the track id or ssrc don't match
-  // the new StreamParam.
-  auto track_it = current_tracks->begin();
-  while (track_it != current_tracks->end()) {
-    const TrackInfo& info = *track_it;
-    const cricket::StreamParams* params =
-        cricket::GetStreamBySsrc(streams, info.ssrc);
-    bool track_exists = params && params->id == info.track_id;
-    // If this is a default track, and we still need it, don't remove it.
-    if ((info.stream_label == kDefaultStreamLabel && default_track_needed) ||
-        track_exists) {
-      ++track_it;
-    } else {
-      OnRemoteTrackRemoved(info.stream_label, info.track_id, media_type);
-      track_it = current_tracks->erase(track_it);
-    }
-  }
+	// Find removed tracks. I.e., tracks where the track id or ssrc don't match
+	// the new StreamParam.
+	auto track_it = current_tracks->begin();
+	while (track_it != current_tracks->end()) {
+		const TrackInfo& info = *track_it;
+		const cricket::StreamParams* params =
+			cricket::GetStreamBySsrc(streams, info.ssrc);
+		bool track_exists = params && params->id == info.track_id;
+		// If this is a default track, and we still need it, don't remove it.
+		if ((info.stream_label == kDefaultStreamLabel && default_track_needed) ||
+			track_exists) {
+			++track_it;
+		}
+		else {
+			OnRemoteTrackRemoved(info.stream_label, info.track_id, media_type);
+			track_it = current_tracks->erase(track_it);
+		}
+	}
 
-  // Find new and active tracks.
-  for (const cricket::StreamParams& params : streams) {
-    // The sync_label is the MediaStream label and the |stream.id| is the
-    // track id.
-    const std::string& stream_label = params.sync_label;
-    const std::string& track_id = params.id;
-    uint32_t ssrc = params.first_ssrc();
+	// Find new and active tracks.
+	for (const cricket::StreamParams& params : streams) {
+		// The sync_label is the MediaStream label and the |stream.id| is the
+		// track id.
+		const std::string& stream_label = params.sync_label;
+		const std::string& track_id = params.id;
+		uint32_t ssrc = params.first_ssrc();
 
-    rtc::scoped_refptr<MediaStreamInterface> stream =
-        remote_streams_->find(stream_label);
-    if (!stream) {
-      // This is a new MediaStream. Create a new remote MediaStream.
-      stream = MediaStreamProxy::Create(rtc::Thread::Current(),
-                                        MediaStream::Create(stream_label));
-      remote_streams_->AddStream(stream);
-      new_streams->AddStream(stream);
-    }
+		rtc::scoped_refptr<MediaStreamInterface> stream =
+			remote_streams_->find(stream_label);
+		if (!stream) {
+			// This is a new MediaStream. Create a new remote MediaStream.
+			stream = MediaStreamProxy::Create(rtc::Thread::Current(),
+				MediaStream::Create(stream_label));
+			remote_streams_->AddStream(stream);
+			new_streams->AddStream(stream);
+		}
 
-    const TrackInfo* track_info =
-        FindTrackInfo(*current_tracks, stream_label, track_id);
-    if (!track_info) {
-      current_tracks->push_back(TrackInfo(stream_label, track_id, ssrc));
-      OnRemoteTrackSeen(stream_label, track_id, ssrc, media_type, isH264);
-    }
-    else {
-      // Update the H264 bypass flag on existing tracks.
-      for (auto receiver: receivers_) {
-        if (receiver->track()->kind() == MediaStreamTrackInterface::kVideoKind) {
-          ((VideoTrackInterface*)receiver->track().get())->GetSource()->SetIsH264Source(isH264);
-        }
-      }
-  }
+		const TrackInfo* track_info =
+			FindTrackInfo(*current_tracks, stream_label, track_id);
+		if (!track_info) {
+			current_tracks->push_back(TrackInfo(stream_label, track_id, ssrc));
+			OnRemoteTrackSeen(stream_label, track_id, ssrc, media_type, isH264);
+		}
+		else {
+			// Update the H264 bypass flag on existing tracks.
+			for (auto receiver : receivers_) {
+				if (receiver->track()->kind() == MediaStreamTrackInterface::kVideoKind) {
+					((VideoTrackInterface*)receiver->track().get())->GetSource()->SetIsH264Source(isH264);
+				}
+			}
+		}
 
-  // Add default track if necessary.
-  if (default_track_needed) {
-    rtc::scoped_refptr<MediaStreamInterface> default_stream =
-        remote_streams_->find(kDefaultStreamLabel);
-    if (!default_stream) {
-      // Create the new default MediaStream.
-      default_stream = MediaStreamProxy::Create(
-          rtc::Thread::Current(), MediaStream::Create(kDefaultStreamLabel));
-      remote_streams_->AddStream(default_stream);
-      new_streams->AddStream(default_stream);
-    }
-    std::string default_track_id = (media_type == cricket::MEDIA_TYPE_AUDIO)
-                                       ? kDefaultAudioTrackLabel
-                                       : kDefaultVideoTrackLabel;
-    const TrackInfo* default_track_info =
-        FindTrackInfo(*current_tracks, kDefaultStreamLabel, default_track_id);
-    if (!default_track_info) {
-      current_tracks->push_back(
-          TrackInfo(kDefaultStreamLabel, default_track_id, 0));
-      OnRemoteTrackSeen(kDefaultStreamLabel, default_track_id, 0, media_type);
-    }
-  }
+		// Add default track if necessary.
+		if (default_track_needed) {
+			rtc::scoped_refptr<MediaStreamInterface> default_stream =
+				remote_streams_->find(kDefaultStreamLabel);
+			if (!default_stream) {
+				// Create the new default MediaStream.
+				default_stream = MediaStreamProxy::Create(
+					rtc::Thread::Current(), MediaStream::Create(kDefaultStreamLabel));
+				remote_streams_->AddStream(default_stream);
+				new_streams->AddStream(default_stream);
+			}
+			std::string default_track_id = (media_type == cricket::MEDIA_TYPE_AUDIO)
+				? kDefaultAudioTrackLabel
+				: kDefaultVideoTrackLabel;
+			const TrackInfo* default_track_info =
+				FindTrackInfo(*current_tracks, kDefaultStreamLabel, default_track_id);
+			if (!default_track_info) {
+				current_tracks->push_back(
+					TrackInfo(kDefaultStreamLabel, default_track_id, 0));
+				OnRemoteTrackSeen(kDefaultStreamLabel, default_track_id, 0, media_type);
+			}
+		}
+	}
 }
-
 void PeerConnection::OnRemoteTrackSeen(const std::string& stream_label,
                                        const std::string& track_id,
                                        uint32_t ssrc,
