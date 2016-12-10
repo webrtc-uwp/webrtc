@@ -216,7 +216,7 @@ class WinRTRealTimeClock : public RealTimeClock {
       //(todo) winrt: according to msdn GetSystemTimeAsFileTime() which was used to get refernce point
       // the precision will be in the range <15ms. For now, let's use TickTime::MillisecondTimestamp(), which already
       // use GetSystemTimeAsFileTime() to get reference time; in addition, the app might have synced it with ntp server
-      uint64_t timestamp = TickTime::MillisecondTimestamp() + timeZoneBias; //in milliseconds
+      uint64_t timestamp = rtc::TimeMillis() + timeZoneBias; //in milliseconds
       struct timeval tv;
 
       tv.tv_sec = (uint32_t)(timestamp / (uint64_t)1000);
@@ -319,7 +319,7 @@ typedef WinRTRealTimeClock WindowsRealTimeClock;
 
 const int64_t Clock::CurrentNtpDeltaMs =
             Clock::GetRealTimeClock()->CurrentNtpInMilliseconds() -
-            TickTime::MillisecondTimestamp();
+						rtc::TimeMillis();
 #endif
 
 #if defined(_WIN32)
