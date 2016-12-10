@@ -124,6 +124,9 @@ void VideoStreamDecoder::OnDecoderTiming(int decode_ms,
                                          int target_delay_ms,
                                          int jitter_buffer_ms,
                                          int min_playout_delay_ms,
+#ifdef WINRT
+																				 int current_endtoend_delay_ms,
+#endif
                                          int render_delay_ms) {
   int last_rtt = -1;
   {
@@ -132,8 +135,17 @@ void VideoStreamDecoder::OnDecoderTiming(int decode_ms,
   }
 
   receive_stats_callback_->OnDecoderTiming(
-      decode_ms, max_decode_ms, current_delay_ms, target_delay_ms,
-      jitter_buffer_ms, min_playout_delay_ms, render_delay_ms, last_rtt);
+      decode_ms, 
+      max_decode_ms, 
+      current_delay_ms, 
+      target_delay_ms,
+      jitter_buffer_ms, 
+      min_playout_delay_ms, 
+      render_delay_ms, 
+#ifdef WINRT
+		 current_endtoend_delay_ms,
+#endif
+			last_rtt);
 }
 
 void VideoStreamDecoder::OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms) {
