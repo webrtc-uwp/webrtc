@@ -78,7 +78,7 @@ void CopyCodecSpecific(const CodecSpecificInfo* info, RTPVideoHeader* rtp) {
       return;
     case kVideoCodecGeneric:
       rtp->codec = kRtpVideoGeneric;
-      rtp->simulcastIdx = info->codecSpecific.generic.simulcast_idx;
+      rtp->simulcastIdx = info->codecSpecific.genericCodec.simulcast_idx;
       return;
     default:
       return;
