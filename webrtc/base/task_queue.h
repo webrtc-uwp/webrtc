@@ -248,12 +248,12 @@ class LOCKABLE TaskQueue {
 
    struct DelayedEntryTimeout
    {     
-     Time nextFireAt_ {};
+     Time next_fire_at_ {};
      OrderId order_ {};
 
      bool operator<(const DelayedEntryTimeout &o) const
      {
-       return std::tie(nextFireAt_, order_) < std::tie(o.nextFireAt_, o.order_);
+       return std::tie(next_fire_at_, order_) < std::tie(o.next_fire_at_, o.order_);
      }
    };
 
@@ -263,18 +263,18 @@ class LOCKABLE TaskQueue {
 
    void notifyWake();
 
-   std::mutex flagLock_;
-   std::condition_variable flagNotify_;
+   std::mutex flag_lock_;
+   std::condition_variable flag_notify_;
 
    PlatformThread thread_;
-   std::atomic<bool> threadShouldQuit_ {};
-   std::atomic<bool> threadDidQuit_ {};
+   std::atomic<bool> thread_should_quit_ {};
+   std::atomic<bool> thread_did_quit_ {};
 
    rtc::CriticalSection pending_lock_;
 
-   OrderId threadPostingOrder_ {} GUARDED_BY(pending_lock_);
-   QueueTaskQueue pendingQueue_ GUARDED_BY(pending_lock_);
-   DelayTimeoutQueueMap delayedQueue_ GUARDED_BY(pending_lock_);
+   OrderId thread_posting_order_ {} GUARDED_BY(pending_lock_);
+   QueueTaskQueue pending_queue_ GUARDED_BY(pending_lock_);
+   DelayTimeoutQueueMap delayed_queue_ GUARDED_BY(pending_lock_);
 
 #undef WEBRTC_BASE_QUEUED_TASK_USING_STDLIB
    

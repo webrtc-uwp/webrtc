@@ -49,9 +49,9 @@ TaskQueue::TaskQueue(const char* queue_name)
 TaskQueue::~TaskQueue() {
   RTC_DCHECK(!IsCurrent());
 
-  threadShouldQuit_ = true;
+  thread_should_quit_ = true;
   
-  while (!threadDidQuit_) {
+  while (!thread_did_quit_) {
     RTC_CHECK_EQ(static_cast<DWORD>(ERROR_NOT_ENOUGH_QUOTA), ::GetLastError());
     Sleep(1);
   }
@@ -77,9 +77,9 @@ void TaskQueue::PostTask(std::unique_ptr<QueuedTask> task) {
   
   {
     CritScope lock(&pending_lock_);
-    OrderId order = ++threadPostingOrder_;
+    OrderId order = ++thread_posting_order_;
 
-    pendingQueue_.push(OrderedQueueTaskPair(order, std::move(task)));
+    pending_queue_.push(OrderedQueueTaskPair(order, std::move(task)));
   }
 
   notifyWake();
@@ -88,15 +88,15 @@ void TaskQueue::PostTask(std::unique_ptr<QueuedTask> task) {
 void TaskQueue::PostDelayedTask(std::unique_ptr<QueuedTask> task,
                                 uint32_t milliseconds) {
   
-  Time fireAt = now() + Milliseconds(milliseconds);
+  Time fire_at = now() + Milliseconds(milliseconds);
 
   DelayedEntryTimeout delay;
-  delay.nextFireAt_ = fireAt;
+  delay.next_fire_at_ = fire_at;
 
   {
     CritScope lock(&pending_lock_);
-    delay.order_ = ++threadPostingOrder_;
-    delayedQueue_[delay] = std::move(task);
+    delay.order_ = ++thread_posting_order_;
+    delayed_queue_[delay] = std::move(task);
   }
 
   notifyWake();
@@ -107,7 +107,6 @@ void TaskQueue::PostTaskAndReply(std::unique_ptr<QueuedTask> task,
                                  TaskQueue* reply_queue) {
   QueuedTask* task_ptr = task.release();
   QueuedTask* reply_task_ptr = reply.release();
-  //DWORD reply_thread_id = reply_queue->thread_.GetThreadRef();
   PostTask([task_ptr, reply_task_ptr, reply_queue]() {
     if (task_ptr->Run())
       delete task_ptr;
@@ -129,42 +128,42 @@ bool TaskQueue::ThreadMain(void* context) {
 
   do
   {
-    Microseconds sleepTime {};
-    QueueTasksUniPtr runTask;
+    Microseconds sleep_time {};
+    QueueTasksUniPtr run_task;
 
     auto tick = now();
 
     {
       CritScope lock(&(me->pending_lock_));
 
-      if (me->delayedQueue_.size() > 0) {
-        auto delayedEntry = me->delayedQueue_.begin();
-        auto &delayInfo = (*delayedEntry).first;
-        auto &delayRun = (*delayedEntry).second;
-        if (tick >= delayInfo.nextFireAt_) {
-          if (me->pendingQueue_.size() > 0) {
-            auto &entry = me->pendingQueue_.front();
-            auto &entryOrder = entry.first;
-            auto &entryRun = entry.second;
-            if (entryOrder < delayInfo.order_) {
-              runTask = std::move(entryRun);
-              me->pendingQueue_.pop();
+      if (me->delayed_queue_.size() > 0) {
+        auto delayed_entry = me->delayed_queue_.begin();
+        auto &delay_info = (*delayed_entry).first;
+        auto &delay_run = (*delayed_entry).second;
+        if (tick >= delay_info.next_fire_at_) {
+          if (me->pending_queue_.size() > 0) {
+            auto &entry = me->pending_queue_.front();
+            auto &entry_order = entry.first;
+            auto &entry_run = entry.second;
+            if (entry_order < delay_info.order_) {
+              run_task = std::move(entry_run);
+              me->pending_queue_.pop();
               goto process;
             }
           }
 
-          runTask = std::move(delayRun);
-          me->delayedQueue_.erase(delayedEntry);
+          run_task = std::move(delay_run);
+          me->delayed_queue_.erase(delayed_entry);
           goto process;
         }
 
-        sleepTime = std::chrono::duration_cast<Microseconds>(delayInfo.nextFireAt_ - tick);
+        sleep_time = std::chrono::duration_cast<Microseconds>(delay_info.next_fire_at_ - tick);
       }
 
-      if (me->pendingQueue_.size() > 0) {
-        auto &entry = me->pendingQueue_.front();
-        runTask = std::move(entry.second);
-        me->pendingQueue_.pop();
+      if (me->pending_queue_.size() > 0) {
+        auto &entry = me->pending_queue_.front();
+        run_task = std::move(entry.second);
+        me->pending_queue_.pop();
       }
 
       goto process;
@@ -172,33 +171,33 @@ bool TaskQueue::ThreadMain(void* context) {
 
   process:
     {
-      if (runTask) {
+      if (run_task) {
         // process entry immediately then try again
-        auto releasePtr = runTask.release();
-        if (releasePtr->Run())
-          delete releasePtr;
+        auto release_ptr = run_task.release();
+        if (release_ptr->Run())
+          delete release_ptr;
 
         // attempt to sleep again
         continue;
       }
 
-      if (me->threadShouldQuit_) break;
+      if (me->thread_should_quit_) break;
 
-      std::unique_lock<std::mutex> flagLock(me->flagLock_);
-      if (Microseconds() == sleepTime)
-        me->flagNotify_.wait(flagLock);
+      std::unique_lock<std::mutex> flag_lock(me->flag_lock_);
+      if (Microseconds() == sleep_time)
+        me->flag_notify_.wait(flag_lock);
       else
-        me->flagNotify_.wait_for(flagLock, sleepTime);
+        me->flag_notify_.wait_for(flag_lock, sleep_time);
     }
-  } while (!me->threadShouldQuit_);
+  } while (true);
 
-  me->threadDidQuit_ = true;
+  me->thread_did_quit_ = true;
   return false;
 }
 
 void TaskQueue::notifyWake()
 {
-  flagNotify_.notify_one();
+  flag_notify_.notify_one();
 }
 
 }  // namespace rtc

@@ -203,8 +203,11 @@
                    'task_queue_posix.cc',
                  ],
                 }],
-                ['OS=="win"', {
+                ['OS=="win" and OS_RUNTIME!="winrt"', {
                   'sources': [ 'task_queue_win.cc' ],
+                }],
+                ['OS=="win" and OS_RUNTIME=="winrt"', {
+                  'sources': [ 'task_queue_stdlib.cc' ],
                 }]
               ],
             }],
