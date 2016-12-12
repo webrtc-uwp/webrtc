@@ -29,7 +29,6 @@
 #include "Utils/Utils.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/base/timeutils.h"
-#include "webrtc/common_video/libyuv/include/scaler.h"
 #include "libyuv/convert.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/win32.h"
@@ -116,11 +115,6 @@ int H264WinRTEncoderImpl::InitEncoderWithSettings(const VideoCodec* inst) {
     MF_MT_FRAME_RATE, currentFps_, 1));
 
   quality_scaler_.ReportFramerate(currentFps_);
-  _scaler.Set(
-    inst->width, inst->height,
-    currentWidth_, currentHeight_,
-    kI420, kI420,
-    kScalePoint);
 
   // Create the media sink
   ON_SUCCEEDED(Microsoft::WRL::MakeAndInitialize<H264MediaSink>(&mediaSink_));
@@ -208,17 +202,17 @@ ComPtr<IMFSample> H264WinRTEncoderImpl::FromVideoFrame(const VideoFrame& frame) 
   ComPtr<IMFAttributes> sampleAttributes;
   ON_SUCCEEDED(sample.As(&sampleAttributes));
 
-  quality_scaler_.OnEncodeFrame(frame);
+  quality_scaler_.OnEncodeFrame(frame.width(), frame.height());
 #ifdef DYNAMIC_SCALING
-  const VideoFrame& dstFrame = quality_scaler_.GetScaledFrame(frame, 16);
+  rtc::scoped_refptr<VideoFrameBuffer> frameBuffer = quality_scaler_.GetScaledBuffer(frame.video_frame_buffer());
 #else
-  const VideoFrame& dstFrame = frame;
+  rtc::scoped_refptr<VideoFrameBuffer> frameBuffer = frame.video_frame_buffer;
 #endif
 
   if (SUCCEEDED(hr)) {
-    auto totalSize = dstFrame.allocated_size(PlaneType::kYPlane) +
-      dstFrame.allocated_size(PlaneType::kUPlane) +
-      dstFrame.allocated_size(PlaneType::kVPlane);
+    auto totalSize = frameBuffer->StrideY() * frameBuffer->height() +
+      frameBuffer->StrideU() * (frameBuffer->height() + 1) / 2 +
+      frameBuffer->StrideV() * (frameBuffer->height() + 1) / 2;
 
     ComPtr<IMFMediaBuffer> mediaBuffer;
     ON_SUCCEEDED(MFCreateMemoryBuffer(totalSize, mediaBuffer.GetAddressOf()));
@@ -233,19 +227,19 @@ ComPtr<IMFSample> H264WinRTEncoderImpl::FromVideoFrame(const VideoFrame& frame) 
 
     if (SUCCEEDED(hr)) {
       BYTE* destUV = destBuffer +
-        (dstFrame.stride(PlaneType::kYPlane) * dstFrame.height());
+        (frameBuffer->StrideY() * frameBuffer->height());
       libyuv::I420ToNV12(
-        dstFrame.buffer(PlaneType::kYPlane), dstFrame.stride(PlaneType::kYPlane),
-        dstFrame.buffer(PlaneType::kUPlane), dstFrame.stride(PlaneType::kUPlane),
-        dstFrame.buffer(PlaneType::kVPlane), dstFrame.stride(PlaneType::kVPlane),
-        destBuffer, dstFrame.stride(PlaneType::kYPlane),
-        destUV, dstFrame.stride(PlaneType::kYPlane),
-        dstFrame.width(),
-        dstFrame.height());
+        frameBuffer->DataY(), frameBuffer->StrideY(),
+        frameBuffer->DataU(), frameBuffer->StrideU(),
+        frameBuffer->DataV(), frameBuffer->StrideV(),
+        destBuffer, frameBuffer->StrideY(),
+        destUV, frameBuffer->StrideY(),
+        frameBuffer->width(),
+        frameBuffer->height());
     }
 
     {
-      if (dstFrame.width() != (int)currentWidth_ || dstFrame.height() != (int)currentHeight_) {
+      if (frameBuffer->width() != (int)currentWidth_ || frameBuffer->height() != (int)currentHeight_) {
         EncodedImageCallback* tempCallback = encodedCompleteCallback_;
         Release();
         {
@@ -253,19 +247,19 @@ ComPtr<IMFSample> H264WinRTEncoderImpl::FromVideoFrame(const VideoFrame& frame) 
           encodedCompleteCallback_ = tempCallback;
         }
 
-        currentWidth_ = dstFrame.width();
-        currentHeight_ = dstFrame.height();
+        currentWidth_ = frameBuffer->width();
+        currentHeight_ = frameBuffer->height();
         InitEncoderWithSettings(&codec_);
-        LOG(LS_WARNING) << "Resolution changed to: " << dstFrame.width() << "x" << dstFrame.height();
+        LOG(LS_WARNING) << "Resolution changed to: " << frameBuffer->width() << "x" << frameBuffer->height();
       }
     }
 
     if (firstFrame_) {
       firstFrame_ = false;
-      startTime_ = dstFrame.timestamp();
+      startTime_ = frame.timestamp();
     }
 
-    auto timestampHns = ((dstFrame.timestamp() - startTime_) / 90) * 1000 * 10;
+    auto timestampHns = ((frame.timestamp() - startTime_) / 90) * 1000 * 10;
     ON_SUCCEEDED(sample->SetSampleTime(timestampHns));
 
     if (SUCCEEDED(hr)) {
@@ -278,16 +272,16 @@ ComPtr<IMFSample> H264WinRTEncoderImpl::FromVideoFrame(const VideoFrame& frame) 
 
       // Cache the frame attributes to get them back after the encoding.
       CachedFrameAttributes frameAttributes;
-      frameAttributes.timestamp = dstFrame.timestamp();
-      frameAttributes.ntpTime = dstFrame.ntp_time_ms();
-      frameAttributes.captureRenderTime = dstFrame.render_time_ms();
-      frameAttributes.frameWidth = dstFrame.width();
-      frameAttributes.frameHeight = dstFrame.height();
+      frameAttributes.timestamp = frame.timestamp();
+      frameAttributes.ntpTime = frame.ntp_time_ms();
+      frameAttributes.captureRenderTime = frame.render_time_ms();
+      frameAttributes.frameWidth = frame.width();
+      frameAttributes.frameHeight = frame.height();
       _sampleAttributeQueue.push(timestampHns, frameAttributes);
     }
 
     ON_SUCCEEDED(mediaBuffer->SetCurrentLength(
-      dstFrame.width() * dstFrame.height() * 3 / 2));
+      frameBuffer->width() * frameBuffer->height() * 3 / 2));
 
     if (destBuffer != nullptr) {
       mediaBuffer->Unlock();
