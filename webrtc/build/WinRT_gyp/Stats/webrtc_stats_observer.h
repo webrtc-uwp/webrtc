@@ -96,7 +96,7 @@ class WebRTCStatsObserverWinRT {
   virtual void OnConnectionHealthStats(const ConnectionHealthStats& stats) = 0;
 
   virtual void OnRTCStatsReportsReady(
-    const webrtc_winrt_api::RTCStatsReports& rtcStatsReports) = 0;
+    const Org::WebRtc::RTCStatsReports& rtcStatsReports) = 0;
 };
 
 }  // namespace webrtc

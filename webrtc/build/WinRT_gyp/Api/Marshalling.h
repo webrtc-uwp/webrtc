@@ -25,107 +25,110 @@ using Windows::Foundation::Collections::IVector;
   void ToCx(nativeType const& inObj, winrtType* outObj)
 
 // Marshalling functions to convert from WinRT objects to native cpp.
-namespace webrtc_winrt_api_internal {
+namespace Org {
+	namespace WebRtc {
+		namespace Internal {
 
-  std::string FromCx(String^ inObj);
-  String^ ToCx(std::string const& inObj);
+			std::string FromCx(String^ inObj);
+			String^ ToCx(std::string const& inObj);
 
-  DECLARE_MARSHALLED_ENUM(webrtc_winrt_api::RTCBundlePolicy,
-                          webrtc::PeerConnectionInterface::BundlePolicy);
-  DECLARE_MARSHALLED_ENUM(webrtc_winrt_api::RTCIceTransportPolicy,
-                          webrtc::PeerConnectionInterface::IceTransportsType);
-  DECLARE_MARSHALLED_ENUM(webrtc_winrt_api::RTCSignalingState,
-                          webrtc::PeerConnectionInterface::SignalingState);
-  DECLARE_MARSHALLED_ENUM(webrtc_winrt_api::RTCDataChannelState,
-                          webrtc::DataChannelInterface::DataState);
-  DECLARE_MARSHALLED_ENUM(webrtc_winrt_api::RTCIceGatheringState,
-                          webrtc::PeerConnectionInterface::IceGatheringState);
-  DECLARE_MARSHALLED_ENUM(webrtc_winrt_api::RTCIceConnectionState,
-                          webrtc::PeerConnectionInterface::IceConnectionState);
-  DECLARE_MARSHALLED_ENUM(webrtc_winrt_api::RTCStatsType,
-                          webrtc::StatsReport::StatsType);
-  DECLARE_MARSHALLED_ENUM(webrtc_winrt_api::RTCStatsValueName,
-                          webrtc::StatsReport::StatsValueName);
+			DECLARE_MARSHALLED_ENUM(Org::WebRtc::RTCBundlePolicy,
+			webrtc::PeerConnectionInterface::BundlePolicy);
+			DECLARE_MARSHALLED_ENUM(Org::WebRtc::RTCIceTransportPolicy,
+			webrtc::PeerConnectionInterface::IceTransportsType);
+			DECLARE_MARSHALLED_ENUM(Org::WebRtc::RTCSignalingState,
+			webrtc::PeerConnectionInterface::SignalingState);
+			DECLARE_MARSHALLED_ENUM(Org::WebRtc::RTCDataChannelState,
+			webrtc::DataChannelInterface::DataState);
+			DECLARE_MARSHALLED_ENUM(Org::WebRtc::RTCIceGatheringState,
+			webrtc::PeerConnectionInterface::IceGatheringState);
+			DECLARE_MARSHALLED_ENUM(Org::WebRtc::RTCIceConnectionState,
+			webrtc::PeerConnectionInterface::IceConnectionState);
+			DECLARE_MARSHALLED_ENUM(Org::WebRtc::RTCStatsType,
+			webrtc::StatsReport::StatsType);
+			DECLARE_MARSHALLED_ENUM(Org::WebRtc::RTCStatsValueName,
+			webrtc::StatsReport::StatsValueName);
 
-  template <typename I, typename O>
-  void FromCx(
-    IVector<I>^ inArray,
-    std::vector<O>* outArray) {
-	  
-	outArray->resize(inArray->Size);
-	int index = 0;
-    for (I inObj : inArray) {
-      FromCx(inObj, &(*outArray)[index]);
-      index++;
-    }
-  }
+			template <typename I, typename O>
+			void FromCx(
+				IVector<I>^ inArray,
+				std::vector<O>* outArray) {
 
-  template <typename I, typename O>
-  void ToCx(
-    std::vector<I>* inArray,
-    IVector<O>^ outArray) {
-    for (auto it = (*inArray).begin(); it != (*inArray).end(); ++it) {
-      O outObj;
-      ToCx((*it), &outObj);
-      outArray->Append(outObj);
-    }
-  }
+				outArray->resize(inArray->Size);
+				int index = 0;
+				for (I inObj : inArray) {
+					FromCx(inObj, &(*outArray)[index]);
+					index++;
+				}
+			}
 
-  // placeholder functions if no conversion needed (used in vector conversion templates)
-  template <typename T>
-  void FromCx(T in, T* out) {
-    *out = in;
-  }
+			template <typename I, typename O>
+			void ToCx(
+				std::vector<I>* inArray,
+				IVector<O>^ outArray) {
+				for (auto it = (*inArray).begin(); it != (*inArray).end(); ++it) {
+					O outObj;
+					ToCx((*it), &outObj);
+					outArray->Append(outObj);
+				}
+			}
 
-  template <typename T>
-  void ToCx(T in, T* out) {
-    *out = in;
-  }
+			// placeholder functions if no conversion needed (used in vector conversion templates)
+			template <typename T>
+			void FromCx(T in, T* out) {
+				*out = in;
+			}
 
-  // ==========================
-  void FromCx(
-    webrtc_winrt_api::RTCIceServer^ inObj,
-    webrtc::PeerConnectionInterface::IceServer* outObj);
+			template <typename T>
+			void ToCx(T in, T* out) {
+				*out = in;
+			}
 
-  // ==========================
-  void FromCx(
-    webrtc_winrt_api::RTCConfiguration^ inObj,
-    webrtc::PeerConnectionInterface::RTCConfiguration* outObj);
+			// ==========================
+			void FromCx(
+				Org::WebRtc::RTCIceServer^ inObj,
+				webrtc::PeerConnectionInterface::IceServer* outObj);
 
-  // ==========================
-  void FromCx(
-    webrtc_winrt_api::RTCDataChannelInit^ inObj,
-    webrtc::DataChannelInit* outObj);
+			// ==========================
+			void FromCx(
+				Org::WebRtc::RTCConfiguration^ inObj,
+				webrtc::PeerConnectionInterface::RTCConfiguration* outObj);
 
-  // ==========================
-  void FromCx(
-    webrtc_winrt_api::RTCIceCandidate^ inObj,
-    rtc::scoped_ptr<webrtc::IceCandidateInterface>* outObj);
-  void ToCx(
-    webrtc::IceCandidateInterface const& inObj,
-    webrtc_winrt_api::RTCIceCandidate^* outObj);
+			// ==========================
+			void FromCx(
+				Org::WebRtc::RTCDataChannelInit^ inObj,
+				webrtc::DataChannelInit* outObj);
 
-  // ==========================
-  std::string FromCx(
-    webrtc_winrt_api::RTCSdpType const& inObj);
-  void ToCx(
-    std::string const& inObj,
-    webrtc_winrt_api::RTCSdpType* outObj);
+			// ==========================
+			void FromCx(
+				Org::WebRtc::RTCIceCandidate^ inObj,
+				rtc::scoped_ptr<webrtc::IceCandidateInterface>* outObj);
+			void ToCx(
+				webrtc::IceCandidateInterface const& inObj,
+				Org::WebRtc::RTCIceCandidate^* outObj);
 
-  // ==========================
-  void FromCx(
-    webrtc_winrt_api::RTCSessionDescription^ inObj,
-    rtc::scoped_ptr<webrtc::SessionDescriptionInterface>* outObj);
-  void ToCx(
-    const webrtc::SessionDescriptionInterface* inObj,
-    webrtc_winrt_api::RTCSessionDescription^* outObj);
+			// ==========================
+			std::string FromCx(
+				Org::WebRtc::RTCSdpType const& inObj);
+			void ToCx(
+				std::string const& inObj,
+				Org::WebRtc::RTCSdpType* outObj);
 
-  // ==========================
-  void ToCx(
-    const webrtc::StatsReport* inObj,
-    webrtc_winrt_api::RTCStatsReport^* outObj);
+			// ==========================
+			void FromCx(
+				Org::WebRtc::RTCSessionDescription^ inObj,
+				rtc::scoped_ptr<webrtc::SessionDescriptionInterface>* outObj);
+			void ToCx(
+				const webrtc::SessionDescriptionInterface* inObj,
+				Org::WebRtc::RTCSessionDescription^* outObj);
 
-}  // namespace webrtc_winrt_api_internal
+			// ==========================
+			void ToCx(
+				const webrtc::StatsReport* inObj,
+				Org::WebRtc::RTCStatsReport^* outObj);
+		}
+	}
+}  // namespace Org.WebRtc.Internal
 
 #endif  // WEBRTC_BUILD_WINRT_GYP_API_MARSHALLING_H_
 

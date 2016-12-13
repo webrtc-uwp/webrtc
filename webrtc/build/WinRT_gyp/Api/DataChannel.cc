@@ -12,9 +12,9 @@
 #include "webrtc/build/WinRT_gyp/Api/DataChannel.h"
 #include "Marshalling.h"
 
-using webrtc_winrt_api_internal::ToCx;
+using Org::WebRtc::Internal::ToCx;
 
-namespace webrtc_winrt_api {
+namespace Org.WebRtc {
 
 RTCDataChannel::RTCDataChannel(
   rtc::scoped_refptr<webrtc::DataChannelInterface> impl)
@@ -94,7 +94,7 @@ void RTCDataChannel::Send(IDataChannelMessage^ message) {
     binaryDataVector.reserve(binaryMessage->BinaryData->Size);
 
     // convert IVector to std::vector
-    webrtc_winrt_api_internal::FromCx(binaryMessage->BinaryData,
+		Org::WebRtc::Internal::FromCx(binaryMessage->BinaryData,
         &binaryDataVector);
 
     byte* byteArr = (&binaryDataVector[0]);
@@ -107,4 +107,4 @@ void RTCDataChannel::Send(IDataChannelMessage^ message) {
   }
 }
 
-}  // namespace webrtc_winrt_api
+}  // namespace Org.WebRtc

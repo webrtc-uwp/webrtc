@@ -25,86 +25,88 @@ using Microsoft::WRL::RuntimeClassFlags;
 using Microsoft::WRL::RuntimeClassType;
 using Windows::System::Threading::ThreadPoolTimer;
 
-namespace webrtc_winrt_api_internal {
+namespace Org {
+	namespace WebRtc {
+		namespace Internal {
 
-class WebRtcMediaSource;
+			class WebRtcMediaSource;
 
-class WebRtcMediaStream :
-  public RuntimeClass<RuntimeClassFlags<RuntimeClassType::WinRtClassicComMix>,
-  IMFMediaStream, IMFMediaEventGenerator,
-  IMFGetService>,
-  public webrtc::VideoRendererInterface{
-  InspectableClass(L"WebRtcMediaStream", BaseTrust)
- public:
-  WebRtcMediaStream();
-  virtual ~WebRtcMediaStream();
-  HRESULT RuntimeClassInitialize(
-    WebRtcMediaSource* source,
-    webrtc_winrt_api::MediaVideoTrack^ track,
-    String^ id);
-
-
-  // IMFMediaEventGenerator
-  IFACEMETHOD(GetEvent)(DWORD dwFlags, IMFMediaEvent **ppEvent);
-  IFACEMETHOD(BeginGetEvent)(IMFAsyncCallback *pCallback, IUnknown *punkState);
-  IFACEMETHOD(EndGetEvent)(IMFAsyncResult *pResult, IMFMediaEvent **ppEvent);
-  IFACEMETHOD(QueueEvent)(MediaEventType met, const GUID& guidExtendedType,
-    HRESULT hrStatus, const PROPVARIANT *pvValue);
-  // IMFMediaStream
-  IFACEMETHOD(GetMediaSource)(IMFMediaSource **ppMediaSource);
-  IFACEMETHOD(GetStreamDescriptor)(IMFStreamDescriptor **ppStreamDescriptor);
-  IFACEMETHOD(RequestSample)(IUnknown *pToken);
-  // IMFGetService
-  IFACEMETHOD(GetService)(REFGUID guidService, REFIID riid, LPVOID *ppvObject);
-
-  // VideoRendererInterface
-  virtual void RenderFrame(const cricket::VideoFrame *frame);
-
-  STDMETHOD(Start)(IMFPresentationDescriptor *pPresentationDescriptor,
-    const GUID *pguidTimeFormat, const PROPVARIANT *pvarStartPosition);
-  STDMETHOD(Stop)();
-  STDMETHOD(Shutdown)();
-  STDMETHOD(SetD3DManager)(ComPtr<IMFDXGIDeviceManager> manager);
-
-  rtc::scoped_ptr<webrtc::CriticalSectionWrapper> _lock;
-
- private:
-  ComPtr<IMFMediaEventQueue> _eventQueue;
-
-  WebRtcMediaSource* _source;
-  webrtc_winrt_api::MediaVideoTrack^ _track;
-  String^ _id;
-
-  static HRESULT CreateMediaType(unsigned int width, unsigned int height,
-    unsigned int rotation, IMFMediaType** ppType, bool isH264);
-  HRESULT MakeSampleCallback(const cricket::VideoFrame* frame, IMFSample** sample);
-  void FpsCallback(int fps);
-
-  HRESULT ReplyToSampleRequest();
-
-  rtc::scoped_ptr<MediaSourceHelper> _helper;
-
-  ComPtr<IMFMediaType> _mediaType;
-  ComPtr<IMFDXGIDeviceManager> _deviceManager;
-  ComPtr<IMFStreamDescriptor> _streamDescriptor;
-  ULONGLONG _startTickCount;
-  ULONGLONG _frameCount;
-  int _index;
-  ULONG _frameReady;
-  ULONG _frameBeingQueued;
-
-  // From the sample manager.
-  HRESULT ResetMediaBuffers();
-  static const int BufferCount = 3;
-  std::vector<ComPtr<IMFMediaBuffer>> _mediaBuffers;
-  int _frameBufferIndex;
-
-  bool _gpuVideoBuffer;
-  bool _isH264;
-  bool _started;
-};
+			class WebRtcMediaStream :
+				public RuntimeClass<RuntimeClassFlags<RuntimeClassType::WinRtClassicComMix>,
+				IMFMediaStream, IMFMediaEventGenerator,
+				IMFGetService>,
+				public webrtc::VideoRendererInterface {
+				InspectableClass(L"WebRtcMediaStream", BaseTrust)
+			public:
+				WebRtcMediaStream();
+				virtual ~WebRtcMediaStream();
+				HRESULT RuntimeClassInitialize(
+					WebRtcMediaSource* source,
+					Org::WebRtc::MediaVideoTrack^ track,
+					String^ id);
 
 
-}  // namespace webrtc_winrt_api_internal
+				// IMFMediaEventGenerator
+				IFACEMETHOD(GetEvent)(DWORD dwFlags, IMFMediaEvent **ppEvent);
+				IFACEMETHOD(BeginGetEvent)(IMFAsyncCallback *pCallback, IUnknown *punkState);
+				IFACEMETHOD(EndGetEvent)(IMFAsyncResult *pResult, IMFMediaEvent **ppEvent);
+				IFACEMETHOD(QueueEvent)(MediaEventType met, const GUID& guidExtendedType,
+					HRESULT hrStatus, const PROPVARIANT *pvValue);
+				// IMFMediaStream
+				IFACEMETHOD(GetMediaSource)(IMFMediaSource **ppMediaSource);
+				IFACEMETHOD(GetStreamDescriptor)(IMFStreamDescriptor **ppStreamDescriptor);
+				IFACEMETHOD(RequestSample)(IUnknown *pToken);
+				// IMFGetService
+				IFACEMETHOD(GetService)(REFGUID guidService, REFIID riid, LPVOID *ppvObject);
+
+				// VideoRendererInterface
+				virtual void RenderFrame(const cricket::VideoFrame *frame);
+
+				STDMETHOD(Start)(IMFPresentationDescriptor *pPresentationDescriptor,
+					const GUID *pguidTimeFormat, const PROPVARIANT *pvarStartPosition);
+				STDMETHOD(Stop)();
+				STDMETHOD(Shutdown)();
+				STDMETHOD(SetD3DManager)(ComPtr<IMFDXGIDeviceManager> manager);
+
+				rtc::scoped_ptr<webrtc::CriticalSectionWrapper> _lock;
+
+			private:
+				ComPtr<IMFMediaEventQueue> _eventQueue;
+
+				WebRtcMediaSource* _source;
+				Org::WebRtc::MediaVideoTrack^ _track;
+				String^ _id;
+
+				static HRESULT CreateMediaType(unsigned int width, unsigned int height,
+					unsigned int rotation, IMFMediaType** ppType, bool isH264);
+				HRESULT MakeSampleCallback(const cricket::VideoFrame* frame, IMFSample** sample);
+				void FpsCallback(int fps);
+
+				HRESULT ReplyToSampleRequest();
+
+				rtc::scoped_ptr<MediaSourceHelper> _helper;
+
+				ComPtr<IMFMediaType> _mediaType;
+				ComPtr<IMFDXGIDeviceManager> _deviceManager;
+				ComPtr<IMFStreamDescriptor> _streamDescriptor;
+				ULONGLONG _startTickCount;
+				ULONGLONG _frameCount;
+				int _index;
+				ULONG _frameReady;
+				ULONG _frameBeingQueued;
+
+				// From the sample manager.
+				HRESULT ResetMediaBuffers();
+				static const int BufferCount = 3;
+				std::vector<ComPtr<IMFMediaBuffer>> _mediaBuffers;
+				int _frameBufferIndex;
+
+				bool _gpuVideoBuffer;
+				bool _isH264;
+				bool _started;
+			};
+		}
+	}
+}  // namespace Org.WebRtc.Internal
 
 #endif  // WEBRTC_BUILD_WINRT_GYP_API_WEBRTCMEDIASTREAM_H_

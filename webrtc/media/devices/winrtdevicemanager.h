@@ -32,10 +32,13 @@
 #error Invalid build configuration
 #endif  // WINRT
 
+#include <map>
 #include <string>
 #include <vector>
 
 #include "webrtc/media/base/device.h"
+#include "webrtc/media/base/videocapturer.h"
+#include "webrtc/media/base/videocapturerfactory.h"
 #include "webrtc/base/sigslot.h"
 #include "webrtc/base/stringencode.h"
 #include "webrtc/base/logging.h"
@@ -58,15 +61,20 @@ class WinRTDeviceManager {
   bool GetAudioInputDevices(std::vector<Device>* devices);
   bool GetAudioOutputDevices(std::vector<Device>* devices);
 
-   bool GetVideoCaptureDevices(std::vector<Device>* devs);
+  bool GetVideoCaptureDevices(std::vector<Device>* devs);
+	VideoCapturer* WinRTDeviceManager::CreateVideoCapturer(const Device& device) const;
 
+ protected:
+	 bool IsInWhitelist(const std::string& key, VideoFormat* video_format) const;
+	 bool GetMaxFormat(const Device& device, VideoFormat* video_format) const;
  private:
   bool GetDefaultVideoCaptureDevice(Device* device);
   void OnDeviceChange();
 
   static const char* kUsbDevicePathPrefix;
 	bool initialized_;
-
+	std::unique_ptr<VideoDeviceCapturerFactory> video_device_capturer_factory_;
+	std::map<std::string, VideoFormat> max_formats_;
 
   ref class WinRTWatcher sealed {
    public:

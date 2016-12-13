@@ -30,6 +30,16 @@
 #include "webrtc/modules/video_capture/video_capture_factory.h"
 #include "webrtc/media/base/mediacommon.h"
 
+namespace {
+
+	bool StringMatchWithWildcard(
+		const std::pair<const std::basic_string<char>, cricket::VideoFormat> key,
+		const std::string& val) {
+		return rtc::string_match(val.c_str(), key.first.c_str());
+	}
+
+}  // namespace
+
 namespace cricket {
   const char* WinRTDeviceManager::kUsbDevicePathPrefix = "\\\\?\\usb";
 
@@ -143,6 +153,49 @@ namespace cricket {
     return ret;
   }
 
+	VideoCapturer* WinRTDeviceManager::CreateVideoCapturer(const Device& device) const {
+		if (!video_device_capturer_factory_) {
+			LOG(LS_ERROR) << "No video capturer factory for devices.";
+			return NULL;
+		}
+		cricket::VideoCapturer* capturer =
+			video_device_capturer_factory_->Create(device);
+		if (!capturer) {
+			return NULL;
+		}
+		LOG(LS_INFO) << "Created VideoCapturer for " << device.name;
+		VideoFormat video_format;
+		bool has_max = GetMaxFormat(device, &video_format);
+		capturer->set_enable_camera_list(has_max);
+		if (has_max) {
+			capturer->ConstrainSupportedFormats(video_format);
+		}
+		return capturer;
+	}
+
+	bool WinRTDeviceManager::GetMaxFormat(const Device& device,
+		VideoFormat* video_format) const {
+		// Match USB ID if available. Failing that, match device name.
+#if !defined(WINRT)
+		std::string usb_id;
+		if (GetUsbId(device, &usb_id) && IsInWhitelist(usb_id, video_format)) {
+			return true;
+		}
+#endif
+		return IsInWhitelist(device.name, video_format);
+	}
+
+	bool WinRTDeviceManager::IsInWhitelist(const std::string& key,
+		VideoFormat* video_format) const {
+		std::map<std::string, VideoFormat>::const_iterator found =
+			std::search_n(max_formats_.begin(), max_formats_.end(), 1, key,
+				StringMatchWithWildcard);
+		if (found == max_formats_.end()) {
+			return false;
+		}
+		*video_format = found->second;
+		return true;
+	}
   void WinRTDeviceManager::OnDeviceChange() {
     SignalDevicesChange();
   }

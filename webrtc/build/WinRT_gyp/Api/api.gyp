@@ -18,7 +18,7 @@
   },
   'targets': [
     {
-      'target_name': 'webrtc_winrt_api',
+      'target_name': 'Org.WebRtc',
       'type': 'shared_library',
       'dependencies': [
         '../../../../webrtc/api/api.gyp:libjingle_peerconnection',
@@ -73,7 +73,7 @@
           'AdditionalDependencies': [
             'dxguid.lib',
           ],
-          'WindowsMetadataFile':'$(OutDir)webrtc_winrt_api.winmd',
+          'WindowsMetadataFile':'$(OutDir)Org.WebRtc.winmd',
           'conditions': [
             ['OS_RUNTIME=="winrt" and (winrt_platform=="win10" or winrt_platform=="win10_arm")', {
               'AdditionalDependencies': [
