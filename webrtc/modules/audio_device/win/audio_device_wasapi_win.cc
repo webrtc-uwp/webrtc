@@ -4896,27 +4896,27 @@ void AudioDeviceWindowsWasapi::Upmix(
                                      int16_t *outSamplesReal,
                                      uint32_t inChannels,
                                      uint32_t outChannels) {
-  // Create temporary array to do the upmix
-  std::unique_ptr<T> outSamples(new T[numberOfFrames * outChannels]);
+	// Create temporary array to do the upmix
+	std::unique_ptr<int16_t> outSamples(new int16_t[numberOfFrames * outChannels]);
 
-  // Copy over input channels
-  for (uint32_t i = 0, o = 0; i < numberOfFrames * inChannels;
-    i += inChannels, o += outChannels) {
-    for (uint32_t j = 0; j < inChannels; ++j) {
-      outSamples.get()[o + j] = inSamples[i + j];
-    }
-  }
+	// Copy over input channels
+	for (uint32_t i = 0, o = 0; i < numberOfFrames * inChannels;
+		i += inChannels, o += outChannels) {
+		for (uint32_t j = 0; j < inChannels; ++j) {
+			outSamples.get()[o + j] = inSamples[i + j];
+		}
+	}
 
-  // Add 0 to other channels
-  for (uint32_t i = 0, o = 0; i < numberOfFrames; ++i, o += outChannels) {
-    for (uint32_t j = inChannels; j < outChannels; ++j) {
-      outSamples.get()[o + j] = 0;
-    }
-  }
+	// Add 0 to other channels
+	for (uint32_t i = 0, o = 0; i < numberOfFrames; ++i, o += outChannels) {
+		for (uint32_t j = inChannels; j < outChannels; ++j) {
+			outSamples.get()[o + j] = 0;
+		}
+	}
 
-  // Copy over memory to be delivered to the IAudioRenderClient
-  memcpy(outSamplesReal, outSamples.get(),
-    _playBlockSize * outChannels * sizeof(int16_t));
+	// Copy over memory to be delivered to the IAudioRenderClient
+	memcpy(outSamplesReal, outSamples.get(),
+		_playBlockSize * outChannels * sizeof(int16_t));
 }
 
 void AudioDeviceWindowsWasapi::UpmixAndConvert(
@@ -4926,7 +4926,7 @@ void AudioDeviceWindowsWasapi::UpmixAndConvert(
                                                uint32_t inChannels,
                                                uint32_t outChannels) {
   // Create temporary array to do the upmix
-  rtc::scoped_ptr<float> outSamples(new float[numberOfFrames * outChannels]);
+	std::unique_ptr<float> outSamples(new float[numberOfFrames * outChannels]);
 
   // Copy over input channels
   for (uint32_t i = 0, o = 0; i < numberOfFrames * inChannels;

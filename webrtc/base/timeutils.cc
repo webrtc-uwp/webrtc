@@ -47,7 +47,9 @@ static const uint64_t kFileTimeToUnixTimeEpochOffset = 116444736000000000ULL;
 #endif
 
 #ifdef WINRT
+#if !defined(WEBRTC_WIN)
 static const uint64 kFileTimeToUnixTimeEpochOffset = 116444736000000000ULL;
+#endif
 static const uint64 kNTPTimeToUnixTimeEpochOffset = 2208988800000L;
 int64_t gAppStartTime = -1;  // Record app start time
 int64_t gTimeSinceOsStart = -1;  // when app start,
