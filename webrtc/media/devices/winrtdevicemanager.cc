@@ -42,6 +42,8 @@ namespace {
 
 namespace cricket {
   const char* WinRTDeviceManager::kUsbDevicePathPrefix = "\\\\?\\usb";
+	// Initialize to empty string.
+	const char WinRTDeviceManager::kDefaultDeviceName[] = "";
 
 	WinRTDeviceManager* DeviceManagerFactory::Create() {
     return new WinRTDeviceManager();

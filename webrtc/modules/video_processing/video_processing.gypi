@@ -43,7 +43,7 @@
         ['(target_arch=="ia32" or target_arch=="x64") and winrt_platform!="win_phone" and  winrt_platform!="win10_arm"', {
           'dependencies': [ 'video_processing_sse2', ],
         }],
-        ['target_arch=="arm" or target_arch == "arm64"', {
+        ['target_arch=="arm" or target_arch=="arm64" or winrt_platform=="win_phone" or winrt_platform=="win10_arm"', {
           'dependencies': [ 'video_processing_neon', ],
         }],
       ],
@@ -72,7 +72,7 @@
         },
       ],
     }],
-    ['target_arch=="arm" or target_arch == "arm64"', {
+    ['target_arch=="arm" or target_arch=="arm64" or winrt_platform=="win_phone" or winrt_platform=="win10_arm"', {
       'targets': [
         {
           'target_name': 'video_processing_neon',

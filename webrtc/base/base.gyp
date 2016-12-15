@@ -627,6 +627,8 @@
             'win32filesystem.cc',
             'win32filesystem.h',
             'win32securityerrors.cc',
+            'winping.cc',
+            'winping.h',
           ],
           'conditions': [
             ['OS_RUNTIME=="winrt"', {
@@ -651,8 +653,6 @@
                 'win32windowpicker.h',
                 'winfirewall.cc',
                 'winfirewall.h',
-                'winping.cc',
-                'winping.h',
               ],
 			}],
             ['winrt_platform!="win_phone" and  winrt_platform!="win10_arm"', {
