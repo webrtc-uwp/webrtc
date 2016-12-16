@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ac9e3ea_c5e09ab3",
+        "filename": "groups",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1002075
+      },
+      "writtenOn": "2016-12-16T09:30:58Z",
+      "side": 0,
+      "message": "Remove the group entirely? How do we control Git repo access then?",
+      "range": {
+        "startLine": 4,
+        "startChar": 48,
+        "endLine": 4,
+        "endChar": 58
+      },
+      "revId": "fd5e77acfd42b7d86e43363d98c2c247a2084b26",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3acce7f8_86e6aacd",
+        "filename": "project.config",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1002075
+      },
+      "writtenOn": "2016-12-16T09:30:58Z",
+      "side": 0,
+      "message": "Shouldn\u0027t webrtc-committers get push access somewhere else, or do we always have to use CQ to land CLs now?",
+      "range": {
+        "startLine": 33,
+        "startChar": 14,
+        "endLine": 33,
+        "endChar": 20
+      },
+      "revId": "fd5e77acfd42b7d86e43363d98c2c247a2084b26",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
