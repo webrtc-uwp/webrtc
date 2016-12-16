@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3acce7f8_e6db1e08",
+        "filename": "groups",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1141499
+      },
+      "writtenOn": "2016-12-16T09:32:08Z",
+      "side": 0,
+      "message": "this is just step 1. this will be re-added.",
+      "parentUuid": "1ac9e3ea_c5e09ab3",
+      "range": {
+        "startLine": 4,
+        "startChar": 48,
+        "endLine": 4,
+        "endChar": 58
+      },
+      "revId": "fd5e77acfd42b7d86e43363d98c2c247a2084b26",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3acce7f8_86e6aacd",
         "filename": "project.config",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2016-12-16T09:30:58Z",
       "side": 0,
       "message": "Shouldn\u0027t webrtc-committers get push access somewhere else, or do we always have to use CQ to land CLs now?",
+      "range": {
+        "startLine": 33,
+        "startChar": 14,
+        "endLine": 33,
+        "endChar": 20
+      },
+      "revId": "fd5e77acfd42b7d86e43363d98c2c247a2084b26",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab4f348_f1f76816",
+        "filename": "project.config",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1141499
+      },
+      "writtenOn": "2016-12-16T09:32:08Z",
+      "side": 0,
+      "message": "they will; this is just step 1.",
+      "parentUuid": "3acce7f8_86e6aacd",
       "range": {
         "startLine": 33,
         "startChar": 14,
