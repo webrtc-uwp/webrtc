@@ -113,7 +113,8 @@ WebRtcVideoCapturer::WebRtcVideoCapturer()
       module_(nullptr),
       captured_frames_(0),
       start_thread_(nullptr),
-      async_invoker_(nullptr) {
+      async_invoker_(nullptr),
+      hasFramePending_(false) {
   set_frame_factory(new WebRtcVideoFrameFactory());
 }
 
@@ -122,7 +123,8 @@ WebRtcVideoCapturer::WebRtcVideoCapturer(WebRtcVcmFactoryInterface* factory)
       module_(nullptr),
       captured_frames_(0),
       start_thread_(nullptr),
-      async_invoker_(nullptr) {
+      async_invoker_(nullptr),
+      hasFramePending_(false) {
   set_frame_factory(new WebRtcVideoFrameFactory());
 }
 
@@ -388,6 +390,7 @@ void WebRtcVideoCapturer::OnIncomingCapturedFrame(
               sample.video_frame_buffer(), sample.rotation(),
               sample.render_time_ms() * rtc::kNumMicrosecsPerMillisec, 0),
           sample.width(), sample.height());
+  hasFramePending_ = false;
 }
 
 void WebRtcVideoCapturer::OnCaptureDelayChanged(const int32_t id,
