@@ -10,6 +10,7 @@
 #error Invalid build configuration
 #endif  // WINRT
 #include "webrtc/media/devices/winrtdevicemanager.h"
+#include "webrtc/media/engine/webrtcvideocapturerfactory.h"
 #include <dbt.h>
 #include <strmif.h>
 #include <ks.h>
@@ -50,7 +51,11 @@ namespace cricket {
   }
 
 	WinRTDeviceManager::WinRTDeviceManager() :
-		watcher_(ref new WinRTWatcher()), initialized_(false) {}
+		watcher_(ref new WinRTWatcher()), initialized_(false) {
+#ifdef HAVE_WEBRTC_VIDEO
+		SetVideoDeviceCapturerFactory(new WebRtcVideoDeviceCapturerFactory());
+#endif  // HAVE_WEBRTC_VIDEO
+	}
 
   WinRTDeviceManager::~WinRTDeviceManager() {
     if (initialized_) {

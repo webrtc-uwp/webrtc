@@ -64,6 +64,11 @@ class WinRTDeviceManager {
   bool GetVideoCaptureDevices(std::vector<Device>* devs);
 	VideoCapturer* WinRTDeviceManager::CreateVideoCapturer(const Device& device) const;
 
+	virtual void SetVideoDeviceCapturerFactory(
+		VideoDeviceCapturerFactory* video_device_capturer_factory) {
+		video_device_capturer_factory_.reset(video_device_capturer_factory);
+	}
+
  protected:
 	 bool IsInWhitelist(const std::string& key, VideoFormat* video_format) const;
 	 bool GetMaxFormat(const Device& device, VideoFormat* video_format) const;
