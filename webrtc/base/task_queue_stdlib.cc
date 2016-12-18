@@ -50,9 +50,11 @@ TaskQueue::~TaskQueue() {
   RTC_DCHECK(!IsCurrent());
 
   thread_should_quit_ = true;
-  
+
+  notifyWake();
+
   while (!thread_did_quit_) {
-    RTC_CHECK_EQ(static_cast<DWORD>(ERROR_NOT_ENOUGH_QUOTA), ::GetLastError());
+    //RTC_CHECK_EQ(static_cast<DWORD>(ERROR_NOT_ENOUGH_QUOTA), ::GetLastError());
     Sleep(1);
   }
   thread_.Stop();
