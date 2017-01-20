@@ -75,8 +75,8 @@ void ProbeController::SetBitrates(int min_bitrate_bps,
   //     |max_bitrate_bps_| was increased.
   if (state_ != State::kWaitingForProbingResult &&
       estimated_bitrate_bps_ != 0 &&
-      estimated_bitrate_bps_ < old_max_bitrate_bps &&
-      max_bitrate_bps_ > old_max_bitrate_bps) {
+      old_max_bitrate_bps < max_bitrate_bps_ &&
+      estimated_bitrate_bps_ < max_bitrate_bps_) {
     InitiateProbing({max_bitrate_bps}, kExponentialProbingDisabled);
   }
 }
