@@ -37,6 +37,12 @@
           # Need to add a directory normally exported by libyuv.gyp.
           'include_dirs': ['<(libyuv_dir)/include',],
         }],
+		['OS=="win" and OS_RUNTIME=="winrt"', {
+            'sources': [
+              'video_common_winrt.cc',
+			  'video_common_winrt.h',
+            ],
+		}],
       ],
       'sources': [
         'i420_buffer_pool.cc',
@@ -52,8 +58,6 @@
         'video_frame_buffer.cc',
         'video_render_frames.cc',
         'video_render_frames.h',
-		'video_common_winrt.cc',
-		'video_common_winrt.h',
       ],
     },
   ],  # targets
