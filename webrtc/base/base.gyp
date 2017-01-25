@@ -709,6 +709,9 @@
             '_CRT_NONSTDC_NO_DEPRECATE',
           ],
         }],
+		['OS=="win" and winrt_platform=="win10_arm"', {
+          'msvs_disabled_warnings': [4005, 4703],
+        }],
 				['OS!="win"', {
           'sources/': [
             ['exclude', 'win32[a-z0-9]*\\.(h|cc)$'],
