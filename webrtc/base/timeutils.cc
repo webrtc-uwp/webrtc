@@ -43,8 +43,8 @@ const uint32_t HALF = 0x80000000;
 static const uint64_t kFileTimeToUnixTimeEpochOffset = 116444736000000000ULL;
 #endif
 
-#ifdef WINRT
-static const uint64 kNTPTimeToUnixTimeEpochOffset = 2208988800000L;
+//#ifdef WINRT
+static const uint64_t kNTPTimeToUnixTimeEpochOffset = 2208988800000L;
 int64_t gAppStartTime = -1;  // Record app start time
 int64_t gTimeSinceOsStart = -1;  // when app start,
 int64_t gOsTicksPerSecond = -1;
@@ -94,7 +94,7 @@ inline void InitializeAppStartTimestamp() {
   QueryPerformanceCounter(&qpcnt);
   gTimeSinceOsStart = (int64_t)((((uint64_t)qpcnt.QuadPart) * 100000ull / ((uint64_t)gOsTicksPerSecond)) * 10000ull);  // ns
 }
-#endif
+//#endif
 
 uint64_t TimeNanos() {
   int64_t ticks = 0;
