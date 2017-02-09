@@ -328,7 +328,12 @@ bool JsepTransport::ApplyLocalTransportDescription(
     TransportChannelImpl* channel,
     std::string* error_desc) {
   channel->SetIceParameters(local_description_->GetIceParameters());
-  return true;
+  bool ret = true;
+  if (certificate_) {
+    ret = channel->SetLocalCertificate(certificate_);
+    RTC_DCHECK(ret);
+  }
+  return ret;
 }
 
 bool JsepTransport::ApplyRemoteTransportDescription(
