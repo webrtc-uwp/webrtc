@@ -382,7 +382,7 @@ int H264VideoToolboxEncoder::RegisterEncodeCompleteCallback(
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-void H264VideoToolboxEncoder::OnDroppedFrame() {
+void H264VideoToolboxEncoder::OnDroppedFrame(uint32_t timestamp) {
   rtc::CritScope lock(&quality_scaler_crit_);
   quality_scaler_.ReportDroppedFrame();
 }
