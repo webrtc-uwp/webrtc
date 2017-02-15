@@ -47,7 +47,7 @@ class H264VideoToolboxEncoder : public H264Encoder {
 
   int RegisterEncodeCompleteCallback(EncodedImageCallback* callback) override;
 
-  void OnDroppedFrame() override;
+  void OnDroppedFrame(uint32_t timestamp) override;
   int SetChannelParameters(uint32_t packet_loss, int64_t rtt) override;
 
   int SetRates(uint32_t new_bitrate_kbit, uint32_t frame_rate) override;

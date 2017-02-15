@@ -472,7 +472,7 @@ int32_t H264EncoderImpl::SetPeriodicKeyFrames(bool enable) {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-void H264EncoderImpl::OnDroppedFrame() {
+void H264EncoderImpl::OnDroppedFrame(uint32_t timestamp) {
   quality_scaler_.ReportDroppedFrame();
 }
 
