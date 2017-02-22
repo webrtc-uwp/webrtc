@@ -53,9 +53,9 @@ class ClockInterface {
 // that uses it, eliminating the need for a global variable and this function.
 ClockInterface* SetClockForTesting(ClockInterface* clock);
 
-#ifdef WINRT
+//#ifdef WINRT
 void SyncWithNtp(int64_t timeFromNtpServer/*in ms*/);
-#endif // WINRT
+//#endif // WINRT
 
 // Returns the actual system time, even if a clock is set for testing.
 // Useful for timeouts while using a test clock, or for logging.
