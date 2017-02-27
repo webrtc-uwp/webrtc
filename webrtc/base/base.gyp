@@ -446,6 +446,8 @@
             'testbase64.h',
             'testclient.cc',
             'testclient.h',
+            'tracelog.cc',
+            'tracelog.h',
             'transformadapter.cc',
             'transformadapter.h',
             'versionparsing.cc',
@@ -635,8 +637,6 @@
 			  'sources': [
                 'loggingserver.cc',
                 'loggingserver.h',
-                'tracelog.cc',
-                'tracelog.h',
               ],
 			  'sources!': [
                 'sec_buffer.h',
