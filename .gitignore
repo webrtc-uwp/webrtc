@@ -174,6 +174,8 @@
 /x86-generic_out/
 /xcodebuild
 /out_ios
+/out_ios_armv7
+/out_ios_arm64
 /out_mac
 /all.ninja.xcworkspace
 /build_win10_x64/
