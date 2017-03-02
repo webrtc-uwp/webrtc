@@ -669,6 +669,9 @@
                 '_CRT_NONSTDC_NO_DEPRECATE',
               ],
 			}],
+			['OS=="win" and winrt_platform=="win10_arm"', {
+				'msvs_disabled_warnings': [4005, 4703],
+			}],
           ],
         }],
         ['os_posix==1', {
