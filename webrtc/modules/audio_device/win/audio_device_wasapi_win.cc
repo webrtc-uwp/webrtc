@@ -391,8 +391,6 @@ HRESULT AudioInterfaceActivator::ActivateCompleted(
       m_AudioDevice->_ptrClientIn = audioClient;
     }
   } else if (m_DeviceType == eOutputDevice) {
-    mixFormat = m_AudioDevice->_mixFormatOut;
-
     // Check for a successful activation result
     hr = pAsyncOp->GetActivateResult(&hrActivateResult, &punkAudioInterface);
     if (SUCCEEDED(hr) && SUCCEEDED(hrActivateResult)) {
@@ -556,9 +554,6 @@ HRESULT AudioInterfaceActivator::ActivateCompleted(
           "_playBlockSize     : %d", m_AudioDevice->_playBlockSize);
         WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, m_AudioDevice->_id,
           "_playChannels      : %d", m_AudioDevice->_playChannels);
-
-        // Remember this settings
-        m_AudioDevice->_mixFormatOut = WfxMix;
 
         // Now switch to the real supported mix format to initialize device
         m_AudioDevice->_mixFormatSurroundOut =
@@ -762,8 +757,6 @@ AudioDeviceWindowsWasapi::AudioDeviceWindowsWasapi(const int32_t id) :
     _sndCardPlayDelay(0),
     _sndCardRecDelay(0),
     _sampleDriftAt48kHz(0),
-    _mixFormatIn(NULL),
-    _mixFormatOut(NULL),
     _mixFormatSurroundOut(NULL),
     _enableUpmix(false),
     _driftAccumulator(0),
@@ -919,10 +912,6 @@ AudioDeviceWindowsWasapi::~AudioDeviceWindowsWasapi() {
     _hSetCaptureVolumeEvent = NULL;
   }
 
-  if (NULL != _mixFormatIn)
-    delete _mixFormatIn;
-  if (NULL != _mixFormatOut)
-    delete _mixFormatOut;
   if (NULL != _mixFormatSurroundOut)
     delete _mixFormatSurroundOut;
 
@@ -3573,7 +3562,7 @@ DWORD AudioDeviceWindowsWasapi::DoRenderThread() {
           }
 
           if (ShouldUpmix()) {
-            int size = _playBlockSize * _mixFormatSurroundOut->Format.nChannels;
+            int size = _playBlockSize * _playAudioFrameSize;
             // Create temporary array for upmixing procedure
             std::unique_ptr<BYTE> mediaEngineRenderData(new BYTE[size]);
 
@@ -4806,9 +4795,6 @@ bool AudioDeviceWindowsWasapi::ShouldUpmix() {
 // ----------------------------------------------------------------------------
 WAVEFORMATEX* AudioDeviceWindowsWasapi::GenerateMixFormatForMediaEngine(
   WAVEFORMATEX* actualMixFormat) {
-  if (_mixFormatOut)
-    return _mixFormatOut;
-
   WAVEFORMATEX* Wfx = new WAVEFORMATEX();
 
   bool isStereo = false;
@@ -4896,27 +4882,35 @@ void AudioDeviceWindowsWasapi::Upmix(
                                      int16_t *outSamplesReal,
                                      uint32_t inChannels,
                                      uint32_t outChannels) {
-	// Create temporary array to do the upmix
-	std::unique_ptr<int16_t> outSamples(new int16_t[numberOfFrames * outChannels]);
+  // Create temporary array to do the upmix
+  std::unique_ptr<int16_t> outSamples(new int16_t[numberOfFrames * outChannels]);
 
-	// Copy over input channels
-	for (uint32_t i = 0, o = 0; i < numberOfFrames * inChannels;
-		i += inChannels, o += outChannels) {
-		for (uint32_t j = 0; j < inChannels; ++j) {
-			outSamples.get()[o + j] = inSamples[i + j];
-		}
-	}
+  // Copy over input channels
+  for (uint32_t i = 0, o = 0; i < numberOfFrames * inChannels;
+    i += inChannels, o += outChannels) {
+    if (inChannels <= outChannels) {
+      for (uint32_t j = 0; j < inChannels; ++j) {
+        outSamples.get()[o + j] = inSamples[i + j];
+      }
+    } else {
+      for (uint32_t j = 0; j < outChannels; ++j) {
+        outSamples.get()[o + j] = (inSamples[i + j] + inSamples[i + j + 1]) / 2;
+      }
+    }
+  }
 
-	// Add 0 to other channels
-	for (uint32_t i = 0, o = 0; i < numberOfFrames; ++i, o += outChannels) {
-		for (uint32_t j = inChannels; j < outChannels; ++j) {
-			outSamples.get()[o + j] = 0;
-		}
-	}
+  if (inChannels < outChannels) {
+    // Add 0 to other channels
+    for (uint32_t i = 0, o = 0; i < numberOfFrames; ++i, o += outChannels) {
+      for (uint32_t j = inChannels; j < outChannels; ++j) {
+        outSamples.get()[o + j] = 0;
+      }
+    }
+  }
 
-	// Copy over memory to be delivered to the IAudioRenderClient
-	memcpy(outSamplesReal, outSamples.get(),
-		_playBlockSize * outChannels * sizeof(int16_t));
+  // Copy over memory to be delivered to the IAudioRenderClient
+  memcpy(outSamplesReal, outSamples.get(),
+    _playBlockSize * outChannels * sizeof(int16_t));
 }
 
 void AudioDeviceWindowsWasapi::UpmixAndConvert(
@@ -4926,20 +4920,28 @@ void AudioDeviceWindowsWasapi::UpmixAndConvert(
                                                uint32_t inChannels,
                                                uint32_t outChannels) {
   // Create temporary array to do the upmix
-	std::unique_ptr<float> outSamples(new float[numberOfFrames * outChannels]);
+  std::unique_ptr<float> outSamples(new float[numberOfFrames * outChannels]);
 
   // Copy over input channels
   for (uint32_t i = 0, o = 0; i < numberOfFrames * inChannels;
     i += inChannels, o += outChannels) {
-    for (uint32_t j = 0; j < inChannels; ++j) {
-      outSamples.get()[o + j] = (float)inSamples[i + j] / (float)INT16_MAX;
+    if (inChannels <= outChannels) {
+      for (uint32_t j = 0; j < inChannels; ++j) {
+        outSamples.get()[o + j] = (float)inSamples[i + j] / (float)INT16_MAX;
+      }
+    } else {
+      for (uint32_t j = 0; j < outChannels; ++j) {
+        outSamples.get()[o + j] = ((float)inSamples[i + j] + (float)inSamples[i + j + 1]) / (float)INT16_MAX / 2.0;
+      }
     }
   }
 
-  // Add 0 to other channels
-  for (uint32_t i = 0, o = 0; i < numberOfFrames; ++i, o += outChannels) {
-    for (uint32_t j = inChannels; j < outChannels; ++j) {
-      outSamples.get()[o + j] = 0.0f;
+  if (inChannels < outChannels) {
+    // Add 0 to other channels
+    for (uint32_t i = 0, o = 0; i < numberOfFrames; ++i, o += outChannels) {
+      for (uint32_t j = inChannels; j < outChannels; ++j) {
+        outSamples.get()[o + j] = 0.0f;
+      }
     }
   }
 

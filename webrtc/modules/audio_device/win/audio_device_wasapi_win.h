@@ -363,8 +363,6 @@ public:
     DeviceInformation^  _captureDevice;
     DeviceInformation^  _renderDevice;
 
-    WAVEFORMATEX           *_mixFormatIn;
-    WAVEFORMATEX           *_mixFormatOut;
     WAVEFORMATPCMEX        *_mixFormatSurroundOut;
     bool                   _enableUpmix;
 
