@@ -170,9 +170,12 @@ class VideoCapturer : public sigslot::has_slots<>,
   }
 
   // Suspend/Resume flow default behavior
-  virtual bool Suspend() { return false; }
-  virtual bool Resume() { return false; }
-  virtual bool IsSuspended() { return false; }
+  virtual bool Suspend() override { return false; }
+  virtual bool Resume() override { return false; }
+  virtual bool IsSuspended() override { return false; }
+
+  void SetIsH264Source(bool isH264) override { }
+  bool IsH264Source() override { return false; }
 
   virtual bool apply_rotation() { return apply_rotation_; }
 

@@ -141,7 +141,8 @@ VideoRtpReceiver::VideoRtpReceiver(MediaStreamInterface* stream,
                                    const std::string& track_id,
                                    rtc::Thread* worker_thread,
                                    uint32_t ssrc,
-                                   cricket::VideoChannel* channel)
+                                   cricket::VideoChannel* channel,
+                                   bool is_h264)
     : id_(track_id),
       ssrc_(ssrc),
       channel_(channel),
@@ -156,6 +157,7 @@ VideoRtpReceiver::VideoRtpReceiver(MediaStreamInterface* stream,
                                             worker_thread,
                                             source_)))) {
   source_->SetState(MediaSourceInterface::kLive);
+  source_->SetIsH264Source(is_h264);
   if (!channel_) {
     LOG(LS_ERROR)
         << "VideoRtpReceiver::VideoRtpReceiver: No video channel exists.";

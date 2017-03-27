@@ -267,6 +267,9 @@ void H264BitstreamParser::ParseSlice(const uint8_t* slice, size_t length) {
         FATAL() << "Unable to parse PPS from H264 bitstream.";
       break;
     }
+    case H264::NaluType::kSei:
+    case H264::NaluType::kAud:
+      break;
     default:
       RTC_CHECK(ParseNonParameterSetNalu(slice, length, nalu_type))
           << "Failed to parse picture slice.";

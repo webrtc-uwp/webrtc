@@ -177,7 +177,7 @@ class PeerConnection : public PeerConnectionInterface,
 
   void CreateVideoReceiver(MediaStreamInterface* stream,
                            const std::string& track_id,
-                           uint32_t ssrc);
+                           uint32_t ssrc, bool is_h264 = false);
   void DestroyReceiver(const std::string& track_id);
   void DestroyAudioSender(MediaStreamInterface* stream,
                           AudioTrackInterface* audio_track,
@@ -261,7 +261,7 @@ class PeerConnection : public PeerConnectionInterface,
       const std::vector<cricket::StreamParams>& streams,
       bool default_track_needed,
       cricket::MediaType media_type,
-      StreamCollection* new_streams, bool isH264 = false);
+      StreamCollection* new_streams, bool is_h264 = false);
 
   // Triggered when a remote track has been seen for the first time in a remote
   // session description. It creates a remote MediaStreamTrackInterface
@@ -270,7 +270,7 @@ class PeerConnection : public PeerConnectionInterface,
                          const std::string& track_id,
                          uint32_t ssrc,
                          cricket::MediaType media_type,
-                         bool isH264 = false);
+                         bool is_h264 = false);
 
   // Triggered when a remote track has been removed from a remote session
   // description. It removes the remote track with id |track_id| from a remote

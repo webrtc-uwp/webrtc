@@ -101,7 +101,8 @@ class VideoRtpReceiver : public rtc::RefCountedObject<RtpReceiverInternal>,
                    const std::string& track_id,
                    rtc::Thread* worker_thread,
                    uint32_t ssrc,
-                   cricket::VideoChannel* channel);
+                   cricket::VideoChannel* channel,
+                   bool is_h264 = false);
 
   virtual ~VideoRtpReceiver();
 

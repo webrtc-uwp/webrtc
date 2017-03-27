@@ -44,6 +44,9 @@ class VideoTrackSource : public Notifier<VideoTrackSourceInterface> {
   bool Resume() override { return false; }
   bool IsSuspended() override { return false; }
 
+  void SetIsH264Source(bool is_h264_source) override;
+  bool IsH264Source() override;
+
   void AddOrUpdateSink(rtc::VideoSinkInterface<cricket::VideoFrame>* sink,
                        const rtc::VideoSinkWants& wants) override;
   void RemoveSink(rtc::VideoSinkInterface<cricket::VideoFrame>* sink) override;
@@ -54,6 +57,7 @@ class VideoTrackSource : public Notifier<VideoTrackSourceInterface> {
   cricket::VideoOptions options_;
   SourceState state_;
   const bool remote_;
+  bool is_h264_source_;
 };
 
 }  // namespace webrtc

@@ -17,7 +17,8 @@ namespace webrtc {
 VideoTrackSource::VideoTrackSource(
     rtc::VideoSourceInterface<cricket::VideoFrame>* source,
     bool remote)
-    : source_(source), state_(kInitializing), remote_(remote) {
+    : source_(source), state_(kInitializing), remote_(remote),
+    is_h264_source_(false) {
   worker_thread_checker_.DetachFromThread();
 }
 
@@ -30,6 +31,14 @@ void VideoTrackSource::SetState(SourceState new_state) {
 
 void VideoTrackSource::OnSourceDestroyed() {
   source_ = nullptr;
+}
+
+void VideoTrackSource::SetIsH264Source(bool is_h264_source) {
+  is_h264_source_ = is_h264_source;
+}
+
+bool VideoTrackSource::IsH264Source() {
+  return is_h264_source_;
 }
 
 void VideoTrackSource::AddOrUpdateSink(

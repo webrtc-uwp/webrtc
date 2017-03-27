@@ -29,9 +29,12 @@ class VideoTrack : public MediaStreamTrack<VideoTrackInterface>,
       const std::string& label,
       VideoTrackSourceInterface* source);
 
-  bool Suspend() override;
-  bool Resume() override;
-  bool IsSuspended() override;
+  bool Suspend() override { return false; }
+  bool Resume() override { return false; }
+  bool IsSuspended() override { return false; }
+
+  void SetIsH264Source(bool isH264) override { }
+  bool IsH264Source() override { return false; }
 
   void AddOrUpdateSink(rtc::VideoSinkInterface<cricket::VideoFrame>* sink,
                        const rtc::VideoSinkWants& wants) override;

@@ -1418,12 +1418,12 @@ void PeerConnection::CreateAudioReceiver(MediaStreamInterface* stream,
 
 void PeerConnection::CreateVideoReceiver(MediaStreamInterface* stream,
                                          const std::string& track_id,
-                                         uint32_t ssrc) {
+                                         uint32_t ssrc, bool is_h264) {
   receivers_.push_back(
       RtpReceiverProxyWithInternal<RtpReceiverInternal>::Create(
           signaling_thread(),
           new VideoRtpReceiver(stream, track_id, factory_->worker_thread(),
-                               ssrc, session_->video_channel())));
+                               ssrc, session_->video_channel(), is_h264)));
 }
 
 // TODO(deadbeef): Keep RtpReceivers around even if track goes away in remote
@@ -1733,7 +1733,7 @@ void PeerConnection::UpdateRemoteStreamsList(
 	const cricket::StreamParamsVec& streams,
 	bool default_track_needed,
 	cricket::MediaType media_type,
-	StreamCollection* new_streams, bool isH264) {
+	StreamCollection* new_streams, bool is_h264) {
 	TrackInfos* current_tracks = GetRemoteTracks(media_type);
 
 	// Find removed tracks. I.e., tracks where the track id or ssrc don't match
@@ -1777,16 +1777,15 @@ void PeerConnection::UpdateRemoteStreamsList(
 			FindTrackInfo(*current_tracks, stream_label, track_id);
 		if (!track_info) {
 			current_tracks->push_back(TrackInfo(stream_label, track_id, ssrc));
-			OnRemoteTrackSeen(stream_label, track_id, ssrc, media_type, isH264);
+			OnRemoteTrackSeen(stream_label, track_id, ssrc, media_type, is_h264);
 		}
 		else {
-			// TODO(sergej): Check is this necessary
 			// Update the H264 bypass flag on existing tracks.
-			/*for (auto receiver : receivers_) {
+			for (auto receiver : receivers_) {
 				if (receiver->track()->kind() == MediaStreamTrackInterface::kVideoKind) {
-					((VideoTrackInterface*)receiver->track().get())->GetSource()->SetIsH264Source(isH264);
+					((VideoTrackInterface*)receiver->track().get())->GetSource()->SetIsH264Source(is_h264);
 				}
-			}*/
+			}
 		}
 
 		// Add default track if necessary.
@@ -1816,13 +1815,13 @@ void PeerConnection::UpdateRemoteStreamsList(
 void PeerConnection::OnRemoteTrackSeen(const std::string& stream_label,
                                        const std::string& track_id,
                                        uint32_t ssrc,
-                                       cricket::MediaType media_type, bool isH264) {
+                                       cricket::MediaType media_type, bool is_h264) {
   MediaStreamInterface* stream = remote_streams_->find(stream_label);
 
   if (media_type == cricket::MEDIA_TYPE_AUDIO) {
     CreateAudioReceiver(stream, track_id, ssrc);
   } else if (media_type == cricket::MEDIA_TYPE_VIDEO) {
-    CreateVideoReceiver(stream, track_id, ssrc);
+    CreateVideoReceiver(stream, track_id, ssrc, is_h264);
   } else {
     RTC_DCHECK(false && "Invalid media type");
   }

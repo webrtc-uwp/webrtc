@@ -55,6 +55,8 @@ BEGIN_PROXY_MAP(VideoTrack)
   PROXY_METHOD0(bool, Suspend)
   PROXY_METHOD0(bool, Resume)
   PROXY_METHOD0(bool, IsSuspended)
+  PROXY_METHOD1(void, SetIsH264Source, bool)
+  PROXY_METHOD0(bool, IsH264Source)
 END_PROXY()
 
 }  // namespace webrtc

@@ -34,9 +34,11 @@ class VideoBroadcaster : public VideoSourceBase,
                          public VideoSinkInterface<cricket::VideoFrame> {
  public:
   VideoBroadcaster();
-  bool Suspend() override;
-  bool Resume() override;
-  bool IsSuspended() override;
+  bool Suspend() override { return false; }
+  bool Resume() override { return false; }
+  bool IsSuspended() override { return false; }
+  void SetIsH264Source(bool isH264) override { }
+  bool IsH264Source() override { return false; }
   void AddOrUpdateSink(VideoSinkInterface<cricket::VideoFrame>* sink,
                        const VideoSinkWants& wants) override;
   void RemoveSink(VideoSinkInterface<cricket::VideoFrame>* sink) override;

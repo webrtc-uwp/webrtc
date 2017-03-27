@@ -32,18 +32,6 @@ std::string VideoTrack::kind() const {
   return kVideoKind;
 }
 
-bool VideoTrack::Suspend() {
-  return false;
-}
-
-bool VideoTrack::Resume() {
-  return false;
-}
-
-bool VideoTrack::IsSuspended() {
-  return false;
-}
-
 // AddOrUpdateSink and RemoveSink should be called on the worker
 // thread.
 void VideoTrack::AddOrUpdateSink(
