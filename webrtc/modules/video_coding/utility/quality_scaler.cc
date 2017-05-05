@@ -10,182 +10,178 @@
 
 #include "webrtc/modules/video_coding/utility/quality_scaler.h"
 
+#include <math.h>
+
+#include <algorithm>
+#include <memory>
+
+#include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/base/task_queue.h"
+
+// TODO(kthelgason): Some versions of Android have issues with log2.
+// See https://code.google.com/p/android/issues/detail?id=212634 for details
+#if defined(WEBRTC_ANDROID)
+#define log2(x) (log(x) / log(2))
+#endif
+
 namespace webrtc {
 
 namespace {
-static const int kMinFps = 5;
 // Threshold constant used until first downscale (to permit fast rampup).
-static const int kMeasureSecondsFastUpscale = 2;
-static const int kMeasureSecondsUpscale = 5;
-static const int kMeasureSecondsDownscale = 5;
+static const int kMeasureMs = 2000;
+static const float kSamplePeriodScaleFactor = 2.5;
 static const int kFramedropPercentThreshold = 60;
-// Min width/height to downscale to, set to not go below QVGA, but with some
-// margin to permit "almost-QVGA" resolutions, such as QCIF.
-static const int kMinDownscaleDimension = 140;
-// Initial resolutions corresponding to a bitrate. Aa bit above their actual
-// values to permit near-VGA and near-QVGA resolutions to use the same
-// mechanism.
-static const int kVgaBitrateThresholdKbps = 500;
-static const int kVgaNumPixels = 700 * 500;  // 640x480
-static const int kQvgaBitrateThresholdKbps = 250;
-static const int kQvgaNumPixels = 400 * 300;  // 320x240
+// QP scaling threshold defaults:
+static const int kLowH264QpThreshold = 24;
+static const int kHighH264QpThreshold = 37;
+// QP is obtained from VP8-bitstream for HW, so the QP corresponds to the
+// bitstream range of [0, 127] and not the user-level range of [0,63].
+static const int kLowVp8QpThreshold = 29;
+static const int kHighVp8QpThreshold = 95;
+
+static VideoEncoder::QpThresholds CodecTypeToDefaultThresholds(
+    VideoCodecType codec_type) {
+  int low = -1;
+  int high = -1;
+  switch (codec_type) {
+    case kVideoCodecH264:
+      low = kLowH264QpThreshold;
+      high = kHighH264QpThreshold;
+      break;
+    case kVideoCodecVP8:
+      low = kLowVp8QpThreshold;
+      high = kHighVp8QpThreshold;
+      break;
+    default:
+      RTC_NOTREACHED() << "Invalid codec type for QualityScaler.";
+  }
+  return VideoEncoder::QpThresholds(low, high);
+}
 }  // namespace
 
-// QP thresholds are chosen to be high enough to be hit in practice when quality
-// is good, but also low enough to not cause a flip-flop behavior (e.g. going up
-// in resolution shouldn't give so bad quality that we should go back down).
-
-const int QualityScaler::kLowVp8QpThreshold = 29;
-const int QualityScaler::kBadVp8QpThreshold = 95;
-
-#if defined(WEBRTC_IOS)
-const int QualityScaler::kLowH264QpThreshold = 32;
-const int QualityScaler::kBadH264QpThreshold = 42;
-#else
-const int QualityScaler::kLowH264QpThreshold = 24;
-const int QualityScaler::kBadH264QpThreshold = 37;
-#endif
-
-QualityScaler::QualityScaler() : low_qp_threshold_(-1) {}
-
-void QualityScaler::Init(int low_qp_threshold,
-                         int high_qp_threshold,
-                         int initial_bitrate_kbps,
-                         int width,
-                         int height,
-                         int fps) {
-  ClearSamples();
-  low_qp_threshold_ = low_qp_threshold;
-  high_qp_threshold_ = high_qp_threshold;
-  downscale_shift_ = 0;
-  // Use a faster window for upscaling initially (but be more graceful later).
-  // This enables faster initial rampups without risking strong up-down
-  // behavior later.
-  measure_seconds_upscale_ = kMeasureSecondsFastUpscale;
-  const int init_width = width;
-  const int init_height = height;
-  if (initial_bitrate_kbps > 0) {
-    int init_num_pixels = width * height;
-    if (initial_bitrate_kbps < kVgaBitrateThresholdKbps)
-      init_num_pixels = kVgaNumPixels;
-    if (initial_bitrate_kbps < kQvgaBitrateThresholdKbps)
-      init_num_pixels = kQvgaNumPixels;
-    while (width * height > init_num_pixels) {
-      ++downscale_shift_;
-      width /= 2;
-      height /= 2;
-    }
+class QualityScaler::CheckQPTask : public rtc::QueuedTask {
+ public:
+  explicit CheckQPTask(QualityScaler* scaler) : scaler_(scaler) {
+    LOG(LS_INFO) << "Created CheckQPTask. Scheduling on queue...";
+    rtc::TaskQueue::Current()->PostDelayedTask(
+        std::unique_ptr<rtc::QueuedTask>(this), scaler_->GetSamplingPeriodMs());
+  }
+  void Stop() {
+    RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
+    LOG(LS_INFO) << "Stopping QP Check task.";
+    stop_ = true;
   }
 
-  // Zero out width/height so they can be checked against inside
-  // UpdateTargetResolution.
-  res_.width = res_.height = 0;
-  UpdateTargetResolution(init_width, init_height);
-  ReportFramerate(fps);
+ private:
+  bool Run() override {
+    RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
+    if (stop_)
+      return true;  // TaskQueue will free this task.
+    scaler_->CheckQP();
+    rtc::TaskQueue::Current()->PostDelayedTask(
+        std::unique_ptr<rtc::QueuedTask>(this), scaler_->GetSamplingPeriodMs());
+    return false;  // Retain the task in order to reuse it.
+  }
+
+  QualityScaler* const scaler_;
+  bool stop_ = false;
+  rtc::SequencedTaskChecker task_checker_;
+};
+
+QualityScaler::QualityScaler(AdaptationObserverInterface* observer,
+                             VideoCodecType codec_type)
+    : QualityScaler(observer, CodecTypeToDefaultThresholds(codec_type)) {}
+
+QualityScaler::QualityScaler(AdaptationObserverInterface* observer,
+                             VideoEncoder::QpThresholds thresholds)
+    : QualityScaler(observer, thresholds, kMeasureMs) {}
+
+// Protected ctor, should not be called directly.
+QualityScaler::QualityScaler(AdaptationObserverInterface* observer,
+                             VideoEncoder::QpThresholds thresholds,
+                             int64_t sampling_period)
+    : check_qp_task_(nullptr),
+      observer_(observer),
+      sampling_period_ms_(sampling_period),
+      fast_rampup_(true),
+      // Arbitrarily choose size based on 30 fps for 5 seconds.
+      average_qp_(5 * 30),
+      framedrop_percent_(5 * 30),
+      thresholds_(thresholds) {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
+  RTC_DCHECK(observer_ != nullptr);
+  check_qp_task_ = new CheckQPTask(this);
 }
 
-// Report framerate(fps) to estimate # of samples.
-void QualityScaler::ReportFramerate(int framerate) {
-  framerate_ = framerate;
-  UpdateSampleCounts();
+QualityScaler::~QualityScaler() {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
+  check_qp_task_->Stop();
 }
 
-void QualityScaler::ReportQP(int qp) {
-  framedrop_percent_.AddSample(0);
-  average_qp_downscale_.AddSample(qp);
-  average_qp_upscale_.AddSample(qp);
+int64_t QualityScaler::GetSamplingPeriodMs() const {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
+  return fast_rampup_ ? sampling_period_ms_
+                      : (sampling_period_ms_ * kSamplePeriodScaleFactor);
 }
 
 void QualityScaler::ReportDroppedFrame() {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
   framedrop_percent_.AddSample(100);
 }
 
-void QualityScaler::OnEncodeFrame(int width, int height) {
+void QualityScaler::ReportQP(int qp) {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
+  framedrop_percent_.AddSample(0);
+  average_qp_.AddSample(qp);
+}
+
+void QualityScaler::CheckQP() {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
   // Should be set through InitEncode -> Should be set by now.
-  RTC_DCHECK_GE(low_qp_threshold_, 0);
-  RTC_DCHECK_GT(num_samples_upscale_, 0u);
-  RTC_DCHECK_GT(num_samples_downscale_, 0u);
-
-  // Update scale factor.
-  int avg_drop = 0;
-  int avg_qp = 0;
-
-  if ((framedrop_percent_.GetAverage(num_samples_downscale_, &avg_drop) &&
-       avg_drop >= kFramedropPercentThreshold) ||
-      (average_qp_downscale_.GetAverage(num_samples_downscale_, &avg_qp) &&
-       avg_qp > high_qp_threshold_)) {
-    AdjustScale(false);
-  } else if (average_qp_upscale_.GetAverage(num_samples_upscale_, &avg_qp) &&
-             avg_qp <= low_qp_threshold_) {
-    AdjustScale(true);
-  }
-  UpdateTargetResolution(width, height);
-}
-
-QualityScaler::Resolution QualityScaler::GetScaledResolution() const {
-  return res_;
-}
-
-rtc::scoped_refptr<VideoFrameBuffer> QualityScaler::GetScaledBuffer(
-    const rtc::scoped_refptr<VideoFrameBuffer>& frame) {
-  Resolution res = GetScaledResolution();
-  int src_width = frame->width();
-  int src_height = frame->height();
-
-  if (res.width == src_width && res.height == src_height)
-    return frame;
-  rtc::scoped_refptr<I420Buffer> scaled_buffer =
-      pool_.CreateBuffer(res.width, res.height);
-
-  scaled_buffer->ScaleFrom(frame);
-
-  return scaled_buffer;
-}
-
-void QualityScaler::UpdateTargetResolution(int frame_width, int frame_height) {
-  RTC_DCHECK_GE(downscale_shift_, 0);
-  int shifts_performed = 0;
-  for (int shift = downscale_shift_;
-       shift > 0 && (frame_width / 2 >= kMinDownscaleDimension) &&
-       (frame_height / 2 >= kMinDownscaleDimension);
-       --shift, ++shifts_performed) {
-    frame_width /= 2;
-    frame_height /= 2;
-  }
-  // Clamp to number of shifts actually performed to not be stuck trying to
-  // scale way beyond QVGA.
-  downscale_shift_ = shifts_performed;
-  if (res_.width == frame_width && res_.height == frame_height) {
-    // No reset done/needed, using same resolution.
+  RTC_DCHECK_GE(thresholds_.low, 0);
+  LOG(LS_INFO) << "Checking if average QP exceeds threshold";
+  // Check if we should scale down due to high frame drop.
+  const rtc::Optional<int> drop_rate = framedrop_percent_.GetAverage();
+  if (drop_rate && *drop_rate >= kFramedropPercentThreshold) {
+    ReportQPHigh();
     return;
   }
-  res_.width = frame_width;
-  res_.height = frame_height;
+
+  // Check if we should scale up or down based on QP.
+  const rtc::Optional<int> avg_qp = average_qp_.GetAverage();
+  if (avg_qp && *avg_qp > thresholds_.high) {
+    ReportQPHigh();
+    return;
+  }
+  if (avg_qp && *avg_qp <= thresholds_.low) {
+    // QP has been low. We want to try a higher resolution.
+    ReportQPLow();
+    return;
+  }
+}
+
+void QualityScaler::ReportQPLow() {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
+  LOG(LS_INFO) << "QP has been low, asking for higher resolution.";
   ClearSamples();
+  observer_->AdaptUp(AdaptationObserverInterface::AdaptReason::kQuality);
+}
+
+void QualityScaler::ReportQPHigh() {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
+  LOG(LS_INFO) << "QP has been high , asking for lower resolution.";
+  ClearSamples();
+  observer_->AdaptDown(AdaptationObserverInterface::AdaptReason::kQuality);
+  // If we've scaled down, wait longer before scaling up again.
+  if (fast_rampup_) {
+    fast_rampup_ = false;
+  }
 }
 
 void QualityScaler::ClearSamples() {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
   framedrop_percent_.Reset();
-  average_qp_downscale_.Reset();
-  average_qp_upscale_.Reset();
+  average_qp_.Reset();
 }
-
-void QualityScaler::UpdateSampleCounts() {
-  num_samples_downscale_ = static_cast<size_t>(
-      kMeasureSecondsDownscale * (framerate_ < kMinFps ? kMinFps : framerate_));
-  num_samples_upscale_ = static_cast<size_t>(
-      measure_seconds_upscale_ * (framerate_ < kMinFps ? kMinFps : framerate_));
-}
-
-void QualityScaler::AdjustScale(bool up) {
-  downscale_shift_ += up ? -1 : 1;
-  if (downscale_shift_ < 0)
-    downscale_shift_ = 0;
-  if (!up) {
-    // First downscale hit, start using a slower threshold for going up.
-    measure_seconds_upscale_ = kMeasureSecondsUpscale;
-    UpdateSampleCounts();
-  }
-}
-
 }  // namespace webrtc

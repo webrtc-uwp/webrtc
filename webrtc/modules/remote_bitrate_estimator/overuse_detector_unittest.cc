@@ -15,8 +15,6 @@
 #include <cstdlib>
 #include <memory>
 
-#include "testing/gtest/include/gtest/gtest.h"
-
 #include "webrtc/base/random.h"
 #include "webrtc/base/rate_statistics.h"
 #include "webrtc/common_types.h"
@@ -24,6 +22,7 @@
 #include "webrtc/modules/remote_bitrate_estimator/overuse_detector.h"
 #include "webrtc/modules/remote_bitrate_estimator/overuse_estimator.h"
 #include "webrtc/test/field_trial.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 namespace testing {
@@ -43,7 +42,7 @@ class OveruseDetectorTest : public ::testing::Test {
 
  protected:
   void SetUp() override {
-    overuse_detector_.reset(new OveruseDetector(options_));
+    overuse_detector_.reset(new OveruseDetector());
   }
 
   int Run100000Samples(int packets_per_frame, size_t packet_size, int mean_ms,
@@ -100,7 +99,7 @@ class OveruseDetectorTest : public ::testing::Test {
             &timestamp_delta, &time_delta, &size_delta)) {
       double timestamp_delta_ms = timestamp_delta / 90.0;
       overuse_estimator_->Update(time_delta, timestamp_delta_ms, size_delta,
-                                 overuse_detector_->State());
+                                 overuse_detector_->State(), receive_time_ms);
       overuse_detector_->Detect(
           overuse_estimator_->offset(), timestamp_delta_ms,
           overuse_estimator_->num_of_deltas(), receive_time_ms);
@@ -650,7 +649,7 @@ class OveruseDetectorExperimentTest : public OveruseDetectorTest {
 
  protected:
   void SetUp() override {
-    overuse_detector_.reset(new OveruseDetector(options_));
+    overuse_detector_.reset(new OveruseDetector());
   }
 
   test::ScopedFieldTrials override_field_trials_;

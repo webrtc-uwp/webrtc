@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "webrtc/api/video/i420_buffer.h"
+#include "webrtc/api/video/video_frame.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/media/base/fakevideorenderer.h"
 #include "webrtc/media/base/videobroadcaster.h"
-#include "webrtc/media/engine/webrtcvideoframe.h"
 
 using rtc::VideoBroadcaster;
 using rtc::VideoSinkWants;
 using cricket::FakeVideoRenderer;
-using cricket::WebRtcVideoFrame;
 
 
 TEST(VideoBroadcasterTest, frame_wanted) {
@@ -38,8 +38,15 @@ TEST(VideoBroadcasterTest, OnFrame) {
   FakeVideoRenderer sink2;
   broadcaster.AddOrUpdateSink(&sink1, rtc::VideoSinkWants());
   broadcaster.AddOrUpdateSink(&sink2, rtc::VideoSinkWants());
+  static int kWidth = 100;
+  static int kHeight = 50;
 
-  WebRtcVideoFrame frame;
+  rtc::scoped_refptr<webrtc::I420Buffer> buffer(
+      webrtc::I420Buffer::Create(kWidth, kHeight));
+  // Initialize, to avoid warnings on use of initialized values.
+  webrtc::I420Buffer::SetBlack(buffer);
+
+  webrtc::VideoFrame frame(buffer, webrtc::kVideoRotation_0, 0);
 
   broadcaster.OnFrame(frame);
   EXPECT_EQ(1, sink1.num_rendered_frames());
@@ -99,25 +106,25 @@ TEST(VideoBroadcasterTest, AppliesMinOfSinkWantsMaxPixelCount) {
   EXPECT_EQ(1280 * 720, *broadcaster.wants().max_pixel_count);
 }
 
-TEST(VideoBroadcasterTest, AppliesMinOfSinkWantsMaxPixelCountStepUp) {
+TEST(VideoBroadcasterTest, AppliesMinOfSinkWantsMaxAndTargetPixelCount) {
   VideoBroadcaster broadcaster;
-  EXPECT_TRUE(!broadcaster.wants().max_pixel_count_step_up);
+  EXPECT_TRUE(!broadcaster.wants().target_pixel_count);
 
   FakeVideoRenderer sink1;
   VideoSinkWants wants1;
-  wants1.max_pixel_count_step_up = rtc::Optional<int>(1280 * 720);
+  wants1.target_pixel_count = rtc::Optional<int>(1280 * 720);
 
   broadcaster.AddOrUpdateSink(&sink1, wants1);
-  EXPECT_EQ(1280 * 720, *broadcaster.wants().max_pixel_count_step_up);
+  EXPECT_EQ(1280 * 720, *broadcaster.wants().target_pixel_count);
 
   FakeVideoRenderer sink2;
   VideoSinkWants wants2;
-  wants2.max_pixel_count_step_up = rtc::Optional<int>(640 * 360);
+  wants2.target_pixel_count = rtc::Optional<int>(640 * 360);
   broadcaster.AddOrUpdateSink(&sink2, wants2);
-  EXPECT_EQ(640 * 360, *broadcaster.wants().max_pixel_count_step_up);
+  EXPECT_EQ(640 * 360, *broadcaster.wants().target_pixel_count);
 
   broadcaster.RemoveSink(&sink2);
-  EXPECT_EQ(1280 * 720, *broadcaster.wants().max_pixel_count_step_up);
+  EXPECT_EQ(1280 * 720, *broadcaster.wants().target_pixel_count);
 }
 
 TEST(VideoBroadcasterTest, SinkWantsBlackFrames) {
@@ -135,17 +142,17 @@ TEST(VideoBroadcasterTest, SinkWantsBlackFrames) {
   broadcaster.AddOrUpdateSink(&sink2, wants2);
 
   rtc::scoped_refptr<webrtc::I420Buffer> buffer(
-      new rtc::RefCountedObject<webrtc::I420Buffer>(100, 200));
+      webrtc::I420Buffer::Create(100, 200));
   // Makes it not all black.
   buffer->InitializeData();
 
-  cricket::WebRtcVideoFrame frame1(buffer, webrtc::kVideoRotation_0,
-                                   10 /* timestamp_us */, 0 /* frame_id */);
+  webrtc::VideoFrame frame1(buffer, webrtc::kVideoRotation_0,
+                            10 /* timestamp_us */);
   broadcaster.OnFrame(frame1);
   EXPECT_TRUE(sink1.black_frame());
-  EXPECT_EQ(10000, sink1.timestamp());
+  EXPECT_EQ(10, sink1.timestamp_us());
   EXPECT_FALSE(sink2.black_frame());
-  EXPECT_EQ(10000, sink2.timestamp());
+  EXPECT_EQ(10, sink2.timestamp_us());
 
   // Switch the sink wants.
   wants1.black_frames = false;
@@ -153,11 +160,11 @@ TEST(VideoBroadcasterTest, SinkWantsBlackFrames) {
   wants2.black_frames = true;
   broadcaster.AddOrUpdateSink(&sink2, wants2);
 
-  cricket::WebRtcVideoFrame frame2(buffer, webrtc::kVideoRotation_0,
-                                   30 /* timestamp_us */, 0 /* frame_id */);
+  webrtc::VideoFrame frame2(buffer, webrtc::kVideoRotation_0,
+                            30 /* timestamp_us */);
   broadcaster.OnFrame(frame2);
   EXPECT_FALSE(sink1.black_frame());
-  EXPECT_EQ(30000, sink1.timestamp());
+  EXPECT_EQ(30, sink1.timestamp_us());
   EXPECT_TRUE(sink2.black_frame());
-  EXPECT_EQ(30000, sink2.timestamp());
+  EXPECT_EQ(30, sink2.timestamp_us());
 }

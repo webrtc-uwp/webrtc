@@ -10,6 +10,8 @@
 
 #include "webrtc/video/send_delay_stats.h"
 
+#include <utility>
+
 #include "webrtc/base/logging.h"
 #include "webrtc/system_wrappers/include/metrics.h"
 
@@ -42,8 +44,8 @@ void SendDelayStats::UpdateHistograms() {
   for (const auto& it : send_delay_counters_) {
     AggregatedStats stats = it.second->GetStats();
     if (stats.num_samples >= kMinRequiredPeriodicSamples) {
-      RTC_LOGGED_HISTOGRAM_COUNTS_10000("WebRTC.Video.SendDelayInMs",
-                                        stats.average);
+      RTC_HISTOGRAM_COUNTS_10000("WebRTC.Video.SendDelayInMs", stats.average);
+      LOG(LS_INFO) << "WebRTC.Video.SendDelayInMs, " << stats.ToString();
     }
   }
 }
@@ -61,7 +63,7 @@ AvgCounter* SendDelayStats::GetSendDelayCounter(uint32_t ssrc) {
   if (it != send_delay_counters_.end())
     return it->second.get();
 
-  AvgCounter* counter = new AvgCounter(clock_, nullptr);
+  AvgCounter* counter = new AvgCounter(clock_, nullptr, false);
   send_delay_counters_[ssrc].reset(counter);
   return counter;
 }

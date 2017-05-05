@@ -10,6 +10,8 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/sdes.h"
 
+#include <utility>
+
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/modules/rtp_rtcp/source/byte_io.h"
@@ -17,6 +19,7 @@
 
 namespace webrtc {
 namespace rtcp {
+constexpr uint8_t Sdes::kPacketType;
 // Source Description (SDES) (RFC 3550).
 //
 //         0                   1                   2                   3
@@ -60,7 +63,7 @@ Sdes::Sdes() : block_length_(RtcpPacket::kHeaderLength) {}
 Sdes::~Sdes() {}
 
 bool Sdes::Parse(const CommonHeader& packet) {
-  RTC_DCHECK(packet.type() == kPacketType);
+  RTC_DCHECK_EQ(packet.type(), kPacketType);
 
   uint8_t number_of_chunks = packet.count();
   std::vector<Chunk> chunks;  // Read chunk into temporary array, so that in
@@ -137,7 +140,7 @@ bool Sdes::Parse(const CommonHeader& packet) {
   return true;
 }
 
-bool Sdes::WithCName(uint32_t ssrc, const std::string& cname) {
+bool Sdes::AddCName(uint32_t ssrc, std::string cname) {
   RTC_DCHECK_LE(cname.length(), 0xffu);
   if (chunks_.size() >= kMaxNumberOfChunks) {
     LOG(LS_WARNING) << "Max SDES chunks reached.";
@@ -145,7 +148,7 @@ bool Sdes::WithCName(uint32_t ssrc, const std::string& cname) {
   }
   Chunk chunk;
   chunk.ssrc = ssrc;
-  chunk.cname = cname;
+  chunk.cname = std::move(cname);
   chunks_.push_back(chunk);
   block_length_ += ChunkSize(chunk);
   return true;

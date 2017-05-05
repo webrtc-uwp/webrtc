@@ -10,9 +10,8 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/pli.h"
 
-#include "testing/gmock/include/gmock/gmock.h"
-#include "testing/gtest/include/gtest/gtest.h"
-
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/rtcp_packet_parser.h"
 
 using testing::ElementsAreArray;
@@ -40,8 +39,8 @@ TEST(RtcpPacketPliTest, Parse) {
 
 TEST(RtcpPacketPliTest, Create) {
   Pli pli;
-  pli.From(kSenderSsrc);
-  pli.To(kRemoteSsrc);
+  pli.SetSenderSsrc(kSenderSsrc);
+  pli.SetMediaSsrc(kRemoteSsrc);
 
   rtc::Buffer packet = pli.Build();
 

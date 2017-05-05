@@ -24,8 +24,6 @@
 #include "webrtc/modules/remote_bitrate_estimator/test/packet_sender.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
-using std::string;
-
 namespace webrtc {
 namespace testing {
 namespace bwe {
@@ -57,8 +55,7 @@ class BweFeedbackTest
 
 INSTANTIATE_TEST_CASE_P(VideoSendersTest,
                         BweFeedbackTest,
-                        ::testing::Values(kRembEstimator,
-                                          kFullSendSideEstimator));
+                        ::testing::Values(kRembEstimator, kSendSideEstimator));
 
 TEST_P(BweFeedbackTest, ConstantCapacity) {
   AdaptiveVideoSource source(0, 30, 300, 0, 0);

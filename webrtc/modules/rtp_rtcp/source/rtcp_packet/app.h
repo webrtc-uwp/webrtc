@@ -12,7 +12,6 @@
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_APP_H_
 
 #include "webrtc/base/buffer.h"
-#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet.h"
 
 namespace webrtc {
@@ -28,10 +27,10 @@ class App : public RtcpPacket {
   // Parse assumes header is already parsed and validated.
   bool Parse(const CommonHeader& packet);
 
-  void From(uint32_t ssrc) { ssrc_ = ssrc; }
-  void WithSubType(uint8_t subtype);
-  void WithName(uint32_t name) { name_ = name; }
-  void WithData(const uint8_t* data, size_t data_length);
+  void SetSsrc(uint32_t ssrc) { ssrc_ = ssrc; }
+  void SetSubType(uint8_t subtype);
+  void SetName(uint32_t name) { name_ = name; }
+  void SetData(const uint8_t* data, size_t data_length);
 
   uint8_t sub_type() const { return sub_type_; }
   uint32_t ssrc() const { return ssrc_; }
@@ -56,8 +55,6 @@ class App : public RtcpPacket {
   uint32_t ssrc_;
   uint32_t name_;
   rtc::Buffer data_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(App);
 };
 
 }  // namespace rtcp

@@ -14,19 +14,18 @@
 
 namespace webrtc {
 
-I420BufferPool::I420BufferPool(bool zero_initialize)
-    : zero_initialize_(zero_initialize) {
-  sequenced_checker_.Detach();
-}
+I420BufferPool::I420BufferPool(bool zero_initialize,
+                               size_t max_number_of_buffers)
+    : zero_initialize_(zero_initialize),
+      max_number_of_buffers_(max_number_of_buffers) {}
 
 void I420BufferPool::Release() {
-  sequenced_checker_.Detach();
   buffers_.clear();
 }
 
 rtc::scoped_refptr<I420Buffer> I420BufferPool::CreateBuffer(int width,
                                                             int height) {
-  RTC_DCHECK(sequenced_checker_.CalledSequentially());
+  RTC_DCHECK_RUNS_SERIALIZED(&race_checker_);
   // Release buffers with wrong resolution.
   for (auto it = buffers_.begin(); it != buffers_.end();) {
     if ((*it)->width() != width || (*it)->height() != height)
@@ -43,6 +42,9 @@ rtc::scoped_refptr<I420Buffer> I420BufferPool::CreateBuffer(int width,
     if (buffer->HasOneRef())
       return buffer;
   }
+
+  if (buffers_.size() >= max_number_of_buffers_)
+    return nullptr;
   // Allocate new buffer.
   rtc::scoped_refptr<PooledI420Buffer> buffer =
       new PooledI420Buffer(width, height);

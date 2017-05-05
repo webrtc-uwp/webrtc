@@ -10,7 +10,10 @@
 #ifndef WEBRTC_TOOLS_EVENT_LOG_VISUALIZER_PLOT_PROTOBUF_H_
 #define WEBRTC_TOOLS_EVENT_LOG_VISUALIZER_PLOT_PROTOBUF_H_
 
-#include "webrtc/tools/event_log_visualizer/graph.pb.h"
+#include "webrtc/base/ignore_wundef.h"
+RTC_PUSH_IGNORING_WUNDEF()
+#include "webrtc/tools/event_log_visualizer/chart.pb.h"
+RTC_POP_IGNORING_WUNDEF()
 #include "webrtc/tools/event_log_visualizer/plot_base.h"
 
 namespace webrtc {
@@ -21,7 +24,7 @@ class ProtobufPlot final : public Plot {
   ProtobufPlot();
   ~ProtobufPlot() override;
   void Draw() override;
-  void ExportProtobuf(protobuf_plot::Plot* plot);
+  void ExportProtobuf(webrtc::analytics::Chart* chart);
 };
 
 class ProtobufPlotCollection final : public PlotCollection {
@@ -30,7 +33,7 @@ class ProtobufPlotCollection final : public PlotCollection {
   ~ProtobufPlotCollection() override;
   void Draw() override;
   Plot* AppendNewPlot() override;
-  void ExportProtobuf(protobuf_plot::PlotCollection* collection);
+  void ExportProtobuf(webrtc::analytics::ChartCollection* collection);
 };
 
 }  // namespace plotting

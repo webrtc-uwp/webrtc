@@ -102,6 +102,9 @@ const CodecInst ACMCodecDB::database_[] = {
   {100, "CN", 48000, 1440, 1, 0},
 #endif
   {106, "telephone-event", 8000, 240, 1, 0},
+  {114, "telephone-event", 16000, 240, 1, 0},
+  {115, "telephone-event", 32000, 240, 1, 0},
+  {116, "telephone-event", 48000, 240, 1, 0},
 #ifdef WEBRTC_CODEC_RED
   {127, "red", 8000, 0, 1, 0},
 #endif
@@ -148,15 +151,23 @@ const ACMCodecDB::CodecSettings ACMCodecDB::codec_settings_[] = {
     // Opus supports frames shorter than 10ms,
     // but it doesn't help us to use them.
     // Mono and stereo.
+#if WEBRTC_OPUS_SUPPORT_120MS_PTIME
+    {5, {480, 960, 1920, 2880, 5760}, 0, 2},
+#else
     {4, {480, 960, 1920, 2880}, 0, 2},
+#endif
 #endif
     // Comfort noise for three different sampling frequencies.
     {1, {240}, 240, 1},
     {1, {480}, 480, 1},
     {1, {960}, 960, 1},
+// TODO(solenberg): What is this flag? It is never set in the build files.
 #ifdef ENABLE_48000_HZ
     {1, {1440}, 1440, 1},
 #endif
+    {1, {240}, 240, 1},
+    {1, {240}, 240, 1},
+    {1, {240}, 240, 1},
     {1, {240}, 240, 1},
 #ifdef WEBRTC_CODEC_RED
     {1, {0}, 0, 1},
@@ -204,6 +215,9 @@ const NetEqDecoder ACMCodecDB::neteq_decoders_[] = {
     NetEqDecoder::kDecoderCNGswb48kHz,
 #endif
     NetEqDecoder::kDecoderAVT,
+    NetEqDecoder::kDecoderAVT16kHz,
+    NetEqDecoder::kDecoderAVT32kHz,
+    NetEqDecoder::kDecoderAVT48kHz,
 #ifdef WEBRTC_CODEC_RED
     NetEqDecoder::kDecoderRED,
 #endif

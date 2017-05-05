@@ -12,8 +12,7 @@
 
 #include <memory>
 
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/common.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {

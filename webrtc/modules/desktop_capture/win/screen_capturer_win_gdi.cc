@@ -10,17 +10,15 @@
 
 #include "webrtc/modules/desktop_capture/win/screen_capturer_win_gdi.h"
 
-#include <assert.h>
-
 #include <utility>
 
 #include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
 #include "webrtc/base/timeutils.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/desktop_frame_win.h"
 #include "webrtc/modules/desktop_capture/desktop_region.h"
-#include "webrtc/modules/desktop_capture/differ.h"
 #include "webrtc/modules/desktop_capture/mouse_cursor.h"
 #include "webrtc/modules/desktop_capture/win/cursor.h"
 #include "webrtc/modules/desktop_capture/win/desktop.h"
@@ -72,7 +70,7 @@ void ScreenCapturerWinGdi::SetSharedMemoryFactory(
   shared_memory_factory_ = std::move(shared_memory_factory);
 }
 
-void ScreenCapturerWinGdi::Capture(const DesktopRegion& region) {
+void ScreenCapturerWinGdi::CaptureFrame() {
   int64_t capture_start_time_nanos = rtc::TimeNanos();
 
   queue_.MoveToNextFrame();
@@ -86,52 +84,24 @@ void ScreenCapturerWinGdi::Capture(const DesktopRegion& region) {
     return;
   }
 
-  const DesktopFrame* current_frame = queue_.current_frame();
-  const DesktopFrame* last_frame = queue_.previous_frame();
-  if (last_frame && last_frame->size().equals(current_frame->size())) {
-    // Make sure the differencer is set up correctly for these previous and
-    // current screens.
-    if (!differ_.get() ||
-        (differ_->width() != current_frame->size().width()) ||
-        (differ_->height() != current_frame->size().height()) ||
-        (differ_->bytes_per_row() != current_frame->stride())) {
-      differ_.reset(new Differ(current_frame->size().width(),
-                               current_frame->size().height(),
-                               DesktopFrame::kBytesPerPixel,
-                               current_frame->stride()));
-    }
-
-    // Calculate difference between the two last captured frames.
-    DesktopRegion region;
-    differ_->CalcDirtyRegion(last_frame->data(), current_frame->data(),
-                             &region);
-    helper_.InvalidateRegion(region);
-  } else {
-    // No previous frame is available, or the screen is resized. Invalidate the
-    // whole screen.
-    helper_.InvalidateScreen(current_frame->size());
-  }
-
-  helper_.set_size_most_recent(current_frame->size());
-
   // Emit the current frame.
   std::unique_ptr<DesktopFrame> frame = queue_.current_frame()->Share();
   frame->set_dpi(DesktopVector(
       GetDeviceCaps(desktop_dc_, LOGPIXELSX),
       GetDeviceCaps(desktop_dc_, LOGPIXELSY)));
-  frame->mutable_updated_region()->Clear();
-  helper_.TakeInvalidRegion(frame->mutable_updated_region());
+  frame->mutable_updated_region()->SetRect(
+      DesktopRect::MakeSize(frame->size()));
   frame->set_capture_time_ms(
       (rtc::TimeNanos() - capture_start_time_nanos) /
       rtc::kNumNanosecsPerMillisec);
   callback_->OnCaptureResult(Result::SUCCESS, std::move(frame));
 }
 
-bool ScreenCapturerWinGdi::GetScreenList(ScreenList* screens) {
-  return webrtc::GetScreenList(screens);
+bool ScreenCapturerWinGdi::GetSourceList(SourceList* sources) {
+  return webrtc::GetScreenList(sources);
 }
 
-bool ScreenCapturerWinGdi::SelectScreen(ScreenId id) {
+bool ScreenCapturerWinGdi::SelectSource(SourceId id) {
   bool valid = IsScreenValid(id, &current_device_key_);
   if (valid)
     current_screen_id_ = id;
@@ -139,8 +109,8 @@ bool ScreenCapturerWinGdi::SelectScreen(ScreenId id) {
 }
 
 void ScreenCapturerWinGdi::Start(Callback* callback) {
-  assert(!callback_);
-  assert(callback);
+  RTC_DCHECK(!callback_);
+  RTC_DCHECK(callback);
 
   callback_ = callback;
 
@@ -198,22 +168,18 @@ void ScreenCapturerWinGdi::PrepareCaptureResources() {
   }
 
   if (!desktop_dc_) {
-    assert(!memory_dc_);
+    RTC_DCHECK(!memory_dc_);
 
     // Create GDI device contexts to capture from the desktop into memory.
     desktop_dc_ = GetDC(nullptr);
-    if (!desktop_dc_)
-      abort();
+    RTC_CHECK(desktop_dc_);
     memory_dc_ = CreateCompatibleDC(desktop_dc_);
-    if (!memory_dc_)
-      abort();
+    RTC_CHECK(memory_dc_);
 
     desktop_dc_rect_ = screen_rect;
 
     // Make sure the frame buffers will be reallocated.
     queue_.Reset();
-
-    helper_.ClearInvalidRegion();
   }
 }
 
@@ -229,8 +195,8 @@ bool ScreenCapturerWinGdi::CaptureImage() {
   // may still be reading from them.
   if (!queue_.current_frame() ||
       !queue_.current_frame()->size().equals(screen_rect.size())) {
-    assert(desktop_dc_);
-    assert(memory_dc_);
+    RTC_DCHECK(desktop_dc_);
+    RTC_DCHECK(memory_dc_);
 
     std::unique_ptr<DesktopFrame> buffer = DesktopFrameWin::Create(
         size, shared_memory_factory_.get(), desktop_dc_);
@@ -244,16 +210,22 @@ bool ScreenCapturerWinGdi::CaptureImage() {
   DesktopFrameWin* current = static_cast<DesktopFrameWin*>(
       queue_.current_frame()->GetUnderlyingFrame());
   HGDIOBJ previous_object = SelectObject(memory_dc_, current->bitmap());
-  if (previous_object) {
-    BitBlt(memory_dc_, 0, 0, screen_rect.width(), screen_rect.height(),
-           desktop_dc_, screen_rect.left(), screen_rect.top(),
-           SRCCOPY | CAPTUREBLT);
-
-    // Select back the previously selected object to that the device contect
-    // could be destroyed independently of the bitmap if needed.
-    SelectObject(memory_dc_, previous_object);
+  if (!previous_object || previous_object == HGDI_ERROR) {
+    return false;
   }
-  return true;
+
+  bool result = (BitBlt(memory_dc_, 0, 0, screen_rect.width(),
+      screen_rect.height(), desktop_dc_, screen_rect.left(), screen_rect.top(),
+      SRCCOPY | CAPTUREBLT) != FALSE);
+  if (!result) {
+    LOG_GLE(LS_WARNING) << "BitBlt failed";
+  }
+
+  // Select back the previously selected object to that the device contect
+  // could be destroyed independently of the bitmap if needed.
+  SelectObject(memory_dc_, previous_object);
+
+  return result;
 }
 
 }  // namespace webrtc

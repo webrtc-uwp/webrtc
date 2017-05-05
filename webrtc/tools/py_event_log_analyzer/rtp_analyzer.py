@@ -94,13 +94,22 @@ class RTPStatistics(object):
       self.print_ssrc_info("", chosen_ssrc)
       return chosen_ssrc
 
-    for (i, ssrc) in enumerate(self.ssrc_frequencies):
+    ssrc_is_incoming = misc.ssrc_directions(self.data_points)
+    incoming = [ssrc for ssrc in ssrc_is_incoming if ssrc_is_incoming[ssrc]]
+    outgoing = [ssrc for ssrc in ssrc_is_incoming if not ssrc_is_incoming[ssrc]]
+
+    print("\nIncoming:\n")
+    for (i, ssrc) in enumerate(incoming):
       self.print_ssrc_info(i, ssrc)
+
+    print("\nOutgoing:\n")
+    for (i, ssrc) in enumerate(outgoing):
+      self.print_ssrc_info(i + len(incoming), ssrc)
 
     while True:
       chosen_index = int(misc.get_input("choose one> "))
       if 0 <= chosen_index < len(self.ssrc_frequencies):
-        return list(self.ssrc_frequencies)[chosen_index]
+        return (incoming + outgoing)[chosen_index]
       else:
         print("Invalid index!")
 
@@ -250,7 +259,7 @@ class RTPStatistics(object):
                             self.data_points)
 
     plt.figure(1)
-    plt.plot(time_axis, delay)
+    plt.plot(time_axis, delay[:len(time_axis)])
     plt.xlabel("Send time [s]")
     plt.ylabel("Relative transport delay [ms]")
 
@@ -271,7 +280,7 @@ def calculate_delay(start, stop, step, points):
   masked array, in which time points with no value are masked.
 
   """
-  grouped_delays = [[] for _ in numpy.arange(start, stop, step)]
+  grouped_delays = [[] for _ in numpy.arange(start, stop + step, step)]
   rounded_value_index = lambda x: int((x - start) / step)
   for point in points:
     grouped_delays[rounded_value_index(point.real_send_time_ms)

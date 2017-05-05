@@ -30,7 +30,13 @@ void PacketRouter::AddRtpModule(RtpRtcp* rtp_module) {
   rtc::CritScope cs(&modules_crit_);
   RTC_DCHECK(std::find(rtp_modules_.begin(), rtp_modules_.end(), rtp_module) ==
              rtp_modules_.end());
-  rtp_modules_.push_back(rtp_module);
+  // Put modules which can use regular payload packets (over rtx) instead of
+  // padding first as it's less of a waste
+  if ((rtp_module->RtxSendStatus() & kRtxRedundantPayloads) > 0) {
+    rtp_modules_.push_front(rtp_module);
+  } else {
+    rtp_modules_.push_back(rtp_module);
+  }
 }
 
 void PacketRouter::RemoveRtpModule(RtpRtcp* rtp_module) {
@@ -44,28 +50,31 @@ bool PacketRouter::TimeToSendPacket(uint32_t ssrc,
                                     uint16_t sequence_number,
                                     int64_t capture_timestamp,
                                     bool retransmission,
-                                    int probe_cluster_id) {
+                                    const PacedPacketInfo& pacing_info) {
   RTC_DCHECK(pacer_thread_checker_.CalledOnValidThread());
   rtc::CritScope cs(&modules_crit_);
   for (auto* rtp_module : rtp_modules_) {
-    if (rtp_module->SendingMedia() && ssrc == rtp_module->SSRC()) {
+    if (!rtp_module->SendingMedia())
+      continue;
+    if (ssrc == rtp_module->SSRC() || ssrc == rtp_module->FlexfecSsrc()) {
       return rtp_module->TimeToSendPacket(ssrc, sequence_number,
                                           capture_timestamp, retransmission,
-                                          probe_cluster_id);
+                                          pacing_info);
     }
   }
   return true;
 }
 
 size_t PacketRouter::TimeToSendPadding(size_t bytes_to_send,
-                                       int probe_cluster_id) {
+                                       const PacedPacketInfo& pacing_info) {
   RTC_DCHECK(pacer_thread_checker_.CalledOnValidThread());
   size_t total_bytes_sent = 0;
   rtc::CritScope cs(&modules_crit_);
+  // Rtp modules are ordered by which stream can most benefit from padding.
   for (RtpRtcp* module : rtp_modules_) {
-    if (module->SendingMedia()) {
+    if (module->SendingMedia() && module->HasBweExtensions()) {
       size_t bytes_sent = module->TimeToSendPadding(
-          bytes_to_send - total_bytes_sent, probe_cluster_id);
+          bytes_to_send - total_bytes_sent, pacing_info);
       total_bytes_sent += bytes_sent;
       if (total_bytes_sent >= bytes_to_send)
         break;
@@ -99,7 +108,7 @@ uint16_t PacketRouter::AllocateSequenceNumber() {
 bool PacketRouter::SendFeedback(rtcp::TransportFeedback* packet) {
   rtc::CritScope cs(&modules_crit_);
   for (auto* rtp_module : rtp_modules_) {
-    packet->WithPacketSenderSsrc(rtp_module->SSRC());
+    packet->SetSenderSsrc(rtp_module->SSRC());
     if (rtp_module->SendFeedbackPacket(*packet))
       return true;
   }

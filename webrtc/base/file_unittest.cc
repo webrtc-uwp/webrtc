@@ -8,10 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-
 #include <limits>
 #include <memory>
 #include <string>
@@ -31,14 +27,6 @@
 #endif
 
 namespace rtc {
-
-void RemoveFile(const std::string& path) {
-#if defined(WEBRTC_WIN)
-  ::DeleteFile(ToUtf16(path).c_str());
-#else
-  ::unlink(path.c_str());
-#endif
-}
 
 int LastError() {
 #if defined(WEBRTC_WIN)
@@ -64,16 +52,28 @@ bool VerifyBuffer(uint8_t* buffer, size_t length, uint8_t start_value) {
 class FileTest : public ::testing::Test {
  protected:
   std::string path_;
-  void SetUp() {
+  void SetUp() override {
     path_ = webrtc::test::TempFilename(webrtc::test::OutputPath(), "test_file");
     ASSERT_FALSE(path_.empty());
   }
-  rtc::File OpenTempFile() { return rtc::File::Open(path_); }
-  void TearDown() { RemoveFile(path_); }
+  void TearDown() override { RemoveFile(path_); }
 };
 
+TEST_F(FileTest, DefaultConstructor) {
+  File file;
+  uint8_t buffer[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+  EXPECT_FALSE(file.IsOpen());
+  EXPECT_EQ(0u, file.Write(buffer, 10));
+  EXPECT_FALSE(file.Seek(0));
+  EXPECT_EQ(0u, file.Read(buffer, 10));
+  EXPECT_EQ(0u, file.WriteAt(buffer, 10, 0));
+  EXPECT_EQ(0u, file.ReadAt(buffer, 10, 0));
+  EXPECT_FALSE(file.Close());
+}
+
 TEST_F(FileTest, DoubleClose) {
-  File file = OpenTempFile();
+  File file = File::Open(path_);
   ASSERT_TRUE(file.IsOpen()) << "Error: " << LastError();
 
   EXPECT_TRUE(file.Close());
@@ -81,7 +81,7 @@ TEST_F(FileTest, DoubleClose) {
 }
 
 TEST_F(FileTest, SimpleReadWrite) {
-  File file = OpenTempFile();
+  File file = File::Open(path_);
   ASSERT_TRUE(file.IsOpen()) << "Error: " << LastError();
 
   uint8_t data[100] = {0};
@@ -113,7 +113,7 @@ TEST_F(FileTest, SimpleReadWrite) {
 }
 
 TEST_F(FileTest, ReadWriteClose) {
-  File file = OpenTempFile();
+  File file = File::Open(path_);
   ASSERT_TRUE(file.IsOpen()) << "Error: " << LastError();
 
   uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -121,14 +121,14 @@ TEST_F(FileTest, ReadWriteClose) {
   EXPECT_EQ(10u, file.Write(data, 10));
   EXPECT_TRUE(file.Close());
 
-  File file2 = OpenTempFile();
+  File file2 = File::Open(path_);
   ASSERT_TRUE(file2.IsOpen()) << "Error: " << LastError();
   EXPECT_EQ(10u, file2.Read(out, 10));
   EXPECT_TRUE(VerifyBuffer(out, 10, 0));
 }
 
 TEST_F(FileTest, RandomAccessRead) {
-  File file = OpenTempFile();
+  File file = File::Open(path_);
   ASSERT_TRUE(file.IsOpen()) << "Error: " << LastError();
 
   uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -146,7 +146,7 @@ TEST_F(FileTest, RandomAccessRead) {
 }
 
 TEST_F(FileTest, RandomAccessReadWrite) {
-  File file = OpenTempFile();
+  File file = File::Open(path_);
   ASSERT_TRUE(file.IsOpen()) << "Error: " << LastError();
 
   uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -161,6 +161,41 @@ TEST_F(FileTest, RandomAccessReadWrite) {
   EXPECT_EQ(2u, file.WriteAt(data, 2, 8));
   EXPECT_EQ(2u, file.ReadAt(out, 2, 8));
   EXPECT_TRUE(VerifyBuffer(out, 2, 0));
+}
+
+TEST_F(FileTest, OpenFromPathname) {
+  {
+    File file = File::Open(Pathname(path_));
+    ASSERT_TRUE(file.IsOpen()) << "Error: " << LastError();
+  }
+
+  {
+    Pathname path(path_);
+    File file = File::Open(path);
+    ASSERT_TRUE(file.IsOpen()) << "Error: " << LastError();
+  }
+}
+
+TEST_F(FileTest, CreateFromPathname) {
+  {
+    File file = File::Create(Pathname(path_));
+    ASSERT_TRUE(file.IsOpen()) << "Error: " << LastError();
+  }
+
+  {
+    Pathname path(path_);
+    File file = File::Create(path);
+    ASSERT_TRUE(file.IsOpen()) << "Error: " << LastError();
+  }
+}
+
+TEST_F(FileTest, ShouldBeAbleToRemoveFile) {
+  {
+    File file = File::Open(Pathname(path_));
+    ASSERT_TRUE(file.IsOpen()) << "Error: " << LastError();
+  }
+
+  ASSERT_TRUE(File::Remove(Pathname(path_))) << "Error: " << LastError();
 }
 
 }  // namespace rtc

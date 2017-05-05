@@ -44,9 +44,8 @@ bool RTPReceiverVideo::ShouldReportCsrcChanges(uint8_t payload_type) const {
 }
 
 int32_t RTPReceiverVideo::OnNewPayloadTypeCreated(
-    const char payload_name[RTP_PAYLOAD_NAME_SIZE],
-    int8_t payload_type,
-    uint32_t frequency) {
+    const CodecInst& audio_codec) {
+  RTC_NOTREACHED();
   return 0;
 }
 
@@ -83,7 +82,7 @@ int32_t RTPReceiverVideo::ParseRtpPacket(WebRtcRTPHeader* rtp_header,
     return -1;
   }
 
-  rtp_header->type.Video.isFirstPacket = is_first_packet;
+  rtp_header->type.Video.is_first_packet_in_frame = is_first_packet;
   RtpDepacketizer::ParsedPayload parsed_payload;
   if (!depacketizer->Parse(&parsed_payload, payload, payload_data_length))
     return -1;
@@ -94,8 +93,8 @@ int32_t RTPReceiverVideo::ParseRtpPacket(WebRtcRTPHeader* rtp_header,
 
   // Retrieve the video rotation information.
   if (rtp_header->header.extension.hasVideoRotation) {
-    rtp_header->type.Video.rotation = ConvertCVOByteToVideoRotation(
-        rtp_header->header.extension.videoRotation);
+    rtp_header->type.Video.rotation =
+        rtp_header->header.extension.videoRotation;
   }
 
   rtp_header->type.Video.playout_delay =
@@ -106,10 +105,6 @@ int32_t RTPReceiverVideo::ParseRtpPacket(WebRtcRTPHeader* rtp_header,
                                                rtp_header) == 0
              ? 0
              : -1;
-}
-
-int RTPReceiverVideo::GetPayloadTypeFrequency() const {
-  return kVideoPayloadTypeFrequency;
 }
 
 RTPAliveType RTPReceiverVideo::ProcessDeadOrAlive(

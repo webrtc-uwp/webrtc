@@ -17,8 +17,13 @@
 #include <string.h>
 
 enum {
+#if WEBRTC_OPUS_SUPPORT_120MS_PTIME
+  /* Maximum supported frame size in WebRTC is 120 ms. */
+  kWebRtcOpusMaxEncodeFrameSizeMs = 120,
+#else
   /* Maximum supported frame size in WebRTC is 60 ms. */
   kWebRtcOpusMaxEncodeFrameSizeMs = 60,
+#endif
 
   /* The format allows up to 120 ms frames. Since we don't control the other
    * side, we must allow for packets of that size. NetEq is currently limited
@@ -108,7 +113,7 @@ int WebRtcOpus_Encode(OpusEncInst* inst,
       return 0;
     } else {
       inst->in_dtx_mode = 1;
-      return 1;
+      return res;
     }
   }
 
@@ -208,6 +213,20 @@ int16_t WebRtcOpus_SetComplexity(OpusEncInst* inst, int32_t complexity) {
   }
 }
 
+int16_t WebRtcOpus_SetForceChannels(OpusEncInst* inst, size_t num_channels) {
+  if (!inst)
+    return -1;
+  if (num_channels == 0) {
+    return opus_encoder_ctl(inst->encoder,
+                            OPUS_SET_FORCE_CHANNELS(OPUS_AUTO));
+  } else if (num_channels == 1 || num_channels == 2) {
+    return opus_encoder_ctl(inst->encoder,
+                            OPUS_SET_FORCE_CHANNELS(num_channels));
+  } else {
+    return -1;
+  }
+}
+
 int16_t WebRtcOpus_DecoderCreate(OpusDecInst** inst, size_t channels) {
   int error;
   OpusDecInst* state;
@@ -264,7 +283,11 @@ static int16_t DetermineAudioType(OpusDecInst* inst, size_t encoded_bytes) {
   // to be so if the following |encoded_byte| are 0 or 1.
   if (encoded_bytes == 0 && inst->in_dtx_mode) {
     return 2;  // Comfort noise.
-  } else if (encoded_bytes == 1) {
+  } else if (encoded_bytes == 1 || encoded_bytes == 2) {
+    // TODO(henrik.lundin): There is a slight risk that a 2-byte payload is in
+    // fact a 1-byte TOC with a 1-byte payload. That will be erroneously
+    // interpreted as comfort noise output, but such a payload is probably
+    // faulty anyway.
     inst->in_dtx_mode = 1;
     return 2;  // Comfort noise.
   } else {

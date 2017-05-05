@@ -26,18 +26,10 @@
 #include "webrtc/base/platform_thread.h"
 #endif
 
-#ifdef WINRT
-#define WEBRTC_BASE_QUEUED_TASK_USING_STDLIB
-#endif //WINRT
-
-#ifdef WEBRTC_BASE_QUEUED_TASK_USING_STDLIB
-#include <condition_variable>
-#include <queue>
-#include <atomic>
-#include <map>
-#endif //WEBRTC_BASE_QUEUED_TASK_USING_STDLIB
-
 #if defined(WEBRTC_BUILD_LIBEVENT)
+#include "webrtc/base/refcountedobject.h"
+#include "webrtc/base/scoped_ref_ptr.h"
+
 struct event_base;
 struct event;
 #endif
@@ -169,8 +161,16 @@ static std::unique_ptr<QueuedTask> NewClosure(const Closure& closure,
 // so assumptions about lifetimes of pending tasks should not be made.
 class LOCKABLE TaskQueue {
  public:
-  explicit TaskQueue(const char* queue_name);
-  // TODO(tommi): Implement move semantics?
+  // TaskQueue priority levels. On some platforms these will map to thread
+  // priorities, on others such as Mac and iOS, GCD queue priorities.
+  enum class Priority {
+    NORMAL = 0,
+    HIGH,
+    LOW,
+  };
+
+  explicit TaskQueue(const char* queue_name,
+                     Priority priority = Priority::NORMAL);
   ~TaskQueue();
 
   static TaskQueue* Current();
@@ -189,6 +189,11 @@ class LOCKABLE TaskQueue {
   void PostTaskAndReply(std::unique_ptr<QueuedTask> task,
                         std::unique_ptr<QueuedTask> reply);
 
+  // Schedules a task to execute a specified number of milliseconds from when
+  // the call is made. The precision should be considered as "best effort"
+  // and in some cases, such as on Windows when all high precision timers have
+  // been used up, can be off by as much as 15 millseconds (although 8 would be
+  // more likely). This can be mitigated by limiting the use of delayed tasks.
   void PostDelayedTask(std::unique_ptr<QueuedTask> task, uint32_t milliseconds);
 
   template <class Closure>
@@ -196,6 +201,7 @@ class LOCKABLE TaskQueue {
     PostTask(std::unique_ptr<QueuedTask>(new ClosureTask<Closure>(closure)));
   }
 
+  // See documentation above for performance expectations.
   template <class Closure>
   void PostDelayedTask(const Closure& closure, uint32_t milliseconds) {
     PostDelayedTask(
@@ -236,59 +242,19 @@ class LOCKABLE TaskQueue {
   }
 
  private:
-#if defined(WEBRTC_BASE_QUEUED_TASK_USING_STDLIB)
-   typedef std::unique_ptr<QueuedTask> QueueTasksUniPtr;
-   typedef uint64_t OrderId;
-   typedef std::pair<OrderId, QueueTasksUniPtr> OrderedQueueTaskPair;
-   typedef std::queue<OrderedQueueTaskPair> QueueTaskQueue;
-   typedef std::chrono::milliseconds Milliseconds;
-   typedef std::chrono::microseconds Microseconds;
-   typedef std::chrono::system_clock::time_point Time;
-   typedef std::mutex Lock;
-
-   struct DelayedEntryTimeout
-   {     
-     Time next_fire_at_ {};
-     OrderId order_ {};
-
-     bool operator<(const DelayedEntryTimeout &o) const
-     {
-       return std::tie(next_fire_at_, order_) < std::tie(o.next_fire_at_, o.order_);
-     }
-   };
-
-   typedef std::map<DelayedEntryTimeout, QueueTasksUniPtr> DelayTimeoutQueueMap;
-
-   static bool ThreadMain(void* context);
-
-   void notifyWake();
-
-   std::mutex flag_lock_;
-   std::condition_variable flag_notify_;
-
-   PlatformThread thread_;
-   std::atomic<bool> thread_should_quit_ {};
-   std::atomic<bool> thread_did_quit_ {};
-
-   rtc::CriticalSection pending_lock_;
-
-   OrderId thread_posting_order_ {} GUARDED_BY(pending_lock_);
-   QueueTaskQueue pending_queue_ GUARDED_BY(pending_lock_);
-   DelayTimeoutQueueMap delayed_queue_ GUARDED_BY(pending_lock_);
-
-#undef WEBRTC_BASE_QUEUED_TASK_USING_STDLIB
-   
-#elif defined(WEBRTC_BUILD_LIBEVENT)
-  static bool ThreadMain(void* context);
+#if defined(WEBRTC_BUILD_LIBEVENT)
+  static void ThreadMain(void* context);
   static void OnWakeup(int socket, short flags, void* context);  // NOLINT
   static void RunTask(int fd, short flags, void* context);       // NOLINT
   static void RunTimer(int fd, short flags, void* context);      // NOLINT
 
+  class ReplyTaskOwner;
   class PostAndReplyTask;
   class SetTimerTask;
 
-  void PrepareReplyTask(PostAndReplyTask* reply_task);
-  void ReplyTaskDone(PostAndReplyTask* reply_task);
+  typedef RefCountedObject<ReplyTaskOwner> ReplyTaskOwnerRef;
+
+  void PrepareReplyTask(scoped_refptr<ReplyTaskOwnerRef> reply_task);
 
   struct QueueContext;
 
@@ -299,7 +265,8 @@ class LOCKABLE TaskQueue {
   PlatformThread thread_;
   rtc::CriticalSection pending_lock_;
   std::list<std::unique_ptr<QueuedTask>> pending_ GUARDED_BY(pending_lock_);
-  std::list<PostAndReplyTask*> pending_replies_ GUARDED_BY(pending_lock_);
+  std::list<scoped_refptr<ReplyTaskOwnerRef>> pending_replies_
+      GUARDED_BY(pending_lock_);
 #elif defined(WEBRTC_MAC)
   struct QueueContext;
   struct TaskContext;
@@ -307,15 +274,20 @@ class LOCKABLE TaskQueue {
   dispatch_queue_t queue_;
   QueueContext* const context_;
 #elif defined(WEBRTC_WIN)
+  class MultimediaTimer;
   typedef std::unordered_map<UINT_PTR, std::unique_ptr<QueuedTask>>
       DelayedTasks;
-  static bool ThreadMain(void* context);
-  static bool ProcessQueuedMessages(DelayedTasks* delayed_tasks);
+  static void ThreadMain(void* context);
+  static bool ProcessQueuedMessages(DelayedTasks* delayed_tasks,
+                                    std::vector<MultimediaTimer>* timers);
 
   class WorkerThread : public PlatformThread {
    public:
-    WorkerThread(ThreadRunFunction func, void* obj, const char* thread_name)
-        : PlatformThread(func, obj, thread_name) {}
+    WorkerThread(ThreadRunFunction func,
+                 void* obj,
+                 const char* thread_name,
+                 ThreadPriority priority)
+        : PlatformThread(func, obj, thread_name, priority) {}
 
     bool QueueAPC(PAPCFUNC apc_function, ULONG_PTR data) {
       return PlatformThread::QueueAPC(apc_function, data);

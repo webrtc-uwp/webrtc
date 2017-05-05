@@ -66,7 +66,6 @@ NSInteger const kRTCAudioSessionErrorConfiguration = -2;
                selector:@selector(handleRouteChangeNotification:)
                    name:AVAudioSessionRouteChangeNotification
                  object:nil];
-    // TODO(tkchin): Maybe listen to SilenceSecondaryAudioHintNotification.
     [center addObserver:self
                selector:@selector(handleMediaServicesWereLost:)
                    name:AVAudioSessionMediaServicesWereLostNotification
@@ -74,6 +73,13 @@ NSInteger const kRTCAudioSessionErrorConfiguration = -2;
     [center addObserver:self
                selector:@selector(handleMediaServicesWereReset:)
                    name:AVAudioSessionMediaServicesWereResetNotification
+                 object:nil];
+    // Posted on the main thread when the primary audio from other applications
+    // starts and stops. Foreground applications may use this notification as a
+    // hint to enable or disable audio that is secondary.
+    [center addObserver:self
+               selector:@selector(handleSilenceSecondaryAudioHintNotification:)
+                   name:AVAudioSessionSilenceSecondaryAudioHintNotification
                  object:nil];
     // Also track foreground event in order to deal with interruption ended situation.
     [center addObserver:self
@@ -101,12 +107,13 @@ NSInteger const kRTCAudioSessionErrorConfiguration = -2;
        "  inputNumberOfChannels: %ld\n"
        "  outputLatency: %f\n"
        "  inputLatency: %f\n"
+       "  outputVolume: %f\n"
        "}";
   NSString *description = [NSString stringWithFormat:format,
       self.category, (long)self.categoryOptions, self.mode,
       self.isActive, self.sampleRate, self.IOBufferDuration,
       self.outputNumberOfChannels, self.inputNumberOfChannels,
-      self.outputLatency, self.inputLatency];
+      self.outputLatency, self.inputLatency, self.outputVolume];
   return description;
 }
 
@@ -515,6 +522,24 @@ NSInteger const kRTCAudioSessionErrorConfiguration = -2;
   [self notifyMediaServicesWereReset];
 }
 
+- (void)handleSilenceSecondaryAudioHintNotification:(NSNotification *)notification {
+  // TODO(henrika): just adding logs here for now until we know if we are ever
+  // see this notification and might be affected by it or if further actions
+  // are required.
+  NSNumber *typeNumber =
+      notification.userInfo[AVAudioSessionSilenceSecondaryAudioHintTypeKey];
+  AVAudioSessionSilenceSecondaryAudioHintType type =
+      (AVAudioSessionSilenceSecondaryAudioHintType)typeNumber.unsignedIntegerValue;
+  switch (type) {
+    case AVAudioSessionSilenceSecondaryAudioHintTypeBegin:
+      RTCLog(@"Another application's primary audio has started.");
+      break;
+    case AVAudioSessionSilenceSecondaryAudioHintTypeEnd:
+      RTCLog(@"Another application's primary audio has stopped.");
+      break;
+  }
+}
+
 - (void)handleApplicationDidBecomeActive:(NSNotification *)notification {
   if (self.isInterrupted) {
     RTCLog(@"Application became active after an interruption. Treating as interruption end.");
@@ -785,18 +810,18 @@ NSInteger const kRTCAudioSessionErrorConfiguration = -2;
 
 - (void)notifyMediaServicesWereLost {
   for (auto delegate : self.delegates) {
-    SEL sel = @selector(audioSessionMediaServicesWereLost:);
+    SEL sel = @selector(audioSessionMediaServerTerminated:);
     if ([delegate respondsToSelector:sel]) {
-      [delegate audioSessionMediaServicesWereLost:self];
+      [delegate audioSessionMediaServerTerminated:self];
     }
   }
 }
 
 - (void)notifyMediaServicesWereReset {
   for (auto delegate : self.delegates) {
-    SEL sel = @selector(audioSessionMediaServicesWereReset:);
+    SEL sel = @selector(audioSessionMediaServerReset:);
     if ([delegate respondsToSelector:sel]) {
-      [delegate audioSessionMediaServicesWereReset:self];
+      [delegate audioSessionMediaServerReset:self];
     }
   }
 }

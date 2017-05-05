@@ -15,10 +15,10 @@
 #include <memory>
 #include <string>
 
+#include "webrtc/api/audio_codecs/audio_decoder_factory.h"
+#include "webrtc/api/audio_codecs/audio_format.h"
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/common_types.h"  // NULL
-#include "webrtc/modules/audio_coding/codecs/audio_decoder_factory.h"
-#include "webrtc/modules/audio_coding/codecs/audio_format.h"
 #include "webrtc/modules/audio_coding/codecs/cng/webrtc_cng.h"
 #include "webrtc/modules/audio_coding/neteq/audio_decoder_impl.h"
 #include "webrtc/modules/audio_coding/neteq/packet.h"
@@ -41,13 +41,16 @@ class DecoderDatabase {
   // Class that stores decoder info in the database.
   class DecoderInfo {
    public:
-    DecoderInfo(
-        NetEqDecoder ct,
-        const std::string& nm,
-        AudioDecoderFactory* factory = nullptr);
-    DecoderInfo(NetEqDecoder ct,
-                const std::string& nm,
-                AudioDecoder* ext_dec);
+    DecoderInfo(const SdpAudioFormat& audio_format,
+                AudioDecoderFactory* factory,
+                const std::string& codec_name);
+    explicit DecoderInfo(const SdpAudioFormat& audio_format,
+                         AudioDecoderFactory* factory = nullptr);
+    explicit DecoderInfo(NetEqDecoder ct,
+                         AudioDecoderFactory* factory = nullptr);
+    DecoderInfo(const SdpAudioFormat& audio_format,
+                AudioDecoder* ext_dec,
+                const std::string& codec_name);
     DecoderInfo(DecoderInfo&&);
     ~DecoderInfo();
 
@@ -59,31 +62,48 @@ class DecoderDatabase {
     void DropDecoder() const { decoder_.reset(); }
 
     int SampleRateHz() const {
+      if (IsDtmf()) {
+        // DTMF has a 1:1 mapping between clock rate and sample rate.
+        return audio_format_.clockrate_hz;
+      }
       const AudioDecoder* decoder = GetDecoder();
       RTC_DCHECK_EQ(1, !!decoder + !!cng_decoder_);
       return decoder ? decoder->SampleRateHz() : cng_decoder_->sample_rate_hz;
     }
 
-    const SdpAudioFormat& GetFormat() const {
-      RTC_DCHECK(audio_format_);
-      return *audio_format_;
+    const SdpAudioFormat& GetFormat() const { return audio_format_; }
+
+    // Returns true if the decoder's format is comfort noise.
+    bool IsComfortNoise() const {
+      RTC_DCHECK_EQ(!!cng_decoder_, subtype_ == Subtype::kComfortNoise);
+      return subtype_ == Subtype::kComfortNoise;
     }
 
-    // Returns true if |codec_type| is comfort noise.
-    bool IsComfortNoise() const;
+    // Returns true if the decoder's format is DTMF.
+    bool IsDtmf() const {
+      return subtype_ == Subtype::kDtmf;
+    }
 
-    // Returns true if |codec_type| is DTMF.
-    bool IsDtmf() const;
+    // Returns true if the decoder's format is RED.
+    bool IsRed() const {
+      return subtype_ == Subtype::kRed;
+    }
 
-    // Returns true if |codec_type| is RED.
-    bool IsRed() const;
+    // Returns true if the decoder's format is named |name|.
+    bool IsType(const char* name) const;
+    // Returns true if the decoder's format is named |name|.
+    bool IsType(const std::string& name) const;
 
-    const NetEqDecoder codec_type;
-    const std::string name;
+    const std::string& get_name() const { return name_; }
 
    private:
-    const rtc::Optional<SdpAudioFormat> audio_format_;
-    AudioDecoderFactory* factory_;
+    // TODO(ossu): |name_| is kept here while we retain the old external
+    //             decoder interface. Remove this once using an
+    //             AudioDecoderFactory has supplanted the old functionality.
+    const std::string name_;
+
+    const SdpAudioFormat audio_format_;
+    AudioDecoderFactory* const factory_;
     mutable std::unique_ptr<AudioDecoder> decoder_;
 
     // Set iff this is an external decoder.
@@ -91,10 +111,21 @@ class DecoderDatabase {
 
     // Set iff this is a comfort noise decoder.
     struct CngDecoder {
-      static rtc::Optional<CngDecoder> Create(NetEqDecoder ct);
+      static rtc::Optional<CngDecoder> Create(const SdpAudioFormat& format);
       int sample_rate_hz;
     };
     const rtc::Optional<CngDecoder> cng_decoder_;
+
+    enum class Subtype : int8_t {
+      kNormal,
+      kComfortNoise,
+      kDtmf,
+      kRed
+    };
+
+    static Subtype SubtypeFromFormat(const SdpAudioFormat& format);
+
+    const Subtype subtype_;
   };
 
   // Maximum value for 8 bits, and an invalid RTP payload type (since it is
@@ -125,6 +156,11 @@ class DecoderDatabase {
                               NetEqDecoder codec_type,
                               const std::string& name);
 
+  // Registers a decoder for the given payload type. Returns kOK on success;
+  // otherwise an error code.
+  virtual int RegisterPayload(int rtp_payload_type,
+                              const SdpAudioFormat& audio_format);
+
   // Registers an externally created AudioDecoder object, and associates it
   // as a decoder of type |codec_type| with |rtp_payload_type|.
   virtual int InsertExternal(uint8_t rtp_payload_type,
@@ -136,15 +172,12 @@ class DecoderDatabase {
   // Returns kDecoderNotFound or kOK depending on the outcome of the operation.
   virtual int Remove(uint8_t rtp_payload_type);
 
+  // Remove all entries.
+  virtual void RemoveAll();
+
   // Returns a pointer to the DecoderInfo struct for |rtp_payload_type|. If
   // no decoder is registered with that |rtp_payload_type|, NULL is returned.
   virtual const DecoderInfo* GetDecoderInfo(uint8_t rtp_payload_type) const;
-
-  // Returns one RTP payload type associated with |codec_type|, or
-  // kDecoderNotFound if no entry exists for that value. Note that one
-  // |codec_type| may be registered with several RTP payload types, and the
-  // method may return any of them.
-  virtual uint8_t GetRtpPayloadType(NetEqDecoder codec_type) const;
 
   // Sets the active decoder to be |rtp_payload_type|. If this call results in a
   // change of active decoder, |new_decoder| is set to true. The previous active
@@ -172,8 +205,11 @@ class DecoderDatabase {
   // object does not exist for that decoder, the object is created.
   AudioDecoder* GetDecoder(uint8_t rtp_payload_type) const;
 
-  // Returns true if |rtp_payload_type| is registered as a |codec_type|.
-  bool IsType(uint8_t rtp_payload_type, NetEqDecoder codec_type) const;
+  // Returns if |rtp_payload_type| is registered with a format named |name|.
+  bool IsType(uint8_t rtp_payload_type, const char* name) const;
+
+  // Returns if |rtp_payload_type| is registered with a format named |name|.
+  bool IsType(uint8_t rtp_payload_type, const std::string& name) const;
 
   // Returns true if |rtp_payload_type| is registered as comfort noise.
   bool IsComfortNoise(uint8_t rtp_payload_type) const;

@@ -87,14 +87,33 @@ rtc::Optional<SdpAudioFormat> RentACodec::NetEqDecoderToSdpAudioFormat(
     case NetEqDecoder::kDecoderG722_2ch:
       return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("g722", 8000, 2));
     case NetEqDecoder::kDecoderOpus:
-      return rtc::Optional<SdpAudioFormat>(
-          SdpAudioFormat("opus", 48000, 2,
-                         std::map<std::string, std::string>{{"stereo", "0"}}));
+      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("opus", 48000, 2));
     case NetEqDecoder::kDecoderOpus_2ch:
       return rtc::Optional<SdpAudioFormat>(
           SdpAudioFormat("opus", 48000, 2,
                          std::map<std::string, std::string>{{"stereo", "1"}}));
-
+    case NetEqDecoder::kDecoderRED:
+      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("red", 8000, 1));
+    case NetEqDecoder::kDecoderAVT:
+      return rtc::Optional<SdpAudioFormat>(
+          SdpAudioFormat("telephone-event", 8000, 1));
+    case NetEqDecoder::kDecoderAVT16kHz:
+      return rtc::Optional<SdpAudioFormat>(
+          SdpAudioFormat("telephone-event", 16000, 1));
+    case NetEqDecoder::kDecoderAVT32kHz:
+      return rtc::Optional<SdpAudioFormat>(
+          SdpAudioFormat("telephone-event", 32000, 1));
+    case NetEqDecoder::kDecoderAVT48kHz:
+      return rtc::Optional<SdpAudioFormat>(
+          SdpAudioFormat("telephone-event", 48000, 1));
+    case NetEqDecoder::kDecoderCNGnb:
+      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("cn", 8000, 1));
+    case NetEqDecoder::kDecoderCNGwb:
+      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("cn", 16000, 1));
+    case NetEqDecoder::kDecoderCNGswb32kHz:
+      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("cn", 32000, 1));
+    case NetEqDecoder::kDecoderCNGswb48kHz:
+      return rtc::Optional<SdpAudioFormat>(SdpAudioFormat("cn", 48000, 1));
     default:
       return rtc::Optional<SdpAudioFormat>();
   }

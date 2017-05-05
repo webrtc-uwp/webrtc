@@ -13,11 +13,11 @@
 #include <math.h>
 
 #include "libyuv/convert_argb.h"
+#include "webrtc/api/video/i420_buffer.h"
 #include "webrtc/examples/peerconnection/client/defaults.h"
 #include "webrtc/base/arraysize.h"
-#include "webrtc/base/common.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
-#include "webrtc/media/engine/webrtcvideoframe.h"
 
 ATOM MainWnd::wnd_class_ = 0;
 const wchar_t MainWnd::kClassName[] = L"WebRTC_MainWnd";
@@ -79,11 +79,11 @@ MainWnd::MainWnd(const char* server, int port, bool auto_connect,
 }
 
 MainWnd::~MainWnd() {
-  ASSERT(!IsWindow());
+  RTC_DCHECK(!IsWindow());
 }
 
 bool MainWnd::Create() {
-  ASSERT(wnd_ == NULL);
+  RTC_DCHECK(wnd_ == NULL);
   if (!RegisterWindowClass())
     return false;
 
@@ -146,7 +146,7 @@ bool MainWnd::PreTranslateMessage(MSG* msg) {
 }
 
 void MainWnd::SwitchToConnectUI() {
-  ASSERT(IsWindow());
+  RTC_DCHECK(IsWindow());
   LayoutPeerListUI(false);
   ui_ = CONNECT_TO_SERVER;
   LayoutConnectUI(true);
@@ -440,7 +440,7 @@ bool MainWnd::RegisterWindowClass() {
   wcex.lpfnWndProc = &WndProc;
   wcex.lpszClassName = kClassName;
   wnd_class_ = ::RegisterClassEx(&wcex);
-  ASSERT(wnd_class_ != 0);
+  RTC_DCHECK(wnd_class_ != 0);
   return wnd_class_ != 0;
 }
 
@@ -456,7 +456,7 @@ void MainWnd::CreateChildWindow(HWND* wnd, MainWnd::ChildWindowID id,
                           100, 100, 100, 100, wnd_,
                           reinterpret_cast<HMENU>(id),
                           GetModuleHandle(NULL), NULL);
-  ASSERT(::IsWindow(*wnd) != FALSE);
+  RTC_DCHECK(::IsWindow(*wnd) != FALSE);
   ::SendMessage(*wnd, WM_SETFONT, reinterpret_cast<WPARAM>(GetDefaultFont()),
                 TRUE);
 }
@@ -601,21 +601,20 @@ void MainWnd::VideoRenderer::SetSize(int width, int height) {
 }
 
 void MainWnd::VideoRenderer::OnFrame(
-    const cricket::VideoFrame& video_frame) {
+    const webrtc::VideoFrame& video_frame) {
 
   {
     AutoLock<VideoRenderer> lock(this);
 
-    const cricket::WebRtcVideoFrame frame(
-        webrtc::I420Buffer::Rotate(video_frame.video_frame_buffer(),
-                                   video_frame.rotation()),
-        webrtc::kVideoRotation_0, video_frame.timestamp_us());
-
-    SetSize(frame.width(), frame.height());
-
-    ASSERT(image_.get() != NULL);
     rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer(
-        frame.video_frame_buffer());
+        video_frame.video_frame_buffer());
+    if (video_frame.rotation() != webrtc::kVideoRotation_0) {
+      buffer = webrtc::I420Buffer::Rotate(*buffer, video_frame.rotation());
+    }
+
+    SetSize(buffer->width(), buffer->height());
+
+    RTC_DCHECK(image_.get() != NULL);
     libyuv::I420ToARGB(buffer->DataY(), buffer->StrideY(),
                        buffer->DataU(), buffer->StrideU(),
                        buffer->DataV(), buffer->StrideV(),

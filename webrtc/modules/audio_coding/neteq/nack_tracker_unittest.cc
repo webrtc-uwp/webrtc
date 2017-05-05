@@ -15,9 +15,9 @@
 #include <algorithm>
 #include <memory>
 
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/typedefs.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module_typedefs.h"
+#include "webrtc/test/gtest.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 namespace {

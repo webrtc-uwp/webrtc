@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/trace_event.h"
 #include "webrtc/modules/video_coding/include/video_coding.h"
@@ -47,6 +48,16 @@ int32_t VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage) {
 
 int32_t VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage,
                                          int64_t decode_time_ms) {
+  Decoded(decodedImage,
+          decode_time_ms >= 0 ? rtc::Optional<int32_t>(decode_time_ms)
+                              : rtc::Optional<int32_t>(),
+          rtc::Optional<uint8_t>());
+  return WEBRTC_VIDEO_CODEC_OK;
+}
+
+void VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage,
+                                      rtc::Optional<int32_t> decode_time_ms,
+                                      rtc::Optional<uint8_t> qp) {
   TRACE_EVENT_INSTANT1("webrtc", "VCMDecodedFrameCallback::Decoded",
                        "timestamp", decodedImage.timestamp());
   // TODO(holmer): We should improve this so that we can handle multiple
@@ -61,55 +72,28 @@ int32_t VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage,
 
   if (frameInfo == NULL) {
     LOG(LS_WARNING) << "Too many frames backed up in the decoder, dropping "
-                       "this one." << decodedImage.timestamp();
-    return WEBRTC_VIDEO_CODEC_OK;
-  }
-#ifdef WINRT
-  static const int32_t kMaxDeltaDelayMs = 10000;
-  int32_t endToEndDecodingFinished = static_cast<int32_t>(
-      Clock::GetRealTimeClock()->TimeInMilliseconds()
-      + Clock::CurrentNtpDeltaMs - decodedImage.ntp_time_ms());
-
-  int32_t endToEndDelay = static_cast<int32_t>(frameInfo->renderTimeMs
-      + Clock::CurrentNtpDeltaMs - decodedImage.ntp_time_ms());
-  // we only finished decoding, however, 'renderTimeMs' is the value we
-  // expect the video element to show the frame already considered the
-  // audo/video sync delay.
-
-  // ntp_time_ms will be only valid after rtcp packet has been exchanged,
-  // before that, it is invalid. We can not validate the ntp_time_ms here,
-  // thereby, just do a quick check to remove obvious invalid values
-  if (endToEndDecodingFinished > 0 &&
-      endToEndDecodingFinished < kMaxDeltaDelayMs) {
-      TRACE_COUNTER1("webrtc", "EndToEndVideoDecoded",
-          endToEndDecodingFinished);
+                       "this one.";
+    return;
   }
 
-  if (endToEndDelay > 0 &&
-      endToEndDelay < kMaxDeltaDelayMs) {
-      TRACE_COUNTER1("webrtc", "EndToEndVideoDelay", endToEndDelay);
-  }
-  else {
-      endToEndDelay = 0; //reset
-  }
-#endif // WINRT
   const int64_t now_ms = _clock->TimeInMilliseconds();
-  if (decode_time_ms < 0) {
+  if (!decode_time_ms) {
     decode_time_ms =
-        static_cast<int32_t>(now_ms - frameInfo->decodeStartTimeMs);
+        rtc::Optional<int32_t>(now_ms - frameInfo->decodeStartTimeMs);
   }
-  _timing->StopDecodeTimer(decodedImage.timestamp(), decode_time_ms, now_ms,
-#ifdef WINRT
-                           endToEndDelay,
-#endif
+  _timing->StopDecodeTimer(decodedImage.timestamp(), *decode_time_ms, now_ms,
                            frameInfo->renderTimeMs);
 
-  if (callback != NULL) {
-    decodedImage.set_render_time_ms(frameInfo->renderTimeMs);
-    decodedImage.set_rotation(frameInfo->rotation);
-    callback->FrameToRender(decodedImage);
+  decodedImage.set_timestamp_us(
+      frameInfo->renderTimeMs * rtc::kNumMicrosecsPerMillisec);
+  decodedImage.set_rotation(frameInfo->rotation);
+  // TODO(sakal): Investigate why callback is NULL sometimes and replace if
+  // statement with a DCHECK.
+  if (callback) {
+    callback->FrameToRender(decodedImage, qp);
+  } else {
+    LOG(LS_WARNING) << "No callback, dropping frame.";
   }
-  return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int32_t VCMDecodedFrameCallback::ReceivedDecodedReferenceFrame(
@@ -180,8 +164,9 @@ int32_t VCMGenericDecoder::Decode(const VCMEncodedFrame& frame, int64_t nowMs) {
     _callback->Map(frame.TimeStamp(), &_frameInfos[_nextFrameInfoIdx]);
 
     _nextFrameInfoIdx = (_nextFrameInfoIdx + 1) % kDecoderFrameMemoryLength;
+    const RTPFragmentationHeader dummy_header;
     int32_t ret = _decoder->Decode(frame.EncodedImage(), frame.MissingFrame(),
-                                   frame.FragmentationHeader(),
+                                   &dummy_header,
                                    frame.CodecSpecific(), frame.RenderTimeMs());
 
     _callback->OnDecoderImplementationName(_decoder->ImplementationName());

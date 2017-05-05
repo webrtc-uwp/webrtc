@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/call/rtc_event_log.h"
+#include "webrtc/logging/rtc_event_log/rtc_event_log.h"
 #include "webrtc/modules/congestion_controller/include/congestion_controller.h"
 #include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
 #include "webrtc/modules/rtp_rtcp/source/byte_io.h"
@@ -19,9 +19,15 @@ class NullBitrateObserver : public CongestionController::Observer,
                             public RemoteBitrateObserver {
  public:
   ~NullBitrateObserver() override {}
+
+  // TODO(minyue): remove this when old OnNetworkChanged is deprecated. See
+  // https://bugs.chromium.org/p/webrtc/issues/detail?id=6796
+  using CongestionController::Observer::OnNetworkChanged;
+
   void OnNetworkChanged(uint32_t bitrate_bps,
                         uint8_t fraction_loss,
-                        int64_t rtt_ms) override {}
+                        int64_t rtt_ms,
+                        int64_t probing_interval_ms) override {}
   void OnReceiveBitrateChanged(const std::vector<uint32_t>& ssrcs,
                                uint32_t bitrate) override {}
 };
@@ -33,7 +39,9 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
   SimulatedClock clock(data[i++]);
   NullBitrateObserver observer;
   RtcEventLogNullImpl event_log;
-  CongestionController cc(&clock, &observer, &observer, &event_log);
+  PacketRouter packet_router;
+  CongestionController cc(&clock, &observer, &observer, &event_log,
+                          &packet_router);
   RemoteBitrateEstimator* rbe = cc.GetRemoteBitrateEstimator(true);
   RTPHeader header;
   header.ssrc = ByteReader<uint32_t>::ReadBigEndian(&data[i]);

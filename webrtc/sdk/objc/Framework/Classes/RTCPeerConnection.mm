@@ -14,13 +14,13 @@
 #import "RTCConfiguration+Private.h"
 #import "RTCDataChannel+Private.h"
 #import "RTCIceCandidate+Private.h"
+#import "RTCLegacyStatsReport+Private.h"
 #import "RTCMediaConstraints+Private.h"
 #import "RTCMediaStream+Private.h"
 #import "RTCPeerConnectionFactory+Private.h"
 #import "RTCRtpReceiver+Private.h"
 #import "RTCRtpSender+Private.h"
 #import "RTCSessionDescription+Private.h"
-#import "RTCStatsReport+Private.h"
 #import "WebRTC/RTCLogging.h"
 
 #include <memory>
@@ -207,6 +207,7 @@ void PeerConnectionDelegateAdapter::OnIceCandidatesRemoved(
   NSMutableArray<RTCMediaStream *> *_localStreams;
   std::unique_ptr<webrtc::PeerConnectionDelegateAdapter> _observer;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> _peerConnection;
+  std::unique_ptr<webrtc::MediaConstraints> _nativeConstraints;
   BOOL _hasStartedRtcEventLog;
 }
 
@@ -224,11 +225,11 @@ void PeerConnectionDelegateAdapter::OnIceCandidatesRemoved(
   }
   if (self = [super init]) {
     _observer.reset(new webrtc::PeerConnectionDelegateAdapter(self));
-    std::unique_ptr<webrtc::MediaConstraints> nativeConstraints =
-        constraints.nativeConstraints;
+    _nativeConstraints = constraints.nativeConstraints;
+    CopyConstraintsIntoRtcConfiguration(_nativeConstraints.get(),
+                                        config.get());
     _peerConnection =
         factory.nativeFactory->CreatePeerConnection(*config,
-                                                    nativeConstraints.get(),
                                                     nullptr,
                                                     nullptr,
                                                     _observer.get());
@@ -282,6 +283,8 @@ void PeerConnectionDelegateAdapter::OnIceCandidatesRemoved(
   if (!config) {
     return NO;
   }
+  CopyConstraintsIntoRtcConfiguration(_nativeConstraints.get(),
+                                      config.get());
   return _peerConnection->SetConfiguration(*config);
 }
 

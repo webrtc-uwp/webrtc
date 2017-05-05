@@ -10,7 +10,7 @@
 
 #import <Foundation/Foundation.h>
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/gtest.h"
 
 #import "webrtc/modules/audio_device/ios/objc/RTCAudioSession.h"
 #import "webrtc/modules/audio_device/ios/objc/RTCAudioSession+Private.h"
@@ -32,10 +32,10 @@
     previousRoute:(AVAudioSessionRouteDescription *)previousRoute {
 }
 
-- (void)audioSessionMediaServicesWereLost:(RTCAudioSession *)session {
+- (void)audioSessionMediaServerTerminated:(RTCAudioSession *)session {
 }
 
-- (void)audioSessionMediaServicesWereReset:(RTCAudioSession *)session {
+- (void)audioSessionMediaServerReset:(RTCAudioSession *)session {
 }
 
 - (void)audioSessionShouldConfigure:(RTCAudioSession *)session {

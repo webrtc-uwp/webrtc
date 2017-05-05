@@ -11,6 +11,7 @@
 #include "webrtc/modules/remote_bitrate_estimator/remote_estimator_proxy.h"
 
 #include <limits>
+#include <algorithm>
 
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
@@ -22,8 +23,10 @@
 namespace webrtc {
 
 // TODO(sprang): Tune these!
-const int RemoteEstimatorProxy::kDefaultProcessIntervalMs = 50;
 const int RemoteEstimatorProxy::kBackWindowMs = 500;
+const int RemoteEstimatorProxy::kMinSendIntervalMs = 50;
+const int RemoteEstimatorProxy::kMaxSendIntervalMs = 250;
+const int RemoteEstimatorProxy::kDefaultSendIntervalMs = 100;
 
 // The maximum allowed value for a timestamp in milliseconds. This is lower
 // than the numerical limit since we often convert to microseconds.
@@ -37,7 +40,8 @@ RemoteEstimatorProxy::RemoteEstimatorProxy(Clock* clock,
       last_process_time_ms_(-1),
       media_ssrc_(0),
       feedback_sequence_(0),
-      window_start_seq_(-1) {}
+      window_start_seq_(-1),
+      send_interval_ms_(kDefaultSendIntervalMs) {}
 
 RemoteEstimatorProxy::~RemoteEstimatorProxy() {}
 
@@ -68,18 +72,17 @@ bool RemoteEstimatorProxy::LatestEstimate(std::vector<unsigned int>* ssrcs,
 }
 
 int64_t RemoteEstimatorProxy::TimeUntilNextProcess() {
-  int64_t now = clock_->TimeInMilliseconds();
   int64_t time_until_next = 0;
-  if (last_process_time_ms_ != -1 &&
-      now - last_process_time_ms_ < kDefaultProcessIntervalMs) {
-    time_until_next = (last_process_time_ms_ + kDefaultProcessIntervalMs - now);
+  if (last_process_time_ms_ != -1) {
+    rtc::CritScope cs(&lock_);
+    int64_t now = clock_->TimeInMilliseconds();
+    if (now - last_process_time_ms_ < send_interval_ms_)
+      time_until_next = (last_process_time_ms_ + send_interval_ms_ - now);
   }
   return time_until_next;
 }
 
 void RemoteEstimatorProxy::Process() {
-  if (TimeUntilNextProcess() > 0)
-    return;
   last_process_time_ms_ = clock_->TimeInMilliseconds();
 
   bool more_to_build = true;
@@ -92,6 +95,24 @@ void RemoteEstimatorProxy::Process() {
       more_to_build = false;
     }
   }
+}
+
+void RemoteEstimatorProxy::OnBitrateChanged(int bitrate_bps) {
+  // TwccReportSize = Ipv4(20B) + UDP(8B) + SRTP(10B) +
+  // AverageTwccReport(30B)
+  // TwccReport size at 50ms interval is 24 byte.
+  // TwccReport size at 250ms interval is 36 byte.
+  // AverageTwccReport = (TwccReport(50ms) + TwccReport(250ms)) / 2
+  constexpr int kTwccReportSize = 20 + 8 + 10 + 30;
+  constexpr double kMinTwccRate =
+      kTwccReportSize * 8.0 * 1000.0 / kMaxSendIntervalMs;
+  constexpr double kMaxTwccRate =
+      kTwccReportSize * 8.0 * 1000.0 / kMinSendIntervalMs;
+
+  // Let TWCC reports occupy 5% of total bandwidth.
+  rtc::CritScope cs(&lock_);
+  send_interval_ms_ = static_cast<int>(0.5 + kTwccReportSize * 8.0 * 1000.0 /
+      (std::max(std::min(0.05 * bitrate_bps, kMaxTwccRate), kMinTwccRate)));
 }
 
 void RemoteEstimatorProxy::OnPacketArrival(uint16_t sequence_number,
@@ -154,15 +175,15 @@ bool RemoteEstimatorProxy::BuildFeedbackPacket(
   // TODO(sprang): Measure receive times in microseconds and remove the
   // conversions below.
   const int64_t first_sequence = it->first;
-  feedback_packet->WithMediaSourceSsrc(media_ssrc_);
+  feedback_packet->SetMediaSsrc(media_ssrc_);
   // Base sequence is the expected next (window_start_seq_). This is known, but
   // we might not have actually received it, so the base time shall be the time
   // of the first received packet in the feedback.
-  feedback_packet->WithBase(static_cast<uint16_t>(window_start_seq_ & 0xFFFF),
-                            it->second * 1000);
-  feedback_packet->WithFeedbackSequenceNumber(feedback_sequence_++);
+  feedback_packet->SetBase(static_cast<uint16_t>(window_start_seq_ & 0xFFFF),
+                           it->second * 1000);
+  feedback_packet->SetFeedbackSequenceNumber(feedback_sequence_++);
   for (; it != packet_arrival_times_.end(); ++it) {
-    if (!feedback_packet->WithReceivedPacket(
+    if (!feedback_packet->AddReceivedPacket(
             static_cast<uint16_t>(it->first & 0xFFFF), it->second * 1000)) {
       // If we can't even add the first seq to the feedback packet, we won't be
       // able to build it at all.

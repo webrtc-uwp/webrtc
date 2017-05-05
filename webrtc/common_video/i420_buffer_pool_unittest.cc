@@ -10,8 +10,8 @@
 
 #include <string>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/common_video/include/i420_buffer_pool.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 
@@ -52,7 +52,7 @@ TEST(TestI420BufferPool, FailToReuse) {
 }
 
 TEST(TestI420BufferPool, FrameValidAfterPoolDestruction) {
-  rtc::scoped_refptr<VideoFrameBuffer> buffer;
+  rtc::scoped_refptr<I420Buffer> buffer;
   {
     I420BufferPool pool;
     buffer = pool.CreateBuffer(16, 16);
@@ -61,6 +61,13 @@ TEST(TestI420BufferPool, FrameValidAfterPoolDestruction) {
   EXPECT_EQ(16, buffer->height());
   // Try to trigger use-after-free errors by writing to y-plane.
   memset(buffer->MutableDataY(), 0xA5, 16 * buffer->StrideY());
+}
+
+TEST(TestI420BufferPool, MaxNumberOfBuffers) {
+  I420BufferPool pool(false, 1);
+  rtc::scoped_refptr<VideoFrameBuffer> buffer1 = pool.CreateBuffer(16, 16);
+  EXPECT_NE(nullptr, buffer1.get());
+  EXPECT_EQ(nullptr, pool.CreateBuffer(16, 16).get());
 }
 
 }  // namespace webrtc

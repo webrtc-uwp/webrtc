@@ -13,7 +13,7 @@
 #include "webrtc/base/httpcommon-inl.h"
 
 #include "webrtc/base/asyncsocket.h"
-#include "webrtc/base/common.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/httpserver.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/socketstream.h"
@@ -44,7 +44,7 @@ HttpServer::~HttpServer() {
 int
 HttpServer::HandleConnection(StreamInterface* stream) {
   int connection_id = next_connection_id_++;
-  ASSERT(connection_id != HTTP_INVALID_CONNECTION_ID);
+  RTC_DCHECK(connection_id != HTTP_INVALID_CONNECTION_ID);
   Connection* connection = new Connection(connection_id, this);
   connections_.insert(ConnectionMap::value_type(connection_id, connection));
   connection->BeginProcess(stream);
@@ -92,7 +92,7 @@ HttpServer::Connection*
 HttpServer::Find(int connection_id) {
   ConnectionMap::iterator it = connections_.find(connection_id);
   if (it == connections_.end())
-    return NULL;
+    return nullptr;
   return it->second;
 }
 
@@ -100,7 +100,7 @@ void
 HttpServer::Remove(int connection_id) {
   ConnectionMap::iterator it = connections_.find(connection_id);
   if (it == connections_.end()) {
-    ASSERT(false);
+    RTC_NOTREACHED();
     return;
   }
   Connection* connection = it->second;
@@ -118,9 +118,11 @@ HttpServer::Remove(int connection_id) {
 ///////////////////////////////////////////////////////////////////////////////
 
 HttpServer::Connection::Connection(int connection_id, HttpServer* server)
-  : connection_id_(connection_id), server_(server),
-    current_(NULL), signalling_(false), close_(false) {
-}
+    : connection_id_(connection_id),
+      server_(server),
+      current_(nullptr),
+      signalling_(false),
+      close_(false) {}
 
 HttpServer::Connection::~Connection() {
   // It's possible that an object hosted inside this transaction signalled
@@ -139,14 +141,14 @@ HttpServer::Connection::BeginProcess(StreamInterface* stream) {
 
 StreamInterface*
 HttpServer::Connection::EndProcess() {
-  base_.notify(NULL);
+  base_.notify(nullptr);
   base_.abort(HE_DISCONNECTED);
   return base_.detach();
 }
 
 void
 HttpServer::Connection::Respond(HttpServerTransaction* transaction) {
-  ASSERT(current_ == NULL);
+  RTC_DCHECK(current_ == nullptr);
   current_ = transaction;
   if (current_->response.begin() == current_->response.end()) {
     current_->response.set_error(HC_INTERNAL_SERVER_ERROR);
@@ -161,7 +163,7 @@ HttpServer::Connection::Respond(HttpServerTransaction* transaction) {
 
 void
 HttpServer::Connection::InitiateClose(bool force) {
-  bool request_in_progress = (HM_SEND == base_.mode()) || (NULL == current_);
+  bool request_in_progress = (HM_SEND == base_.mode()) || (nullptr == current_);
   if (!signalling_ && (force || !request_in_progress)) {
     server_->Remove(connection_id_);
   } else {
@@ -178,7 +180,7 @@ HttpServer::Connection::onHttpHeaderComplete(bool chunked, size_t& data_size) {
   if (data_size == SIZE_UNKNOWN) {
     data_size = 0;
   }
-  ASSERT(current_ != NULL);
+  RTC_DCHECK(current_ != nullptr);
   bool custom_document = false;
   server_->SignalHttpRequestHeader(server_, current_, &custom_document);
   if (!custom_document) {
@@ -190,7 +192,7 @@ HttpServer::Connection::onHttpHeaderComplete(bool chunked, size_t& data_size) {
 void
 HttpServer::Connection::onHttpComplete(HttpMode mode, HttpError err) {
   if (mode == HM_SEND) {
-    ASSERT(current_ != NULL);
+    RTC_DCHECK(current_ != nullptr);
     signalling_ = true;
     server_->SignalHttpRequestComplete(server_, current_, err);
     signalling_ = false;
@@ -204,11 +206,11 @@ HttpServer::Connection::onHttpComplete(HttpMode mode, HttpError err) {
   } else if (mode == HM_CONNECT) {
     base_.recv(&current_->request);
   } else if (mode == HM_RECV) {
-    ASSERT(current_ != NULL);
+    RTC_DCHECK(current_ != nullptr);
     // TODO: do we need this?
     //request_.document_->rewind();
     HttpServerTransaction* transaction = current_;
-    current_ = NULL;
+    current_ = nullptr;
     server_->SignalHttpRequest(server_, transaction);
   } else if (mode == HM_SEND) {
     Thread::Current()->Dispose(current_->response.document.release());
@@ -216,13 +218,12 @@ HttpServer::Connection::onHttpComplete(HttpMode mode, HttpError err) {
     current_->response.clear(true);
     base_.recv(&current_->request);
   } else {
-    ASSERT(false);
+    RTC_NOTREACHED();
   }
 }
 
 void
 HttpServer::Connection::onHttpClosed(HttpError err) {
-  RTC_UNUSED(err);
   server_->Remove(connection_id_);
 }
 
@@ -267,8 +268,8 @@ void HttpListenServer::StopListening() {
 }
 
 void HttpListenServer::OnReadEvent(AsyncSocket* socket) {
-  ASSERT(socket == listener_.get());
-  AsyncSocket* incoming = listener_->Accept(NULL);
+  RTC_DCHECK(socket == listener_.get());
+  AsyncSocket* incoming = listener_->Accept(nullptr);
   if (incoming) {
     StreamInterface* stream = new SocketStream(incoming);
     //stream = new LoggingAdapter(stream, LS_VERBOSE, "HttpServer", false);

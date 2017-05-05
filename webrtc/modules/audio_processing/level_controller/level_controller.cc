@@ -59,7 +59,7 @@ float FrameEnergy(const AudioBuffer& audio) {
 float PeakLevel(const AudioBuffer& audio) {
   float peak_level = 0.f;
   for (size_t k = 0; k < audio.num_channels(); ++k) {
-    auto channel_peak_level = std::max_element(
+    auto* channel_peak_level = std::max_element(
         audio.channels_const_f()[k],
         audio.channels_const_f()[k] + audio.num_frames(),
         [](float a, float b) { return std::abs(a) < std::abs(b); });
@@ -156,23 +156,21 @@ void LevelController::Metrics::Update(float long_term_peak_level,
     const int frame_peak_level_dbfs = static_cast<int>(
         10 * log10(frame_peak_level * frame_peak_level + 1e-10f) - kdBFSOffset);
 
-    LOG(LS_INFO) << "Level Controller metrics: " << std::endl
-                 << "Max noise power:              " << max_noise_power_dbfs
-                 << " dBFS" << std::endl
-                 << "Average noise power:          " << average_noise_power_dbfs
-                 << " dBFS" << std::endl
-                 << "Max long term peak level:     " << max_peak_level_dbfs
-                 << " dBFS" << std::endl
+    LOG(LS_INFO) << "Level Controller metrics: {"
+                 << "Max noise power: " << max_noise_power_dbfs << " dBFS, "
+                 << "Average noise power: " << average_noise_power_dbfs
+                 << " dBFS, "
+                 << "Max long term peak level: " << max_peak_level_dbfs
+                 << " dBFS, "
                  << "Average long term peak level: " << average_peak_level_dbfs
-                 << " dBFS" << std::endl
-                 << "Max gain:                     " << max_gain_db << " dB"
-                 << std::endl
-                 << "Average gain:                 " << average_gain_db << " dB"
-                 << std::endl
-                 << "Long term peak level:         "
-                 << long_term_peak_level_dbfs << " dBFS" << std::endl
-                 << "Last frame peak level:        " << frame_peak_level_dbfs
-                 << " dBFS";
+                 << " dBFS, "
+                 << "Max gain: " << max_gain_db << " dB, "
+                 << "Average gain: " << average_gain_db << " dB, "
+                 << "Long term peak level: " << long_term_peak_level_dbfs
+                 << " dBFS, "
+                 << "Last frame peak level: " << frame_peak_level_dbfs
+                 << " dBFS"
+                 << "}";
 
     Reset();
   }
@@ -181,7 +179,8 @@ void LevelController::Metrics::Update(float long_term_peak_level,
 LevelController::LevelController()
     : data_dumper_(new ApmDataDumper(instance_count_)),
       gain_applier_(data_dumper_.get()),
-      signal_classifier_(data_dumper_.get()) {
+      signal_classifier_(data_dumper_.get()),
+      peak_level_estimator_(kTargetLcPeakLeveldBFS) {
   Initialize(AudioProcessing::kSampleRate48kHz);
   ++instance_count_;
 }
@@ -198,7 +197,7 @@ void LevelController::Initialize(int sample_rate_hz) {
   gain_applier_.Initialize(sample_rate_hz);
   signal_classifier_.Initialize(sample_rate_hz);
   noise_level_estimator_.Initialize(sample_rate_hz);
-  peak_level_estimator_.Initialize();
+  peak_level_estimator_.Initialize(config_.initial_peak_level_dbfs);
   saturating_gain_estimator_.Initialize();
   metrics_.Initialize(sample_rate_hz);
 
@@ -209,8 +208,8 @@ void LevelController::Initialize(int sample_rate_hz) {
 }
 
 void LevelController::Process(AudioBuffer* audio) {
-  RTC_DCHECK_LT(0u, audio->num_channels());
-  RTC_DCHECK_GE(2u, audio->num_channels());
+  RTC_DCHECK_LT(0, audio->num_channels());
+  RTC_DCHECK_GE(2, audio->num_channels());
   RTC_DCHECK_NE(0.f, dc_forgetting_factor_);
   RTC_DCHECK(sample_rate_hz_);
   data_dumper_->DumpWav("lc_input", audio->num_frames(),
@@ -240,8 +239,12 @@ void LevelController::Process(AudioBuffer* audio) {
   float saturating_gain = saturating_gain_estimator_.GetGain();
 
   // Compute the new gain to apply.
-  last_gain_ = gain_selector_.GetNewGain(long_term_peak_level, noise_energy,
-                                         saturating_gain, signal_type);
+  last_gain_ =
+      gain_selector_.GetNewGain(long_term_peak_level, noise_energy,
+                                saturating_gain, gain_jumpstart_, signal_type);
+
+  // Unflag the jumpstart of the gain as it should only happen once.
+  gain_jumpstart_ = false;
 
   // Apply the gain to the signal.
   int num_saturations = gain_applier_.Process(last_gain_, audio);
@@ -260,6 +263,31 @@ void LevelController::Process(AudioBuffer* audio) {
 
   data_dumper_->DumpWav("lc_output", audio->num_frames(),
                         audio->channels_f()[0], *sample_rate_hz_, 1);
+}
+
+void LevelController::ApplyConfig(
+    const AudioProcessing::Config::LevelController& config) {
+  RTC_DCHECK(Validate(config));
+  config_ = config;
+  peak_level_estimator_.Initialize(config_.initial_peak_level_dbfs);
+  gain_jumpstart_ = true;
+}
+
+std::string LevelController::ToString(
+    const AudioProcessing::Config::LevelController& config) {
+  std::stringstream ss;
+  ss << "{"
+     << "enabled: " << (config.enabled ? "true" : "false") << ", "
+     << "initial_peak_level_dbfs: " << config.initial_peak_level_dbfs << "}";
+  return ss.str();
+}
+
+bool LevelController::Validate(
+    const AudioProcessing::Config::LevelController& config) {
+  return (config.initial_peak_level_dbfs <
+              std::numeric_limits<float>::epsilon() &&
+          config.initial_peak_level_dbfs >
+              -(100.f + std::numeric_limits<float>::epsilon()));
 }
 
 }  // namespace webrtc

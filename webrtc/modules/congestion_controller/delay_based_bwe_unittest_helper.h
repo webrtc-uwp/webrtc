@@ -17,10 +17,11 @@
 #include <utility>
 #include <vector>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/congestion_controller/delay_based_bwe.h"
 #include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
 #include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 namespace test {
@@ -124,7 +125,7 @@ class DelayBasedBweTest : public ::testing::Test {
                         int64_t send_time_ms,
                         uint16_t sequence_number,
                         size_t payload_size,
-                        int probe_cluster_id);
+                        const PacedPacketInfo& pacing_info);
 
   // Generates a frame of packets belonging to a stream at a given bitrate and
   // with a given ssrc. The stream is pushed through a very simple simulated
@@ -160,10 +161,11 @@ class DelayBasedBweTest : public ::testing::Test {
   static const uint32_t kDefaultSsrc;
 
   SimulatedClock clock_;  // Time at the receiver.
-  std::unique_ptr<test::TestBitrateObserver> bitrate_observer_;
-  std::unique_ptr<RemoteBitrateEstimator> bitrate_estimator_;
+  test::TestBitrateObserver bitrate_observer_;
+  std::unique_ptr<DelayBasedBwe> bitrate_estimator_;
   std::unique_ptr<test::StreamGenerator> stream_generator_;
   int64_t arrival_time_offset_ms_;
+  bool first_update_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(DelayBasedBweTest);
 };

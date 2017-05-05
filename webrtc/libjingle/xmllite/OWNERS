@@ -1,3 +1,0 @@
-# See ../OWNERS for more owners.
-
-per-file BUILD.gn=kjellander@webrtc.org

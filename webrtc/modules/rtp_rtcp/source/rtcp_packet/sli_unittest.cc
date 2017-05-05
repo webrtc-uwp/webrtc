@@ -10,8 +10,8 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/sli.h"
 
-#include "testing/gmock/include/gmock/gmock.h"
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/rtcp_packet_parser.h"
 
 using testing::ElementsAreArray;
@@ -42,9 +42,9 @@ constexpr uint8_t kPacket[] = {0x82,  206, 0x00, 0x03,
 
 TEST(RtcpPacketSliTest, Create) {
   Sli sli;
-  sli.From(kSenderSsrc);
-  sli.To(kRemoteSsrc);
-  sli.WithPictureId(kPictureId, kFirstMb, kNumberOfMb);
+  sli.SetSenderSsrc(kSenderSsrc);
+  sli.SetMediaSsrc(kRemoteSsrc);
+  sli.AddPictureId(kPictureId, kFirstMb, kNumberOfMb);
 
   rtc::Buffer packet = sli.Build();
 
@@ -67,9 +67,9 @@ TEST(RtcpPacketSliTest, Parse) {
 
 TEST(RtcpPacketSliTest, ParseFailsOnTooSmallPacket) {
   Sli sli;
-  sli.From(kSenderSsrc);
-  sli.To(kRemoteSsrc);
-  sli.WithPictureId(kPictureId, kFirstMb, kNumberOfMb);
+  sli.SetSenderSsrc(kSenderSsrc);
+  sli.SetMediaSsrc(kRemoteSsrc);
+  sli.AddPictureId(kPictureId, kFirstMb, kNumberOfMb);
 
   rtc::Buffer packet = sli.Build();
   packet[3]--;  // Decrease size by 1 word (4 bytes).

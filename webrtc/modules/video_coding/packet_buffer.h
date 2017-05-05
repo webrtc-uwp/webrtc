@@ -48,8 +48,10 @@ class PacketBuffer {
 
   virtual ~PacketBuffer();
 
-  // Made virtual for testing.
-  virtual bool InsertPacket(const VCMPacket& packet);
+  // Returns true if |packet| is inserted into the packet buffer, false
+  // otherwise. The PacketBuffer will always take ownership of the
+  // |packet.dataPtr| when this function is called. Made virtual for testing.
+  virtual bool InsertPacket(VCMPacket* packet);
   void ClearTo(uint16_t seq_num);
   void Clear();
 
@@ -94,11 +96,13 @@ class PacketBuffer {
   bool ExpandBufferSize() EXCLUSIVE_LOCKS_REQUIRED(crit_);
 
   // Test if all previous packets has arrived for the given sequence number.
-  bool IsContinuous(uint16_t seq_num) const EXCLUSIVE_LOCKS_REQUIRED(crit_);
+  bool PotentialNewFrame(uint16_t seq_num) const
+      EXCLUSIVE_LOCKS_REQUIRED(crit_);
 
   // Test if all packets of a frame has arrived, and if so, creates a frame.
-  // May create multiple frames per invocation.
-  void FindFrames(uint16_t seq_num) EXCLUSIVE_LOCKS_REQUIRED(crit_);
+  // Returns a vector of received frames.
+  std::vector<std::unique_ptr<RtpFrameObject>> FindFrames(uint16_t seq_num)
+      EXCLUSIVE_LOCKS_REQUIRED(crit_);
 
   // Copy the bitstream for |frame| to |destination|.
   // Virtual for testing.
@@ -106,7 +110,8 @@ class PacketBuffer {
 
   // Get the packet with sequence number |seq_num|.
   // Virtual for testing.
-  virtual VCMPacket* GetPacket(uint16_t seq_num);
+  virtual VCMPacket* GetPacket(uint16_t seq_num)
+      EXCLUSIVE_LOCKS_REQUIRED(crit_);
 
   // Mark all slots used by |frame| as not used.
   // Virtual for testing.
@@ -121,11 +126,11 @@ class PacketBuffer {
   // The fist sequence number currently in the buffer.
   uint16_t first_seq_num_ GUARDED_BY(crit_);
 
-  // The last sequence number currently in the buffer.
-  uint16_t last_seq_num_ GUARDED_BY(crit_);
-
   // If the packet buffer has received its first packet.
   bool first_packet_received_ GUARDED_BY(crit_);
+
+  // If the buffer is cleared to |first_seq_num_|.
+  bool is_cleared_to_first_seq_num_ GUARDED_BY(crit_);
 
   // Buffer that holds the inserted packets.
   std::vector<VCMPacket> data_buffer_ GUARDED_BY(crit_);

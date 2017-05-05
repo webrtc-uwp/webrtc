@@ -17,7 +17,7 @@
 
 namespace webrtc {
 namespace rtcp {
-//
+constexpr uint8_t ReceiverReport::kPacketType;
 // RTCP receiver report (RFC 3550).
 //
 //   0                   1                   2                   3
@@ -30,7 +30,7 @@ namespace rtcp {
 //  |                         report block(s)                       |
 //  |                            ....                               |
 bool ReceiverReport::Parse(const CommonHeader& packet) {
-  RTC_DCHECK(packet.type() == kPacketType);
+  RTC_DCHECK_EQ(packet.type(), kPacketType);
 
   const uint8_t report_blocks_count = packet.count();
 
@@ -50,7 +50,7 @@ bool ReceiverReport::Parse(const CommonHeader& packet) {
     next_report_block += ReportBlock::kLength;
   }
 
-  RTC_DCHECK_EQ(next_report_block - packet.payload(),
+  RTC_DCHECK_LE(next_report_block - packet.payload(),
                 static_cast<ptrdiff_t>(packet.payload_size_bytes()));
   return true;
 }
@@ -74,7 +74,7 @@ bool ReceiverReport::Create(uint8_t* packet,
   return true;
 }
 
-bool ReceiverReport::WithReportBlock(const ReportBlock& block) {
+bool ReceiverReport::AddReportBlock(const ReportBlock& block) {
   if (report_blocks_.size() >= kMaxNumberOfReportBlocks) {
     LOG(LS_WARNING) << "Max report blocks reached.";
     return false;

@@ -70,7 +70,7 @@ bool Tmmbn::Parse(const CommonHeader& packet) {
   return true;
 }
 
-void Tmmbn::WithTmmbr(const TmmbItem& item) {
+void Tmmbn::AddTmmbr(const TmmbItem& item) {
   items_.push_back(item);
 }
 
@@ -86,7 +86,7 @@ bool Tmmbn::Create(uint8_t* packet,
 
   CreateHeader(kFeedbackMessageType, kPacketType, HeaderLength(), packet,
                index);
-  RTC_DCHECK_EQ(0u, Rtpfb::media_ssrc());
+  RTC_DCHECK_EQ(0, Rtpfb::media_ssrc());
   CreateCommonFeedback(packet + *index);
   *index += kCommonFeedbackLength;
   for (const TmmbItem& item : items_) {

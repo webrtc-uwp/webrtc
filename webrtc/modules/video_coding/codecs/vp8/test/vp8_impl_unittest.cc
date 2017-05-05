@@ -12,11 +12,15 @@
 
 #include <memory>
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/api/video/i420_buffer.h"
 #include "webrtc/base/checks.h"
+#include "webrtc/base/optional.h"
 #include "webrtc/base/timeutils.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
+#include "webrtc/modules/video_coding/codecs/vp8/temporal_layers.h"
+#include "webrtc/test/frame_utils.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
@@ -72,6 +76,7 @@ Vp8UnitTestEncodeCompleteCallback::OnEncodedImage(
   encoded_frame_->_timeStamp = encoded_frame._timeStamp;
   encoded_frame_->_frameType = encoded_frame._frameType;
   encoded_frame_->_completeFrame = encoded_frame._completeFrame;
+  encoded_frame_->qp_ = encoded_frame.qp_;
   encode_complete_ = true;
   return Result(Result::OK, 0);
 }
@@ -86,17 +91,25 @@ bool Vp8UnitTestEncodeCompleteCallback::EncodeComplete() {
 
 class Vp8UnitTestDecodeCompleteCallback : public webrtc::DecodedImageCallback {
  public:
-  explicit Vp8UnitTestDecodeCompleteCallback(VideoFrame* frame)
-      : decoded_frame_(frame), decode_complete(false) {}
-  int32_t Decoded(VideoFrame& frame) override;
+  explicit Vp8UnitTestDecodeCompleteCallback(rtc::Optional<VideoFrame>* frame,
+                                             rtc::Optional<uint8_t>* qp)
+      : decoded_frame_(frame), decoded_qp_(qp), decode_complete(false) {}
+  int32_t Decoded(VideoFrame& frame) override {
+    RTC_NOTREACHED();
+    return -1;
+  }
   int32_t Decoded(VideoFrame& frame, int64_t decode_time_ms) override {
     RTC_NOTREACHED();
     return -1;
   }
+  void Decoded(VideoFrame& frame,
+               rtc::Optional<int32_t> decode_time_ms,
+               rtc::Optional<uint8_t> qp) override;
   bool DecodeComplete();
 
  private:
-  VideoFrame* decoded_frame_;
+  rtc::Optional<VideoFrame>* decoded_frame_;
+  rtc::Optional<uint8_t>* decoded_qp_;
   bool decode_complete;
 };
 
@@ -108,10 +121,13 @@ bool Vp8UnitTestDecodeCompleteCallback::DecodeComplete() {
   return false;
 }
 
-int Vp8UnitTestDecodeCompleteCallback::Decoded(VideoFrame& image) {
-  decoded_frame_->CopyFrame(image);
+void Vp8UnitTestDecodeCompleteCallback::Decoded(
+    VideoFrame& frame,
+    rtc::Optional<int32_t> decode_time_ms,
+    rtc::Optional<uint8_t> qp) {
+  *decoded_frame_ = rtc::Optional<VideoFrame>(frame);
+  *decoded_qp_ = qp;
   decode_complete = true;
-  return 0;
 }
 
 class TestVp8ImplUnitTest : public ::testing::Test {
@@ -123,19 +139,16 @@ class TestVp8ImplUnitTest : public ::testing::Test {
     encode_complete_callback_.reset(
         new Vp8UnitTestEncodeCompleteCallback(&encoded_frame_, 0, NULL));
     decode_complete_callback_.reset(
-        new Vp8UnitTestDecodeCompleteCallback(&decoded_frame_));
+        new Vp8UnitTestDecodeCompleteCallback(&decoded_frame_, &decoded_qp_));
     encoder_->RegisterEncodeCompleteCallback(encode_complete_callback_.get());
     decoder_->RegisterDecodeCompleteCallback(decode_complete_callback_.get());
     // Using a QCIF image (aligned stride (u,v planes) > width).
     // Processing only one frame.
-    length_source_frame_ = CalcBufferSize(kI420, kWidth, kHeight);
-    source_buffer_.reset(new uint8_t[length_source_frame_]);
     source_file_ = fopen(test::ResourcePath("paris_qcif", "yuv").c_str(), "rb");
     ASSERT_TRUE(source_file_ != NULL);
-    // Set input frame.
-    ASSERT_EQ(
-        fread(source_buffer_.get(), 1, length_source_frame_, source_file_),
-        length_source_frame_);
+    rtc::scoped_refptr<VideoFrameBuffer> compact_buffer(
+        test::ReadI420Buffer(kWidth, kHeight, source_file_));
+    ASSERT_TRUE(compact_buffer);
     codec_inst_.width = kWidth;
     codec_inst_.height = kHeight;
     const int kFramerate = 30;
@@ -147,20 +160,24 @@ class TestVp8ImplUnitTest : public ::testing::Test {
     EXPECT_EQ(stride_y, 176);
     EXPECT_EQ(stride_uv, 96);
 
-    input_frame_.CreateEmptyFrame(codec_inst_.width, codec_inst_.height,
-                                  stride_y, stride_uv, stride_uv);
-    input_frame_.set_timestamp(kTestTimestamp);
-    // Using ConvertToI420 to add stride to the image.
-    EXPECT_EQ(0, ConvertToI420(kI420, source_buffer_.get(), 0, 0,
-                               codec_inst_.width, codec_inst_.height, 0,
-                               kVideoRotation_0, &input_frame_));
+    rtc::scoped_refptr<I420Buffer> stride_buffer(
+        I420Buffer::Create(kWidth, kHeight, stride_y, stride_uv, stride_uv));
+
+    // No scaling in our case, just a copy, to add stride to the image.
+    stride_buffer->ScaleFrom(*compact_buffer);
+
+    input_frame_.reset(
+        new VideoFrame(stride_buffer, kVideoRotation_0, 0));
+    input_frame_->set_timestamp(kTestTimestamp);
   }
 
   void SetUpEncodeDecode() {
     codec_inst_.startBitrate = 300;
     codec_inst_.maxBitrate = 4000;
     codec_inst_.qpMax = 56;
-    codec_inst_.codecSpecific.VP8.denoisingOn = true;
+    codec_inst_.VP8()->denoisingOn = true;
+    codec_inst_.VP8()->tl_factory = &tl_factory_;
+    codec_inst_.VP8()->numberOfTemporalLayers = 1;
 
     EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
               encoder_->InitEncode(&codec_inst_, 1, 1440));
@@ -181,8 +198,8 @@ class TestVp8ImplUnitTest : public ::testing::Test {
     int64_t startTime = rtc::TimeMillis();
     while (rtc::TimeMillis() - startTime < kMaxWaitDecTimeMs) {
       if (decode_complete_callback_->DecodeComplete()) {
-        return CalcBufferSize(kI420, decoded_frame_.width(),
-                              decoded_frame_.height());
+        return CalcBufferSize(kI420, decoded_frame_->width(),
+                              decoded_frame_->height());
       }
     }
     return 0;
@@ -195,13 +212,14 @@ class TestVp8ImplUnitTest : public ::testing::Test {
   std::unique_ptr<Vp8UnitTestDecodeCompleteCallback> decode_complete_callback_;
   std::unique_ptr<uint8_t[]> source_buffer_;
   FILE* source_file_;
-  VideoFrame input_frame_;
+  std::unique_ptr<VideoFrame> input_frame_;
   std::unique_ptr<VideoEncoder> encoder_;
   std::unique_ptr<VideoDecoder> decoder_;
   EncodedImage encoded_frame_;
-  VideoFrame decoded_frame_;
-  size_t length_source_frame_;
+  rtc::Optional<VideoFrame> decoded_frame_;
+  rtc::Optional<uint8_t> decoded_qp_;
   VideoCodec codec_inst_;
+  TemporalLayersFactory tl_factory_;
 };
 
 TEST_F(TestVp8ImplUnitTest, EncoderParameterTest) {
@@ -214,13 +232,17 @@ TEST_F(TestVp8ImplUnitTest, EncoderParameterTest) {
   codec_inst_.maxFramerate = 30;
   codec_inst_.startBitrate = 300;
   codec_inst_.qpMax = 56;
-  codec_inst_.codecSpecific.VP8.complexity = kComplexityNormal;
-  codec_inst_.codecSpecific.VP8.numberOfTemporalLayers = 1;
+  codec_inst_.VP8()->complexity = kComplexityNormal;
+  codec_inst_.VP8()->numberOfTemporalLayers = 1;
+  codec_inst_.VP8()->tl_factory = &tl_factory_;
   // Calls before InitEncode().
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Release());
   int bit_rate = 300;
+  BitrateAllocation bitrate_allocation;
+  bitrate_allocation.SetBitrate(0, 0, bit_rate * 1000);
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_UNINITIALIZED,
-            encoder_->SetRates(bit_rate, codec_inst_.maxFramerate));
+            encoder_->SetRateAllocation(bitrate_allocation,
+                                        codec_inst_.maxFramerate));
 
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->InitEncode(&codec_inst_, 1, 1440));
 
@@ -230,6 +252,21 @@ TEST_F(TestVp8ImplUnitTest, EncoderParameterTest) {
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, decoder_->InitDecode(&codec_inst_, 1));
 }
 
+TEST_F(TestVp8Impl, DecodedQpEqualsEncodedQp) {
+  SetUpEncodeDecode();
+  encoder_->Encode(*input_frame_, nullptr, nullptr);
+  EXPECT_GT(WaitForEncodedFrame(), 0u);
+  // First frame should be a key frame.
+  encoded_frame_._frameType = kVideoFrameKey;
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
+            decoder_->Decode(encoded_frame_, false, nullptr));
+  EXPECT_GT(WaitForDecodedFrame(), 0u);
+  ASSERT_TRUE(decoded_frame_);
+  EXPECT_GT(I420PSNR(input_frame_.get(), &*decoded_frame_), 36);
+  ASSERT_TRUE(decoded_qp_);
+  EXPECT_EQ(encoded_frame_.qp_, *decoded_qp_);
+}
+
 #if defined(WEBRTC_ANDROID)
 #define MAYBE_AlignedStrideEncodeDecode DISABLED_AlignedStrideEncodeDecode
 #else
@@ -237,7 +274,7 @@ TEST_F(TestVp8ImplUnitTest, EncoderParameterTest) {
 #endif
 TEST_F(TestVp8ImplUnitTest, MAYBE_AlignedStrideEncodeDecode) {
   SetUpEncodeDecode();
-  encoder_->Encode(input_frame_, NULL, NULL);
+  encoder_->Encode(*input_frame_, NULL, NULL);
   EXPECT_GT(WaitForEncodedFrame(), 0u);
   // First frame should be a key frame.
   encoded_frame_._frameType = kVideoFrameKey;
@@ -245,10 +282,11 @@ TEST_F(TestVp8ImplUnitTest, MAYBE_AlignedStrideEncodeDecode) {
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
             decoder_->Decode(encoded_frame_, false, NULL));
   EXPECT_GT(WaitForDecodedFrame(), 0u);
+  ASSERT_TRUE(decoded_frame_);
   // Compute PSNR on all planes (faster than SSIM).
-  EXPECT_GT(I420PSNR(&input_frame_, &decoded_frame_), 36);
-  EXPECT_EQ(kTestTimestamp, decoded_frame_.timestamp());
-  EXPECT_EQ(kTestNtpTimeMs, decoded_frame_.ntp_time_ms());
+  EXPECT_GT(I420PSNR(input_frame_.get(), &*decoded_frame_), 36);
+  EXPECT_EQ(kTestTimestamp, decoded_frame_->timestamp());
+  EXPECT_EQ(kTestNtpTimeMs, decoded_frame_->ntp_time_ms());
 }
 
 #if defined(WEBRTC_ANDROID)
@@ -258,7 +296,7 @@ TEST_F(TestVp8ImplUnitTest, MAYBE_AlignedStrideEncodeDecode) {
 #endif
 TEST_F(TestVp8ImplUnitTest, MAYBE_DecodeWithACompleteKeyFrame) {
   SetUpEncodeDecode();
-  encoder_->Encode(input_frame_, NULL, NULL);
+  encoder_->Encode(*input_frame_, NULL, NULL);
   EXPECT_GT(WaitForEncodedFrame(), 0u);
   // Setting complete to false -> should return an error.
   encoded_frame_._completeFrame = false;
@@ -273,7 +311,8 @@ TEST_F(TestVp8ImplUnitTest, MAYBE_DecodeWithACompleteKeyFrame) {
   encoded_frame_._frameType = kVideoFrameKey;
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
             decoder_->Decode(encoded_frame_, false, NULL));
-  EXPECT_GT(I420PSNR(&input_frame_, &decoded_frame_), 36);
+  ASSERT_TRUE(decoded_frame_);
+  EXPECT_GT(I420PSNR(input_frame_.get(), &*decoded_frame_), 36);
 }
 
 }  // namespace webrtc

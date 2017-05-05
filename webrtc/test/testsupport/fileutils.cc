@@ -18,6 +18,9 @@
 #include <windows.h>
 #include <algorithm>
 
+#include "Shlwapi.h"
+#include "WinDef.h"
+
 #include "webrtc/system_wrappers/include/utf_util_win.h"
 #define GET_CURRENT_DIR _getcwd
 #else
@@ -51,6 +54,7 @@ namespace test {
 #if defined(WEBRTC_IOS)
 // Defined in iosfileutils.mm.  No header file to discourage use elsewhere.
 std::string IOSOutputPath();
+std::string IOSRootPath();
 std::string IOSResourcePath(std::string name, std::string extension);
 #endif
 
@@ -68,8 +72,6 @@ const char* kRootDirName = "/sdcard/chromium_tests_root/";
 const char* kProjectRootFileName = "";
 const char* kFallbackPath = "./";
 #else
-// The file we're looking for to identify the project root dir.
-const char* kProjectRootFileName = "DEPS";
 #if !defined(WEBRTC_IOS)
 const char* kOutputDirName = "out";
 #endif
@@ -108,7 +110,7 @@ void SetExecutablePath(const std::string& path) {
   relative_dir_path_set = true;
 }
 
-bool FileExists(std::string& file_name) {
+bool FileExists(const std::string& file_name) {
   struct stat file_info = {0};
   return stat(file_name.c_str(), &file_info) == 0;
 }
@@ -130,6 +132,9 @@ std::string WorkingDir() {
 #else // WEBRTC_ANDROID
 
 std::string ProjectRootPath() {
+#if defined(WEBRTC_IOS)
+  return IOSRootPath();
+#else
   std::string path = WorkingDir();
   if (path == kFallbackPath) {
     return kCannotFindProjectRootDir;
@@ -140,20 +145,21 @@ std::string ProjectRootPath() {
   if (relative_dir_path_set) {
     path = path + kPathDelimiter + relative_dir_path;
   }
-  // Check for our file that verifies the root dir.
-  size_t path_delimiter_index = path.find_last_of(kPathDelimiter);
-  while (path_delimiter_index != std::string::npos) {
-    std::string root_filename = path + kPathDelimiter + kProjectRootFileName;
-    if (FileExists(root_filename)) {
-      return path + kPathDelimiter;
-    }
-    // Move up one directory in the directory tree.
-    path = path.substr(0, path_delimiter_index);
-    path_delimiter_index = path.find_last_of(kPathDelimiter);
+  path = path + kPathDelimiter + ".." + kPathDelimiter + "..";
+  char canonical_path[FILENAME_MAX];
+#ifdef WIN32
+  BOOL succeeded = PathCanonicalizeA(canonical_path, path.c_str());
+#else
+  bool succeeded = realpath(path.c_str(), canonical_path) != NULL;
+#endif
+  if (succeeded) {
+    path = std::string(canonical_path) + kPathDelimiter;
+    return path;
+  } else {
+    fprintf(stderr, "Cannot find project root directory!\n");
+    return kCannotFindProjectRootDir;
   }
-  // Reached the root directory.
-  fprintf(stderr, "Cannot find project root directory!\n");
-  return kCannotFindProjectRootDir;
+#endif
 }
 
 std::string OutputPath() {
@@ -250,7 +256,7 @@ std::string TempFilename(const std::string &dir, const std::string &prefix) {
 #endif
 }
 
-bool CreateDir(std::string directory_name) {
+bool CreateDir(const std::string& directory_name) {
   struct stat path_info = {0};
   // Check if the path exists already:
   if (stat(directory_name.c_str(), &path_info) == 0) {
@@ -270,7 +276,8 @@ bool CreateDir(std::string directory_name) {
   return true;
 }
 
-std::string ResourcePath(std::string name, std::string extension) {
+std::string ResourcePath(const std::string& name,
+                         const std::string& extension) {
 #if defined(WEBRTC_IOS)
   return IOSResourcePath(name, extension);
 #else
@@ -314,7 +321,7 @@ std::string ResourcePath(std::string name, std::string extension) {
 #endif  // defined (WEBRTC_IOS)
 }
 
-size_t GetFileSize(std::string filename) {
+size_t GetFileSize(const std::string& filename) {
   FILE* f = fopen(filename.c_str(), "rb");
   size_t size = 0;
   if (f != NULL) {

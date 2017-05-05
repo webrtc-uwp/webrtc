@@ -16,8 +16,7 @@
 #include <limits>
 
 #include "webrtc/base/checks.h"
-#include "webrtc/call.h"
-#include "webrtc/call/rtc_event_log.h"
+#include "webrtc/call/call.h"
 #include "webrtc/modules/audio_coding/neteq/tools/packet.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
 

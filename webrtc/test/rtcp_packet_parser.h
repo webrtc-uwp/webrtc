@@ -41,7 +41,7 @@ template <typename Packet>
 bool ParseSinglePacket(const uint8_t* buffer, size_t size, Packet* packet) {
   rtcp::CommonHeader header;
   RTC_CHECK(header.Parse(buffer, size));
-  RTC_CHECK_EQ(static_cast<ptrdiff_t>(size), header.NextPacket() - buffer);
+  RTC_CHECK_EQ(size, header.NextPacket() - buffer);
   return packet->Parse(header);
 }
 // Same function, but takes raw buffer as single argument instead of pair.
@@ -60,6 +60,13 @@ class RtcpPacketParser {
     void Parse(const rtcp::CommonHeader& header) {
       if (TypedRtcpPacket::Parse(header))
         ++num_packets_;
+    }
+    void Parse(const rtcp::CommonHeader& header, uint32_t* sender_ssrc) {
+      if (TypedRtcpPacket::Parse(header)) {
+        ++num_packets_;
+        if (*sender_ssrc == 0)  // Use first sender ssrc in compound packet.
+          *sender_ssrc = TypedRtcpPacket::sender_ssrc();
+      }
     }
 
    private:
@@ -92,9 +99,7 @@ class RtcpPacketParser {
   PacketCounter<rtcp::TransportFeedback>* transport_feedback() {
     return &transport_feedback_;
   }
-  const RTCPVoIPMetric* voip_metric() {
-    return &xr_.voip_metrics()[0].voip_metric();
-  }
+  uint32_t sender_ssrc() const { return sender_ssrc_; }
 
  private:
   PacketCounter<rtcp::App> app_;
@@ -114,6 +119,7 @@ class RtcpPacketParser {
   PacketCounter<rtcp::Tmmbn> tmmbn_;
   PacketCounter<rtcp::Tmmbr> tmmbr_;
   PacketCounter<rtcp::TransportFeedback> transport_feedback_;
+  uint32_t sender_ssrc_ = 0;
 };
 
 }  // namespace test

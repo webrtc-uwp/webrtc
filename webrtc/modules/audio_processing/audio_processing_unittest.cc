@@ -17,26 +17,33 @@
 #include <queue>
 
 #include "webrtc/base/arraysize.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/gtest_prod_util.h"
+#include "webrtc/base/ignore_wundef.h"
 #include "webrtc/common_audio/include/audio_util.h"
 #include "webrtc/common_audio/resampler/include/push_resampler.h"
 #include "webrtc/common_audio/resampler/push_sinc_resampler.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/modules/audio_processing/audio_processing_impl.h"
 #include "webrtc/modules/audio_processing/beamformer/mock_nonlinear_beamformer.h"
 #include "webrtc/modules/audio_processing/common.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "webrtc/modules/audio_processing/level_controller/level_controller_constants.h"
 #include "webrtc/modules/audio_processing/test/protobuf_utils.h"
 #include "webrtc/modules/audio_processing/test/test_utils.h"
 #include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/system_wrappers/include/event_wrapper.h"
 #include "webrtc/system_wrappers/include/trace.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
+
+RTC_PUSH_IGNORING_WUNDEF()
 #ifdef WEBRTC_ANDROID_PLATFORM_BUILD
-#include "gtest/gtest.h"
 #include "external/webrtc/webrtc/modules/audio_processing/test/unittest.pb.h"
 #else
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/modules/audio_processing/unittest.pb.h"
+#include "webrtc/modules/audio_processing/test/unittest.pb.h"
 #endif
+RTC_POP_IGNORING_WUNDEF()
 
 namespace webrtc {
 namespace {
@@ -92,7 +99,7 @@ size_t TotalChannelsFromLayout(AudioProcessing::ChannelLayout layout) {
     case AudioProcessing::kStereoAndKeyboard:
       return 3;
   }
-  assert(false);
+  RTC_NOTREACHED();
   return 0;
 }
 
@@ -178,7 +185,10 @@ void EnableAllAPComponents(AudioProcessing* ap) {
   EXPECT_NOERR(ap->gain_control()->Enable(true));
 #endif
 
-  EXPECT_NOERR(ap->high_pass_filter()->Enable(true));
+  AudioProcessing::Config apm_config;
+  apm_config.high_pass_filter.enabled = true;
+  ap->ApplyConfig(apm_config);
+
   EXPECT_NOERR(ap->level_estimator()->Enable(true));
   EXPECT_NOERR(ap->noise_suppression()->Enable(true));
 
@@ -265,7 +275,7 @@ std::string OutputFilePath(std::string name,
   } else if (num_output_channels == 2) {
     ss << "stereo";
   } else {
-    assert(false);
+    RTC_NOTREACHED();
   }
   ss << output_rate / 1000;
   if (num_reverse_output_channels == 1) {
@@ -273,7 +283,7 @@ std::string OutputFilePath(std::string name,
   } else if (num_reverse_output_channels == 2) {
     ss << "_rstereo";
   } else {
-    assert(false);
+    RTC_NOTREACHED();
   }
   ss << reverse_output_rate / 1000;
   ss << "_d" << file_direction << "_pcm";
@@ -289,7 +299,7 @@ void ClearTempFiles() {
     remove(kv.second.c_str());
 }
 
-void OpenFileAndReadMessage(const std::string filename,
+void OpenFileAndReadMessage(std::string filename,
                             ::google::protobuf::MessageLite* msg) {
   FILE* file = fopen(filename.c_str(), "rb");
   ASSERT_TRUE(file != NULL);
@@ -311,7 +321,7 @@ bool ReadChunk(FILE* file, int16_t* int_data, float* float_data,
   size_t read_count = fread(int_data, sizeof(int16_t), frame_size, file);
   if (read_count != frame_size) {
     // Check that the file really ended.
-    assert(feof(file));
+    RTC_DCHECK(feof(file));
     return false;  // This is expected.
   }
 
@@ -384,7 +394,6 @@ class ApmTest : public ::testing::Test {
   void VerifyDebugDumpTest(Format format);
 
   const std::string output_path_;
-  const std::string ref_path_;
   const std::string ref_filename_;
   std::unique_ptr<AudioProcessing> apm_;
   AudioFrame* frame_;
@@ -400,16 +409,18 @@ class ApmTest : public ::testing::Test {
 
 ApmTest::ApmTest()
     : output_path_(test::OutputPath()),
-      ref_path_(test::ProjectRootPath() + "data/audio_processing/"),
 #if defined(WEBRTC_AUDIOPROC_FIXED_PROFILE)
-      ref_filename_(ref_path_ + "output_data_fixed.pb"),
+      ref_filename_(test::ResourcePath("audio_processing/output_data_fixed",
+                                       "pb")),
 #elif defined(WEBRTC_AUDIOPROC_FLOAT_PROFILE)
 #if defined(WEBRTC_MAC)
       // A different file for Mac is needed because on this platform the AEC
       // constant |kFixedDelayMs| value is 20 and not 50 as it is on the rest.
-      ref_filename_(ref_path_ + "output_data_mac.pb"),
+      ref_filename_(test::ResourcePath("audio_processing/output_data_mac",
+                                       "pb")),
 #else
-      ref_filename_(ref_path_ + "output_data_float.pb"),
+      ref_filename_(test::ResourcePath("audio_processing/output_data_float",
+                                       "pb")),
 #endif
 #endif
       frame_(NULL),
@@ -917,6 +928,9 @@ TEST_F(ApmTest, EchoCancellation) {
   EXPECT_EQ(apm_->kNotEnabledError,
             apm_->echo_cancellation()->GetMetrics(&metrics));
 
+  EXPECT_EQ(apm_->kNoError, apm_->echo_cancellation()->Enable(true));
+  EXPECT_TRUE(apm_->echo_cancellation()->is_enabled());
+
   EXPECT_EQ(apm_->kNoError,
             apm_->echo_cancellation()->enable_metrics(true));
   EXPECT_TRUE(apm_->echo_cancellation()->are_metrics_enabled());
@@ -924,19 +938,21 @@ TEST_F(ApmTest, EchoCancellation) {
             apm_->echo_cancellation()->enable_metrics(false));
   EXPECT_FALSE(apm_->echo_cancellation()->are_metrics_enabled());
 
-  int median = 0;
-  int std = 0;
-  float poor_fraction = 0;
-  EXPECT_EQ(apm_->kNotEnabledError,
-            apm_->echo_cancellation()->GetDelayMetrics(&median, &std,
-                                                       &poor_fraction));
-
   EXPECT_EQ(apm_->kNoError,
             apm_->echo_cancellation()->enable_delay_logging(true));
   EXPECT_TRUE(apm_->echo_cancellation()->is_delay_logging_enabled());
   EXPECT_EQ(apm_->kNoError,
             apm_->echo_cancellation()->enable_delay_logging(false));
   EXPECT_FALSE(apm_->echo_cancellation()->is_delay_logging_enabled());
+
+  EXPECT_EQ(apm_->kNoError, apm_->echo_cancellation()->Enable(false));
+  EXPECT_FALSE(apm_->echo_cancellation()->is_enabled());
+
+  int median = 0;
+  int std = 0;
+  float poor_fraction = 0;
+  EXPECT_EQ(apm_->kNotEnabledError, apm_->echo_cancellation()->GetDelayMetrics(
+                                        &median, &std, &poor_fraction));
 
   EXPECT_EQ(apm_->kNoError, apm_->echo_cancellation()->Enable(true));
   EXPECT_TRUE(apm_->echo_cancellation()->is_enabled());
@@ -1378,10 +1394,11 @@ TEST_F(ApmTest, NoiseSuppression) {
 
 TEST_F(ApmTest, HighPassFilter) {
   // Turn HP filter on/off
-  EXPECT_EQ(apm_->kNoError, apm_->high_pass_filter()->Enable(true));
-  EXPECT_TRUE(apm_->high_pass_filter()->is_enabled());
-  EXPECT_EQ(apm_->kNoError, apm_->high_pass_filter()->Enable(false));
-  EXPECT_FALSE(apm_->high_pass_filter()->is_enabled());
+  AudioProcessing::Config apm_config;
+  apm_config.high_pass_filter.enabled = true;
+  apm_->ApplyConfig(apm_config);
+  apm_config.high_pass_filter.enabled = false;
+  apm_->ApplyConfig(apm_config);
 }
 
 TEST_F(ApmTest, LevelEstimator) {
@@ -2773,4 +2790,97 @@ INSTANTIATE_TEST_CASE_P(
 #endif
 
 }  // namespace
+
+TEST(ApmConfiguration, DefaultBehavior) {
+  // Verify that the level controller is default off, it can be activated using
+  // the config, and that the default initial level is maintained after the
+  // config has been applied.
+  std::unique_ptr<AudioProcessingImpl> apm(
+      new AudioProcessingImpl(webrtc::Config()));
+  AudioProcessing::Config config;
+  EXPECT_FALSE(apm->config_.level_controller.enabled);
+  // TODO(peah): Add test for the existence of the level controller object once
+  // that is created only when that is specified in the config.
+  // TODO(peah): Remove the testing for
+  // apm->capture_nonlocked_.level_controller_enabled once the value in config_
+  // is instead used to activate the level controller.
+  EXPECT_FALSE(apm->capture_nonlocked_.level_controller_enabled);
+  EXPECT_NEAR(kTargetLcPeakLeveldBFS,
+              apm->config_.level_controller.initial_peak_level_dbfs,
+              std::numeric_limits<float>::epsilon());
+  config.level_controller.enabled = true;
+  apm->ApplyConfig(config);
+  EXPECT_TRUE(apm->config_.level_controller.enabled);
+  // TODO(peah): Add test for the existence of the level controller object once
+  // that is created only when the that is specified in the config.
+  // TODO(peah): Remove the testing for
+  // apm->capture_nonlocked_.level_controller_enabled once the value in config_
+  // is instead used to activate the level controller.
+  EXPECT_TRUE(apm->capture_nonlocked_.level_controller_enabled);
+  EXPECT_NEAR(kTargetLcPeakLeveldBFS,
+              apm->config_.level_controller.initial_peak_level_dbfs,
+              std::numeric_limits<float>::epsilon());
+}
+
+TEST(ApmConfiguration, ValidConfigBehavior) {
+  // Verify that the initial level can be specified and is retained after the
+  // config has been applied.
+  std::unique_ptr<AudioProcessingImpl> apm(
+      new AudioProcessingImpl(webrtc::Config()));
+  AudioProcessing::Config config;
+  config.level_controller.initial_peak_level_dbfs = -50.f;
+  apm->ApplyConfig(config);
+  EXPECT_FALSE(apm->config_.level_controller.enabled);
+  // TODO(peah): Add test for the existence of the level controller object once
+  // that is created only when the that is specified in the config.
+  // TODO(peah): Remove the testing for
+  // apm->capture_nonlocked_.level_controller_enabled once the value in config_
+  // is instead used to activate the level controller.
+  EXPECT_FALSE(apm->capture_nonlocked_.level_controller_enabled);
+  EXPECT_NEAR(-50.f, apm->config_.level_controller.initial_peak_level_dbfs,
+              std::numeric_limits<float>::epsilon());
+}
+
+TEST(ApmConfiguration, InValidConfigBehavior) {
+  // Verify that the config is properly reset when nonproper values are applied
+  // for the initial level.
+
+  // Verify that the config is properly reset when the specified initial peak
+  // level is too low.
+  std::unique_ptr<AudioProcessingImpl> apm(
+      new AudioProcessingImpl(webrtc::Config()));
+  AudioProcessing::Config config;
+  config.level_controller.enabled = true;
+  config.level_controller.initial_peak_level_dbfs = -101.f;
+  apm->ApplyConfig(config);
+  EXPECT_FALSE(apm->config_.level_controller.enabled);
+  // TODO(peah): Add test for the existence of the level controller object once
+  // that is created only when the that is specified in the config.
+  // TODO(peah): Remove the testing for
+  // apm->capture_nonlocked_.level_controller_enabled once the value in config_
+  // is instead used to activate the level controller.
+  EXPECT_FALSE(apm->capture_nonlocked_.level_controller_enabled);
+  EXPECT_NEAR(kTargetLcPeakLeveldBFS,
+              apm->config_.level_controller.initial_peak_level_dbfs,
+              std::numeric_limits<float>::epsilon());
+
+  // Verify that the config is properly reset when the specified initial peak
+  // level is too high.
+  apm.reset(new AudioProcessingImpl(webrtc::Config()));
+  config = AudioProcessing::Config();
+  config.level_controller.enabled = true;
+  config.level_controller.initial_peak_level_dbfs = 1.f;
+  apm->ApplyConfig(config);
+  EXPECT_FALSE(apm->config_.level_controller.enabled);
+  // TODO(peah): Add test for the existence of the level controller object once
+  // that is created only when that is specified in the config.
+  // TODO(peah): Remove the testing for
+  // apm->capture_nonlocked_.level_controller_enabled once the value in config_
+  // is instead used to activate the level controller.
+  EXPECT_FALSE(apm->capture_nonlocked_.level_controller_enabled);
+  EXPECT_NEAR(kTargetLcPeakLeveldBFS,
+              apm->config_.level_controller.initial_peak_level_dbfs,
+              std::numeric_limits<float>::epsilon());
+}
+
 }  // namespace webrtc

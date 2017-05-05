@@ -10,8 +10,8 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/app.h"
 
-#include "testing/gmock/include/gmock/gmock.h"
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/rtcp_packet_parser.h"
 
 namespace webrtc {
@@ -53,9 +53,9 @@ constexpr uint8_t kPacketWithUnalignedPayload[] = {
 
 TEST(RtcpPacketAppTest, CreateWithoutData) {
   App app;
-  app.From(kSenderSsrc);
-  app.WithSubType(kSubtype);
-  app.WithName(kName);
+  app.SetSsrc(kSenderSsrc);
+  app.SetSubType(kSubtype);
+  app.SetName(kName);
 
   rtc::Buffer raw = app.Build();
 
@@ -75,10 +75,10 @@ TEST(RtcpPacketAppTest, ParseWithoutData) {
 
 TEST(RtcpPacketAppTest, CreateWithData) {
   App app;
-  app.From(kSenderSsrc);
-  app.WithSubType(kSubtype);
-  app.WithName(kName);
-  app.WithData(kData, sizeof(kData));
+  app.SetSsrc(kSenderSsrc);
+  app.SetSubType(kSubtype);
+  app.SetName(kName);
+  app.SetData(kData, sizeof(kData));
 
   rtc::Buffer raw = app.Build();
 

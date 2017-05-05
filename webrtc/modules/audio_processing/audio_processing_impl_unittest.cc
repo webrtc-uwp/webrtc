@@ -10,11 +10,11 @@
 
 #include "webrtc/modules/audio_processing/audio_processing_impl.h"
 
-#include "testing/gmock/include/gmock/gmock.h"
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/config.h"
 #include "webrtc/modules/audio_processing/test/test_utils.h"
 #include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
 
 using ::testing::Invoke;
 using ::testing::Return;
@@ -23,8 +23,8 @@ namespace webrtc {
 
 class MockInitialize : public AudioProcessingImpl {
  public:
-  explicit MockInitialize(const Config& config) : AudioProcessingImpl(config) {
-  }
+  explicit MockInitialize(const webrtc::Config& config)
+      : AudioProcessingImpl(config) {}
 
   MOCK_METHOD0(InitializeLocked, int());
   int RealInitializeLocked() NO_THREAD_SAFETY_ANALYSIS {
@@ -33,7 +33,7 @@ class MockInitialize : public AudioProcessingImpl {
 };
 
 TEST(AudioProcessingImplTest, AudioParameterChangeTriggersInit) {
-  Config config;
+  webrtc::Config config;
   MockInitialize mock(config);
   ON_CALL(mock, InitializeLocked())
       .WillByDefault(Invoke(&mock, &MockInitialize::RealInitializeLocked));
@@ -42,11 +42,11 @@ TEST(AudioProcessingImplTest, AudioParameterChangeTriggersInit) {
   mock.Initialize();
 
   AudioFrame frame;
-  // Call with the default parameters; there should be no init.
+  // Call with the default parameters; there should be an init.
   frame.num_channels_ = 1;
   SetFrameSampleRate(&frame, 16000);
   EXPECT_CALL(mock, InitializeLocked())
-      .Times(0);
+      .Times(1);
   EXPECT_NOERR(mock.ProcessStream(&frame));
   EXPECT_NOERR(mock.ProcessReverseStream(&frame));
 
@@ -57,6 +57,7 @@ TEST(AudioProcessingImplTest, AudioParameterChangeTriggersInit) {
   EXPECT_NOERR(mock.ProcessStream(&frame));
 
   // New number of channels.
+  // TODO(peah): Investigate why this causes 2 inits.
   frame.num_channels_ = 2;
   EXPECT_CALL(mock, InitializeLocked())
       .Times(2);

@@ -10,6 +10,7 @@
 
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/refcount.h"
 #include "webrtc/base/timeutils.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
@@ -21,10 +22,7 @@
 #include <assert.h>
 #include <string.h>
 
-#if defined (WINRT)
-#include "audio_device_wasapi_win.h"
-#elif defined(_WIN32)
-#include "audio_device_wave_win.h"
+#if defined(_WIN32)
 #if defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
 #include "audio_device_core_win.h"
 #endif
@@ -35,6 +33,7 @@
 #include "webrtc/modules/audio_device/android/audio_record_jni.h"
 #include "webrtc/modules/audio_device/android/audio_track_jni.h"
 #include "webrtc/modules/audio_device/android/opensles_player.h"
+#include "webrtc/modules/audio_device/android/opensles_recorder.h"
 #elif defined(WEBRTC_LINUX)
 #if defined(LINUX_ALSA)
 #include "audio_device_alsa_linux.h"
@@ -200,30 +199,7 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects() {
 
 // Create the *Windows* implementation of the Audio Device
 //
-#if defined(_WIN32)
-  if ((audioLayer == kWindowsWaveAudio)
-#if !defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
-      // Wave audio is default if Core audio is not supported in this build
-      || (audioLayer == kPlatformDefaultAudio)
-#endif
-          ) {
-#if !defined(WINRT)
-    // create *Windows Wave Audio* implementation
-    ptrAudioDevice = new AudioDeviceWindowsWave(Id());
-    LOG(INFO) << "Windows Wave APIs will be utilized";
-#endif // WINRT
-  }
 #if defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
-#if defined(WINRT)
-    if (audioLayer == kWindowsWasapiAudio)
-    {
-      LOG(INFO) << "attempting to use the Windows Wasapi Audio APIs...";
-
-      // create *Windows Core Audio* implementation
-      ptrAudioDevice = new AudioDeviceWindowsWasapi(Id());
-      LOG(INFO) << "Windows Wasapi Audio APIs will be utilized";
-    }
-#else // defined(WINRT)
   if ((audioLayer == kWindowsCoreAudio) ||
       (audioLayer == kPlatformDefaultAudio)) {
     LOG(INFO) << "attempting to use the Windows Core Audio APIs...";
@@ -232,34 +208,27 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects() {
       // create *Windows Core Audio* implementation
       ptrAudioDevice = new AudioDeviceWindowsCore(Id());
       LOG(INFO) << "Windows Core Audio APIs will be utilized";
-    } else {
-      // create *Windows Wave Audio* implementation
-      ptrAudioDevice = new AudioDeviceWindowsWave(Id());
-      if (ptrAudioDevice != NULL) {
-        // Core Audio was not supported => revert to Windows Wave instead
-        _platformAudioLayer =
-            kWindowsWaveAudio;  // modify the state set at construction
-        LOG(WARNING) << "Windows Core Audio is *not* supported => Wave APIs "
-                        "will be utilized instead";
-      }
     }
   }
-#endif  // defined(WINRT)
 #endif  // defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
-#endif  // #if defined(_WIN32)
 
 #if defined(WEBRTC_ANDROID)
   // Create an Android audio manager.
   _audioManagerAndroid.reset(new AudioManager());
   // Select best possible combination of audio layers.
   if (audioLayer == kPlatformDefaultAudio) {
-    if (_audioManagerAndroid->IsLowLatencyPlayoutSupported()) {
-      // Always use OpenSL ES for output on devices that supports the
+    if (_audioManagerAndroid->IsLowLatencyPlayoutSupported() &&
+        _audioManagerAndroid->IsLowLatencyRecordSupported()) {
+      // Use OpenSL ES for both playout and recording.
+      audioLayer = kAndroidOpenSLESAudio;
+    } else if (_audioManagerAndroid->IsLowLatencyPlayoutSupported() &&
+               !_audioManagerAndroid->IsLowLatencyRecordSupported()) {
+      // Use OpenSL ES for output on devices that only supports the
       // low-latency output audio path.
       audioLayer = kAndroidJavaInputAndOpenSLESOutputAudio;
     } else {
-      // Use Java-based audio in both directions when low-latency output
-      // is not supported.
+      // Use Java-based audio in both directions when low-latency output is
+      // not supported.
       audioLayer = kAndroidJavaAudio;
     }
   }
@@ -267,6 +236,10 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects() {
   if (audioLayer == kAndroidJavaAudio) {
     // Java audio for both input and output audio.
     ptrAudioDevice = new AudioDeviceTemplate<AudioRecordJni, AudioTrackJni>(
+        audioLayer, audio_manager);
+  } else if (audioLayer == kAndroidOpenSLESAudio) {
+    // OpenSL ES based audio for both input and output audio.
+    ptrAudioDevice = new AudioDeviceTemplate<OpenSLESRecorder, OpenSLESPlayer>(
         audioLayer, audio_manager);
   } else if (audioLayer == kAndroidJavaInputAndOpenSLESOutputAudio) {
     // Java audio for input and OpenSL ES for output audio (i.e. mixed APIs).
@@ -276,7 +249,7 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects() {
         audioLayer, audio_manager);
   } else {
     // Invalid audio layer.
-    ptrAudioDevice = NULL;
+    ptrAudioDevice = nullptr;
   }
 // END #if defined(WEBRTC_ANDROID)
 
@@ -1350,7 +1323,6 @@ int32_t AudioDeviceModuleImpl::InitPlayout() {
   if (PlayoutIsInitialized()) {
     return 0;
   }
-  _audioDeviceBuffer.InitPlayout();
   int32_t result = _ptrAudioDevice->InitPlayout();
   LOG(INFO) << "output: " << result;
   RTC_HISTOGRAM_BOOLEAN("WebRTC.Audio.InitPlayoutSuccess",
@@ -1368,7 +1340,6 @@ int32_t AudioDeviceModuleImpl::InitRecording() {
   if (RecordingIsInitialized()) {
     return 0;
   }
-  _audioDeviceBuffer.InitRecording();
   int32_t result = _ptrAudioDevice->InitRecording();
   LOG(INFO) << "output: " << result;
   RTC_HISTOGRAM_BOOLEAN("WebRTC.Audio.InitRecordingSuccess",
@@ -1406,6 +1377,7 @@ int32_t AudioDeviceModuleImpl::StartPlayout() {
   if (Playing()) {
     return 0;
   }
+  _audioDeviceBuffer.StartPlayout();
   int32_t result = _ptrAudioDevice->StartPlayout();
   LOG(INFO) << "output: " << result;
   RTC_HISTOGRAM_BOOLEAN("WebRTC.Audio.StartPlayoutSuccess",
@@ -1421,6 +1393,7 @@ int32_t AudioDeviceModuleImpl::StopPlayout() {
   LOG(INFO) << __FUNCTION__;
   CHECK_INITIALIZED();
   int32_t result = _ptrAudioDevice->StopPlayout();
+  _audioDeviceBuffer.StopPlayout();
   LOG(INFO) << "output: " << result;
   RTC_HISTOGRAM_BOOLEAN("WebRTC.Audio.StopPlayoutSuccess",
                         static_cast<int>(result == 0));
@@ -1447,6 +1420,7 @@ int32_t AudioDeviceModuleImpl::StartRecording() {
   if (Recording()) {
     return 0;
   }
+  _audioDeviceBuffer.StartRecording();
   int32_t result = _ptrAudioDevice->StartRecording();
   LOG(INFO) << "output: " << result;
   RTC_HISTOGRAM_BOOLEAN("WebRTC.Audio.StartRecordingSuccess",
@@ -1461,6 +1435,7 @@ int32_t AudioDeviceModuleImpl::StopRecording() {
   LOG(INFO) << __FUNCTION__;
   CHECK_INITIALIZED();
   int32_t result = _ptrAudioDevice->StopRecording();
+  _audioDeviceBuffer.StopRecording();
   LOG(INFO) << "output: " << result;
   RTC_HISTOGRAM_BOOLEAN("WebRTC.Audio.StopRecordingSuccess",
                         static_cast<int>(result == 0));
@@ -1498,9 +1473,7 @@ int32_t AudioDeviceModuleImpl::RegisterAudioCallback(
     AudioTransport* audioCallback) {
   LOG(INFO) << __FUNCTION__;
   CriticalSectionScoped lock(&_critSectAudioCb);
-  _audioDeviceBuffer.RegisterAudioCallback(audioCallback);
-
-  return 0;
+  return _audioDeviceBuffer.RegisterAudioCallback(audioCallback);
 }
 
 // ----------------------------------------------------------------------------
@@ -1758,13 +1731,8 @@ int32_t AudioDeviceModuleImpl::PlayoutSampleRate(
 
 int32_t AudioDeviceModuleImpl::ResetAudioDevice() {
   LOG(INFO) << __FUNCTION__;
-  CHECK_INITIALIZED();
-
-  if (_ptrAudioDevice->ResetAudioDevice() == -1) {
-    return -1;
-  }
-
-  return (0);
+  FATAL() << "Should never be called";
+  return -1;
 }
 
 // ----------------------------------------------------------------------------

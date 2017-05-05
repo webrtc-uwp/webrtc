@@ -7,8 +7,9 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include <stdio.h>
+#include "webrtc/video/video_quality_test.h"
 
+#include <stdio.h>
 #include <algorithm>
 #include <deque>
 #include <map>
@@ -16,26 +17,33 @@
 #include <string>
 #include <vector>
 
-#include "testing/gtest/include/gtest/gtest.h"
-
 #include "webrtc/base/checks.h"
+#include "webrtc/base/cpu_time.h"
 #include "webrtc/base/event.h"
 #include "webrtc/base/format_macros.h"
 #include "webrtc/base/optional.h"
+#include "webrtc/base/platform_file.h"
 #include "webrtc/base/timeutils.h"
-#include "webrtc/call.h"
+#include "webrtc/call/call.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/logging/rtc_event_log/rtc_event_log.h"
+#include "webrtc/modules/audio_mixer/audio_mixer_impl.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_format.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
+#include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
+#include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
+#include "webrtc/modules/video_coding/codecs/vp9/include/vp9.h"
 #include "webrtc/system_wrappers/include/cpu_info.h"
+#include "webrtc/system_wrappers/include/field_trial.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/layer_filtering_transport.h"
 #include "webrtc/test/run_loop.h"
 #include "webrtc/test/statistics.h"
 #include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/test/vcm_capturer.h"
 #include "webrtc/test/video_renderer.h"
-#include "webrtc/video/video_quality_test.h"
 #include "webrtc/voice_engine/include/voe_base.h"
-#include "webrtc/voice_engine/include/voe_codec.h"
 
 namespace {
 
@@ -45,20 +53,19 @@ constexpr int kPayloadTypeVP8 = 123;
 constexpr int kPayloadTypeVP9 = 124;
 constexpr size_t kMaxComparisons = 10;
 constexpr char kSyncGroup[] = "av_sync";
-constexpr int kOpusMinBitrate = 6000;
-constexpr int kOpusBitrateFb = 32000;
+constexpr int kOpusMinBitrateBps = 6000;
+constexpr int kOpusBitrateFbBps = 32000;
+constexpr int kFramesSentInQuickTest = 1;
 
 struct VoiceEngineState {
   VoiceEngineState()
       : voice_engine(nullptr),
         base(nullptr),
-        codec(nullptr),
         send_channel_id(-1),
         receive_channel_id(-1) {}
 
   webrtc::VoiceEngine* voice_engine;
   webrtc::VoEBase* base;
-  webrtc::VoECodec* codec;
   int send_channel_id;
   int receive_channel_id;
 };
@@ -68,11 +75,10 @@ void CreateVoiceEngine(VoiceEngineState* voe,
                            decoder_factory) {
   voe->voice_engine = webrtc::VoiceEngine::Create();
   voe->base = webrtc::VoEBase::GetInterface(voe->voice_engine);
-  voe->codec = webrtc::VoECodec::GetInterface(voe->voice_engine);
   EXPECT_EQ(0, voe->base->Init(nullptr, nullptr, decoder_factory));
-  webrtc::Config voe_config;
-  voe_config.Set<webrtc::VoicePacing>(new webrtc::VoicePacing(true));
-  voe->send_channel_id = voe->base->CreateChannel(voe_config);
+  webrtc::VoEBase::ChannelConfig config;
+  config.enable_voice_pacing = true;
+  voe->send_channel_id = voe->base->CreateChannel(config);
   EXPECT_GE(voe->send_channel_id, 0);
   voe->receive_channel_id = voe->base->CreateChannel();
   EXPECT_GE(voe->receive_channel_id, 0);
@@ -85,11 +91,34 @@ void DestroyVoiceEngine(VoiceEngineState* voe) {
   voe->receive_channel_id = -1;
   voe->base->Release();
   voe->base = nullptr;
-  voe->codec->Release();
-  voe->codec = nullptr;
 
   webrtc::VoiceEngine::Delete(voe->voice_engine);
   voe->voice_engine = nullptr;
+}
+
+class VideoStreamFactory
+    : public webrtc::VideoEncoderConfig::VideoStreamFactoryInterface {
+ public:
+  explicit VideoStreamFactory(const std::vector<webrtc::VideoStream>& streams)
+      : streams_(streams) {}
+
+ private:
+  std::vector<webrtc::VideoStream> CreateEncoderStreams(
+      int width,
+      int height,
+      const webrtc::VideoEncoderConfig& encoder_config) override {
+    // The highest layer must match the incoming resolution.
+    std::vector<webrtc::VideoStream> streams = streams_;
+    streams[streams_.size() - 1].height = height;
+    streams[streams_.size() - 1].width = width;
+    return streams;
+  }
+
+  std::vector<webrtc::VideoStream> streams_;
+};
+
+bool IsFlexfec(int payload_type) {
+  return payload_type == webrtc::VideoQualityTest::kFlexfecPayloadType;
 }
 
 }  // namespace
@@ -98,9 +127,7 @@ namespace webrtc {
 
 class VideoAnalyzer : public PacketReceiver,
                       public Transport,
-                      public rtc::VideoSinkInterface<VideoFrame>,
-                      public VideoCaptureInput,
-                      public EncodedFrameObserver {
+                      public rtc::VideoSinkInterface<VideoFrame> {
  public:
   VideoAnalyzer(test::LayerFilteringTransport* transport,
                 const std::string& test_label,
@@ -109,15 +136,27 @@ class VideoAnalyzer : public PacketReceiver,
                 int duration_frames,
                 FILE* graph_data_output_file,
                 const std::string& graph_title,
-                uint32_t ssrc_to_analyze)
-      : input_(nullptr),
-        transport_(transport),
+                uint32_t ssrc_to_analyze,
+                uint32_t rtx_ssrc_to_analyze,
+                uint32_t selected_stream_width,
+                uint32_t selected_stream_height,
+                int selected_sl,
+                int selected_tl,
+                bool is_quick_test_enabled)
+      : transport_(transport),
         receiver_(nullptr),
         send_stream_(nullptr),
+        receive_stream_(nullptr),
+        captured_frame_forwarder_(this),
         test_label_(test_label),
         graph_data_output_file_(graph_data_output_file),
         graph_title_(graph_title),
         ssrc_to_analyze_(ssrc_to_analyze),
+        rtx_ssrc_to_analyze_(rtx_ssrc_to_analyze),
+        selected_stream_width_(selected_stream_width),
+        selected_stream_height_(selected_stream_height),
+        selected_sl_(selected_sl),
+        selected_tl_(selected_tl),
         pre_encode_proxy_(this),
         encode_timing_proxy_(this),
         frames_to_process_(duration_frames),
@@ -128,8 +167,14 @@ class VideoAnalyzer : public PacketReceiver,
         dropped_frames_before_rendering_(0),
         last_render_time_(0),
         rtp_timestamp_delta_(0),
+        total_media_bytes_(0),
+        first_sending_time_(0),
+        last_sending_time_(0),
+        cpu_time_(0),
+        wallclock_time_(0),
         avg_psnr_threshold_(avg_psnr_threshold),
         avg_ssim_threshold_(avg_ssim_threshold),
+        is_quick_test_enabled_(is_quick_test_enabled),
         stats_polling_thread_(&PollStatsThread, this, "StatsPoller"),
         comparison_available_event_(false, false),
         done_(true, false) {
@@ -141,7 +186,7 @@ class VideoAnalyzer : public PacketReceiver,
     // spare cores.
 
     uint32_t num_cores = CpuInfo::DetectNumberOfCores();
-    RTC_DCHECK_GE(num_cores, 1u);
+    RTC_DCHECK_GE(num_cores, 1);
     static const uint32_t kMinCoresLeft = 4;
     static const uint32_t kMaxComparisonThreads = 8;
 
@@ -169,6 +214,25 @@ class VideoAnalyzer : public PacketReceiver,
 
   virtual void SetReceiver(PacketReceiver* receiver) { receiver_ = receiver; }
 
+  void SetSendStream(VideoSendStream* stream) {
+    rtc::CritScope lock(&crit_);
+    RTC_DCHECK(!send_stream_);
+    send_stream_ = stream;
+  }
+
+  void SetReceiveStream(VideoReceiveStream* stream) {
+    rtc::CritScope lock(&crit_);
+    RTC_DCHECK(!receive_stream_);
+    receive_stream_ = stream;
+  }
+
+  rtc::VideoSinkInterface<VideoFrame>* InputInterface() {
+    return &captured_frame_forwarder_;
+  }
+  rtc::VideoSourceInterface<VideoFrame>* OutputInterface() {
+    return &captured_frame_forwarder_;
+  }
+
   DeliveryStatus DeliverPacket(MediaType media_type,
                                const uint8_t* packet,
                                size_t length,
@@ -178,11 +242,16 @@ class VideoAnalyzer : public PacketReceiver,
     if (RtpHeaderParser::IsRtcp(packet, length)) {
       return receiver_->DeliverPacket(media_type, packet, length, packet_time);
     }
-
     RtpUtility::RtpHeaderParser parser(packet, length);
     RTPHeader header;
     parser.Parse(&header);
-    {
+    if (!IsFlexfec(header.payloadType) &&
+        (header.ssrc == ssrc_to_analyze_ ||
+         header.ssrc == rtx_ssrc_to_analyze_)) {
+      // Ignore FlexFEC timestamps, to avoid collisions with media timestamps.
+      // (FlexFEC and media are sent on different SSRCs, which have different
+      // timestamps spaces.)
+      // Also ignore packets from wrong SSRC, but include retransmits.
       rtc::CritScope lock(&crit_);
       int64_t timestamp =
           wrap_handler_.Unwrap(header.timestamp - rtp_timestamp_delta_);
@@ -198,26 +267,25 @@ class VideoAnalyzer : public PacketReceiver,
     samples_encode_time_ms_[ntp_time_ms] = encode_time_ms;
   }
 
-  void IncomingCapturedFrame(const VideoFrame& video_frame) override {
-    VideoFrame copy = video_frame;
-    copy.set_timestamp(copy.ntp_time_ms() * 90);
-    {
-      rtc::CritScope lock(&crit_);
-      frames_.push_back(copy);
-    }
-
-    input_->IncomingCapturedFrame(video_frame);
-  }
-
   void PreEncodeOnFrame(const VideoFrame& video_frame) {
     rtc::CritScope lock(&crit_);
-    if (!first_send_timestamp_ && rtp_timestamp_delta_ == 0) {
+    if (!first_encoded_timestamp_) {
       while (frames_.front().timestamp() != video_frame.timestamp()) {
         ++dropped_frames_before_first_encode_;
         frames_.pop_front();
         RTC_CHECK(!frames_.empty());
       }
-      first_send_timestamp_ = rtc::Optional<uint32_t>(video_frame.timestamp());
+      first_encoded_timestamp_ =
+          rtc::Optional<uint32_t>(video_frame.timestamp());
+    }
+  }
+
+  void PostEncodeFrameCallback(const EncodedFrame& encoded_frame) {
+    rtc::CritScope lock(&crit_);
+    if (!first_sent_timestamp_ &&
+        encoded_frame.encoded_width_ == selected_stream_width_ &&
+        encoded_frame.encoded_height_ == selected_stream_height_) {
+      first_sent_timestamp_ = rtc::Optional<uint32_t>(encoded_frame.timestamp_);
     }
   }
 
@@ -230,21 +298,33 @@ class VideoAnalyzer : public PacketReceiver,
 
     int64_t current_time =
         Clock::GetRealTimeClock()->CurrentNtpInMilliseconds();
+
     bool result = transport_->SendRtp(packet, length, options);
     {
       rtc::CritScope lock(&crit_);
-
-      if (rtp_timestamp_delta_ == 0) {
-        rtp_timestamp_delta_ = header.timestamp - *first_send_timestamp_;
-        first_send_timestamp_ = rtc::Optional<uint32_t>();
+      if (rtp_timestamp_delta_ == 0 && header.ssrc == ssrc_to_analyze_) {
+        RTC_CHECK(static_cast<bool>(first_sent_timestamp_));
+        rtp_timestamp_delta_ = header.timestamp - *first_sent_timestamp_;
       }
-      int64_t timestamp =
-          wrap_handler_.Unwrap(header.timestamp - rtp_timestamp_delta_);
-      send_times_[timestamp] = current_time;
-      if (!transport_->DiscardedLastPacket() &&
-          header.ssrc == ssrc_to_analyze_) {
-        encoded_frame_sizes_[timestamp] +=
-            length - (header.headerLength + header.paddingLength);
+
+      if (!IsFlexfec(header.payloadType) && header.ssrc == ssrc_to_analyze_) {
+        // Ignore FlexFEC timestamps, to avoid collisions with media timestamps.
+        // (FlexFEC and media are sent on different SSRCs, which have different
+        // timestamps spaces.)
+        // Also ignore packets from wrong SSRC and retransmits.
+        int64_t timestamp =
+            wrap_handler_.Unwrap(header.timestamp - rtp_timestamp_delta_);
+        send_times_[timestamp] = current_time;
+
+        if (IsInSelectedSpatialAndTemporalLayer(packet, length, header)) {
+          encoded_frame_sizes_[timestamp] +=
+              length - (header.headerLength + header.paddingLength);
+          total_media_bytes_ +=
+              length - (header.headerLength + header.paddingLength);
+        }
+        if (first_sending_time_ == 0)
+          first_sending_time_ = current_time;
+        last_sending_time_ = current_time;
       }
     }
     return result;
@@ -254,17 +334,14 @@ class VideoAnalyzer : public PacketReceiver,
     return transport_->SendRtcp(packet, length);
   }
 
-  void EncodedFrameCallback(const EncodedFrame& frame) override {
-    rtc::CritScope lock(&comparison_lock_);
-    if (frames_recorded_ < frames_to_process_)
-      encoded_frame_size_.AddSample(frame.length_);
-  }
-
   void OnFrame(const VideoFrame& video_frame) override {
     int64_t render_time_ms =
         Clock::GetRealTimeClock()->CurrentNtpInMilliseconds();
 
     rtc::CritScope lock(&crit_);
+
+    StartExcludingCpuThreadTime();
+
     int64_t send_timestamp =
         wrap_handler_.Unwrap(video_frame.timestamp() - rtp_timestamp_delta_);
 
@@ -273,12 +350,10 @@ class VideoAnalyzer : public PacketReceiver,
         // No previous frame rendered, this one was dropped after sending but
         // before rendering.
         ++dropped_frames_before_rendering_;
-        frames_.pop_front();
-        RTC_CHECK(!frames_.empty());
-        continue;
+      } else {
+        AddFrameComparison(frames_.front(), *last_rendered_frame_, true,
+                           render_time_ms);
       }
-      AddFrameComparison(frames_.front(), *last_rendered_frame_, true,
-                         render_time_ms);
       frames_.pop_front();
       RTC_DCHECK(!frames_.empty());
     }
@@ -297,6 +372,8 @@ class VideoAnalyzer : public PacketReceiver,
     AddFrameComparison(reference_frame, video_frame, false, render_time_ms);
 
     last_rendered_frame_ = rtc::Optional<VideoFrame>(video_frame);
+
+    StopExcludingCpuThreadTime();
   }
 
   void Wait() {
@@ -346,15 +423,41 @@ class VideoAnalyzer : public PacketReceiver,
   }
   EncodedFrameObserver* encode_timing_proxy() { return &encode_timing_proxy_; }
 
-  VideoCaptureInput* input_;
+  void StartMeasuringCpuProcessTime() {
+    rtc::CritScope lock(&cpu_measurement_lock_);
+    cpu_time_ -= rtc::GetProcessCpuTimeNanos();
+    wallclock_time_ -= rtc::SystemTimeNanos();
+  }
+
+  void StopMeasuringCpuProcessTime() {
+    rtc::CritScope lock(&cpu_measurement_lock_);
+    cpu_time_ += rtc::GetProcessCpuTimeNanos();
+    wallclock_time_ += rtc::SystemTimeNanos();
+  }
+
+  void StartExcludingCpuThreadTime() {
+    rtc::CritScope lock(&cpu_measurement_lock_);
+    cpu_time_ += rtc::GetThreadCpuTimeNanos();
+  }
+
+  void StopExcludingCpuThreadTime() {
+    rtc::CritScope lock(&cpu_measurement_lock_);
+    cpu_time_ -= rtc::GetThreadCpuTimeNanos();
+  }
+
+  double GetCpuUsagePercent() {
+    rtc::CritScope lock(&cpu_measurement_lock_);
+    return static_cast<double>(cpu_time_) / wallclock_time_ * 100.0;
+  }
+
   test::LayerFilteringTransport* const transport_;
   PacketReceiver* receiver_;
-  VideoSendStream* send_stream_;
 
  private:
   struct FrameComparison {
     FrameComparison()
         : dropped(false),
+          input_time_ms(0),
           send_time_ms(0),
           recv_time_ms(0),
           render_time_ms(0),
@@ -363,6 +466,7 @@ class VideoAnalyzer : public PacketReceiver,
     FrameComparison(const VideoFrame& reference,
                     const VideoFrame& render,
                     bool dropped,
+                    int64_t input_time_ms,
                     int64_t send_time_ms,
                     int64_t recv_time_ms,
                     int64_t render_time_ms,
@@ -370,14 +474,29 @@ class VideoAnalyzer : public PacketReceiver,
         : reference(reference),
           render(render),
           dropped(dropped),
+          input_time_ms(input_time_ms),
           send_time_ms(send_time_ms),
           recv_time_ms(recv_time_ms),
           render_time_ms(render_time_ms),
           encoded_frame_size(encoded_frame_size) {}
 
-    VideoFrame reference;
-    VideoFrame render;
+    FrameComparison(bool dropped,
+                    int64_t input_time_ms,
+                    int64_t send_time_ms,
+                    int64_t recv_time_ms,
+                    int64_t render_time_ms,
+                    size_t encoded_frame_size)
+        : dropped(dropped),
+          input_time_ms(input_time_ms),
+          send_time_ms(send_time_ms),
+          recv_time_ms(recv_time_ms),
+          render_time_ms(render_time_ms),
+          encoded_frame_size(encoded_frame_size) {}
+
+    rtc::Optional<VideoFrame> reference;
+    rtc::Optional<VideoFrame> render;
     bool dropped;
+    int64_t input_time_ms;
     int64_t send_time_ms;
     int64_t recv_time_ms;
     int64_t render_time_ms;
@@ -421,7 +540,9 @@ class VideoAnalyzer : public PacketReceiver,
     void OnEncodeTiming(int64_t ntp_time_ms, int encode_time_ms) override {
       parent_->MeasuredEncodeTiming(ntp_time_ms, encode_time_ms);
     }
-    void EncodedFrameCallback(const EncodedFrame& frame) override {}
+    void EncodedFrameCallback(const EncodedFrame& frame) override {
+      parent_->PostEncodeFrameCallback(frame);
+    }
 
    private:
     VideoAnalyzer* const parent_;
@@ -440,6 +561,37 @@ class VideoAnalyzer : public PacketReceiver,
    private:
     VideoAnalyzer* const parent_;
   };
+
+  bool IsInSelectedSpatialAndTemporalLayer(const uint8_t* packet,
+                                           size_t length,
+                                           const RTPHeader& header) {
+    if (header.payloadType != kPayloadTypeVP9 &&
+        header.payloadType != kPayloadTypeVP8) {
+      return true;
+    } else {
+      // Get VP8 and VP9 specific header to check layers indexes.
+      const uint8_t* payload = packet + header.headerLength;
+      const size_t payload_length = length - header.headerLength;
+      const size_t payload_data_length = payload_length - header.paddingLength;
+      const bool is_vp8 = header.payloadType == kPayloadTypeVP8;
+      std::unique_ptr<RtpDepacketizer> depacketizer(
+          RtpDepacketizer::Create(is_vp8 ? kRtpVideoVp8 : kRtpVideoVp9));
+      RtpDepacketizer::ParsedPayload parsed_payload;
+      bool result =
+          depacketizer->Parse(&parsed_payload, payload, payload_data_length);
+      RTC_DCHECK(result);
+      const int temporal_idx = static_cast<int>(
+          is_vp8 ? parsed_payload.type.Video.codecHeader.VP8.temporalIdx
+                 : parsed_payload.type.Video.codecHeader.VP9.temporal_idx);
+      const int spatial_idx = static_cast<int>(
+          is_vp8 ? kNoSpatialIdx
+                 : parsed_payload.type.Video.codecHeader.VP9.spatial_idx);
+      return (selected_tl_ < 0 || temporal_idx == kNoTemporalIdx ||
+              temporal_idx <= selected_tl_) &&
+             (selected_sl_ < 0 || spatial_idx == kNoSpatialIdx ||
+              spatial_idx <= selected_sl_);
+    }
+  }
 
   void AddFrameComparison(const VideoFrame& reference,
                           const VideoFrame& render,
@@ -460,47 +612,49 @@ class VideoAnalyzer : public PacketReceiver,
     if (it != encoded_frame_sizes_.end())
       encoded_frame_sizes_.erase(it);
 
-    VideoFrame reference_copy;
-    VideoFrame render_copy;
-
     rtc::CritScope crit(&comparison_lock_);
     if (comparisons_.size() < kMaxComparisons) {
-      reference_copy.CopyFrame(reference);
-      render_copy.CopyFrame(render);
+      comparisons_.push_back(FrameComparison(reference, render, dropped,
+                                             reference.ntp_time_ms(),
+                                             send_time_ms, recv_time_ms,
+                                             render_time_ms, encoded_size));
     } else {
-      // Copy the time to ensure that delay calculations can still be made.
-      reference_copy.set_ntp_time_ms(reference.ntp_time_ms());
-      render_copy.set_ntp_time_ms(render.ntp_time_ms());
+      comparisons_.push_back(FrameComparison(dropped,
+                                             reference.ntp_time_ms(),
+                                             send_time_ms, recv_time_ms,
+                                             render_time_ms, encoded_size));
     }
-    comparisons_.push_back(FrameComparison(reference_copy, render_copy, dropped,
-                                           send_time_ms, recv_time_ms,
-                                           render_time_ms, encoded_size));
     comparison_available_event_.Set();
   }
 
-  static bool PollStatsThread(void* obj) {
-    return static_cast<VideoAnalyzer*>(obj)->PollStats();
+  static void PollStatsThread(void* obj) {
+    static_cast<VideoAnalyzer*>(obj)->PollStats();
   }
 
-  bool PollStats() {
-    if (done_.Wait(kSendStatsPollingIntervalMs))
-      return false;
+  void PollStats() {
+    while (!done_.Wait(kSendStatsPollingIntervalMs)) {
+      rtc::CritScope crit(&comparison_lock_);
 
-    VideoSendStream::Stats stats = send_stream_->GetStats();
+      VideoSendStream::Stats send_stats = send_stream_->GetStats();
+      // It's not certain that we yet have estimates for any of these stats.
+      // Check that they are positive before mixing them in.
+      if (send_stats.encode_frame_rate > 0)
+        encode_frame_rate_.AddSample(send_stats.encode_frame_rate);
+      if (send_stats.avg_encode_time_ms > 0)
+        encode_time_ms_.AddSample(send_stats.avg_encode_time_ms);
+      if (send_stats.encode_usage_percent > 0)
+        encode_usage_percent_.AddSample(send_stats.encode_usage_percent);
+      if (send_stats.media_bitrate_bps > 0)
+        media_bitrate_bps_.AddSample(send_stats.media_bitrate_bps);
 
-    rtc::CritScope crit(&comparison_lock_);
-    // It's not certain that we yet have estimates for any of these stats. Check
-    // that they are positive before mixing them in.
-    if (stats.encode_frame_rate > 0)
-      encode_frame_rate_.AddSample(stats.encode_frame_rate);
-    if (stats.avg_encode_time_ms > 0)
-      encode_time_ms.AddSample(stats.avg_encode_time_ms);
-    if (stats.encode_usage_percent > 0)
-      encode_usage_percent.AddSample(stats.encode_usage_percent);
-    if (stats.media_bitrate_bps > 0)
-      media_bitrate_bps.AddSample(stats.media_bitrate_bps);
-
-    return true;
+      if (receive_stream_ != nullptr) {
+        VideoReceiveStream::Stats receive_stats = receive_stream_->GetStats();
+        if (receive_stats.decode_ms > 0)
+          decode_time_ms_.AddSample(receive_stats.decode_ms);
+        if (receive_stats.max_decode_ms > 0)
+          decode_time_max_ms_.AddSample(receive_stats.max_decode_ms);
+      }
+    }
   }
 
   static bool FrameComparisonThread(void* obj) {
@@ -511,8 +665,6 @@ class VideoAnalyzer : public PacketReceiver,
     if (AllFramesRecorded())
       return false;
 
-    VideoFrame reference;
-    VideoFrame render;
     FrameComparison comparison;
 
     if (!PopComparison(&comparison)) {
@@ -526,7 +678,11 @@ class VideoAnalyzer : public PacketReceiver,
       return true;  // Try again.
     }
 
+    StartExcludingCpuThreadTime();
+
     PerformFrameComparison(comparison);
+
+    StopExcludingCpuThreadTime();
 
     if (FrameProcessed()) {
       PrintResults();
@@ -580,6 +736,7 @@ class VideoAnalyzer : public PacketReceiver,
   }
 
   void PrintResults() {
+    StopMeasuringCpuProcessTime();
     rtc::CritScope crit(&comparison_lock_);
     PrintResult("psnr", psnr_, " dB");
     PrintResult("ssim", ssim_, " score");
@@ -589,9 +746,17 @@ class VideoAnalyzer : public PacketReceiver,
     PrintResult("time_between_rendered_frames", rendered_delta_, " ms");
     PrintResult("encoded_frame_size", encoded_frame_size_, " bytes");
     PrintResult("encode_frame_rate", encode_frame_rate_, " fps");
-    PrintResult("encode_time", encode_time_ms, " ms");
-    PrintResult("encode_usage_percent", encode_usage_percent, " percent");
-    PrintResult("media_bitrate", media_bitrate_bps, " bps");
+    PrintResult("encode_time", encode_time_ms_, " ms");
+    PrintResult("encode_usage_percent", encode_usage_percent_, " percent");
+    PrintResult("media_bitrate", media_bitrate_bps_, " bps");
+
+    printf("RESULT actual_bitrate: %s = %.6lf bps\n", test_label_.c_str(),
+           GetAverageMediaBitrateBps());
+
+    if (receive_stream_ != nullptr) {
+      PrintResult("decode_time", decode_time_ms_, " ms");
+      PrintResult("decode_time_max", decode_time_max_ms_, " ms");
+    }
 
     printf("RESULT dropped_frames: %s = %d frames\n", test_label_.c_str(),
            dropped_frames_);
@@ -599,28 +764,31 @@ class VideoAnalyzer : public PacketReceiver,
            test_label_.c_str(), dropped_frames_before_first_encode_);
     printf("RESULT dropped_frames_before_rendering: %s = %d frames\n",
            test_label_.c_str(), dropped_frames_before_rendering_);
-
-    EXPECT_GT(psnr_.Mean(), avg_psnr_threshold_);
-    EXPECT_GT(ssim_.Mean(), avg_ssim_threshold_);
+    printf("RESULT cpu_usage: %s = %lf %%\n", test_label_.c_str(),
+           GetCpuUsagePercent());
+    //  Disable quality check for quick test, as quality checks may fail
+    //  because too few samples were collected.
+    if (!is_quick_test_enabled_) {
+      EXPECT_GT(psnr_.Mean(), avg_psnr_threshold_);
+      EXPECT_GT(ssim_.Mean(), avg_ssim_threshold_);
+    }
   }
 
   void PerformFrameComparison(const FrameComparison& comparison) {
     // Perform expensive psnr and ssim calculations while not holding lock.
     double psnr = -1.0;
     double ssim = -1.0;
-    if (!comparison.reference.IsZeroSize()) {
-      psnr = I420PSNR(&comparison.reference, &comparison.render);
-      ssim = I420SSIM(&comparison.reference, &comparison.render);
+    if (comparison.reference) {
+      psnr = I420PSNR(&*comparison.reference, &*comparison.render);
+      ssim = I420SSIM(&*comparison.reference, &*comparison.render);
     }
-
-    int64_t input_time_ms = comparison.reference.ntp_time_ms();
 
     rtc::CritScope crit(&comparison_lock_);
     if (graph_data_output_file_) {
-      samples_.push_back(
-          Sample(comparison.dropped, input_time_ms, comparison.send_time_ms,
-                 comparison.recv_time_ms, comparison.render_time_ms,
-                 comparison.encoded_frame_size, psnr, ssim));
+      samples_.push_back(Sample(
+          comparison.dropped, comparison.input_time_ms, comparison.send_time_ms,
+          comparison.recv_time_ms, comparison.render_time_ms,
+          comparison.encoded_frame_size, psnr, ssim));
     }
     if (psnr >= 0.0)
       psnr_.AddSample(psnr);
@@ -635,10 +803,24 @@ class VideoAnalyzer : public PacketReceiver,
       rendered_delta_.AddSample(comparison.render_time_ms - last_render_time_);
     last_render_time_ = comparison.render_time_ms;
 
-    sender_time_.AddSample(comparison.send_time_ms - input_time_ms);
-    receiver_time_.AddSample(comparison.render_time_ms -
-                             comparison.recv_time_ms);
-    end_to_end_.AddSample(comparison.render_time_ms - input_time_ms);
+    sender_time_.AddSample(comparison.send_time_ms - comparison.input_time_ms);
+    if (comparison.recv_time_ms > 0) {
+      // If recv_time_ms == 0, this frame consisted of a packets which were all
+      // lost in the transport. Since we were able to render the frame, however,
+      // the dropped packets were recovered by FlexFEC. The FlexFEC recovery
+      // happens internally in Call, and we can therefore here not know which
+      // FEC packets that protected the lost media packets. Consequently, we
+      // were not able to record a meaningful recv_time_ms. We therefore skip
+      // this sample.
+      //
+      // The reasoning above does not hold for ULPFEC and RTX, as for those
+      // strategies the timestamp of the received packets is set to the
+      // timestamp of the protected/retransmitted media packet. I.e., then
+      // recv_time_ms != 0, even though the media packets were lost.
+      receiver_time_.AddSample(comparison.render_time_ms -
+                               comparison.recv_time_ms);
+    }
+    end_to_end_.AddSample(comparison.render_time_ms - comparison.input_time_ms);
     encoded_frame_size_.AddSample(comparison.encoded_frame_size);
   }
 
@@ -697,10 +879,77 @@ class VideoAnalyzer : public PacketReceiver,
     }
   }
 
+  double GetAverageMediaBitrateBps() {
+    if (last_sending_time_ == first_sending_time_) {
+      return 0;
+    } else {
+      return static_cast<double>(total_media_bytes_) * 8 /
+             (last_sending_time_ - first_sending_time_) *
+             rtc::kNumMillisecsPerSec;
+    }
+  }
+
+  // Implements VideoSinkInterface to receive captured frames from a
+  // FrameGeneratorCapturer. Implements VideoSourceInterface to be able to act
+  // as a source to VideoSendStream.
+  // It forwards all input frames to the VideoAnalyzer for later comparison and
+  // forwards the captured frames to the VideoSendStream.
+  class CapturedFrameForwarder : public rtc::VideoSinkInterface<VideoFrame>,
+                                 public rtc::VideoSourceInterface<VideoFrame> {
+   public:
+    explicit CapturedFrameForwarder(VideoAnalyzer* analyzer)
+        : analyzer_(analyzer), send_stream_input_(nullptr) {}
+
+   private:
+    void OnFrame(const VideoFrame& video_frame) override {
+      VideoFrame copy = video_frame;
+      // Frames from the capturer does not have a rtp timestamp.
+      // Create one so it can be used for comparison.
+      RTC_DCHECK_EQ(0, video_frame.timestamp());
+      copy.set_timestamp(copy.ntp_time_ms() * 90);
+      analyzer_->AddCapturedFrameForComparison(copy);
+      rtc::CritScope lock(&crit_);
+      if (send_stream_input_)
+        send_stream_input_->OnFrame(video_frame);
+    }
+
+    // Called when |send_stream_.SetSource()| is called.
+    void AddOrUpdateSink(rtc::VideoSinkInterface<VideoFrame>* sink,
+                         const rtc::VideoSinkWants& wants) override {
+      rtc::CritScope lock(&crit_);
+      RTC_DCHECK(!send_stream_input_ || send_stream_input_ == sink);
+      send_stream_input_ = sink;
+    }
+
+    // Called by |send_stream_| when |send_stream_.SetSource()| is called.
+    void RemoveSink(rtc::VideoSinkInterface<VideoFrame>* sink) override {
+      rtc::CritScope lock(&crit_);
+      RTC_DCHECK(sink == send_stream_input_);
+      send_stream_input_ = nullptr;
+    }
+
+    VideoAnalyzer* const analyzer_;
+    rtc::CriticalSection crit_;
+    rtc::VideoSinkInterface<VideoFrame>* send_stream_input_ GUARDED_BY(crit_);
+  };
+
+  void AddCapturedFrameForComparison(const VideoFrame& video_frame) {
+    rtc::CritScope lock(&crit_);
+    frames_.push_back(video_frame);
+  }
+
+  VideoSendStream* send_stream_;
+  VideoReceiveStream* receive_stream_;
+  CapturedFrameForwarder captured_frame_forwarder_;
   const std::string test_label_;
   FILE* const graph_data_output_file_;
   const std::string graph_title_;
   const uint32_t ssrc_to_analyze_;
+  const uint32_t rtx_ssrc_to_analyze_;
+  const uint32_t selected_stream_width_;
+  const uint32_t selected_stream_height_;
+  const int selected_sl_;
+  const int selected_tl_;
   PreEncodeProxy pre_encode_proxy_;
   OnEncodeTimingProxy encode_timing_proxy_;
   std::vector<Sample> samples_ GUARDED_BY(comparison_lock_);
@@ -713,9 +962,11 @@ class VideoAnalyzer : public PacketReceiver,
   test::Statistics rendered_delta_ GUARDED_BY(comparison_lock_);
   test::Statistics encoded_frame_size_ GUARDED_BY(comparison_lock_);
   test::Statistics encode_frame_rate_ GUARDED_BY(comparison_lock_);
-  test::Statistics encode_time_ms GUARDED_BY(comparison_lock_);
-  test::Statistics encode_usage_percent GUARDED_BY(comparison_lock_);
-  test::Statistics media_bitrate_bps GUARDED_BY(comparison_lock_);
+  test::Statistics encode_time_ms_ GUARDED_BY(comparison_lock_);
+  test::Statistics encode_usage_percent_ GUARDED_BY(comparison_lock_);
+  test::Statistics decode_time_ms_ GUARDED_BY(comparison_lock_);
+  test::Statistics decode_time_max_ms_ GUARDED_BY(comparison_lock_);
+  test::Statistics media_bitrate_bps_ GUARDED_BY(comparison_lock_);
 
   const int frames_to_process_;
   int frames_recorded_;
@@ -725,6 +976,13 @@ class VideoAnalyzer : public PacketReceiver,
   int dropped_frames_before_rendering_;
   int64_t last_render_time_;
   uint32_t rtp_timestamp_delta_;
+  int64_t total_media_bytes_;
+  int64_t first_sending_time_;
+  int64_t last_sending_time_;
+
+  int64_t cpu_time_ GUARDED_BY(cpu_measurement_lock_);
+  int64_t wallclock_time_ GUARDED_BY(cpu_measurement_lock_);
+  rtc::CriticalSection cpu_measurement_lock_;
 
   rtc::CriticalSection crit_;
   std::deque<VideoFrame> frames_ GUARDED_BY(crit_);
@@ -733,9 +991,11 @@ class VideoAnalyzer : public PacketReceiver,
   std::map<int64_t, int64_t> send_times_ GUARDED_BY(crit_);
   std::map<int64_t, int64_t> recv_times_ GUARDED_BY(crit_);
   std::map<int64_t, size_t> encoded_frame_sizes_ GUARDED_BY(crit_);
-  rtc::Optional<uint32_t> first_send_timestamp_ GUARDED_BY(crit_);
+  rtc::Optional<uint32_t> first_encoded_timestamp_ GUARDED_BY(crit_);
+  rtc::Optional<uint32_t> first_sent_timestamp_ GUARDED_BY(crit_);
   const double avg_psnr_threshold_;
   const double avg_ssim_threshold_;
+  bool is_quick_test_enabled_;
 
   rtc::CriticalSection comparison_lock_;
   std::vector<rtc::PlatformThread*> comparison_thread_pool_;
@@ -745,15 +1005,29 @@ class VideoAnalyzer : public PacketReceiver,
   rtc::Event done_;
 };
 
-VideoQualityTest::VideoQualityTest() : clock_(Clock::GetRealTimeClock()) {}
+VideoQualityTest::VideoQualityTest()
+    : clock_(Clock::GetRealTimeClock()), receive_logs_(0), send_logs_(0) {}
+
+VideoQualityTest::Params::Params()
+    : call({false, Call::Config::BitrateConfig()}),
+      video({false, 640, 480, 30, 50, 800, 800, false, "VP8", 1, -1, 0, false,
+             false, "", ""}),
+      audio({false, false}),
+      screenshare({false, 10, 0}),
+      analyzer({"", 0.0, 0.0, 0, "", ""}),
+      pipe(),
+      logs(false),
+      ss({std::vector<VideoStream>(), 0, 0, -1, std::vector<SpatialLayer>()}) {}
+
+VideoQualityTest::Params::~Params() = default;
 
 void VideoQualityTest::TestBody() {}
 
 std::string VideoQualityTest::GenerateGraphTitle() const {
   std::stringstream ss;
-  ss << params_.common.codec;
-  ss << " (" << params_.common.target_bitrate_bps / 1000 << "kbps";
-  ss << ", " << params_.common.fps << " FPS";
+  ss << params_.video.codec;
+  ss << " (" << params_.video.target_bitrate_bps / 1000 << "kbps";
+  ss << ", " << params_.video.fps << " FPS";
   if (params_.screenshare.scroll_duration)
     ss << ", " << params_.screenshare.scroll_duration << "s scroll";
   if (params_.ss.streams.size() > 1)
@@ -765,6 +1039,8 @@ std::string VideoQualityTest::GenerateGraphTitle() const {
 }
 
 void VideoQualityTest::CheckParams() {
+  if (!params_.video.enabled)
+    return;
   // Add a default stream in none specified.
   if (params_.ss.streams.empty())
     params_.ss.streams.push_back(VideoQualityTest::DefaultVideoStream(params_));
@@ -778,25 +1054,23 @@ void VideoQualityTest::CheckParams() {
     // retransmitting the wrong packets.
     RTC_CHECK(params_.ss.selected_sl == -1 ||
               params_.ss.selected_sl == params_.ss.num_spatial_layers - 1);
-    RTC_CHECK(params_.common.selected_tl == -1 ||
-              params_.common.selected_tl ==
-                  params_.common.num_temporal_layers - 1);
+    RTC_CHECK(params_.video.selected_tl == -1 ||
+              params_.video.selected_tl ==
+                  params_.video.num_temporal_layers - 1);
   }
 
   // TODO(ivica): Should max_bitrate_bps == -1 represent inf max bitrate, as it
   // does in some parts of the code?
-  RTC_CHECK_GE(params_.common.max_bitrate_bps,
-               params_.common.target_bitrate_bps);
-  RTC_CHECK_GE(params_.common.target_bitrate_bps,
-               params_.common.min_bitrate_bps);
-  RTC_CHECK_LT(params_.common.selected_tl, params_.common.num_temporal_layers);
+  RTC_CHECK_GE(params_.video.max_bitrate_bps, params_.video.target_bitrate_bps);
+  RTC_CHECK_GE(params_.video.target_bitrate_bps, params_.video.min_bitrate_bps);
+  RTC_CHECK_LT(params_.video.selected_tl, params_.video.num_temporal_layers);
   RTC_CHECK_LT(params_.ss.selected_stream, params_.ss.streams.size());
   for (const VideoStream& stream : params_.ss.streams) {
     RTC_CHECK_GE(stream.min_bitrate_bps, 0);
     RTC_CHECK_GE(stream.target_bitrate_bps, stream.min_bitrate_bps);
     RTC_CHECK_GE(stream.max_bitrate_bps, stream.target_bitrate_bps);
-    RTC_CHECK_EQ(static_cast<int>(stream.temporal_layer_thresholds_bps.size()),
-                 params_.common.num_temporal_layers - 1);
+    RTC_CHECK_EQ(stream.temporal_layer_thresholds_bps.size(),
+                 params_.video.num_temporal_layers - 1);
   }
   // TODO(ivica): Should we check if the sum of all streams/layers is equal to
   // the total bitrate? We anyway have to update them in the case bitrate
@@ -806,10 +1080,10 @@ void VideoQualityTest::CheckParams() {
   RTC_CHECK(params_.ss.spatial_layers.empty() ||
             params_.ss.spatial_layers.size() ==
                 static_cast<size_t>(params_.ss.num_spatial_layers));
-  if (params_.common.codec == "VP8") {
+  if (params_.video.codec == "VP8") {
     RTC_CHECK_EQ(params_.ss.num_spatial_layers, 1);
-  } else if (params_.common.codec == "VP9") {
-    RTC_CHECK_EQ(params_.ss.streams.size(), 1u);
+  } else if (params_.video.codec == "VP9") {
+    RTC_CHECK_EQ(params_.ss.streams.size(), 1);
   }
 }
 
@@ -844,14 +1118,14 @@ std::vector<int> VideoQualityTest::ParseCSV(const std::string& str) {
 // Static.
 VideoStream VideoQualityTest::DefaultVideoStream(const Params& params) {
   VideoStream stream;
-  stream.width = params.common.width;
-  stream.height = params.common.height;
-  stream.max_framerate = params.common.fps;
-  stream.min_bitrate_bps = params.common.min_bitrate_bps;
-  stream.target_bitrate_bps = params.common.target_bitrate_bps;
-  stream.max_bitrate_bps = params.common.max_bitrate_bps;
+  stream.width = params.video.width;
+  stream.height = params.video.height;
+  stream.max_framerate = params.video.fps;
+  stream.min_bitrate_bps = params.video.min_bitrate_bps;
+  stream.target_bitrate_bps = params.video.target_bitrate_bps;
+  stream.max_bitrate_bps = params.video.max_bitrate_bps;
   stream.max_qp = 52;
-  if (params.common.num_temporal_layers == 2)
+  if (params.video.num_temporal_layers == 2)
     stream.temporal_layer_thresholds_bps.push_back(stream.target_bitrate_bps);
   return stream;
 }
@@ -894,7 +1168,7 @@ void VideoQualityTest::FillScalabilitySettings(
           stream.temporal_layer_thresholds_bps.end(), v.begin() + 7, v.end());
     } else {
       // Automatic TL thresholds for more than two layers not supported.
-      RTC_CHECK_LE(params->common.num_temporal_layers, 2);
+      RTC_CHECK_LE(params->video.num_temporal_layers, 2);
     }
     params->ss.streams.push_back(stream);
   }
@@ -917,38 +1191,39 @@ void VideoQualityTest::FillScalabilitySettings(
   }
 }
 
-void VideoQualityTest::SetupCommon(Transport* send_transport,
-                                   Transport* recv_transport) {
+void VideoQualityTest::SetupVideo(Transport* send_transport,
+                                  Transport* recv_transport) {
   if (params_.logs)
     trace_to_stderr_.reset(new test::TraceToStderr);
 
-  size_t num_streams = params_.ss.streams.size();
-  CreateSendConfig(num_streams, 0, send_transport);
+  size_t num_video_streams = params_.ss.streams.size();
+  size_t num_flexfec_streams = params_.video.flexfec ? 1 : 0;
+  CreateSendConfig(num_video_streams, 0, num_flexfec_streams, send_transport);
 
   int payload_type;
-  if (params_.common.codec == "H264") {
-    encoder_.reset(VideoEncoder::Create(VideoEncoder::kH264));
+  if (params_.video.codec == "H264") {
+    video_encoder_.reset(H264Encoder::Create(cricket::VideoCodec("H264")));
     payload_type = kPayloadTypeH264;
-  } else if (params_.common.codec == "VP8") {
-    encoder_.reset(VideoEncoder::Create(VideoEncoder::kVp8));
+  } else if (params_.video.codec == "VP8") {
+    video_encoder_.reset(VP8Encoder::Create());
     payload_type = kPayloadTypeVP8;
-  } else if (params_.common.codec == "VP9") {
-    encoder_.reset(VideoEncoder::Create(VideoEncoder::kVp9));
+  } else if (params_.video.codec == "VP9") {
+    video_encoder_.reset(VP9Encoder::Create());
     payload_type = kPayloadTypeVP9;
   } else {
     RTC_NOTREACHED() << "Codec not supported!";
     return;
   }
-  video_send_config_.encoder_settings.encoder = encoder_.get();
-  video_send_config_.encoder_settings.payload_name = params_.common.codec;
+  video_send_config_.encoder_settings.encoder = video_encoder_.get();
+  video_send_config_.encoder_settings.payload_name = params_.video.codec;
   video_send_config_.encoder_settings.payload_type = payload_type;
   video_send_config_.rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
   video_send_config_.rtp.rtx.payload_type = kSendRtxPayloadType;
-  for (size_t i = 0; i < num_streams; ++i)
+  for (size_t i = 0; i < num_video_streams; ++i)
     video_send_config_.rtp.rtx.ssrcs.push_back(kSendRtxSsrcs[i]);
 
   video_send_config_.rtp.extensions.clear();
-  if (params_.common.send_side_bwe) {
+  if (params_.call.send_side_bwe) {
     video_send_config_.rtp.extensions.push_back(
         RtpExtension(RtpExtension::kTransportSequenceNumberUri,
                      test::kTransportSequenceNumberExtensionId));
@@ -958,104 +1233,180 @@ void VideoQualityTest::SetupCommon(Transport* send_transport,
   }
 
   video_encoder_config_.min_transmit_bitrate_bps =
-      params_.common.min_transmit_bps;
-  video_encoder_config_.streams = params_.ss.streams;
+      params_.video.min_transmit_bps;
+
+  video_send_config_.suspend_below_min_bitrate =
+      params_.video.suspend_below_min_bitrate;
+
+  video_encoder_config_.number_of_streams = params_.ss.streams.size();
+  video_encoder_config_.max_bitrate_bps = 0;
+  for (size_t i = 0; i < params_.ss.streams.size(); ++i) {
+    video_encoder_config_.max_bitrate_bps +=
+        params_.ss.streams[i].max_bitrate_bps;
+  }
+  video_encoder_config_.video_stream_factory =
+      new rtc::RefCountedObject<VideoStreamFactory>(params_.ss.streams);
+
   video_encoder_config_.spatial_layers = params_.ss.spatial_layers;
 
   CreateMatchingReceiveConfigs(recv_transport);
 
-  for (size_t i = 0; i < num_streams; ++i) {
+  for (size_t i = 0; i < num_video_streams; ++i) {
     video_receive_configs_[i].rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
-    video_receive_configs_[i].rtp.rtx[payload_type].ssrc = kSendRtxSsrcs[i];
-    video_receive_configs_[i].rtp.rtx[payload_type].payload_type =
+    video_receive_configs_[i].rtp.rtx_ssrc = kSendRtxSsrcs[i];
+    video_receive_configs_[i].rtp.rtx_payload_types[payload_type] =
         kSendRtxPayloadType;
-    video_receive_configs_[i].rtp.transport_cc = params_.common.send_side_bwe;
+    video_receive_configs_[i].rtp.transport_cc = params_.call.send_side_bwe;
+    video_receive_configs_[i].rtp.remb = !params_.call.send_side_bwe;
+  }
+
+  if (params_.video.flexfec) {
+    // Override send config constructed by CreateSendConfig.
+    video_send_config_.rtp.flexfec.protected_media_ssrcs = {
+        kVideoSendSsrcs[params_.ss.selected_stream]};
+
+    // The matching receive config is _not_ created by
+    // CreateMatchingReceiveConfigs, since VideoQualityTest is not a BaseTest.
+    // Set up the receive config manually instead.
+    FlexfecReceiveStream::Config flexfec_receive_config(recv_transport);
+    flexfec_receive_config.payload_type =
+        video_send_config_.rtp.flexfec.payload_type;
+    flexfec_receive_config.remote_ssrc = video_send_config_.rtp.flexfec.ssrc;
+    flexfec_receive_config.protected_media_ssrcs =
+        video_send_config_.rtp.flexfec.protected_media_ssrcs;
+    flexfec_receive_config.local_ssrc = kReceiverLocalVideoSsrc;
+    flexfec_receive_config.transport_cc = params_.call.send_side_bwe;
+    if (params_.call.send_side_bwe) {
+      flexfec_receive_config.rtp_header_extensions.push_back(
+          RtpExtension(RtpExtension::kTransportSequenceNumberUri,
+                       test::kTransportSequenceNumberExtensionId));
+    } else {
+      flexfec_receive_config.rtp_header_extensions.push_back(RtpExtension(
+          RtpExtension::kAbsSendTimeUri, test::kAbsSendTimeExtensionId));
+    }
+    flexfec_receive_configs_.push_back(flexfec_receive_config);
+  }
+
+  if (params_.video.ulpfec) {
+    video_send_config_.rtp.ulpfec.red_payload_type = kRedPayloadType;
+    video_send_config_.rtp.ulpfec.ulpfec_payload_type = kUlpfecPayloadType;
+    video_send_config_.rtp.ulpfec.red_rtx_payload_type = kRtxRedPayloadType;
+
+    video_receive_configs_[params_.ss.selected_stream]
+        .rtp.ulpfec.red_payload_type =
+        video_send_config_.rtp.ulpfec.red_payload_type;
+    video_receive_configs_[params_.ss.selected_stream]
+        .rtp.ulpfec.ulpfec_payload_type =
+        video_send_config_.rtp.ulpfec.ulpfec_payload_type;
+    video_receive_configs_[params_.ss.selected_stream]
+        .rtp.ulpfec.red_rtx_payload_type =
+        video_send_config_.rtp.ulpfec.red_rtx_payload_type;
   }
 }
 
-void VideoQualityTest::SetupScreenshare() {
-  RTC_CHECK(params_.screenshare.enabled);
+void VideoQualityTest::SetupScreenshareOrSVC() {
+  if (params_.screenshare.enabled) {
+    // Fill out codec settings.
+    video_encoder_config_.content_type =
+        VideoEncoderConfig::ContentType::kScreen;
+    degradation_preference_ =
+        VideoSendStream::DegradationPreference::kMaintainResolution;
+    if (params_.video.codec == "VP8") {
+      VideoCodecVP8 vp8_settings = VideoEncoder::GetDefaultVp8Settings();
+      vp8_settings.denoisingOn = false;
+      vp8_settings.frameDroppingOn = false;
+      vp8_settings.numberOfTemporalLayers =
+          static_cast<unsigned char>(params_.video.num_temporal_layers);
+      video_encoder_config_.encoder_specific_settings =
+          new rtc::RefCountedObject<
+              VideoEncoderConfig::Vp8EncoderSpecificSettings>(vp8_settings);
+    } else if (params_.video.codec == "VP9") {
+      VideoCodecVP9 vp9_settings = VideoEncoder::GetDefaultVp9Settings();
+      vp9_settings.denoisingOn = false;
+      vp9_settings.frameDroppingOn = false;
+      vp9_settings.numberOfTemporalLayers =
+          static_cast<unsigned char>(params_.video.num_temporal_layers);
+      vp9_settings.numberOfSpatialLayers =
+          static_cast<unsigned char>(params_.ss.num_spatial_layers);
+      video_encoder_config_.encoder_specific_settings =
+          new rtc::RefCountedObject<
+              VideoEncoderConfig::Vp9EncoderSpecificSettings>(vp9_settings);
+    }
+    // Setup frame generator.
+    const size_t kWidth = 1850;
+    const size_t kHeight = 1110;
+    std::vector<std::string> slides;
+    slides.push_back(test::ResourcePath("web_screenshot_1850_1110", "yuv"));
+    slides.push_back(test::ResourcePath("presentation_1850_1110", "yuv"));
+    slides.push_back(test::ResourcePath("photo_1850_1110", "yuv"));
+    slides.push_back(test::ResourcePath("difficult_photo_1850_1110", "yuv"));
 
-  // Fill out codec settings.
-  video_encoder_config_.content_type = VideoEncoderConfig::ContentType::kScreen;
-  if (params_.common.codec == "VP8") {
-    codec_settings_.VP8 = VideoEncoder::GetDefaultVp8Settings();
-    codec_settings_.VP8.denoisingOn = false;
-    codec_settings_.VP8.frameDroppingOn = false;
-    codec_settings_.VP8.numberOfTemporalLayers =
-        static_cast<unsigned char>(params_.common.num_temporal_layers);
-    video_encoder_config_.encoder_specific_settings = &codec_settings_.VP8;
-  } else if (params_.common.codec == "VP9") {
-    codec_settings_.VP9 = VideoEncoder::GetDefaultVp9Settings();
-    codec_settings_.VP9.denoisingOn = false;
-    codec_settings_.VP9.frameDroppingOn = false;
-    codec_settings_.VP9.numberOfTemporalLayers =
-        static_cast<unsigned char>(params_.common.num_temporal_layers);
-    video_encoder_config_.encoder_specific_settings = &codec_settings_.VP9;
-    codec_settings_.VP9.numberOfSpatialLayers =
+    if (params_.screenshare.scroll_duration == 0) {
+      // Cycle image every slide_change_interval seconds.
+      frame_generator_ = test::FrameGenerator::CreateFromYuvFile(
+          slides, kWidth, kHeight,
+          params_.screenshare.slide_change_interval * params_.video.fps);
+    } else {
+      RTC_CHECK_LE(params_.video.width, kWidth);
+      RTC_CHECK_LE(params_.video.height, kHeight);
+      RTC_CHECK_GT(params_.screenshare.slide_change_interval, 0);
+      const int kPauseDurationMs = (params_.screenshare.slide_change_interval -
+                                    params_.screenshare.scroll_duration) *
+                                   1000;
+      RTC_CHECK_LE(params_.screenshare.scroll_duration,
+                   params_.screenshare.slide_change_interval);
+
+      frame_generator_ = test::FrameGenerator::CreateScrollingInputFromYuvFiles(
+          clock_, slides, kWidth, kHeight, params_.video.width,
+          params_.video.height, params_.screenshare.scroll_duration * 1000,
+          kPauseDurationMs);
+    }
+  } else if (params_.ss.num_spatial_layers > 1) {  // For non-screenshare case.
+    RTC_CHECK(params_.video.codec == "VP9");
+    VideoCodecVP9 vp9_settings = VideoEncoder::GetDefaultVp9Settings();
+    vp9_settings.numberOfTemporalLayers =
+        static_cast<unsigned char>(params_.video.num_temporal_layers);
+    vp9_settings.numberOfSpatialLayers =
         static_cast<unsigned char>(params_.ss.num_spatial_layers);
-  }
-
-  // Setup frame generator.
-  const size_t kWidth = 1850;
-  const size_t kHeight = 1110;
-  std::vector<std::string> slides;
-  slides.push_back(test::ResourcePath("web_screenshot_1850_1110", "yuv"));
-  slides.push_back(test::ResourcePath("presentation_1850_1110", "yuv"));
-  slides.push_back(test::ResourcePath("photo_1850_1110", "yuv"));
-  slides.push_back(test::ResourcePath("difficult_photo_1850_1110", "yuv"));
-
-  if (params_.screenshare.scroll_duration == 0) {
-    // Cycle image every slide_change_interval seconds.
-    frame_generator_.reset(test::FrameGenerator::CreateFromYuvFile(
-        slides, kWidth, kHeight,
-        params_.screenshare.slide_change_interval * params_.common.fps));
-  } else {
-    RTC_CHECK_LE(params_.common.width, kWidth);
-    RTC_CHECK_LE(params_.common.height, kHeight);
-    RTC_CHECK_GT(params_.screenshare.slide_change_interval, 0);
-    const int kPauseDurationMs = (params_.screenshare.slide_change_interval -
-                                  params_.screenshare.scroll_duration) *
-                                 1000;
-    RTC_CHECK_LE(params_.screenshare.scroll_duration,
-                 params_.screenshare.slide_change_interval);
-
-    frame_generator_.reset(
-        test::FrameGenerator::CreateScrollingInputFromYuvFiles(
-            clock_, slides, kWidth, kHeight, params_.common.width,
-            params_.common.height, params_.screenshare.scroll_duration * 1000,
-            kPauseDurationMs));
+    video_encoder_config_.encoder_specific_settings = new rtc::RefCountedObject<
+        VideoEncoderConfig::Vp9EncoderSpecificSettings>(vp9_settings);
   }
 }
 
-void VideoQualityTest::CreateCapturer(VideoCaptureInput* input) {
+void VideoQualityTest::CreateCapturer() {
   if (params_.screenshare.enabled) {
     test::FrameGeneratorCapturer* frame_generator_capturer =
-        new test::FrameGeneratorCapturer(
-            clock_, input, frame_generator_.release(), params_.common.fps);
+        new test::FrameGeneratorCapturer(clock_, std::move(frame_generator_),
+                                         params_.video.fps);
     EXPECT_TRUE(frame_generator_capturer->Init());
-    capturer_.reset(frame_generator_capturer);
+    video_capturer_.reset(frame_generator_capturer);
   } else {
     if (params_.video.clip_name.empty()) {
-      capturer_.reset(test::VideoCapturer::Create(input, params_.common.width,
-                                                  params_.common.height,
-                                                  params_.common.fps, clock_));
+      video_capturer_.reset(test::VcmCapturer::Create(
+          params_.video.width, params_.video.height, params_.video.fps));
+      if (!video_capturer_) {
+        // Failed to get actual camera, use chroma generator as backup.
+        video_capturer_.reset(test::FrameGeneratorCapturer::Create(
+            static_cast<int>(params_.video.width),
+            static_cast<int>(params_.video.height), params_.video.fps, clock_));
+      }
     } else {
-      capturer_.reset(test::FrameGeneratorCapturer::CreateFromYuvFile(
-          input, test::ResourcePath(params_.video.clip_name, "yuv"),
-          params_.common.width, params_.common.height, params_.common.fps,
+      video_capturer_.reset(test::FrameGeneratorCapturer::CreateFromYuvFile(
+          test::ResourcePath(params_.video.clip_name, "yuv"),
+          params_.video.width, params_.video.height, params_.video.fps,
           clock_));
-      ASSERT_TRUE(capturer_) << "Could not create capturer for "
-                             << params_.video.clip_name
-                             << ".yuv. Is this resource file present?";
+      ASSERT_TRUE(video_capturer_) << "Could not create capturer for "
+                                   << params_.video.clip_name
+                                   << ".yuv. Is this resource file present?";
     }
   }
+  RTC_DCHECK(video_capturer_.get());
 }
 
 void VideoQualityTest::RunWithAnalyzer(const Params& params) {
   params_ = params;
 
-  RTC_CHECK(!params_.audio);
+  RTC_CHECK(!params_.audio.enabled);
   // TODO(ivica): Merge with RunWithRenderer and use a flag / argument to
   // differentiate between the analyzer and the renderer case.
   CheckParams();
@@ -1069,14 +1420,15 @@ void VideoQualityTest::RunWithAnalyzer(const Params& params) {
         << "!";
   }
 
-  Call::Config call_config;
-  call_config.bitrate_config = params.common.call_bitrate_config;
+  webrtc::RtcEventLogNullImpl event_log;
+  Call::Config call_config(&event_log_);
+  call_config.bitrate_config = params.call.call_bitrate_config;
   CreateCalls(call_config, call_config);
 
   test::LayerFilteringTransport send_transport(
-      params.pipe, sender_call_.get(), kPayloadTypeVP8, kPayloadTypeVP9,
-      params.common.selected_tl, params_.ss.selected_sl);
-  test::DirectTransport recv_transport(params.pipe, receiver_call_.get());
+      params_.pipe, sender_call_.get(), kPayloadTypeVP8, kPayloadTypeVP9,
+      params_.video.selected_tl, params_.ss.selected_sl);
+  test::DirectTransport recv_transport(params_.pipe, receiver_call_.get());
 
   std::string graph_title = params_.analyzer.graph_title;
   if (graph_title.empty())
@@ -1088,61 +1440,64 @@ void VideoQualityTest::RunWithAnalyzer(const Params& params) {
   // 0.0 by default. Setting the thresholds to -1.1 prevents the unnecessary
   // abort.
   VideoStream& selected_stream = params_.ss.streams[params_.ss.selected_stream];
-  int selected_sl = params_.ss.selected_sl != -1
-                        ? params_.ss.selected_sl
-                        : params_.ss.num_spatial_layers - 1;
-  bool disable_quality_check =
-      selected_stream.width != params_.common.width ||
-      selected_stream.height != params_.common.height ||
-      (!params_.ss.spatial_layers.empty() &&
-       params_.ss.spatial_layers[selected_sl].scaling_factor_num !=
-           params_.ss.spatial_layers[selected_sl].scaling_factor_den);
-  if (disable_quality_check) {
-    fprintf(stderr,
-            "Warning: Calculating PSNR and SSIM for downsized resolution "
-            "not implemented yet! Skipping PSNR and SSIM calculations!");
-  }
 
+  bool is_quick_test_enabled = field_trial::IsEnabled("WebRTC-QuickPerfTest");
   VideoAnalyzer analyzer(
       &send_transport, params_.analyzer.test_label,
-      disable_quality_check ? -1.1 : params_.analyzer.avg_psnr_threshold,
-      disable_quality_check ? -1.1 : params_.analyzer.avg_ssim_threshold,
-      params_.analyzer.test_durations_secs * params_.common.fps,
-      graph_data_output_file, graph_title,
-      kVideoSendSsrcs[params_.ss.selected_stream]);
 
+      params_.analyzer.avg_psnr_threshold, params_.analyzer.avg_ssim_threshold,
+      is_quick_test_enabled
+          ? kFramesSentInQuickTest
+          : params_.analyzer.test_durations_secs * params_.video.fps,
+      graph_data_output_file, graph_title,
+      kVideoSendSsrcs[params_.ss.selected_stream],
+      kSendRtxSsrcs[params_.ss.selected_stream],
+      static_cast<uint32_t>(selected_stream.width),
+      static_cast<uint32_t>(selected_stream.height), params.ss.selected_sl,
+      params_.video.selected_tl, is_quick_test_enabled);
   analyzer.SetReceiver(receiver_call_->Receiver());
   send_transport.SetReceiver(&analyzer);
   recv_transport.SetReceiver(sender_call_->Receiver());
 
-  SetupCommon(&analyzer, &recv_transport);
+  SetupVideo(&analyzer, &recv_transport);
   video_receive_configs_[params_.ss.selected_stream].renderer = &analyzer;
   video_send_config_.pre_encode_callback = analyzer.pre_encode_proxy();
-  for (auto& config : video_receive_configs_)
-    config.pre_decode_callback = &analyzer;
   RTC_DCHECK(!video_send_config_.post_encode_callback);
   video_send_config_.post_encode_callback = analyzer.encode_timing_proxy();
 
-  if (params_.screenshare.enabled)
-    SetupScreenshare();
+  SetupScreenshareOrSVC();
 
+  CreateFlexfecStreams();
   CreateVideoStreams();
-  analyzer.input_ = video_send_stream_->Input();
-  analyzer.send_stream_ = video_send_stream_;
+  analyzer.SetSendStream(video_send_stream_);
+  if (video_receive_streams_.size() == 1)
+    analyzer.SetReceiveStream(video_receive_streams_[0]);
 
-  CreateCapturer(&analyzer);
+  video_send_stream_->SetSource(analyzer.OutputInterface(),
+                                degradation_preference_);
 
+  CreateCapturer();
+  rtc::VideoSinkWants wants;
+  video_capturer_->AddOrUpdateSink(analyzer.InputInterface(), wants);
+
+  StartEncodedFrameLogs(video_send_stream_);
+  StartEncodedFrameLogs(video_receive_streams_[0]);
   video_send_stream_->Start();
   for (VideoReceiveStream* receive_stream : video_receive_streams_)
     receive_stream->Start();
-  capturer_->Start();
+  for (FlexfecReceiveStream* receive_stream : flexfec_receive_streams_)
+    receive_stream->Start();
+  analyzer.StartMeasuringCpuProcessTime();
+  video_capturer_->Start();
 
   analyzer.Wait();
 
   send_transport.StopSending();
   recv_transport.StopSending();
 
-  capturer_->Stop();
+  video_capturer_->Stop();
+  for (FlexfecReceiveStream* receive_stream : flexfec_receive_streams_)
+    receive_stream->Stop();
   for (VideoReceiveStream* receive_stream : video_receive_streams_)
     receive_stream->Stop();
   video_send_stream_->Stop();
@@ -1153,123 +1508,141 @@ void VideoQualityTest::RunWithAnalyzer(const Params& params) {
     fclose(graph_data_output_file);
 }
 
+void VideoQualityTest::SetupAudio(int send_channel_id,
+                                  int receive_channel_id,
+                                  Call* call,
+                                  Transport* transport,
+                                  AudioReceiveStream** audio_receive_stream) {
+  audio_send_config_ = AudioSendStream::Config(transport);
+  audio_send_config_.voe_channel_id = send_channel_id;
+  audio_send_config_.rtp.ssrc = kAudioSendSsrc;
+
+  // Add extension to enable audio send side BWE, and allow audio bit rate
+  // adaptation.
+  audio_send_config_.rtp.extensions.clear();
+  if (params_.call.send_side_bwe) {
+    audio_send_config_.rtp.extensions.push_back(
+        webrtc::RtpExtension(webrtc::RtpExtension::kTransportSequenceNumberUri,
+                             test::kTransportSequenceNumberExtensionId));
+    audio_send_config_.min_bitrate_bps = kOpusMinBitrateBps;
+    audio_send_config_.max_bitrate_bps = kOpusBitrateFbBps;
+  }
+  audio_send_config_.send_codec_spec.codec_inst =
+      CodecInst{120, "OPUS", 48000, 960, 2, 64000};
+
+  audio_send_stream_ = call->CreateAudioSendStream(audio_send_config_);
+
+  AudioReceiveStream::Config audio_config;
+  audio_config.rtp.local_ssrc = kReceiverLocalAudioSsrc;
+  audio_config.rtcp_send_transport = transport;
+  audio_config.voe_channel_id = receive_channel_id;
+  audio_config.rtp.remote_ssrc = audio_send_config_.rtp.ssrc;
+  audio_config.rtp.transport_cc = params_.call.send_side_bwe;
+  audio_config.rtp.extensions = audio_send_config_.rtp.extensions;
+  audio_config.decoder_factory = decoder_factory_;
+  if (params_.video.enabled && params_.audio.sync_video)
+    audio_config.sync_group = kSyncGroup;
+
+  *audio_receive_stream = call->CreateAudioReceiveStream(audio_config);
+}
+
 void VideoQualityTest::RunWithRenderers(const Params& params) {
   params_ = params;
   CheckParams();
 
-  std::unique_ptr<test::VideoRenderer> local_preview(
-      test::VideoRenderer::Create("Local Preview", params_.common.width,
-                                  params_.common.height));
-  size_t stream_id = params_.ss.selected_stream;
-  std::string title = "Loopback Video";
-  if (params_.ss.streams.size() > 1) {
-    std::ostringstream s;
-    s << stream_id;
-    title += " - Stream #" + s.str();
-  }
-
-  std::unique_ptr<test::VideoRenderer> loopback_video(
-      test::VideoRenderer::Create(title.c_str(),
-                                  params_.ss.streams[stream_id].width,
-                                  params_.ss.streams[stream_id].height));
-
   // TODO(ivica): Remove bitrate_config and use the default Call::Config(), to
   // match the full stack tests.
-  Call::Config call_config;
-  call_config.bitrate_config = params_.common.call_bitrate_config;
+  webrtc::RtcEventLogNullImpl event_log;
+  Call::Config call_config(&event_log_);
+  call_config.bitrate_config = params_.call.call_bitrate_config;
 
   ::VoiceEngineState voe;
-  if (params_.audio) {
+  if (params_.audio.enabled) {
     CreateVoiceEngine(&voe, decoder_factory_);
     AudioState::Config audio_state_config;
     audio_state_config.voice_engine = voe.voice_engine;
+    audio_state_config.audio_mixer = AudioMixerImpl::Create();
     call_config.audio_state = AudioState::Create(audio_state_config);
   }
 
   std::unique_ptr<Call> call(Call::Create(call_config));
 
+  // TODO(minyue): consider if this is a good transport even for audio only
+  // calls.
   test::LayerFilteringTransport transport(
       params.pipe, call.get(), kPayloadTypeVP8, kPayloadTypeVP9,
-      params.common.selected_tl, params_.ss.selected_sl);
+      params.video.selected_tl, params_.ss.selected_sl);
   // TODO(ivica): Use two calls to be able to merge with RunWithAnalyzer or at
   // least share as much code as possible. That way this test would also match
   // the full stack tests better.
   transport.SetReceiver(call->Receiver());
 
-  SetupCommon(&transport, &transport);
+  VideoReceiveStream* video_receive_stream = nullptr;
+  FlexfecReceiveStream* flexfec_receive_stream = nullptr;
+  std::unique_ptr<test::VideoRenderer> local_preview;
+  std::unique_ptr<test::VideoRenderer> loopback_video;
+  if (params_.video.enabled) {
+    // Create video renderers.
+    local_preview.reset(test::VideoRenderer::Create(
+        "Local Preview", params_.video.width, params_.video.height));
 
-  video_send_config_.pre_encode_callback = local_preview.get();
-  video_receive_configs_[stream_id].renderer = loopback_video.get();
-  if (params_.audio && params_.audio_video_sync)
-    video_receive_configs_[stream_id].sync_group = kSyncGroup;
-
-  video_send_config_.suspend_below_min_bitrate =
-      params_.common.suspend_below_min_bitrate;
-
-  if (params.common.fec) {
-    video_send_config_.rtp.fec.red_payload_type = kRedPayloadType;
-    video_send_config_.rtp.fec.ulpfec_payload_type = kUlpfecPayloadType;
-    video_receive_configs_[stream_id].rtp.fec.red_payload_type =
-      kRedPayloadType;
-    video_receive_configs_[stream_id].rtp.fec.ulpfec_payload_type =
-      kUlpfecPayloadType;
-  }
-
-  if (params_.screenshare.enabled)
-    SetupScreenshare();
-
-  video_send_stream_ = call->CreateVideoSendStream(
-      video_send_config_.Copy(), video_encoder_config_.Copy());
-  VideoReceiveStream* video_receive_stream =
-      call->CreateVideoReceiveStream(video_receive_configs_[stream_id].Copy());
-  CreateCapturer(video_send_stream_->Input());
-
-  AudioReceiveStream* audio_receive_stream = nullptr;
-  if (params_.audio) {
-    audio_send_config_ = AudioSendStream::Config(&transport);
-    audio_send_config_.voe_channel_id = voe.send_channel_id;
-    audio_send_config_.rtp.ssrc = kAudioSendSsrc;
-
-    // Add extension to enable audio send side BWE, and allow audio bit rate
-    // adaptation.
-    audio_send_config_.rtp.extensions.clear();
-    if (params_.common.send_side_bwe) {
-      audio_send_config_.rtp.extensions.push_back(webrtc::RtpExtension(
-          webrtc::RtpExtension::kTransportSequenceNumberUri,
-          test::kTransportSequenceNumberExtensionId));
-      audio_send_config_.min_bitrate_kbps = kOpusMinBitrate / 1000;
-      audio_send_config_.max_bitrate_kbps = kOpusBitrateFb / 1000;
+    size_t stream_id = params_.ss.selected_stream;
+    std::string title = "Loopback Video";
+    if (params_.ss.streams.size() > 1) {
+      std::ostringstream s;
+      s << stream_id;
+      title += " - Stream #" + s.str();
     }
 
-    audio_send_stream_ = call->CreateAudioSendStream(audio_send_config_);
+    loopback_video.reset(test::VideoRenderer::Create(
+        title.c_str(), params_.ss.streams[stream_id].width,
+        params_.ss.streams[stream_id].height));
 
-    AudioReceiveStream::Config audio_config;
-    audio_config.rtp.local_ssrc = kReceiverLocalAudioSsrc;
-    audio_config.rtcp_send_transport = &transport;
-    audio_config.voe_channel_id = voe.receive_channel_id;
-    audio_config.rtp.remote_ssrc = audio_send_config_.rtp.ssrc;
-    audio_config.rtp.transport_cc = params_.common.send_side_bwe;
-    audio_config.rtp.extensions = audio_send_config_.rtp.extensions;
-    audio_config.decoder_factory = decoder_factory_;
-    if (params_.audio_video_sync)
-      audio_config.sync_group = kSyncGroup;
+    SetupVideo(&transport, &transport);
+    video_send_config_.pre_encode_callback = local_preview.get();
+    video_receive_configs_[stream_id].renderer = loopback_video.get();
+    if (params_.audio.enabled && params_.audio.sync_video)
+      video_receive_configs_[stream_id].sync_group = kSyncGroup;
 
-    audio_receive_stream =call->CreateAudioReceiveStream(audio_config);
+    if (params_.screenshare.enabled)
+      SetupScreenshareOrSVC();
 
-    const CodecInst kOpusInst = {120, "OPUS", 48000, 960, 2, 64000};
-    EXPECT_EQ(0, voe.codec->SetSendCodec(voe.send_channel_id, kOpusInst));
+    video_send_stream_ = call->CreateVideoSendStream(
+        video_send_config_.Copy(), video_encoder_config_.Copy());
+    if (params_.video.flexfec) {
+      RTC_DCHECK(!flexfec_receive_configs_.empty());
+      flexfec_receive_stream =
+          call->CreateFlexfecReceiveStream(flexfec_receive_configs_[0]);
+    }
+    video_receive_stream = call->CreateVideoReceiveStream(
+        video_receive_configs_[stream_id].Copy());
+    CreateCapturer();
+    video_send_stream_->SetSource(video_capturer_.get(),
+                                  degradation_preference_);
   }
 
-  // Start sending and receiving video.
-  video_receive_stream->Start();
-  video_send_stream_->Start();
-  capturer_->Start();
+  AudioReceiveStream* audio_receive_stream = nullptr;
+  if (params_.audio.enabled) {
+    SetupAudio(voe.send_channel_id, voe.receive_channel_id, call.get(),
+               &transport, &audio_receive_stream);
+  }
 
-  if (params_.audio) {
+  StartEncodedFrameLogs(video_receive_stream);
+  StartEncodedFrameLogs(video_send_stream_);
+
+  // Start sending and receiving video.
+  if (params_.video.enabled) {
+    if (flexfec_receive_stream)
+      flexfec_receive_stream->Start();
+    video_receive_stream->Start();
+    video_send_stream_->Start();
+    video_capturer_->Start();
+  }
+
+  if (params_.audio.enabled) {
     // Start receiving audio.
     audio_receive_stream->Start();
     EXPECT_EQ(0, voe.base->StartPlayout(voe.receive_channel_id));
-    EXPECT_EQ(0, voe.base->StartReceive(voe.receive_channel_id));
 
     // Start sending audio.
     audio_send_stream_->Start();
@@ -1278,33 +1651,59 @@ void VideoQualityTest::RunWithRenderers(const Params& params) {
 
   test::PressEnterToContinue();
 
-  if (params_.audio) {
+  if (params_.audio.enabled) {
     // Stop sending audio.
     EXPECT_EQ(0, voe.base->StopSend(voe.send_channel_id));
     audio_send_stream_->Stop();
 
     // Stop receiving audio.
-    EXPECT_EQ(0, voe.base->StopReceive(voe.receive_channel_id));
     EXPECT_EQ(0, voe.base->StopPlayout(voe.receive_channel_id));
     audio_receive_stream->Stop();
+    call->DestroyAudioSendStream(audio_send_stream_);
+    call->DestroyAudioReceiveStream(audio_receive_stream);
   }
 
   // Stop receiving and sending video.
-  capturer_->Stop();
-  video_send_stream_->Stop();
-  video_receive_stream->Stop();
-
-  call->DestroyVideoReceiveStream(video_receive_stream);
-  call->DestroyVideoSendStream(video_send_stream_);
-
-  if (params_.audio) {
-     call->DestroyAudioSendStream(audio_send_stream_);
-     call->DestroyAudioReceiveStream(audio_receive_stream);
+  if (params_.video.enabled) {
+    video_capturer_->Stop();
+    video_send_stream_->Stop();
+    video_receive_stream->Stop();
+    if (flexfec_receive_stream) {
+      flexfec_receive_stream->Stop();
+      call->DestroyFlexfecReceiveStream(flexfec_receive_stream);
+    }
+    call->DestroyVideoReceiveStream(video_receive_stream);
+    call->DestroyVideoSendStream(video_send_stream_);
   }
 
   transport.StopSending();
-  if (params_.audio)
+  if (params_.audio.enabled)
     DestroyVoiceEngine(&voe);
+}
+
+void VideoQualityTest::StartEncodedFrameLogs(VideoSendStream* stream) {
+  if (!params_.video.encoded_frame_base_path.empty()) {
+    std::ostringstream str;
+    str << send_logs_++;
+    std::string prefix =
+        params_.video.encoded_frame_base_path + "." + str.str() + ".send.";
+    stream->EnableEncodedFrameRecording(
+        std::vector<rtc::PlatformFile>(
+            {rtc::CreatePlatformFile(prefix + "1.ivf"),
+             rtc::CreatePlatformFile(prefix + "2.ivf"),
+             rtc::CreatePlatformFile(prefix + "3.ivf")}),
+        10000000);
+  }
+}
+void VideoQualityTest::StartEncodedFrameLogs(VideoReceiveStream* stream) {
+  if (!params_.video.encoded_frame_base_path.empty()) {
+    std::ostringstream str;
+    str << receive_logs_++;
+    std::string path =
+        params_.video.encoded_frame_base_path + "." + str.str() + ".recv.ivf";
+    stream->EnableEncodedFrameRecording(rtc::CreatePlatformFile(path),
+                                        10000000);
+  }
 }
 
 }  // namespace webrtc

@@ -28,15 +28,13 @@
 
 // Forward declaration to avoid pulling in libsrtp headers here
 struct srtp_event_data_t;
-struct srtp_ctx_t;
-struct srtp_policy_t;
+struct srtp_ctx_t_;
 
 namespace cricket {
 
 class SrtpSession;
 class SrtpStat;
 
-void EnableSrtpDebugging();
 void ShutdownSrtp();
 
 // Class to transform SRTP to/from RTP.
@@ -112,6 +110,9 @@ class SrtpFilter {
 
   // Returns rtp auth params from srtp context.
   bool GetRtpAuthParams(uint8_t** key, int* key_len, int* tag_len);
+
+  // Returns srtp overhead for rtp packets.
+  bool GetSrtpOverhead(int* srtp_overhead) const;
 
   // Update the silent threshold (in ms) for signaling errors.
   void set_signal_silent_time(int signal_silent_time_in_ms);
@@ -203,6 +204,8 @@ class SrtpSession {
   // Helper method to get authentication params.
   bool GetRtpAuthParams(uint8_t** key, int* key_len, int* tag_len);
 
+  int GetSrtpOverhead() const;
+
   // Update the silent threshold (in ms) for signaling errors.
   void set_signal_silent_time(int signal_silent_time_in_ms);
 
@@ -222,7 +225,7 @@ class SrtpSession {
   static void HandleEventThunk(srtp_event_data_t* ev);
 
   rtc::ThreadChecker thread_checker_;
-  srtp_ctx_t* session_;
+  srtp_ctx_t_* session_;
   int rtp_auth_tag_len_;
   int rtcp_auth_tag_len_;
   std::unique_ptr<SrtpStat> srtp_stat_;

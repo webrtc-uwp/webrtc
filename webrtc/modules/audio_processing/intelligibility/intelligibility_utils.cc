@@ -56,12 +56,35 @@ GainApplier::GainApplier(size_t freqs, float relative_change_limit)
       target_(freqs, 1.f),
       current_(freqs, 1.f) {}
 
+GainApplier::~GainApplier() {}
+
 void GainApplier::Apply(const std::complex<float>* in_block,
                         std::complex<float>* out_block) {
   for (size_t i = 0; i < num_freqs_; ++i) {
     current_[i] = UpdateFactor(target_[i], current_[i], relative_change_limit_);
     out_block[i] = sqrtf(fabsf(current_[i])) * in_block[i];
   }
+}
+
+DelayBuffer::DelayBuffer(size_t delay, size_t num_channels)
+    : buffer_(num_channels, std::vector<float>(delay, 0.f)), read_index_(0u) {}
+
+DelayBuffer::~DelayBuffer() {}
+
+void DelayBuffer::Delay(float* const* data, size_t length) {
+  size_t sample_index = read_index_;
+  for (size_t i = 0u; i < buffer_.size(); ++i) {
+    sample_index = read_index_;
+    for (size_t j = 0u; j < length; ++j) {
+      float swap = data[i][j];
+      data[i][j] = buffer_[i][sample_index];
+      buffer_[i][sample_index] = swap;
+      if (++sample_index == buffer_.size()) {
+        sample_index = 0u;
+      }
+    }
+  }
+  read_index_ = sample_index;
 }
 
 }  // namespace intelligibility

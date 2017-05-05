@@ -8,7 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/api/rtcstatsreport.h"
+#include "webrtc/api/stats/rtcstatsreport.h"
+
+#include <sstream>
 
 namespace webrtc {
 
@@ -40,6 +42,10 @@ const RTCStats& RTCStatsReport::ConstIterator::operator*() const {
   return *it_->second.get();
 }
 
+const RTCStats* RTCStatsReport::ConstIterator::operator->() const {
+  return it_->second.get();
+}
+
 bool RTCStatsReport::ConstIterator::operator==(
     const RTCStatsReport::ConstIterator& other) const {
   return it_ == other.it_;
@@ -50,20 +56,25 @@ bool RTCStatsReport::ConstIterator::operator!=(
   return !(*this == other);
 }
 
-rtc::scoped_refptr<RTCStatsReport> RTCStatsReport::Create() {
+rtc::scoped_refptr<RTCStatsReport> RTCStatsReport::Create(
+    int64_t timestamp_us) {
   return rtc::scoped_refptr<RTCStatsReport>(
-      new rtc::RefCountedObject<RTCStatsReport>());
+      new rtc::RefCountedObject<RTCStatsReport>(timestamp_us));
 }
 
-RTCStatsReport::RTCStatsReport() {
+RTCStatsReport::RTCStatsReport(int64_t timestamp_us)
+    : timestamp_us_(timestamp_us) {
 }
 
 RTCStatsReport::~RTCStatsReport() {
 }
 
-bool RTCStatsReport::AddStats(std::unique_ptr<const RTCStats> stats) {
-  return !stats_.insert(std::make_pair(std::string(stats->id()),
-                        std::move(stats))).second;
+void RTCStatsReport::AddStats(std::unique_ptr<const RTCStats> stats) {
+  auto result = stats_.insert(std::make_pair(std::string(stats->id()),
+                              std::move(stats)));
+  RTC_DCHECK(result.second) <<
+      "A stats object with ID " << result.first->second->id() << " is already "
+      "present in this stats report.";
 }
 
 const RTCStats* RTCStatsReport::Get(const std::string& id) const {
@@ -90,6 +101,18 @@ RTCStatsReport::ConstIterator RTCStatsReport::begin() const {
 RTCStatsReport::ConstIterator RTCStatsReport::end() const {
   return ConstIterator(rtc::scoped_refptr<const RTCStatsReport>(this),
                        stats_.cend());
+}
+
+std::string RTCStatsReport::ToString() const {
+  std::ostringstream oss;
+  ConstIterator it = begin();
+  if (it != end()) {
+    oss << it->ToString();
+    for (++it; it != end(); ++it) {
+      oss << '\n' << it->ToString();
+    }
+  }
+  return oss.str();
 }
 
 }  // namespace webrtc

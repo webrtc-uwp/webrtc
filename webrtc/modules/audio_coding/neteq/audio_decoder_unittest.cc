@@ -17,7 +17,6 @@
 #include <string>
 #include <vector>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/audio_coding/codecs/g711/audio_decoder_pcm.h"
 #include "webrtc/modules/audio_coding/codecs/g711/audio_encoder_pcm.h"
 #include "webrtc/modules/audio_coding/codecs/g722/audio_decoder_g722.h"
@@ -33,7 +32,7 @@
 #include "webrtc/modules/audio_coding/codecs/pcm16b/audio_decoder_pcm16b.h"
 #include "webrtc/modules/audio_coding/codecs/pcm16b/audio_encoder_pcm16b.h"
 #include "webrtc/modules/audio_coding/neteq/tools/resample_input_audio_file.h"
-#include "webrtc/system_wrappers/include/data_log.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
@@ -53,9 +52,6 @@ void CompareInputOutput(const std::vector<int16_t>& input,
   for (unsigned int n = 0; n < num_samples - delay; ++n) {
     ASSERT_NEAR(input[n], output[channels * n + delay], tolerance)
         << "Exit test on first diff; n = " << n;
-    DataLog::InsertCell("CodecTest", "input", input[n]);
-    DataLog::InsertCell("CodecTest", "output", output[channels * n]);
-    DataLog::NextRow("CodecTest");
   }
 }
 
@@ -113,19 +109,11 @@ class AudioDecoderTest : public ::testing::Test {
       codec_input_rate_hz_ = audio_encoder_->SampleRateHz();
     // Create arrays.
     ASSERT_GT(data_length_, 0u) << "The test must set data_length_ > 0";
-    // Logging to view input and output in Matlab.
-    // Use 'gyp -Denable_data_logging=1' to enable logging.
-    DataLog::CreateLog();
-    DataLog::AddTable("CodecTest");
-    DataLog::AddColumn("CodecTest", "input", 1);
-    DataLog::AddColumn("CodecTest", "output", 1);
   }
 
   virtual void TearDown() {
     delete decoder_;
     decoder_ = NULL;
-    // Close log.
-    DataLog::ReturnLog();
   }
 
   virtual void InitEncoder() { }
@@ -481,7 +469,7 @@ TEST_F(AudioDecoderPcmUTest, EncodeDecode) {
 
 namespace {
 int SetAndGetTargetBitrate(AudioEncoder* audio_encoder, int rate) {
-  audio_encoder->SetTargetBitrate(rate);
+  audio_encoder->OnReceivedUplinkBandwidth(rate, rtc::Optional<int64_t>());
   return audio_encoder->GetTargetBitrate();
 }
 void TestSetAndGetTargetBitratesWithFixedCodec(AudioEncoder* audio_encoder,
@@ -620,8 +608,8 @@ TEST_F(AudioDecoderOpusTest, EncodeDecode) {
 
 namespace {
 void TestOpusSetTargetBitrates(AudioEncoder* audio_encoder) {
-  EXPECT_EQ(500, SetAndGetTargetBitrate(audio_encoder, 499));
-  EXPECT_EQ(500, SetAndGetTargetBitrate(audio_encoder, 500));
+  EXPECT_EQ(6000, SetAndGetTargetBitrate(audio_encoder, 5999));
+  EXPECT_EQ(6000, SetAndGetTargetBitrate(audio_encoder, 6000));
   EXPECT_EQ(32000, SetAndGetTargetBitrate(audio_encoder, 32000));
   EXPECT_EQ(512000, SetAndGetTargetBitrate(audio_encoder, 512000));
   EXPECT_EQ(512000, SetAndGetTargetBitrate(audio_encoder, 513000));
@@ -695,6 +683,9 @@ TEST(AudioDecoder, CodecSupported) {
   EXPECT_EQ(has_g722, CodecSupported(NetEqDecoder::kDecoderG722_2ch));
   EXPECT_TRUE(CodecSupported(NetEqDecoder::kDecoderRED));
   EXPECT_TRUE(CodecSupported(NetEqDecoder::kDecoderAVT));
+  EXPECT_TRUE(CodecSupported(NetEqDecoder::kDecoderAVT16kHz));
+  EXPECT_TRUE(CodecSupported(NetEqDecoder::kDecoderAVT32kHz));
+  EXPECT_TRUE(CodecSupported(NetEqDecoder::kDecoderAVT48kHz));
   EXPECT_TRUE(CodecSupported(NetEqDecoder::kDecoderCNGnb));
   EXPECT_TRUE(CodecSupported(NetEqDecoder::kDecoderCNGwb));
   EXPECT_TRUE(CodecSupported(NetEqDecoder::kDecoderCNGswb32kHz));

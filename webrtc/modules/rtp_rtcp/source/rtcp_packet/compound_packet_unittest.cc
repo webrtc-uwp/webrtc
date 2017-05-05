@@ -10,12 +10,12 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/compound_packet.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/bye.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/fir.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/receiver_report.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/sender_report.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/rtcp_packet_parser.h"
 
 using webrtc::rtcp::Bye;
@@ -35,11 +35,11 @@ const uint8_t kSeqNo = 13;
 TEST(RtcpCompoundPacketTest, AppendPacket) {
   CompoundPacket compound;
   Fir fir;
-  fir.WithRequestTo(kRemoteSsrc, kSeqNo);
+  fir.AddRequestTo(kRemoteSsrc, kSeqNo);
   ReportBlock rb;
   ReceiverReport rr;
-  rr.From(kSenderSsrc);
-  EXPECT_TRUE(rr.WithReportBlock(rb));
+  rr.SetSenderSsrc(kSenderSsrc);
+  EXPECT_TRUE(rr.AddReportBlock(rb));
   compound.Append(&rr);
   compound.Append(&fir);
 
@@ -56,12 +56,12 @@ TEST(RtcpCompoundPacketTest, AppendPacketWithOwnAppendedPacket) {
   CompoundPacket root;
   CompoundPacket leaf;
   Fir fir;
-  fir.WithRequestTo(kRemoteSsrc, kSeqNo);
+  fir.AddRequestTo(kRemoteSsrc, kSeqNo);
   Bye bye;
   ReportBlock rb;
 
   ReceiverReport rr;
-  EXPECT_TRUE(rr.WithReportBlock(rb));
+  EXPECT_TRUE(rr.AddReportBlock(rb));
   leaf.Append(&rr);
   leaf.Append(&fir);
 
@@ -83,11 +83,11 @@ TEST(RtcpCompoundPacketTest, AppendPacketWithOwnAppendedPacket) {
 TEST(RtcpCompoundPacketTest, BuildWithInputBuffer) {
   CompoundPacket compound;
   Fir fir;
-  fir.WithRequestTo(kRemoteSsrc, kSeqNo);
+  fir.AddRequestTo(kRemoteSsrc, kSeqNo);
   ReportBlock rb;
   ReceiverReport rr;
-  rr.From(kSenderSsrc);
-  EXPECT_TRUE(rr.WithReportBlock(rb));
+  rr.SetSenderSsrc(kSenderSsrc);
+  EXPECT_TRUE(rr.AddReportBlock(rb));
   compound.Append(&rr);
   compound.Append(&fir);
 
@@ -117,11 +117,11 @@ TEST(RtcpCompoundPacketTest, BuildWithInputBuffer) {
 TEST(RtcpCompoundPacketTest, BuildWithTooSmallBuffer_FragmentedSend) {
   CompoundPacket compound;
   Fir fir;
-  fir.WithRequestTo(kRemoteSsrc, kSeqNo);
+  fir.AddRequestTo(kRemoteSsrc, kSeqNo);
   ReportBlock rb;
   ReceiverReport rr;
-  rr.From(kSenderSsrc);
-  EXPECT_TRUE(rr.WithReportBlock(rb));
+  rr.SetSenderSsrc(kSenderSsrc);
+  EXPECT_TRUE(rr.AddReportBlock(rb));
   compound.Append(&rr);
   compound.Append(&fir);
 

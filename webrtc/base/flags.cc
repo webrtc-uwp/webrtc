@@ -8,17 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "webrtc/base/flags.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "webrtc/base/checks.h"
 
 #if defined(WEBRTC_WIN)
 #include "webrtc/base/win32.h"
 #include <shellapi.h>
 #endif
-
-#include "webrtc/base/flags.h"
 
 namespace rtc {
 // -----------------------------------------------------------------------------
@@ -105,19 +106,18 @@ void Flag::Print(bool print_current_value) {
 // -----------------------------------------------------------------------------
 // Implementation of FlagList
 
-Flag* FlagList::list_ = NULL;
-
+Flag* FlagList::list_ = nullptr;
 
 FlagList::FlagList() {
-  list_ = NULL;
+  list_ = nullptr;
 }
 
 void FlagList::Print(const char* file, bool print_current_value) {
   // Since flag registration is likely by file (= C++ file),
   // we don't need to sort by file and still get grouped output.
-  const char* current = NULL;
-  for (Flag* f = list_; f != NULL; f = f->next()) {
-    if (file == NULL || file == f->file()) {
+  const char* current = nullptr;
+  for (Flag* f = list_; f != nullptr; f = f->next()) {
+    if (file == nullptr || file == f->file()) {
       if (current != f->file()) {
         printf("Flags from %s:\n", f->file());
         current = f->file();
@@ -130,7 +130,7 @@ void FlagList::Print(const char* file, bool print_current_value) {
 
 Flag* FlagList::Lookup(const char* name) {
   Flag* f = list_;
-  while (f != NULL && strcmp(name, f->name()) != 0)
+  while (f != nullptr && strcmp(name, f->name()) != 0)
     f = f->next();
   return f;
 }
@@ -140,8 +140,8 @@ void FlagList::SplitArgument(const char* arg,
                              char* buffer, int buffer_size,
                              const char** name, const char** value,
                              bool* is_bool) {
-  *name = NULL;
-  *value = NULL;
+  *name = nullptr;
+  *value = nullptr;
   *is_bool = false;
 
   if (*arg == '-') {
@@ -188,16 +188,16 @@ int FlagList::SetFlagsFromCommandLine(int* argc, const char** argv,
     bool is_bool;
     SplitArgument(arg, buffer, sizeof buffer, &name, &value, &is_bool);
 
-    if (name != NULL) {
+    if (name != nullptr) {
       // lookup the flag
       Flag* flag = Lookup(name);
-      if (flag == NULL) {
+      if (flag == nullptr) {
         fprintf(stderr, "Error: unrecognized flag %s\n", arg);
         return j;
       }
 
       // if we still need a flag value, use the next argument if available
-      if (flag->type() != Flag::BOOL && value == NULL) {
+      if (flag->type() != Flag::BOOL && value == nullptr) {
         if (i < *argc) {
           value = argv[i++];
         } else {
@@ -226,9 +226,8 @@ int FlagList::SetFlagsFromCommandLine(int* argc, const char** argv,
       }
 
       // handle errors
-      if ((flag->type() == Flag::BOOL && value != NULL) ||
-          (flag->type() != Flag::BOOL && is_bool) ||
-          *endp != '\0') {
+      if ((flag->type() == Flag::BOOL && value != nullptr) ||
+          (flag->type() != Flag::BOOL && is_bool) || *endp != '\0') {
         fprintf(stderr, "Error: illegal value for flag %s of type %s\n",
           arg, Type2String(flag->type()));
         return j;
@@ -237,7 +236,7 @@ int FlagList::SetFlagsFromCommandLine(int* argc, const char** argv,
       // remove the flag & value from the command
       if (remove_flags)
         while (j < i)
-          argv[j++] = NULL;
+          argv[j++] = nullptr;
     }
   }
 
@@ -245,7 +244,7 @@ int FlagList::SetFlagsFromCommandLine(int* argc, const char** argv,
   if (remove_flags) {
     int j = 1;
     for (int i = 1; i < *argc; i++) {
-      if (argv[i] != NULL)
+      if (argv[i] != nullptr)
         argv[j++] = argv[i];
     }
     *argc = j;
@@ -256,7 +255,8 @@ int FlagList::SetFlagsFromCommandLine(int* argc, const char** argv,
 }
 
 void FlagList::Register(Flag* flag) {
-  assert(flag != NULL && strlen(flag->name()) > 0);
+  RTC_DCHECK(flag);
+  RTC_DCHECK_GT(strlen(flag->name()), 0);
   // NOTE: Don't call Lookup() within Register because it accesses the name_
   // of other flags in list_, and if the flags are coming from two different
   // compilation units, the initialization order between them is undefined, and

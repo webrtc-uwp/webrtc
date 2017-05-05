@@ -84,6 +84,7 @@ RTC_EXPORT
 @property(nonatomic, assign)
     RTCContinualGatheringPolicy continualGatheringPolicy;
 @property(nonatomic, assign) int audioJitterBufferMaxPackets;
+@property(nonatomic, assign) BOOL audioJitterBufferFastAccelerate;
 @property(nonatomic, assign) int iceConnectionReceivingTimeout;
 @property(nonatomic, assign) int iceBackupCandidatePairPingInterval;
 
@@ -102,6 +103,11 @@ RTC_EXPORT
  *  candidate pairs will succeed, even before a binding response is received.
  */
 @property(nonatomic, assign) BOOL shouldPresumeWritableWhenFullyRelayed;
+
+/** If set to non-nil, controls the minimal interval between consecutive ICE
+ *  check packets.
+ */
+@property(nonatomic, copy, nullable) NSNumber *iceCheckMinInterval;
 
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
 

@@ -19,7 +19,7 @@ namespace rtc {
 //         NextPacket.
 
 TestClient::TestClient(AsyncPacketSocket* socket)
-    : socket_(socket), ready_to_send_(false), prev_packet_timestamp_(-1) {
+    : socket_(socket), prev_packet_timestamp_(-1) {
   packets_ = new std::vector<Packet*>();
   socket_->SignalReadPacket.connect(this, &TestClient::OnPacket);
   socket_->SignalReadyToSend.connect(this, &TestClient::OnReadyToSend);
@@ -76,7 +76,7 @@ TestClient::Packet* TestClient::NextPacket(int timeout_ms) {
   }
 
   // Return the first packet placed in the queue.
-  Packet* packet = NULL;
+  Packet* packet = nullptr;
   CritScope cs(&crit_);
   if (packets_->size() > 0) {
     packet = packets_->front();
@@ -117,7 +117,7 @@ bool TestClient::CheckTimestamp(int64_t packet_timestamp) {
 bool TestClient::CheckNoPacket() {
   bool res;
   Packet* packet = NextPacket(kNoPacketTimeoutMs);
-  res = (packet == NULL);
+  res = (packet == nullptr);
   delete packet;
   return res;
 }
@@ -130,10 +130,6 @@ int TestClient::SetOption(Socket::Option opt, int value) {
   return socket_->SetOption(opt, value);
 }
 
-bool TestClient::ready_to_send() const {
-  return ready_to_send_;
-}
-
 void TestClient::OnPacket(AsyncPacketSocket* socket, const char* buf,
                           size_t size, const SocketAddress& remote_addr,
                           const PacketTime& packet_time) {
@@ -142,7 +138,7 @@ void TestClient::OnPacket(AsyncPacketSocket* socket, const char* buf,
 }
 
 void TestClient::OnReadyToSend(AsyncPacketSocket* socket) {
-  ready_to_send_ = true;
+  ++ready_to_send_count_;
 }
 
 TestClient::Packet::Packet(const SocketAddress& a,

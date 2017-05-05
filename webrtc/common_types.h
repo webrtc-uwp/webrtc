@@ -11,13 +11,16 @@
 #ifndef WEBRTC_COMMON_TYPES_H_
 #define WEBRTC_COMMON_TYPES_H_
 
-#include <assert.h>
 #include <stddef.h>
 #include <string.h>
 
+#include <ostream>
 #include <string>
 #include <vector>
 
+#include "webrtc/api/video/video_rotation.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/base/optional.h"
 #include "webrtc/typedefs.h"
 
 #if defined(_MSC_VER)
@@ -26,9 +29,9 @@
 #pragma warning(disable : 4351)
 #endif
 
-#ifdef WEBRTC_EXPORT
+#if defined(WEBRTC_EXPORT)
 #define WEBRTC_DLLEXPORT _declspec(dllexport)
-#elif WEBRTC_DLL
+#elif defined(WEBRTC_DLL)
 #define WEBRTC_DLLEXPORT _declspec(dllimport)
 #else
 #define WEBRTC_DLLEXPORT
@@ -51,8 +54,6 @@
 #endif
 
 namespace webrtc {
-
-class Config;
 
 class RewindableStream {
  public:
@@ -139,14 +140,6 @@ enum FileFormats {
   kFileFormatPcm16kHzFile = 7,
   kFileFormatPcm8kHzFile = 8,
   kFileFormatPcm32kHzFile = 9
-};
-
-enum ProcessingTypes {
-  kPlaybackPerChannel = 0,
-  kPlaybackAllChannelsMixed,
-  kRecordingPerChannel,
-  kRecordingAllChannelsMixed,
-  kRecordingPreprocessing
 };
 
 enum FrameType {
@@ -299,6 +292,14 @@ class SendPacketObserver {
                             uint32_t ssrc) = 0;
 };
 
+// Callback, used to notify an observer when the overhead per packet
+// has changed.
+class OverheadObserver {
+ public:
+  virtual ~OverheadObserver() = default;
+  virtual void OnOverheadChanged(size_t overhead_bytes_per_packet) = 0;
+};
+
 // ==================================================================
 // Voice specific types
 // ==================================================================
@@ -320,6 +321,16 @@ struct CodecInst {
   }
 
   bool operator!=(const CodecInst& other) const { return !(*this == other); }
+
+  friend std::ostream& operator<<(std::ostream& os, const CodecInst& ci) {
+    os << "{pltype: " << ci.pltype;
+    os << ", plname: " << ci.plname;
+    os << ", plfreq: " << ci.plfreq;
+    os << ", pacsize: " << ci.pacsize;
+    os << ", channels: " << ci.channels;
+    os << ", rate: " << ci.rate << "}";
+    return os;
+  }
 };
 
 // RTP
@@ -386,7 +397,8 @@ struct AudioDecodingCallStats {
         decoded_normal(0),
         decoded_plc(0),
         decoded_cng(0),
-        decoded_plc_cng(0) {}
+        decoded_plc_cng(0),
+        decoded_muted_output(0) {}
 
   int calls_to_silence_generator;  // Number of calls where silence generated,
                                    // and NetEq was disengaged from decoding.
@@ -395,7 +407,7 @@ struct AudioDecodingCallStats {
   int decoded_plc;     // Number of calls resulted in PLC.
   int decoded_cng;  // Number of calls where comfort noise generated due to DTX.
   int decoded_plc_cng;  // Number of calls resulted where PLC faded to CNG.
-  int end_to_end_delay_ms {};      // end-to-end call delay measurement
+  int decoded_muted_output;  // Number of calls returning a muted state output.
 };
 
 // Type of Noise Suppression.
@@ -455,11 +467,9 @@ enum StereoChannel { kStereoLeft = 0, kStereoRight, kStereoBoth };
 // Audio device layers
 enum AudioLayers {
   kAudioPlatformDefault = 0,
-  kAudioWindowsWave = 1,
   kAudioWindowsCore = 2,
-  kAudioWindowsWasapi = 3,
-  kAudioLinuxAlsa = 4,
-  kAudioLinuxPulse = 5
+  kAudioLinuxAlsa = 3,
+  kAudioLinuxPulse = 4
 };
 
 // ==================================================================
@@ -499,8 +509,6 @@ enum VideoCodecComplexity {
   kComplexityMax = 3
 };
 
-enum VideoCodecProfile { kProfileBase = 0x00, kProfileMain = 0x01 };
-
 enum VP8ResilienceMode {
   kResilienceOff,    // The stream produced by the encoder requires a
                      // recovery frame (typically a key frame) to be
@@ -525,7 +533,7 @@ struct VideoCodecVP8 {
   bool automaticResizeOn;
   bool frameDroppingOn;
   int keyFrameInterval;
-  const TemporalLayersFactory* tl_factory;
+  TemporalLayersFactory* tl_factory;
 };
 
 // VP9 specific.
@@ -542,9 +550,21 @@ struct VideoCodecVP9 {
   bool flexibleMode;
 };
 
+// TODO(magjed): Move this and other H264 related classes out to their own file.
+namespace H264 {
+
+enum Profile {
+  kProfileConstrainedBaseline,
+  kProfileBaseline,
+  kProfileMain,
+  kProfileConstrainedHigh,
+  kProfileHigh,
+};
+
+}  // namespace H264
+
 // H264 specific.
 struct VideoCodecH264 {
-  VideoCodecProfile profile;
   bool frameDroppingOn;
   int keyFrameInterval;
   // These are NULL/0 if not externally negotiated.
@@ -552,6 +572,7 @@ struct VideoCodecH264 {
   size_t spsLen;
   const uint8_t* ppsData;
   size_t ppsLen;
+  H264::Profile profile;
 };
 
 // Video codec types
@@ -562,9 +583,14 @@ enum VideoCodecType {
   kVideoCodecI420,
   kVideoCodecRED,
   kVideoCodecULPFEC,
+  kVideoCodecFlexfec,
   kVideoCodecGeneric,
   kVideoCodecUnknown
 };
+
+// Translates from name of codec to codec type and vice versa.
+rtc::Optional<const char*> CodecTypeToPayloadName(VideoCodecType type);
+rtc::Optional<VideoCodecType> PayloadNameToCodecType(const std::string& name);
 
 union VideoCodecUnion {
   VideoCodecVP8 VP8;
@@ -594,7 +620,11 @@ struct SpatialLayer {
 enum VideoCodecMode { kRealtimeVideo, kScreensharing };
 
 // Common video codec properties
-struct VideoCodec {
+class VideoCodec {
+ public:
+  VideoCodec();
+
+  // Public variables. TODO(hta): Make them private with accessors.
   VideoCodecType codecType;
   char plName[kPayloadNameSize];
   unsigned char plType;
@@ -609,8 +639,6 @@ struct VideoCodec {
 
   unsigned char maxFramerate;
 
-  VideoCodecUnion codecSpecific;
-
   unsigned int qpMax;
   unsigned char numberOfSimulcastStreams;
   SimulcastStream simulcastStream[kMaxSimulcastStreams];
@@ -621,11 +649,59 @@ struct VideoCodec {
 
   bool operator==(const VideoCodec& other) const = delete;
   bool operator!=(const VideoCodec& other) const = delete;
+
+  // Accessors for codec specific information.
+  // There is a const version of each that returns a reference,
+  // and a non-const version that returns a pointer, in order
+  // to allow modification of the parameters.
+  VideoCodecVP8* VP8();
+  const VideoCodecVP8& VP8() const;
+  VideoCodecVP9* VP9();
+  const VideoCodecVP9& VP9() const;
+  VideoCodecH264* H264();
+  const VideoCodecH264& H264() const;
+
+ private:
+  // TODO(hta): Consider replacing the union with a pointer type.
+  // This will allow removing the VideoCodec* types from this file.
+  VideoCodecUnion codec_specific_;
+};
+
+class BitrateAllocation {
+ public:
+  static const uint32_t kMaxBitrateBps;
+  BitrateAllocation();
+
+  bool SetBitrate(size_t spatial_index,
+                  size_t temporal_index,
+                  uint32_t bitrate_bps);
+
+  uint32_t GetBitrate(size_t spatial_index, size_t temporal_index) const;
+
+  // Get the sum of all the temporal layer for a specific spatial layer.
+  uint32_t GetSpatialLayerSum(size_t spatial_index) const;
+
+  uint32_t get_sum_bps() const { return sum_; }  // Sum of all bitrates.
+  uint32_t get_sum_kbps() const { return (sum_ + 500) / 1000; }
+
+  inline bool operator==(const BitrateAllocation& other) const {
+    return memcmp(bitrates_, other.bitrates_, sizeof(bitrates_)) == 0;
+  }
+  inline bool operator!=(const BitrateAllocation& other) const {
+    return !(*this == other);
+  }
+
+ private:
+  uint32_t sum_;
+  uint32_t bitrates_[kMaxSpatialLayers][kMaxTemporalStreams];
 };
 
 // Bandwidth over-use detector options.  These are used to drive
 // experimentation with bandwidth estimation parameters.
 // See modules/remote_bitrate_estimator/overuse_detector.h
+// TODO(terelius): This is only used in overuse_estimator.cc, and only in the
+// default constructed state. Can we move the relevant variables into that
+// class and delete this? See also disabled warning at line 27
 struct OverUseDetectorOptions {
   OverUseDetectorOptions()
       : initial_slope(8.0 / 512.0),
@@ -701,7 +777,7 @@ struct RTPHeaderExtension {
   // http://www.etsi.org/deliver/etsi_ts/126100_126199/126114/12.07.00_60/
   // ts_126114v120700p.pdf
   bool hasVideoRotation;
-  uint8_t videoRotation;
+  VideoRotation videoRotation;
 
   PlayoutDelay playout_delay = {-1, -1};
 };
@@ -734,13 +810,13 @@ struct RtpPacketCounter {
   }
 
   void Subtract(const RtpPacketCounter& other) {
-    assert(header_bytes >= other.header_bytes);
+    RTC_DCHECK_GE(header_bytes, other.header_bytes);
     header_bytes -= other.header_bytes;
-    assert(payload_bytes >= other.payload_bytes);
+    RTC_DCHECK_GE(payload_bytes, other.payload_bytes);
     payload_bytes -= other.payload_bytes;
-    assert(padding_bytes >= other.padding_bytes);
+    RTC_DCHECK_GE(padding_bytes, other.padding_bytes);
     padding_bytes -= other.padding_bytes;
-    assert(packets >= other.packets);
+    RTC_DCHECK_GE(packets, other.packets);
     packets -= other.packets;
   }
 

@@ -10,14 +10,13 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/extended_reports.h"
 
-#include "testing/gmock/include/gmock/gmock.h"
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/random.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/rtcp_packet_parser.h"
 
 using testing::ElementsAre;
 using testing::ElementsAreArray;
-using testing::IsEmpty;
 using testing::make_tuple;
 using webrtc::rtcp::Dlrr;
 using webrtc::rtcp::ExtendedReports;
@@ -60,10 +59,6 @@ bool operator==(const ReceiveTimeInfo& time1, const ReceiveTimeInfo& time2) {
   return time1.ssrc == time2.ssrc &&
          time1.last_rr == time2.last_rr &&
          time1.delay_since_last_rr == time2.delay_since_last_rr;
-}
-
-bool operator==(const Dlrr& dlrr1, const Dlrr& dlrr2) {
-  return dlrr1.sub_blocks() == dlrr2.sub_blocks();
 }
 
 bool operator==(const VoipMetric& metric1, const VoipMetric& metric2) {
@@ -110,7 +105,7 @@ NtpTime RtcpPacketExtendedReportsTest::Rand<NtpTime>() {
 template <>
 Rrtr RtcpPacketExtendedReportsTest::Rand<Rrtr>() {
   Rrtr rrtr;
-  rrtr.WithNtp(Rand<NtpTime>());
+  rrtr.SetNtp(Rand<NtpTime>());
   return rrtr;
 }
 
@@ -143,14 +138,14 @@ RTCPVoIPMetric RtcpPacketExtendedReportsTest::Rand<RTCPVoIPMetric>() {
 template <>
 VoipMetric RtcpPacketExtendedReportsTest::Rand<VoipMetric>() {
   VoipMetric voip_metric;
-  voip_metric.To(Rand<uint32_t>());
-  voip_metric.WithVoipMetric(Rand<RTCPVoIPMetric>());
+  voip_metric.SetMediaSsrc(Rand<uint32_t>());
+  voip_metric.SetVoipMetric(Rand<RTCPVoIPMetric>());
   return voip_metric;
 }
 
 TEST_F(RtcpPacketExtendedReportsTest, CreateWithoutReportBlocks) {
   ExtendedReports xr;
-  xr.From(kSenderSsrc);
+  xr.SetSenderSsrc(kSenderSsrc);
 
   rtc::Buffer packet = xr.Build();
 
@@ -162,16 +157,16 @@ TEST_F(RtcpPacketExtendedReportsTest, ParseWithoutReportBlocks) {
   ExtendedReports parsed;
   EXPECT_TRUE(test::ParseSinglePacket(kEmptyPacket, &parsed));
   EXPECT_EQ(kSenderSsrc, parsed.sender_ssrc());
-  EXPECT_THAT(parsed.rrtrs(), IsEmpty());
-  EXPECT_THAT(parsed.dlrrs(), IsEmpty());
-  EXPECT_THAT(parsed.voip_metrics(), IsEmpty());
+  EXPECT_FALSE(parsed.rrtr());
+  EXPECT_FALSE(parsed.dlrr());
+  EXPECT_FALSE(parsed.voip_metric());
 }
 
-TEST_F(RtcpPacketExtendedReportsTest, CreateAndParseWithOneRrtrBlock) {
-  Rrtr rrtr = Rand<Rrtr>();
+TEST_F(RtcpPacketExtendedReportsTest, CreateAndParseWithRrtrBlock) {
+  const Rrtr kRrtr = Rand<Rrtr>();
   ExtendedReports xr;
-  xr.From(kSenderSsrc);
-  EXPECT_TRUE(xr.WithRrtr(rrtr));
+  xr.SetSenderSsrc(kSenderSsrc);
+  xr.SetRrtr(kRrtr);
   rtc::Buffer packet = xr.Build();
 
   ExtendedReports mparsed;
@@ -179,33 +174,14 @@ TEST_F(RtcpPacketExtendedReportsTest, CreateAndParseWithOneRrtrBlock) {
   const ExtendedReports& parsed = mparsed;
 
   EXPECT_EQ(kSenderSsrc, parsed.sender_ssrc());
-  EXPECT_THAT(parsed.rrtrs(), ElementsAre(rrtr));
-}
-
-TEST_F(RtcpPacketExtendedReportsTest, CreateAndParseWithTwoRrtrBlocks) {
-  Rrtr rrtr1 = Rand<Rrtr>();
-  Rrtr rrtr2 = Rand<Rrtr>();
-  ExtendedReports xr;
-  xr.From(kSenderSsrc);
-  EXPECT_TRUE(xr.WithRrtr(rrtr1));
-  EXPECT_TRUE(xr.WithRrtr(rrtr2));
-
-  rtc::Buffer packet = xr.Build();
-
-  ExtendedReports mparsed;
-  EXPECT_TRUE(test::ParseSinglePacket(packet, &mparsed));
-  const ExtendedReports& parsed = mparsed;
-
-  EXPECT_EQ(kSenderSsrc, parsed.sender_ssrc());
-  EXPECT_THAT(parsed.rrtrs(), ElementsAre(rrtr1, rrtr2));
+  EXPECT_EQ(kRrtr, parsed.rrtr());
 }
 
 TEST_F(RtcpPacketExtendedReportsTest, CreateAndParseWithDlrrWithOneSubBlock) {
-  Dlrr dlrr;
-  EXPECT_TRUE(dlrr.WithDlrrItem(Rand<ReceiveTimeInfo>()));
+  const ReceiveTimeInfo kTimeInfo = Rand<ReceiveTimeInfo>();
   ExtendedReports xr;
-  xr.From(kSenderSsrc);
-  EXPECT_TRUE(xr.WithDlrr(dlrr));
+  xr.SetSenderSsrc(kSenderSsrc);
+  xr.AddDlrrItem(kTimeInfo);
 
   rtc::Buffer packet = xr.Build();
 
@@ -214,16 +190,16 @@ TEST_F(RtcpPacketExtendedReportsTest, CreateAndParseWithDlrrWithOneSubBlock) {
   const ExtendedReports& parsed = mparsed;
 
   EXPECT_EQ(kSenderSsrc, parsed.sender_ssrc());
-  EXPECT_THAT(parsed.dlrrs(), ElementsAre(dlrr));
+  EXPECT_THAT(parsed.dlrr().sub_blocks(), ElementsAre(kTimeInfo));
 }
 
 TEST_F(RtcpPacketExtendedReportsTest, CreateAndParseWithDlrrWithTwoSubBlocks) {
-  Dlrr dlrr;
-  EXPECT_TRUE(dlrr.WithDlrrItem(Rand<ReceiveTimeInfo>()));
-  EXPECT_TRUE(dlrr.WithDlrrItem(Rand<ReceiveTimeInfo>()));
+  const ReceiveTimeInfo kTimeInfo1 = Rand<ReceiveTimeInfo>();
+  const ReceiveTimeInfo kTimeInfo2 = Rand<ReceiveTimeInfo>();
   ExtendedReports xr;
-  xr.From(kSenderSsrc);
-  EXPECT_TRUE(xr.WithDlrr(dlrr));
+  xr.SetSenderSsrc(kSenderSsrc);
+  xr.AddDlrrItem(kTimeInfo1);
+  xr.AddDlrrItem(kTimeInfo2);
 
   rtc::Buffer packet = xr.Build();
 
@@ -232,35 +208,15 @@ TEST_F(RtcpPacketExtendedReportsTest, CreateAndParseWithDlrrWithTwoSubBlocks) {
   const ExtendedReports& parsed = mparsed;
 
   EXPECT_EQ(kSenderSsrc, parsed.sender_ssrc());
-  EXPECT_THAT(parsed.dlrrs(), ElementsAre(dlrr));
-}
-
-TEST_F(RtcpPacketExtendedReportsTest, CreateAndParseWithTwoDlrrBlocks) {
-  Dlrr dlrr1;
-  EXPECT_TRUE(dlrr1.WithDlrrItem(Rand<ReceiveTimeInfo>()));
-  Dlrr dlrr2;
-  EXPECT_TRUE(dlrr2.WithDlrrItem(Rand<ReceiveTimeInfo>()));
-  ExtendedReports xr;
-  xr.From(kSenderSsrc);
-  EXPECT_TRUE(xr.WithDlrr(dlrr1));
-  EXPECT_TRUE(xr.WithDlrr(dlrr2));
-
-  rtc::Buffer packet = xr.Build();
-
-  ExtendedReports mparsed;
-  EXPECT_TRUE(test::ParseSinglePacket(packet, &mparsed));
-  const ExtendedReports& parsed = mparsed;
-
-  EXPECT_EQ(kSenderSsrc, parsed.sender_ssrc());
-  EXPECT_THAT(parsed.dlrrs(), ElementsAre(dlrr1, dlrr2));
+  EXPECT_THAT(parsed.dlrr().sub_blocks(), ElementsAre(kTimeInfo1, kTimeInfo2));
 }
 
 TEST_F(RtcpPacketExtendedReportsTest, CreateAndParseWithVoipMetric) {
-  VoipMetric voip_metric = Rand<VoipMetric>();
+  const VoipMetric kVoipMetric = Rand<VoipMetric>();
 
   ExtendedReports xr;
-  xr.From(kSenderSsrc);
-  EXPECT_TRUE(xr.WithVoipMetric(voip_metric));
+  xr.SetSenderSsrc(kSenderSsrc);
+  xr.SetVoipMetric(kVoipMetric);
 
   rtc::Buffer packet = xr.Build();
 
@@ -269,19 +225,19 @@ TEST_F(RtcpPacketExtendedReportsTest, CreateAndParseWithVoipMetric) {
   const ExtendedReports& parsed = mparsed;
 
   EXPECT_EQ(kSenderSsrc, parsed.sender_ssrc());
-  EXPECT_THAT(parsed.voip_metrics(), ElementsAre(voip_metric));
+  EXPECT_EQ(kVoipMetric, parsed.voip_metric());
 }
 
 TEST_F(RtcpPacketExtendedReportsTest, CreateAndParseWithMultipleReportBlocks) {
-  Rrtr rrtr = Rand<Rrtr>();
-  Dlrr dlrr;
-  EXPECT_TRUE(dlrr.WithDlrrItem(Rand<ReceiveTimeInfo>()));
-  VoipMetric metric = Rand<VoipMetric>();
+  const Rrtr kRrtr = Rand<Rrtr>();
+  const ReceiveTimeInfo kTimeInfo = Rand<ReceiveTimeInfo>();
+  const VoipMetric kVoipMetric = Rand<VoipMetric>();
+
   ExtendedReports xr;
-  xr.From(kSenderSsrc);
-  EXPECT_TRUE(xr.WithRrtr(rrtr));
-  EXPECT_TRUE(xr.WithDlrr(dlrr));
-  EXPECT_TRUE(xr.WithVoipMetric(metric));
+  xr.SetSenderSsrc(kSenderSsrc);
+  xr.SetRrtr(kRrtr);
+  xr.AddDlrrItem(kTimeInfo);
+  xr.SetVoipMetric(kVoipMetric);
 
   rtc::Buffer packet = xr.Build();
 
@@ -290,49 +246,9 @@ TEST_F(RtcpPacketExtendedReportsTest, CreateAndParseWithMultipleReportBlocks) {
   const ExtendedReports& parsed = mparsed;
 
   EXPECT_EQ(kSenderSsrc, parsed.sender_ssrc());
-  EXPECT_THAT(parsed.rrtrs(), ElementsAre(rrtr));
-  EXPECT_THAT(parsed.dlrrs(), ElementsAre(dlrr));
-  EXPECT_THAT(parsed.voip_metrics(), ElementsAre(metric));
+  EXPECT_EQ(kRrtr, parsed.rrtr());
+  EXPECT_THAT(parsed.dlrr().sub_blocks(), ElementsAre(kTimeInfo));
+  EXPECT_EQ(kVoipMetric, parsed.voip_metric());
 }
 
-TEST_F(RtcpPacketExtendedReportsTest, DlrrWithoutItemNotIncludedInPacket) {
-  Rrtr rrtr = Rand<Rrtr>();
-  Dlrr dlrr;
-  VoipMetric metric = Rand<VoipMetric>();
-  ExtendedReports xr;
-  xr.From(kSenderSsrc);
-  EXPECT_TRUE(xr.WithRrtr(rrtr));
-  EXPECT_TRUE(xr.WithDlrr(dlrr));
-  EXPECT_TRUE(xr.WithVoipMetric(metric));
-
-  rtc::Buffer packet = xr.Build();
-
-  ExtendedReports mparsed;
-  EXPECT_TRUE(test::ParseSinglePacket(packet, &mparsed));
-  const ExtendedReports& parsed = mparsed;
-
-  EXPECT_THAT(parsed.rrtrs(), ElementsAre(rrtr));
-  EXPECT_THAT(parsed.dlrrs(), IsEmpty());
-  EXPECT_THAT(parsed.voip_metrics(), ElementsAre(metric));
-}
-
-TEST_F(RtcpPacketExtendedReportsTest, WithTooManyBlocks) {
-  const size_t kMaxBlocks = 50;
-  ExtendedReports xr;
-
-  Rrtr rrtr = Rand<Rrtr>();
-  for (size_t i = 0; i < kMaxBlocks; ++i)
-    EXPECT_TRUE(xr.WithRrtr(rrtr));
-  EXPECT_FALSE(xr.WithRrtr(rrtr));
-
-  Dlrr dlrr;
-  for (size_t i = 0; i < kMaxBlocks; ++i)
-    EXPECT_TRUE(xr.WithDlrr(dlrr));
-  EXPECT_FALSE(xr.WithDlrr(dlrr));
-
-  VoipMetric voip_metric = Rand<VoipMetric>();
-  for (size_t i = 0; i < kMaxBlocks; ++i)
-    EXPECT_TRUE(xr.WithVoipMetric(voip_metric));
-  EXPECT_FALSE(xr.WithVoipMetric(voip_metric));
-}
 }  // namespace webrtc

@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 
+#include "webrtc/base/checks.h"
 #include "webrtc/base/stringutils.h"
 #include "webrtc/common_audio/include/audio_util.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
@@ -42,6 +43,22 @@ std::string GetIndexedOutputWavFilename(const std::string& wav_name,
   return ss.str();
 }
 
+void WriteEchoLikelihoodGraphFileHeader(std::ofstream* output_file) {
+  (*output_file) << "import numpy as np" << std::endl
+                 << "import matplotlib.pyplot as plt" << std::endl
+                 << "y = np.array([";
+}
+
+void WriteEchoLikelihoodGraphFileFooter(std::ofstream* output_file) {
+  (*output_file) << "])" << std::endl
+                 << "x = np.arange(len(y))*.01" << std::endl
+                 << "plt.plot(x, y)" << std::endl
+                 << "plt.ylabel('Echo likelihood')" << std::endl
+                 << "plt.xlabel('Time (s)')" << std::endl
+                 << "plt.ylim([0,1])" << std::endl
+                 << "plt.show()" << std::endl;
+}
+
 }  // namespace
 
 SimulationSettings::SimulationSettings() = default;
@@ -61,9 +78,22 @@ void CopyToAudioFrame(const ChannelBuffer<float>& src, AudioFrame* dest) {
 
 AudioProcessingSimulator::AudioProcessingSimulator(
     const SimulationSettings& settings)
-    : settings_(settings) {}
+    : settings_(settings) {
+  if (settings_.ed_graph_output_filename &&
+      settings_.ed_graph_output_filename->size() > 0) {
+    residual_echo_likelihood_graph_writer_.open(
+        *settings_.ed_graph_output_filename);
+    RTC_CHECK(residual_echo_likelihood_graph_writer_.is_open());
+    WriteEchoLikelihoodGraphFileHeader(&residual_echo_likelihood_graph_writer_);
+  }
+}
 
-AudioProcessingSimulator::~AudioProcessingSimulator() = default;
+AudioProcessingSimulator::~AudioProcessingSimulator() {
+  if (residual_echo_likelihood_graph_writer_.is_open()) {
+    WriteEchoLikelihoodGraphFileFooter(&residual_echo_likelihood_graph_writer_);
+    residual_echo_likelihood_graph_writer_.close();
+  }
+}
 
 AudioProcessingSimulator::ScopedTimer::~ScopedTimer() {
   int64_t interval = rtc::TimeNanos() - start_time_;
@@ -88,6 +118,12 @@ void AudioProcessingSimulator::ProcessStream(bool fixed_interface) {
 
   if (buffer_writer_) {
     buffer_writer_->Write(*out_buf_);
+  }
+
+  if (residual_echo_likelihood_graph_writer_.is_open()) {
+    auto stats = ap_->GetStatistics();
+    residual_echo_likelihood_graph_writer_ << stats.residual_echo_likelihood
+                                           << ", ";
   }
 
   ++num_process_stream_calls_;
@@ -218,6 +254,7 @@ void AudioProcessingSimulator::DestroyAudioProcessor() {
 
 void AudioProcessingSimulator::CreateAudioProcessor() {
   Config config;
+  AudioProcessing::Config apm_config;
   if (settings_.use_bf && *settings_.use_bf) {
     config.Set<Beamforming>(new Beamforming(
         true, ParseArrayGeometry(*settings_.microphone_positions),
@@ -231,11 +268,15 @@ void AudioProcessingSimulator::CreateAudioProcessor() {
     config.Set<Intelligibility>(new Intelligibility(*settings_.use_ie));
   }
   if (settings_.use_aec3) {
-    config.Set<EchoCanceller3>(new EchoCanceller3(*settings_.use_aec3));
+    apm_config.echo_canceller3.enabled = *settings_.use_aec3;
   }
   if (settings_.use_lc) {
-    config.Set<LevelControl>(new LevelControl(true));
+    apm_config.level_controller.enabled = *settings_.use_lc;
   }
+  if (settings_.use_hpf) {
+    apm_config.high_pass_filter.enabled = *settings_.use_hpf;
+  }
+
   if (settings_.use_refined_adaptive_filter) {
     config.Set<RefinedAdaptiveFilter>(
         new RefinedAdaptiveFilter(*settings_.use_refined_adaptive_filter));
@@ -244,8 +285,16 @@ void AudioProcessingSimulator::CreateAudioProcessor() {
       !settings_.use_extended_filter || *settings_.use_extended_filter));
   config.Set<DelayAgnostic>(new DelayAgnostic(!settings_.use_delay_agnostic ||
                                               *settings_.use_delay_agnostic));
+  config.Set<ExperimentalAgc>(new ExperimentalAgc(
+      !settings_.use_experimental_agc || *settings_.use_experimental_agc));
+  if (settings_.use_ed) {
+    apm_config.residual_echo_detector.enabled = *settings_.use_ed;
+  }
 
   ap_.reset(AudioProcessing::Create(config));
+  RTC_CHECK(ap_);
+
+  ap_->ApplyConfig(apm_config);
 
   if (settings_.use_aec) {
     RTC_CHECK_EQ(AudioProcessing::kNoError,
@@ -258,10 +307,6 @@ void AudioProcessingSimulator::CreateAudioProcessor() {
   if (settings_.use_agc) {
     RTC_CHECK_EQ(AudioProcessing::kNoError,
                  ap_->gain_control()->Enable(*settings_.use_agc));
-  }
-  if (settings_.use_hpf) {
-    RTC_CHECK_EQ(AudioProcessing::kNoError,
-                 ap_->high_pass_filter()->Enable(*settings_.use_hpf));
   }
   if (settings_.use_ns) {
     RTC_CHECK_EQ(AudioProcessing::kNoError,
@@ -284,7 +329,11 @@ void AudioProcessingSimulator::CreateAudioProcessor() {
                  ap_->gain_control()->set_target_level_dbfs(
                      *settings_.agc_target_level));
   }
-
+  if (settings_.agc_compression_gain) {
+    RTC_CHECK_EQ(AudioProcessing::kNoError,
+                 ap_->gain_control()->set_compression_gain_db(
+                     *settings_.agc_compression_gain));
+  }
   if (settings_.agc_mode) {
     RTC_CHECK_EQ(
         AudioProcessing::kNoError,

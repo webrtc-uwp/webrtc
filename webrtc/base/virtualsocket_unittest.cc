@@ -137,10 +137,10 @@ struct Receiver : public MessageHandler, public sigslot::has_slots<> {
 
 class VirtualSocketServerTest : public testing::Test {
  public:
-  VirtualSocketServerTest() : ss_(new VirtualSocketServer(NULL)),
-                              kIPv4AnyAddress(IPAddress(INADDR_ANY), 0),
-                              kIPv6AnyAddress(IPAddress(in6addr_any), 0) {
-  }
+  VirtualSocketServerTest()
+      : ss_(new VirtualSocketServer(nullptr)),
+        kIPv4AnyAddress(IPAddress(INADDR_ANY), 0),
+        kIPv6AnyAddress(IPAddress(in6addr_any), 0) {}
 
   void CheckPortIncrementalization(const SocketAddress& post,
                                    const SocketAddress& pre) {
@@ -263,7 +263,7 @@ class VirtualSocketServerTest : public testing::Test {
 
     // No pending server connections
     EXPECT_FALSE(sink.Check(server, testing::SSE_READ));
-    EXPECT_TRUE(NULL == server->Accept(&accept_addr));
+    EXPECT_TRUE(nullptr == server->Accept(&accept_addr));
     EXPECT_EQ(AF_UNSPEC, accept_addr.family());
 
     // Attempt connect to listening socket
@@ -287,7 +287,7 @@ class VirtualSocketServerTest : public testing::Test {
     // Server has pending connection
     EXPECT_TRUE(sink.Check(server, testing::SSE_READ));
     Socket* accepted = server->Accept(&accept_addr);
-    EXPECT_TRUE(NULL != accepted);
+    EXPECT_TRUE(nullptr != accepted);
     EXPECT_NE(accept_addr, kEmptyAddr);
     EXPECT_EQ(accepted->GetRemoteAddress(), accept_addr);
 
@@ -330,7 +330,7 @@ class VirtualSocketServerTest : public testing::Test {
 
     // No pending server connections
     EXPECT_FALSE(sink.Check(server, testing::SSE_READ));
-    EXPECT_TRUE(NULL == server->Accept(&accept_addr));
+    EXPECT_TRUE(nullptr == server->Accept(&accept_addr));
     EXPECT_EQ(accept_addr, nil_addr);
 
     // Connection failed
@@ -409,7 +409,7 @@ class VirtualSocketServerTest : public testing::Test {
     // Server accepts connection
     EXPECT_TRUE(sink.Check(server.get(), testing::SSE_READ));
     std::unique_ptr<AsyncSocket> accepted(server->Accept(&accept_addr));
-    ASSERT_TRUE(NULL != accepted.get());
+    ASSERT_TRUE(nullptr != accepted.get());
     sink.Monitor(accepted.get());
 
     // Client closes before connection complets
@@ -686,7 +686,7 @@ class VirtualSocketServerTest : public testing::Test {
   // incremental port behavior could ensure the 2 Binds result in different
   // address.
   void DelayTest(const SocketAddress& initial_addr) {
-    time_t seed = ::time(NULL);
+    time_t seed = ::time(nullptr);
     LOG(LS_VERBOSE) << "seed = " << seed;
     srand(static_cast<unsigned int>(seed));
 
@@ -766,7 +766,7 @@ class VirtualSocketServerTest : public testing::Test {
       ss_->ProcessMessagesUntilIdle();
       EXPECT_TRUE(sink.Check(server, testing::SSE_READ));
       Socket* accepted = server->Accept(&accept_address);
-      EXPECT_TRUE(NULL != accepted);
+      EXPECT_TRUE(nullptr != accepted);
       EXPECT_NE(kEmptyAddr, accept_address);
       ss_->ProcessMessagesUntilIdle();
       EXPECT_TRUE(sink.Check(client, testing::SSE_OPEN));
@@ -777,7 +777,7 @@ class VirtualSocketServerTest : public testing::Test {
       ss_->ProcessMessagesUntilIdle();
 
       EXPECT_FALSE(sink.Check(server, testing::SSE_READ));
-      EXPECT_TRUE(NULL == server->Accept(&accept_address));
+      EXPECT_TRUE(nullptr == server->Accept(&accept_address));
       EXPECT_EQ(accept_address, kEmptyAddr);
       EXPECT_EQ(client->GetState(), AsyncSocket::CS_CLOSED);
       EXPECT_FALSE(sink.Check(client, testing::SSE_OPEN));
@@ -818,9 +818,7 @@ class VirtualSocketServerTest : public testing::Test {
   virtual void SetUp() {
     Thread::Current()->set_socketserver(ss_);
   }
-  virtual void TearDown() {
-    Thread::Current()->set_socketserver(NULL);
-  }
+  virtual void TearDown() { Thread::Current()->set_socketserver(nullptr); }
 
   VirtualSocketServer* ss_;
   const SocketAddress kIPv4AnyAddress;
@@ -1018,10 +1016,73 @@ TEST_F(VirtualSocketServerTest, CanSendDatagramFromUnboundIPv6ToIPv4Any) {
                           true);
 }
 
+TEST_F(VirtualSocketServerTest, SetSendingBlockedWithUdpSocket) {
+  AsyncSocket* socket1 =
+      ss_->CreateAsyncSocket(kIPv4AnyAddress.family(), SOCK_DGRAM);
+  AsyncSocket* socket2 =
+      ss_->CreateAsyncSocket(kIPv4AnyAddress.family(), SOCK_DGRAM);
+  socket1->Bind(kIPv4AnyAddress);
+  socket2->Bind(kIPv4AnyAddress);
+  TestClient* client1 = new TestClient(new AsyncUDPSocket(socket1));
+
+  ss_->SetSendingBlocked(true);
+  EXPECT_EQ(-1, client1->SendTo("foo", 3, socket2->GetLocalAddress()));
+  EXPECT_TRUE(socket1->IsBlocking());
+  EXPECT_EQ(0, client1->ready_to_send_count());
+
+  ss_->SetSendingBlocked(false);
+  EXPECT_EQ(1, client1->ready_to_send_count());
+  EXPECT_EQ(3, client1->SendTo("foo", 3, socket2->GetLocalAddress()));
+}
+
+TEST_F(VirtualSocketServerTest, SetSendingBlockedWithTcpSocket) {
+  constexpr size_t kBufferSize = 1024;
+  ss_->set_send_buffer_capacity(kBufferSize);
+  ss_->set_recv_buffer_capacity(kBufferSize);
+
+  testing::StreamSink sink;
+  AsyncSocket* socket1 =
+      ss_->CreateAsyncSocket(kIPv4AnyAddress.family(), SOCK_STREAM);
+  AsyncSocket* socket2 =
+      ss_->CreateAsyncSocket(kIPv4AnyAddress.family(), SOCK_STREAM);
+  sink.Monitor(socket1);
+  sink.Monitor(socket2);
+  socket1->Bind(kIPv4AnyAddress);
+  socket2->Bind(kIPv4AnyAddress);
+
+  // Connect sockets.
+  EXPECT_EQ(0, socket1->Connect(socket2->GetLocalAddress()));
+  EXPECT_EQ(0, socket2->Connect(socket1->GetLocalAddress()));
+  ss_->ProcessMessagesUntilIdle();
+
+  char data[kBufferSize] = {};
+
+  // First Send call will fill the send buffer but not send anything.
+  ss_->SetSendingBlocked(true);
+  EXPECT_EQ(static_cast<int>(kBufferSize), socket1->Send(data, kBufferSize));
+  ss_->ProcessMessagesUntilIdle();
+  EXPECT_FALSE(sink.Check(socket1, testing::SSE_WRITE));
+  EXPECT_FALSE(sink.Check(socket2, testing::SSE_READ));
+  EXPECT_FALSE(socket1->IsBlocking());
+
+  // Since the send buffer is full, next Send will result in EWOULDBLOCK.
+  EXPECT_EQ(-1, socket1->Send(data, kBufferSize));
+  EXPECT_FALSE(sink.Check(socket1, testing::SSE_WRITE));
+  EXPECT_FALSE(sink.Check(socket2, testing::SSE_READ));
+  EXPECT_TRUE(socket1->IsBlocking());
+
+  // When sending is unblocked, the buffered data should be sent and
+  // SignalWriteEvent should fire.
+  ss_->SetSendingBlocked(false);
+  ss_->ProcessMessagesUntilIdle();
+  EXPECT_TRUE(sink.Check(socket1, testing::SSE_WRITE));
+  EXPECT_TRUE(sink.Check(socket2, testing::SSE_READ));
+}
+
 TEST_F(VirtualSocketServerTest, CreatesStandardDistribution) {
   const uint32_t kTestMean[] = {10, 100, 333, 1000};
   const double kTestDev[] = { 0.25, 0.1, 0.01 };
-  // TODO: The current code only works for 1000 data points or more.
+  // TODO(deadbeef): The current code only works for 1000 data points or more.
   const uint32_t kTestSamples[] = {/*10, 100,*/ 1000};
   for (size_t midx = 0; midx < arraysize(kTestMean); ++midx) {
     for (size_t didx = 0; didx < arraysize(kTestDev); ++didx) {
@@ -1033,7 +1094,7 @@ TEST_F(VirtualSocketServerTest, CreatesStandardDistribution) {
             VirtualSocketServer::CreateDistribution(kTestMean[midx],
                                                     kStdDev,
                                                     kTestSamples[sidx]);
-        ASSERT_TRUE(NULL != f);
+        ASSERT_TRUE(nullptr != f);
         ASSERT_EQ(kTestSamples[sidx], f->size());
         double sum = 0;
         for (uint32_t i = 0; i < f->size(); ++i) {

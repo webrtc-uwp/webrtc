@@ -10,8 +10,8 @@
 
 #include <set>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/video_coding/sequence_number_util.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 class TestSeqNumUtil : public ::testing::Test {

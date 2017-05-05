@@ -65,14 +65,14 @@ void VCMTiming::UpdateHistograms() const {
   if (elapsed_sec < metrics::kMinRunTimeInSeconds) {
     return;
   }
-  RTC_LOGGED_HISTOGRAM_COUNTS_100(
+  RTC_HISTOGRAM_COUNTS_100(
       "WebRTC.Video.DecodedFramesPerSecond",
       static_cast<int>((num_decoded_frames_ / elapsed_sec) + 0.5f));
-  RTC_LOGGED_HISTOGRAM_PERCENTAGE(
+  RTC_HISTOGRAM_PERCENTAGE(
       "WebRTC.Video.DelayedFramesToRenderer",
       num_delayed_decoded_frames_ * 100 / num_decoded_frames_);
   if (num_delayed_decoded_frames_ > 0) {
-    RTC_LOGGED_HISTOGRAM_COUNTS_1000(
+    RTC_HISTOGRAM_COUNTS_1000(
         "WebRTC.Video.DelayedFramesToRenderer_AvgDelayInMs",
         sum_missed_render_deadline_ms_ / num_delayed_decoded_frames_);
   }
@@ -156,6 +156,7 @@ void VCMTiming::UpdateCurrentDelay(uint32_t frame_timestamp) {
       max_change_ms = kDelayMaxChangeMsPerS *
                       (frame_timestamp - prev_frame_timestamp_) / 90000;
     }
+
     if (max_change_ms <= 0) {
       // Any changes less than 1 ms are truncated and
       // will be postponed. Negative change will be due
@@ -296,7 +297,7 @@ int VCMTiming::TargetDelayInternal() const {
                   jitter_delay_ms_ + RequiredDecodeTimeMs() + render_delay_ms_);
 }
 
-void VCMTiming::GetTimings(int* decode_ms,
+bool VCMTiming::GetTimings(int* decode_ms,
                            int* max_decode_ms,
                            int* current_delay_ms,
                            int* target_delay_ms,
@@ -317,6 +318,7 @@ void VCMTiming::GetTimings(int* decode_ms,
   *current_endtoend_delay_ms =  current_endtoend_delay_ms_,
 #endif
   *render_delay_ms = render_delay_ms_;
+  return (num_decoded_frames_ > 0);
 }
 
 }  // namespace webrtc

@@ -10,19 +10,19 @@
 
 #include <memory>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/bwe_test.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/packet_receiver.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/packet_sender.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 
 namespace webrtc {
 namespace testing {
 namespace bwe {
-#if BWE_TEST_LOGGING_COMPILE_TIME_ENABLE
+
 // This test fixture is used to instantiate tests running with adaptive video
 // senders.
 class BweSimulation : public BweTest,
@@ -47,7 +47,7 @@ class BweSimulation : public BweTest,
 INSTANTIATE_TEST_CASE_P(VideoSendersTest,
                         BweSimulation,
                         ::testing::Values(kRembEstimator,
-                                          kFullSendSideEstimator,
+                                          kSendSideEstimator,
                                           kNadaEstimator));
 
 TEST_P(BweSimulation, SprintUplinkTest) {
@@ -178,6 +178,36 @@ TEST_P(BweSimulation, Choke200kbps30kbps200kbps) {
   RunFor(60 * 1000);
 }
 
+TEST_P(BweSimulation, PacerChoke50kbps15kbps50kbps) {
+  AdaptiveVideoSource source(0, 30, 300, 0, 0);
+  PacedVideoSender sender(&uplink_, &source, GetParam());
+  ChokeFilter filter(&uplink_, 0);
+  RateCounterFilter counter(&uplink_, 0, "Receiver", bwe_names[GetParam()]);
+  PacketReceiver receiver(&uplink_, 0, GetParam(), true, true);
+  filter.set_capacity_kbps(50);
+  filter.set_max_delay_ms(500);
+  RunFor(60 * 1000);
+  filter.set_capacity_kbps(15);
+  RunFor(60 * 1000);
+  filter.set_capacity_kbps(50);
+  RunFor(60 * 1000);
+}
+
+TEST_P(BweSimulation, Choke50kbps15kbps50kbps) {
+  AdaptiveVideoSource source(0, 30, 300, 0, 0);
+  VideoSender sender(&uplink_, &source, GetParam());
+  ChokeFilter filter(&uplink_, 0);
+  RateCounterFilter counter(&uplink_, 0, "Receiver", bwe_names[GetParam()]);
+  PacketReceiver receiver(&uplink_, 0, GetParam(), true, true);
+  filter.set_capacity_kbps(50);
+  filter.set_max_delay_ms(500);
+  RunFor(60 * 1000);
+  filter.set_capacity_kbps(15);
+  RunFor(60 * 1000);
+  filter.set_capacity_kbps(50);
+  RunFor(60 * 1000);
+}
+
 TEST_P(BweSimulation, GoogleWifiTrace3Mbps) {
   AdaptiveVideoSource source(0, 30, 300, 0, 0);
   VideoSender sender(&uplink_, &source, GetParam());
@@ -231,6 +261,19 @@ TEST_P(BweSimulation, LinearDecreasingCapacity) {
 
 TEST_P(BweSimulation, PacerGoogleWifiTrace3Mbps) {
   PeriodicKeyFrameSource source(0, 30, 300, 0, 0, 1000);
+  PacedVideoSender sender(&uplink_, &source, GetParam());
+  RateCounterFilter counter1(&uplink_, 0, "sender_output",
+                             bwe_names[GetParam()]);
+  TraceBasedDeliveryFilter filter(&uplink_, 0, "link_capacity");
+  filter.set_max_delay_ms(500);
+  RateCounterFilter counter2(&uplink_, 0, "Receiver", bwe_names[GetParam()]);
+  PacketReceiver receiver(&uplink_, 0, GetParam(), true, true);
+  ASSERT_TRUE(filter.Init(test::ResourcePath("google-wifi-3mbps", "rx")));
+  RunFor(300 * 1000);
+}
+
+TEST_P(BweSimulation, PacerGoogleWifiTrace3MbpsLowFramerate) {
+  PeriodicKeyFrameSource source(0, 5, 300, 0, 0, 1000);
   PacedVideoSender sender(&uplink_, &source, GetParam());
   RateCounterFilter counter1(&uplink_, 0, "sender_output",
                              bwe_names[GetParam()]);
@@ -332,7 +375,7 @@ TEST_P(BweSimulation, TcpFairness1000msTest) {
   RunFairnessTest(GetParam(), 1, 1, 1000, 2000, 1000, 50, 0, offset_ms);
 }
 
-// The following test cases begin with "Evaluation" as a referrence to the
+// The following test cases begin with "Evaluation" as a reference to the
 // Internet draft https://tools.ietf.org/html/draft-ietf-rmcat-eval-test-01.
 
 TEST_P(BweSimulation, Evaluation1) {
@@ -380,20 +423,20 @@ TEST_P(BweSimulation, Evaluation8) {
 TEST_P(BweSimulation, GccComparison1) {
   RunVariableCapacity1SingleFlow(GetParam());
   BweTest gcc_test(false);
-  gcc_test.RunVariableCapacity1SingleFlow(kFullSendSideEstimator);
+  gcc_test.RunVariableCapacity1SingleFlow(kSendSideEstimator);
 }
 
 TEST_P(BweSimulation, GccComparison2) {
   const size_t kNumFlows = 2;
   RunVariableCapacity2MultipleFlows(GetParam(), kNumFlows);
   BweTest gcc_test(false);
-  gcc_test.RunVariableCapacity2MultipleFlows(kFullSendSideEstimator, kNumFlows);
+  gcc_test.RunVariableCapacity2MultipleFlows(kSendSideEstimator, kNumFlows);
 }
 
 TEST_P(BweSimulation, GccComparison3) {
   RunBidirectionalFlow(GetParam());
   BweTest gcc_test(false);
-  gcc_test.RunBidirectionalFlow(kFullSendSideEstimator);
+  gcc_test.RunBidirectionalFlow(kSendSideEstimator);
 }
 
 TEST_P(BweSimulation, GccComparison4) {
@@ -405,13 +448,13 @@ TEST_P(BweSimulation, GccComparison4) {
 TEST_P(BweSimulation, GccComparison5) {
   RunRoundTripTimeFairness(GetParam());
   BweTest gcc_test(false);
-  gcc_test.RunRoundTripTimeFairness(kFullSendSideEstimator);
+  gcc_test.RunRoundTripTimeFairness(kSendSideEstimator);
 }
 
 TEST_P(BweSimulation, GccComparison6) {
   RunLongTcpFairness(GetParam());
   BweTest gcc_test(false);
-  gcc_test.RunLongTcpFairness(kFullSendSideEstimator);
+  gcc_test.RunLongTcpFairness(kSendSideEstimator);
 }
 
 TEST_P(BweSimulation, GccComparison7) {
@@ -426,14 +469,14 @@ TEST_P(BweSimulation, GccComparison7) {
                               tcp_starting_times_ms);
 
   BweTest gcc_test(false);
-  gcc_test.RunMultipleShortTcpFairness(
-      kFullSendSideEstimator, tcp_file_sizes_bytes, tcp_starting_times_ms);
+  gcc_test.RunMultipleShortTcpFairness(kSendSideEstimator, tcp_file_sizes_bytes,
+                                       tcp_starting_times_ms);
 }
 
 TEST_P(BweSimulation, GccComparison8) {
   RunPauseResumeFlows(GetParam());
   BweTest gcc_test(false);
-  gcc_test.RunPauseResumeFlows(kFullSendSideEstimator);
+  gcc_test.RunPauseResumeFlows(kSendSideEstimator);
 }
 
 TEST_P(BweSimulation, GccComparisonChoke) {
@@ -442,10 +485,9 @@ TEST_P(BweSimulation, GccComparisonChoke) {
   RunChoke(GetParam(), capacities_kbps);
 
   BweTest gcc_test(false);
-  gcc_test.RunChoke(kFullSendSideEstimator, capacities_kbps);
+  gcc_test.RunChoke(kSendSideEstimator, capacities_kbps);
 }
 
-#endif  // BWE_TEST_LOGGING_COMPILE_TIME_ENABLE
 }  // namespace bwe
 }  // namespace testing
 }  // namespace webrtc

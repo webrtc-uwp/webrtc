@@ -26,6 +26,13 @@ const char kRtxCodecName[] = "rtx";
 const char kRedCodecName[] = "red";
 const char kUlpfecCodecName[] = "ulpfec";
 
+// TODO(brandtr): Change this to 'flexfec' when we are confident that the
+// header format is not changing anymore.
+const char kFlexfecCodecName[] = "flexfec-03";
+
+// draft-ietf-payload-flexible-fec-scheme-02.txt
+const char kFlexfecFmtpRepairWindow[] = "repair-window";
+
 const char kCodecParamAssociatedPayloadType[] = "apt";
 
 const char kOpusCodecName[] = "opus";
@@ -83,10 +90,10 @@ const char kCodecParamStartBitrate[] = "x-google-start-bitrate";
 const char kCodecParamMaxQuantization[] = "x-google-max-quantization";
 const char kCodecParamPort[] = "x-google-port";
 
-const int kGoogleRtpDataCodecId = 101;
+const int kGoogleRtpDataCodecPlType = 109;
 const char kGoogleRtpDataCodecName[] = "google-data";
 
-const int kGoogleSctpDataCodecId = 108;
+const int kGoogleSctpDataCodecPlType = 108;
 const char kGoogleSctpDataCodecName[] = "google-sctp-data";
 
 const char kComfortNoiseCodecName[] = "CN";
@@ -99,19 +106,8 @@ const char kH264CodecName[] = "H264";
 const char kH264FmtpProfileLevelId[] = "profile-level-id";
 const char kH264FmtpLevelAsymmetryAllowed[] = "level-asymmetry-allowed";
 const char kH264FmtpPacketizationMode[] = "packetization-mode";
+const char kH264FmtpSpropParameterSets[] = "sprop-parameter-sets";
 const char kH264ProfileLevelConstrainedBaseline[] = "42e01f";
 
-const int kDefaultVp8PlType = 100;
-const int kDefaultVp9PlType = 101;
-const int kDefaultH264PlType = 107;
-const int kDefaultRedPlType = 116;
-const int kDefaultUlpfecType = 117;
-const int kDefaultRtxVp8PlType = 96;
-const int kDefaultRtxVp9PlType = 97;
-const int kDefaultRtxRedPlType = 98;
-const int kDefaultRtxH264PlType = 99;
-
-const int kDefaultVideoMaxWidth = 640;
-const int kDefaultVideoMaxHeight = 400;
-const int kDefaultVideoMaxFramerate = 30;
+const int kDefaultVideoMaxFramerate = 60;
 }  // namespace cricket

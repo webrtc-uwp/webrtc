@@ -12,8 +12,6 @@
 #include <memory>
 #include <vector>
 
-#include "testing/gmock/include/gmock/gmock.h"
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/rate_limiter.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/rtp_rtcp/include/receive_statistics.h"
@@ -21,6 +19,8 @@
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_receiver_audio.h"
 #include "webrtc/modules/rtp_rtcp/test/testAPI/test_api.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 namespace {
@@ -46,7 +46,6 @@ class RtcpCallback : public RtcpIntraFrameObserver {
                               uint64_t pictureId) {
     EXPECT_EQ(kTestPictureId, pictureId);
   }
-  virtual void OnLocalSsrcChanged(uint32_t old_ssrc, uint32_t new_ssrc) {}
 
  private:
   RtpRtcp* _rtpRtcpModule;
@@ -57,7 +56,7 @@ class TestRtpFeedback : public NullRtpFeedback {
   explicit TestRtpFeedback(RtpRtcp* rtp_rtcp) : rtp_rtcp_(rtp_rtcp) {}
   virtual ~TestRtpFeedback() {}
 
-  void OnIncomingSSRCChanged(const uint32_t ssrc) override {
+  void OnIncomingSSRCChanged(uint32_t ssrc) override {
     rtp_rtcp_->SetRemoteSSRC(ssrc);
   }
 
@@ -95,10 +94,8 @@ class RtpRtcpRtcpTest : public ::testing::Test {
     configuration.intra_frame_callback = myRTCPFeedback1;
     configuration.retransmission_rate_limiter = &retransmission_rate_limiter_;
 
-    rtp_payload_registry1_.reset(new RTPPayloadRegistry(
-            RTPPayloadStrategy::CreateStrategy(true)));
-    rtp_payload_registry2_.reset(new RTPPayloadRegistry(
-            RTPPayloadStrategy::CreateStrategy(true)));
+    rtp_payload_registry1_.reset(new RTPPayloadRegistry());
+    rtp_payload_registry2_.reset(new RTPPayloadRegistry());
 
     module1 = RtpRtcp::CreateRtpRtcp(configuration);
 
@@ -147,19 +144,9 @@ class RtpRtcpRtcpTest : public ::testing::Test {
     memcpy(voice_codec.plname, "PCMU", 5);
 
     EXPECT_EQ(0, module1->RegisterSendPayload(voice_codec));
-    EXPECT_EQ(0, rtp_receiver1_->RegisterReceivePayload(
-        voice_codec.plname,
-        voice_codec.pltype,
-        voice_codec.plfreq,
-        voice_codec.channels,
-        (voice_codec.rate < 0) ? 0 : voice_codec.rate));
+    EXPECT_EQ(0, rtp_receiver1_->RegisterReceivePayload(voice_codec));
     EXPECT_EQ(0, module2->RegisterSendPayload(voice_codec));
-    EXPECT_EQ(0, rtp_receiver2_->RegisterReceivePayload(
-        voice_codec.plname,
-        voice_codec.pltype,
-        voice_codec.plfreq,
-        voice_codec.channels,
-        (voice_codec.rate < 0) ? 0 : voice_codec.rate));
+    EXPECT_EQ(0, rtp_receiver2_->RegisterReceivePayload(voice_codec));
 
     // We need to send one RTP packet to get the RTCP packet to be accepted by
     // the receiving module.

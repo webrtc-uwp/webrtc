@@ -17,11 +17,6 @@
 #define snprintf _snprintf
 #endif
 #undef ERROR  // wingdi.h
-
-#if defined(WINRT)
-#include <stdlib.h>
-#include "webrtc/base/win32.h"
-#endif // defined(WINRT)
 #endif
 
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
@@ -115,7 +110,7 @@ CriticalSection g_log_crit;
 // The list of logging streams currently configured.
 // Note: we explicitly do not clean this up, because of the uncertain ordering
 // of destructors at program exit.  Let the person who sets the stream trigger
-// cleanup by setting to NULL, or let it leak (safe at program exit).
+// cleanup by setting to null, or let it leak (safe at program exit).
 LogMessage::StreamList LogMessage::streams_ GUARDED_BY(g_log_crit);
 
 // Boolean options default to false (0)
@@ -145,7 +140,7 @@ LogMessage::LogMessage(const char* file,
     print_stream_ << "[" << std::dec << id << "] ";
   }
 
-  if (file != NULL)
+  if (file != nullptr)
     print_stream_ << "(" << FilenameFromPath(file)  << ":" << line << "): ";
 
   if (err_ctx != ERRCTX_NONE) {
@@ -155,27 +150,16 @@ LogMessage::LogMessage(const char* file,
       case ERRCTX_ERRNO:
         tmp << " " << strerror(err);
         break;
-#if WEBRTC_WIN
+#ifdef WEBRTC_WIN
       case ERRCTX_HRESULT: {
-        WCHAR msgbuf[256];
+        char msgbuf[256];
         DWORD flags = FORMAT_MESSAGE_FROM_SYSTEM;
-#if defined(WINRT)
-        HMODULE hmod = NULL;
-        if (module) {
-          wchar_t modulew[255];
-          size_t temp;
-          mbstowcs_s(&temp, modulew, 255, module, _TRUNCATE);
-          hmod = LoadPackagedLibrary(modulew, 0);
-        }
-#else // defined(WINRT)
         HMODULE hmod = GetModuleHandleA(module);
-#endif // defined(WINRT)
         if (hmod)
           flags |= FORMAT_MESSAGE_FROM_HMODULE;
-        if (DWORD len = FormatMessageW(
-            flags, hmod, err,
-            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            msgbuf, sizeof(msgbuf) / sizeof(msgbuf[0]), NULL)) {
+        if (DWORD len = FormatMessageA(
+                flags, hmod, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                msgbuf, sizeof(msgbuf) / sizeof(msgbuf[0]), nullptr)) {
           while ((len > 0) &&
               isspace(static_cast<unsigned char>(msgbuf[len-1]))) {
             msgbuf[--len] = 0;
@@ -203,7 +187,12 @@ LogMessage::LogMessage(const char* file,
                        int line,
                        LoggingSeverity sev,
                        const std::string& tag)
-    : LogMessage(file, line, sev, ERRCTX_NONE, 0 /* err */, NULL /* module */) {
+    : LogMessage(file,
+                 line,
+                 sev,
+                 ERRCTX_NONE,
+                 0 /* err */,
+                 nullptr /* module */) {
   tag_ = tag;
   print_stream_ << tag << ": ";
 }
@@ -232,7 +221,7 @@ int64_t LogMessage::LogStartTime() {
 }
 
 uint32_t LogMessage::WallClockStartTime() {
-  static const uint32_t g_start_wallclock = time(NULL);
+  static const uint32_t g_start_wallclock = time(nullptr);
   return g_start_wallclock;
 }
 
@@ -319,7 +308,7 @@ void LogMessage::ConfigureLogging(const char* params) {
     }
   }
 
-#if defined(WEBRTC_WIN) && !defined(WINRT)
+#if defined(WEBRTC_WIN)
   if ((LS_NONE != debug_level) && !::IsDebuggerPresent()) {
     // First, attempt to attach to our parent's console... so if you invoke
     // from the command line, we'll see the output there.  Otherwise, create
@@ -364,7 +353,7 @@ void LogMessage::OutputToDebug(const std::string& str,
                                               "logToStdErr",
                                               kCFStringEncodingUTF8);
   CFStringRef domain = CFBundleGetIdentifier(CFBundleGetMainBundle());
-  if (key != NULL && domain != NULL) {
+  if (key != nullptr && domain != nullptr) {
     Boolean exists_and_is_valid;
     Boolean should_log =
         CFPreferencesGetAppBooleanValue(key, domain, &exists_and_is_valid);
@@ -372,14 +361,11 @@ void LogMessage::OutputToDebug(const std::string& str,
     // stderr.
     log_to_stderr = exists_and_is_valid && should_log;
   }
-  if (key != NULL) {
+  if (key != nullptr) {
     CFRelease(key);
   }
 #endif
-#if defined(WINRT)
-  // Always log to the debugger.
-  OutputDebugString(rtc::ToUtf16(str).c_str());
-#elif defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN)
   // Always log to the debugger.
   // Perhaps stderr should be controlled by a preference, as on Mac?
   OutputDebugStringA(str.c_str());
@@ -461,7 +447,7 @@ void LogMultiline(LoggingSeverity level, const char* label, bool input,
 
   const char * direction = (input ? " << " : " >> ");
 
-  // NULL data means to flush our count of unprintable characters.
+  // null data means to flush our count of unprintable characters.
   if (!data) {
     if (state && state->unprintable_count_[input]) {
       LOG_V(level) << label << direction << "## "

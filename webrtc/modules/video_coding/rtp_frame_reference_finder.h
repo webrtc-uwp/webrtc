@@ -14,7 +14,7 @@
 #include <array>
 #include <map>
 #include <memory>
-#include <queue>
+#include <deque>
 #include <set>
 #include <utility>
 
@@ -40,16 +40,29 @@ class OnCompleteFrameCallback {
 class RtpFrameReferenceFinder {
  public:
   explicit RtpFrameReferenceFinder(OnCompleteFrameCallback* frame_callback);
+
+  // Manage this frame until:
+  //  - We have all information needed to determine its references, after
+  //    which |frame_callback_| is called with the completed frame, or
+  //  - We have too many stashed frames (determined by |kMaxStashedFrames)
+  //    so we drop this frame, or
+  //  - It gets cleared by ClearTo, which also means we drop it.
   void ManageFrame(std::unique_ptr<RtpFrameObject> frame);
+
+  // Notifies that padding has been received, which the reference finder
+  // might need to calculate the references of a frame.
   void PaddingReceived(uint16_t seq_num);
 
+  // Clear all stashed frames that include packets older than |seq_num|.
+  void ClearTo(uint16_t seq_num);
+
  private:
-  static const uint16_t kPicIdLength = 1 << 7;
+  static const uint16_t kPicIdLength = 1 << 15;
   static const uint8_t kMaxTemporalLayers = 5;
-  static const int kMaxLayerInfo = 10;
-  static const int kMaxStashedFrames = 10;
-  static const int kMaxNotYetReceivedFrames = 20;
-  static const int kMaxGofSaved = 15;
+  static const int kMaxLayerInfo = 50;
+  static const int kMaxStashedFrames = 50;
+  static const int kMaxNotYetReceivedFrames = 100;
+  static const int kMaxGofSaved = 50;
   static const int kMaxPaddingAge = 100;
 
 
@@ -116,6 +129,24 @@ class RtpFrameReferenceFinder {
   // All picture ids are unwrapped to 16 bits.
   uint16_t UnwrapPictureId(uint16_t picture_id) EXCLUSIVE_LOCKS_REQUIRED(crit_);
 
+  // Returns true if the frame is old and should be dropped.
+  // TODO(philipel): Remove when VP9 PID/TL0 does not jump mid-stream (should be
+  //                 around M59).
+  bool Vp9PidTl0Fix(const RtpFrameObject& frame,
+                    int16_t* picture_id,
+                    int16_t* tl0_pic_idx) EXCLUSIVE_LOCKS_REQUIRED(crit_);
+
+  // TODO(philipel): Remove when VP9 PID/TL0 does not jump mid-stream (should be
+  //                 around M59).
+  bool DetectVp9PicIdJump(int fixed_pid,
+                          int fixed_tl0,
+                          uint32_t timestamp) const
+      EXCLUSIVE_LOCKS_REQUIRED(crit_);
+
+  // TODO(philipel): Remove when VP9 PID/TL0 does not jump mid-stream (should be
+  //                 around M59).
+  bool DetectVp9Tl0PicIdxJump(int fixed_tl0, uint32_t timestamp) const
+      EXCLUSIVE_LOCKS_REQUIRED(crit_);
 
   // For every group of pictures, hold two sequence numbers. The first being
   // the sequence number of the last packet of the last completed frame, and
@@ -146,7 +177,7 @@ class RtpFrameReferenceFinder {
 
   // Frames that have been fully received but didn't have all the information
   // needed to determine their references.
-  std::queue<std::unique_ptr<RtpFrameObject>> stashed_frames_ GUARDED_BY(crit_);
+  std::deque<std::unique_ptr<RtpFrameObject>> stashed_frames_ GUARDED_BY(crit_);
 
   // Holds the information about the last completed frame for a given temporal
   // layer given a Tl0 picture index.
@@ -177,7 +208,21 @@ class RtpFrameReferenceFinder {
              kMaxTemporalLayers>
       missing_frames_for_layer_ GUARDED_BY(crit_);
 
+  // How far frames have been cleared by sequence number. A frame will be
+  // cleared if it contains a packet with a sequence number older than
+  // |cleared_to_seq_num_|.
+  int cleared_to_seq_num_ GUARDED_BY(crit_);
+
   OnCompleteFrameCallback* frame_callback_;
+
+  // Vp9PidFix variables
+  // TODO(philipel): Remove when VP9 PID does not jump mid-stream.
+  int vp9_fix_last_timestamp_ = -1;
+  int vp9_fix_jump_timestamp_ = -1;
+  int vp9_fix_last_picture_id_ = -1;
+  int vp9_fix_pid_offset_ = 0;
+  int vp9_fix_last_tl0_pic_idx_ = -1;
+  int vp9_fix_tl0_pic_idx_offset_ = 0;
 };
 
 }  // namespace video_coding

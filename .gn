@@ -6,6 +6,8 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
+import("//build/dotfile_settings.gni")
+
 # The location of the build configuration file.
 buildconfig = "//build/config/BUILDCONFIG.gn"
 
@@ -20,48 +22,35 @@ secondary_source = "//build/secondary/"
 # "gn check" or "gn gen --check".
 # TODO(kjellander): Keep adding paths to this list as work in webrtc:5589 is done.
 check_targets = [
-  "//webrtc/modules/audio_coding:g711_test",
-  "//webrtc/modules/audio_coding:g722_test",
-  "//webrtc/modules/audio_coding:isac_fix_test",
-  "//webrtc/modules/audio_coding:isac_test",
-  "//webrtc/modules/audio_coding:webrtc_opus_fec_test",
+  "//webrtc/api/*",
+  "//webrtc/audio/*",
+  "//webrtc/call/*",
+  "//webrtc/common_video/*",
+  "//webrtc/modules/audio_coding/*",
+  "//webrtc/modules/audio_conference_mixer/*",
   "//webrtc/modules/audio_device/*",
   "//webrtc/modules/audio_mixer/*",
+  "//webrtc/modules/audio_processing/*",
+  "//webrtc/modules/bitrate_controller/*",
+  "//webrtc/modules/congestion_controller/*",
+  "//webrtc/modules/desktop_capture/*",
+  "//webrtc/modules/media_file/*",
+  "//webrtc/modules/pacing/*",
+  "//webrtc/modules/rtp_rtcp/*",
+  "//webrtc/modules/utility/*",
+  "//webrtc/modules/video_capture/*",
+  "//webrtc/modules/video_coding/*",
+  "//webrtc/modules/video_processing/*",
+  "//webrtc/modules/remote_bitrate_estimator/*",
+  "//webrtc/stats/*",
+  "//webrtc/voice_engine",
+  "//webrtc/voice_engine:audio_coder",
+  "//webrtc/voice_engine:file_player",
+  "//webrtc/voice_engine:file_recorder",
   "//webrtc/voice_engine:level_indicator",
-  "//webrtc/modules/audio_coding:ilbc_test",
-  "//webrtc/modules/audio_coding:isac",
-  "//webrtc/modules/audio_coding:isac_api_test",
-  "//webrtc/modules/audio_coding:isac_switch_samprate_test",
 ]
 
 # These are the list of GN files that run exec_script. This whitelist exists
 # to force additional review for new uses of exec_script, which is strongly
 # discouraged except for gypi_to_gn calls.
-exec_script_whitelist = [
-  "//build/config/BUILD.gn",
-  "//build/config/android/BUILD.gn",
-  "//build/config/android/config.gni",
-  "//build/config/android/internal_rules.gni",
-  "//build/config/android/rules.gni",
-  "//build/config/compiler/BUILD.gn",
-  "//build/config/gcc/gcc_version.gni",
-  "//build/config/ios/ios_sdk.gni",
-  "//build/config/linux/BUILD.gn",
-  "//build/config/linux/pkg_config.gni",
-  "//build/config/mac/mac_sdk.gni",
-  "//build/config/posix/BUILD.gn",
-  "//build/config/sysroot.gni",
-  "//build/config/win/BUILD.gn",
-  "//build/config/win/visual_studio_version.gni",
-  "//build/gn_helpers.py",
-  "//build/gypi_to_gn.py",
-  "//build/toolchain/concurrent_links.gni",
-  "//build/toolchain/gcc_toolchain.gni",
-  "//build/toolchain/mac/BUILD.gn",
-  "//build/toolchain/win/BUILD.gn",
-  "//third_party/boringssl/BUILD.gn",
-  "//third_party/openh264/BUILD.gn",
-  "//third_party/opus/BUILD.gn",
-  "//webrtc/modules/video_render/BUILD.gn",
-  "//webrtc/modules/video_render/BUILD.gn",
-]
+exec_script_whitelist = build_dotfile_settings.exec_script_whitelist

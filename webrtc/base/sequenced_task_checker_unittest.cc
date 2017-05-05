@@ -7,12 +7,13 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "testing/gtest/include/gtest/gtest.h"
+
 #include "webrtc/base/checks.h"
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/base/platform_thread.h"
 #include "webrtc/base/sequenced_task_checker.h"
 #include "webrtc/base/task_queue.h"
+#include "webrtc/test/gtest.h"
 
 namespace rtc {
 
@@ -34,14 +35,13 @@ class CallCalledSequentiallyOnThread {
   }
 
  private:
-  static bool Run(void* obj) {
+  static void Run(void* obj) {
     CallCalledSequentiallyOnThread* call_stuff_on_thread =
         static_cast<CallCalledSequentiallyOnThread*>(obj);
     EXPECT_EQ(
         call_stuff_on_thread->expect_true_,
         call_stuff_on_thread->sequenced_task_checker_->CalledSequentially());
     call_stuff_on_thread->thread_has_run_event_.Set();
-    return false;
   }
 
   const bool expect_true_;
@@ -197,7 +197,7 @@ TEST(SequencedTaskCheckerTest, DetachFromTaskQueueAndUseOnThread) {
   EXPECT_TRUE(done_event.Wait(1000));
 }
 
-#if !NDEBUG || DCHECK_ALWAYS_ON
+#if RTC_DCHECK_IS_ON
 TEST(SequencedTaskCheckerTest, MethodNotAllowedOnDifferentThreadInDebug) {
   RunMethodOnDifferentThread(false);
 }
@@ -207,7 +207,7 @@ TEST(SequencedTaskCheckerTest, MethodAllowedOnDifferentThreadInRelease) {
 }
 #endif
 
-#if !NDEBUG || DCHECK_ALWAYS_ON
+#if RTC_DCHECK_IS_ON
 TEST(SequencedTaskCheckerTest, MethodNotAllowedOnDifferentTaskQueueInDebug) {
   RunMethodOnDifferentTaskQueue(false);
 }
@@ -217,7 +217,7 @@ TEST(SequencedTaskCheckerTest, MethodAllowedOnDifferentTaskQueueInRelease) {
 }
 #endif
 
-#if !NDEBUG || DCHECK_ALWAYS_ON
+#if RTC_DCHECK_IS_ON
 TEST(SequencedTaskCheckerTest, DetachFromTaskQueueInDebug) {
   DetachThenCallFromDifferentTaskQueue(false);
 }

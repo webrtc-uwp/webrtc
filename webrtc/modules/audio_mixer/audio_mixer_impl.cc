@@ -12,582 +12,243 @@
 
 #include <algorithm>
 #include <functional>
+#include <iterator>
+#include <utility>
 
+#include "webrtc/base/logging.h"
 #include "webrtc/modules/audio_mixer/audio_frame_manipulator.h"
-#include "webrtc/modules/audio_mixer/audio_mixer_defines.h"
-#include "webrtc/modules/audio_processing/include/audio_processing.h"
-#include "webrtc/modules/utility/include/audio_frame_operations.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/include/trace.h"
+#include "webrtc/modules/audio_mixer/default_output_rate_calculator.h"
 
 namespace webrtc {
 namespace {
 
-class SourceFrame {
- public:
-  SourceFrame(MixerAudioSource* p, AudioFrame* a, bool m, bool was_mixed_before)
-      : audio_source_(p),
-        audio_frame_(a),
-        muted_(m),
-        was_mixed_before_(was_mixed_before) {
-    if (!muted_) {
-      energy_ = NewMixerCalculateEnergy(*a);
+struct SourceFrame {
+  SourceFrame(AudioMixerImpl::SourceStatus* source_status,
+              AudioFrame* audio_frame,
+              bool muted)
+      : source_status(source_status), audio_frame(audio_frame), muted(muted) {
+    RTC_DCHECK(source_status);
+    RTC_DCHECK(audio_frame);
+    if (!muted) {
+      energy = AudioMixerCalculateEnergy(*audio_frame);
     }
   }
 
-  // a.shouldMixBefore(b) is used to select mixer participants.
-  bool shouldMixBefore(const SourceFrame& other) const {
-    if (muted_ != other.muted_) {
-      return other.muted_;
-    }
-
-    auto our_activity = audio_frame_->vad_activity_;
-    auto other_activity = other.audio_frame_->vad_activity_;
-
-    if (our_activity != other_activity) {
-      return our_activity == AudioFrame::kVadActive;
-    }
-
-    return energy_ > other.energy_;
+  SourceFrame(AudioMixerImpl::SourceStatus* source_status,
+              AudioFrame* audio_frame,
+              bool muted,
+              uint32_t energy)
+      : source_status(source_status),
+        audio_frame(audio_frame),
+        muted(muted),
+        energy(energy) {
+    RTC_DCHECK(source_status);
+    RTC_DCHECK(audio_frame);
   }
 
-  MixerAudioSource* audio_source_;
-  AudioFrame* audio_frame_;
-  bool muted_;
-  uint32_t energy_;
-  bool was_mixed_before_;
+  AudioMixerImpl::SourceStatus* source_status = nullptr;
+  AudioFrame* audio_frame = nullptr;
+  bool muted = true;
+  uint32_t energy = 0;
 };
 
-// Remixes a frame between stereo and mono.
-void RemixFrame(AudioFrame* frame, size_t number_of_channels) {
-  RTC_DCHECK(number_of_channels == 1 || number_of_channels == 2);
-  if (frame->num_channels_ == 1 && number_of_channels == 2) {
-    AudioFrameOperations::MonoToStereo(frame);
-  } else if (frame->num_channels_ == 2 && number_of_channels == 1) {
-    AudioFrameOperations::StereoToMono(frame);
+// ShouldMixBefore(a, b) is used to select mixer sources.
+bool ShouldMixBefore(const SourceFrame& a, const SourceFrame& b) {
+  if (a.muted != b.muted) {
+    return b.muted;
+  }
+
+  const auto a_activity = a.audio_frame->vad_activity_;
+  const auto b_activity = b.audio_frame->vad_activity_;
+
+  if (a_activity != b_activity) {
+    return a_activity == AudioFrame::kVadActive;
+  }
+
+  return a.energy > b.energy;
+}
+
+void RampAndUpdateGain(
+    const std::vector<SourceFrame>& mixed_sources_and_frames) {
+  for (const auto& source_frame : mixed_sources_and_frames) {
+    float target_gain = source_frame.source_status->is_mixed ? 1.0f : 0.0f;
+    Ramp(source_frame.source_status->gain, target_gain,
+         source_frame.audio_frame);
+    source_frame.source_status->gain = target_gain;
   }
 }
 
-// Mix |frame| into |mixed_frame|, with saturation protection and upmixing.
-// These effects are applied to |frame| itself prior to mixing. Assumes that
-// |mixed_frame| always has at least as many channels as |frame|. Supports
-// stereo at most.
-//
-void MixFrames(AudioFrame* mixed_frame, AudioFrame* frame, bool use_limiter) {
-  RTC_DCHECK_GE(mixed_frame->num_channels_, frame->num_channels_);
-  if (use_limiter) {
-    // Divide by two to avoid saturation in the mixing.
-    // This is only meaningful if the limiter will be used.
-    *frame >>= 1;
-  }
-  RTC_DCHECK_EQ(frame->num_channels_, mixed_frame->num_channels_);
-  *mixed_frame += *frame;
+AudioMixerImpl::SourceStatusList::const_iterator FindSourceInList(
+    AudioMixerImpl::Source const* audio_source,
+    AudioMixerImpl::SourceStatusList const* audio_source_list) {
+  return std::find_if(
+      audio_source_list->begin(), audio_source_list->end(),
+      [audio_source](const std::unique_ptr<AudioMixerImpl::SourceStatus>& p) {
+        return p->audio_source == audio_source;
+      });
+}
+
+// TODO(aleloi): remove non-const version when WEBRTC only supports modern STL.
+AudioMixerImpl::SourceStatusList::iterator FindSourceInList(
+    AudioMixerImpl::Source const* audio_source,
+    AudioMixerImpl::SourceStatusList* audio_source_list) {
+  return std::find_if(
+      audio_source_list->begin(), audio_source_list->end(),
+      [audio_source](const std::unique_ptr<AudioMixerImpl::SourceStatus>& p) {
+        return p->audio_source == audio_source;
+      });
 }
 
 }  // namespace
 
-MixerAudioSource::MixerAudioSource() : _mixHistory(new NewMixHistory()) {}
-
-MixerAudioSource::~MixerAudioSource() {
-  delete _mixHistory;
-}
-
-bool MixerAudioSource::IsMixed() const {
-  return _mixHistory->IsMixed();
-}
-
-NewMixHistory::NewMixHistory() : is_mixed_(0) {}
-
-NewMixHistory::~NewMixHistory() {}
-
-bool NewMixHistory::IsMixed() const {
-  return is_mixed_;
-}
-
-bool NewMixHistory::WasMixed() const {
-  // Was mixed is the same as is mixed depending on perspective. This function
-  // is for the perspective of NewAudioConferenceMixerImpl.
-  return IsMixed();
-}
-
-int32_t NewMixHistory::SetIsMixed(const bool mixed) {
-  is_mixed_ = mixed;
-  return 0;
-}
-
-void NewMixHistory::ResetMixedStatus() {
-  is_mixed_ = false;
-}
-
-std::unique_ptr<AudioMixer> AudioMixer::Create(int id) {
-  AudioMixerImpl* mixer = new AudioMixerImpl(id);
-  if (!mixer->Init()) {
-    delete mixer;
-    return NULL;
-  }
-  return std::unique_ptr<AudioMixer>(mixer);
-}
-
-AudioMixerImpl::AudioMixerImpl(int id)
-    : id_(id),
-      output_frequency_(kDefaultFrequency),
+AudioMixerImpl::AudioMixerImpl(
+    std::unique_ptr<OutputRateCalculator> output_rate_calculator,
+    bool use_limiter)
+    : output_rate_calculator_(std::move(output_rate_calculator)),
+      output_frequency_(0),
       sample_size_(0),
       audio_source_list_(),
-      additional_audio_source_list_(),
-      num_mixed_audio_sources_(0),
-      use_limiter_(true),
-      time_stamp_(0) {
-  thread_checker_.DetachFromThread();
-}
+      frame_combiner_(use_limiter) {}
 
 AudioMixerImpl::~AudioMixerImpl() {}
 
-bool AudioMixerImpl::Init() {
-  crit_.reset(CriticalSectionWrapper::CreateCriticalSection());
-  if (crit_.get() == NULL)
-    return false;
-
-  cb_crit_.reset(CriticalSectionWrapper::CreateCriticalSection());
-  if (cb_crit_.get() == NULL)
-    return false;
-
-  Config config;
-  config.Set<ExperimentalAgc>(new ExperimentalAgc(false));
-  limiter_.reset(AudioProcessing::Create(config));
-  if (!limiter_.get())
-    return false;
-
-  if (SetOutputFrequency(kDefaultFrequency) == -1)
-    return false;
-
-  if (limiter_->gain_control()->set_mode(GainControl::kFixedDigital) !=
-      limiter_->kNoError)
-    return false;
-
-  // We smoothly limit the mixed frame to -7 dbFS. -6 would correspond to the
-  // divide-by-2 but -7 is used instead to give a bit of headroom since the
-  // AGC is not a hard limiter.
-  if (limiter_->gain_control()->set_target_level_dbfs(7) != limiter_->kNoError)
-    return false;
-
-  if (limiter_->gain_control()->set_compression_gain_db(0) !=
-      limiter_->kNoError)
-    return false;
-
-  if (limiter_->gain_control()->enable_limiter(true) != limiter_->kNoError)
-    return false;
-
-  if (limiter_->gain_control()->Enable(true) != limiter_->kNoError)
-    return false;
-
-  return true;
+rtc::scoped_refptr<AudioMixerImpl> AudioMixerImpl::Create() {
+  return Create(std::unique_ptr<DefaultOutputRateCalculator>(
+                    new DefaultOutputRateCalculator()),
+                true);
 }
 
-void AudioMixerImpl::Mix(int sample_rate,
-                         size_t number_of_channels,
+rtc::scoped_refptr<AudioMixerImpl>
+AudioMixerImpl::CreateWithOutputRateCalculator(
+    std::unique_ptr<OutputRateCalculator> output_rate_calculator) {
+  return Create(std::move(output_rate_calculator), true);
+}
+
+rtc::scoped_refptr<AudioMixerImpl> AudioMixerImpl::Create(
+    std::unique_ptr<OutputRateCalculator> output_rate_calculator,
+    bool use_limiter) {
+  return rtc::scoped_refptr<AudioMixerImpl>(
+      new rtc::RefCountedObject<AudioMixerImpl>(
+          std::move(output_rate_calculator), use_limiter));
+}
+
+void AudioMixerImpl::Mix(size_t number_of_channels,
                          AudioFrame* audio_frame_for_mixing) {
   RTC_DCHECK(number_of_channels == 1 || number_of_channels == 2);
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
-  AudioFrameList mixList;
-  AudioFrameList additionalFramesList;
-  std::map<int, MixerAudioSource*> mixedAudioSourcesMap;
-  {
-    CriticalSectionScoped cs(cb_crit_.get());
-    Frequency mixing_frequency;
+  RTC_DCHECK_RUNS_SERIALIZED(&race_checker_);
 
-    switch (sample_rate) {
-      case 8000:
-        mixing_frequency = kNbInHz;
-        break;
-      case 16000:
-        mixing_frequency = kWbInHz;
-        break;
-      case 32000:
-        mixing_frequency = kSwbInHz;
-        break;
-      case 48000:
-        mixing_frequency = kFbInHz;
-        break;
-      default:
-        RTC_NOTREACHED();
-        return;
-    }
-
-    if (OutputFrequency() != mixing_frequency) {
-      SetOutputFrequency(mixing_frequency);
-    }
-
-    mixList = UpdateToMix(kMaximumAmountOfMixedAudioSources);
-    GetAdditionalAudio(&additionalFramesList);
-  }
-
-  for (FrameAndMuteInfo& frame_and_mute : mixList) {
-    RemixFrame(frame_and_mute.frame, number_of_channels);
-  }
-  for (FrameAndMuteInfo& frame_and_mute : additionalFramesList) {
-    RemixFrame(frame_and_mute.frame, number_of_channels);
-  }
-
-  audio_frame_for_mixing->UpdateFrame(
-      -1, time_stamp_, NULL, 0, output_frequency_, AudioFrame::kNormalSpeech,
-      AudioFrame::kVadPassive, number_of_channels);
-
-  time_stamp_ += static_cast<uint32_t>(sample_size_);
-
-  use_limiter_ = num_mixed_audio_sources_ > 1;
-
-  // We only use the limiter if it supports the output sample rate and
-  // we're actually mixing multiple streams.
-  MixFromList(audio_frame_for_mixing, mixList, id_, use_limiter_);
+  CalculateOutputFrequency();
 
   {
-    CriticalSectionScoped cs(crit_.get());
-    MixAnonomouslyFromList(audio_frame_for_mixing, additionalFramesList);
-
-    if (audio_frame_for_mixing->samples_per_channel_ == 0) {
-      // Nothing was mixed, set the audio samples to silence.
-      audio_frame_for_mixing->samples_per_channel_ = sample_size_;
-      audio_frame_for_mixing->Mute();
-    } else {
-      // Only call the limiter if we have something to mix.
-      LimitMixedAudio(audio_frame_for_mixing);
-    }
+    rtc::CritScope lock(&crit_);
+    const size_t number_of_streams = audio_source_list_.size();
+    frame_combiner_.Combine(GetAudioFromSources(), number_of_channels,
+                            OutputFrequency(), number_of_streams,
+                            audio_frame_for_mixing);
   }
-
-  // Pass the final result to the level indicator.
-  audio_level_.ComputeLevel(*audio_frame_for_mixing);
 
   return;
 }
 
-int32_t AudioMixerImpl::SetOutputFrequency(const Frequency& frequency) {
-  CriticalSectionScoped cs(crit_.get());
+void AudioMixerImpl::CalculateOutputFrequency() {
+  RTC_DCHECK_RUNS_SERIALIZED(&race_checker_);
+  rtc::CritScope lock(&crit_);
 
-  output_frequency_ = frequency;
-  sample_size_ =
-      static_cast<size_t>((output_frequency_ * kFrameDurationInMs) / 1000);
+  std::vector<int> preferred_rates;
+  std::transform(audio_source_list_.begin(), audio_source_list_.end(),
+                 std::back_inserter(preferred_rates),
+                 [&](std::unique_ptr<SourceStatus>& a) {
+                   return a->audio_source->PreferredSampleRate();
+                 });
 
-  return 0;
+  output_frequency_ =
+      output_rate_calculator_->CalculateOutputRate(preferred_rates);
+  sample_size_ = (output_frequency_ * kFrameDurationInMs) / 1000;
 }
 
-AudioMixer::Frequency AudioMixerImpl::OutputFrequency() const {
-  CriticalSectionScoped cs(crit_.get());
+int AudioMixerImpl::OutputFrequency() const {
+  RTC_DCHECK_RUNS_SERIALIZED(&race_checker_);
   return output_frequency_;
 }
 
-int32_t AudioMixerImpl::SetMixabilityStatus(MixerAudioSource* audio_source,
-                                            bool mixable) {
-  if (!mixable) {
-    // Anonymous audio sources are in a separate list. Make sure that the
-    // audio source is in the _audioSourceList if it is being mixed.
-    SetAnonymousMixabilityStatus(audio_source, false);
-  }
-  size_t numMixedAudioSources;
-  {
-    CriticalSectionScoped cs(cb_crit_.get());
-    const bool isMixed = IsAudioSourceInList(*audio_source, audio_source_list_);
-    // API must be called with a new state.
-    if (!(mixable ^ isMixed)) {
-      WEBRTC_TRACE(kTraceWarning, kTraceAudioMixerServer, id_,
-                   "Mixable is aready %s", isMixed ? "ON" : "off");
-      return -1;
-    }
-    bool success = false;
-    if (mixable) {
-      success = AddAudioSourceToList(audio_source, &audio_source_list_);
-    } else {
-      success = RemoveAudioSourceFromList(audio_source, &audio_source_list_);
-    }
-    if (!success) {
-      WEBRTC_TRACE(kTraceError, kTraceAudioMixerServer, id_,
-                   "failed to %s audio_source", mixable ? "add" : "remove");
-      RTC_NOTREACHED();
-      return -1;
-    }
-
-    size_t numMixedNonAnonymous = audio_source_list_.size();
-    if (numMixedNonAnonymous > kMaximumAmountOfMixedAudioSources) {
-      numMixedNonAnonymous = kMaximumAmountOfMixedAudioSources;
-    }
-    numMixedAudioSources =
-        numMixedNonAnonymous + additional_audio_source_list_.size();
-  }
-  // A MixerAudioSource was added or removed. Make sure the scratch
-  // buffer is updated if necessary.
-  // Note: The scratch buffer may only be updated in Process().
-  CriticalSectionScoped cs(crit_.get());
-  num_mixed_audio_sources_ = numMixedAudioSources;
-  return 0;
+bool AudioMixerImpl::AddSource(Source* audio_source) {
+  RTC_DCHECK(audio_source);
+  rtc::CritScope lock(&crit_);
+  RTC_DCHECK(FindSourceInList(audio_source, &audio_source_list_) ==
+             audio_source_list_.end())
+      << "Source already added to mixer";
+  audio_source_list_.emplace_back(new SourceStatus(audio_source, false, 0));
+  return true;
 }
 
-bool AudioMixerImpl::MixabilityStatus(
-    const MixerAudioSource& audio_source) const {
-  CriticalSectionScoped cs(cb_crit_.get());
-  return IsAudioSourceInList(audio_source, audio_source_list_);
+void AudioMixerImpl::RemoveSource(Source* audio_source) {
+  RTC_DCHECK(audio_source);
+  rtc::CritScope lock(&crit_);
+  const auto iter = FindSourceInList(audio_source, &audio_source_list_);
+  RTC_DCHECK(iter != audio_source_list_.end()) << "Source not present in mixer";
+  audio_source_list_.erase(iter);
 }
 
-int32_t AudioMixerImpl::SetAnonymousMixabilityStatus(
-    MixerAudioSource* audio_source,
-    bool anonymous) {
-  CriticalSectionScoped cs(cb_crit_.get());
-  if (IsAudioSourceInList(*audio_source, additional_audio_source_list_)) {
-    if (anonymous) {
-      return 0;
-    }
-    if (!RemoveAudioSourceFromList(audio_source,
-                                   &additional_audio_source_list_)) {
-      WEBRTC_TRACE(kTraceError, kTraceAudioMixerServer, id_,
-                   "unable to remove audio_source from anonymous list");
-      RTC_NOTREACHED();
-      return -1;
-    }
-    return AddAudioSourceToList(audio_source, &audio_source_list_) ? 0 : -1;
-  }
-  if (!anonymous) {
-    return 0;
-  }
-  const bool mixable =
-      RemoveAudioSourceFromList(audio_source, &audio_source_list_);
-  if (!mixable) {
-    WEBRTC_TRACE(
-        kTraceWarning, kTraceAudioMixerServer, id_,
-        "audio_source must be registered before turning it into anonymous");
-    // Setting anonymous status is only possible if MixerAudioSource is
-    // already registered.
-    return -1;
-  }
-  return AddAudioSourceToList(audio_source, &additional_audio_source_list_)
-             ? 0
-             : -1;
-}
-
-bool AudioMixerImpl::AnonymousMixabilityStatus(
-    const MixerAudioSource& audio_source) const {
-  CriticalSectionScoped cs(cb_crit_.get());
-  return IsAudioSourceInList(audio_source, additional_audio_source_list_);
-}
-
-AudioFrameList AudioMixerImpl::UpdateToMix(size_t maxAudioFrameCounter) const {
+AudioFrameList AudioMixerImpl::GetAudioFromSources() {
+  RTC_DCHECK_RUNS_SERIALIZED(&race_checker_);
   AudioFrameList result;
-  std::vector<SourceFrame> audioSourceMixingDataList;
+  std::vector<SourceFrame> audio_source_mixing_data_list;
+  std::vector<SourceFrame> ramp_list;
 
-  // Get audio source audio and put it in the struct vector.
-  for (MixerAudioSource* audio_source : audio_source_list_) {
-    auto audio_frame_with_info = audio_source->GetAudioFrameWithMuted(
-        id_, static_cast<int>(output_frequency_));
+  // Get audio from the audio sources and put it in the SourceFrame vector.
+  for (auto& source_and_status : audio_source_list_) {
+    const auto audio_frame_info =
+        source_and_status->audio_source->GetAudioFrameWithInfo(
+            OutputFrequency(), &source_and_status->audio_frame);
 
-    auto audio_frame_info = audio_frame_with_info.audio_frame_info;
-    AudioFrame* audio_source_audio_frame = audio_frame_with_info.audio_frame;
-
-    if (audio_frame_info == MixerAudioSource::AudioFrameInfo::kError) {
-      WEBRTC_TRACE(kTraceWarning, kTraceAudioMixerServer, id_,
-                   "failed to GetAudioFrameWithMuted() from participant");
+    if (audio_frame_info == Source::AudioFrameInfo::kError) {
+      LOG_F(LS_WARNING) << "failed to GetAudioFrameWithInfo() from source";
       continue;
     }
-    audioSourceMixingDataList.emplace_back(
-        audio_source, audio_source_audio_frame,
-        audio_frame_info == MixerAudioSource::AudioFrameInfo::kMuted,
-        audio_source->_mixHistory->WasMixed());
+    audio_source_mixing_data_list.emplace_back(
+        source_and_status.get(), &source_and_status->audio_frame,
+        audio_frame_info == Source::AudioFrameInfo::kMuted);
   }
 
   // Sort frames by sorting function.
-  std::sort(audioSourceMixingDataList.begin(), audioSourceMixingDataList.end(),
-            std::mem_fn(&SourceFrame::shouldMixBefore));
+  std::sort(audio_source_mixing_data_list.begin(),
+            audio_source_mixing_data_list.end(), ShouldMixBefore);
 
-  // Go through list in order and put things in mixList.
-  for (SourceFrame& p : audioSourceMixingDataList) {
+  int max_audio_frame_counter = kMaximumAmountOfMixedAudioSources;
+
+  // Go through list in order and put unmuted frames in result list.
+  for (const auto& p : audio_source_mixing_data_list) {
     // Filter muted.
-    if (p.muted_) {
-      p.audio_source_->_mixHistory->SetIsMixed(false);
+    if (p.muted) {
+      p.source_status->is_mixed = false;
       continue;
     }
 
     // Add frame to result vector for mixing.
     bool is_mixed = false;
-    if (maxAudioFrameCounter > 0) {
-      --maxAudioFrameCounter;
-      if (!p.was_mixed_before_) {
-        NewMixerRampIn(p.audio_frame_);
-      }
-      result.emplace_back(p.audio_frame_, false);
+    if (max_audio_frame_counter > 0) {
+      --max_audio_frame_counter;
+      result.push_back(p.audio_frame);
+      ramp_list.emplace_back(p.source_status, p.audio_frame, false, -1);
       is_mixed = true;
     }
-
-    // Ramp out unmuted.
-    if (p.was_mixed_before_ && !is_mixed) {
-      NewMixerRampOut(p.audio_frame_);
-      result.emplace_back(p.audio_frame_, false);
-    }
-
-    p.audio_source_->_mixHistory->SetIsMixed(is_mixed);
+    p.source_status->is_mixed = is_mixed;
   }
+  RampAndUpdateGain(ramp_list);
   return result;
 }
 
-void AudioMixerImpl::GetAdditionalAudio(
-    AudioFrameList* additionalFramesList) const {
-  WEBRTC_TRACE(kTraceStream, kTraceAudioMixerServer, id_,
-               "GetAdditionalAudio(additionalFramesList)");
-  // The GetAudioFrameWithMuted() callback may result in the audio source being
-  // removed from additionalAudioFramesList_. If that happens it will
-  // invalidate any iterators. Create a copy of the audio sources list such
-  // that the list of participants can be traversed safely.
-  MixerAudioSourceList additionalAudioSourceList;
-  additionalAudioSourceList.insert(additionalAudioSourceList.begin(),
-                                   additional_audio_source_list_.begin(),
-                                   additional_audio_source_list_.end());
+bool AudioMixerImpl::GetAudioSourceMixabilityStatusForTest(
+    AudioMixerImpl::Source* audio_source) const {
+  RTC_DCHECK_RUNS_SERIALIZED(&race_checker_);
+  rtc::CritScope lock(&crit_);
 
-  for (MixerAudioSourceList::const_iterator audio_source =
-           additionalAudioSourceList.begin();
-       audio_source != additionalAudioSourceList.end(); ++audio_source) {
-    auto audio_frame_with_info =
-        (*audio_source)->GetAudioFrameWithMuted(id_, output_frequency_);
-    auto ret = audio_frame_with_info.audio_frame_info;
-    AudioFrame* audio_frame = audio_frame_with_info.audio_frame;
-    if (ret == MixerAudioSource::AudioFrameInfo::kError) {
-      WEBRTC_TRACE(kTraceWarning, kTraceAudioMixerServer, id_,
-                   "failed to GetAudioFrameWithMuted() from audio_source");
-      continue;
-    }
-    if (audio_frame->samples_per_channel_ == 0) {
-      // Empty frame. Don't use it.
-      continue;
-    }
-    additionalFramesList->push_back(FrameAndMuteInfo(
-        audio_frame, ret == MixerAudioSource::AudioFrameInfo::kMuted));
-  }
-}
-
-bool AudioMixerImpl::IsAudioSourceInList(
-    const MixerAudioSource& audio_source,
-    const MixerAudioSourceList& audioSourceList) const {
-  WEBRTC_TRACE(kTraceStream, kTraceAudioMixerServer, id_,
-               "IsAudioSourceInList(audio_source,audioSourceList)");
-  return std::find(audioSourceList.begin(), audioSourceList.end(),
-                   &audio_source) != audioSourceList.end();
-}
-
-bool AudioMixerImpl::AddAudioSourceToList(
-    MixerAudioSource* audio_source,
-    MixerAudioSourceList* audioSourceList) const {
-  WEBRTC_TRACE(kTraceStream, kTraceAudioMixerServer, id_,
-               "AddAudioSourceToList(audio_source, audioSourceList)");
-  audioSourceList->push_back(audio_source);
-  // Make sure that the mixed status is correct for new MixerAudioSource.
-  audio_source->_mixHistory->ResetMixedStatus();
-  return true;
-}
-
-bool AudioMixerImpl::RemoveAudioSourceFromList(
-    MixerAudioSource* audio_source,
-    MixerAudioSourceList* audioSourceList) const {
-  WEBRTC_TRACE(kTraceStream, kTraceAudioMixerServer, id_,
-               "RemoveAudioSourceFromList(audio_source, audioSourceList)");
-  auto iter =
-      std::find(audioSourceList->begin(), audioSourceList->end(), audio_source);
-  if (iter != audioSourceList->end()) {
-    audioSourceList->erase(iter);
-    // AudioSource is no longer mixed, reset to default.
-    audio_source->_mixHistory->ResetMixedStatus();
-    return true;
-  } else {
-    return false;
-  }
-}
-
-int32_t AudioMixerImpl::MixFromList(AudioFrame* mixedAudio,
-                                    const AudioFrameList& audioFrameList,
-                                    int32_t id,
-                                    bool use_limiter) {
-  WEBRTC_TRACE(kTraceStream, kTraceAudioMixerServer, id,
-               "MixFromList(mixedAudio, audioFrameList)");
-  if (audioFrameList.empty())
-    return 0;
-
-  uint32_t position = 0;
-
-  if (audioFrameList.size() == 1) {
-    mixedAudio->timestamp_ = audioFrameList.front().frame->timestamp_;
-    mixedAudio->elapsed_time_ms_ =
-        audioFrameList.front().frame->elapsed_time_ms_;
-  } else {
-    // TODO(wu): Issue 3390.
-    // Audio frame timestamp is only supported in one channel case.
-    mixedAudio->timestamp_ = 0;
-    mixedAudio->elapsed_time_ms_ = -1;
+  const auto iter = FindSourceInList(audio_source, &audio_source_list_);
+  if (iter != audio_source_list_.end()) {
+    return (*iter)->is_mixed;
   }
 
-  for (AudioFrameList::const_iterator iter = audioFrameList.begin();
-       iter != audioFrameList.end(); ++iter) {
-    if (!iter->muted) {
-      MixFrames(mixedAudio, iter->frame, use_limiter);
-    }
-
-    position++;
-  }
-
-  return 0;
-}
-
-// TODO(andrew): consolidate this function with MixFromList.
-int32_t AudioMixerImpl::MixAnonomouslyFromList(
-    AudioFrame* mixedAudio,
-    const AudioFrameList& audioFrameList) const {
-  WEBRTC_TRACE(kTraceStream, kTraceAudioMixerServer, id_,
-               "MixAnonomouslyFromList(mixedAudio, audioFrameList)");
-
-  if (audioFrameList.empty())
-    return 0;
-
-  for (AudioFrameList::const_iterator iter = audioFrameList.begin();
-       iter != audioFrameList.end(); ++iter) {
-    if (!iter->muted) {
-      MixFrames(mixedAudio, iter->frame, use_limiter_);
-    }
-  }
-  return 0;
-}
-
-bool AudioMixerImpl::LimitMixedAudio(AudioFrame* mixedAudio) const {
-  if (!use_limiter_) {
-    return true;
-  }
-
-  // Smoothly limit the mixed frame.
-  const int error = limiter_->ProcessStream(mixedAudio);
-
-  // And now we can safely restore the level. This procedure results in
-  // some loss of resolution, deemed acceptable.
-  //
-  // It's possible to apply the gain in the AGC (with a target level of 0 dbFS
-  // and compression gain of 6 dB). However, in the transition frame when this
-  // is enabled (moving from one to two audio sources) it has the potential to
-  // create discontinuities in the mixed frame.
-  //
-  // Instead we double the frame (with addition since left-shifting a
-  // negative value is undefined).
-  *mixedAudio += *mixedAudio;
-
-  if (error != limiter_->kNoError) {
-    WEBRTC_TRACE(kTraceError, kTraceAudioMixerServer, id_,
-                 "Error from AudioProcessing: %d", error);
-    RTC_NOTREACHED();
-    return false;
-  }
-  return true;
-}
-
-int AudioMixerImpl::GetOutputAudioLevel() {
-  const int level = audio_level_.Level();
-  WEBRTC_TRACE(kTraceStateInfo, kTraceAudioMixerServer, id_,
-               "GetAudioOutputLevel() => level=%d", level);
-  return level;
-}
-
-int AudioMixerImpl::GetOutputAudioLevelFullRange() {
-  const int level = audio_level_.LevelFullRange();
-  WEBRTC_TRACE(kTraceStateInfo, kTraceAudioMixerServer, id_,
-               "GetAudioOutputLevelFullRange() => level=%d", level);
-  return level;
+  LOG(LS_ERROR) << "Audio source unknown";
+  return false;
 }
 }  // namespace webrtc

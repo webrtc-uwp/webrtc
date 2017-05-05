@@ -31,10 +31,14 @@ bool IsValidRect(const RECT& rect) {
 
 }  // namespace
 
+DxgiAdapterDuplicator::Context::Context() = default;
+DxgiAdapterDuplicator::Context::Context(const Context& other) = default;
+DxgiAdapterDuplicator::Context::~Context() = default;
+
 DxgiAdapterDuplicator::DxgiAdapterDuplicator(const D3dDevice& device)
     : device_(device) {}
-
 DxgiAdapterDuplicator::DxgiAdapterDuplicator(DxgiAdapterDuplicator&&) = default;
+DxgiAdapterDuplicator::~DxgiAdapterDuplicator() = default;
 
 bool DxgiAdapterDuplicator::Initialize() {
   if (DoInitialize()) {
@@ -62,11 +66,11 @@ bool DxgiAdapterDuplicator::DoInitialize() {
     }
 
     DXGI_OUTPUT_DESC desc;
-    error = _com_error(output->GetDesc(&desc));
+    error = output->GetDesc(&desc);
     if (error.Error() == S_OK) {
       if (desc.AttachedToDesktop && IsValidRect(desc.DesktopCoordinates)) {
         ComPtr<IDXGIOutput1> output1;
-        error = _com_error(output.As(&output1));
+        error = output.As(&output1);
         if (error.Error() != S_OK || !output1) {
           LOG(LS_WARNING) << "Failed to convert IDXGIOutput to IDXGIOutput1, "
                              "this usually means the system does not support "
@@ -138,6 +142,19 @@ bool DxgiAdapterDuplicator::DuplicateMonitor(Context* context,
 DesktopRect DxgiAdapterDuplicator::ScreenRect(int id) const {
   RTC_DCHECK(id >= 0 && id < static_cast<int>(duplicators_.size()));
   return duplicators_[id].desktop_rect();
+}
+
+int DxgiAdapterDuplicator::screen_count() const {
+  return static_cast<int>(duplicators_.size());
+}
+
+int64_t DxgiAdapterDuplicator::GetNumFramesCaptured() const {
+  int64_t min = INT64_MAX;
+  for (const auto& duplicator : duplicators_) {
+    min = std::min(min, duplicator.num_frames_captured());
+  }
+
+  return min;
 }
 
 }  // namespace webrtc

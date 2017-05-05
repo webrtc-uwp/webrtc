@@ -18,8 +18,8 @@
 #include <wincodec.h>
 
 #include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/desktop_capture/desktop_capturer.h"
 #include "webrtc/modules/desktop_capture/screen_capture_frame_queue.h"
-#include "webrtc/modules/desktop_capture/screen_capturer.h"
 #include "webrtc/modules/desktop_capture/screen_capturer_helper.h"
 #include "webrtc/modules/desktop_capture/shared_desktop_frame.h"
 #include "webrtc/modules/desktop_capture/win/scoped_thread_desktop.h"
@@ -29,28 +29,27 @@ namespace webrtc {
 
 class DesktopFrame;
 class DesktopRect;
-class Differ;
 
 // Captures the screen using the Magnification API to support window exclusion.
 // Each capturer must run on a dedicated thread because it uses thread local
 // storage for redirecting the library callback. Also the thread must have a UI
 // message loop to handle the window messages for the magnifier window.
-class ScreenCapturerWinMagnifier : public ScreenCapturer {
+//
+// This class does not detect DesktopFrame::updated_region(), the field is
+// always set to the entire frame rectangle. ScreenCapturerDifferWrapper should
+// be used if that functionality is necessary.
+class ScreenCapturerWinMagnifier : public DesktopCapturer {
  public:
-  // |fallback_capturer| will be used to capture the screen if a non-primary
-  // screen is being captured, or the OS does not support Magnification API, or
-  // the magnifier capturer fails (e.g. in Windows8 Metro mode).
-  explicit ScreenCapturerWinMagnifier(
-      std::unique_ptr<ScreenCapturer> fallback_capturer);
-  virtual ~ScreenCapturerWinMagnifier();
+  ScreenCapturerWinMagnifier();
+  ~ScreenCapturerWinMagnifier() override;
 
   // Overridden from ScreenCapturer:
   void Start(Callback* callback) override;
   void SetSharedMemoryFactory(
       std::unique_ptr<SharedMemoryFactory> shared_memory_factory) override;
-  void Capture(const DesktopRegion& region) override;
-  bool GetScreenList(ScreenList* screens) override;
-  bool SelectScreen(ScreenId id) override;
+  void CaptureFrame() override;
+  bool GetSourceList(SourceList* screens) override;
+  bool SelectSource(SourceId id) override;
   void SetExcludedWindow(WindowId window) override;
 
  private:
@@ -100,31 +99,16 @@ class ScreenCapturerWinMagnifier : public ScreenCapturer {
   // Makes sure the current frame exists and matches |size|.
   void CreateCurrentFrameIfNecessary(const DesktopSize& size);
 
-  // Start the fallback capturer and select the screen.
-  void StartFallbackCapturer();
-
   static Atomic32 tls_index_;
 
-  std::unique_ptr<ScreenCapturer> fallback_capturer_;
-  bool fallback_capturer_started_ = false;
   Callback* callback_ = nullptr;
   std::unique_ptr<SharedMemoryFactory> shared_memory_factory_;
   ScreenId current_screen_id_ = kFullDesktopScreenId;
   std::wstring current_device_key_;
   HWND excluded_window_ = NULL;
 
-  // A thread-safe list of invalid rectangles, and the size of the most
-  // recently captured screen.
-  ScreenCapturerHelper helper_;
-
   // Queue of the frames buffers.
   ScreenCaptureFrameQueue<SharedDesktopFrame> queue_;
-
-  // Class to calculate the difference between two screen bitmaps.
-  std::unique_ptr<Differ> differ_;
-
-  // Used to suppress duplicate logging of SetThreadExecutionState errors.
-  bool set_thread_execution_state_failed_ = false;
 
   ScopedThreadDesktop desktop_;
 

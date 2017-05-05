@@ -15,6 +15,11 @@
 namespace webrtc {
 
 // static
+std::unique_ptr<ScreenDrawerLock> ScreenDrawerLock::Create() {
+  return nullptr;
+}
+
+// static
 std::unique_ptr<ScreenDrawer> ScreenDrawer::Create() {
   return nullptr;
 }

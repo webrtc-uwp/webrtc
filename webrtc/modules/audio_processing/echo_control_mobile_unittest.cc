@@ -9,12 +9,12 @@
  */
 #include <vector>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/array_view.h"
 #include "webrtc/modules/audio_processing/audio_buffer.h"
 #include "webrtc/modules/audio_processing/echo_control_mobile_impl.h"
 #include "webrtc/modules/audio_processing/test/audio_buffer_tools.h"
 #include "webrtc/modules/audio_processing/test/bitexactness_tools.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 namespace {
@@ -45,7 +45,12 @@ void ProcessOneFrame(int sample_rate_hz,
     capture_audio_buffer->SplitIntoFrequencyBands();
   }
 
-  echo_control_mobile->ProcessRenderAudio(render_audio_buffer);
+  std::vector<int16_t> render_audio;
+  EchoControlMobileImpl::PackRenderAudioBuffer(
+      render_audio_buffer, 1, render_audio_buffer->num_channels(),
+      &render_audio);
+  echo_control_mobile->ProcessRenderAudio(render_audio);
+
   echo_control_mobile->ProcessCaptureAudio(capture_audio_buffer,
                                            stream_delay_ms);
 
@@ -174,7 +179,7 @@ TEST(EchoControlMobileBitExactnessTest,
 
 TEST(EchoControlMobileBitExactnessTest,
      Mono16kHz_LoudSpeakerPhone_CngOn_StreamDelay10) {
-  const float kOutputReference[] = {-0.002411f, -0.002716f, -0.002747f};
+  const float kOutputReference[] = {-0.002380f, -0.002533f, -0.002563f};
 
   RunBitexactnessTest(16000, 1, 10,
                       EchoControlMobile::RoutingMode::kLoudSpeakerphone, true,

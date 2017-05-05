@@ -23,14 +23,13 @@ void TimestampScaler::ToInternal(Packet* packet) {
   if (!packet) {
     return;
   }
-  packet->header.timestamp = ToInternal(packet->header.timestamp,
-                                        packet->header.payloadType);
+  packet->timestamp = ToInternal(packet->timestamp, packet->payload_type);
 }
 
 void TimestampScaler::ToInternal(PacketList* packet_list) {
   PacketList::iterator it;
   for (it = packet_list->begin(); it != packet_list->end(); ++it) {
-    ToInternal(*it);
+    ToInternal(&(*it));
   }
 }
 
@@ -45,9 +44,9 @@ uint32_t TimestampScaler::ToInternal(uint32_t external_timestamp,
   if (!(info->IsComfortNoise() || info->IsDtmf())) {
     // Do not change the timestamp scaling settings for DTMF or CNG.
     numerator_ = info->SampleRateHz();
-    if (info->codec_type == NetEqDecoder::kDecoderArbitrary) {
-      // We have no format mapping for "arbitrary" external codecs, so we cannot
-      // support timestamp scaling of them.
+    if (info->GetFormat().clockrate_hz == 0) {
+      // If the clockrate is invalid (i.e. with an old-style external codec)
+      // we cannot do any timestamp scaling.
       denominator_ = numerator_;
     } else {
       denominator_ = info->GetFormat().clockrate_hz;

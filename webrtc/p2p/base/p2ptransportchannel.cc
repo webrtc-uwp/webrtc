@@ -11,9 +11,11 @@
 #include "webrtc/p2p/base/p2ptransportchannel.h"
 
 #include <algorithm>
+#include <iterator>
 #include <set>
 
-#include "webrtc/base/common.h"
+#include "webrtc/api/umametrics.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/crc32.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/stringencode.h"
@@ -65,18 +67,22 @@ namespace cricket {
 // well on a 28.8K modem, which is the slowest connection on which the voice
 // quality is reasonable at all.
 static const int PING_PACKET_SIZE = 60 * 8;
+
+// The next two ping intervals are at the channel level.
 // STRONG_PING_INTERVAL (480ms) is applied when the selected connection is both
 // writable and receiving.
-static const int STRONG_PING_INTERVAL = 1000 * PING_PACKET_SIZE / 1000;
+const int STRONG_PING_INTERVAL = 1000 * PING_PACKET_SIZE / 1000;
 // WEAK_PING_INTERVAL (48ms) is applied when the selected connection is either
 // not writable or not receiving.
 const int WEAK_PING_INTERVAL = 1000 * PING_PACKET_SIZE / 10000;
 
-// Writable connections are pinged at a faster rate while stabilizing.
-const int STABILIZING_WRITABLE_CONNECTION_PING_INTERVAL = 900;  // ms
-
-// Writable connections are pinged at a slower rate once stabilized.
-const int STABLE_WRITABLE_CONNECTION_PING_INTERVAL = 2500;  // ms
+// The next two ping intervals are at the connection level.
+// Writable connections are pinged at a faster rate while the connections are
+// stabilizing or the channel is weak.
+const int WEAK_OR_STABILIZING_WRITABLE_CONNECTION_PING_INTERVAL = 900;  // ms
+// Writable connections are pinged at a slower rate once they are stabilized and
+// the channel is strongly connected.
+const int STRONG_AND_STABLE_WRITABLE_CONNECTION_PING_INTERVAL = 2500;  // ms
 
 static const int MIN_CHECK_RECEIVING_INTERVAL = 50;  // ms
 
@@ -93,16 +99,11 @@ static constexpr int b_is_better = -1;
 
 P2PTransportChannel::P2PTransportChannel(const std::string& transport_name,
                                          int component,
-                                         P2PTransport* transport,
                                          PortAllocator* allocator)
-    : P2PTransportChannel(transport_name, component, allocator) {}
-
-P2PTransportChannel::P2PTransportChannel(const std::string& transport_name,
-                                         int component,
-                                         PortAllocator* allocator)
-    : TransportChannelImpl(transport_name, component),
+    : transport_name_(transport_name),
+      component_(component),
       allocator_(allocator),
-      worker_thread_(rtc::Thread::Current()),
+      network_thread_(rtc::Thread::Current()),
       incoming_only_(false),
       error_(0),
       sort_dirty_(false),
@@ -115,7 +116,7 @@ P2PTransportChannel::P2PTransportChannel(const std::string& transport_name,
               DEFAULT_BACKUP_CONNECTION_PING_INTERVAL,
               GATHER_ONCE /* continual_gathering_policy */,
               false /* prioritize_most_likely_candidate_pairs */,
-              STABLE_WRITABLE_CONNECTION_PING_INTERVAL,
+              STRONG_AND_STABLE_WRITABLE_CONNECTION_PING_INTERVAL,
               true /* presume_writable_when_fully_relayed */,
               DEFAULT_REGATHER_ON_FAILED_NETWORKS_INTERVAL,
               RECEIVING_SWITCHING_DELAY) {
@@ -128,14 +129,14 @@ P2PTransportChannel::P2PTransportChannel(const std::string& transport_name,
 }
 
 P2PTransportChannel::~P2PTransportChannel() {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
 }
 
 // Add the allocator session to our list so that we know which sessions
 // are still active.
 void P2PTransportChannel::AddAllocatorSession(
     std::unique_ptr<PortAllocatorSession> session) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
 
   session->set_generation(static_cast<uint32_t>(allocator_sessions_.size()));
   session->SignalPortReady.connect(this, &P2PTransportChannel::OnPortReady);
@@ -246,7 +247,7 @@ bool P2PTransportChannel::MaybeSwitchSelectedConnection(
 }
 
 void P2PTransportChannel::SetIceRole(IceRole ice_role) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
   if (ice_role_ != ice_role) {
     ice_role_ = ice_role;
     for (PortInterface* port : ports_) {
@@ -261,7 +262,7 @@ void P2PTransportChannel::SetIceRole(IceRole ice_role) {
 }
 
 void P2PTransportChannel::SetIceTiebreaker(uint64_t tiebreaker) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
   if (!ports_.empty() || !pruned_ports_.empty()) {
     LOG(LS_ERROR)
         << "Attempt to change tiebreaker after Port has been allocated.";
@@ -271,15 +272,24 @@ void P2PTransportChannel::SetIceTiebreaker(uint64_t tiebreaker) {
   tiebreaker_ = tiebreaker;
 }
 
-TransportChannelState P2PTransportChannel::GetState() const {
+IceTransportState P2PTransportChannel::GetState() const {
   return state_;
+}
+
+rtc::Optional<int> P2PTransportChannel::GetRttEstimate() {
+  if (selected_connection_ != nullptr
+      && selected_connection_->rtt_samples() > 0) {
+    return rtc::Optional<int>(selected_connection_->rtt());
+  } else {
+    return rtc::Optional<int>();
+  }
 }
 
 // A channel is considered ICE completed once there is at most one active
 // connection per network and at least one active connection.
-TransportChannelState P2PTransportChannel::ComputeState() const {
+IceTransportState P2PTransportChannel::ComputeState() const {
   if (!had_connection_) {
-    return TransportChannelState::STATE_INIT;
+    return IceTransportState::STATE_INIT;
   }
 
   std::vector<Connection*> active_connections;
@@ -289,7 +299,7 @@ TransportChannelState P2PTransportChannel::ComputeState() const {
     }
   }
   if (active_connections.empty()) {
-    return TransportChannelState::STATE_FAILED;
+    return IceTransportState::STATE_FAILED;
   }
 
   std::set<rtc::Network*> networks;
@@ -301,15 +311,18 @@ TransportChannelState P2PTransportChannel::ComputeState() const {
       LOG_J(LS_VERBOSE, this) << "Ice not completed yet for this channel as "
                               << network->ToString()
                               << " has more than 1 connection.";
-      return TransportChannelState::STATE_CONNECTING;
+      return IceTransportState::STATE_CONNECTING;
     }
   }
 
-  return TransportChannelState::STATE_COMPLETED;
+  return IceTransportState::STATE_COMPLETED;
 }
 
 void P2PTransportChannel::SetIceParameters(const IceParameters& ice_params) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
+  LOG(LS_INFO) << "Set ICE ufrag: " << ice_params.ufrag
+               << " pwd: " << ice_params.pwd << " on transport "
+               << transport_name();
   ice_parameters_ = ice_params;
   // Note: Candidate gathering will restart when MaybeStartGathering is next
   // called.
@@ -317,7 +330,7 @@ void P2PTransportChannel::SetIceParameters(const IceParameters& ice_params) {
 
 void P2PTransportChannel::SetRemoteIceParameters(
     const IceParameters& ice_params) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
   LOG(LS_INFO) << "Remote supports ICE renomination ? "
                << ice_params.renomination;
   IceParameters* current_ice = remote_ice();
@@ -426,14 +439,28 @@ void P2PTransportChannel::SetIceConfig(const IceConfig& config) {
     LOG(LS_INFO) << "Set default nomination mode to "
                  << static_cast<int>(config_.default_nomination_mode);
   }
+
+  if (config_.ice_check_min_interval != config.ice_check_min_interval) {
+    config_.ice_check_min_interval = config.ice_check_min_interval;
+    LOG(LS_INFO) << "Set min ping interval to "
+                 << *config_.ice_check_min_interval;
+  }
 }
 
 const IceConfig& P2PTransportChannel::config() const {
   return config_;
 }
 
+void P2PTransportChannel::SetMetricsObserver(
+    webrtc::MetricsObserverInterface* observer) {
+  metrics_observer_ = observer;
+}
+
 void P2PTransportChannel::MaybeStartGathering() {
   if (ice_parameters_.ufrag.empty() || ice_parameters_.pwd.empty()) {
+    LOG(LS_ERROR) << "Cannot gather candidates because ICE parameters are empty"
+                  << " ufrag: " << ice_parameters_.ufrag
+                  << " pwd: " << ice_parameters_.pwd;
     return;
   }
   // Start gathering if we never started before, or if an ICE restart occurred.
@@ -445,6 +472,21 @@ void P2PTransportChannel::MaybeStartGathering() {
       gathering_state_ = kIceGatheringGathering;
       SignalGatheringState(this);
     }
+
+    if (metrics_observer_ && !allocator_sessions_.empty()) {
+      IceRestartState state;
+      if (writable()) {
+        state = IceRestartState::CONNECTED;
+      } else if (IsGettingPorts()) {
+        state = IceRestartState::CONNECTING;
+      } else {
+        state = IceRestartState::DISCONNECTED;
+      }
+      metrics_observer_->IncrementEnumCounter(
+          webrtc::kEnumCounterIceRestart, static_cast<int>(state),
+          static_cast<int>(IceRestartState::MAX_VALUE));
+    }
+
     // Time for a new allocator.
     std::unique_ptr<PortAllocatorSession> pooled_session =
         allocator_->TakePooledSession(transport_name(), component(),
@@ -467,7 +509,6 @@ void P2PTransportChannel::MaybeStartGathering() {
       AddAllocatorSession(allocator_->CreateSession(
           transport_name(), component(), ice_parameters_.ufrag,
           ice_parameters_.pwd));
-      LOG(LS_INFO) << "Start getting ports";
       allocator_sessions_.back()->StartGettingPorts();
     }
   }
@@ -476,7 +517,7 @@ void P2PTransportChannel::MaybeStartGathering() {
 // A new port is available, attempt to make connections for it
 void P2PTransportChannel::OnPortReady(PortAllocatorSession *session,
                                       PortInterface* port) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
 
   // Set in-effect options on the new port
   for (OptionMap::const_iterator it = options_.begin();
@@ -521,7 +562,7 @@ void P2PTransportChannel::OnPortReady(PortAllocatorSession *session,
 void P2PTransportChannel::OnCandidatesReady(
     PortAllocatorSession* session,
     const std::vector<Candidate>& candidates) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
   for (size_t i = 0; i < candidates.size(); ++i) {
     SignalCandidateGathered(this, candidates[i]);
   }
@@ -529,7 +570,7 @@ void P2PTransportChannel::OnCandidatesReady(
 
 void P2PTransportChannel::OnCandidatesAllocationDone(
     PortAllocatorSession* session) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
   if (config_.gather_continually()) {
     LOG(LS_INFO) << "P2PTransportChannel: " << transport_name()
                  << ", component " << component()
@@ -549,7 +590,7 @@ void P2PTransportChannel::OnUnknownAddress(
     const rtc::SocketAddress& address, ProtocolType proto,
     IceMessage* stun_msg, const std::string &remote_username,
     bool port_muxed) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
 
   // Port has received a valid stun packet from an address that no Connection
   // is currently available for. See if we already have a candidate with the
@@ -637,7 +678,7 @@ void P2PTransportChannel::OnUnknownAddress(
                    << "candidate: " << remote_candidate.ToString();
       return;
     } else {
-      ASSERT(false);
+      RTC_NOTREACHED();
       port->SendBindingErrorResponse(stun_msg, address,
                                      STUN_ERROR_SERVER_ERROR,
                                      STUN_ERROR_REASON_SERVER_ERROR);
@@ -648,7 +689,8 @@ void P2PTransportChannel::OnUnknownAddress(
   Connection* connection =
       port->CreateConnection(remote_candidate, PortInterface::ORIGIN_THIS_PORT);
   if (!connection) {
-    ASSERT(false);
+    // This could happen in some scenarios. For example, a TurnPort may have
+    // had a refresh request timeout, so it won't create connections.
     port->SendBindingErrorResponse(stun_msg, address, STUN_ERROR_SERVER_ERROR,
                                    STUN_ERROR_REASON_SERVER_ERROR);
     return;
@@ -687,8 +729,8 @@ const IceParameters* P2PTransportChannel::FindRemoteIceFromUfrag(
 }
 
 void P2PTransportChannel::OnNominated(Connection* conn) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
-  ASSERT(ice_role_ == ICEROLE_CONTROLLED);
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(ice_role_ == ICEROLE_CONTROLLED);
 
   if (selected_connection_ == conn) {
     return;
@@ -707,7 +749,7 @@ void P2PTransportChannel::OnNominated(Connection* conn) {
 }
 
 void P2PTransportChannel::AddRemoteCandidate(const Candidate& candidate) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
 
   uint32_t generation = GetRemoteCandidateGeneration(candidate);
   // If a remote candidate with a previous generation arrives, drop it.
@@ -771,7 +813,7 @@ void P2PTransportChannel::RemoveRemoteCandidate(
 // the origin port.
 bool P2PTransportChannel::CreateConnections(const Candidate& remote_candidate,
                                             PortInterface* origin_port) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
 
   // If we've already seen the new remote candidate (in the current candidate
   // generation), then we shouldn't try creating connections for it.
@@ -920,7 +962,7 @@ void P2PTransportChannel::RememberRemoteCandidate(
 // Set options on ourselves is simply setting options on all of our available
 // port objects.
 int P2PTransportChannel::SetOption(rtc::Socket::Option opt, int value) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
   OptionMap::iterator it = options_.find(opt);
   if (it == options_.end()) {
     options_.insert(std::make_pair(opt, value));
@@ -943,7 +985,7 @@ int P2PTransportChannel::SetOption(rtc::Socket::Option opt, int value) {
 }
 
 bool P2PTransportChannel::GetOption(rtc::Socket::Option opt, int* value) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
 
   const auto& found = options_.find(opt);
   if (found == options_.end()) {
@@ -957,7 +999,7 @@ bool P2PTransportChannel::GetOption(rtc::Socket::Option opt, int* value) {
 int P2PTransportChannel::SendPacket(const char *data, size_t len,
                                     const rtc::PacketOptions& options,
                                     int flags) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
   if (flags != 0) {
     error_ = EINVAL;
     return -1;
@@ -972,31 +1014,22 @@ int P2PTransportChannel::SendPacket(const char *data, size_t len,
   last_sent_packet_id_ = options.packet_id;
   int sent = selected_connection_->Send(data, len, options);
   if (sent <= 0) {
-    ASSERT(sent < 0);
+    RTC_DCHECK(sent < 0);
     error_ = selected_connection_->GetError();
   }
   return sent;
 }
 
 bool P2PTransportChannel::GetStats(ConnectionInfos *infos) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
   // Gather connection infos.
   infos->clear();
 
   for (Connection* connection : connections_) {
     ConnectionInfo info = connection->stats();
     info.best_connection = (selected_connection_ == connection);
-    info.receiving = connection->receiving();
-    info.writable = (connection->write_state() == Connection::STATE_WRITABLE);
-    info.timeout =
-        (connection->write_state() == Connection::STATE_WRITE_TIMEOUT);
-    info.new_connection = !connection->reported();
+    infos->push_back(std::move(info));
     connection->set_reported(true);
-    info.rtt = connection->rtt();
-    info.local_candidate = connection->local_candidate();
-    info.remote_candidate = connection->remote_candidate();
-    info.key = connection;
-    infos->push_back(info);
   }
 
   return true;
@@ -1024,7 +1057,7 @@ void P2PTransportChannel::UpdateConnectionStates() {
 // Prepare for best candidate sorting.
 void P2PTransportChannel::RequestSortAndStateUpdate() {
   if (!sort_dirty_) {
-    worker_thread_->Post(RTC_FROM_HERE, this, MSG_SORT_AND_UPDATE_STATE);
+    network_thread_->Post(RTC_FROM_HERE, this, MSG_SORT_AND_UPDATE_STATE);
     sort_dirty_ = true;
   }
 }
@@ -1203,7 +1236,7 @@ bool P2PTransportChannel::PresumedWritable(const Connection* conn) const {
 // Sort the available connections to find the best one.  We also monitor
 // the number of available connections and the current state.
 void P2PTransportChannel::SortConnectionsAndUpdateState() {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
 
   // Make sure the connection states are up-to-date since this affects how they
   // will be sorted.
@@ -1216,6 +1249,7 @@ void P2PTransportChannel::SortConnectionsAndUpdateState() {
   // that amongst equal preference, writable connections, this will choose the
   // one whose estimated latency is lowest.  So it is the only one that we
   // need to consider switching to.
+  // TODO(honghaiz): Don't sort;  Just use std::max_element in the right places.
   std::stable_sort(connections_.begin(), connections_.end(),
                    [this](const Connection* a, const Connection* b) {
                      int cmp = CompareConnections(
@@ -1278,6 +1312,37 @@ void P2PTransportChannel::SortConnectionsAndUpdateState() {
   MaybeStartPinging();
 }
 
+std::map<rtc::Network*, Connection*>
+P2PTransportChannel::GetBestConnectionByNetwork() const {
+  // |connections_| has been sorted, so the first one in the list on a given
+  // network is the best connection on the network, except that the selected
+  // connection is always the best connection on the network.
+  std::map<rtc::Network*, Connection*> best_connection_by_network;
+  if (selected_connection_) {
+    best_connection_by_network[selected_connection_->port()->Network()] =
+        selected_connection_;
+  }
+  // TODO(honghaiz): Need to update this if |connections_| are not sorted.
+  for (Connection* conn : connections_) {
+    rtc::Network* network = conn->port()->Network();
+    // This only inserts when the network does not exist in the map.
+    best_connection_by_network.insert(std::make_pair(network, conn));
+  }
+  return best_connection_by_network;
+}
+
+std::vector<Connection*>
+P2PTransportChannel::GetBestWritableConnectionPerNetwork() const {
+  std::vector<Connection*> connections;
+  for (auto kv : GetBestConnectionByNetwork()) {
+    Connection* conn = kv.second;
+    if (conn->writable() && conn->connected()) {
+      connections.push_back(conn);
+    }
+  }
+  return connections;
+}
+
 void P2PTransportChannel::PruneConnections() {
   // We can prune any connection for which there is a connected, writable
   // connection on the same network with better or equal priority.  We leave
@@ -1285,28 +1350,19 @@ void P2PTransportChannel::PruneConnections() {
   // which point, we would prune out the current selected connection).  We leave
   // connections on other networks because they may not be using the same
   // resources and they may represent very distinct paths over which we can
-  // switch. If the |premier| connection is not connected, we may be
-  // reconnecting a TCP connection and temporarily do not prune connections in
-  // this network. See the big comment in CompareConnectionStates.
-
-  // Get a list of the networks that we are using.
-  std::set<rtc::Network*> networks;
-  for (const Connection* conn : connections_) {
-    networks.insert(conn->port()->Network());
-  }
-  for (rtc::Network* network : networks) {
-    Connection* premier = GetBestConnectionOnNetwork(network);
-    // Do not prune connections if the current selected connection is weak on
-    // this network. Otherwise, it may delete connections prematurely.
-    if (!premier || premier->weak()) {
-      continue;
-    }
-
-    for (Connection* conn : connections_) {
-      if ((conn != premier) && (conn->port()->Network() == network) &&
-          (CompareConnectionCandidates(premier, conn) >= 0)) {
-        conn->Prune();
-      }
+  // switch. If |best_conn_on_network| is not connected, we may be reconnecting
+  // a TCP connection and should not prune connections in this network.
+  // See the big comment in CompareConnectionStates.
+  auto best_connection_by_network = GetBestConnectionByNetwork();
+  for (Connection* conn : connections_) {
+    // Do not prune connections if the current best connection on this network
+    // is weak. Otherwise, it may delete connections prematurely.
+    Connection* best_conn_on_network =
+        best_connection_by_network[conn->port()->Network()];
+    if (best_conn_on_network && conn != best_conn_on_network &&
+        !best_conn_on_network->weak() &&
+        CompareConnectionCandidates(best_conn_on_network, conn) >= 0) {
+      conn->Prune();
     }
   }
 }
@@ -1350,36 +1406,41 @@ void P2PTransportChannel::SwitchSelectedConnection(Connection* conn) {
 // change, it should be called after all the connection states have changed. For
 // example, we call this at the end of SortConnectionsAndUpdateState.
 void P2PTransportChannel::UpdateState() {
-  TransportChannelState state = ComputeState();
+  IceTransportState state = ComputeState();
   if (state_ != state) {
-    LOG_J(LS_INFO, this) << "Transport channel state changed from " << state_
-                         << " to " << state;
+    LOG_J(LS_INFO, this) << "Transport channel state changed from "
+                         << static_cast<int>(state_) << " to "
+                         << static_cast<int>(state);
     // Check that the requested transition is allowed. Note that
     // P2PTransportChannel does not (yet) implement a direct mapping of the ICE
     // states from the standard; the difference is covered by
     // TransportController and PeerConnection.
     switch (state_) {
-      case STATE_INIT:
+      case IceTransportState::STATE_INIT:
         // TODO(deadbeef): Once we implement end-of-candidates signaling,
         // we shouldn't go from INIT to COMPLETED.
-        RTC_DCHECK(state == STATE_CONNECTING || state == STATE_COMPLETED);
+        RTC_DCHECK(state == IceTransportState::STATE_CONNECTING ||
+                   state == IceTransportState::STATE_COMPLETED);
         break;
-      case STATE_CONNECTING:
-        RTC_DCHECK(state == STATE_COMPLETED || state == STATE_FAILED);
+      case IceTransportState::STATE_CONNECTING:
+        RTC_DCHECK(state == IceTransportState::STATE_COMPLETED ||
+                   state == IceTransportState::STATE_FAILED);
         break;
-      case STATE_COMPLETED:
+      case IceTransportState::STATE_COMPLETED:
         // TODO(deadbeef): Once we implement end-of-candidates signaling,
         // we shouldn't go from COMPLETED to CONNECTING.
         // Though we *can* go from COMPlETED to FAILED, if consent expires.
-        RTC_DCHECK(state == STATE_CONNECTING || state == STATE_FAILED);
+        RTC_DCHECK(state == IceTransportState::STATE_CONNECTING ||
+                   state == IceTransportState::STATE_FAILED);
         break;
-      case STATE_FAILED:
+      case IceTransportState::STATE_FAILED:
         // TODO(deadbeef): Once we implement end-of-candidates signaling,
         // we shouldn't go from FAILED to CONNECTING or COMPLETED.
-        RTC_DCHECK(state == STATE_CONNECTING || state == STATE_COMPLETED);
+        RTC_DCHECK(state == IceTransportState::STATE_CONNECTING ||
+                   state == IceTransportState::STATE_COMPLETED);
         break;
       default:
-        RTC_DCHECK(false);
+        RTC_NOTREACHED();
         break;
     }
     state_ = state;
@@ -1444,26 +1505,6 @@ bool P2PTransportChannel::ReadyToSend(Connection* connection) const {
           PresumedWritable(connection));
 }
 
-// If we have a selected connection, return it, otherwise return top one in the
-// list (later we will mark it best).
-Connection* P2PTransportChannel::GetBestConnectionOnNetwork(
-    rtc::Network* network) const {
-  // If the selected connection is on this network, then it wins.
-  if (selected_connection_ &&
-      (selected_connection_->port()->Network() == network)) {
-    return selected_connection_;
-  }
-
-  // Otherwise, we return the top-most in sorted order.
-  for (size_t i = 0; i < connections_.size(); ++i) {
-    if (connections_[i]->port()->Network() == network) {
-      return connections_[i];
-    }
-  }
-
-  return NULL;
-}
-
 // Handle any queued up requests
 void P2PTransportChannel::OnMessage(rtc::Message *pmsg) {
   switch (pmsg->message_id) {
@@ -1477,7 +1518,7 @@ void P2PTransportChannel::OnMessage(rtc::Message *pmsg) {
       OnRegatherOnFailedNetworks();
       break;
     default:
-      ASSERT(false);
+      RTC_NOTREACHED();
       break;
   }
 }
@@ -1496,8 +1537,8 @@ void P2PTransportChannel::OnCheckAndPing() {
                conn->num_pings_sent() < MIN_PINGS_AT_WEAK_PING_INTERVAL;
       });
   int ping_interval = (weak() || need_more_pings_at_weak_interval)
-                          ? weak_ping_interval_
-                          : STRONG_PING_INTERVAL;
+                          ? weak_ping_interval()
+                          : strong_ping_interval();
   if (rtc::TimeMillis() >= last_ping_sent_ms_ + ping_interval) {
     Connection* conn = FindNextPingableConnection();
     if (conn) {
@@ -1512,8 +1553,8 @@ void P2PTransportChannel::OnCheckAndPing() {
 // A connection is considered a backup connection if the channel state
 // is completed, the connection is not the selected connection and it is active.
 bool P2PTransportChannel::IsBackupConnection(const Connection* conn) const {
-  return state_ == STATE_COMPLETED && conn != selected_connection_ &&
-         conn->active();
+  return state_ == IceTransportState::STATE_COMPLETED &&
+         conn != selected_connection_ && conn->active();
 }
 
 // Is the connection in a state for us to even consider pinging the other side?
@@ -1523,14 +1564,14 @@ bool P2PTransportChannel::IsPingable(const Connection* conn,
                                      int64_t now) const {
   const Candidate& remote = conn->remote_candidate();
   // We should never get this far with an empty remote ufrag.
-  ASSERT(!remote.username().empty());
+  RTC_DCHECK(!remote.username().empty());
   if (remote.username().empty() || remote.password().empty()) {
     // If we don't have an ICE ufrag and pwd, there's no way we can ping.
     return false;
   }
 
   // A failed connection will not be pinged.
-  if (conn->state() == Connection::STATE_FAILED) {
+  if (conn->state() == IceCandidatePairState::FAILED) {
     return false;
   }
 
@@ -1565,18 +1606,14 @@ bool P2PTransportChannel::IsPingable(const Connection* conn,
 
   // Ping writable, active connections if it's been long enough since the last
   // ping.
-  int ping_interval = CalculateActiveWritablePingInterval(conn, now);
-  return (now >= conn->last_ping_sent() + ping_interval);
+  return WritableConnectionPastPingInterval(conn, now);
 }
 
-bool P2PTransportChannel::IsSelectedConnectionPingable(int64_t now) {
-  if (!selected_connection_ || !selected_connection_->connected() ||
-      !selected_connection_->writable()) {
-    return false;
-  }
-
-  int interval = CalculateActiveWritablePingInterval(selected_connection_, now);
-  return selected_connection_->last_ping_sent() + interval <= now;
+bool P2PTransportChannel::WritableConnectionPastPingInterval(
+    const Connection* conn,
+    int64_t now) const {
+  int interval = CalculateActiveWritablePingInterval(conn, now);
+  return conn->last_ping_sent() + interval <= now;
 }
 
 int P2PTransportChannel::CalculateActiveWritablePingInterval(
@@ -1585,32 +1622,96 @@ int P2PTransportChannel::CalculateActiveWritablePingInterval(
   // Ping each connection at a higher rate at least
   // MIN_PINGS_AT_WEAK_PING_INTERVAL times.
   if (conn->num_pings_sent() < MIN_PINGS_AT_WEAK_PING_INTERVAL) {
-    return weak_ping_interval_;
+    return weak_ping_interval();
   }
 
   int stable_interval = config_.stable_writable_connection_ping_interval;
-  int stablizing_interval =
-      std::min(stable_interval, STABILIZING_WRITABLE_CONNECTION_PING_INTERVAL);
-
-  return conn->stable(now) ? stable_interval : stablizing_interval;
+  int weak_or_stablizing_interval = std::min(
+      stable_interval, WEAK_OR_STABILIZING_WRITABLE_CONNECTION_PING_INTERVAL);
+  // If the channel is weak or the connection is not stable yet, use the
+  // weak_or_stablizing_interval.
+  return (!weak() && conn->stable(now)) ? stable_interval
+                                        : weak_or_stablizing_interval;
 }
 
-// Returns the next pingable connection to ping.  This will be the oldest
-// pingable connection unless we have a connected, writable connection that is
-// past the writable ping interval. When reconnecting a TCP
-// connection, the selected connection is disconnected, although still WRITABLE
-// while reconnecting. The newly created connection should be selected as the
-// ping target to become writable instead. See the big comment in
-// CompareConnectionStates.
+// Returns the next pingable connection to ping.
 Connection* P2PTransportChannel::FindNextPingableConnection() {
   int64_t now = rtc::TimeMillis();
-  Connection* conn_to_ping = nullptr;
-  if (IsSelectedConnectionPingable(now)) {
-    conn_to_ping = selected_connection_;
-  } else {
-    conn_to_ping = FindConnectionToPing(now);
+
+  // Rule 1: Selected connection takes priority over non-selected ones.
+  if (selected_connection_ && selected_connection_->connected() &&
+      selected_connection_->writable() &&
+      WritableConnectionPastPingInterval(selected_connection_, now)) {
+    return selected_connection_;
   }
-  return conn_to_ping;
+
+  // Rule 2: If the channel is weak, we need to find a new writable and
+  // receiving connection, probably on a different network. If there are lots of
+  // connections, it may take several seconds between two pings for every
+  // non-selected connection. This will cause the receiving state of those
+  // connections to be false, and thus they won't be selected. This is
+  // problematic for network fail-over. We want to make sure at least one
+  // connection per network is pinged frequently enough in order for it to be
+  // selectable. So we prioritize one connection per network.
+  // Rule 2.1: Among such connections, pick the one with the earliest
+  // last-ping-sent time.
+  if (weak()) {
+    auto selectable_connections = GetBestWritableConnectionPerNetwork();
+    std::vector<Connection*> pingable_selectable_connections;
+    std::copy_if(selectable_connections.begin(), selectable_connections.end(),
+                 std::back_inserter(pingable_selectable_connections),
+                 [this, now](Connection* conn) {
+                   return WritableConnectionPastPingInterval(conn, now);
+                 });
+    auto iter = std::min_element(pingable_selectable_connections.begin(),
+                                 pingable_selectable_connections.end(),
+                                 [](Connection* conn1, Connection* conn2) {
+                                   return conn1->last_ping_sent() <
+                                          conn2->last_ping_sent();
+                                 });
+    if (iter != pingable_selectable_connections.end()) {
+      return *iter;
+    }
+  }
+
+  // Rule 3: Triggered checks have priority over non-triggered connections.
+  // Rule 3.1: Among triggered checks, oldest takes precedence.
+  Connection* oldest_triggered_check =
+      FindOldestConnectionNeedingTriggeredCheck(now);
+  if (oldest_triggered_check) {
+    return oldest_triggered_check;
+  }
+
+  // Rule 4: Unpinged connections have priority over pinged ones.
+  RTC_CHECK(connections_.size() ==
+            pinged_connections_.size() + unpinged_connections_.size());
+  // If there are unpinged and pingable connections, only ping those.
+  // Otherwise, treat everything as unpinged.
+  // TODO(honghaiz): Instead of adding two separate vectors, we can add a state
+  // "pinged" to filter out unpinged connections.
+  if (std::find_if(unpinged_connections_.begin(), unpinged_connections_.end(),
+                   [this, now](Connection* conn) {
+                     return this->IsPingable(conn, now);
+                   }) == unpinged_connections_.end()) {
+    unpinged_connections_.insert(pinged_connections_.begin(),
+                                 pinged_connections_.end());
+    pinged_connections_.clear();
+  }
+
+  // Among un-pinged pingable connections, "more pingable" takes precedence.
+  std::vector<Connection*> pingable_connections;
+  std::copy_if(unpinged_connections_.begin(), unpinged_connections_.end(),
+               std::back_inserter(pingable_connections),
+               [this, now](Connection* conn) { return IsPingable(conn, now); });
+  auto iter =
+      std::max_element(pingable_connections.begin(), pingable_connections.end(),
+                       [this](Connection* conn1, Connection* conn2) {
+                         return MorePingable(conn1, conn2) == conn2;
+                       });
+  if (iter != pingable_connections.end()) {
+    return *iter;
+  }
+  return nullptr;
 }
 
 void P2PTransportChannel::MarkConnectionPinged(Connection* conn) {
@@ -1678,7 +1779,7 @@ bool P2PTransportChannel::GetUseCandidateAttr(Connection* conn,
       return selected || better_than_selected;
     }
     default:
-      RTC_DCHECK(false);
+      RTC_NOTREACHED();
       return false;
   }
 }
@@ -1687,7 +1788,7 @@ bool P2PTransportChannel::GetUseCandidateAttr(Connection* conn,
 // the selected connection again.  It could have become usable, or become
 // unusable.
 void P2PTransportChannel::OnConnectionStateChange(Connection* connection) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
 
   // May stop the allocator session when at least one connection becomes
   // strongly connected after starting to get ports and the local candidate of
@@ -1709,7 +1810,7 @@ void P2PTransportChannel::OnConnectionStateChange(Connection* connection) {
 // When a connection is removed, edit it out, and then update our best
 // connection.
 void P2PTransportChannel::OnConnectionDestroyed(Connection* connection) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
 
   // Note: the previous selected_connection_ may be destroyed by now, so don't
   // use it.
@@ -1717,13 +1818,14 @@ void P2PTransportChannel::OnConnectionDestroyed(Connection* connection) {
   // Remove this connection from the list.
   std::vector<Connection*>::iterator iter =
       std::find(connections_.begin(), connections_.end(), connection);
-  ASSERT(iter != connections_.end());
+  RTC_DCHECK(iter != connections_.end());
   pinged_connections_.erase(*iter);
   unpinged_connections_.erase(*iter);
   connections_.erase(iter);
 
-  LOG_J(LS_INFO, this) << "Removed connection ("
-    << static_cast<int>(connections_.size()) << " remaining)";
+  LOG_J(LS_INFO, this) << "Removed connection " << std::hex << connection
+                       << std::dec << " (" << connections_.size()
+                       << " remaining)";
 
   // If this is currently the selected connection, then we need to pick a new
   // one. The call to SortConnectionsAndUpdateState will pick a new one. It
@@ -1746,7 +1848,7 @@ void P2PTransportChannel::OnConnectionDestroyed(Connection* connection) {
 // When a port is destroyed, remove it from our list of ports to use for
 // connection attempts.
 void P2PTransportChannel::OnPortDestroyed(PortInterface* port) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
 
   ports_.erase(std::remove(ports_.begin(), ports_.end(), port), ports_.end());
   pruned_ports_.erase(
@@ -1759,7 +1861,7 @@ void P2PTransportChannel::OnPortDestroyed(PortInterface* port) {
 void P2PTransportChannel::OnPortsPruned(
     PortAllocatorSession* session,
     const std::vector<PortInterface*>& ports) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
   for (PortInterface* port : ports) {
     if (PrunePort(port)) {
       LOG(INFO) << "Removed port: " << port->ToString() << " " << ports_.size()
@@ -1771,7 +1873,7 @@ void P2PTransportChannel::OnPortsPruned(
 void P2PTransportChannel::OnCandidatesRemoved(
     PortAllocatorSession* session,
     const std::vector<Candidate>& candidates) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
   // Do not signal candidate removals if continual gathering is not enabled, or
   // if this is not the last session because an ICE restart would have signaled
   // the remote side to remove all candidates in previous sessions.
@@ -1821,7 +1923,7 @@ void P2PTransportChannel::OnReadPacket(Connection* connection,
                                        const char* data,
                                        size_t len,
                                        const rtc::PacketTime& packet_time) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
 
   // Do not deliver, if packet doesn't belong to the correct transport channel.
   if (!FindConnection(connection))
@@ -1838,7 +1940,7 @@ void P2PTransportChannel::OnReadPacket(Connection* connection,
 }
 
 void P2PTransportChannel::OnSentPacket(const rtc::SentPacket& sent_packet) {
-  ASSERT(worker_thread_ == rtc::Thread::Current());
+  RTC_DCHECK(network_thread_ == rtc::Thread::Current());
 
   SignalSentPacket(this, sent_packet);
 }
@@ -1851,7 +1953,7 @@ void P2PTransportChannel::OnReadyToSend(Connection* connection) {
 
 // Find "triggered checks".  We ping first those connections that have
 // received a ping but have not sent a ping since receiving it
-// (last_received_ping > last_sent_ping).  But we shouldn't do
+// (last_ping_received > last_ping_sent).  But we shouldn't do
 // triggered checks if the connection is already writable.
 Connection* P2PTransportChannel::FindOldestConnectionNeedingTriggeredCheck(
     int64_t now) {
@@ -1876,39 +1978,6 @@ Connection* P2PTransportChannel::FindOldestConnectionNeedingTriggeredCheck(
                  << oldest_needing_triggered_check->ToString();
   }
   return oldest_needing_triggered_check;
-}
-
-Connection* P2PTransportChannel::FindConnectionToPing(int64_t now) {
-  RTC_CHECK(connections_.size() ==
-            pinged_connections_.size() + unpinged_connections_.size());
-
-  // If there is nothing pingable in the |unpinged_connections_|, copy
-  // over from |pinged_connections_|. We do this here such that the
-  // new connection will take precedence.
-  if (std::find_if(unpinged_connections_.begin(), unpinged_connections_.end(),
-                   [this, now](Connection* conn) {
-                     return this->IsPingable(conn, now);
-                   }) == unpinged_connections_.end()) {
-    unpinged_connections_.insert(pinged_connections_.begin(),
-                                 pinged_connections_.end());
-    pinged_connections_.clear();
-  }
-
-  Connection* conn_to_ping = FindOldestConnectionNeedingTriggeredCheck(now);
-  if (conn_to_ping) {
-    return conn_to_ping;
-  }
-
-  for (Connection* conn : unpinged_connections_) {
-    if (!IsPingable(conn, now)) {
-      continue;
-    }
-    if (!conn_to_ping ||
-        SelectMostPingableConnection(conn_to_ping, conn) == conn) {
-      conn_to_ping = conn;
-    }
-  }
-  return conn_to_ping;
 }
 
 Connection* P2PTransportChannel::MostLikelyToWork(Connection* conn1,
@@ -1942,9 +2011,8 @@ Connection* P2PTransportChannel::LeastRecentlyPinged(Connection* conn1,
   return nullptr;
 }
 
-Connection* P2PTransportChannel::SelectMostPingableConnection(
-    Connection* conn1,
-    Connection* conn2) {
+Connection* P2PTransportChannel::MorePingable(Connection* conn1,
+                                              Connection* conn2) {
   RTC_DCHECK(conn1 != conn2);
   if (config_.prioritize_most_likely_candidate_pairs) {
     Connection* most_likely_to_work_conn = MostLikelyToWork(conn1, conn2);
@@ -1964,6 +2032,27 @@ Connection* P2PTransportChannel::SelectMostPingableConnection(
                         [conn1, conn2](Connection* conn) {
                           return conn == conn1 || conn == conn2;
                         }));
+}
+
+void P2PTransportChannel::set_writable(bool writable) {
+  if (writable_ == writable) {
+    return;
+  }
+  LOG_J(LS_VERBOSE, this) << "set_writable from:" << writable_ << " to "
+                          << writable;
+  writable_ = writable;
+  if (writable_) {
+    SignalReadyToSend(this);
+  }
+  SignalWritableState(this);
+}
+
+void P2PTransportChannel::set_receiving(bool receiving) {
+  if (receiving_ == receiving) {
+    return;
+  }
+  receiving_ = receiving;
+  SignalReceivingState(this);
 }
 
 }  // namespace cricket

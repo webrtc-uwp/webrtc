@@ -15,12 +15,11 @@
 #include <utility>
 #include <vector>
 
+#include "webrtc/api/video/video_frame.h"
 #include "webrtc/base/criticalsection.h"
 #include "webrtc/base/thread_checker.h"
-#include "webrtc/media/base/videoframe.h"
 #include "webrtc/media/base/videosinkinterface.h"
 #include "webrtc/media/base/videosourcebase.h"
-#include "webrtc/media/engine/webrtcvideoframe.h"
 
 namespace rtc {
 
@@ -31,17 +30,12 @@ namespace rtc {
 // Video frames can be broadcasted on any thread. I.e VideoBroadcaster::OnFrame
 // can be called on any thread.
 class VideoBroadcaster : public VideoSourceBase,
-                         public VideoSinkInterface<cricket::VideoFrame> {
+                         public VideoSinkInterface<webrtc::VideoFrame> {
  public:
   VideoBroadcaster();
-  bool Suspend() override { return false; }
-  bool Resume() override { return false; }
-  bool IsSuspended() override { return false; }
-  void SetIsH264Source(bool isH264) override { }
-  bool IsH264Source() override { return false; }
-  void AddOrUpdateSink(VideoSinkInterface<cricket::VideoFrame>* sink,
+  void AddOrUpdateSink(VideoSinkInterface<webrtc::VideoFrame>* sink,
                        const VideoSinkWants& wants) override;
-  void RemoveSink(VideoSinkInterface<cricket::VideoFrame>* sink) override;
+  void RemoveSink(VideoSinkInterface<webrtc::VideoFrame>* sink) override;
 
   // Returns true if the next frame will be delivered to at least one sink.
   bool frame_wanted() const;
@@ -50,7 +44,11 @@ class VideoBroadcaster : public VideoSourceBase,
   // aggregated by all VideoSinkWants from all sinks.
   VideoSinkWants wants() const;
 
-  void OnFrame(const cricket::VideoFrame& frame) override;
+  // This method ensures that if a sink sets rotation_applied == true,
+  // it will never receive a frame with pending rotation. Our caller
+  // may pass in frames without precise synchronization with changes
+  // to the VideoSinkWants.
+  void OnFrame(const webrtc::VideoFrame& frame) override;
 
  protected:
   void UpdateWants() EXCLUSIVE_LOCKS_REQUIRED(sinks_and_wants_lock_);

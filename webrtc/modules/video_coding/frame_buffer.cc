@@ -66,6 +66,10 @@ bool VCMFrameBuffer::NonReference() const {
   return _sessionInfo.NonReference();
 }
 
+std::vector<NaluInfo> VCMFrameBuffer::GetNaluInfos() const {
+  return _sessionInfo.GetNaluInfos();
+}
+
 void VCMFrameBuffer::SetGofInfo(const GofInfoVP9& gof_info, size_t idx) {
   _sessionInfo.SetGofInfo(gof_info, idx);
   // TODO(asapersson): Consider adding hdr->VP9.ref_picture_id for testing.
@@ -157,7 +161,7 @@ VCMFrameBufferEnum VCMFrameBuffer::InsertPacket(
     _rotation_set = true;
   }
 
-  if (packet.isFirstPacket) {
+  if (packet.is_first_packet_in_frame) {
     playout_delay_ = packet.video_header.playout_delay;
   }
 
@@ -253,18 +257,8 @@ bool VCMFrameBuffer::IsRetransmitted() const {
 }
 
 void VCMFrameBuffer::PrepareForDecode(bool continuous) {
-#ifdef INDEPENDENT_PARTITIONS
-  if (_codec == kVideoCodecVP8) {
-    _length = _sessionInfo.BuildVP8FragmentationHeader(_buffer, _length,
-                                                       &_fragmentation);
-  } else {
-    size_t bytes_removed = _sessionInfo.MakeDecodable();
-    _length -= bytes_removed;
-  }
-#else
   size_t bytes_removed = _sessionInfo.MakeDecodable();
   _length -= bytes_removed;
-#endif
   // Transfer frame information to EncodedFrame and create any codec
   // specific information.
   _frameType = _sessionInfo.FrameType();

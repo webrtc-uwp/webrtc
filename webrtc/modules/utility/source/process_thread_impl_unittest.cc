@@ -11,12 +11,12 @@
 #include <memory>
 #include <utility>
 
-#include "testing/gmock/include/gmock/gmock.h"
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/task_queue.h"
 #include "webrtc/base/timeutils.h"
 #include "webrtc/modules/include/module.h"
 #include "webrtc/modules/utility/source/process_thread_impl.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 
@@ -26,6 +26,11 @@ using ::testing::InSequence;
 using ::testing::Invoke;
 using ::testing::Return;
 using ::testing::SetArgPointee;
+
+// The length of time, in milliseconds, to wait for an event to become signaled.
+// Set to a fairly large value as there is quite a bit of variation on some
+// Windows bots.
+static const int kEventWaitTimeout = 500;
 
 class MockModule : public Module {
  public:
@@ -80,14 +85,16 @@ TEST(ProcessThreadImpl, ProcessCall) {
   std::unique_ptr<EventWrapper> event(EventWrapper::Create());
 
   MockModule module;
-  EXPECT_CALL(module, TimeUntilNextProcess()).WillRepeatedly(Return(0));
+  EXPECT_CALL(module, TimeUntilNextProcess())
+      .WillOnce(Return(0))
+      .WillRepeatedly(Return(1));
   EXPECT_CALL(module, Process())
       .WillOnce(DoAll(SetEvent(event.get()), Return()))
       .WillRepeatedly(Return());
   EXPECT_CALL(module, ProcessThreadAttached(&thread)).Times(1);
 
   thread.RegisterModule(&module);
-  EXPECT_EQ(kEventSignaled, event->Wait(100));
+  EXPECT_EQ(kEventSignaled, event->Wait(kEventWaitTimeout));
 
   EXPECT_CALL(module, ProcessThreadAttached(nullptr)).Times(1);
   thread.Stop();
@@ -100,7 +107,9 @@ TEST(ProcessThreadImpl, ProcessCall2) {
   std::unique_ptr<EventWrapper> event(EventWrapper::Create());
 
   MockModule module;
-  EXPECT_CALL(module, TimeUntilNextProcess()).WillRepeatedly(Return(0));
+  EXPECT_CALL(module, TimeUntilNextProcess())
+      .WillOnce(Return(0))
+      .WillRepeatedly(Return(1));
   EXPECT_CALL(module, Process())
       .WillOnce(DoAll(SetEvent(event.get()), Return()))
       .WillRepeatedly(Return());
@@ -109,7 +118,7 @@ TEST(ProcessThreadImpl, ProcessCall2) {
 
   EXPECT_CALL(module, ProcessThreadAttached(&thread)).Times(1);
   thread.Start();
-  EXPECT_EQ(kEventSignaled, event->Wait(100));
+  EXPECT_EQ(kEventSignaled, event->Wait(kEventWaitTimeout));
 
   EXPECT_CALL(module, ProcessThreadAttached(nullptr)).Times(1);
   thread.Stop();
@@ -123,7 +132,9 @@ TEST(ProcessThreadImpl, Deregister) {
 
   int process_count = 0;
   MockModule module;
-  EXPECT_CALL(module, TimeUntilNextProcess()).WillRepeatedly(Return(0));
+  EXPECT_CALL(module, TimeUntilNextProcess())
+      .WillOnce(Return(0))
+      .WillRepeatedly(Return(1));
   EXPECT_CALL(module, Process())
       .WillOnce(DoAll(SetEvent(event.get()),
                       Increment(&process_count),
@@ -135,7 +146,7 @@ TEST(ProcessThreadImpl, Deregister) {
   EXPECT_CALL(module, ProcessThreadAttached(&thread)).Times(1);
   thread.Start();
 
-  EXPECT_EQ(kEventSignaled, event->Wait(100));
+  EXPECT_EQ(kEventSignaled, event->Wait(kEventWaitTimeout));
 
   EXPECT_CALL(module, ProcessThreadAttached(nullptr)).Times(1);
   thread.DeRegisterModule(&module);
@@ -281,9 +292,9 @@ TEST(ProcessThreadImpl, WakeUp) {
   EXPECT_CALL(module, ProcessThreadAttached(&thread)).Times(1);
   thread.RegisterModule(&module);
 
-  EXPECT_EQ(kEventSignaled, started->Wait(100));
+  EXPECT_EQ(kEventSignaled, started->Wait(kEventWaitTimeout));
   thread.WakeUp(&module);
-  EXPECT_EQ(kEventSignaled, called->Wait(100));
+  EXPECT_EQ(kEventSignaled, called->Wait(kEventWaitTimeout));
 
   EXPECT_CALL(module, ProcessThreadAttached(nullptr)).Times(1);
   thread.Stop();
@@ -302,7 +313,7 @@ TEST(ProcessThreadImpl, PostTask) {
   std::unique_ptr<RaiseEventTask> task(new RaiseEventTask(task_ran.get()));
   thread.Start();
   thread.PostTask(std::move(task));
-  EXPECT_EQ(kEventSignaled, task_ran->Wait(100));
+  EXPECT_EQ(kEventSignaled, task_ran->Wait(kEventWaitTimeout));
   thread.Stop();
 }
 

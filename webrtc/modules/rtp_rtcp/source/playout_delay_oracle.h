@@ -11,7 +11,8 @@
 #ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_PLAYOUT_DELAY_ORACLE_H_
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_PLAYOUT_DELAY_ORACLE_H_
 
-#include "webrtc/base/basictypes.h"
+#include <stdint.h>
+
 #include "webrtc/base/criticalsection.h"
 #include "webrtc/base/thread_annotations.h"
 #include "webrtc/modules/include/module_common_types.h"
@@ -42,16 +43,10 @@ class PlayoutDelayOracle {
     return send_playout_delay_;
   }
 
-  // Returns current minimum playout delay in milliseconds.
-  int min_playout_delay_ms() const {
+  // Returns current playout delay.
+  PlayoutDelay playout_delay() const {
     rtc::CritScope lock(&crit_sect_);
-    return min_playout_delay_ms_;
-  }
-
-  // Returns current maximum playout delay in milliseconds.
-  int max_playout_delay_ms() const {
-    rtc::CritScope lock(&crit_sect_);
-    return max_playout_delay_ms_;
+    return playout_delay_;
   }
 
   // Updates the application requested playout delay, current ssrc
@@ -75,10 +70,8 @@ class PlayoutDelayOracle {
   uint32_t ssrc_ GUARDED_BY(crit_sect_);
   // Sequence number unwrapper.
   SequenceNumberUnwrapper unwrapper_ GUARDED_BY(crit_sect_);
-  // Min playout delay value on the next frame if |send_playout_delay_| is set.
-  int min_playout_delay_ms_ GUARDED_BY(crit_sect_);
-  // Max playout delay value on the next frame if |send_playout_delay_| is set.
-  int max_playout_delay_ms_ GUARDED_BY(crit_sect_);
+  // Playout delay values on the next frame if |send_playout_delay_| is set.
+  PlayoutDelay playout_delay_ GUARDED_BY(crit_sect_);
 
   RTC_DISALLOW_COPY_AND_ASSIGN(PlayoutDelayOracle);
 };

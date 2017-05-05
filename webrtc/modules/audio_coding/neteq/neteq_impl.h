@@ -46,7 +46,7 @@ class Merge;
 class NackTracker;
 class Normal;
 class PacketBuffer;
-class PayloadSplitter;
+class RedPayloadSplitter;
 class PostDecodeVad;
 class PreemptiveExpand;
 class RandomVector;
@@ -86,7 +86,7 @@ class NetEqImpl : public webrtc::NetEq {
     std::unique_ptr<DtmfBuffer> dtmf_buffer;
     std::unique_ptr<DtmfToneGenerator> dtmf_tone_generator;
     std::unique_ptr<PacketBuffer> packet_buffer;
-    std::unique_ptr<PayloadSplitter> payload_splitter;
+    std::unique_ptr<RedPayloadSplitter> red_payload_splitter;
     std::unique_ptr<TimestampScaler> timestamp_scaler;
     std::unique_ptr<AccelerateFactory> accelerate_factory;
     std::unique_ptr<ExpandFactory> expand_factory;
@@ -108,18 +108,6 @@ class NetEqImpl : public webrtc::NetEq {
                    rtc::ArrayView<const uint8_t> payload,
                    uint32_t receive_timestamp) override;
 
-  // Inserts a sync-packet into packet queue. Sync-packets are decoded to
-  // silence and are intended to keep AV-sync intact in an event of long packet
-  // losses when Video NACK is enabled but Audio NACK is not. Clients of NetEq
-  // might insert sync-packet when they observe that buffer level of NetEq is
-  // decreasing below a certain threshold, defined by the application.
-  // Sync-packets should have the same payload type as the last audio payload
-  // type, i.e. they cannot have DTMF or CNG payload type, nor a codec change
-  // can be implied by inserting a sync-packet.
-  // Returns kOk on success, kFail on failure.
-  int InsertSyncPacket(const WebRtcRTPHeader& rtp_header,
-                       uint32_t receive_timestamp) override;
-
   int GetAudio(AudioFrame* audio_frame, bool* muted) override;
 
   int RegisterPayloadType(NetEqDecoder codec,
@@ -131,9 +119,14 @@ class NetEqImpl : public webrtc::NetEq {
                               const std::string& codec_name,
                               uint8_t rtp_payload_type) override;
 
+  bool RegisterPayloadType(int rtp_payload_type,
+                           const SdpAudioFormat& audio_format) override;
+
   // Removes |rtp_payload_type| from the codec database. Returns 0 on success,
   // -1 on failure.
   int RemovePayloadType(uint8_t rtp_payload_type) override;
+
+  void RemoveAllPayloadTypes() override;
 
   bool SetMinimumDelay(int delay_ms) override;
 
@@ -181,6 +174,11 @@ class NetEqImpl : public webrtc::NetEq {
 
   int last_output_sample_rate_hz() const override;
 
+  rtc::Optional<CodecInst> GetDecoder(int payload_type) const override;
+
+  rtc::Optional<SdpAudioFormat> GetDecoderFormat(
+      int payload_type) const override;
+
   int SetTargetNumberOfChannels() override;
 
   int SetTargetSampleRate() override;
@@ -223,8 +221,7 @@ class NetEqImpl : public webrtc::NetEq {
   // TODO(hlundin): Merge this with InsertPacket above?
   int InsertPacketInternal(const WebRtcRTPHeader& rtp_header,
                            rtc::ArrayView<const uint8_t> payload,
-                           uint32_t receive_timestamp,
-                           bool is_sync_packet)
+                           uint32_t receive_timestamp)
       EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
 
   // Delivers 10 ms of audio data. The data is written to |audio_frame|.
@@ -360,7 +357,7 @@ class NetEqImpl : public webrtc::NetEq {
   const std::unique_ptr<DtmfToneGenerator> dtmf_tone_generator_
       GUARDED_BY(crit_sect_);
   const std::unique_ptr<PacketBuffer> packet_buffer_ GUARDED_BY(crit_sect_);
-  const std::unique_ptr<PayloadSplitter> payload_splitter_
+  const std::unique_ptr<RedPayloadSplitter> red_payload_splitter_
       GUARDED_BY(crit_sect_);
   const std::unique_ptr<TimestampScaler> timestamp_scaler_
       GUARDED_BY(crit_sect_);

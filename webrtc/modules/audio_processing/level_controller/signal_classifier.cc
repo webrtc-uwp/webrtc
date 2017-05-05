@@ -16,7 +16,6 @@
 
 #include "webrtc/base/array_view.h"
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/modules/audio_processing/aec/aec_rdft.h"
 #include "webrtc/modules/audio_processing/audio_buffer.h"
 #include "webrtc/modules/audio_processing/level_controller/down_sampler.h"
 #include "webrtc/modules/audio_processing/level_controller/noise_spectrum_estimator.h"
@@ -26,7 +25,7 @@ namespace webrtc {
 namespace {
 
 void RemoveDcLevel(rtc::ArrayView<float> x) {
-  RTC_DCHECK_LT(0u, x.size());
+  RTC_DCHECK_LT(0, x.size());
   float mean = std::accumulate(x.data(), x.data() + x.size(), 0.f);
   mean /= x.size();
 
@@ -35,13 +34,14 @@ void RemoveDcLevel(rtc::ArrayView<float> x) {
   }
 }
 
-void PowerSpectrum(rtc::ArrayView<const float> x,
+void PowerSpectrum(const OouraFft* ooura_fft,
+                   rtc::ArrayView<const float> x,
                    rtc::ArrayView<float> spectrum) {
-  RTC_DCHECK_EQ(65u, spectrum.size());
-  RTC_DCHECK_EQ(128u, x.size());
+  RTC_DCHECK_EQ(65, spectrum.size());
+  RTC_DCHECK_EQ(128, x.size());
   float X[128];
   std::copy(x.data(), x.data() + x.size(), X);
-  aec_rdft_forward_128(X);
+  ooura_fft->Fft(X);
 
   float* X_p = X;
   RTC_DCHECK_EQ(X_p, &X[0]);
@@ -118,7 +118,6 @@ SignalClassifier::SignalClassifier(ApmDataDumper* data_dumper)
 SignalClassifier::~SignalClassifier() {}
 
 void SignalClassifier::Initialize(int sample_rate_hz) {
-  aec_rdft_init();
   down_sampler_.Initialize(sample_rate_hz);
   noise_spectrum_estimator_.Initialize();
   frame_extender_.reset(new FrameExtender(80, 128));
@@ -130,7 +129,7 @@ void SignalClassifier::Initialize(int sample_rate_hz) {
 
 void SignalClassifier::Analyze(const AudioBuffer& audio,
                                SignalType* signal_type) {
-  RTC_DCHECK_EQ(audio.num_frames(), static_cast<size_t>(sample_rate_hz_ / 100));
+  RTC_DCHECK_EQ(audio.num_frames(), sample_rate_hz_ / 100);
 
   // Compute the signal power spectrum.
   float downsampled_frame[80];
@@ -141,7 +140,7 @@ void SignalClassifier::Analyze(const AudioBuffer& audio,
   frame_extender_->ExtendFrame(downsampled_frame, extended_frame);
   RemoveDcLevel(extended_frame);
   float signal_spectrum[65];
-  PowerSpectrum(extended_frame, signal_spectrum);
+  PowerSpectrum(&ooura_fft_, extended_frame, signal_spectrum);
 
   // Classify the signal based on the estimate of the noise spectrum and the
   // signal spectrum estimate.

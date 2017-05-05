@@ -217,42 +217,45 @@ uint32_t PacketProcessor::bits_per_second() const {
 RateCounterFilter::RateCounterFilter(PacketProcessorListener* listener,
                                      int flow_id,
                                      const char* name,
-                                     const std::string& plot_name)
+                                     const std::string& algorithm_name)
     : PacketProcessor(listener, flow_id, kRegular),
       packets_per_second_stats_(),
       kbps_stats_(),
       start_plotting_time_ms_(0),
-      plot_name_(plot_name) {
-  std::stringstream ss;
-  ss << name << "_" << flow_id;
-  name_ = ss.str();
-}
+#if BWE_TEST_LOGGING_COMPILE_TIME_ENABLE
+      flow_id_(flow_id),
+#endif
+      name_(name),
+      algorithm_name_(algorithm_name) {}
 
 RateCounterFilter::RateCounterFilter(PacketProcessorListener* listener,
                                      const FlowIds& flow_ids,
                                      const char* name,
-                                     const std::string& plot_name)
+                                     const std::string& algorithm_name)
     : PacketProcessor(listener, flow_ids, kRegular),
       packets_per_second_stats_(),
       kbps_stats_(),
       start_plotting_time_ms_(0),
-      plot_name_(plot_name) {
+      name_(name),
+      algorithm_name_(algorithm_name) {
+  // TODO(terelius): Appending the flow IDs to the algorithm name is a hack to
+  // keep the current plot functionality without having to print the full
+  // context for each PLOT line. It is unclear whether multiple flow IDs are
+  // needed at all in the long term.
   std::stringstream ss;
-  ss << name;
-  char delimiter = '_';
+  ss << algorithm_name_;
   for (int flow_id : flow_ids) {
-    ss << delimiter << flow_id;
-    delimiter = ',';
+    ss << ',' << flow_id;
   }
-  name_ = ss.str();
+  algorithm_name_ = ss.str();
 }
 
 RateCounterFilter::RateCounterFilter(PacketProcessorListener* listener,
                                      const FlowIds& flow_ids,
                                      const char* name,
                                      int64_t start_plotting_time_ms,
-                                     const std::string& plot_name)
-    : RateCounterFilter(listener, flow_ids, name, plot_name) {
+                                     const std::string& algorithm_name)
+    : RateCounterFilter(listener, flow_ids, name, algorithm_name) {
   start_plotting_time_ms_ = start_plotting_time_ms;
 }
 
@@ -272,19 +275,23 @@ Stats<double> RateCounterFilter::GetBitrateStats() const {
 }
 
 void RateCounterFilter::Plot(int64_t timestamp_ms) {
+  // TODO(stefan): Reorganize logging configuration to reduce amount
+  // of preprocessor conditionals in the code.
+#if BWE_TEST_LOGGING_COMPILE_TIME_ENABLE
   uint32_t plot_kbps = 0;
   if (timestamp_ms >= start_plotting_time_ms_) {
     plot_kbps = rate_counter_.bits_per_second() / 1000.0;
   }
   BWE_TEST_LOGGING_CONTEXT(name_.c_str());
-  if (plot_name_.empty()) {
-    BWE_TEST_LOGGING_PLOT(0, "Throughput_kbps#1", timestamp_ms, plot_kbps);
+  if (algorithm_name_.empty()) {
+    BWE_TEST_LOGGING_PLOT_WITH_SSRC(0, "Throughput_kbps#1", timestamp_ms,
+                                    plot_kbps, flow_id_);
   } else {
-    BWE_TEST_LOGGING_PLOT_WITH_NAME(0, "Throughput_kbps#1", timestamp_ms,
-                                    plot_kbps, plot_name_);
+    BWE_TEST_LOGGING_PLOT_WITH_NAME_AND_SSRC(0, "Throughput_kbps#1",
+                                             timestamp_ms, plot_kbps, flow_id_,
+                                             algorithm_name_);
   }
-
-  RTC_UNUSED(plot_kbps);
+#endif
 }
 
 void RateCounterFilter::RunFor(int64_t /*time_ms*/, Packets* in_out) {
@@ -758,7 +765,7 @@ AdaptiveVideoSource::AdaptiveVideoSource(int flow_id,
 }
 
 void AdaptiveVideoSource::SetBitrateBps(int bitrate_bps) {
-  bits_per_second_ = std::min(bitrate_bps, 2500000);
+  bits_per_second_ = bitrate_bps;
   frame_size_bytes_ = (bits_per_second_ / 8 * frame_period_ms_ + 500) / 1000;
 }
 

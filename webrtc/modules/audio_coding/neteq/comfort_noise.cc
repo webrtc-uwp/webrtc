@@ -12,8 +12,8 @@
 
 #include <assert.h>
 
+#include "webrtc/api/audio_codecs/audio_decoder.h"
 #include "webrtc/base/logging.h"
-#include "webrtc/modules/audio_coding/codecs/audio_decoder.h"
 #include "webrtc/modules/audio_coding/neteq/decoder_database.h"
 #include "webrtc/modules/audio_coding/neteq/dsp_helper.h"
 #include "webrtc/modules/audio_coding/neteq/sync_buffer.h"
@@ -24,18 +24,14 @@ void ComfortNoise::Reset() {
   first_call_ = true;
 }
 
-int ComfortNoise::UpdateParameters(Packet* packet) {
-  assert(packet);  // Existence is verified by caller.
+int ComfortNoise::UpdateParameters(const Packet& packet) {
   // Get comfort noise decoder.
-  if (decoder_database_->SetActiveCngDecoder(packet->header.payloadType)
-      != kOK) {
-    delete packet;
+  if (decoder_database_->SetActiveCngDecoder(packet.payload_type) != kOK) {
     return kUnknownPayloadType;
   }
   ComfortNoiseDecoder* cng_decoder = decoder_database_->GetActiveCngDecoder();
   RTC_DCHECK(cng_decoder);
-  cng_decoder->UpdateSid(packet->payload);
-  delete packet;
+  cng_decoder->UpdateSid(packet.payload);
   return kOK;
 }
 

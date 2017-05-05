@@ -14,7 +14,6 @@
 #include <vector>
 
 #include "webrtc/base/basictypes.h"
-#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/rtpfb.h"
 
 namespace webrtc {
@@ -30,7 +29,7 @@ class Nack : public Rtpfb {
   // Parse assumes header is already parsed and validated.
   bool Parse(const CommonHeader& packet);
 
-  void WithList(const uint16_t* nack_list, size_t length);
+  void SetPacketIds(const uint16_t* nack_list, size_t length);
   const std::vector<uint16_t>& packet_ids() const { return packet_ids_; }
 
  protected:
@@ -48,13 +47,11 @@ class Nack : public Rtpfb {
     uint16_t bitmask;
   };
 
-  void Pack();    // Fills packed_ using packed_ids_. (used in WithList).
+  void Pack();    // Fills packed_ using packed_ids_. (used in SetPacketIds).
   void Unpack();  // Fills packet_ids_ using packed_. (used in Parse).
 
   std::vector<PackedNack> packed_;
   std::vector<uint16_t> packet_ids_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(Nack);
 };
 
 }  // namespace rtcp

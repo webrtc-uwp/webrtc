@@ -11,9 +11,9 @@
 
 #include "webrtc/modules/audio_coding/neteq/tools/neteq_external_decoder_test.h"
 
-#include "webrtc/modules/audio_coding/codecs/builtin_audio_decoder_factory.h"
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "webrtc/base/format_macros.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 namespace test {
@@ -28,7 +28,6 @@ NetEqExternalDecoderTest::NetEqExternalDecoderTest(NetEqDecoder codec,
   NetEq::Config config;
   config.sample_rate_hz = sample_rate_hz_;
   neteq_.reset(NetEq::Create(config, CreateBuiltinAudioDecoderFactory()));
-  printf("%" PRIuS "\n", channels_);
 }
 
 void NetEqExternalDecoderTest::Init() {

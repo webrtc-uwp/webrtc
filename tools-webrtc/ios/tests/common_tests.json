@@ -1,0 +1,35 @@
+{
+  "tests": [
+    {
+      "app": "apprtcmobile_tests",
+      "xctest": true
+    },
+    {
+      "app": "audio_decoder_unittests"
+    },
+    {
+      "app": "common_audio_unittests"
+    },
+    {
+      "app": "common_video_unittests"
+    },
+    {
+      "app": "modules_tests"
+    },
+    {
+      "app": "ortc_unittests"
+    },
+    {
+      "app": "rtc_pc_unittests"
+    },
+    {
+      "app": "system_wrappers_unittests"
+    },
+    {
+      "app": "test_support_unittests"
+    },
+    {
+      "app": "voice_engine_unittests"
+    }
+  ]
+}

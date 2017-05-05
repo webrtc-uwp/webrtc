@@ -15,8 +15,6 @@
 #include <limits>
 #include <vector>
 
-#include "testing/gmock/include/gmock/gmock.h"
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/platform_thread.h"
 #include "webrtc/base/random.h"
 #include "webrtc/modules/video_coding/frame_object.h"
@@ -24,6 +22,11 @@
 #include "webrtc/modules/video_coding/sequence_number_util.h"
 #include "webrtc/modules/video_coding/timing.h"
 #include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
+
+using testing::_;
+using testing::Return;
 
 namespace webrtc {
 namespace video_coding {
@@ -54,6 +57,16 @@ class VCMTimingFake : public VCMTiming {
     return std::max<int>(0, render_time_ms - now_ms - kDecodeTime);
   }
 
+  bool GetTimings(int* decode_ms,
+                  int* max_decode_ms,
+                  int* current_delay_ms,
+                  int* target_delay_ms,
+                  int* jitter_buffer_ms,
+                  int* min_playout_delay_ms,
+                  int* render_delay_ms) const override {
+    return true;
+  }
+
  private:
   static constexpr int kDelayMs = 50;
   static constexpr int kDecodeTime = kDelayMs / 2;
@@ -82,6 +95,27 @@ class FrameObjectFake : public FrameObject {
   int64_t ReceivedTime() const override { return 0; }
 
   int64_t RenderTime() const override { return _renderTimeMs; }
+
+  // In EncodedImage |_length| is used to descibe its size and |_size| to
+  // describe its capacity.
+  void SetSize(int size) { _length = size; }
+};
+
+class VCMReceiveStatisticsCallbackMock : public VCMReceiveStatisticsCallback {
+ public:
+  MOCK_METHOD2(OnReceiveRatesUpdated,
+               void(uint32_t bitRate, uint32_t frameRate));
+  MOCK_METHOD2(OnCompleteFrame, void(bool is_keyframe, size_t size_bytes));
+  MOCK_METHOD1(OnDiscardedPacketsUpdated, void(int discarded_packets));
+  MOCK_METHOD1(OnFrameCountsUpdated, void(const FrameCounts& frame_counts));
+  MOCK_METHOD7(OnFrameBufferTimingsUpdated,
+               void(int decode_ms,
+                    int max_decode_ms,
+                    int current_delay_ms,
+                    int target_delay_ms,
+                    int jitter_buffer_ms,
+                    int min_playout_delay_ms,
+                    int render_delay_ms));
 };
 
 class TestFrameBuffer2 : public ::testing::Test {
@@ -95,7 +129,7 @@ class TestFrameBuffer2 : public ::testing::Test {
       : clock_(0),
         timing_(&clock_),
         jitter_estimator_(&clock_),
-        buffer_(&clock_, &jitter_estimator_, &timing_),
+        buffer_(&clock_, &jitter_estimator_, &timing_, &stats_callback_),
         rand_(0x34678213),
         tear_down_(false),
         extract_thread_(&ExtractLoop, this, "Extract Thread"),
@@ -111,11 +145,11 @@ class TestFrameBuffer2 : public ::testing::Test {
   }
 
   template <typename... T>
-  void InsertFrame(uint16_t picture_id,
-                   uint8_t spatial_layer,
-                   int64_t ts_ms,
-                   bool inter_layer_predicted,
-                   T... refs) {
+  int InsertFrame(uint16_t picture_id,
+                  uint8_t spatial_layer,
+                  int64_t ts_ms,
+                  bool inter_layer_predicted,
+                  T... refs) {
     static_assert(sizeof...(refs) <= kMaxReferences,
                   "To many references specified for FrameObject.");
     std::array<uint16_t, sizeof...(refs)> references = {{refs...}};
@@ -129,7 +163,7 @@ class TestFrameBuffer2 : public ::testing::Test {
     for (size_t r = 0; r < references.size(); ++r)
       frame->references[r] = references[r];
 
-    buffer_.InsertFrame(std::move(frame));
+    return buffer_.InsertFrame(std::move(frame));
   }
 
   void ExtractFrame(int64_t max_wait_time = 0) {
@@ -163,7 +197,7 @@ class TestFrameBuffer2 : public ::testing::Test {
     ASSERT_FALSE(frames_[index]);
   }
 
-  static bool ExtractLoop(void* obj) {
+  static void ExtractLoop(void* obj) {
     TestFrameBuffer2* tfb = static_cast<TestFrameBuffer2*>(obj);
     while (true) {
       tfb->trigger_extract_event_.Wait(rtc::Event::kForever);
@@ -171,7 +205,7 @@ class TestFrameBuffer2 : public ::testing::Test {
         rtc::CritScope lock(&tfb->crit_);
         tfb->crit_acquired_event_.Set();
         if (tfb->tear_down_)
-          return false;
+          return;
 
         std::unique_ptr<FrameObject> frame;
         FrameBuffer::ReturnReason res =
@@ -190,6 +224,7 @@ class TestFrameBuffer2 : public ::testing::Test {
   FrameBuffer buffer_;
   std::vector<std::unique_ptr<FrameObject>> frames_;
   Random rand_;
+  ::testing::NiceMock<VCMReceiveStatisticsCallbackMock> stats_callback_;
 
   int64_t max_wait_time_;
   bool tear_down_;
@@ -213,6 +248,20 @@ TEST_F(TestFrameBuffer2, WaitForFrame) {
 }
 
 TEST_F(TestFrameBuffer2, OneSuperFrame) {
+  uint16_t pid = Rand();
+  uint32_t ts = Rand();
+
+  InsertFrame(pid, 0, ts, false);
+  ExtractFrame();
+  InsertFrame(pid, 1, ts, true);
+  ExtractFrame();
+
+  CheckFrame(0, pid, 0);
+  CheckFrame(1, pid, 1);
+}
+
+// Flaky test, see bugs.webrtc.org/7068.
+TEST_F(TestFrameBuffer2, DISABLED_OneUnorderedSuperFrame) {
   uint16_t pid = Rand();
   uint32_t ts = Rand();
 
@@ -250,6 +299,22 @@ TEST_F(TestFrameBuffer2, ExtractFromEmptyBuffer) {
   CheckNoFrame(0);
 }
 
+TEST_F(TestFrameBuffer2, MissingFrame) {
+  uint16_t pid = Rand();
+  uint32_t ts = Rand();
+
+  InsertFrame(pid, 0, ts, false);
+  InsertFrame(pid + 2, 0, ts, false, pid);
+  InsertFrame(pid + 3, 0, ts, false, pid + 1, pid + 2);
+  ExtractFrame();
+  ExtractFrame();
+  ExtractFrame();
+
+  CheckFrame(0, pid, 0);
+  CheckFrame(1, pid + 2, 0);
+  CheckNoFrame(2);
+}
+
 TEST_F(TestFrameBuffer2, OneLayerStream) {
   uint16_t pid = Rand();
   uint32_t ts = Rand();
@@ -270,7 +335,7 @@ TEST_F(TestFrameBuffer2, DropTemporalLayerSlowDecoder) {
   uint32_t ts = Rand();
 
   InsertFrame(pid, 0, ts, false);
-  InsertFrame(pid + 1, 0, ts + kFps20, false);
+  InsertFrame(pid + 1, 0, ts + kFps20, false, pid);
   for (int i = 2; i < 10; i += 2) {
     uint32_t ts_tl0 = ts + i / 2 * kFps10;
     InsertFrame(pid + i, 0, ts_tl0, false, pid + i - 2);
@@ -355,6 +420,99 @@ TEST_F(TestFrameBuffer2, ProtectionMode) {
   buffer_.SetProtectionMode(kProtectionNackFEC);
   EXPECT_CALL(jitter_estimator_, GetJitterEstimate(0.0));
   InsertFrame(pid + 1, 0, ts, false);
+  ExtractFrame();
+}
+
+TEST_F(TestFrameBuffer2, NoContinuousFrame) {
+  uint16_t pid = Rand();
+  uint32_t ts = Rand();
+
+  EXPECT_EQ(-1, InsertFrame(pid + 1, 0, ts, false, pid));
+}
+
+TEST_F(TestFrameBuffer2, LastContinuousFrameSingleLayer) {
+  uint16_t pid = Rand();
+  uint32_t ts = Rand();
+
+  EXPECT_EQ(pid, InsertFrame(pid, 0, ts, false));
+  EXPECT_EQ(pid, InsertFrame(pid + 2, 0, ts, false, pid + 1));
+  EXPECT_EQ(pid + 2, InsertFrame(pid + 1, 0, ts, false, pid));
+  EXPECT_EQ(pid + 2, InsertFrame(pid + 4, 0, ts, false, pid + 3));
+  EXPECT_EQ(pid + 5, InsertFrame(pid + 5, 0, ts, false));
+}
+
+TEST_F(TestFrameBuffer2, LastContinuousFrameTwoLayers) {
+  uint16_t pid = Rand();
+  uint32_t ts = Rand();
+
+  EXPECT_EQ(pid, InsertFrame(pid, 0, ts, false));
+  EXPECT_EQ(pid, InsertFrame(pid, 1, ts, true));
+  EXPECT_EQ(pid, InsertFrame(pid + 1, 1, ts, true, pid));
+  EXPECT_EQ(pid, InsertFrame(pid + 2, 0, ts, false, pid + 1));
+  EXPECT_EQ(pid, InsertFrame(pid + 2, 1, ts, true, pid + 1));
+  EXPECT_EQ(pid, InsertFrame(pid + 3, 0, ts, false, pid + 2));
+  EXPECT_EQ(pid + 3, InsertFrame(pid + 1, 0, ts, false, pid));
+  EXPECT_EQ(pid + 3, InsertFrame(pid + 3, 1, ts, true, pid + 2));
+}
+
+TEST_F(TestFrameBuffer2, PictureIdJumpBack) {
+  uint16_t pid = Rand();
+  uint32_t ts = Rand();
+
+  EXPECT_EQ(pid, InsertFrame(pid, 0, ts, false));
+  EXPECT_EQ(pid + 1, InsertFrame(pid + 1, 0, ts + 1, false, pid));
+  ExtractFrame();
+  CheckFrame(0, pid, 0);
+
+  // Jump back in pid but increase ts.
+  EXPECT_EQ(pid - 1, InsertFrame(pid - 1, 0, ts + 2, false));
+  ExtractFrame();
+  ExtractFrame();
+  CheckFrame(1, pid - 1, 0);
+  CheckNoFrame(2);
+}
+
+TEST_F(TestFrameBuffer2, StatsCallback) {
+  uint16_t pid = Rand();
+  uint32_t ts = Rand();
+  const int kFrameSize = 5000;
+
+  EXPECT_CALL(stats_callback_, OnCompleteFrame(true, kFrameSize));
+  EXPECT_CALL(stats_callback_,
+              OnFrameBufferTimingsUpdated(_, _, _, _, _, _, _));
+
+  {
+    std::unique_ptr<FrameObjectFake> frame(new FrameObjectFake());
+    frame->SetSize(kFrameSize);
+    frame->picture_id = pid;
+    frame->spatial_layer = 0;
+    frame->timestamp = ts;
+    frame->num_references = 0;
+    frame->inter_layer_predicted = false;
+
+    EXPECT_EQ(buffer_.InsertFrame(std::move(frame)), pid);
+  }
+
+  ExtractFrame();
+  CheckFrame(0, pid, 0);
+}
+
+TEST_F(TestFrameBuffer2, ForwardJumps) {
+  EXPECT_EQ(5453, InsertFrame(5453, 0, 1, false));
+  ExtractFrame();
+  EXPECT_EQ(5454, InsertFrame(5454, 0, 1, false, 5453));
+  ExtractFrame();
+  EXPECT_EQ(15670, InsertFrame(15670, 0, 1, false));
+  ExtractFrame();
+  EXPECT_EQ(29804, InsertFrame(29804, 0, 1, false));
+  ExtractFrame();
+  EXPECT_EQ(29805, InsertFrame(29805, 0, 1, false, 29804));
+  ExtractFrame();
+  EXPECT_EQ(29806, InsertFrame(29806, 0, 1, false, 29805));
+  ExtractFrame();
+  EXPECT_EQ(33819, InsertFrame(33819, 0, 1, false));
+  ExtractFrame();
+  EXPECT_EQ(41248, InsertFrame(41248, 0, 1, false));
   ExtractFrame();
 }
 

@@ -73,6 +73,9 @@ namespace rtc {
 template <typename T>
 class ArrayView final {
  public:
+  using value_type = T;
+  using const_iterator = const T*;
+
   // Construct an empty ArrayView.
   ArrayView() : ArrayView(static_cast<T*>(nullptr), 0) {}
   ArrayView(std::nullptr_t) : ArrayView() {}
@@ -116,6 +119,13 @@ class ArrayView final {
   T* end() const { return data_ + size_; }
   const T* cbegin() const { return data_; }
   const T* cend() const { return data_ + size_; }
+
+  ArrayView subview(size_t offset, size_t size) const {
+    if (offset >= size_)
+      return ArrayView();
+    return ArrayView(data_ + offset, std::min(size, size_ - offset));
+  }
+  ArrayView subview(size_t offset) const { return subview(offset, size_); }
 
   // Comparing two ArrayViews compares their (pointer,size) pairs; it does
   // *not* dereference the pointers.

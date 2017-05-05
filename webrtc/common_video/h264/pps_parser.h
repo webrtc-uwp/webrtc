@@ -11,7 +11,6 @@
 #ifndef WEBRTC_COMMON_VIDEO_H264_PPS_PARSER_H_
 #define WEBRTC_COMMON_VIDEO_H264_PPS_PARSER_H_
 
-#include "webrtc/base/common.h"
 #include "webrtc/base/optional.h"
 
 namespace rtc {
@@ -30,6 +29,7 @@ class PpsParser {
 
     bool bottom_field_pic_order_in_frame_present_flag = false;
     bool weighted_pred_flag = false;
+    bool entropy_coding_mode_flag = false;
     uint32_t weighted_bipred_idc = false;
     uint32_t redundant_pic_cnt_present_flag = 0;
     int pic_init_qp_minus26 = 0;
@@ -40,6 +40,11 @@ class PpsParser {
   // Unpack RBSP and parse PPS state from the supplied buffer.
   static rtc::Optional<PpsState> ParsePps(const uint8_t* data, size_t length);
 
+  static bool ParsePpsIds(const uint8_t* data,
+                          size_t length,
+                          uint32_t* pps_id,
+                          uint32_t* sps_id);
+
   static rtc::Optional<uint32_t> ParsePpsIdFromSlice(const uint8_t* data,
                                                      size_t length);
 
@@ -47,6 +52,9 @@ class PpsParser {
   // Parse the PPS state, for a bit buffer where RBSP decoding has already been
   // performed.
   static rtc::Optional<PpsState> ParseInternal(rtc::BitBuffer* bit_buffer);
+  static bool ParsePpsIdsInternal(rtc::BitBuffer* bit_buffer,
+                                  uint32_t* pps_id,
+                                  uint32_t* sps_id);
 };
 
 }  // namespace webrtc

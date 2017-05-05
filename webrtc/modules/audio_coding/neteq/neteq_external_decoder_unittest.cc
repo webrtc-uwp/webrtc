@@ -12,13 +12,13 @@
 
 #include <memory>
 
-#include "testing/gmock/include/gmock/gmock.h"
-#include "webrtc/modules/audio_coding/codecs/builtin_audio_decoder_factory.h"
+#include "webrtc/api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "webrtc/modules/audio_coding/neteq/mock/mock_external_decoder_pcm16b.h"
 #include "webrtc/modules/audio_coding/neteq/tools/input_audio_file.h"
 #include "webrtc/modules/audio_coding/neteq/tools/neteq_external_decoder_test.h"
 #include "webrtc/modules/audio_coding/neteq/tools/rtp_generator.h"
 #include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/test/gmock.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
@@ -184,9 +184,8 @@ class NetEqExternalVsInternalDecoderTest : public NetEqExternalDecoderUnitTest,
   }
 
   void SetUp() override {
-    ASSERT_EQ(NetEq::kOK, neteq_internal_->RegisterPayloadType(
-                              NetEqDecoder::kDecoderPCM16Bswb32kHz,
-                              "pcm16-swb32", kPayloadType));
+    ASSERT_EQ(true, neteq_internal_->RegisterPayloadType(
+                        kPayloadType, SdpAudioFormat("L16", 32000, 1)));
   }
 
   void GetAndVerifyOutput() override {

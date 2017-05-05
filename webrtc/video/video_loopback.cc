@@ -11,9 +11,8 @@
 #include <stdio.h>
 
 #include "gflags/gflags.h"
-#include "testing/gtest/include/gtest/gtest.h"
-
 #include "webrtc/test/field_trial.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/run_test.h"
 #include "webrtc/video/video_quality_test.h"
 
@@ -183,18 +182,30 @@ std::string SL1() {
   return static_cast<std::string>(FLAGS_sl1);
 }
 
+DEFINE_string(encoded_frame_path,
+              "",
+              "The base path for encoded frame logs. Created files will have "
+              "the form <encoded_frame_path>.<n>.(recv|send.<m>).ivf");
+std::string EncodedFramePath() {
+  return static_cast<std::string>(FLAGS_encoded_frame_path);
+}
+
 DEFINE_bool(logs, false, "print logs to stderr");
 
 DEFINE_bool(send_side_bwe, true, "Use send-side bandwidth estimation");
 
 DEFINE_bool(allow_reordering, false, "Allow packet reordering to occur");
 
-DEFINE_bool(use_fec, false, "Use forward error correction.");
+DEFINE_bool(use_ulpfec, false, "Use RED+ULPFEC forward error correction.");
+
+DEFINE_bool(use_flexfec, false, "Use FlexFEC forward error correction.");
 
 DEFINE_bool(audio, false, "Add audio stream");
 
 DEFINE_bool(audio_video_sync, false, "Sync audio and video stream (no effect if"
     " audio is false)");
+
+DEFINE_bool(video, true, "Add video stream");
 
 DEFINE_string(
     force_fieldtrials,
@@ -230,19 +241,29 @@ void Loopback() {
   call_bitrate_config.max_bitrate_bps = flags::MaxBitrateKbps() * 1000;
 
   VideoQualityTest::Params params;
-  params.common = {flags::Width(), flags::Height(), flags::Fps(),
-      flags::MinBitrateKbps() * 1000, flags::TargetBitrateKbps() * 1000,
-      flags::MaxBitrateKbps() * 1000, flags::FLAGS_suspend_below_min_bitrate,
-      flags::Codec(), flags::NumTemporalLayers(), flags::SelectedTL(),
-      0,  // No min transmit bitrate.
-      flags::FLAGS_send_side_bwe, flags::FLAGS_use_fec, call_bitrate_config};
-  params.video = {flags::Clip()};
+  params.call = {flags::FLAGS_send_side_bwe, call_bitrate_config};
+  params.video = {flags::FLAGS_video,
+                  flags::Width(),
+                  flags::Height(),
+                  flags::Fps(),
+                  flags::MinBitrateKbps() * 1000,
+                  flags::TargetBitrateKbps() * 1000,
+                  flags::MaxBitrateKbps() * 1000,
+                  flags::FLAGS_suspend_below_min_bitrate,
+                  flags::Codec(),
+                  flags::NumTemporalLayers(),
+                  flags::SelectedTL(),
+                  0,  // No min transmit bitrate.
+                  flags::FLAGS_use_ulpfec,
+                  flags::FLAGS_use_flexfec,
+                  flags::EncodedFramePath(),
+                  flags::Clip()};
+  params.audio = {flags::FLAGS_audio, flags::FLAGS_audio_video_sync};
+  params.screenshare.enabled = false;
   params.analyzer = {"video", 0.0, 0.0, flags::DurationSecs(),
       flags::OutputFilename(), flags::GraphTitle()};
   params.pipe = pipe_config;
   params.logs = flags::FLAGS_logs;
-  params.audio = flags::FLAGS_audio,
-  params.audio_video_sync = flags::FLAGS_audio_video_sync;
 
   std::vector<std::string> stream_descriptors;
   stream_descriptors.push_back(flags::Stream0());

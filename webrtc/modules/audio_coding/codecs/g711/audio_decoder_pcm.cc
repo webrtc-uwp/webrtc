@@ -10,11 +10,19 @@
 
 #include "webrtc/modules/audio_coding/codecs/g711/audio_decoder_pcm.h"
 
+#include "webrtc/modules/audio_coding/codecs/legacy_encoded_audio_frame.h"
 #include "webrtc/modules/audio_coding/codecs/g711/g711_interface.h"
 
 namespace webrtc {
 
 void AudioDecoderPcmU::Reset() {}
+
+std::vector<AudioDecoder::ParseResult> AudioDecoderPcmU::ParsePayload(
+    rtc::Buffer&& payload,
+    uint32_t timestamp) {
+  return LegacyEncodedAudioFrame::SplitBySamples(
+      this, std::move(payload), timestamp, 8 * num_channels_, 8);
+}
 
 int AudioDecoderPcmU::SampleRateHz() const {
   return 8000;
@@ -43,6 +51,13 @@ int AudioDecoderPcmU::PacketDuration(const uint8_t* encoded,
 }
 
 void AudioDecoderPcmA::Reset() {}
+
+std::vector<AudioDecoder::ParseResult> AudioDecoderPcmA::ParsePayload(
+    rtc::Buffer&& payload,
+    uint32_t timestamp) {
+  return LegacyEncodedAudioFrame::SplitBySamples(
+      this, std::move(payload), timestamp, 8 * num_channels_, 8);
+}
 
 int AudioDecoderPcmA::SampleRateHz() const {
   return 8000;

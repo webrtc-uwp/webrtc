@@ -28,6 +28,10 @@ namespace webrtc {
 class DxgiAdapterDuplicator {
  public:
   struct Context {
+    Context();
+    Context(const Context& other);
+    ~Context();
+
     // Child DxgiOutputDuplicator::Context belongs to this
     // DxgiAdapterDuplicator::Context.
     std::vector<DxgiOutputDuplicator::Context> contexts;
@@ -40,6 +44,8 @@ class DxgiAdapterDuplicator {
   // Move constructor, to make it possible to store instances of
   // DxgiAdapterDuplicator in std::vector<>.
   DxgiAdapterDuplicator(DxgiAdapterDuplicator&& other);
+
+  ~DxgiAdapterDuplicator();
 
   // Initializes the DxgiAdapterDuplicator from a D3dDevice.
   bool Initialize();
@@ -64,16 +70,17 @@ class DxgiAdapterDuplicator {
   // Returns the count of screens owned by this DxgiAdapterDuplicator. These
   // screens can be retrieved by an interger in the range of
   // [0, screen_count()).
-  int screen_count() const { return static_cast<int>(duplicators_.size()); }
-
- private:
-  friend class DxgiDuplicatorController;
-
-  bool DoInitialize();
+  int screen_count() const;
 
   void Setup(Context* context);
 
   void Unregister(const Context* const context);
+
+  // The minimum num_frames_captured() returned by |duplicators_|.
+  int64_t GetNumFramesCaptured() const;
+
+ private:
+  bool DoInitialize();
 
   const D3dDevice device_;
   std::vector<DxgiOutputDuplicator> duplicators_;

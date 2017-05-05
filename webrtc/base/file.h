@@ -15,8 +15,9 @@
 
 #include <string>
 
-#include "webrtc/base/platform_file.h"
 #include "webrtc/base/constructormagic.h"
+#include "webrtc/base/pathutils.h"
+#include "webrtc/base/platform_file.h"
 
 namespace rtc {
 
@@ -30,12 +31,26 @@ class File {
   // Wraps the given PlatformFile. This class is then responsible for closing
   // the file, which will be done in the destructor if Close is never called.
   explicit File(PlatformFile);
+  // The default constructor produces a closed file.
+  File();
   ~File();
 
   File(File&& other);
   File& operator=(File&& other);
 
+  // Open and Create give files with both reading and writing enabled.
   static File Open(const std::string& path);
+  static File Open(Pathname&& path);
+  static File Open(const Pathname& path);
+  // If the file already exists it will be overwritten.
+  static File Create(const std::string& path);
+  static File Create(Pathname&& path);
+  static File Create(const Pathname& path);
+
+  // Remove a file in the file system.
+  static bool Remove(const std::string& path);
+  static bool Remove(Pathname&& path);
+  static bool Remove(const Pathname& path);
 
   size_t Write(const uint8_t* data, size_t length);
   size_t Read(uint8_t* buffer, size_t length);

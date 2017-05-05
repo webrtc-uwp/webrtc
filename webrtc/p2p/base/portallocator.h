@@ -23,6 +23,10 @@
 #include "webrtc/base/sigslot.h"
 #include "webrtc/base/thread.h"
 
+namespace webrtc {
+class MetricsObserverInterface;
+}
+
 namespace cricket {
 
 // PortAllocator is responsible for allocating Port types for a given
@@ -72,6 +76,9 @@ enum {
   PORTALLOCATOR_DISABLE_COSTLY_NETWORKS = 0x2000,
 };
 
+// Defines various reasons that have caused ICE regathering.
+enum class IceRegatheringReason { NETWORK_CHANGE, NETWORK_FAILURE, MAX_VALUE };
+
 const uint32_t kDefaultPortAllocatorFlags = 0;
 
 const uint32_t kDefaultStepDelay = 1000;  // 1 sec step delay.
@@ -86,6 +93,17 @@ enum {
   CF_REFLEXIVE = 0x2,
   CF_RELAY = 0x4,
   CF_ALL = 0x7,
+};
+
+// TLS certificate policy.
+enum class TlsCertPolicy {
+  // For TLS based protocols, ensure the connection is secure by not
+  // circumventing certificate validation.
+  TLS_CERT_POLICY_SECURE,
+  // For TLS based protocols, disregard security completely by skipping
+  // certificate validation. This is insecure and should never be used unless
+  // security is irrelevant in that particular context.
+  TLS_CERT_POLICY_INSECURE_NO_CHECK,
 };
 
 // TODO(deadbeef): Rename to TurnCredentials (and username to ufrag).
@@ -112,12 +130,23 @@ struct RelayServerConfig {
                     int port,
                     const std::string& username,
                     const std::string& password,
+                    ProtocolType proto)
+      : type(RELAY_TURN), credentials(username, password) {
+    ports.push_back(ProtocolAddress(rtc::SocketAddress(address, port), proto));
+  }
+
+  // Legacy constructor where "secure" and PROTO_TCP implies PROTO_TLS.
+  RelayServerConfig(const std::string& address,
+                    int port,
+                    const std::string& username,
+                    const std::string& password,
                     ProtocolType proto,
                     bool secure)
-      : type(RELAY_TURN), credentials(username, password) {
-    ports.push_back(
-        ProtocolAddress(rtc::SocketAddress(address, port), proto, secure));
-  }
+      : RelayServerConfig(address,
+                          port,
+                          username,
+                          password,
+                          (proto == PROTO_TCP && secure ? PROTO_TLS : proto)) {}
 
   bool operator==(const RelayServerConfig& o) const {
     return type == o.type && ports == o.ports && credentials == o.credentials &&
@@ -129,6 +158,7 @@ struct RelayServerConfig {
   PortList ports;
   RelayCredentials credentials;
   int priority = 0;
+  TlsCertPolicy tls_cert_policy = TlsCertPolicy::TLS_CERT_POLICY_SECURE;
 };
 
 class PortAllocatorSession : public sigslot::has_slots<> {
@@ -216,6 +246,9 @@ class PortAllocatorSession : public sigslot::has_slots<> {
       SignalCandidatesRemoved;
   sigslot::signal1<PortAllocatorSession*> SignalCandidatesAllocationDone;
 
+  sigslot::signal2<PortAllocatorSession*, IceRegatheringReason>
+      SignalIceRegathering;
+
   virtual uint32_t generation() { return generation_; }
   virtual void set_generation(uint32_t generation) { generation_ = generation; }
   sigslot::signal1<PortAllocatorSession*> SignalDestroyed;
@@ -288,7 +321,9 @@ class PortAllocator : public sigslot::has_slots<> {
   //
   // If the servers are not changing but the candidate pool size is,
   // pooled sessions will be either created or destroyed as necessary.
-  void SetConfiguration(const ServerAddresses& stun_servers,
+  //
+  // Returns true if the configuration could successfully be changed.
+  bool SetConfiguration(const ServerAddresses& stun_servers,
                         const std::vector<RelayServerConfig>& turn_servers,
                         int candidate_pool_size,
                         bool prune_turn_ports);
@@ -299,7 +334,7 @@ class PortAllocator : public sigslot::has_slots<> {
     return turn_servers_;
   }
 
-  int candidate_pool_size() const { return target_pooled_session_count_; }
+  int candidate_pool_size() const { return candidate_pool_size_; }
 
   // Sets the network types to ignore.
   // Values are defined by the AdapterType enum.
@@ -370,12 +405,24 @@ class PortAllocator : public sigslot::has_slots<> {
   const std::string& origin() const { return origin_; }
   void set_origin(const std::string& origin) { origin_ = origin; }
 
+  void SetMetricsObserver(webrtc::MetricsObserverInterface* observer) {
+    metrics_observer_ = observer;
+  }
+
  protected:
   virtual PortAllocatorSession* CreateSessionInternal(
       const std::string& content_name,
       int component,
       const std::string& ice_ufrag,
       const std::string& ice_pwd) = 0;
+
+  webrtc::MetricsObserverInterface* metrics_observer() {
+    return metrics_observer_;
+  }
+
+  const std::deque<std::unique_ptr<PortAllocatorSession>>& pooled_sessions() {
+    return pooled_sessions_;
+  }
 
   uint32_t flags_;
   std::string agent_;
@@ -390,13 +437,11 @@ class PortAllocator : public sigslot::has_slots<> {
  private:
   ServerAddresses stun_servers_;
   std::vector<RelayServerConfig> turn_servers_;
-  // The last size passed into SetConfiguration.
-  int target_pooled_session_count_ = 0;
-  // This variable represents the total number of pooled sessions
-  // both owned by this class and taken by TakePooledSession.
-  int allocated_pooled_session_count_ = 0;
+  int candidate_pool_size_ = 0;  // Last value passed into SetConfiguration.
   std::deque<std::unique_ptr<PortAllocatorSession>> pooled_sessions_;
   bool prune_turn_ports_ = false;
+
+  webrtc::MetricsObserverInterface* metrics_observer_ = nullptr;
 };
 
 }  // namespace cricket

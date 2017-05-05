@@ -10,8 +10,8 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbn.h"
 
-#include "testing/gmock/include/gmock/gmock.h"
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/gmock.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/rtcp_packet_parser.h"
 
 using testing::ElementsAreArray;
@@ -35,8 +35,8 @@ const uint8_t kPacket[] = {0x84, 205,  0x00, 0x04,
 
 TEST(RtcpPacketTmmbnTest, Create) {
   Tmmbn tmmbn;
-  tmmbn.From(kSenderSsrc);
-  tmmbn.WithTmmbr(TmmbItem(kRemoteSsrc, kBitrateBps, kOverhead));
+  tmmbn.SetSenderSsrc(kSenderSsrc);
+  tmmbn.AddTmmbr(TmmbItem(kRemoteSsrc, kBitrateBps, kOverhead));
 
   rtc::Buffer packet = tmmbn.Build();
 
@@ -59,7 +59,7 @@ TEST(RtcpPacketTmmbnTest, Parse) {
 
 TEST(RtcpPacketTmmbnTest, CreateAndParseWithoutItems) {
   Tmmbn tmmbn;
-  tmmbn.From(kSenderSsrc);
+  tmmbn.SetSenderSsrc(kSenderSsrc);
 
   rtc::Buffer packet = tmmbn.Build();
   Tmmbn parsed;
@@ -71,9 +71,9 @@ TEST(RtcpPacketTmmbnTest, CreateAndParseWithoutItems) {
 
 TEST(RtcpPacketTmmbnTest, CreateAndParseWithTwoItems) {
   Tmmbn tmmbn;
-  tmmbn.From(kSenderSsrc);
-  tmmbn.WithTmmbr(TmmbItem(kRemoteSsrc, kBitrateBps, kOverhead));
-  tmmbn.WithTmmbr(TmmbItem(kRemoteSsrc + 1, 4 * kBitrateBps, 40));
+  tmmbn.SetSenderSsrc(kSenderSsrc);
+  tmmbn.AddTmmbr(TmmbItem(kRemoteSsrc, kBitrateBps, kOverhead));
+  tmmbn.AddTmmbr(TmmbItem(kRemoteSsrc + 1, 4 * kBitrateBps, 40));
 
   rtc::Buffer packet = tmmbn.Build();
   Tmmbn parsed;

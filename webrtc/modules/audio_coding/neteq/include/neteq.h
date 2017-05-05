@@ -76,7 +76,6 @@ class NetEq {
   struct Config {
     Config()
         : sample_rate_hz(16000),
-          enable_audio_classifier(false),
           enable_post_decode_vad(false),
           max_packets_in_buffer(50),
           // |max_delay_ms| has the same effect as calling SetMaximumDelay().
@@ -88,7 +87,6 @@ class NetEq {
     std::string ToString() const;
 
     int sample_rate_hz;  // Initial value. Will change with input data.
-    bool enable_audio_classifier;
     bool enable_post_decode_vad;
     size_t max_packets_in_buffer;
     int max_delay_ms;
@@ -126,10 +124,8 @@ class NetEq {
     kStereoNotSupported,
     kSampleUnderrun,
     kDecodedTooMuch,
-    kFrameSplitError,
     kRedundancySplitError,
-    kPacketBufferCorruption,
-    kSyncPacketNotAccepted
+    kPacketBufferCorruption
   };
 
   // Creates a new NetEq object, with parameters set in |config|. The |config|
@@ -148,18 +144,6 @@ class NetEq {
   virtual int InsertPacket(const WebRtcRTPHeader& rtp_header,
                            rtc::ArrayView<const uint8_t> payload,
                            uint32_t receive_timestamp) = 0;
-
-  // Inserts a sync-packet into packet queue. Sync-packets are decoded to
-  // silence and are intended to keep AV-sync intact in an event of long packet
-  // losses when Video NACK is enabled but Audio NACK is not. Clients of NetEq
-  // might insert sync-packet when they observe that buffer level of NetEq is
-  // decreasing below a certain threshold, defined by the application.
-  // Sync-packets should have the same payload type as the last audio payload
-  // type, i.e. they cannot have DTMF or CNG payload type, nor a codec change
-  // can be implied by inserting a sync-packet.
-  // Returns kOk on success, kFail on failure.
-  virtual int InsertSyncPacket(const WebRtcRTPHeader& rtp_header,
-                               uint32_t receive_timestamp) = 0;
 
   // Instructs NetEq to deliver 10 ms of audio data. The data is written to
   // |audio_frame|. All data in |audio_frame| is wiped; |data_|, |speech_type_|,
@@ -192,9 +176,17 @@ class NetEq {
                                       const std::string& codec_name,
                                       uint8_t rtp_payload_type) = 0;
 
+  // Associates |rtp_payload_type| with the given codec, which NetEq will
+  // instantiate when it needs it. Returns true iff successful.
+  virtual bool RegisterPayloadType(int rtp_payload_type,
+                                   const SdpAudioFormat& audio_format) = 0;
+
   // Removes |rtp_payload_type| from the codec database. Returns 0 on success,
   // -1 on failure.
   virtual int RemovePayloadType(uint8_t rtp_payload_type) = 0;
+
+  // Removes all payload types from the codec database.
+  virtual void RemoveAllPayloadTypes() = 0;
 
   // Sets a minimum delay in millisecond for packet buffer. The minimum is
   // maintained unless a higher latency is dictated by channel condition.
@@ -264,6 +256,15 @@ class NetEq {
   // call. If GetAudio has not been called yet, the configured sample rate
   // (Config::sample_rate_hz) is returned.
   virtual int last_output_sample_rate_hz() const = 0;
+
+  // Returns info about the decoder for the given payload type, or an empty
+  // value if we have no decoder for that payload type.
+  virtual rtc::Optional<CodecInst> GetDecoder(int payload_type) const = 0;
+
+  // Returns the decoder format for the given payload type. Returns empty if no
+  // such payload type was registered.
+  virtual rtc::Optional<SdpAudioFormat> GetDecoderFormat(
+      int payload_type) const = 0;
 
   // Not implemented.
   virtual int SetTargetNumberOfChannels() = 0;

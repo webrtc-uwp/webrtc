@@ -11,11 +11,11 @@
 #include <memory>
 #include <string>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/checks.h"
-#include "webrtc/modules/audio_coding/codecs/opus/opus_interface.h"
 #include "webrtc/modules/audio_coding/codecs/opus/opus_inst.h"
+#include "webrtc/modules/audio_coding/codecs/opus/opus_interface.h"
 #include "webrtc/modules/audio_coding/neteq/tools/audio_loop.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
@@ -411,6 +411,27 @@ TEST_P(OpusTest, OpusSetComplexity) {
   EXPECT_EQ(-1, WebRtcOpus_SetComplexity(opus_encoder_, 11));
 
   // Free memory.
+  EXPECT_EQ(0, WebRtcOpus_EncoderFree(opus_encoder_));
+}
+
+TEST_P(OpusTest, OpusForceChannels) {
+  // Test without creating encoder memory.
+  EXPECT_EQ(-1, WebRtcOpus_SetForceChannels(opus_encoder_, 1));
+
+  ASSERT_EQ(0,
+            WebRtcOpus_EncoderCreate(&opus_encoder_, channels_, application_));
+
+  if (channels_ == 2) {
+    EXPECT_EQ(-1, WebRtcOpus_SetForceChannels(opus_encoder_, 3));
+    EXPECT_EQ(0, WebRtcOpus_SetForceChannels(opus_encoder_, 2));
+    EXPECT_EQ(0, WebRtcOpus_SetForceChannels(opus_encoder_, 1));
+    EXPECT_EQ(0, WebRtcOpus_SetForceChannels(opus_encoder_, 0));
+  } else {
+    EXPECT_EQ(-1, WebRtcOpus_SetForceChannels(opus_encoder_, 2));
+    EXPECT_EQ(0, WebRtcOpus_SetForceChannels(opus_encoder_, 1));
+    EXPECT_EQ(0, WebRtcOpus_SetForceChannels(opus_encoder_, 0));
+  }
+
   EXPECT_EQ(0, WebRtcOpus_EncoderFree(opus_encoder_));
 }
 

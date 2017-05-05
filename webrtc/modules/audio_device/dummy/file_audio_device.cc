@@ -7,6 +7,8 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
+
+#include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/platform_thread.h"
 #include "webrtc/modules/audio_device/dummy/file_audio_device.h"
@@ -42,8 +44,7 @@ FileAudioDevice::FileAudioDevice(const int32_t id,
     _outputFile(*FileWrapper::Create()),
     _inputFile(*FileWrapper::Create()),
     _outputFilename(outputFilename),
-    _inputFilename(inputFilename),
-    _clock(Clock::GetRealTimeClock()) {
+    _inputFilename(inputFilename) {
 }
 
 FileAudioDevice::~FileAudioDevice() {
@@ -480,10 +481,10 @@ bool FileAudioDevice::RecThreadFunc(void* pThis)
 
 bool FileAudioDevice::PlayThreadProcess()
 {
-    if(!_playing) {
+    if (!_playing) {
         return false;
     }
-    uint64_t currentTime = _clock->CurrentNtpInMilliseconds();
+    int64_t currentTime = rtc::TimeMillis();
     _critSect.Enter();
 
     if (_lastCallPlayoutMillis == 0 ||
@@ -493,7 +494,7 @@ bool FileAudioDevice::PlayThreadProcess()
         _critSect.Enter();
 
         _playoutFramesLeft = _ptrAudioBuffer->GetPlayoutData(_playoutBuffer);
-        assert(_playoutFramesLeft == _playoutFramesIn10MS);
+        RTC_DCHECK_EQ(_playoutFramesIn10MS, _playoutFramesLeft);
         if (_outputFile.is_open()) {
           _outputFile.Write(_playoutBuffer, kPlayoutBufferSize);
         }
@@ -502,8 +503,8 @@ bool FileAudioDevice::PlayThreadProcess()
     _playoutFramesLeft = 0;
     _critSect.Leave();
 
-    uint64_t deltaTimeMillis = _clock->CurrentNtpInMilliseconds() - currentTime;
-    if(deltaTimeMillis < 10) {
+    int64_t deltaTimeMillis = rtc::TimeMillis() - currentTime;
+    if (deltaTimeMillis < 10) {
       SleepMs(10 - deltaTimeMillis);
     }
 
@@ -516,7 +517,7 @@ bool FileAudioDevice::RecThreadProcess()
         return false;
     }
 
-    uint64_t currentTime = _clock->CurrentNtpInMilliseconds();
+    int64_t currentTime = rtc::TimeMillis();
     _critSect.Enter();
 
     if (_lastCallRecordMillis == 0 ||
@@ -537,8 +538,8 @@ bool FileAudioDevice::RecThreadProcess()
 
     _critSect.Leave();
 
-    uint64_t deltaTimeMillis = _clock->CurrentNtpInMilliseconds() - currentTime;
-    if(deltaTimeMillis < 10) {
+    int64_t deltaTimeMillis = rtc::TimeMillis() - currentTime;
+    if (deltaTimeMillis < 10) {
       SleepMs(10 - deltaTimeMillis);
     }
 

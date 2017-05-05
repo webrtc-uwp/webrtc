@@ -12,7 +12,9 @@
 
 #include <limits>
 
+#include "webrtc/api/video/i420_buffer.h"
 #include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
 
 namespace rtc {
 
@@ -21,7 +23,7 @@ VideoBroadcaster::VideoBroadcaster() {
 }
 
 void VideoBroadcaster::AddOrUpdateSink(
-    VideoSinkInterface<cricket::VideoFrame>* sink,
+    VideoSinkInterface<webrtc::VideoFrame>* sink,
     const VideoSinkWants& wants) {
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
   RTC_DCHECK(sink != nullptr);
@@ -31,7 +33,7 @@ void VideoBroadcaster::AddOrUpdateSink(
 }
 
 void VideoBroadcaster::RemoveSink(
-    VideoSinkInterface<cricket::VideoFrame>* sink) {
+    VideoSinkInterface<webrtc::VideoFrame>* sink) {
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
   RTC_DCHECK(sink != nullptr);
   rtc::CritScope cs(&sinks_and_wants_lock_);
@@ -45,18 +47,26 @@ bool VideoBroadcaster::frame_wanted() const {
 }
 
 VideoSinkWants VideoBroadcaster::wants() const {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
   rtc::CritScope cs(&sinks_and_wants_lock_);
   return current_wants_;
 }
 
-void VideoBroadcaster::OnFrame(const cricket::VideoFrame& frame) {
+void VideoBroadcaster::OnFrame(const webrtc::VideoFrame& frame) {
   rtc::CritScope cs(&sinks_and_wants_lock_);
   for (auto& sink_pair : sink_pairs()) {
+    if (sink_pair.wants.rotation_applied &&
+        frame.rotation() != webrtc::kVideoRotation_0) {
+      // Calls to OnFrame are not synchronized with changes to the sink wants.
+      // When rotation_applied is set to true, one or a few frames may get here
+      // with rotation still pending. Protect sinks that don't expect any
+      // pending rotation.
+      LOG(LS_VERBOSE) << "Discarding frame with unexpected rotation.";
+      continue;
+    }
     if (sink_pair.wants.black_frames) {
-      sink_pair.sink->OnFrame(cricket::WebRtcVideoFrame(
+      sink_pair.sink->OnFrame(webrtc::VideoFrame(
           GetBlackFrameBuffer(frame.width(), frame.height()), frame.rotation(),
-          frame.timestamp_us(), frame.transport_frame_id()));
+          frame.timestamp_us()));
     } else {
       sink_pair.sink->OnFrame(frame);
     }
@@ -79,18 +89,20 @@ void VideoBroadcaster::UpdateWants() {
          (*sink.wants.max_pixel_count < *wants.max_pixel_count))) {
       wants.max_pixel_count = sink.wants.max_pixel_count;
     }
-    // wants.max_pixel_count_step_up == MIN(sink.wants.max_pixel_count_step_up)
-    if (sink.wants.max_pixel_count_step_up &&
-        (!wants.max_pixel_count_step_up ||
-         (*sink.wants.max_pixel_count_step_up <
-          *wants.max_pixel_count_step_up))) {
-      wants.max_pixel_count_step_up = sink.wants.max_pixel_count_step_up;
+    // Select the minimum requested target_pixel_count, if any, of all sinks so
+    // that we don't over utilize the resources for any one.
+    // TODO(sprang): Consider using the median instead, since the limit can be
+    // expressed by max_pixel_count.
+    if (sink.wants.target_pixel_count &&
+        (!wants.target_pixel_count ||
+         (*sink.wants.target_pixel_count < *wants.target_pixel_count))) {
+      wants.target_pixel_count = sink.wants.target_pixel_count;
     }
   }
 
-  if (wants.max_pixel_count && wants.max_pixel_count_step_up &&
-      *wants.max_pixel_count_step_up >= *wants.max_pixel_count) {
-    wants.max_pixel_count_step_up = Optional<int>();
+  if (wants.max_pixel_count && wants.target_pixel_count &&
+      *wants.target_pixel_count >= *wants.max_pixel_count) {
+    wants.target_pixel_count = wants.max_pixel_count;
   }
   current_wants_ = wants;
 }
@@ -100,8 +112,8 @@ VideoBroadcaster::GetBlackFrameBuffer(int width, int height) {
   if (!black_frame_buffer_ || black_frame_buffer_->width() != width ||
       black_frame_buffer_->height() != height) {
     rtc::scoped_refptr<webrtc::I420Buffer> buffer =
-        new RefCountedObject<webrtc::I420Buffer>(width, height);
-    buffer->SetToBlack();
+        webrtc::I420Buffer::Create(width, height);
+    webrtc::I420Buffer::SetBlack(buffer.get());
     black_frame_buffer_ = buffer;
   }
 

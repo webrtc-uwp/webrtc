@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/api/rtcstatsreport.h"
+#include "webrtc/api/stats/rtcstatsreport.h"
 
-#include "webrtc/api/rtcstats.h"
+#include "webrtc/api/stats/rtcstats.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/base/gunit.h"
 
@@ -18,48 +18,49 @@ namespace webrtc {
 
 class RTCTestStats1 : public RTCStats {
  public:
+  WEBRTC_RTCSTATS_DECL();
+
   RTCTestStats1(const std::string& id, int64_t timestamp_us)
       : RTCStats(id, timestamp_us),
         integer("integer") {}
 
-  WEBRTC_RTCSTATS_IMPL(RTCStats, RTCTestStats1,
-      &integer);
-
   RTCStatsMember<int32_t> integer;
 };
 
-const char RTCTestStats1::kType[] = "test-stats-1";
+WEBRTC_RTCSTATS_IMPL(RTCTestStats1, RTCStats, "test-stats-1",
+    &integer);
 
 class RTCTestStats2 : public RTCStats {
  public:
+  WEBRTC_RTCSTATS_DECL();
+
   RTCTestStats2(const std::string& id, int64_t timestamp_us)
       : RTCStats(id, timestamp_us),
         number("number") {}
 
-  WEBRTC_RTCSTATS_IMPL(RTCStats, RTCTestStats2,
-      &number);
-
   RTCStatsMember<double> number;
 };
 
-const char RTCTestStats2::kType[] = "test-stats-2";
+WEBRTC_RTCSTATS_IMPL(RTCTestStats2, RTCStats, "test-stats-2",
+    &number);
 
 class RTCTestStats3 : public RTCStats {
  public:
+  WEBRTC_RTCSTATS_DECL();
+
   RTCTestStats3(const std::string& id, int64_t timestamp_us)
       : RTCStats(id, timestamp_us),
         string("string") {}
 
-  WEBRTC_RTCSTATS_IMPL(RTCStats, RTCTestStats3,
-      &string);
-
   RTCStatsMember<std::string> string;
 };
 
-const char RTCTestStats3::kType[] = "test-stats-3";
+WEBRTC_RTCSTATS_IMPL(RTCTestStats3, RTCStats, "test-stats-3",
+    &string);
 
 TEST(RTCStatsReport, AddAndGetStats) {
-  rtc::scoped_refptr<RTCStatsReport> report = RTCStatsReport::Create();
+  rtc::scoped_refptr<RTCStatsReport> report = RTCStatsReport::Create(1337);
+  EXPECT_EQ(report->timestamp_us(), 1337u);
   EXPECT_EQ(report->size(), static_cast<size_t>(0));
   report->AddStats(std::unique_ptr<RTCStats>(new RTCTestStats1("a0", 1)));
   report->AddStats(std::unique_ptr<RTCStats>(new RTCTestStats1("a1", 2)));
@@ -92,7 +93,8 @@ TEST(RTCStatsReport, AddAndGetStats) {
 }
 
 TEST(RTCStatsReport, StatsOrder) {
-  rtc::scoped_refptr<RTCStatsReport> report = RTCStatsReport::Create();
+  rtc::scoped_refptr<RTCStatsReport> report = RTCStatsReport::Create(1337);
+  EXPECT_EQ(report->timestamp_us(), 1337u);
   report->AddStats(std::unique_ptr<RTCStats>(new RTCTestStats1("C", 2)));
   report->AddStats(std::unique_ptr<RTCStats>(new RTCTestStats1("D", 3)));
   report->AddStats(std::unique_ptr<RTCStats>(new RTCTestStats2("B", 1)));
@@ -109,11 +111,13 @@ TEST(RTCStatsReport, StatsOrder) {
 }
 
 TEST(RTCStatsReport, TakeMembersFrom) {
-  rtc::scoped_refptr<RTCStatsReport> a = RTCStatsReport::Create();
+  rtc::scoped_refptr<RTCStatsReport> a = RTCStatsReport::Create(1337);
+  EXPECT_EQ(a->timestamp_us(), 1337u);
   a->AddStats(std::unique_ptr<RTCStats>(new RTCTestStats1("B", 1)));
   a->AddStats(std::unique_ptr<RTCStats>(new RTCTestStats1("C", 2)));
   a->AddStats(std::unique_ptr<RTCStats>(new RTCTestStats1("E", 4)));
-  rtc::scoped_refptr<RTCStatsReport> b = RTCStatsReport::Create();
+  rtc::scoped_refptr<RTCStatsReport> b = RTCStatsReport::Create(1338);
+  EXPECT_EQ(b->timestamp_us(), 1338u);
   b->AddStats(std::unique_ptr<RTCStats>(new RTCTestStats1("A", 0)));
   b->AddStats(std::unique_ptr<RTCStats>(new RTCTestStats1("D", 3)));
   b->AddStats(std::unique_ptr<RTCStats>(new RTCTestStats1("F", 5)));

@@ -9,6 +9,7 @@
  */
 
 #include "webrtc/p2p/base/stunrequest.h"
+#include "webrtc/base/fakeclock.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/helpers.h"
 #include "webrtc/base/logging.h"
@@ -16,12 +17,6 @@
 #include "webrtc/base/timeutils.h"
 
 using namespace cricket;
-
-// STUN timeout (with all retries) is 9500ms.
-// Add some margin of error for slow bots.
-// TODO(deadbeef): Use simulated clock instead of just increasing timeouts to
-// fix flaky tests.
-static const int kTimeoutMs = 15000;
 
 class StunRequestTest : public testing::Test,
                         public sigslot::has_slots<> {
@@ -60,14 +55,9 @@ class StunRequestTest : public testing::Test,
     return msg;
   }
   static int TotalDelay(int sends) {
-    int total = 0;
-    for (int i = 0; i < sends; i++) {
-      if (i < 4)
-        total += 100 << i;
-      else
-        total += 1600;
-    }
-    return total;
+    std::vector<int> delays = {0,    250,   750,   1750,  3750,
+                               7750, 15750, 23750, 31750, 39750};
+    return delays[sends];
   }
 
   StunRequestManager manager_;
@@ -147,21 +137,21 @@ TEST_F(StunRequestTest, TestUnexpected) {
   delete res;
 }
 
-// Test that requests are sent at the right times, and that the 9th request
-// (sent at 7900 ms) can be properly replied to.
+// Test that requests are sent at the right times.
 TEST_F(StunRequestTest, TestBackoff) {
+  rtc::ScopedFakeClock fake_clock;
   StunMessage* req = CreateStunMessage(STUN_BINDING_REQUEST, NULL);
 
   int64_t start = rtc::TimeMillis();
   manager_.Send(new StunRequestThunker(req, this));
   StunMessage* res = CreateStunMessage(STUN_BINDING_RESPONSE, req);
   for (int i = 0; i < 9; ++i) {
-    while (request_count_ == i)
-      rtc::Thread::Current()->ProcessMessages(1);
+    EXPECT_TRUE_SIMULATED_WAIT(request_count_ != i, STUN_TOTAL_TIMEOUT,
+                               fake_clock);
     int64_t elapsed = rtc::TimeMillis() - start;
     LOG(LS_INFO) << "STUN request #" << (i + 1)
                  << " sent at " << elapsed << " ms";
-    EXPECT_GE(TotalDelay(i + 1), elapsed);
+    EXPECT_EQ(TotalDelay(i), elapsed);
   }
   EXPECT_TRUE(manager_.CheckResponse(res));
 
@@ -172,15 +162,16 @@ TEST_F(StunRequestTest, TestBackoff) {
   delete res;
 }
 
-// Test that we timeout properly if no response is received in 9500 ms.
+// Test that we timeout properly if no response is received.
 TEST_F(StunRequestTest, TestTimeout) {
+  rtc::ScopedFakeClock fake_clock;
   StunMessage* req = CreateStunMessage(STUN_BINDING_REQUEST, NULL);
   StunMessage* res = CreateStunMessage(STUN_BINDING_RESPONSE, req);
 
   manager_.Send(new StunRequestThunker(req, this));
-  rtc::Thread::Current()->ProcessMessages(kTimeoutMs);
-  EXPECT_FALSE(manager_.CheckResponse(res));
+  SIMULATED_WAIT(false, cricket::STUN_TOTAL_TIMEOUT, fake_clock);
 
+  EXPECT_FALSE(manager_.CheckResponse(res));
   EXPECT_TRUE(response_ == NULL);
   EXPECT_FALSE(success_);
   EXPECT_FALSE(failure_);

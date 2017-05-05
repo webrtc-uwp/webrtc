@@ -21,26 +21,31 @@
 #include <vector>
 
 #include "gflags/gflags.h"
-#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/api/audio_codecs/builtin_audio_decoder_factory.h"
+#include "webrtc/base/ignore_wundef.h"
 #include "webrtc/base/sha1digest.h"
 #include "webrtc/base/stringencode.h"
-#include "webrtc/modules/audio_coding/codecs/builtin_audio_decoder_factory.h"
+#include "webrtc/modules/audio_coding/codecs/pcm16b/pcm16b.h"
 #include "webrtc/modules/audio_coding/neteq/tools/audio_loop.h"
 #include "webrtc/modules/audio_coding/neteq/tools/rtp_file_source.h"
-#include "webrtc/modules/audio_coding/codecs/pcm16b/pcm16b.h"
 #include "webrtc/modules/include/module_common_types.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/typedefs.h"
 
 #ifdef WEBRTC_NETEQ_UNITTEST_BITEXACT
+RTC_PUSH_IGNORING_WUNDEF()
 #ifdef WEBRTC_ANDROID_PLATFORM_BUILD
 #include "external/webrtc/webrtc/modules/audio_coding/neteq/neteq_unittest.pb.h"
 #else
-#include "webrtc/audio_coding/neteq/neteq_unittest.pb.h"
+#include "webrtc/modules/audio_coding/neteq/neteq_unittest.pb.h"
 #endif
+RTC_POP_IGNORING_WUNDEF()
 #endif
 
 DEFINE_bool(gen_ref, false, "Generate reference files.");
+
+namespace webrtc {
 
 namespace {
 
@@ -48,9 +53,9 @@ const std::string& PlatformChecksum(const std::string& checksum_general,
                                     const std::string& checksum_android,
                                     const std::string& checksum_win_32,
                                     const std::string& checksum_win_64) {
-#ifdef WEBRTC_ANDROID
+#if defined(WEBRTC_ANDROID)
     return checksum_android;
-#elif WEBRTC_WIN
+#elif defined(WEBRTC_WIN)
   #ifdef WEBRTC_ARCH_64_BITS
     return checksum_win_64;
   #else
@@ -59,20 +64,6 @@ const std::string& PlatformChecksum(const std::string& checksum_general,
 #else
   return checksum_general;
 #endif  // WEBRTC_WIN
-}
-
-bool IsAllZero(const int16_t* buf, size_t buf_length) {
-  bool all_zero = true;
-  for (size_t n = 0; n < buf_length && all_zero; ++n)
-    all_zero = buf[n] == 0;
-  return all_zero;
-}
-
-bool IsAllNonZero(const int16_t* buf, size_t buf_length) {
-  bool all_non_zero = true;
-  for (size_t n = 0; n < buf_length && all_non_zero; ++n)
-    all_non_zero = buf[n] != 0;
-  return all_non_zero;
 }
 
 #ifdef WEBRTC_NETEQ_UNITTEST_BITEXACT
@@ -121,51 +112,41 @@ void AddMessage(FILE* file, rtc::MessageDigest* digest,
 #endif  // WEBRTC_NETEQ_UNITTEST_BITEXACT
 
 void LoadDecoders(webrtc::NetEq* neteq) {
-  // Load PCMu.
-  ASSERT_EQ(0, neteq->RegisterPayloadType(webrtc::NetEqDecoder::kDecoderPCMu,
-                                          "pcmu", 0));
-  // Load PCMa.
+  ASSERT_EQ(true,
+            neteq->RegisterPayloadType(0, SdpAudioFormat("pcmu", 8000, 1)));
+  // Use non-SdpAudioFormat argument when registering PCMa, so that we get test
+  // coverage for that as well.
   ASSERT_EQ(0, neteq->RegisterPayloadType(webrtc::NetEqDecoder::kDecoderPCMa,
                                           "pcma", 8));
 #ifdef WEBRTC_CODEC_ILBC
-  // Load iLBC.
-  ASSERT_EQ(0, neteq->RegisterPayloadType(webrtc::NetEqDecoder::kDecoderILBC,
-                                          "ilbc", 102));
+  ASSERT_EQ(true,
+            neteq->RegisterPayloadType(102, SdpAudioFormat("ilbc", 8000, 1)));
 #endif
 #if defined(WEBRTC_CODEC_ISAC) || defined(WEBRTC_CODEC_ISACFX)
-  // Load iSAC.
-  ASSERT_EQ(0, neteq->RegisterPayloadType(webrtc::NetEqDecoder::kDecoderISAC,
-                                          "isac", 103));
+  ASSERT_EQ(true,
+            neteq->RegisterPayloadType(103, SdpAudioFormat("isac", 16000, 1)));
 #endif
 #ifdef WEBRTC_CODEC_ISAC
-  // Load iSAC SWB.
-  ASSERT_EQ(0, neteq->RegisterPayloadType(webrtc::NetEqDecoder::kDecoderISACswb,
-                                          "isac-swb", 104));
+  ASSERT_EQ(true,
+            neteq->RegisterPayloadType(104, SdpAudioFormat("isac", 32000, 1)));
 #endif
 #ifdef WEBRTC_CODEC_OPUS
-  ASSERT_EQ(0, neteq->RegisterPayloadType(webrtc::NetEqDecoder::kDecoderOpus,
-                                          "opus", 111));
+  ASSERT_EQ(true,
+            neteq->RegisterPayloadType(
+                111, SdpAudioFormat("opus", 48000, 2, {{"stereo", "0"}})));
 #endif
-  // Load PCM16B nb.
-  ASSERT_EQ(0, neteq->RegisterPayloadType(webrtc::NetEqDecoder::kDecoderPCM16B,
-                                          "pcm16-nb", 93));
-  // Load PCM16B wb.
-  ASSERT_EQ(0, neteq->RegisterPayloadType(
-                   webrtc::NetEqDecoder::kDecoderPCM16Bwb, "pcm16-wb", 94));
-  // Load PCM16B swb32.
-  ASSERT_EQ(
-      0, neteq->RegisterPayloadType(
-             webrtc::NetEqDecoder::kDecoderPCM16Bswb32kHz, "pcm16-swb32", 95));
-  // Load CNG 8 kHz.
-  ASSERT_EQ(0, neteq->RegisterPayloadType(webrtc::NetEqDecoder::kDecoderCNGnb,
-                                          "cng-nb", 13));
-  // Load CNG 16 kHz.
-  ASSERT_EQ(0, neteq->RegisterPayloadType(webrtc::NetEqDecoder::kDecoderCNGwb,
-                                          "cng-wb", 98));
+  ASSERT_EQ(true,
+            neteq->RegisterPayloadType(93, SdpAudioFormat("L16", 8000, 1)));
+  ASSERT_EQ(true,
+            neteq->RegisterPayloadType(94, SdpAudioFormat("L16", 16000, 1)));
+  ASSERT_EQ(true,
+            neteq->RegisterPayloadType(95, SdpAudioFormat("L16", 32000, 1)));
+  ASSERT_EQ(true,
+            neteq->RegisterPayloadType(13, SdpAudioFormat("cn", 8000, 1)));
+  ASSERT_EQ(true,
+            neteq->RegisterPayloadType(98, SdpAudioFormat("cn", 16000, 1)));
 }
 }  // namespace
-
-namespace webrtc {
 
 class ResultSink {
  public:
@@ -461,16 +442,16 @@ TEST_F(NetEqDecodingTest, MAYBE_TestBitExactness) {
       webrtc::test::ResourcePath("audio_coding/neteq_universal_new", "rtp");
 
   const std::string output_checksum = PlatformChecksum(
-      "acd33f5c73625c1529c412ad59b5565132826f1b",
-      "1a2e82a0410421c1d1d3eb0615334db5e2c63784",
-      "acd33f5c73625c1529c412ad59b5565132826f1b",
-      "52797b781758a1d2303140b80b9c5030c9093d6b");
+      "5a8184bc60c0d7dddb50af8966360675476a8d8b",
+      "be982d2c5685dd1ca4ea5d352283df50e8e5b46d",
+      "5a8184bc60c0d7dddb50af8966360675476a8d8b",
+      "c86aec95439748f4949de95b50c94be291118615");
 
   const std::string network_stats_checksum = PlatformChecksum(
-      "9c5bb9e74a583be89313b158a19ea10d41bf9de6",
-      "e948ec65cf18852ba2a197189a3186635db34c3b",
-      "9c5bb9e74a583be89313b158a19ea10d41bf9de6",
-      "9c5bb9e74a583be89313b158a19ea10d41bf9de6");
+      "f59b3dfdb9b1b8bbb61abedd7c8cf3fc47c21f5f",
+      "c8b2a93842e48d014f7e6efe10ae96cb3892b129",
+      "f59b3dfdb9b1b8bbb61abedd7c8cf3fc47c21f5f",
+      "f59b3dfdb9b1b8bbb61abedd7c8cf3fc47c21f5f");
 
   const std::string rtcp_stats_checksum = PlatformChecksum(
       "b8880bf9fed2487efbddcb8d94b9937a29ae521d",
@@ -503,10 +484,10 @@ TEST_F(NetEqDecodingTest, MAYBE_TestOpusBitExactness) {
       "9d7d52bc94e941d106aa518f324f16a58d231586");
 
   const std::string network_stats_checksum = PlatformChecksum(
-      "191af29ed3b8b6dd4c4cc94dc3f33bdf48f055ef",
-      "191af29ed3b8b6dd4c4cc94dc3f33bdf48f055ef",
-      "191af29ed3b8b6dd4c4cc94dc3f33bdf48f055ef",
-      "191af29ed3b8b6dd4c4cc94dc3f33bdf48f055ef");
+      "d8379381d5a619f0616bb3c0a8a9eea1704a8ab8",
+      "d8379381d5a619f0616bb3c0a8a9eea1704a8ab8",
+      "d8379381d5a619f0616bb3c0a8a9eea1704a8ab8",
+      "d8379381d5a619f0616bb3c0a8a9eea1704a8ab8");
 
   const std::string rtcp_stats_checksum = PlatformChecksum(
       "e37c797e3de6a64dda88c9ade7a013d022a2e1e0",
@@ -596,7 +577,7 @@ TEST_F(NetEqDecodingTest, TestAverageInterArrivalTimeNegative) {
 
   NetEqNetworkStatistics network_stats;
   ASSERT_EQ(0, neteq_->NetworkStatistics(&network_stats));
-  EXPECT_EQ(-103196, network_stats.clockdrift_ppm);
+  EXPECT_EQ(-103192, network_stats.clockdrift_ppm);
 }
 
 TEST_F(NetEqDecodingTest, TestAverageInterArrivalTimePositive) {
@@ -624,7 +605,7 @@ TEST_F(NetEqDecodingTest, TestAverageInterArrivalTimePositive) {
 
   NetEqNetworkStatistics network_stats;
   ASSERT_EQ(0, neteq_->NetworkStatistics(&network_stats));
-  EXPECT_EQ(110946, network_stats.clockdrift_ppm);
+  EXPECT_EQ(110953, network_stats.clockdrift_ppm);
 }
 
 void NetEqDecodingTest::LongCngWithClockDrift(double drift_factor,
@@ -1079,232 +1060,6 @@ TEST_F(NetEqBgnTestFade, RunTest) {
   CheckBgn(32000);
 }
 
-#if defined(WEBRTC_CODEC_ISAC) || defined(WEBRTC_CODEC_ISACFX)
-#define MAYBE_SyncPacketInsert SyncPacketInsert
-#else
-#define MAYBE_SyncPacketInsert DISABLED_SyncPacketInsert
-#endif
-TEST_F(NetEqDecodingTest, MAYBE_SyncPacketInsert) {
-  WebRtcRTPHeader rtp_info;
-  uint32_t receive_timestamp = 0;
-  // For the readability use the following payloads instead of the defaults of
-  // this test.
-  uint8_t kPcm16WbPayloadType = 1;
-  uint8_t kCngNbPayloadType = 2;
-  uint8_t kCngWbPayloadType = 3;
-  uint8_t kCngSwb32PayloadType = 4;
-  uint8_t kCngSwb48PayloadType = 5;
-  uint8_t kAvtPayloadType = 6;
-  uint8_t kRedPayloadType = 7;
-  uint8_t kIsacPayloadType = 9;  // Payload type 8 is already registered.
-
-  // Register decoders.
-  ASSERT_EQ(0, neteq_->RegisterPayloadType(NetEqDecoder::kDecoderPCM16Bwb,
-                                           "pcm16-wb", kPcm16WbPayloadType));
-  ASSERT_EQ(0, neteq_->RegisterPayloadType(NetEqDecoder::kDecoderCNGnb,
-                                           "cng-nb", kCngNbPayloadType));
-  ASSERT_EQ(0, neteq_->RegisterPayloadType(NetEqDecoder::kDecoderCNGwb,
-                                           "cng-wb", kCngWbPayloadType));
-  ASSERT_EQ(0, neteq_->RegisterPayloadType(NetEqDecoder::kDecoderCNGswb32kHz,
-                                           "cng-swb32", kCngSwb32PayloadType));
-  ASSERT_EQ(0, neteq_->RegisterPayloadType(NetEqDecoder::kDecoderCNGswb48kHz,
-                                           "cng-swb48", kCngSwb48PayloadType));
-  ASSERT_EQ(0, neteq_->RegisterPayloadType(NetEqDecoder::kDecoderAVT, "avt",
-                                           kAvtPayloadType));
-  ASSERT_EQ(0, neteq_->RegisterPayloadType(NetEqDecoder::kDecoderRED, "red",
-                                           kRedPayloadType));
-  ASSERT_EQ(0, neteq_->RegisterPayloadType(NetEqDecoder::kDecoderISAC, "isac",
-                                           kIsacPayloadType));
-
-  PopulateRtpInfo(0, 0, &rtp_info);
-  rtp_info.header.payloadType = kPcm16WbPayloadType;
-
-  // The first packet injected cannot be sync-packet.
-  EXPECT_EQ(-1, neteq_->InsertSyncPacket(rtp_info, receive_timestamp));
-
-  // Payload length of 10 ms PCM16 16 kHz.
-  const size_t kPayloadBytes = kBlockSize16kHz * sizeof(int16_t);
-  uint8_t payload[kPayloadBytes] = {0};
-  ASSERT_EQ(0, neteq_->InsertPacket(rtp_info, payload, receive_timestamp));
-
-  // Next packet. Last packet contained 10 ms audio.
-  rtp_info.header.sequenceNumber++;
-  rtp_info.header.timestamp += kBlockSize16kHz;
-  receive_timestamp += kBlockSize16kHz;
-
-  // Unacceptable payload types CNG, AVT (DTMF), RED.
-  rtp_info.header.payloadType = kCngNbPayloadType;
-  EXPECT_EQ(-1, neteq_->InsertSyncPacket(rtp_info, receive_timestamp));
-
-  rtp_info.header.payloadType = kCngWbPayloadType;
-  EXPECT_EQ(-1, neteq_->InsertSyncPacket(rtp_info, receive_timestamp));
-
-  rtp_info.header.payloadType = kCngSwb32PayloadType;
-  EXPECT_EQ(-1, neteq_->InsertSyncPacket(rtp_info, receive_timestamp));
-
-  rtp_info.header.payloadType = kCngSwb48PayloadType;
-  EXPECT_EQ(-1, neteq_->InsertSyncPacket(rtp_info, receive_timestamp));
-
-  rtp_info.header.payloadType = kAvtPayloadType;
-  EXPECT_EQ(-1, neteq_->InsertSyncPacket(rtp_info, receive_timestamp));
-
-  rtp_info.header.payloadType = kRedPayloadType;
-  EXPECT_EQ(-1, neteq_->InsertSyncPacket(rtp_info, receive_timestamp));
-
-  // Change of codec cannot be initiated with a sync packet.
-  rtp_info.header.payloadType = kIsacPayloadType;
-  EXPECT_EQ(-1, neteq_->InsertSyncPacket(rtp_info, receive_timestamp));
-
-  // Change of SSRC is not allowed with a sync packet.
-  rtp_info.header.payloadType = kPcm16WbPayloadType;
-  ++rtp_info.header.ssrc;
-  EXPECT_EQ(-1, neteq_->InsertSyncPacket(rtp_info, receive_timestamp));
-
-  --rtp_info.header.ssrc;
-  EXPECT_EQ(0, neteq_->InsertSyncPacket(rtp_info, receive_timestamp));
-}
-
-// First insert several noise like packets, then sync-packets. Decoding all
-// packets should not produce error, statistics should not show any packet loss
-// and sync-packets should decode to zero.
-// TODO(turajs) we will have a better test if we have a referece NetEq, and
-// when Sync packets are inserted in "test" NetEq we insert all-zero payload
-// in reference NetEq and compare the output of those two.
-TEST_F(NetEqDecodingTest, SyncPacketDecode) {
-  WebRtcRTPHeader rtp_info;
-  PopulateRtpInfo(0, 0, &rtp_info);
-  const size_t kPayloadBytes = kBlockSize16kHz * sizeof(int16_t);
-  uint8_t payload[kPayloadBytes];
-  AudioFrame output;
-  int algorithmic_frame_delay = algorithmic_delay_ms_ / 10 + 1;
-  for (size_t n = 0; n < kPayloadBytes; ++n) {
-    payload[n] = (rand() & 0xF0) + 1;  // Non-zero random sequence.
-  }
-  // Insert some packets which decode to noise. We are not interested in
-  // actual decoded values.
-  uint32_t receive_timestamp = 0;
-  bool muted;
-  for (int n = 0; n < 100; ++n) {
-    ASSERT_EQ(0, neteq_->InsertPacket(rtp_info, payload, receive_timestamp));
-    ASSERT_EQ(0, neteq_->GetAudio(&output, &muted));
-    ASSERT_EQ(kBlockSize16kHz, output.samples_per_channel_);
-    ASSERT_EQ(1u, output.num_channels_);
-
-    rtp_info.header.sequenceNumber++;
-    rtp_info.header.timestamp += kBlockSize16kHz;
-    receive_timestamp += kBlockSize16kHz;
-  }
-  const int kNumSyncPackets = 10;
-
-  // Make sure sufficient number of sync packets are inserted that we can
-  // conduct a test.
-  ASSERT_GT(kNumSyncPackets, algorithmic_frame_delay);
-  // Insert sync-packets, the decoded sequence should be all-zero.
-  for (int n = 0; n < kNumSyncPackets; ++n) {
-    ASSERT_EQ(0, neteq_->InsertSyncPacket(rtp_info, receive_timestamp));
-    ASSERT_EQ(0, neteq_->GetAudio(&output, &muted));
-    ASSERT_FALSE(muted);
-    ASSERT_EQ(kBlockSize16kHz, output.samples_per_channel_);
-    ASSERT_EQ(1u, output.num_channels_);
-    if (n > algorithmic_frame_delay) {
-      EXPECT_TRUE(IsAllZero(
-          output.data_, output.samples_per_channel_ * output.num_channels_));
-    }
-    rtp_info.header.sequenceNumber++;
-    rtp_info.header.timestamp += kBlockSize16kHz;
-    receive_timestamp += kBlockSize16kHz;
-  }
-
-  // We insert regular packets, if sync packet are not correctly buffered then
-  // network statistics would show some packet loss.
-  for (int n = 0; n <= algorithmic_frame_delay + 10; ++n) {
-    ASSERT_EQ(0, neteq_->InsertPacket(rtp_info, payload, receive_timestamp));
-    ASSERT_EQ(0, neteq_->GetAudio(&output, &muted));
-    ASSERT_FALSE(muted);
-    if (n >= algorithmic_frame_delay + 1) {
-      // Expect that this frame contain samples from regular RTP.
-      EXPECT_TRUE(IsAllNonZero(
-          output.data_, output.samples_per_channel_ * output.num_channels_));
-    }
-    rtp_info.header.sequenceNumber++;
-    rtp_info.header.timestamp += kBlockSize16kHz;
-    receive_timestamp += kBlockSize16kHz;
-  }
-  NetEqNetworkStatistics network_stats;
-  ASSERT_EQ(0, neteq_->NetworkStatistics(&network_stats));
-  // Expecting a "clean" network.
-  EXPECT_EQ(0, network_stats.packet_loss_rate);
-  EXPECT_EQ(0, network_stats.expand_rate);
-  EXPECT_EQ(0, network_stats.accelerate_rate);
-  EXPECT_LE(network_stats.preemptive_rate, 150);
-}
-
-// Test if the size of the packet buffer reported correctly when containing
-// sync packets. Also, test if network packets override sync packets. That is to
-// prefer decoding a network packet to a sync packet, if both have same sequence
-// number and timestamp.
-TEST_F(NetEqDecodingTest, SyncPacketBufferSizeAndOverridenByNetworkPackets) {
-  WebRtcRTPHeader rtp_info;
-  PopulateRtpInfo(0, 0, &rtp_info);
-  const size_t kPayloadBytes = kBlockSize16kHz * sizeof(int16_t);
-  uint8_t payload[kPayloadBytes];
-  AudioFrame output;
-  for (size_t n = 0; n < kPayloadBytes; ++n) {
-    payload[n] = (rand() & 0xF0) + 1;  // Non-zero random sequence.
-  }
-  // Insert some packets which decode to noise. We are not interested in
-  // actual decoded values.
-  uint32_t receive_timestamp = 0;
-  int algorithmic_frame_delay = algorithmic_delay_ms_ / 10 + 1;
-  bool muted;
-  for (int n = 0; n < algorithmic_frame_delay; ++n) {
-    ASSERT_EQ(0, neteq_->InsertPacket(rtp_info, payload, receive_timestamp));
-    ASSERT_EQ(0, neteq_->GetAudio(&output, &muted));
-    ASSERT_EQ(kBlockSize16kHz, output.samples_per_channel_);
-    ASSERT_EQ(1u, output.num_channels_);
-    rtp_info.header.sequenceNumber++;
-    rtp_info.header.timestamp += kBlockSize16kHz;
-    receive_timestamp += kBlockSize16kHz;
-  }
-  const int kNumSyncPackets = 10;
-
-  WebRtcRTPHeader first_sync_packet_rtp_info;
-  memcpy(&first_sync_packet_rtp_info, &rtp_info, sizeof(rtp_info));
-
-  // Insert sync-packets, but no decoding.
-  for (int n = 0; n < kNumSyncPackets; ++n) {
-    ASSERT_EQ(0, neteq_->InsertSyncPacket(rtp_info, receive_timestamp));
-    rtp_info.header.sequenceNumber++;
-    rtp_info.header.timestamp += kBlockSize16kHz;
-    receive_timestamp += kBlockSize16kHz;
-  }
-  NetEqNetworkStatistics network_stats;
-  ASSERT_EQ(0, neteq_->NetworkStatistics(&network_stats));
-  EXPECT_EQ(kNumSyncPackets * 10 + algorithmic_delay_ms_,
-            network_stats.current_buffer_size_ms);
-
-  // Rewind |rtp_info| to that of the first sync packet.
-  memcpy(&rtp_info, &first_sync_packet_rtp_info, sizeof(rtp_info));
-
-  // Insert.
-  for (int n = 0; n < kNumSyncPackets; ++n) {
-    ASSERT_EQ(0, neteq_->InsertPacket(rtp_info, payload, receive_timestamp));
-    rtp_info.header.sequenceNumber++;
-    rtp_info.header.timestamp += kBlockSize16kHz;
-    receive_timestamp += kBlockSize16kHz;
-  }
-
-  // Decode.
-  for (int n = 0; n < kNumSyncPackets; ++n) {
-    ASSERT_EQ(0, neteq_->GetAudio(&output, &muted));
-    ASSERT_FALSE(muted);
-    ASSERT_EQ(kBlockSize16kHz, output.samples_per_channel_);
-    ASSERT_EQ(1u, output.num_channels_);
-    EXPECT_TRUE(IsAllNonZero(
-        output.data_, output.samples_per_channel_ * output.num_channels_));
-  }
-}
-
 void NetEqDecodingTest::WrapTest(uint16_t start_seq_no,
                                  uint32_t start_timestamp,
                                  const std::set<uint16_t>& drop_seq_numbers,
@@ -1555,6 +1310,17 @@ class NetEqDecodingTestWithMutedState : public NetEqDecodingTest {
     EXPECT_EQ(0, neteq_->InsertPacket(rtp_info, payload, 0));
   }
 
+  void InsertCngPacket(uint32_t rtp_timestamp) {
+    uint8_t payload[kPayloadBytes] = {0};
+    WebRtcRTPHeader rtp_info;
+    size_t payload_len;
+    PopulateCng(0, rtp_timestamp, &rtp_info, payload, &payload_len);
+    EXPECT_EQ(
+        NetEq::kOK,
+        neteq_->InsertPacket(
+            rtp_info, rtc::ArrayView<const uint8_t>(payload, payload_len), 0));
+  }
+
   bool GetAudioReturnMuted() {
     bool muted;
     EXPECT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
@@ -1667,6 +1433,39 @@ TEST_F(NetEqDecodingTestWithMutedState, MutedStateOldPacket) {
   InsertPacket(kSamples * (counter_ - 1000));
   EXPECT_FALSE(GetAudioReturnMuted());
   EXPECT_EQ(AudioFrame::kNormalSpeech, out_frame_.speech_type_);
+}
+
+// Verifies that NetEq doesn't enter muted state when CNG mode is active and the
+// packet stream is suspended for a long time.
+TEST_F(NetEqDecodingTestWithMutedState, DoNotMuteExtendedCngWithoutPackets) {
+  // Insert one CNG packet.
+  InsertCngPacket(0);
+
+  // Pull 10 seconds of audio (10 ms audio generated per lap).
+  for (int i = 0; i < 1000; ++i) {
+    bool muted;
+    EXPECT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+    ASSERT_FALSE(muted);
+  }
+  EXPECT_EQ(AudioFrame::kCNG, out_frame_.speech_type_);
+}
+
+// Verifies that NetEq goes back to normal after a long CNG period with the
+// packet stream suspended.
+TEST_F(NetEqDecodingTestWithMutedState, RecoverAfterExtendedCngWithoutPackets) {
+  // Insert one CNG packet.
+  InsertCngPacket(0);
+
+  // Pull 10 seconds of audio (10 ms audio generated per lap).
+  for (int i = 0; i < 1000; ++i) {
+    bool muted;
+    EXPECT_EQ(0, neteq_->GetAudio(&out_frame_, &muted));
+  }
+
+  // Insert new data. Timestamp is corrected for the time elapsed since the last
+  // packet. Verify that normal operation resumes.
+  InsertPacket(kSamples * counter_);
+  GetAudioUntilNormal();
 }
 
 class NetEqDecodingTestTwoInstances : public NetEqDecodingTest {

@@ -19,10 +19,9 @@
 #include "webrtc/base/criticalsection.h"
 #include "webrtc/base/event.h"
 #include "webrtc/base/task_queue.h"
-#include "webrtc/call.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/video_coding/protection_bitrate_calculator.h"
-#include "webrtc/video/encoder_state_feedback.h"
+#include "webrtc/video/encoder_rtcp_feedback.h"
 #include "webrtc/video/payload_router.h"
 #include "webrtc/video/send_delay_stats.h"
 #include "webrtc/video/send_statistics_proxy.h"
@@ -36,6 +35,7 @@ class BitrateAllocator;
 class CallStats;
 class CongestionController;
 class IvfFileWriter;
+class PacketRouter;
 class ProcessThread;
 class RtpRtcp;
 class VieRemb;
@@ -55,6 +55,7 @@ class VideoSendStream : public webrtc::VideoSendStream {
                   rtc::TaskQueue* worker_queue,
                   CallStats* call_stats,
                   CongestionController* congestion_controller,
+                  PacketRouter* packet_router,
                   BitrateAllocator* bitrate_allocator,
                   SendDelayStats* send_delay_stats,
                   VieRemb* remb,
@@ -71,12 +72,27 @@ class VideoSendStream : public webrtc::VideoSendStream {
   // webrtc::VideoSendStream implementation.
   void Start() override;
   void Stop() override;
-  VideoCaptureInput* Input() override;
+
+  void SetSource(rtc::VideoSourceInterface<webrtc::VideoFrame>* source,
+                 const DegradationPreference& degradation_preference) override;
+
   void ReconfigureVideoEncoder(VideoEncoderConfig) override;
   Stats GetStats() override;
 
   typedef std::map<uint32_t, RtpState> RtpStateMap;
+
+  // Takes ownership of each file, is responsible for closing them later.
+  // Calling this method will close and finalize any current logs.
+  // Giving rtc::kInvalidPlatformFileValue in any position disables logging
+  // for the corresponding stream.
+  // If a frame to be written would make the log too large the write fails and
+  // the log is closed and finalized. A |byte_limit| of 0 means no limit.
+  void EnableEncodedFrameRecording(const std::vector<rtc::PlatformFile>& files,
+                                   size_t byte_limit) override;
+
   RtpStateMap StopPermanentlyAndGetRtpStates();
+
+  void SetTransportOverhead(size_t transport_overhead_per_packet);
 
  private:
   class ConstructionTask;
@@ -88,6 +104,7 @@ class VideoSendStream : public webrtc::VideoSendStream {
 
   SendStatisticsProxy stats_proxy_;
   const VideoSendStream::Config config_;
+  const VideoEncoderConfig::ContentType content_type_;
   std::unique_ptr<VideoSendStreamImpl> send_stream_;
   std::unique_ptr<ViEEncoder> vie_encoder_;
 };

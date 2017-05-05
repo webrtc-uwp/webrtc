@@ -441,7 +441,7 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
   for (size_t i = 0; i < kNumCorrelationCandidates; ++i) {
     int32_t ratio;
     if (best_distortion[i] > 0) {
-      ratio = (best_correlation[i] << 16) / best_distortion[i];
+      ratio = (best_correlation[i] * (1 << 16)) / best_distortion[i];
     } else if (best_correlation[i] == 0) {
       ratio = 0;  // No correlation set result to zero.
     } else {
@@ -675,12 +675,20 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
                               parameters.ar_filter,
                               kUnvoicedLpcOrder + 1,
                               128);
-    int16_t unvoiced_prescale;
-    if (WebRtcSpl_MaxAbsValueW16(unvoiced_vector, 128) > 4000) {
-      unvoiced_prescale = 4;
-    } else {
-      unvoiced_prescale = 0;
-    }
+    const int unvoiced_max_abs = [&] {
+      const int16_t max_abs = WebRtcSpl_MaxAbsValueW16(unvoiced_vector, 128);
+      // Since WebRtcSpl_MaxAbsValueW16 returns 2^15 - 1 when the input contains
+      // -2^15, we have to conservatively bump the return value by 1
+      // if it is 2^15 - 1.
+      return max_abs == WEBRTC_SPL_WORD16_MAX ? max_abs + 1 : max_abs;
+    }();
+    // Pick the smallest n such that 2^n > unvoiced_max_abs; then the maximum
+    // value of the dot product is less than 2^7 * 2^(2*n) = 2^(2*n + 7), so to
+    // prevent overflows we want 2n + 7 <= 31, which means we should shift by
+    // 2n + 7 - 31 bits, if this value is greater than zero.
+    int unvoiced_prescale =
+        std::max(0, 2 * WebRtcSpl_GetSizeInBits(unvoiced_max_abs) - 24);
+
     int32_t unvoiced_energy = WebRtcSpl_DotProductWithScale(unvoiced_vector,
                                                             unvoiced_vector,
                                                             128,
@@ -712,7 +720,7 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
       x2 = (x1 * x1) >> 14;   // Shift 14 to keep result in Q14.
       x3 = (x1 * x2) >> 14;
       static const int kCoefficients[4] = { -5179, 19931, -16422, 5776 };
-      int32_t temp_sum = kCoefficients[0] << 14;
+      int32_t temp_sum = kCoefficients[0] * 16384;
       temp_sum += kCoefficients[1] * x1;
       temp_sum += kCoefficients[2] * x2;
       temp_sum += kCoefficients[3] * x3;
@@ -751,7 +759,7 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
       // Calculate (1 - slope) / distortion_lag.
       // Shift |slope| by 7 to Q20 before the division. The result is in Q20.
       parameters.mute_slope = WebRtcSpl_DivW32W16(
-          (8192 - slope) << 7, static_cast<int16_t>(distortion_lag));
+          (8192 - slope) * 128, static_cast<int16_t>(distortion_lag));
       if (parameters.voice_mix_factor <= 13107) {
         // Make sure the mute factor decreases from 1.0 to 0.9 in no more than
         // 6.25 ms.

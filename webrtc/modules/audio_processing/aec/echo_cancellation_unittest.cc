@@ -15,9 +15,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "webrtc/modules/audio_processing/aec/aec_core.h"
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/checks.h"
+#include "webrtc/modules/audio_processing/aec/aec_core.h"
+#include "webrtc/test/gtest.h"
 
 namespace webrtc {
 

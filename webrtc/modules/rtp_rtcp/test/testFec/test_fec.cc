@@ -18,11 +18,11 @@
 
 #include <list>
 
-#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/random.h"
 #include "webrtc/modules/rtp_rtcp/source/byte_io.h"
 #include "webrtc/modules/rtp_rtcp/source/forward_error_correction.h"
 #include "webrtc/modules/rtp_rtcp/source/forward_error_correction_internal.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 // #define VERBOSE_OUTPUT
@@ -107,7 +107,8 @@ TEST(FecTest, MAYBE_FecTest) {
   ASSERT_EQ(12, kMaxMediaPackets[1]) << "Max media packets for bursty mode not "
                                      << "equal to 12.";
 
-  ForwardErrorCorrection fec;
+  std::unique_ptr<ForwardErrorCorrection> fec =
+      ForwardErrorCorrection::CreateUlpfec();
   ForwardErrorCorrection::PacketList media_packet_list;
   std::list<ForwardErrorCorrection::Packet*> fec_packet_list;
   ForwardErrorCorrection::ReceivedPacketList to_decode_list;
@@ -238,8 +239,7 @@ TEST(FecTest, MAYBE_FecTest) {
                   new ForwardErrorCorrection::Packet());
               const uint32_t kMinPacketSize = 12;
               const uint32_t kMaxPacketSize = static_cast<uint32_t>(
-                  IP_PACKET_SIZE - 12 - 28 -
-                  ForwardErrorCorrection::PacketOverhead());
+                  IP_PACKET_SIZE - 12 - 28 - fec->MaxPacketOverhead());
               media_packet->length = random.Rand(kMinPacketSize,
                                                  kMaxPacketSize);
 
@@ -278,14 +278,14 @@ TEST(FecTest, MAYBE_FecTest) {
             }
             media_packet_list.back()->data[1] |= 0x80;
 
-            ASSERT_EQ(0, fec.GenerateFec(media_packet_list, protection_factor,
-                                         num_imp_packets, kUseUnequalProtection,
-                                         fec_mask_type, &fec_packet_list))
-                << "GenerateFec() failed";
+            ASSERT_EQ(0, fec->EncodeFec(media_packet_list, protection_factor,
+                                        num_imp_packets, kUseUnequalProtection,
+                                        fec_mask_type, &fec_packet_list))
+                << "EncodeFec() failed";
 
             ASSERT_EQ(num_fec_packets, fec_packet_list.size())
                 << "We requested " << num_fec_packets << " FEC packets, but "
-                << "GenerateFec() produced " << fec_packet_list.size();
+                << "EncodeFec() produced " << fec_packet_list.size();
 
             memset(media_loss_mask, 0, sizeof(media_loss_mask));
             uint32_t media_packet_idx = 0;
@@ -393,8 +393,8 @@ TEST(FecTest, MAYBE_FecTest) {
                   }
                 }
               }
-              ASSERT_EQ(0, fec.DecodeFec(&to_decode_list,
-                                         &recovered_packet_list))
+              ASSERT_EQ(0,
+                        fec->DecodeFec(&to_decode_list, &recovered_packet_list))
                   << "DecodeFec() failed";
               ASSERT_TRUE(to_decode_list.empty())
                   << "Received packet list is not empty.";
@@ -422,7 +422,7 @@ TEST(FecTest, MAYBE_FecTest) {
               }
               ++media_packet_idx;
             }
-            fec.ResetState(&recovered_packet_list);
+            fec->ResetState(&recovered_packet_list);
             ASSERT_TRUE(recovered_packet_list.empty())
                 << "Excessive number of recovered packets.\t size is: "
                 << recovered_packet_list.size();
@@ -448,7 +448,7 @@ TEST(FecTest, MAYBE_FecTest) {
   }    // loop over mask types
 
   // Have DecodeFec clear the recovered packet list.
-  fec.ResetState(&recovered_packet_list);
+  fec->ResetState(&recovered_packet_list);
   ASSERT_TRUE(recovered_packet_list.empty())
       << "Recovered packet list is not empty";
 }

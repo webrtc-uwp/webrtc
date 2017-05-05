@@ -15,18 +15,18 @@
 #include <memory>
 
 #include "gflags/gflags.h"
-#include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/common.h"
 #include "webrtc/common_types.h"
-#include "webrtc/engine_configurations.h"
+#include "webrtc/modules/audio_coding/acm2/acm_common_defs.h"
+#include "webrtc/modules/audio_coding/codecs/audio_format_conversion.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module.h"
 #include "webrtc/modules/audio_coding/include/audio_coding_module_typedefs.h"
-#include "webrtc/modules/audio_coding/acm2/acm_common_defs.h"
 #include "webrtc/modules/audio_coding/test/Channel.h"
 #include "webrtc/modules/audio_coding/test/PCMFile.h"
 #include "webrtc/modules/audio_coding/test/utility.h"
 #include "webrtc/system_wrappers/include/event_wrapper.h"
+#include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/typedefs.h"
 
 DEFINE_string(codec, "isac", "Codec Name");
 DEFINE_int32(sample_rate_hz, 16000, "Sampling rate in Hertz.");
@@ -108,8 +108,9 @@ class DelayTest {
         continue;
       if (STR_CASE_CMP(my_codec_param.plname, "telephone-event") == 0)
         continue;
-      ASSERT_EQ(0, acm_b_->RegisterReceiveCodec(my_codec_param)) <<
-          "Couldn't register receive codec.\n";
+      ASSERT_EQ(true,
+                acm_b_->RegisterReceiveCodec(my_codec_param.pltype,
+                                             CodecInstToSdp(my_codec_param)));
     }
 
     // Create and connect the channel
