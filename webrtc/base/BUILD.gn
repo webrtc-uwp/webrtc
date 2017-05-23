@@ -20,7 +20,7 @@ if (is_win) {
 
 group("base") {
   public_deps = [
-    ":rtc_base",
+    ":rtc_base_all",
     ":rtc_base_approved",
     ":rtc_task_queue",
   ]
@@ -392,7 +392,7 @@ rtc_source_set("rtc_json") {
   }
 }
 
-rtc_static_library("rtc_base") {
+rtc_static_library("rtc_base_all") {
   cflags = []
   cflags_cc = []
   libs = []
@@ -712,7 +712,7 @@ rtc_source_set("rtc_base_tests_utils") {
   configs += [ ":rtc_base_tests_utils_warnings_config" ]
   public_configs = [ ":rtc_base_tests_utils_exported_config" ]
   deps = [
-    ":rtc_base",
+    ":rtc_base_all",
     "../test:field_trial",
     "../test:test_support",
   ]
@@ -735,7 +735,7 @@ if (rtc_include_tests) {
     ]
     public_configs = [ ":rtc_base_tests_utils_exported_config" ]
     deps = [
-      ":rtc_base",
+      ":rtc_base_all",
       ":rtc_base_approved",
       ":rtc_base_tests_utils",
       "../test:field_trial",
@@ -772,7 +772,7 @@ if (rtc_include_tests) {
       "virtualsocket_unittest.cc",
     ]
     deps = [
-      ":rtc_base",
+      ":rtc_base_all",
       ":rtc_base_tests_main",
       ":rtc_base_tests_utils",
       "../system_wrappers:system_wrappers",
@@ -840,7 +840,7 @@ if (rtc_include_tests) {
       "timeutils_unittest.cc",
     ]
     deps = [
-      ":rtc_base",
+      ":rtc_base_all",
       ":rtc_base_approved",
       ":rtc_base_tests_main",
       ":rtc_base_tests_utils",
@@ -966,7 +966,7 @@ if (rtc_include_tests) {
       "../test:test_support",
     ]
     public_deps = [
-      ":rtc_base",
+      ":rtc_base_all",
     ]
     configs += [ ":rtc_base_unittests_config" ]
     if (!build_with_chromium && is_clang) {

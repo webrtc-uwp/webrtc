@@ -35,7 +35,7 @@ rtc_static_library("ortc") {
   deps = [
     "../api/audio_codecs:builtin_audio_decoder_factory",
     "../api/audio_codecs:builtin_audio_encoder_factory",
-    "../base:rtc_base",
+    "../base:rtc_base_all",
     "../base:rtc_base_approved",
     "../call:call_interfaces",
     "../logging:rtc_event_log_api",
@@ -75,7 +75,7 @@ if (rtc_include_tests) {
 
     deps = [
       ":ortc",
-      "../base:rtc_base",
+      "../base:rtc_base_all",
       "../base:rtc_base_approved",
       "../base:rtc_base_tests_main",
       "../base:rtc_base_tests_utils",

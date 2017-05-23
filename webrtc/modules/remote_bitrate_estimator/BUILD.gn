@@ -51,7 +51,7 @@ rtc_static_library("remote_bitrate_estimator") {
 
   deps = [
     "../..:webrtc_common",
-    "../../base:rtc_base",
+    "../../base:rtc_base_all",
     "../../base:rtc_base_approved",
     "../../system_wrappers",
   ]
@@ -112,7 +112,7 @@ if (rtc_include_tests) {
       "..:module_api",
       "../..:webrtc_common",
       "../../base:gtest_prod",
-      "../../base:rtc_base",
+      "../../base:rtc_base_all",
       "../../base:rtc_base_approved",
       "../../system_wrappers",
       "../../test:test_support",
@@ -179,7 +179,7 @@ if (rtc_include_tests) {
       ":mock_remote_bitrate_observer",
       ":remote_bitrate_estimator",
       "../..:webrtc_common",
-      "../../base:rtc_base",
+      "../../base:rtc_base_all",
       "../../base:rtc_base_approved",
       "../../system_wrappers:system_wrappers",
       "../../test:field_trial",

@@ -52,7 +52,7 @@ if (is_ios || is_mac) {
     ]
 
     deps = [
-      "../base:rtc_base",
+      "../base:rtc_base_all",
     ]
     configs += [ "..:common_objc" ]
 
@@ -215,7 +215,7 @@ if (is_ios || is_mac) {
       ":rtc_sdk_corevideoframebuffer",
       ":webrtc_h264_video_toolbox",
       "../api:video_frame_api",
-      "../base:rtc_base",
+      "../base:rtc_base_all",
       "../base:rtc_base_approved",
       "../common_video",
       "../media:rtc_media",

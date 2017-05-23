@@ -2158,7 +2158,7 @@ if (rtc_include_tests) {
       "../../api/audio_codecs:builtin_audio_decoder_factory",
       "../../api/audio_codecs:builtin_audio_encoder_factory",
       "../../base:protobuf_utils",
-      "../../base:rtc_base",
+      "../../base:rtc_base_all",
       "../../base:rtc_base_approved",
       "../../base:rtc_base_tests_utils",
       "../../common_audio",

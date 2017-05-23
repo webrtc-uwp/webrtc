@@ -553,7 +553,7 @@ if (rtc_include_tests) {
       "../..:webrtc_common",
       "../../base:gtest_prod",
       "../../base:protobuf_utils",
-      "../../base:rtc_base",
+      "../../base:rtc_base_all",
       "../../base:rtc_base_approved",
       "../../common_audio:common_audio",
       "../../system_wrappers:system_wrappers",

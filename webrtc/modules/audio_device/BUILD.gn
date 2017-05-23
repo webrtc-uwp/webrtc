@@ -175,7 +175,7 @@ rtc_static_library("audio_device") {
       if (is_ios) {
         public_deps = [
           "../../base:gtest_prod",
-          "../../base:rtc_base",
+          "../../base:rtc_base_all",
           "../../sdk:rtc_sdk_common_objc",
         ]
         sources += [

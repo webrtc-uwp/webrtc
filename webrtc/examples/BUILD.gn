@@ -413,7 +413,7 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
           "objc/AppRTCMobile/tests/ARDSettingsModel_xctest.mm",
         ]
         deps = [
-          "//webrtc/base:rtc_base",
+          "//webrtc/base:rtc_base_all",
         ]
         public_deps = [
           ":AppRTCMobile_ios_frameworks",
@@ -515,7 +515,7 @@ if (is_linux || is_win) {
       "//third_party/libyuv",
       "//webrtc/api:libjingle_peerconnection_test_api",
       "//webrtc/api:video_frame_api",
-      "//webrtc/base:rtc_base",
+      "//webrtc/base:rtc_base_all",
       "//webrtc/base:rtc_base_approved",
       "//webrtc/base:rtc_json",
       "//webrtc/media:rtc_media",
@@ -553,7 +553,7 @@ if (is_linux || is_win) {
       "relayserver/relayserver_main.cc",
     ]
     deps = [
-      "../base:rtc_base",
+      "../base:rtc_base_all",
       "//webrtc/base:rtc_base_approved",
       "//webrtc/p2p:rtc_p2p",
       "//webrtc/pc:rtc_pc",
@@ -571,7 +571,7 @@ if (is_linux || is_win) {
       "turnserver/turnserver_main.cc",
     ]
     deps = [
-      "../base:rtc_base",
+      "../base:rtc_base_all",
       "//webrtc/base:rtc_base_approved",
       "//webrtc/p2p:rtc_p2p",
       "//webrtc/pc:rtc_pc",
@@ -589,7 +589,7 @@ if (is_linux || is_win) {
       "stunserver/stunserver_main.cc",
     ]
     deps = [
-      "../base:rtc_base",
+      "../base:rtc_base_all",
       "//webrtc/base:rtc_base_approved",
       "//webrtc/p2p:rtc_p2p",
       "//webrtc/pc:rtc_pc",
@@ -624,7 +624,7 @@ if (is_win) {
     deps = [
       "//webrtc/api:libjingle_peerconnection_test_api",
       "//webrtc/api:video_frame_api",
-      "//webrtc/base:rtc_base",
+      "//webrtc/base:rtc_base_all",
       "//webrtc/base:rtc_base_approved",
       "//webrtc/base:rtc_json",
       "//webrtc/media:rtc_media",
@@ -652,7 +652,7 @@ if (!build_with_chromium) {
     }
 
     deps = [
-      "../base:rtc_base",
+      "../base:rtc_base_all",
       "../base:rtc_base_approved",
       "../p2p:libstunprober",
       "../p2p:rtc_p2p",

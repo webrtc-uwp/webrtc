@@ -83,7 +83,7 @@ rtc_static_library("libjingle_peerconnection_api") {
   deps = [
     ":rtc_stats_api",
     "..:webrtc_common",
-    "../base:rtc_base",
+    "../base:rtc_base_all",
     "../base:rtc_base_approved",
     "audio_codecs:audio_codecs_api",
   ]

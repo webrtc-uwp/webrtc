@@ -72,7 +72,7 @@ rtc_static_library("libjingle_peerconnection_jni") {
     "../..:webrtc_common",
     "../../api:video_frame_api",
     "../../api/video_codecs:video_codecs_api",
-    "../../base:rtc_base",
+    "../../base:rtc_base_all",
     "../../base:rtc_base_approved",
     "../../base:rtc_task_queue",
     "../../common_video:common_video",
@@ -123,7 +123,7 @@ rtc_shared_library("libjingle_peerconnection_so") {
   deps = [
     ":libjingle_peerconnection_jni",
     ":libjingle_peerconnection_metrics_default_jni",
-    "../../base:rtc_base",
+    "../../base:rtc_base_all",
     "//webrtc/pc:libjingle_peerconnection",
   ]
   output_extension = "so"

@@ -55,7 +55,7 @@ rtc_static_library("rtc_pc") {
 
   deps = [
     "../api:call_api",
-    "../base:rtc_base",
+    "../base:rtc_base_all",
     "../media",
   ]
 
