@@ -25,7 +25,7 @@ namespace {
 
 const unsigned int kDefaultMinQp = 2;
 const unsigned int kDefaultMaxQp = 56;
-// Max qp for lowest spatial resolution when doing simulcast.
+// Max QP for lowest spatial resolution when doing simulcast.
 const unsigned int kLowestResMaxQp = 45;
 
 uint32_t SumStreamMaxBitrate(int streams, const webrtc::VideoCodec& codec) {
@@ -87,20 +87,28 @@ int VerifyCodec(const webrtc::VideoCodec* inst) {
 class AdapterEncodedImageCallback : public webrtc::EncodedImageCallback {
  public:
   AdapterEncodedImageCallback(webrtc::SimulcastEncoderAdapter* adapter,
-                              size_t stream_idx)
-      : adapter_(adapter), stream_idx_(stream_idx) {}
+                              size_t stream_idx,
+                              const std::string implementation_name)
+      : adapter_(adapter),
+        stream_idx_(stream_idx),
+        implementation_name_(implementation_name) {}
 
   EncodedImageCallback::Result OnEncodedImage(
       const webrtc::EncodedImage& encoded_image,
       const webrtc::CodecSpecificInfo* codec_specific_info,
       const webrtc::RTPFragmentationHeader* fragmentation) override {
+    webrtc::CodecSpecificInfo codec_specific_info_with_name =
+        *codec_specific_info;
+    codec_specific_info_with_name.codec_name = implementation_name_.c_str();
     return adapter_->OnEncodedImage(stream_idx_, encoded_image,
-                                    codec_specific_info, fragmentation);
+                                    &codec_specific_info_with_name,
+                                    fragmentation);
   }
 
  private:
   webrtc::SimulcastEncoderAdapter* const adapter_;
   const size_t stream_idx_;
+  const std::string implementation_name_;
 };
 
 // Utility class used to adapt the simulcast id as reported by the temporal
@@ -247,10 +255,9 @@ int SimulcastEncoderAdapter::InitEncode(const VideoCodec* inst,
       Release();
       return ret;
     }
-    std::unique_ptr<EncodedImageCallback> callback(
-        new AdapterEncodedImageCallback(this, i));
-    encoder->RegisterEncodeCompleteCallback(callback.get());
-    streaminfos_.emplace_back(encoder, std::move(callback), stream_codec.width,
+
+    // Set up callback below, when compound implementation name is known.
+    streaminfos_.emplace_back(encoder, nullptr, stream_codec.width,
                               stream_codec.height, start_bitrate_kbps > 0);
 
     if (i != 0) {
@@ -264,6 +271,16 @@ int SimulcastEncoderAdapter::InitEncode(const VideoCodec* inst,
         "SimulcastEncoderAdapter (" + implementation_name + ")";
   } else {
     implementation_name_ = implementation_name;
+  }
+
+  // Set up callback adapters.
+  RTC_DCHECK_EQ(number_of_streams, streaminfos_.size());
+  for (int i = 0; i < number_of_streams; ++i) {
+    std::unique_ptr<EncodedImageCallback> callback(
+        new AdapterEncodedImageCallback(this, i, implementation_name_));
+    StreamInfo* streaminfo = &streaminfos_[i];
+    streaminfo->encoder->RegisterEncodeCompleteCallback(callback.get());
+    streaminfo->callback = std::move(callback);
   }
 
   // To save memory, don't store encoders that we don't use.
@@ -450,7 +467,6 @@ EncodedImageCallback::Result SimulcastEncoderAdapter::OnEncodedImage(
     const CodecSpecificInfo* codecSpecificInfo,
     const RTPFragmentationHeader* fragmentation) {
   CodecSpecificInfo stream_codec_specific = *codecSpecificInfo;
-  stream_codec_specific.codec_name = implementation_name_.c_str();
   CodecSpecificInfoVP8* vp8Info = &(stream_codec_specific.codecSpecific.VP8);
   vp8Info->simulcastIdx = stream_idx;
 

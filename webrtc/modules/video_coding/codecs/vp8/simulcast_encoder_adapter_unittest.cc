@@ -256,6 +256,7 @@ class TestSimulcastEncoderAdapterFake : public ::testing::Test,
     last_encoded_image_width_ = encoded_image._encodedWidth;
     last_encoded_image_height_ = encoded_image._encodedHeight;
     if (codec_specific_info) {
+      last_encoded_image_implementation_name_ = codec_specific_info->codec_name;
       last_encoded_image_simulcast_index_ =
           codec_specific_info->codecSpecific.VP8.simulcastIdx;
     }
@@ -272,6 +273,10 @@ class TestSimulcastEncoderAdapterFake : public ::testing::Test,
     *out_height = last_encoded_image_height_;
     *out_simulcast_index = last_encoded_image_simulcast_index_;
     return true;
+  }
+
+  const std::string GetLastEncodedImageImplementationName() {
+    return last_encoded_image_implementation_name_;
   }
 
   void SetupCodec() {
@@ -363,6 +368,7 @@ class TestSimulcastEncoderAdapterFake : public ::testing::Test,
   int last_encoded_image_width_;
   int last_encoded_image_height_;
   int last_encoded_image_simulcast_index_;
+  std::string last_encoded_image_implementation_name_;
   TemporalLayersFactory tl_factory_;
   std::unique_ptr<SimulcastRateAllocator> rate_allocator_;
 };
@@ -678,15 +684,34 @@ TEST_F(TestSimulcastEncoderAdapterFake, SupportsImplementationName) {
   EXPECT_STREQ("SimulcastEncoderAdapter", adapter_->ImplementationName());
   TestVp8Simulcast::DefaultSettings(
       &codec_, static_cast<const int*>(kTestTemporalLayerProfile));
+  rate_allocator_.reset(new SimulcastRateAllocator(codec_, nullptr));
+  tl_factory_.SetListener(rate_allocator_.get());
   codec_.VP8()->tl_factory = &tl_factory_;
   std::vector<const char*> encoder_names;
   encoder_names.push_back("codec1");
   encoder_names.push_back("codec2");
   encoder_names.push_back("codec3");
+  const std::string expected_implementation_name =
+      "SimulcastEncoderAdapter (codec1, codec2, codec3)";
   helper_->factory()->SetEncoderNames(encoder_names);
   EXPECT_EQ(0, adapter_->InitEncode(&codec_, 1, 1200));
-  EXPECT_STREQ("SimulcastEncoderAdapter (codec1, codec2, codec3)",
+  adapter_->RegisterEncodeCompleteCallback(this);
+  EXPECT_STREQ(expected_implementation_name.c_str(),
                adapter_->ImplementationName());
+
+  std::vector<MockVideoEncoder*> encoders = helper_->factory()->encoders();
+  ASSERT_EQ(3u, encoders.size());
+  encoders[0]->SendEncodedImage(1152, 704);
+  EXPECT_EQ(expected_implementation_name,
+            GetLastEncodedImageImplementationName());
+
+  encoders[1]->SendEncodedImage(300, 620);
+  EXPECT_EQ(expected_implementation_name,
+            GetLastEncodedImageImplementationName());
+
+  encoders[2]->SendEncodedImage(120, 240);
+  EXPECT_EQ(expected_implementation_name,
+            GetLastEncodedImageImplementationName());
 
   // Single streams should not expose "SimulcastEncoderAdapter" in name.
   EXPECT_EQ(0, adapter_->Release());
@@ -695,6 +720,9 @@ TEST_F(TestSimulcastEncoderAdapterFake, SupportsImplementationName) {
   adapter_->RegisterEncodeCompleteCallback(this);
   ASSERT_EQ(1u, helper_->factory()->encoders().size());
   EXPECT_STREQ("codec1", adapter_->ImplementationName());
+
+  encoders[0]->SendEncodedImage(1152, 704);
+  EXPECT_EQ("codec1", GetLastEncodedImageImplementationName());
 }
 
 TEST_F(TestSimulcastEncoderAdapterFake,
