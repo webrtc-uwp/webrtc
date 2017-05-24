@@ -266,7 +266,8 @@ int FrameBuffer::InsertFrame(std::unique_ptr<FrameObject> frame) {
     LOG(LS_WARNING) << "Frame with (picture_id:spatial_id) (" << key.picture_id
                     << ":" << static_cast<int>(key.spatial_layer)
                     << ") could not be inserted due to the frame "
-                    << "buffer being full, dropping frame.";
+                    << "buffer being full, dropping frame, cleanring buffer..";
+    ClearFramesAndHistory();
     return last_continuous_picture_id;
   }
 
