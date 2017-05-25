@@ -170,8 +170,7 @@ class MockVideoEncoder : public VideoEncoder {
 class MockVideoEncoderFactory : public VideoEncoderFactory {
  public:
   VideoEncoder* Create() override {
-    MockVideoEncoder* encoder = new
-        ::testing::NiceMock<MockVideoEncoder>();
+    MockVideoEncoder* encoder = new ::testing::NiceMock<MockVideoEncoder>();
     encoder->set_init_encode_return_value(init_encode_return_value_);
     const char* encoder_name = encoder_names_.empty()
                                    ? "codec_implementation_name"
