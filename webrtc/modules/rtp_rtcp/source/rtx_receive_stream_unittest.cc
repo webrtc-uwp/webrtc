@@ -8,10 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/call/rtx_receive_stream.h"
-#include "webrtc/modules/rtp_rtcp/source/rtp_packet_received.h"
+#include "webrtc/modules/rtp_rtcp/include/rtx_receive_stream.h"
+
 #include "webrtc/modules/rtp_rtcp/source/rtp_header_extension.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_header_extensions.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "webrtc/test/gmock.h"
 #include "webrtc/test/gtest.h"
 
@@ -39,7 +40,7 @@ constexpr uint8_t kRtxPacket[] = {
     0x11, 0x11, 0x11, 0x11,  // Timestamp.
     0x22, 0x22, 0x22, 0x22,  // SSRC.
     // RTX header.
-    0x56, 0x57,              // Orig seqno.
+    0x56, 0x57,  // Orig seqno.
     // Payload.
     0xee,
 };
@@ -53,7 +54,7 @@ constexpr uint8_t kRtxPacketWithCVO[] = {
     0xbe, 0xde, 0x00, 0x01,  // Extension header.
     0x30, 0x01, 0x00, 0x00,  // 90 degree rotation.
     // RTX header.
-    0x56, 0x57,              // Orig seqno.
+    0x56, 0x57,  // Orig seqno.
     // Payload.
     0xee,
 };
@@ -77,8 +78,8 @@ TEST(RtxReceiveStreamTest, RestoresPacketPayload) {
   RtpPacketReceived rtx_packet;
   EXPECT_TRUE(rtx_packet.Parse(rtc::ArrayView<const uint8_t>(kRtxPacket)));
 
-  EXPECT_CALL(media_sink, OnRtpPacket(_)).WillOnce(testing::Invoke(
-      [](const RtpPacketReceived& packet) {
+  EXPECT_CALL(media_sink, OnRtpPacket(_))
+      .WillOnce(testing::Invoke([](const RtpPacketReceived& packet) {
         EXPECT_EQ(packet.SequenceNumber(), kMediaSeqno);
         EXPECT_EQ(packet.Ssrc(), kMediaSSRC);
         EXPECT_EQ(packet.PayloadType(), kMediaPayloadType);
@@ -111,15 +112,15 @@ TEST(RtxReceiveStreamTest, CopiesRtpHeaderExtensions) {
   RtpHeaderExtensionMap extension_map;
   extension_map.RegisterByType(3, kRtpExtensionVideoRotation);
   RtpPacketReceived rtx_packet(&extension_map);
-  EXPECT_TRUE(rtx_packet.Parse(
-      rtc::ArrayView<const uint8_t>(kRtxPacketWithCVO)));
+  EXPECT_TRUE(
+      rtx_packet.Parse(rtc::ArrayView<const uint8_t>(kRtxPacketWithCVO)));
 
   VideoRotation rotation = kVideoRotation_0;
   EXPECT_TRUE(rtx_packet.GetExtension<VideoOrientation>(&rotation));
   EXPECT_EQ(kVideoRotation_90, rotation);
 
-  EXPECT_CALL(media_sink, OnRtpPacket(_)).WillOnce(testing::Invoke(
-      [](const RtpPacketReceived& packet) {
+  EXPECT_CALL(media_sink, OnRtpPacket(_))
+      .WillOnce(testing::Invoke([](const RtpPacketReceived& packet) {
         EXPECT_EQ(packet.SequenceNumber(), kMediaSeqno);
         EXPECT_EQ(packet.Ssrc(), kMediaSSRC);
         EXPECT_EQ(packet.PayloadType(), kMediaPayloadType);

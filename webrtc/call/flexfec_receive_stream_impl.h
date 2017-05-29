@@ -15,7 +15,7 @@
 
 #include "webrtc/base/criticalsection.h"
 #include "webrtc/call/flexfec_receive_stream.h"
-#include "webrtc/call/rtp_demuxer.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_demuxer.h"
 
 namespace webrtc {
 

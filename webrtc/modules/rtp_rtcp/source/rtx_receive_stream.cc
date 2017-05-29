@@ -10,15 +10,14 @@
 
 #include <utility>
 
-#include "webrtc/call/rtx_receive_stream.h"
+#include "webrtc/modules/rtp_rtcp/include/rtx_receive_stream.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_packet_received.h"
 
 namespace webrtc {
 
-RtxReceiveStream::RtxReceiveStream(
-    RtpPacketSinkInterface* media_sink,
-    std::map<int, int> rtx_payload_type_map,
-    uint32_t media_ssrc)
+RtxReceiveStream::RtxReceiveStream(RtpPacketSinkInterface* media_sink,
+                                   std::map<int, int> rtx_payload_type_map,
+                                   uint32_t media_ssrc)
     : media_sink_(media_sink),
       rtx_payload_type_map_(std::move(rtx_payload_type_map)),
       media_ssrc_(media_ssrc) {}
@@ -42,8 +41,7 @@ void RtxReceiveStream::OnRtpPacket(const RtpPacketReceived& rtx_packet) {
   media_packet.SetPayloadType(it->second);
 
   // Skip the RTX header.
-  rtc::ArrayView<const uint8_t> rtx_payload =
-      payload.subview(kRtxHeaderSize);
+  rtc::ArrayView<const uint8_t> rtx_payload = payload.subview(kRtxHeaderSize);
 
   uint8_t* media_payload = media_packet.AllocatePayload(rtx_payload.size());
   RTC_DCHECK(media_payload != nullptr);
