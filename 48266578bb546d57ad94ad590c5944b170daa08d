@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e69f108_c2abbaca",
+        "filename": "webrtc/test/vcm_capturer.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1211784
+      },
+      "writtenOn": "2017-05-29T15:29:27Z",
+      "side": 1,
+      "message": "Not sure why \u0027s\u0027 of size_t is not aligning to above \u0027s\u0027. In my diff it is perfectly fine, also there is no special character here it is simple space I am using to indent here.",
+      "range": {
+        "startLine": 22,
+        "startChar": 23,
+        "endLine": 22,
+        "endChar": 27
+      },
+      "revId": "48266578bb546d57ad94ad590c5944b170daa08d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
