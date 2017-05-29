@@ -52,6 +52,7 @@ class VideoQualityTest : public test::CallTest {
       bool flexfec;
       std::string encoded_frame_base_path;
       std::string clip_name;
+      uint32_t capture_device_index;
     } video;
     struct Audio {
       bool enabled;

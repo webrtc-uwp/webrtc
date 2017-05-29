@@ -26,7 +26,8 @@ class VcmCapturer
     : public VideoCapturer,
       public rtc::VideoSinkInterface<VideoFrame> {
  public:
-  static VcmCapturer* Create(size_t width, size_t height, size_t target_fps);
+  static VcmCapturer* Create(size_t width, size_t height, size_t target_fps,
+                             size_t capture_device_index);
   virtual ~VcmCapturer();
 
   void Start() override;
@@ -39,7 +40,8 @@ class VcmCapturer
 
  private:
   VcmCapturer();
-  bool Init(size_t width, size_t height, size_t target_fps);
+  bool Init(size_t width, size_t height, size_t target_fps,
+            size_t capture_device_index);
   void Destroy();
 
   rtc::CriticalSection crit_;
