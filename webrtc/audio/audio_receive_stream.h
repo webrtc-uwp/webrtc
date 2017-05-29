@@ -19,8 +19,8 @@
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/base/thread_checker.h"
 #include "webrtc/call/audio_receive_stream.h"
-#include "webrtc/call/rtp_demuxer.h"
 #include "webrtc/call/syncable.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_demuxer.h"
 
 namespace webrtc {
 class PacketRouter;

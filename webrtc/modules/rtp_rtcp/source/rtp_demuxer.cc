@@ -8,8 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "webrtc/modules/rtp_rtcp/include/rtp_demuxer.h"
+
 #include "webrtc/base/checks.h"
-#include "webrtc/call/rtp_demuxer.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_packet_received.h"
 
 namespace webrtc {
@@ -28,7 +29,7 @@ void RtpDemuxer::AddSink(uint32_t ssrc, RtpPacketSinkInterface* sink) {
 size_t RtpDemuxer::RemoveSink(const RtpPacketSinkInterface* sink) {
   RTC_DCHECK(sink);
   size_t count = 0;
-  for (auto it = sinks_.begin(); it != sinks_.end(); ) {
+  for (auto it = sinks_.begin(); it != sinks_.end();) {
     if (it->second == sink) {
       it = sinks_.erase(it);
       ++count;

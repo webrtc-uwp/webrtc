@@ -7,8 +7,8 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef WEBRTC_CALL_RTP_DEMUXER_H_
-#define WEBRTC_CALL_RTP_DEMUXER_H_
+#ifndef WEBRTC_MODULES_RTP_RTCP_INCLUDE_RTP_DEMUXER_H_
+#define WEBRTC_MODULES_RTP_RTCP_INCLUDE_RTP_DEMUXER_H_
 
 #include <map>
 
@@ -49,4 +49,4 @@ class RtpDemuxer {
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_CALL_RTP_DEMUXER_H_
+#endif  // WEBRTC_MODULES_RTP_RTCP_INCLUDE_RTP_DEMUXER_H_
