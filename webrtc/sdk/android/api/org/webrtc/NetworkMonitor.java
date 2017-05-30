@@ -39,9 +39,7 @@ public class NetworkMonitor {
   private static final String TAG = "NetworkMonitor";
 
   // We are storing application context so it is okay.
-  @SuppressLint("StaticFieldLeak") private static NetworkMonitor instance;
-
-  private final Context applicationContext;
+  private static NetworkMonitor instance;
 
   // Native observers of the connection type changes.
   private final ArrayList<Long> nativeNetworkObservers;
@@ -53,10 +51,7 @@ public class NetworkMonitor {
 
   private ConnectionType currentConnectionType = ConnectionType.CONNECTION_UNKNOWN;
 
-  private NetworkMonitor(Context context) {
-    assertIsTrue(context != null);
-    applicationContext = context.getApplicationContext();
-
+  private NetworkMonitor() {
     nativeNetworkObservers = new ArrayList<Long>();
     networkObservers = new ArrayList<NetworkObserver>();
   }
@@ -163,7 +158,7 @@ public class NetworkMonitor {
         public void onNetworkDisconnect(long networkHandle) {
           notifyObserversOfNetworkDisconnect(networkHandle);
         }
-      }, applicationContext);
+      }, ContextUtils.getApplicationContext());
       final NetworkMonitorAutoDetect.NetworkState networkState =
           autoDetector.getCurrentNetworkState();
       updateCurrentConnectionType(NetworkMonitorAutoDetect.getConnectionType(networkState));
