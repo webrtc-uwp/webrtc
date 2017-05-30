@@ -53,8 +53,6 @@ class AndroidNetworkMonitor : public rtc::NetworkMonitorBase,
  public:
   AndroidNetworkMonitor();
 
-  static void SetAndroidContext(JNIEnv* jni, jobject context);
-
   void Start() override;
   void Stop() override;
 
