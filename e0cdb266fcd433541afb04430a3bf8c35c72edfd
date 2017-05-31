@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d8791a2_6ae323ab",
+        "filename": "webrtc/modules/video_coding/simulcast_encoder_adapter.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 462,
+      "author": {
+        "id": 1125049
+      },
+      "writtenOn": "2017-05-31T11:40:56Z",
+      "side": 1,
+      "message": "I don\u0027t think this temporary pointer is necessary? I don\u0027t know why it\u0027s done like that for vp8 either, possibly there were more usages of vp8Info at one point?\nAnyhow it should be enough with \nstream_codec_specific.codecSpecific.(VP8|H264).simulcastIdx \u003d stream_idx;",
+      "range": {
+        "startLine": 462,
+        "startChar": 40,
+        "endLine": 462,
+        "endChar": 0
+      },
+      "revId": "e0cdb266fcd433541afb04430a3bf8c35c72edfd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
