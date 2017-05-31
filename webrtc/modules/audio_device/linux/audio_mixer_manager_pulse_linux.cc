@@ -11,8 +11,9 @@
 #include <assert.h>
 
 #include "webrtc/modules/audio_device/linux/audio_mixer_manager_pulse_linux.h"
-#include "webrtc/system_wrappers/include/trace.h"
+
 #include "webrtc/base/checks.h"
+#include "webrtc/base/logging.h"
 
 extern webrtc::adm_linux_pulse::PulseAudioSymbolTable PaSymbolTable;
 
@@ -42,7 +43,6 @@ class AutoPulseLock {
 };
 
 AudioMixerManagerLinuxPulse::AudioMixerManagerLinuxPulse(const int32_t id) :
-    _id(id),
     _paOutputDeviceIndex(-1),
     _paInputDeviceIndex(-1),
     _paPlayStream(NULL),
@@ -57,15 +57,13 @@ AudioMixerManagerLinuxPulse::AudioMixerManagerLinuxPulse(const int32_t id) :
     _paChannels(0),
     _paObjectsSet(false)
 {
-    WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, _id,
-                 "%s constructed", __FUNCTION__);
+  LOG(LS_INFO) << "" << __FUNCTION__ << " constructed";
 }
 
 AudioMixerManagerLinuxPulse::~AudioMixerManagerLinuxPulse()
 {
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
-    WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, _id,
-                 "%s destructed", __FUNCTION__);
+    LOG(LS_INFO) << "" << __FUNCTION__ << " destructed";
 
     Close();
 }
@@ -79,22 +77,19 @@ int32_t AudioMixerManagerLinuxPulse::SetPulseAudioObjects(
     pa_context* context)
 {
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s",
-                 __FUNCTION__);
+    LOG(LS_VERBOSE) << "" << __FUNCTION__ << "";
 
     if (!mainloop || !context)
     {
-        WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-                     "  could not set PulseAudio objects for mixer");
-        return -1;
+      LOG(LS_ERROR) << "  could not set PulseAudio objects for mixer";
+      return -1;
     }
 
     _paMainloop = mainloop;
     _paContext = context;
     _paObjectsSet = true;
 
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "  the PulseAudio objects for the mixer has been set");
+    LOG(LS_VERBOSE) << "  the PulseAudio objects for the mixer has been set";
 
     return 0;
 }
@@ -102,8 +97,7 @@ int32_t AudioMixerManagerLinuxPulse::SetPulseAudioObjects(
 int32_t AudioMixerManagerLinuxPulse::Close()
 {
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s",
-                 __FUNCTION__);
+    LOG(LS_VERBOSE) << "" << __FUNCTION__ << "";
 
     CloseSpeaker();
     CloseMicrophone();
@@ -119,8 +113,7 @@ int32_t AudioMixerManagerLinuxPulse::Close()
 int32_t AudioMixerManagerLinuxPulse::CloseSpeaker()
 {
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s",
-                 __FUNCTION__);
+    LOG(LS_VERBOSE) << "" << __FUNCTION__ << "";
 
     // Reset the index to -1
     _paOutputDeviceIndex = -1;
@@ -132,8 +125,7 @@ int32_t AudioMixerManagerLinuxPulse::CloseSpeaker()
 int32_t AudioMixerManagerLinuxPulse::CloseMicrophone()
 {
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s",
-                 __FUNCTION__);
+    LOG(LS_VERBOSE) << "" << __FUNCTION__ << "";
 
     // Reset the index to -1
     _paInputDeviceIndex = -1;
@@ -145,8 +137,7 @@ int32_t AudioMixerManagerLinuxPulse::CloseMicrophone()
 int32_t AudioMixerManagerLinuxPulse::SetPlayStream(pa_stream* playStream)
 {
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "AudioMixerManagerLinuxPulse::SetPlayStream(playStream)");
+    LOG(LS_VERBOSE) << "AudioMixerManagerLinuxPulse::SetPlayStream(playStream)";
 
     _paPlayStream = playStream;
     return 0;
@@ -155,8 +146,7 @@ int32_t AudioMixerManagerLinuxPulse::SetPlayStream(pa_stream* playStream)
 int32_t AudioMixerManagerLinuxPulse::SetRecStream(pa_stream* recStream)
 {
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "AudioMixerManagerLinuxPulse::SetRecStream(recStream)");
+    LOG(LS_VERBOSE) << "AudioMixerManagerLinuxPulse::SetRecStream(recStream)";
 
     _paRecStream = recStream;
     return 0;
@@ -166,25 +156,22 @@ int32_t AudioMixerManagerLinuxPulse::OpenSpeaker(
     uint16_t deviceIndex)
 {
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "AudioMixerManagerLinuxPulse::OpenSpeaker(deviceIndex=%d)",
-                 deviceIndex);
+    LOG(LS_VERBOSE) << "AudioMixerManagerLinuxPulse::OpenSpeaker(deviceIndex="
+                    << deviceIndex << ")";
 
     // No point in opening the speaker
     // if PA objects have not been set
     if (!_paObjectsSet)
     {
-        WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-                     "  PulseAudio objects has not been set");
-        return -1;
+      LOG(LS_ERROR) << "  PulseAudio objects has not been set";
+      return -1;
     }
 
     // Set the index for the PulseAudio
     // output device to control
     _paOutputDeviceIndex = deviceIndex;
 
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "  the output mixer device is now open");
+    LOG(LS_VERBOSE) << "  the output mixer device is now open";
 
     return 0;
 }
@@ -193,25 +180,23 @@ int32_t AudioMixerManagerLinuxPulse::OpenMicrophone(
     uint16_t deviceIndex)
 {
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "AudioMixerManagerLinuxPulse::OpenMicrophone"
-                 "(deviceIndex=%d)", deviceIndex);
+    LOG(LS_VERBOSE)
+        << "AudioMixerManagerLinuxPulse::OpenMicrophone(deviceIndex="
+        << deviceIndex << ")";
 
     // No point in opening the microphone
     // if PA objects have not been set
     if (!_paObjectsSet)
     {
-        WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-                     "  PulseAudio objects have not been set");
-        return -1;
+      LOG(LS_ERROR) << "  PulseAudio objects have not been set";
+      return -1;
     }
 
     // Set the index for the PulseAudio
     // input device to control
     _paInputDeviceIndex = deviceIndex;
 
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "  the input mixer device is now open");
+    LOG(LS_VERBOSE) << "  the input mixer device is now open";
 
     return 0;
 }
@@ -219,8 +204,7 @@ int32_t AudioMixerManagerLinuxPulse::OpenMicrophone(
 bool AudioMixerManagerLinuxPulse::SpeakerIsInitialized() const
 {
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
-    WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, _id, "%s",
-                 __FUNCTION__);
+    LOG(LS_INFO) << "" << __FUNCTION__ << "";
 
     return (_paOutputDeviceIndex != -1);
 }
@@ -228,8 +212,7 @@ bool AudioMixerManagerLinuxPulse::SpeakerIsInitialized() const
 bool AudioMixerManagerLinuxPulse::MicrophoneIsInitialized() const
 {
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
-    WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, _id, "%s",
-                 __FUNCTION__);
+    LOG(LS_INFO) << "" << __FUNCTION__ << "";
 
     return (_paInputDeviceIndex != -1);
 }
@@ -238,15 +221,13 @@ int32_t AudioMixerManagerLinuxPulse::SetSpeakerVolume(
     uint32_t volume)
 {
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "AudioMixerManagerLinuxPulse::SetSpeakerVolume(volume=%u)",
-                 volume);
+    LOG(LS_VERBOSE) << "AudioMixerManagerLinuxPulse::SetSpeakerVolume(volume="
+                    << volume << ")";
 
     if (_paOutputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  output device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  output device index has not been set";
+      return -1;
     }
 
     bool setFailed(false);
@@ -262,9 +243,8 @@ int32_t AudioMixerManagerLinuxPulse::SetSpeakerVolume(
             LATE(pa_stream_get_sample_spec)(_paPlayStream);
         if (!spec)
         {
-            WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-                         "  could not get sample specification");
-            return -1;
+          LOG(LS_ERROR) << "  could not get sample specification";
+          return -1;
         }
 
         // Set the same volume for all channels
@@ -293,11 +273,10 @@ int32_t AudioMixerManagerLinuxPulse::SetSpeakerVolume(
 
     if (setFailed)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     " could not set speaker volume, error%d",
-                     LATE(pa_context_errno)(_paContext));
+      LOG(LS_WARNING) << " could not set speaker volume, error"
+                      << LATE(pa_context_errno)(_paContext) << "";
 
-        return -1;
+      return -1;
     }
 
     return 0;
@@ -308,9 +287,8 @@ AudioMixerManagerLinuxPulse::SpeakerVolume(uint32_t& volume) const
 {
     if (_paOutputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  output device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  output device index has not been set";
+      return -1;
     }
 
     if (_paPlayStream && (LATE(pa_stream_get_state)(_paPlayStream)
@@ -328,9 +306,8 @@ AudioMixerManagerLinuxPulse::SpeakerVolume(uint32_t& volume) const
         volume = _paSpeakerVolume;
     }
 
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "\tAudioMixerManagerLinuxPulse::SpeakerVolume() => vol=%i",
-                 volume);
+    LOG(LS_VERBOSE) << "\tAudioMixerManagerLinuxPulse::SpeakerVolume() => vol="
+                    << volume << "";
 
     return 0;
 }
@@ -341,9 +318,8 @@ AudioMixerManagerLinuxPulse::MaxSpeakerVolume(uint32_t& maxVolume) const
 
     if (_paOutputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  output device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  output device index has not been set";
+      return -1;
     }
 
     // PA_VOLUME_NORM corresponds to 100% (0db)
@@ -359,9 +335,8 @@ AudioMixerManagerLinuxPulse::MinSpeakerVolume(uint32_t& minVolume) const
 
     if (_paOutputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  output device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  output device index has not been set";
+      return -1;
     }
 
     minVolume = static_cast<uint32_t> (PA_VOLUME_MUTED);
@@ -375,18 +350,17 @@ AudioMixerManagerLinuxPulse::SpeakerVolumeStepSize(uint16_t& stepSize) const
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
     if (_paOutputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  output device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  output device index has not been set";
+      return -1;
     }
 
     // The sink input (stream) will always have step size = 1
     // There are PA_VOLUME_NORM+1 steps
     stepSize = 1;
 
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "\tAudioMixerManagerLinuxPulse::SpeakerVolumeStepSize() => "
-                 "size=%i", stepSize);
+    LOG(LS_VERBOSE)
+        << "\tAudioMixerManagerLinuxPulse::SpeakerVolumeStepSize() => size="
+        << stepSize << "";
 
     return 0;
 }
@@ -397,9 +371,8 @@ AudioMixerManagerLinuxPulse::SpeakerVolumeIsAvailable(bool& available)
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
     if (_paOutputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  output device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  output device index has not been set";
+      return -1;
     }
 
     // Always available in Pulse Audio
@@ -414,9 +387,8 @@ AudioMixerManagerLinuxPulse::SpeakerMuteIsAvailable(bool& available)
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
     if (_paOutputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  output device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  output device index has not been set";
+      return -1;
     }
 
     // Always available in Pulse Audio
@@ -428,15 +400,13 @@ AudioMixerManagerLinuxPulse::SpeakerMuteIsAvailable(bool& available)
 int32_t AudioMixerManagerLinuxPulse::SetSpeakerMute(bool enable)
 {
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "AudioMixerManagerLinuxPulse::SetSpeakerMute(enable=%u)",
-                 enable);
+    LOG(LS_VERBOSE) << "AudioMixerManagerLinuxPulse::SetSpeakerMute(enable="
+                    << enable << ")";
 
     if (_paOutputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  output device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  output device index has not been set";
+      return -1;
     }
 
     bool setFailed(false);
@@ -470,10 +440,9 @@ int32_t AudioMixerManagerLinuxPulse::SetSpeakerMute(bool enable)
 
     if (setFailed)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     " could not mute speaker, error%d",
-                     LATE(pa_context_errno)(_paContext));
-        return -1;
+      LOG(LS_WARNING) << " could not mute speaker, error"
+                      << LATE(pa_context_errno)(_paContext) << "";
+      return -1;
     }
 
     return 0;
@@ -484,9 +453,8 @@ int32_t AudioMixerManagerLinuxPulse::SpeakerMute(bool& enabled) const
 
     if (_paOutputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  output device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  output device index has not been set";
+      return -1;
     }
 
     if (_paPlayStream && (LATE(pa_stream_get_state)(_paPlayStream)
@@ -502,9 +470,9 @@ int32_t AudioMixerManagerLinuxPulse::SpeakerMute(bool& enabled) const
         enabled = _paSpeakerMute;
     }
 
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "     AudioMixerManagerLinuxPulse::SpeakerMute() => "
-                 "enabled=%i, enabled");
+    LOG(LS_VERBOSE)
+        << "     AudioMixerManagerLinuxPulse::SpeakerMute() => enabled="
+        << enabled << "";
 
     return 0;
 }
@@ -515,9 +483,8 @@ AudioMixerManagerLinuxPulse::StereoPlayoutIsAvailable(bool& available)
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
     if (_paOutputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  output device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  output device index has not been set";
+      return -1;
     }
 
     uint32_t deviceIndex = (uint32_t) _paOutputDeviceIndex;
@@ -549,9 +516,8 @@ AudioMixerManagerLinuxPulse::StereoRecordingIsAvailable(bool& available)
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
     if (_paInputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  input device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  input device index has not been set";
+      return -1;
     }
 
     uint32_t deviceIndex = (uint32_t) _paInputDeviceIndex;
@@ -580,9 +546,9 @@ AudioMixerManagerLinuxPulse::StereoRecordingIsAvailable(bool& available)
 
     available = static_cast<bool> (_paChannels == 2);
 
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 " AudioMixerManagerLinuxPulse::StereoRecordingIsAvailable()"
-                 " => available=%i, available");
+    LOG(LS_VERBOSE) << " AudioMixerManagerLinuxPulse::"
+                       "StereoRecordingIsAvailable() => available="
+                    << available << "";
 
     return 0;
 }
@@ -593,9 +559,8 @@ int32_t AudioMixerManagerLinuxPulse::MicrophoneMuteIsAvailable(
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
     if (_paInputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  input device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  input device index has not been set";
+      return -1;
     }
 
     // Always available in Pulse Audio
@@ -607,15 +572,13 @@ int32_t AudioMixerManagerLinuxPulse::MicrophoneMuteIsAvailable(
 int32_t AudioMixerManagerLinuxPulse::SetMicrophoneMute(bool enable)
 {
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "AudioMixerManagerLinuxPulse::SetMicrophoneMute(enable=%u)",
-                 enable);
+    LOG(LS_VERBOSE) << "AudioMixerManagerLinuxPulse::SetMicrophoneMute(enable="
+                    << enable << ")";
 
     if (_paInputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  input device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  input device index has not been set";
+      return -1;
     }
 
     bool setFailed(false);
@@ -650,10 +613,9 @@ int32_t AudioMixerManagerLinuxPulse::SetMicrophoneMute(bool enable)
 
     if (setFailed)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     " could not mute microphone, error%d",
-                     LATE(pa_context_errno)(_paContext));
-        return -1;
+      LOG(LS_WARNING) << " could not mute microphone, error"
+                      << LATE(pa_context_errno)(_paContext) << "";
+      return -1;
     }
 
     return 0;
@@ -664,9 +626,8 @@ int32_t AudioMixerManagerLinuxPulse::MicrophoneMute(bool& enabled) const
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
     if (_paInputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  input device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  input device index has not been set";
+      return -1;
     }
 
     uint32_t deviceIndex = (uint32_t) _paInputDeviceIndex;
@@ -688,9 +649,9 @@ int32_t AudioMixerManagerLinuxPulse::MicrophoneMute(bool& enabled) const
 
     enabled = static_cast<bool> (_paMute);
 
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "\tAudioMixerManagerLinuxPulse::MicrophoneMute() =>"
-                 " enabled=%i", enabled);
+    LOG(LS_VERBOSE)
+        << "\tAudioMixerManagerLinuxPulse::MicrophoneMute() => enabled="
+        << enabled << "";
 
     return 0;
 }
@@ -701,9 +662,8 @@ AudioMixerManagerLinuxPulse::MicrophoneBoostIsAvailable(bool& available)
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
     if (_paInputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  input device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  input device index has not been set";
+      return -1;
     }
 
     // Always unavailable in Pulse Audio
@@ -717,15 +677,13 @@ AudioMixerManagerLinuxPulse::MicrophoneBoostIsAvailable(bool& available)
 int32_t AudioMixerManagerLinuxPulse::SetMicrophoneBoost(bool enable)
 {
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "AudioMixerManagerLinuxPulse::SetMicrophoneBoost(enable=%u)",
-                 enable);
+    LOG(LS_VERBOSE) << "AudioMixerManagerLinuxPulse::SetMicrophoneBoost(enable="
+                    << enable << ")";
 
     if (_paInputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  input device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  input device index has not been set";
+      return -1;
     }
 
     // Ensure the selected microphone destination has a valid boost control
@@ -733,9 +691,8 @@ int32_t AudioMixerManagerLinuxPulse::SetMicrophoneBoost(bool enable)
     MicrophoneBoostIsAvailable(available);
     if (!available)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  it is not possible to enable microphone boost");
-        return -1;
+      LOG(LS_WARNING) << "  it is not possible to enable microphone boost";
+      return -1;
     }
 
     // It is assumed that the call above fails!
@@ -748,9 +705,8 @@ int32_t AudioMixerManagerLinuxPulse::MicrophoneBoost(bool& enabled) const
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
     if (_paInputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  input device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  input device index has not been set";
+      return -1;
     }
 
     // Microphone boost cannot be enabled on this platform!
@@ -765,9 +721,8 @@ int32_t AudioMixerManagerLinuxPulse::MicrophoneVolumeIsAvailable(
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
     if (_paInputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  input device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  input device index has not been set";
+      return -1;
     }
 
     // Always available in Pulse Audio
@@ -779,15 +734,12 @@ int32_t AudioMixerManagerLinuxPulse::MicrophoneVolumeIsAvailable(
 int32_t
 AudioMixerManagerLinuxPulse::SetMicrophoneVolume(uint32_t volume)
 {
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "AudioMixerManagerLinuxPulse::SetMicrophoneVolume"
-                 "(volume=%u)", volume);
+  LOG(LS_VERBOSE) << "AudioMixerManagerLinuxPulse::SetMicrophoneVolume(volume="
+                  << volume << ")";
 
-    if (_paInputDeviceIndex == -1)
-    {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  input device index has not been set");
-        return -1;
+  if (_paInputDeviceIndex == -1) {
+    LOG(LS_WARNING) << "  input device index has not been set";
+    return -1;
     }
 
     // Unlike output streams, input streams have no concept of a stream
@@ -845,10 +797,9 @@ AudioMixerManagerLinuxPulse::SetMicrophoneVolume(uint32_t volume)
 
     if (setFailed)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     " could not set microphone volume, error%d",
-                     LATE(pa_context_errno)(_paContext));
-        return -1;
+      LOG(LS_WARNING) << " could not set microphone volume, error"
+                      << LATE(pa_context_errno)(_paContext) << "";
+      return -1;
     }
 
     return 0;
@@ -860,9 +811,8 @@ AudioMixerManagerLinuxPulse::MicrophoneVolume(uint32_t& volume) const
 
     if (_paInputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  input device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  input device index has not been set";
+      return -1;
     }
 
     uint32_t deviceIndex = (uint32_t) _paInputDeviceIndex;
@@ -886,9 +836,9 @@ AudioMixerManagerLinuxPulse::MicrophoneVolume(uint32_t& volume) const
         volume = static_cast<uint32_t> (_paVolume);
     }
 
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "     AudioMixerManagerLinuxPulse::MicrophoneVolume()"
-                 " => vol=%i, volume");
+    LOG(LS_VERBOSE)
+        << "     AudioMixerManagerLinuxPulse::MicrophoneVolume() => vol="
+        << volume << "";
 
     return 0;
 }
@@ -899,9 +849,8 @@ AudioMixerManagerLinuxPulse::MaxMicrophoneVolume(uint32_t& maxVolume) const
 
     if (_paInputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  input device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  input device index has not been set";
+      return -1;
     }
 
     // PA_VOLUME_NORM corresponds to 100% (0db)
@@ -918,9 +867,8 @@ AudioMixerManagerLinuxPulse::MinMicrophoneVolume(uint32_t& minVolume) const
 
     if (_paInputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  input device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  input device index has not been set";
+      return -1;
     }
 
     minVolume = static_cast<uint32_t> (PA_VOLUME_MUTED);
@@ -934,9 +882,8 @@ int32_t AudioMixerManagerLinuxPulse::MicrophoneVolumeStepSize(
     RTC_DCHECK(thread_checker_.CalledOnValidThread());
     if (_paInputDeviceIndex == -1)
     {
-        WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                     "  input device index has not been set");
-        return -1;
+      LOG(LS_WARNING) << "  input device index has not been set";
+      return -1;
     }
 
     uint32_t deviceIndex = (uint32_t) _paInputDeviceIndex;
@@ -964,9 +911,9 @@ int32_t AudioMixerManagerLinuxPulse::MicrophoneVolumeStepSize(
 
     stepSize = static_cast<uint16_t> ((PA_VOLUME_NORM + 1) / _paVolSteps);
 
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
-                 "\tAudioMixerManagerLinuxPulse::MicrophoneVolumeStepSize()"
-                 " => size=%i", stepSize);
+    LOG(LS_VERBOSE)
+        << "\tAudioMixerManagerLinuxPulse::MicrophoneVolumeStepSize() => size="
+        << stepSize << "";
 
     return 0;
 }
@@ -1014,8 +961,7 @@ AudioMixerManagerLinuxPulse::PaSetVolumeCallback(pa_context * c,
 {
     if (!success)
     {
-        WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
-                     " failed to set volume");
+      LOG(LS_ERROR) << " failed to set volume";
     }
 }
 
