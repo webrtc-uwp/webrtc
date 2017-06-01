@@ -25,17 +25,17 @@ namespace {
 constexpr size_t kNumFrames = 480u;
 constexpr size_t kStereo = 2u;
 
-void SetAudioBufferSamples(float value, AudioBuffer* ab) {
+void SetAudioBufferSamples(float value, FloatAudioFrame<float>* ab) {
   for (size_t k = 0; k < ab->num_channels(); ++k) {
-    auto channel = rtc::ArrayView<float>(ab->channels_f()[k], ab->num_frames());
+    auto channel = ab->channel(k);
     for (auto& sample : channel) { sample = value; }
   }
 }
 
-template<typename Functor>
-bool CheckAudioBufferSamples(Functor validator, AudioBuffer* ab) {
+template <typename Functor>
+bool CheckAudioBufferSamples(Functor validator, FloatAudioFrame<float>* ab) {
   for (size_t k = 0; k < ab->num_channels(); ++k) {
-    auto channel = rtc::ArrayView<float>(ab->channels_f()[k], ab->num_frames());
+    auto channel = ab->channel(k);
     for (auto& sample : channel) { if (!validator(sample)) { return false; } }
   }
   return true;
@@ -43,18 +43,19 @@ bool CheckAudioBufferSamples(Functor validator, AudioBuffer* ab) {
 
 bool TestDigitalGainApplier(float sample_value, float gain, float expected) {
   AudioBuffer ab(kNumFrames, kStereo, kNumFrames, kStereo, kNumFrames);
-  SetAudioBufferSamples(sample_value, &ab);
+  FloatAudioFrame<float> float_frame(ab.channels_f(), ab.num_channels(),
+                                     ab.num_frames());
+  SetAudioBufferSamples(sample_value, &float_frame);
 
   DigitalGainApplier gain_applier;
   for (size_t k = 0; k < ab.num_channels(); ++k) {
-    auto channel_view = rtc::ArrayView<float>(
-        ab.channels_f()[k], ab.num_frames());
+    auto channel_view = float_frame.channel(k);
     gain_applier.Process(gain, channel_view);
   }
 
   auto check_expectation = [expected](float sample) {
       return sample == expected; };
-  return CheckAudioBufferSamples(check_expectation, &ab);
+  return CheckAudioBufferSamples(check_expectation, &float_frame);
 }
 
 }  // namespace
@@ -90,9 +91,13 @@ TEST(GainController2, Usage) {
   std::unique_ptr<GainController2> gain_controller2;
   gain_controller2.reset(new GainController2(
       AudioProcessing::kSampleRate48kHz));
+
   AudioBuffer ab(kNumFrames, kStereo, kNumFrames, kStereo, kNumFrames);
-  SetAudioBufferSamples(1000.0f, &ab);
-  gain_controller2->Process(&ab);
+  FloatAudioFrame<float> float_frame(ab.channels_f(), ab.num_channels(),
+                                     ab.num_frames());
+
+  SetAudioBufferSamples(1000.0f, &float_frame);
+  gain_controller2->Process(&float_frame);
 }
 
 }  // namespace test

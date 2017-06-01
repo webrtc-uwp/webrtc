@@ -37,8 +37,8 @@ class CaptureStreamInfo {
  public:
   explicit CaptureStreamInfo(std::unique_ptr<WriteToFileTask> task);
   ~CaptureStreamInfo();
-  void AddInput(const FloatAudioFrame& src);
-  void AddOutput(const FloatAudioFrame& src);
+  void AddInput(const FloatAudioFrame<const float>& src);
+  void AddOutput(const FloatAudioFrame<const float>& src);
 
   void AddInput(const AudioFrame& frame);
   void AddOutput(const AudioFrame& frame);

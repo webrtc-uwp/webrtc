@@ -12,7 +12,6 @@
 
 #include "webrtc/base/atomicops.h"
 #include "webrtc/base/checks.h"
-#include "webrtc/modules/audio_processing/audio_buffer.h"
 #include "webrtc/modules/audio_processing/logging/apm_data_dumper.h"
 
 namespace webrtc {
@@ -41,10 +40,9 @@ GainController2::GainController2(int sample_rate_hz)
 
 GainController2::~GainController2() = default;
 
-void GainController2::Process(AudioBuffer* audio) {
+void GainController2::Process(FloatAudioFrame<float>* audio) {
   for (size_t k = 0; k < audio->num_channels(); ++k) {
-    auto channel_view = rtc::ArrayView<float>(
-        audio->channels_f()[k], audio->num_frames());
+    auto channel_view = audio->channel(k);
     digital_gain_applier_.Process(gain_, channel_view);
   }
 }

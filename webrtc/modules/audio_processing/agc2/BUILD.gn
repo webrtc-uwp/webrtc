@@ -1,0 +1,38 @@
+# Copyright (c) 2017 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+import("../../../webrtc.gni")
+
+rtc_source_set("agc2") {
+  sources = [
+    "digital_gain_applier.cc",
+    "digital_gain_applier.h",
+    "gain_controller2.cc",
+    "gain_controller2.h",
+  ]
+  deps = [
+    "..:apm_data_dumper",
+    "..:audio_processing_interface",
+    "../../../base:rtc_base_approved",
+  ]
+}
+
+rtc_source_set("agc2_unittests") {
+  testonly = true
+  sources = [
+    "gain_controller2_unittest.cc",
+  ]
+
+  deps = [
+    ":agc2",
+    "../",
+    "../../../base:rtc_base_approved",
+    "../../../test:test_support",
+    "//testing/gtest",
+  ]
+}
