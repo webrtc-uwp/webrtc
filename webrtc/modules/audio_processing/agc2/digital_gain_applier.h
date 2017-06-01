@@ -12,7 +12,6 @@
 #define WEBRTC_MODULES_AUDIO_PROCESSING_AGC2_DIGITAL_GAIN_APPLIER_H_
 
 #include "webrtc/base/array_view.h"
-#include "webrtc/modules/audio_processing/audio_buffer.h"
 
 namespace webrtc {
 

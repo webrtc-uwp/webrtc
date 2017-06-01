@@ -1360,8 +1360,12 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
         capture_.key_pressed);
   }
 
+  FloatAudioFrame<float> float_frame(capture_buffer->channels_f(),
+                                     capture_buffer->num_channels(),
+                                     capture_buffer->num_frames());
+
   if (capture_nonlocked_.gain_controller2_enabled) {
-    private_submodules_->gain_controller2->Process(capture_buffer);
+    private_submodules_->gain_controller2->Process(&float_frame);
   }
 
   if (capture_nonlocked_.level_controller_enabled) {
@@ -1464,7 +1468,7 @@ int AudioProcessingImpl::AnalyzeReverseStreamLocked(
     const size_t num_channels =
         formats_.api_format.reverse_input_stream().num_channels();
     aec_dump_->WriteRenderStreamMessage(
-        FloatAudioFrame(src, num_channels, channel_size));
+        FloatAudioFrame<const float>(src, num_channels, channel_size));
   }
   render_.render_audio->CopyFrom(src,
                                  formats_.api_format.reverse_input_stream());
@@ -2043,7 +2047,7 @@ void AudioProcessingImpl::RecordUnprocessedCaptureStream(
   const size_t channel_size = formats_.api_format.input_stream().num_frames();
   const size_t num_channels = formats_.api_format.input_stream().num_channels();
   aec_dump_->AddCaptureStreamInput(
-      FloatAudioFrame(src, num_channels, channel_size));
+      FloatAudioFrame<const float>(src, num_channels, channel_size));
   RecordAudioProcessingState();
 }
 
@@ -2063,8 +2067,8 @@ void AudioProcessingImpl::RecordProcessedCaptureStream(
   const size_t channel_size = formats_.api_format.output_stream().num_frames();
   const size_t num_channels =
       formats_.api_format.output_stream().num_channels();
-  aec_dump_->AddCaptureStreamOutput(
-      FloatAudioFrame(processed_capture_stream, num_channels, channel_size));
+  aec_dump_->AddCaptureStreamOutput(FloatAudioFrame<const float>(
+      processed_capture_stream, num_channels, channel_size));
   aec_dump_->WriteCaptureStreamMessage();
 }
 
