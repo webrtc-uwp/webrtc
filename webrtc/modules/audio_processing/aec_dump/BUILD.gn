@@ -6,7 +6,7 @@ rtc_source_set("aec_dump") {
   ]
 
   public_deps = [
-    "..:aec_dump_interface",
+    "..:audio_processing_interface",
   ]
 
   deps = [
@@ -29,7 +29,7 @@ if (rtc_enable_protobuf) {
 
     public_deps = [
       ":aec_dump",
-      "..:aec_dump_interface",
+      "..:audio_processing_interface",
     ]
 
     deps = [
@@ -48,7 +48,7 @@ if (rtc_enable_protobuf) {
     defines = []
     deps = [
       ":aec_dump_impl",
-      "..:aec_dump_interface",
+      "..:audio_processing_interface",
       "..:audioproc_debug_proto",
       "../../../base:rtc_task_queue",
       "../../../modules:module_api",
@@ -69,6 +69,6 @@ rtc_source_set("null_aec_dump_factory") {
 
   public_deps = [
     ":aec_dump",
-    "..:aec_dump_interface",
+    "..:audio_processing_interface",
   ]
 }

@@ -94,11 +94,13 @@ void AecDumpImpl::WriteInitMessage(
   worker_queue_->PostTask(std::unique_ptr<rtc::QueuedTask>(std::move(task)));
 }
 
-void AecDumpImpl::AddCaptureStreamInput(const FloatAudioFrame& src) {
+void AecDumpImpl::AddCaptureStreamInput(
+    const FloatAudioFrame<const float>& src) {
   capture_stream_info_.AddInput(src);
 }
 
-void AecDumpImpl::AddCaptureStreamOutput(const FloatAudioFrame& src) {
+void AecDumpImpl::AddCaptureStreamOutput(
+    const FloatAudioFrame<const float>& src) {
   capture_stream_info_.AddOutput(src);
 }
 
@@ -135,7 +137,8 @@ void AecDumpImpl::WriteRenderStreamMessage(const AudioFrame& frame) {
   worker_queue_->PostTask(std::unique_ptr<rtc::QueuedTask>(std::move(task)));
 }
 
-void AecDumpImpl::WriteRenderStreamMessage(const FloatAudioFrame& src) {
+void AecDumpImpl::WriteRenderStreamMessage(
+    const FloatAudioFrame<const float>& src) {
   auto task = CreateWriteToFileTask();
   auto* event = task->GetEvent();
 

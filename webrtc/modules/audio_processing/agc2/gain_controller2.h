@@ -15,8 +15,9 @@
 #include <string>
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/modules/audio_processing/agc2/digital_gain_applier.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "webrtc/modules/audio_processing/include/float_audio_frame.h"
 
 namespace webrtc {
 
@@ -34,7 +35,7 @@ class GainController2 {
 
   int sample_rate_hz() { return sample_rate_hz_; }
 
-  void Process(AudioBuffer* audio);
+  void Process(FloatAudioFrame<float>* audio);
 
   static bool Validate(const AudioProcessing::Config::GainController2& config);
   static std::string ToString(
