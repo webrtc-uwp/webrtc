@@ -135,12 +135,14 @@ public class PeerConnectionFactory {
   public VideoSource createVideoSource(VideoCapturer capturer) {
     final EglBase.Context eglContext =
         localEglbase == null ? null : localEglbase.getEglBaseContext();
+    final SurfaceTextureHelper surfaceTextureHelper =
+        SurfaceTextureHelper.create("Camera SurfaceTextureHelper", eglContext);
     long nativeAndroidVideoTrackSource =
-        nativeCreateVideoSource(nativeFactory, eglContext, capturer.isScreencast());
+        nativeCreateVideoSource(nativeFactory, surfaceTextureHelper, capturer.isScreencast());
     VideoCapturer.CapturerObserver capturerObserver =
         new AndroidVideoTrackSourceObserver(nativeAndroidVideoTrackSource);
-    nativeInitializeVideoCapturer(
-        nativeFactory, capturer, nativeAndroidVideoTrackSource, capturerObserver);
+    capturer.initialize(
+        surfaceTextureHelper, ContextUtils.getApplicationContext(), capturerObserver);
     return new VideoSource(nativeAndroidVideoTrackSource);
   }
 
@@ -254,11 +256,7 @@ public class PeerConnectionFactory {
   private static native long nativeCreateLocalMediaStream(long nativeFactory, String label);
 
   private static native long nativeCreateVideoSource(
-      long nativeFactory, EglBase.Context eglContext, boolean is_screencast);
-
-  private static native void nativeInitializeVideoCapturer(long native_factory,
-      VideoCapturer j_video_capturer, long native_source,
-      VideoCapturer.CapturerObserver j_frame_observer);
+      long nativeFactory, SurfaceTextureHelper surfaceTextureHelper, boolean is_screencast);
 
   private static native long nativeCreateVideoTrack(
       long nativeFactory, String id, long nativeVideoSource);
