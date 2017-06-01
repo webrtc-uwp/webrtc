@@ -18,6 +18,7 @@ import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.os.Build;
+import android.os.DeadObjectException;
 import java.util.Timer;
 import java.util.TimerTask;
 import org.webrtc.ContextUtils;
@@ -114,15 +115,19 @@ public class WebRtcAudioManager {
       }
 
       public void run() {
-        final int mode = audioManager.getMode();
-        if (mode == AudioManager.MODE_RINGTONE) {
-          Logging.d(TAG, "STREAM_RING stream volume: "
-                  + audioManager.getStreamVolume(AudioManager.STREAM_RING) + " (max="
-                  + maxRingVolume + ")");
-        } else if (mode == AudioManager.MODE_IN_COMMUNICATION) {
-          Logging.d(TAG, "VOICE_CALL stream volume: "
-                  + audioManager.getStreamVolume(AudioManager.STREAM_VOICE_CALL) + " (max="
-                  + maxVoiceCallVolume + ")");
+        try {
+          final int mode = audioManager.getMode();
+          if (mode == AudioManager.MODE_RINGTONE) {
+            Logging.d(TAG, "STREAM_RING stream volume: "
+                    + audioManager.getStreamVolume(AudioManager.STREAM_RING) + " (max="
+                    + maxRingVolume + ")");
+          } else if (mode == AudioManager.MODE_IN_COMMUNICATION) {
+            Logging.d(TAG, "VOICE_CALL stream volume: "
+                    + audioManager.getStreamVolume(AudioManager.STREAM_VOICE_CALL) + " (max="
+                    + maxVoiceCallVolume + ")");
+          }
+        } catch (DeadObjectException e) {
+          Logging.e(TAG, "Error reading stream volume " + e.getMessage());
         }
       }
     }
