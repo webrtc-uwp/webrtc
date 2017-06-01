@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9afcfd6a_be7802a5",
+        "filename": "webrtc/modules/audio_device/BUILD.gn",
+        "patchSetId": 3
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1126897
+      },
+      "writtenOn": "2017-06-01T12:04:23Z",
+      "side": 1,
+      "message": "Merge these two lines?",
+      "revId": "dd2e033cee9d6f10e11414d13b11b46a0c4cd715",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37caf263_be3c0391",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 3
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1126897
+      },
+      "writtenOn": "2017-06-01T12:04:23Z",
+      "side": 1,
+      "message": "Buffer::SetSize() should be *really* cheap if it doesn\u0027t have to reallocate, so protecting it like this is unnecessary.\n\nAlso, if you don\u0027t need to preserve the contents of the buffer, the sequence\n\n  b.Clear();\n  b.SetSize(x);\n\nis faster than just\n\n  b.SetSize(x);\n\nbecause then it doesn\u0027t have to copy the contents from the old to the new place in case it needs to reallocate. You won\u0027t end up needing to reallocate all that often, though, so pick whichever you think is best.",
+      "revId": "dd2e033cee9d6f10e11414d13b11b46a0c4cd715",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a034a77d_57ad5ab7",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 3
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1126897
+      },
+      "writtenOn": "2017-06-01T12:04:23Z",
+      "side": 1,
+      "message": "There\u0027s supposed to be an implicit conversion from Buffer\u003cT\u003e to ArrayView\u003cconst T\u003e.",
+      "range": {
+        "startLine": 408,
+        "startChar": 6,
+        "endLine": 408,
+        "endChar": 56
+      },
+      "revId": "dd2e033cee9d6f10e11414d13b11b46a0c4cd715",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}

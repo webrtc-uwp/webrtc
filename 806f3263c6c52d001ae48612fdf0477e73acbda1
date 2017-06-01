@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d0bf8b0_9b1efffc",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_unittest_ios.mm",
+        "patchSetId": 4
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1126897
+      },
+      "writtenOn": "2017-06-01T12:04:23Z",
+      "side": 1,
+      "message": "This looks unrelated to the rest of the CL, and to the commit message?",
+      "revId": "806f3263c6c52d001ae48612fdf0477e73acbda1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
