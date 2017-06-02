@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa0872b1_0b5a4a12",
+        "filename": "webrtc/sdk/android/api/org/webrtc/EncodedImage.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-02T12:32:03Z",
+      "side": 1,
+      "message": "spelling nit: Used AS input",
+      "range": {
+        "startLine": 16,
+        "startChar": 46,
+        "endLine": 16,
+        "endChar": 48
+      },
+      "revId": "056465e93f4e9e1b7a6b9142abe2c433f9d978e0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1909cdc_5a617126",
+        "filename": "webrtc/sdk/android/api/org/webrtc/EncodedImage.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-02T12:32:03Z",
+      "side": 1,
+      "message": "I would like this class to be immutable, and that we use the Builder pattern for constructing it.",
+      "range": {
+        "startLine": 18,
+        "startChar": 13,
+        "endLine": 18,
+        "endChar": 25
+      },
+      "revId": "056465e93f4e9e1b7a6b9142abe2c433f9d978e0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f5110e8_3534d7d8",
+        "filename": "webrtc/sdk/android/api/org/webrtc/RtpFragmentationHeader.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-02T12:32:03Z",
+      "side": 1,
+      "message": "Can you add a comment for this class? Can you make it a nested class of the encoder to reduce the number of classes under api?",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 6
+      },
+      "revId": "056465e93f4e9e1b7a6b9142abe2c433f9d978e0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "88bbdd91_4e4ec279",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoDecoder.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-02T12:32:03Z",
+      "side": 1,
+      "message": "Can we name it isMissingFrames instead?",
+      "range": {
+        "startLine": 32,
+        "startChar": 30,
+        "endLine": 32,
+        "endChar": 43
+      },
+      "revId": "056465e93f4e9e1b7a6b9142abe2c433f9d978e0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9927f0df_0bd094b2",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoEncoder.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-02T12:32:03Z",
+      "side": 1,
+      "message": "Let\u0027s remove RtpFragmentationHeader as an argument. It looks to be optional for RtpPacketizer anyway, and if we need it in the future, we can add it to CodecSpecificInfo.",
+      "range": {
+        "startLine": 68,
+        "startChar": 68,
+        "endLine": 68,
+        "endChar": 90
+      },
+      "revId": "056465e93f4e9e1b7a6b9142abe2c433f9d978e0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
