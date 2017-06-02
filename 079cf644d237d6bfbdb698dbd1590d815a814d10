@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4fc200d4_10e3f8ed",
+        "filename": "webrtc/modules/audio_processing/audio_processing_impl.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1363,
+      "author": {
+        "id": 1130670
+      },
+      "writtenOn": "2017-06-02T08:54:26Z",
+      "side": 1,
+      "message": "I think this reduces the code readability until AudioBuffer is properly refactored/replaced, which could take a long while until that actually happens.\n\nMy concern is that it is not that clear from the code that the capture_buffer data is actually mutated in the float_frame.",
+      "range": {
+        "startLine": 1363,
+        "startChar": 25,
+        "endLine": 1363,
+        "endChar": 36
+      },
+      "revId": "079cf644d237d6bfbdb698dbd1590d815a814d10",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
