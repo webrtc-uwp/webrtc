@@ -326,12 +326,17 @@ int32_t VideoSender::AddVideoFrame(const VideoFrame& videoFrame,
     return VCM_PARAMETER_ERROR;
   }
   VideoFrame converted_frame = videoFrame;
-  if (converted_frame.video_frame_buffer()->native_handle() &&
-      !_encoder->SupportsNativeHandle()) {
+  const VideoFrameBuffer::Type pixel_format =
+      converted_frame.video_frame_buffer()->type();
+  const bool is_pixel_format_supported =
+      pixel_format == VideoFrameBuffer::Type::kI420 ||
+      (pixel_format == VideoFrameBuffer::Type::kNative &&
+       _encoder->SupportsNativeHandle());
+  if (!is_pixel_format_supported) {
     // This module only supports software encoding.
     // TODO(pbos): Offload conversion from the encoder thread.
-    rtc::scoped_refptr<VideoFrameBuffer> converted_buffer(
-        converted_frame.video_frame_buffer()->NativeToI420Buffer());
+    rtc::scoped_refptr<I420BufferInterface> converted_buffer(
+        converted_frame.video_frame_buffer()->ToI420());
 
     if (!converted_buffer) {
       LOG(LS_ERROR) << "Frame conversion failed, dropping frame.";
