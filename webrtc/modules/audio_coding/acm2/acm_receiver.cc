@@ -82,19 +82,20 @@ int AcmReceiver::InsertPacket(const WebRtcRTPHeader& rtp_header,
     return 0;
   }
 
+  const rtc::Optional<CodecInst> ci =
+      RtpHeaderToDecoder(*header, incoming_payload[0]);
+  if (!ci) {
+    LOG_F(LS_ERROR) << "Payload-type " << static_cast<int>(header->payloadType)
+                    << " is not registered.";
+    return -1;
+  }
+  receive_timestamp = NowInTimestamp(ci->plfreq);
+
+  const rtc::Optional<SdpAudioFormat> audio_format =
+      neteq_->GetDecoderFormat(ci->pltype);
+
   {
     rtc::CritScope lock(&crit_sect_);
-
-    const rtc::Optional<CodecInst> ci =
-        RtpHeaderToDecoder(*header, incoming_payload[0]);
-    if (!ci) {
-      LOG_F(LS_ERROR) << "Payload-type "
-                      << static_cast<int>(header->payloadType)
-                      << " is not registered.";
-      return -1;
-    }
-    receive_timestamp = NowInTimestamp(ci->plfreq);
-
     if (STR_CASE_CMP(ci->plname, "cn") == 0) {
       if (last_audio_decoder_ && last_audio_decoder_->channels > 1) {
         // This is a CNG and the audio codec is not mono, so skip pushing in
@@ -103,7 +104,7 @@ int AcmReceiver::InsertPacket(const WebRtcRTPHeader& rtp_header,
       }
     } else {
       last_audio_decoder_ = ci;
-      last_audio_format_ = neteq_->GetDecoderFormat(ci->pltype);
+      last_audio_format_ = audio_format;
       RTC_DCHECK(last_audio_format_);
       last_packet_sample_rate_hz_ = rtc::Optional<int>(ci->plfreq);
     }
@@ -123,9 +124,6 @@ int AcmReceiver::GetAudio(int desired_freq_hz,
                           AudioFrame* audio_frame,
                           bool* muted) {
   RTC_DCHECK(muted);
-  // Accessing members, take the lock.
-  rtc::CritScope lock(&crit_sect_);
-
   if (neteq_->GetAudio(audio_frame, muted) != NetEq::kOK) {
     LOG(LERROR) << "AcmReceiver::GetAudio - NetEq Failed.";
     return -1;
@@ -137,49 +135,54 @@ int AcmReceiver::GetAudio(int desired_freq_hz,
   const bool need_resampling =
       (desired_freq_hz != -1) && (current_sample_rate_hz != desired_freq_hz);
 
-  if (need_resampling && !resampled_last_output_frame_) {
-    // Prime the resampler with the last frame.
-    int16_t temp_output[AudioFrame::kMaxDataSizeSamples];
-    int samples_per_channel_int = resampler_.Resample10Msec(
-        last_audio_buffer_.get(), current_sample_rate_hz, desired_freq_hz,
-        audio_frame->num_channels_, AudioFrame::kMaxDataSizeSamples,
-        temp_output);
-    if (samples_per_channel_int < 0) {
-      LOG(LERROR) << "AcmReceiver::GetAudio - "
-                     "Resampling last_audio_buffer_ failed.";
-      return -1;
+  {
+    rtc::CritScope lock(&crit_sect_);
+
+    if (need_resampling && !resampled_last_output_frame_) {
+      // Prime the resampler with the last frame.
+      int16_t temp_output[AudioFrame::kMaxDataSizeSamples];
+      int samples_per_channel_int = resampler_.Resample10Msec(
+          last_audio_buffer_.get(), current_sample_rate_hz, desired_freq_hz,
+          audio_frame->num_channels_, AudioFrame::kMaxDataSizeSamples,
+          temp_output);
+      if (samples_per_channel_int < 0) {
+        LOG(LERROR) << "AcmReceiver::GetAudio - "
+                       "Resampling last_audio_buffer_ failed.";
+        return -1;
+      }
     }
-  }
 
-  // TODO(henrik.lundin) Glitches in the output may appear if the output rate
-  // from NetEq changes. See WebRTC issue 3923.
-  if (need_resampling) {
-    int samples_per_channel_int = resampler_.Resample10Msec(
-        audio_frame->data_, current_sample_rate_hz, desired_freq_hz,
-        audio_frame->num_channels_, AudioFrame::kMaxDataSizeSamples,
-        audio_frame->data_);
-    if (samples_per_channel_int < 0) {
-      LOG(LERROR) << "AcmReceiver::GetAudio - Resampling audio_buffer_ failed.";
-      return -1;
+    // TODO(henrik.lundin) Glitches in the output may appear if the output rate
+    // from NetEq changes. See WebRTC issue 3923.
+    if (need_resampling) {
+      int samples_per_channel_int = resampler_.Resample10Msec(
+          audio_frame->data_, current_sample_rate_hz, desired_freq_hz,
+          audio_frame->num_channels_, AudioFrame::kMaxDataSizeSamples,
+          audio_frame->data_);
+      if (samples_per_channel_int < 0) {
+        LOG(LERROR)
+            << "AcmReceiver::GetAudio - Resampling audio_buffer_ failed.";
+        return -1;
+      }
+      audio_frame->samples_per_channel_ =
+          static_cast<size_t>(samples_per_channel_int);
+      audio_frame->sample_rate_hz_ = desired_freq_hz;
+      RTC_DCHECK_EQ(
+          audio_frame->sample_rate_hz_,
+          rtc::dchecked_cast<int>(audio_frame->samples_per_channel_ * 100));
+      resampled_last_output_frame_ = true;
+    } else {
+      resampled_last_output_frame_ = false;
+      // We might end up here ONLY if codec is changed.
     }
-    audio_frame->samples_per_channel_ =
-        static_cast<size_t>(samples_per_channel_int);
-    audio_frame->sample_rate_hz_ = desired_freq_hz;
-    RTC_DCHECK_EQ(
-        audio_frame->sample_rate_hz_,
-        rtc::dchecked_cast<int>(audio_frame->samples_per_channel_ * 100));
-    resampled_last_output_frame_ = true;
-  } else {
-    resampled_last_output_frame_ = false;
-    // We might end up here ONLY if codec is changed.
+
+    // Store current audio in |last_audio_buffer_| for next time.
+    memcpy(last_audio_buffer_.get(), audio_frame->data_,
+           sizeof(int16_t) * audio_frame->samples_per_channel_ *
+               audio_frame->num_channels_);
+
+    call_stats_.DecodedByNetEq(audio_frame->speech_type_, *muted);
   }
-
-  // Store current audio in |last_audio_buffer_| for next time.
-  memcpy(last_audio_buffer_.get(), audio_frame->data_,
-         sizeof(int16_t) * audio_frame->samples_per_channel_ *
-             audio_frame->num_channels_);
-
-  call_stats_.DecodedByNetEq(audio_frame->speech_type_, *muted);
   return 0;
 }
 
@@ -209,8 +212,6 @@ int32_t AcmReceiver::AddCodec(int acm_codec_id,
   }();
   const rtc::Optional<SdpAudioFormat> new_format =
       NetEqDecoderToSdpAudioFormat(neteq_decoder);
-
-  rtc::CritScope lock(&crit_sect_);
 
   const auto old_format = neteq_->GetDecoderFormat(payload_type);
   if (old_format && new_format && *old_format == *new_format) {
@@ -270,24 +271,29 @@ void AcmReceiver::FlushBuffers() {
 }
 
 void AcmReceiver::RemoveAllCodecs() {
-  rtc::CritScope lock(&crit_sect_);
   neteq_->RemoveAllPayloadTypes();
-  last_audio_decoder_ = rtc::Optional<CodecInst>();
-  last_audio_format_ = rtc::Optional<SdpAudioFormat>();
-  last_packet_sample_rate_hz_ = rtc::Optional<int>();
+  {
+    rtc::CritScope lock(&crit_sect_);
+    last_audio_decoder_ = rtc::Optional<CodecInst>();
+    last_audio_format_ = rtc::Optional<SdpAudioFormat>();
+    last_packet_sample_rate_hz_ = rtc::Optional<int>();
+  }
 }
 
 int AcmReceiver::RemoveCodec(uint8_t payload_type) {
-  rtc::CritScope lock(&crit_sect_);
   if (neteq_->RemovePayloadType(payload_type) != NetEq::kOK &&
       neteq_->LastError() != NetEq::kDecoderNotFound) {
     LOG(LERROR) << "AcmReceiver::RemoveCodec" << static_cast<int>(payload_type);
     return -1;
   }
-  if (last_audio_decoder_ && payload_type == last_audio_decoder_->pltype) {
-    last_audio_decoder_ = rtc::Optional<CodecInst>();
-    last_audio_format_ = rtc::Optional<SdpAudioFormat>();
-    last_packet_sample_rate_hz_ = rtc::Optional<int>();
+  {
+    rtc::CritScope lock(&crit_sect_);
+
+    if (last_audio_decoder_ && payload_type == last_audio_decoder_->pltype) {
+      last_audio_decoder_ = rtc::Optional<CodecInst>();
+      last_audio_format_ = rtc::Optional<SdpAudioFormat>();
+      last_packet_sample_rate_hz_ = rtc::Optional<int>();
+    }
   }
   return 0;
 }
@@ -339,7 +345,6 @@ void AcmReceiver::GetNetworkStatistics(NetworkStatistics* acm_stat) {
 
 int AcmReceiver::DecoderByPayloadType(uint8_t payload_type,
                                       CodecInst* codec) const {
-  rtc::CritScope lock(&crit_sect_);
   const rtc::Optional<CodecInst> ci = neteq_->GetDecoder(payload_type);
   if (ci) {
     *codec = *ci;

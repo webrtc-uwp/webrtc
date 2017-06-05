@@ -271,7 +271,7 @@ class AcmReceiver {
 
   const rtc::Optional<CodecInst> RtpHeaderToDecoder(
       const RTPHeader& rtp_header,
-      uint8_t first_payload_byte) const EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
+      uint8_t first_payload_byte) const;
 
   uint32_t NowInTimestamp(int decoder_sampling_rate) const;
 
