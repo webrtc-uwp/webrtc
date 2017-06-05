@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e64cd19_a2242b6d",
+        "filename": "webrtc/media/engine/fakewebrtccall.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1125049
+      },
+      "writtenOn": "2017-06-05T14:20:12Z",
+      "side": 1,
+      "message": "Maybe rename this union as well?",
+      "revId": "adbc47b7df4a803506238773257750933dede170",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a512698_dc623715",
+        "filename": "webrtc/modules/video_coding/simulcast_encoder_adapter_unittest.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 1275,
+      "author": {
+        "id": 1125049
+      },
+      "writtenOn": "2017-06-05T14:20:12Z",
+      "side": 1,
+      "message": "Great to have these test!\nLooks like a lot of code duplication though. Would it be possible to break most of the logic out to common interface and use a parameterized test to cover both simulcast codecs?",
+      "revId": "adbc47b7df4a803506238773257750933dede170",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6a32e9f_815456f3",
+        "filename": "webrtc/video/end_to_end_tests.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 4237,
+      "author": {
+        "id": 1125049
+      },
+      "writtenOn": "2017-06-05T14:20:12Z",
+      "side": 1,
+      "message": "Looks like there\u0027s a lot of code duplication here (code copied from TestPictureIdStatePreservation?)\nCould you possibly break this out into a common utility class?",
+      "range": {
+        "startLine": 4237,
+        "startChar": 13,
+        "endLine": 4237,
+        "endChar": 0
+      },
+      "revId": "adbc47b7df4a803506238773257750933dede170",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
