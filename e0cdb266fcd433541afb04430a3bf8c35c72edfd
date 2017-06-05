@@ -22,6 +22,30 @@
       "revId": "e0cdb266fcd433541afb04430a3bf8c35c72edfd",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1cddf1ee_bb465044",
+        "filename": "webrtc/modules/video_coding/simulcast_encoder_adapter.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 462,
+      "author": {
+        "id": 1176415
+      },
+      "writtenOn": "2017-06-05T04:38:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9d8791a2_6ae323ab",
+      "range": {
+        "startLine": 462,
+        "startChar": 40,
+        "endLine": 462,
+        "endChar": 0
+      },
+      "revId": "e0cdb266fcd433541afb04430a3bf8c35c72edfd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
