@@ -619,6 +619,8 @@ void SendStatisticsProxy::OnSendEncodedImage(
   if (codec_info) {
     if (codec_info->codecType == kVideoCodecVP8) {
       simulcast_idx = codec_info->codecSpecific.VP8.simulcastIdx;
+    } else if (codec_info->codecType == kVideoCodecH264) {
+      simulcast_idx = codec_info->codecSpecific.H264.simulcastIdx;
     } else if (codec_info->codecType == kVideoCodecGeneric) {
       simulcast_idx = codec_info->codecSpecific.generic.simulcast_idx;
     }

@@ -47,13 +47,15 @@ void GetSimulcastSsrcs(const StreamParams& sp, std::vector<uint32_t>* ssrcs);
 
 // Get simulcast settings.
 // TODO(sprang): Remove default parameter when it's not longer referenced.
-std::vector<webrtc::VideoStream> GetSimulcastConfig(size_t max_streams,
-                                                    int width,
-                                                    int height,
-                                                    int max_bitrate_bps,
-                                                    int max_qp,
-                                                    int max_framerate,
-                                                    bool is_screencast = false);
+std::vector<webrtc::VideoStream> GetSimulcastConfig(
+    size_t max_streams,
+    int width,
+    int height,
+    int max_bitrate_bps,
+    int max_qp,
+    int max_framerate,
+    bool is_screencast = false,
+    bool temporal_layers_supported = false);
 
 bool UseSimulcastScreenshare();
 
