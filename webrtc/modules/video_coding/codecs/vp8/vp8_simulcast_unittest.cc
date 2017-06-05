@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_coding/codecs/vp8/simulcast_unittest.h"
+#include "webrtc/modules/video_coding/codecs/vp8/vp8_simulcast_unittest.h"
 
 namespace webrtc {
 namespace testing {
