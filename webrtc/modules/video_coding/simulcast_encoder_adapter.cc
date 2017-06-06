@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_coding/codecs/vp8/simulcast_encoder_adapter.h"
+#include "webrtc/modules/video_coding/simulcast_encoder_adapter.h"
 
 #include <algorithm>
 
@@ -17,8 +17,8 @@
 
 #include "webrtc/api/video/i420_buffer.h"
 #include "webrtc/base/checks.h"
-#include "webrtc/modules/video_coding/codecs/vp8/screenshare_layers.h"
-#include "webrtc/modules/video_coding/codecs/vp8/simulcast_rate_allocator.h"
+#include "webrtc/base/logging.h"
+#include "webrtc/modules/video_coding/utility/simulcast_rate_allocator.h"
 #include "webrtc/system_wrappers/include/clock.h"
 
 namespace {
@@ -75,7 +75,8 @@ int VerifyCodec(const webrtc::VideoCodec* inst) {
   if (inst->width <= 1 || inst->height <= 1) {
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
-  if (inst->VP8().automaticResizeOn && inst->numberOfSimulcastStreams > 1) {
+  if (inst->codecType == webrtc::kVideoCodecVP8 &&
+      inst->VP8().automaticResizeOn && inst->numberOfSimulcastStreams > 1) {
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
   return WEBRTC_VIDEO_CODEC_OK;
@@ -219,9 +220,11 @@ int SimulcastEncoderAdapter::InitEncode(const VideoCodec* inst,
       PopulateStreamCodec(codec_, i, start_bitrate_kbps,
                           highest_resolution_stream, &stream_codec);
     }
-    TemporalLayersFactoryAdapter tl_factory_adapter(i,
-                                                    *codec_.VP8()->tl_factory);
-    stream_codec.VP8()->tl_factory = &tl_factory_adapter;
+    if (codec_.codecType == webrtc::kVideoCodecVP8) {
+      TemporalLayersFactoryAdapter tl_factory_adapter(
+          i, *codec_.VP8()->tl_factory);
+      stream_codec.VP8()->tl_factory = &tl_factory_adapter;
+    }
 
     // TODO(ronghuawu): Remove once this is handled in VP8EncoderImpl.
     if (stream_codec.qpMax < kDefaultMinQp) {
@@ -351,12 +354,11 @@ int SimulcastEncoderAdapter::Encode(
                         input_image.video_frame_buffer()->DataU(),
                         input_image.video_frame_buffer()->StrideU(),
                         input_image.video_frame_buffer()->DataV(),
-                        input_image.video_frame_buffer()->StrideV(),
-                        src_width, src_height,
-                        dst_buffer->MutableDataY(), dst_buffer->StrideY(),
-                        dst_buffer->MutableDataU(), dst_buffer->StrideU(),
-                        dst_buffer->MutableDataV(), dst_buffer->StrideV(),
-                        dst_width, dst_height,
+                        input_image.video_frame_buffer()->StrideV(), src_width,
+                        src_height, dst_buffer->MutableDataY(),
+                        dst_buffer->StrideY(), dst_buffer->MutableDataU(),
+                        dst_buffer->StrideU(), dst_buffer->MutableDataV(),
+                        dst_buffer->StrideV(), dst_width, dst_height,
                         libyuv::kFilterBilinear);
 
       int ret = streaminfos_[stream_idx].encoder->Encode(
@@ -451,8 +453,11 @@ EncodedImageCallback::Result SimulcastEncoderAdapter::OnEncodedImage(
     const RTPFragmentationHeader* fragmentation) {
   CodecSpecificInfo stream_codec_specific = *codecSpecificInfo;
   stream_codec_specific.codec_name = implementation_name_.c_str();
-  CodecSpecificInfoVP8* vp8Info = &(stream_codec_specific.codecSpecific.VP8);
-  vp8Info->simulcastIdx = stream_idx;
+  if (stream_codec_specific.codecType == webrtc::kVideoCodecVP8) {
+    stream_codec_specific.codecSpecific.VP8.simulcastIdx = stream_idx;
+  } else if (stream_codec_specific.codecType == webrtc::kVideoCodecH264) {
+    stream_codec_specific.codecSpecific.H264.simulcastIdx = stream_idx;
+  }
 
   return encoded_complete_callback_->OnEncodedImage(
       encodedImage, &stream_codec_specific, fragmentation);
@@ -467,8 +472,6 @@ void SimulcastEncoderAdapter::PopulateStreamCodec(
   *stream_codec = inst;
 
   // Stream specific settings.
-  stream_codec->VP8()->numberOfTemporalLayers =
-      inst.simulcastStream[stream_index].numberOfTemporalLayers;
   stream_codec->numberOfSimulcastStreams = 0;
   stream_codec->width = inst.simulcastStream[stream_index].width;
   stream_codec->height = inst.simulcastStream[stream_index].height;
@@ -481,15 +484,19 @@ void SimulcastEncoderAdapter::PopulateStreamCodec(
     // Settings for lowest spatial resolutions.
     stream_codec->qpMax = kLowestResMaxQp;
   }
-  if (!highest_resolution_stream) {
-    // For resolutions below CIF, set the codec |complexity| parameter to
-    // kComplexityHigher, which maps to cpu_used = -4.
-    int pixels_per_frame = stream_codec->width * stream_codec->height;
-    if (pixels_per_frame < 352 * 288) {
-      stream_codec->VP8()->complexity = webrtc::kComplexityHigher;
+  if (inst.codecType == webrtc::kVideoCodecVP8) {
+    stream_codec->VP8()->numberOfTemporalLayers =
+        inst.simulcastStream[stream_index].numberOfTemporalLayers;
+    if (!highest_resolution_stream) {
+      // For resolutions below CIF, set the codec |complexity| parameter to
+      // kComplexityHigher, which maps to cpu_used = -4.
+      int pixels_per_frame = stream_codec->width * stream_codec->height;
+      if (pixels_per_frame < 352 * 288) {
+        stream_codec->VP8()->complexity = webrtc::kComplexityHigher;
+      }
+      // Turn off denoising for all streams but the highest resolution.
+      stream_codec->VP8()->denoisingOn = false;
     }
-    // Turn off denoising for all streams but the highest resolution.
-    stream_codec->VP8()->denoisingOn = false;
   }
   // TODO(ronghuawu): what to do with targetBitrate.
 
