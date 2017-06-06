@@ -18,9 +18,17 @@ public interface VideoEncoder {
   /** Settings passed to the encoder by WebRTC. */
   public class Settings {
     public final int numberOfCores;
+    public final int width;
+    public final int height;
+    public final int startBitrate; // Kilobits per second.
+    public final int maxFramerate;
 
-    public Settings(int numberOfCores) {
+    public Settings(int numberOfCores, int width, int height, int startBitrate, int maxFramerate) {
       this.numberOfCores = numberOfCores;
+      this.width = width;
+      this.height = height;
+      this.startBitrate = startBitrate;
+      this.maxFramerate = maxFramerate;
     }
   }
 
@@ -49,23 +57,23 @@ public interface VideoEncoder {
    */
   public class BitrateAllocation {
     // First index is the spatial layer and second the temporal layer.
-    public final long[][] bitratesBbs;
+    public final int[][] bitratesBbs;
 
     /**
      * Initializes the allocation with a two dimensional array of bitrates. The first index of the
      * array is the spatial layer and the second index in the temporal layer.
      */
-    public BitrateAllocation(long[][] bitratesBbs) {
+    public BitrateAllocation(int[][] bitratesBbs) {
       this.bitratesBbs = bitratesBbs;
     }
 
     /**
      * Gets the total bitrate allocated for all layers.
      */
-    public long getSum() {
-      long sum = 0;
-      for (long[] spatialLayer : bitratesBbs) {
-        for (long bitrate : spatialLayer) {
+    public int getSum() {
+      int sum = 0;
+      for (int[] spatialLayer : bitratesBbs) {
+        for (int bitrate : spatialLayer) {
           sum += bitrate;
         }
       }
@@ -118,7 +126,7 @@ public interface VideoEncoder {
    */
   void setChannelParameters(short packetLoss, long roundTripTimeMs);
   /** Sets the bitrate allocation and the target framerate for the encoder. */
-  void setRateAllocation(BitrateAllocation allocation, long framerate);
+  void setRateAllocation(BitrateAllocation allocation, int framerate);
   /** Any encoder that wants to use WebRTC provided quality scaler must implement this method. */
   ScalingSettings getScalingSettings();
   /** Should return a descriptive name for the implementation. */
