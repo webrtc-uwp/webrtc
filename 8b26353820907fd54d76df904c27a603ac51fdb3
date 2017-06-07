@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5cee1de3_c580eefb",
+        "filename": "webrtc/modules/video_coding/codecs/h264/h264_encoder_impl.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1144186
+      },
+      "writtenOn": "2017-06-07T09:42:38Z",
+      "side": 1,
+      "message": "Why can\u0027t it be const?",
+      "range": {
+        "startLine": 335,
+        "startChar": 21,
+        "endLine": 335,
+        "endChar": 40
+      },
+      "revId": "8b26353820907fd54d76df904c27a603ac51fdb3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d40defda_3c7cf46e",
+        "filename": "webrtc/modules/video_coding/codecs/vp8/simulcast_encoder_adapter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1144186
+      },
+      "writtenOn": "2017-06-07T09:42:38Z",
+      "side": 1,
+      "message": "This comment is likely obsolete.",
+      "range": {
+        "startLine": 346,
+        "startChar": 0,
+        "endLine": 346,
+        "endChar": 47
+      },
+      "revId": "8b26353820907fd54d76df904c27a603ac51fdb3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cbb7b080_97be71b2",
+        "filename": "webrtc/modules/video_coding/video_sender.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1144186
+      },
+      "writtenOn": "2017-06-07T09:42:38Z",
+      "side": 1,
+      "message": "Rename |pixel_format| and |is_pixel_format_supported| to |type| or |*_type|.",
+      "range": {
+        "startLine": 329,
+        "startChar": 31,
+        "endLine": 329,
+        "endChar": 43
+      },
+      "revId": "8b26353820907fd54d76df904c27a603ac51fdb3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
