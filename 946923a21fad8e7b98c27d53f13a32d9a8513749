@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ebaadb1_f14e54b9",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Video/RTCDefaultShader.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1167989
+      },
+      "writtenOn": "2017-06-07T11:51:56Z",
+      "side": 0,
+      "message": "I don\u0027t think we should delete this header and put in the protocol definition. It would be better to keep the header and move it to WebRTC/Headers",
+      "revId": "946923a21fad8e7b98c27d53f13a32d9a8513749",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
