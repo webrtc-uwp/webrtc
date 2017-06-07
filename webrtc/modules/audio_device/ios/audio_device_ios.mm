@@ -419,6 +419,7 @@ OSStatus AudioDeviceIOS::OnGetPlayoutData(AudioUnitRenderActionFlags* flags,
   RTC_DCHECK_EQ(1, io_data->mNumberBuffers);
   AudioBuffer* audio_buffer = &io_data->mBuffers[0];
   RTC_DCHECK_EQ(1, audio_buffer->mNumberChannels);
+
   // Get pointer to internal audio buffer to which new audio data shall be
   // written.
   const size_t size_in_bytes = audio_buffer->mDataByteSize;
@@ -433,10 +434,28 @@ OSStatus AudioDeviceIOS::OnGetPlayoutData(AudioUnitRenderActionFlags* flags,
     return noErr;
   }
 
+  // Measure time since last call to OnGetPlayoutData() and check if the sum of
+  // this delta time and the last processing time is larger than a threshold.
+  // If so, we have a clear indication of an a glitch in the output audio since
+  // the core audio layer will most likely run dry in this state.
+  const int64_t now_time = rtc::TimeMillis();
+  const int64_t delta_time = now_time - last_playout_time_;
+  const int glitch_threshold =
+      1.5 * playout_parameters_.GetBufferSizeInMilliseconds() - 1;
+  if (delta_time + last_playout_processing_time_ > glitch_threshold) {
+    LOG(WARNING) << "_____ Audio glitch _____ "
+                 << "Last decoding took " << last_playout_processing_time_ << " ms. "
+                 << "Time since last OnGetPlayoutData was " << delta_time << " ms.";
+  }
+
   // Read decoded 16-bit PCM samples from WebRTC (using a size that matches
   // the native I/O audio unit) and copy the result to the audio buffer in the
   // |io_data| destination.
   fine_audio_buffer_->GetPlayoutData(rtc::ArrayView<int8_t>(destination, size_in_bytes));
+
+  last_playout_time_ = rtc::TimeMillis();
+  last_playout_processing_time_ = last_playout_time_ - now_time;
+
   return noErr;
 }
 

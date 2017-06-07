@@ -290,6 +290,9 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
   // Set to true if we've activated the audio session.
   bool has_configured_session_;
 
+  int64_t last_playout_time_ = 0;
+  int64_t last_playout_processing_time_ = 0;
+
   // Exposes private members for testing purposes only.
   FRIEND_TEST_ALL_PREFIXES(AudioDeviceTest, testInterruptedAudioSession);
 };
