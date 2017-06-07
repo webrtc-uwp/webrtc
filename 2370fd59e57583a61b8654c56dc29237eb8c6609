@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d015fac5_88c447fe",
+        "filename": "webrtc/api/peerconnectioninterface.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-06-07T18:46:35Z",
+      "side": 1,
+      "message": "I think this should just be tls_host_name. We\u0027re going to use it for more than just SNI (e.g., cert matching)",
+      "revId": "2370fd59e57583a61b8654c56dc29237eb8c6609",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c5fadec_7fb3b279",
+        "filename": "webrtc/base/ssladapter.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-06-07T18:46:35Z",
+      "side": 1,
+      "message": "style should be sni_host_name and set_sni_host_name.\n\nBut can we remove this altogether and handle this in StartSSL instead?",
+      "revId": "2370fd59e57583a61b8654c56dc29237eb8c6609",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91c2775b_7697644c",
+        "filename": "webrtc/p2p/base/basicpacketsocketfactory.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-06-07T18:46:35Z",
+      "side": 1,
+      "message": "please use the auto-formatter to fix style/spacing issues",
+      "revId": "2370fd59e57583a61b8654c56dc29237eb8c6609",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
