@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "dea437d4_0c6e0bfd",
+        "filename": "webrtc/sdk/android/src/jni/androidmediaencoder_jni.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 797,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-07T11:07:03Z",
+      "side": 1,
+      "message": "Done. I\u0027m not thrilled about the name |is_texture()| now though.",
+      "parentUuid": "35fc57dc_168ab7f0",
+      "range": {
+        "startLine": 797,
+        "startChar": 0,
+        "endLine": 797,
+        "endChar": 74
+      },
+      "revId": "588dc38e049c95f4caaecdf75a5e524e73a74ae2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ee0b45d8_86b15d75",
         "filename": "webrtc/sdk/android/src/jni/androidmediaencoder_jni.cc",
         "patchSetId": 1
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "8b5a076c_8b65864a",
+        "filename": "webrtc/sdk/android/src/jni/androidmediaencoder_jni.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-07T11:07:03Z",
+      "side": 1,
+      "message": "Yep, I have another CL in progress that will change this.",
+      "parentUuid": "ee0b45d8_86b15d75",
+      "range": {
+        "startLine": 870,
+        "startChar": 18,
+        "endLine": 870,
+        "endChar": 38
+      },
+      "revId": "588dc38e049c95f4caaecdf75a5e524e73a74ae2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3c65e6a5_d848cc64",
         "filename": "webrtc/sdk/android/src/jni/peerconnection_jni.cc",
         "patchSetId": 1
@@ -59,6 +107,30 @@
       "writtenOn": "2017-06-07T10:02:32Z",
       "side": 1,
       "message": "These two methods ought to be renamed, cricket::VideoFrame is no more. But feel free to leave that for some other cl.",
+      "range": {
+        "startLine": 876,
+        "startChar": 28,
+        "endLine": 877,
+        "endChar": 50
+      },
+      "revId": "588dc38e049c95f4caaecdf75a5e524e73a74ae2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f4849a3_137e4923",
+        "filename": "webrtc/sdk/android/src/jni/peerconnection_jni.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 877,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-07T11:07:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3c65e6a5_d848cc64",
       "range": {
         "startLine": 876,
         "startChar": 28,
