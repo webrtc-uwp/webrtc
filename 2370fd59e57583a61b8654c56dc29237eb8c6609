@@ -90,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "9c3a088a_16de6e66",
+        "filename": "webrtc/base/ssladapter.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1213539
+      },
+      "writtenOn": "2017-06-07T22:59:17Z",
+      "side": 1,
+      "message": "I tested that but the video freezes once the call is established. the RTCP packet can\u0027t be decrypted.\n\n(channel.cc:788): Failed to unprotect video RTCP packet: size\u003d22, type\u003d201",
+      "parentUuid": "1f023c3f_5f8e93a6",
+      "revId": "2370fd59e57583a61b8654c56dc29237eb8c6609",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "91c2775b_7697644c",
         "filename": "webrtc/p2p/base/basicpacketsocketfactory.cc",
         "patchSetId": 2

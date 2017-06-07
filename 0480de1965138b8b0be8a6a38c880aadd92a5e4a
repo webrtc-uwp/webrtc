@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "daaa001b_cc36bc9b",
+        "filename": "webrtc/api/peerconnectioninterface.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1213539
+      },
+      "writtenOn": "2017-06-07T22:59:17Z",
+      "side": 1,
+      "message": "\u003e\u003e\u003e \"If anything is optional, it\u0027s the IP\"\nIn our case IP is what we start with and the hostname is the optional one which we will use for the SNI extension. \n\n\u003e\u003e\u003e \"Even with this CL, it looks like the TLS SNI extension will end up used if you just put the hostname in |uri| and don\u0027t use |tls_host_name|, which is counter-intuitive. At least, that\u0027s how it appears to me.\"\nNo, it will only be used if the address has a resolved ip address and non ip literal host name. But to your point, this is why I said before it is less confusing to have a separate field for the tls hostname \n\n\u003e\u003e\u003e \"In this CL, the IP and hostname are both encoded as strings. In the version that adds the IP as an optional field, the IP is of type IPAddress already, so it\u0027s more clear which field needs to be an IP address and which needs to be a hostname.\"\nYou just moved the confusion to the upper level, as the IceServer creator need to check the returned host name value and determine weather to set this optional IP field or not",
+      "parentUuid": "77bac117_d1271786",
+      "range": {
+        "startLine": 184,
+        "startChar": 4,
+        "endLine": 184,
+        "endChar": 30
+      },
+      "revId": "0480de1965138b8b0be8a6a38c880aadd92a5e4a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ffbd1a5f_18ca58d7",
         "filename": "webrtc/p2p/base/basicpacketsocketfactory.cc",
         "patchSetId": 3
