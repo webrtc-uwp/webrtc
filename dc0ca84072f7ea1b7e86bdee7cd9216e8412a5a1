@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a217275_78d607c7",
+        "filename": "webrtc/media/engine/simulcast.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-07T13:40:14Z",
+      "side": 1,
+      "message": "Default parameters are not recommended, but I guess there is no cleaner way of doing this? We should remove the default values at some point.",
+      "range": {
+        "startLine": 58,
+        "startChar": 4,
+        "endLine": 58,
+        "endChar": 42
+      },
+      "revId": "dc0ca84072f7ea1b7e86bdee7cd9216e8412a5a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5facab88_ebfb73a6",
+        "filename": "webrtc/media/engine/simulcast.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-07T13:40:14Z",
+      "side": 1,
+      "message": "It looks like this default value should be \u0027true\u0027, otherwise you will change the default current behavior.",
+      "range": {
+        "startLine": 58,
+        "startChar": 37,
+        "endLine": 58,
+        "endChar": 42
+      },
+      "revId": "dc0ca84072f7ea1b7e86bdee7cd9216e8412a5a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb95ecda_4b3cb9f6",
+        "filename": "webrtc/media/engine/webrtcvideoengine2.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-07T13:40:14Z",
+      "side": 1,
+      "message": "Make this check in the ctor instead.",
+      "range": {
+        "startLine": 102,
+        "startChar": 4,
+        "endLine": 102,
+        "endChar": 36
+      },
+      "revId": "dc0ca84072f7ea1b7e86bdee7cd9216e8412a5a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "113c5fce_abcde358",
+        "filename": "webrtc/media/engine/webrtcvideoengine2.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-07T13:40:14Z",
+      "side": 1,
+      "message": "I don\u0027t think you need this?",
+      "range": {
+        "startLine": 133,
+        "startChar": 2,
+        "endLine": 133,
+        "endChar": 63
+      },
+      "revId": "dc0ca84072f7ea1b7e86bdee7cd9216e8412a5a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bcee7631_69dc8f5d",
+        "filename": "webrtc/media/engine/webrtcvideoengine2.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-07T13:40:14Z",
+      "side": 1,
+      "message": "For clarity, I would like to reverse the order of assignments so you do:\nsoftware_fallback_encoder_factory_.reset(new SoftwareFallbackEncoderFactory(factory));\nfactory_ \u003d software_fallback_encoder_factory_.get();",
+      "range": {
+        "startLine": 153,
+        "startChar": 0,
+        "endLine": 156,
+        "endChar": 57
+      },
+      "revId": "dc0ca84072f7ea1b7e86bdee7cd9216e8412a5a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e677025b_6845d997",
+        "filename": "webrtc/media/engine/webrtcvideoengine2.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 615,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-07T13:40:14Z",
+      "side": 1,
+      "message": "Can you comment this literal with an in-line comment /* external */?",
+      "range": {
+        "startLine": 615,
+        "startChar": 59,
+        "endLine": 615,
+        "endChar": 63
+      },
+      "revId": "dc0ca84072f7ea1b7e86bdee7cd9216e8412a5a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "905f24d0_d29277cf",
+        "filename": "webrtc/media/engine/webrtcvideoengine2.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 1825,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-07T13:40:14Z",
+      "side": 1,
+      "message": "Same here, please comment literal with /* external */.",
+      "range": {
+        "startLine": 1825,
+        "startChar": 43,
+        "endLine": 1825,
+        "endChar": 48
+      },
+      "revId": "dc0ca84072f7ea1b7e86bdee7cd9216e8412a5a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
