@@ -33,5 +33,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)setMaxBitrate:(nullable NSNumber *)value;
 
+- (BOOL)hasSettingForCallOption:(NSString *)option;
+- (BOOL)callOption:(NSString *)option;
+- (void)setSetting:(BOOL)setting forCallOption:(NSString *)option;
+
 @end
 NS_ASSUME_NONNULL_END

@@ -214,17 +214,16 @@ static int const kKbpsMultiplier = 1000;
 
 - (void)connectToRoomWithId:(NSString *)roomId
                    settings:(ARDSettingsModel *)settings
-                 isLoopback:(BOOL)isLoopback
-                isAudioOnly:(BOOL)isAudioOnly
-          shouldMakeAecDump:(BOOL)shouldMakeAecDump
-      shouldUseLevelControl:(BOOL)shouldUseLevelControl {
+                 isLoopback:(BOOL)isLoopback {
   NSParameterAssert(roomId.length);
   NSParameterAssert(_state == kARDAppClientStateDisconnected);
   _settings = settings;
   _isLoopback = isLoopback;
-  _isAudioOnly = isAudioOnly;
-  _shouldMakeAecDump = shouldMakeAecDump;
-  _shouldUseLevelControl = shouldUseLevelControl;
+  _isAudioOnly = [_settings currentSettingFromStoreForCallOption:ARDSettingsCallOptionAudioOnly];
+  _shouldMakeAecDump =
+      [_settings currentSettingFromStoreForCallOption:ARDSettingsCallOptionCreateAecDump];
+  _shouldUseLevelControl =
+      [_settings currentSettingFromStoreForCallOption:ARDSettingsCallOptionUseLevelController];
   self.state = kARDAppClientStateConnecting;
 
 #if defined(WEBRTC_IOS)
