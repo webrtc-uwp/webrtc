@@ -55,6 +55,9 @@ ConferenceTransport::ConferenceTransport()
   local_network_ = webrtc::VoENetwork::GetInterface(local_voe_);
   local_rtp_rtcp_ = webrtc::VoERTP_RTCP::GetInterface(local_voe_);
 
+  local_apm_.reset(webrtc::AudioProcessing::Create());
+  local_base_->Init(nullptr, local_apm_.get(), nullptr);
+
   // In principle, we can use one VoiceEngine to achieve the same goal. Well, in
   // here, we use two engines to make it more like reality.
   remote_voe_ = webrtc::VoiceEngine::Create();
@@ -63,6 +66,9 @@ ConferenceTransport::ConferenceTransport()
   remote_network_ = webrtc::VoENetwork::GetInterface(remote_voe_);
   remote_rtp_rtcp_ = webrtc::VoERTP_RTCP::GetInterface(remote_voe_);
   remote_file_ = webrtc::VoEFile::GetInterface(remote_voe_);
+
+  remote_apm_.reset(webrtc::AudioProcessing::Create());
+  remote_base_->Init(nullptr, remote_apm_.get(), nullptr);
 
   EXPECT_EQ(0, local_base_->Init());
   local_sender_ = local_base_->CreateChannel();

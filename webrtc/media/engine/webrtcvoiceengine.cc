@@ -213,14 +213,16 @@ WebRtcVoiceEngine::WebRtcVoiceEngine(
     webrtc::AudioDeviceModule* adm,
     const rtc::scoped_refptr<webrtc::AudioEncoderFactory>& encoder_factory,
     const rtc::scoped_refptr<webrtc::AudioDecoderFactory>& decoder_factory,
-    rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer)
+    rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer,
+    rtc::scoped_refptr<webrtc::AudioProcessing> apm)
     : WebRtcVoiceEngine(adm,
                         encoder_factory,
                         decoder_factory,
                         audio_mixer,
+                        apm,
                         new VoEWrapper()) {
-  audio_state_ =
-      webrtc::AudioState::Create(MakeAudioStateConfig(voe(), audio_mixer));
+  audio_state_ = webrtc::AudioState::Create(
+      MakeAudioStateConfig(voe(), audio_mixer), apm_.get());
 }
 
 WebRtcVoiceEngine::WebRtcVoiceEngine(
@@ -228,6 +230,7 @@ WebRtcVoiceEngine::WebRtcVoiceEngine(
     const rtc::scoped_refptr<webrtc::AudioEncoderFactory>& encoder_factory,
     const rtc::scoped_refptr<webrtc::AudioDecoderFactory>& decoder_factory,
     rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer,
+    rtc::scoped_refptr<webrtc::AudioProcessing> apm,
     VoEWrapper* voe_wrapper)
     : low_priority_worker_queue_("rtc-low-prio", rtc::TaskQueue::Priority::LOW),
       adm_(adm),
@@ -238,6 +241,12 @@ WebRtcVoiceEngine::WebRtcVoiceEngine(
   LOG(LS_INFO) << "WebRtcVoiceEngine::WebRtcVoiceEngine";
   RTC_DCHECK(voe_wrapper);
   RTC_DCHECK(decoder_factory);
+
+  if (apm == nullptr) {
+    apm_ = webrtc::AudioProcessing::Create();
+  } else {
+    apm_ = apm;
+  }
 
   signal_thread_checker_.DetachFromThread();
 
@@ -260,8 +269,8 @@ WebRtcVoiceEngine::WebRtcVoiceEngine(
   webrtc::Trace::SetTraceCallback(this);
   webrtc::Trace::set_level_filter(kElevatedTraceFilter);
   LOG(LS_INFO) << webrtc::VoiceEngine::GetVersionString();
-  RTC_CHECK_EQ(0, voe_wrapper_->base()->Init(adm_.get(), nullptr,
-                                             decoder_factory_));
+  RTC_CHECK_EQ(
+      0, voe_wrapper_->base()->Init(adm_.get(), apm_.get(), decoder_factory_));
   webrtc::Trace::set_level_filter(kDefaultTraceFilter);
 
   // No ADM supplied? Get the default one from VoE.
@@ -269,9 +278,6 @@ WebRtcVoiceEngine::WebRtcVoiceEngine(
     adm_ = voe_wrapper_->base()->audio_device_module();
   }
   RTC_DCHECK(adm_);
-
-  apm_ = voe_wrapper_->base()->audio_processing();
-  RTC_DCHECK(apm_);
 
   transmit_mixer_ = voe_wrapper_->base()->transmit_mixer();
   RTC_DCHECK(transmit_mixer_);
@@ -306,7 +312,7 @@ WebRtcVoiceEngine::WebRtcVoiceEngine(
   // Set default audio devices.
 #if !defined(WEBRTC_IOS)
   webrtc::adm_helpers::SetRecordingDevice(adm_);
-  apm()->Initialize();
+  apm_->Initialize();
   webrtc::adm_helpers::SetPlayoutDevice(adm_);
 #endif  // !WEBRTC_IOS
 }
@@ -727,7 +733,7 @@ webrtc::AudioDeviceModule* WebRtcVoiceEngine::adm() {
 webrtc::AudioProcessing* WebRtcVoiceEngine::apm() {
   RTC_DCHECK(worker_thread_checker_.CalledOnValidThread());
   RTC_DCHECK(apm_);
-  return apm_;
+  return apm_.get();
 }
 
 webrtc::voe::TransmitMixer* WebRtcVoiceEngine::transmit_mixer() {

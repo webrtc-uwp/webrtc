@@ -144,13 +144,15 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
   const uint32_t kAudioSendSsrc = 1234;
   const uint32_t kAudioRecvSsrc = 5678;
 
+  std::unique_ptr<AudioProcessing> apm(AudioProcessing::Create());
+
   metrics::Reset();
   VoiceEngine* voice_engine = VoiceEngine::Create();
   VoEBase* voe_base = VoEBase::GetInterface(voice_engine);
   FakeAudioDevice fake_audio_device(
       FakeAudioDevice::CreatePulsedNoiseCapturer(256, 48000),
       FakeAudioDevice::CreateDiscardRenderer(48000), audio_rtp_speed);
-  EXPECT_EQ(0, voe_base->Init(&fake_audio_device, nullptr, decoder_factory_));
+  EXPECT_EQ(0, voe_base->Init(&fake_audio_device, apm.get(), decoder_factory_));
   VoEBase::ChannelConfig config;
   config.enable_voice_pacing = true;
   int send_channel_id = voe_base->CreateChannel(config);
@@ -160,7 +162,9 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
   send_audio_state_config.voice_engine = voice_engine;
   send_audio_state_config.audio_mixer = AudioMixerImpl::Create();
   Call::Config sender_config(event_log_.get());
-  sender_config.audio_state = AudioState::Create(send_audio_state_config);
+
+  sender_config.audio_state =
+      AudioState::Create(send_audio_state_config, apm.get());
   Call::Config receiver_config(event_log_.get());
   receiver_config.audio_state = sender_config.audio_state;
   CreateCalls(sender_config, receiver_config);

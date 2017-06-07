@@ -31,8 +31,6 @@ struct ConfigHelper {
         .WillOnce(testing::Return(0));
     EXPECT_CALL(mock_voice_engine, audio_device_module())
         .Times(testing::AtLeast(1));
-    EXPECT_CALL(mock_voice_engine, audio_processing())
-        .Times(testing::AtLeast(1));
     EXPECT_CALL(mock_voice_engine, audio_transport())
         .WillRepeatedly(testing::Return(&audio_transport));
 
@@ -49,12 +47,15 @@ struct ConfigHelper {
 
     audio_state_config.voice_engine = &mock_voice_engine;
     audio_state_config.audio_mixer = audio_mixer;
+
+    apm.reset(AudioProcessing::Create());
   }
   AudioState::Config& config() { return audio_state_config; }
   MockVoiceEngine& voice_engine() { return mock_voice_engine; }
   rtc::scoped_refptr<AudioMixer> mixer() { return audio_mixer; }
   MockAudioTransport& original_audio_transport() { return audio_transport; }
   AudioTransport* audio_transport_proxy() { return registered_audio_transport; }
+  AudioProcessing* audio_processing() { return apm.get(); }
 
  private:
   testing::StrictMock<MockVoiceEngine> mock_voice_engine;
@@ -62,6 +63,7 @@ struct ConfigHelper {
   rtc::scoped_refptr<AudioMixer> audio_mixer;
   MockAudioTransport audio_transport;
   AudioTransport* registered_audio_transport = nullptr;
+  std::unique_ptr<AudioProcessing> apm;
 };
 
 class FakeAudioSource : public AudioMixer::Source {
@@ -83,27 +85,27 @@ class FakeAudioSource : public AudioMixer::Source {
 TEST(AudioStateTest, Create) {
   ConfigHelper helper;
   rtc::scoped_refptr<AudioState> audio_state =
-      AudioState::Create(helper.config());
+      AudioState::Create(helper.config(), helper.audio_processing());
   EXPECT_TRUE(audio_state.get());
 }
 
 TEST(AudioStateTest, ConstructDestruct) {
   ConfigHelper helper;
   std::unique_ptr<internal::AudioState> audio_state(
-      new internal::AudioState(helper.config()));
+      new internal::AudioState(helper.config(), helper.audio_processing()));
 }
 
 TEST(AudioStateTest, GetVoiceEngine) {
   ConfigHelper helper;
   std::unique_ptr<internal::AudioState> audio_state(
-      new internal::AudioState(helper.config()));
+      new internal::AudioState(helper.config(), helper.audio_processing()));
   EXPECT_EQ(audio_state->voice_engine(), &helper.voice_engine());
 }
 
 TEST(AudioStateTest, TypingNoiseDetected) {
   ConfigHelper helper;
   std::unique_ptr<internal::AudioState> audio_state(
-      new internal::AudioState(helper.config()));
+      new internal::AudioState(helper.config(), helper.audio_processing()));
   VoiceEngineObserver* voe_observer =
       static_cast<VoiceEngineObserver*>(audio_state.get());
   EXPECT_FALSE(audio_state->typing_noise_detected());
@@ -127,7 +129,7 @@ TEST(AudioStateAudioPathTest, RecordedAudioArrivesAtOriginalTransport) {
   ConfigHelper helper;
 
   rtc::scoped_refptr<AudioState> audio_state =
-      AudioState::Create(helper.config());
+      AudioState::Create(helper.config(), helper.audio_processing());
 
   // Setup completed. Ensure call of original transport is forwarded to new.
   uint32_t new_mic_level;
@@ -147,7 +149,7 @@ TEST(AudioStateAudioPathTest,
   ConfigHelper helper;
 
   rtc::scoped_refptr<AudioState> audio_state =
-      AudioState::Create(helper.config());
+      AudioState::Create(helper.config(), helper.audio_processing());
 
   FakeAudioSource fake_source;
 

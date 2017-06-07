@@ -102,7 +102,7 @@ class MockVoiceEngine : public VoiceEngineImpl {
   MOCK_METHOD3(
       Init,
       int(AudioDeviceModule* external_adm,
-          AudioProcessing* audioproc,
+          AudioProcessing* external_apm,
           const rtc::scoped_refptr<AudioDecoderFactory>& decoder_factory));
   MOCK_METHOD0(audio_processing, AudioProcessing*());
   MOCK_METHOD0(audio_device_module, AudioDeviceModule*());
