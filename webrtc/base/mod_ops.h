@@ -37,6 +37,36 @@ inline unsigned long Subtract(unsigned long a, unsigned long b) {  // NOLINT
   return a - sub;
 }
 
+// Calculates the signed difference between two wrapping numbers.
+//
+// Example:
+// uint32_t x = 253;
+// uint32_t y = 2;
+// M = 256
+//
+// SignedDiff<M>(x, y) == 5
+//
+//   252   253   254   255    0     1     2     3
+// #################################################
+// |     |  x  |     |     |     |     |  y  |     |
+// #################################################
+//          |----->----->----->----->----->
+//
+// SignedDiff<M>(x, y) == 251
+//
+//   252   253   254   255    0     1     2     3
+// #################################################
+// |     |  x  |     |     |     |     |  y  |     |
+// #################################################
+// ---<-----|                             |<-----<--
+//
+template <unsigned int M>
+inline int SignedDiff(unsigned int a, unsigned int b) {
+  RTC_DCHECK_LT(a, M);
+  RTC_DCHECK_LT(b, M);
+  return ((a + M + M / 2 - b) % M) - M / 2;
+}
+
 // Calculates the forward difference between two wrapping numbers.
 //
 // Example:
