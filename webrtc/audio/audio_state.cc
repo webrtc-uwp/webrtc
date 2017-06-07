@@ -19,11 +19,11 @@
 namespace webrtc {
 namespace internal {
 
-AudioState::AudioState(const AudioState::Config& config)
+AudioState::AudioState(const AudioState::Config& config, AudioProcessing* apm)
     : config_(config),
       voe_base_(config.voice_engine),
       audio_transport_proxy_(voe_base_->audio_transport(),
-                             voe_base_->audio_processing(),
+                             apm,
                              config_.audio_mixer) {
   process_thread_checker_.DetachFromThread();
   RTC_DCHECK(config_.audio_mixer);
@@ -92,7 +92,8 @@ void AudioState::CallbackOnError(int channel_id, int err_code) {
 }  // namespace internal
 
 rtc::scoped_refptr<AudioState> AudioState::Create(
-    const AudioState::Config& config) {
-  return rtc::scoped_refptr<AudioState>(new internal::AudioState(config));
+    const AudioState::Config& config,
+    AudioProcessing* apm) {
+  return rtc::scoped_refptr<AudioState>(new internal::AudioState(config, apm));
 }
 }  // namespace webrtc
