@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "35fc57dc_168ab7f0",
+        "filename": "webrtc/sdk/android/src/jni/androidmediaencoder_jni.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 797,
+      "author": {
+        "id": 1144186
+      },
+      "writtenOn": "2017-06-07T10:02:32Z",
+      "side": 1,
+      "message": "Could write as |frame.is_texture() !\u003d use_surface| and delete |is_texture_frame|, now that we have that convenience function (and count this use as a reason to not delete it).",
+      "range": {
+        "startLine": 797,
+        "startChar": 0,
+        "endLine": 797,
+        "endChar": 74
+      },
+      "revId": "588dc38e049c95f4caaecdf75a5e524e73a74ae2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee0b45d8_86b15d75",
+        "filename": "webrtc/sdk/android/src/jni/androidmediaencoder_jni.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1144186
+      },
+      "writtenOn": "2017-06-07T10:02:32Z",
+      "side": 1,
+      "message": "I hope AndroidTextureBuffer and NativeHandleImpl can be merged at some point (but not in this cl).",
+      "range": {
+        "startLine": 870,
+        "startChar": 18,
+        "endLine": 870,
+        "endChar": 38
+      },
+      "revId": "588dc38e049c95f4caaecdf75a5e524e73a74ae2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c65e6a5_d848cc64",
+        "filename": "webrtc/sdk/android/src/jni/peerconnection_jni.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 877,
+      "author": {
+        "id": 1144186
+      },
+      "writtenOn": "2017-06-07T10:02:32Z",
+      "side": 1,
+      "message": "These two methods ought to be renamed, cricket::VideoFrame is no more. But feel free to leave that for some other cl.",
+      "range": {
+        "startLine": 876,
+        "startChar": 28,
+        "endLine": 877,
+        "endChar": 50
+      },
+      "revId": "588dc38e049c95f4caaecdf75a5e524e73a74ae2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "013ea1cd_3010187c",
+        "filename": "webrtc/sdk/android/src/jni/native_handle_impl.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1144186
+      },
+      "writtenOn": "2017-06-07T10:02:32Z",
+      "side": 0,
+      "message": "Nice, it seems this became unused with cl https://codereview.webrtc.org/2398963003.",
+      "range": {
+        "startLine": 187,
+        "startChar": 22,
+        "endLine": 187,
+        "endChar": 40
+      },
+      "revId": "5f11577e094a57475c3c38b8cf38a589943f8551",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
