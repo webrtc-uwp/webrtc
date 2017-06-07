@@ -57,5 +57,18 @@ NS_ASSUME_NONNULL_BEGIN
   [self.storage synchronize];
 }
 
+- (BOOL)hasSettingForCallOption:(NSString *)option {
+  return [self.storage objectForKey:option] != nil;
+}
+
+- (BOOL)callOption:(NSString *)option {
+  return [self.storage boolForKey:option];
+}
+
+- (void)setSetting:(BOOL)setting forCallOption:(NSString *)option {
+  [self.storage setBool:setting forKey:option];
+  [self.storage synchronize];
+}
+
 @end
 NS_ASSUME_NONNULL_END

@@ -11,6 +11,12 @@
 #import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
+
+#define ARDSettingsCallOptionAudioOnly @"ARDSettingsCallOptionAudioOnly"
+#define ARDSettingsCallOptionCreateAecDump @"ARDSettingsCallOptionCreateAecDump"
+#define ARDSettingsCallOptionUseLevelController @"ARDSettingsCallOptionUseLevelController"
+#define ARDSettingsCallOptionUseManualAudioConfig @"ARDSettingsCallOptionUseManualAudioConfig"
+
 /**
  * Model class for user defined settings.
  *
@@ -78,6 +84,25 @@ NS_ASSUME_NONNULL_BEGIN
  * @param bitrate NSNumber representation of the max bitrate value.
  */
 - (void)storeMaxBitrateSetting:(nullable NSNumber *)bitrate;
+
+/**
+ * Returns array of available call options.
+ */
+- (NSArray<NSString *> *)availableCallOptions;
+
+/**
+ * Returns current call option setting from store if present or default (NO) otherwise.
+ */
+- (BOOL)currentSettingFromStoreForCallOption:(NSString *)option;
+
+/**
+ * Stores the provided call option setting into the store.
+ *
+ * @param setting the boolean value to be stored.
+ * @param call option the name of the option.
+ * @return YES/NO depending on success.
+ */
+- (BOOL)storeSetting:(BOOL)setting forCallOption:(NSString *)option;
 
 @end
 NS_ASSUME_NONNULL_END

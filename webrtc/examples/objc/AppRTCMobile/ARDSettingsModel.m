@@ -21,6 +21,15 @@ static NSArray<NSString *> *videoCodecsStaticValues() {
   return @[ @"H264", @"VP8", @"VP9" ];
 }
 
+static NSArray<NSString *> *callOptionsStaticValues() {
+  return @[
+    ARDSettingsCallOptionAudioOnly,
+    ARDSettingsCallOptionCreateAecDump,
+    ARDSettingsCallOptionUseLevelController,
+    ARDSettingsCallOptionUseManualAudioConfig
+  ];
+}
+
 @interface ARDSettingsModel () {
   ARDSettingsStore *_settingsStore;
 }
@@ -79,6 +88,26 @@ static NSArray<NSString *> *videoCodecsStaticValues() {
   [[self settingsStore] setMaxBitrate:bitrate];
 }
 
+- (NSArray<NSString *> *)availableCallOptions {
+  return callOptionsStaticValues();
+}
+
+- (BOOL)currentSettingFromStoreForCallOption:(NSString *)option {
+  if (![[self settingsStore] hasSettingForCallOption:option]) {
+    [[self settingsStore] setSetting:[self defaultSettingForCallOption:option]
+                       forCallOption:option];
+  }
+  return [[self settingsStore] callOption:option];
+}
+
+- (BOOL)storeSetting:(BOOL)setting forCallOption:(NSString *)option {
+  if (![[self availableCallOptions] containsObject:option]) {
+    return NO;
+  }
+  [[self settingsStore] setSetting:setting forCallOption:option];
+  return YES;
+}
+
 #pragma mark - Testable
 
 - (ARDSettingsStore *)settingsStore {
@@ -118,6 +147,17 @@ static NSArray<NSString *> *videoCodecsStaticValues() {
 
 - (NSString *)defaultVideoCodecSetting {
   return videoCodecsStaticValues()[0];
+}
+
+- (BOOL)defaultSettingForCallOption:(NSString *)option {
+  NSDictionary<NSString *, NSNumber *> *callOptionDefaults = @{
+    @"ARDSettingsCallOptionAudioOnly" : @(NO),
+    @"ARDSettingsCallOptionCreateAecDump" : @(NO),
+    @"ARDSettingsCallOptionUseLevelController" : @(NO),
+    @"ARDSettingsCallOptionUseManualAudioConfig" : @(YES)
+  };
+
+  return callOptionDefaults[option].boolValue;
 }
 
 @end

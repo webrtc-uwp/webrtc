@@ -74,4 +74,32 @@
 
   XCTAssertEqual(width, 0);
 }
+
+- (void)testStoringCallOption {
+  id storeMock = [self setupMockStoreWithVideoResolution:nil];
+  [[[storeMock stub] andReturnValue:@YES] hasSettingForCallOption:ARDSettingsCallOptionAudioOnly];
+  [[storeMock expect] setSetting:YES forCallOption:ARDSettingsCallOptionAudioOnly];
+
+  BOOL result = [_model storeSetting:YES forCallOption:ARDSettingsCallOptionAudioOnly];
+  XCTAssertTrue(result);
+}
+
+- (void)testStoringInvalidCallOption {
+  __unused id storeMock = [self setupMockStoreWithVideoResolution:nil];
+
+  BOOL result = [_model storeSetting:YES forCallOption:@"Invalid option"];
+  XCTAssertFalse(result);
+}
+
+- (void)testReturningDefaultCallOption {
+  id storeMock = [self setupMockStoreWithVideoResolution:nil];
+  [[[storeMock stub] andReturnValue:@NO]
+      hasSettingForCallOption:ARDSettingsCallOptionUseManualAudioConfig];
+  [[storeMock expect] setSetting:YES forCallOption:ARDSettingsCallOptionUseManualAudioConfig];
+  [[[storeMock stub] andReturnValue:@YES] callOption:ARDSettingsCallOptionUseManualAudioConfig];
+
+  XCTAssertTrue(
+      [_model currentSettingFromStoreForCallOption:ARDSettingsCallOptionUseManualAudioConfig]);
+}
+
 @end

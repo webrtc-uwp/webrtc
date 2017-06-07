@@ -14,7 +14,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(int, ARDSettingsSections) {
-  ARDSettingsSectionVideoResolution = 0,
+  ARDSettingsSectionCallOptions = 0,
+  ARDSettingsSectionVideoResolution,
   ARDSettingsSectionVideoCodec,
   ARDSettingsSectionBitRate,
 };
@@ -64,6 +65,10 @@ typedef NS_ENUM(int, ARDSettingsSections) {
   return _settingsModel.availableVideoCodecs;
 }
 
+- (NSArray<NSString *> *)callOptionsArray {
+  return _settingsModel.availableCallOptions;
+}
+
 #pragma mark -
 
 - (void)addDoneBarButton {
@@ -93,11 +98,13 @@ typedef NS_ENUM(int, ARDSettingsSections) {
 #pragma mark - Table view data source
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-  return 3;
+  return 4;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
   switch (section) {
+    case ARDSettingsSectionCallOptions:
+      return self.callOptionsArray.count;
     case ARDSettingsSectionVideoResolution:
       return self.videoResolutionArray.count;
     case ARDSettingsSectionVideoCodec:
@@ -133,6 +140,8 @@ updateListSelectionAtIndexPath:(NSIndexPath *)indexPath
 - (nullable NSString *)tableView:(UITableView *)tableView
          titleForHeaderInSection:(NSInteger)section {
   switch (section) {
+    case ARDSettingsSectionCallOptions:
+      return @"Call options";
     case ARDSettingsSectionVideoResolution:
       return @"Video resolution";
     case ARDSettingsSectionVideoCodec:
@@ -147,6 +156,9 @@ updateListSelectionAtIndexPath:(NSIndexPath *)indexPath
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
   switch (indexPath.section) {
+    case ARDSettingsSectionCallOptions:
+      return [self callOptionsTableViewCellForTableView:tableView atIndexPath:indexPath];
+
     case ARDSettingsSectionVideoResolution:
       return [self videoResolutionTableViewCellForTableView:tableView atIndexPath:indexPath];
 
@@ -273,6 +285,51 @@ updateListSelectionAtIndexPath:(NSIndexPath *)indexPath
   }
 
   [_settingsModel storeMaxBitrateSetting:bitrateNumber];
+}
+
+#pragma mark - Table view delegate(Call options)
+
+- (UITableViewCell *)callOptionsTableViewCellForTableView:(UITableView *)tableView
+                                              atIndexPath:(NSIndexPath *)indexPath {
+  NSString *dequeueIdentifier = @"ARDSettingsCallOptionsCellIdentifier";
+  UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:dequeueIdentifier];
+  if (!cell) {
+    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                  reuseIdentifier:dequeueIdentifier];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    UISwitch *switchView = [[UISwitch alloc] initWithFrame:CGRectZero];
+    switchView.tag = indexPath.row;
+    [switchView addTarget:self
+                   action:@selector(callOptionSwitchChanged:)
+         forControlEvents:UIControlEventValueChanged];
+    cell.accessoryView = switchView;
+  }
+
+  NSString *callOption = self.callOptionsArray[indexPath.row];
+  cell.textLabel.text = [self labelForCallOption:callOption];
+  UISwitch *switchView = (UISwitch *)cell.accessoryView;
+  switchView.on = [_settingsModel currentSettingFromStoreForCallOption:callOption];
+
+  return cell;
+}
+
+- (NSString *)labelForCallOption:(NSString *)option {
+  if ([option isEqualToString:ARDSettingsCallOptionAudioOnly]) {
+    return @"Audio only";
+  } else if ([option isEqualToString:ARDSettingsCallOptionCreateAecDump]) {
+    return @"Create AecDump";
+  } else if ([option isEqualToString:ARDSettingsCallOptionUseLevelController]) {
+    return @"Use level controller";
+  } else if ([option isEqualToString:ARDSettingsCallOptionUseManualAudioConfig]) {
+    return @"Use manual audio config";
+  } else {
+    return @"";
+  }
+}
+
+- (void)callOptionSwitchChanged:(UISwitch *)sender {
+  NSString *callOption = self.callOptionsArray[sender.tag];
+  [_settingsModel storeSetting:sender.isOn forCallOption:callOption];
 }
 
 @end
