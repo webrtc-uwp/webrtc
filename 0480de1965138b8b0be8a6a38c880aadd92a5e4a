@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e9ede7ba_2c202f50",
+        "filename": "webrtc/api/peerconnectioninterface.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-06-07T21:55:37Z",
+      "side": 1,
+      "message": "Needs comments.\n\nAlso, I\u0027d just call this \"hostname\", not \"tls_host_name\". The user of the API doesn\u0027t need to know how the hostname is used; just that it\u0027s the server\u0027s hostname, and that if it\u0027s present, |uri| needs to contain an IP address.\n\nHowever, I prefer the version of this CL that adds the IP as the new/optional field: https://codereview.webrtc.org/2926823003/diff/1/webrtc/api/peerconnectioninterface.h\n\nBecause:\n\n* If anything is optional, it\u0027s the IP. WebRTC will always work (and use the SNI extension) given just the hostname, encoded in |uri|. Even with this CL, it looks like the TLS SNI extension will end up used if you just put the hostname in |uri| and don\u0027t use |tls_host_name|, which is counter-intuitive. At least, that\u0027s how it appears to me.\n* Most existing applications put hostnames in the URI field (in my experience).\n* In this CL, the IP and hostname are both encoded as strings. In the version that adds the IP as an optional field, the IP is of type IPAddress already, so it\u0027s more clear which field needs to be an IP address and which needs to be a hostname.",
+      "range": {
+        "startLine": 184,
+        "startChar": 4,
+        "endLine": 184,
+        "endChar": 30
+      },
+      "revId": "0480de1965138b8b0be8a6a38c880aadd92a5e4a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ffbd1a5f_18ca58d7",
+        "filename": "webrtc/p2p/base/basicpacketsocketfactory.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-06-07T21:55:37Z",
+      "side": 1,
+      "message": "nit: Capitalize \"Both\", and \"IP\".",
+      "range": {
+        "startLine": 157,
+        "startChar": 9,
+        "endLine": 157,
+        "endChar": 13
+      },
+      "revId": "0480de1965138b8b0be8a6a38c880aadd92a5e4a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32d46481_c767534f",
+        "filename": "webrtc/pc/iceserverparsing.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-06-07T21:55:37Z",
+      "side": 1,
+      "message": "This comment, and a more detailed explanation, should also go in the header file.",
+      "revId": "0480de1965138b8b0be8a6a38c880aadd92a5e4a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d322a0e0_0569e3d0",
+        "filename": "webrtc/pc/iceserverparsing.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-06-07T21:55:37Z",
+      "side": 1,
+      "message": "nit: capitalize \"IP\"",
+      "range": {
+        "startLine": 243,
+        "startChar": 22,
+        "endLine": 243,
+        "endChar": 24
+      },
+      "revId": "0480de1965138b8b0be8a6a38c880aadd92a5e4a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4bce9dab_51eca100",
+        "filename": "webrtc/pc/iceserverparsing.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-06-07T21:55:37Z",
+      "side": 1,
+      "message": "nit: Would be nice to have a more specific error message.",
+      "range": {
+        "startLine": 244,
+        "startChar": 28,
+        "endLine": 244,
+        "endChar": 60
+      },
+      "revId": "0480de1965138b8b0be8a6a38c880aadd92a5e4a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b8b8f473_9d1363be",
+        "filename": "webrtc/sdk/android/api/org/webrtc/PeerConnection.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-06-07T21:55:37Z",
+      "side": 1,
+      "message": "Should have a comment here too.",
+      "range": {
+        "startLine": 103,
+        "startChar": 24,
+        "endLine": 103,
+        "endChar": 35
+      },
+      "revId": "0480de1965138b8b0be8a6a38c880aadd92a5e4a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
