@@ -120,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "58044133_c987fee2",
+        "filename": "webrtc/test/frame_generator.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-07T10:55:01Z",
+      "side": 1,
+      "message": "Yes, std::function would do it, but I know that\u0027s one of the banned C++11 features.",
+      "parentUuid": "f3816493_7be92b7a",
+      "range": {
+        "startLine": 266,
+        "startChar": 36,
+        "endLine": 266,
+        "endChar": 52
+      },
+      "revId": "506262c25422dcac2b1193a7d1c4aef27204c6a3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f2366901_a4d0985f",
         "filename": "webrtc/test/frame_utils.cc",
         "patchSetId": 1
