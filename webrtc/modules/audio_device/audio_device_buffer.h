@@ -229,7 +229,7 @@ class AudioDeviceBuffer {
   // Counts number of audio callbacks modulo 50 to create a signal when
   // a new storage of audio stats shall be done.
   int16_t rec_stat_count_ ACCESS_ON(recording_thread_checker_);
-  int16_t play_stat_count_ ACCESS_ON(playout_thread_checker_);
+  // int16_t play_stat_count_ ACCESS_ON(playout_thread_checker_);
 
   // Time stamps of when playout and recording starts.
   int64_t play_start_time_ ACCESS_ON(main_thread_checker_);
@@ -245,6 +245,10 @@ class AudioDeviceBuffer {
   // Set to true at construction and modified to false as soon as one audio-
   // level estimate larger than zero is detected.
   bool only_silence_recorded_;
+
+  // int64_t last_time_ = 0;
+
+  double phase_ ACCESS_ON(playout_thread_checker_) = 0.0;
 
   // Set to true when logging of audio stats is enabled for the first time in
   // StartPeriodicLogging() and set to false by StopPeriodicLogging().

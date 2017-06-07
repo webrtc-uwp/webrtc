@@ -16,6 +16,7 @@
 
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
+#include "webrtc/base/timeutils.h"
 #include "webrtc/modules/audio_device/audio_device_buffer.h"
 
 namespace webrtc {
@@ -47,6 +48,17 @@ void FineAudioBuffer::GetPlayoutData(rtc::ArrayView<int8_t> audio_buffer) {
   // fulfill the request. It is possible that the buffer already contains
   // enough samples from the last round.
   const size_t num_bytes = audio_buffer.size();
+
+  const int64_t now_ms = rtc::TimeMillis();
+  const int64_t duration = now_ms - last_time_ms_;
+  LOG(INFO) << "dT=" << duration;
+  if (duration + last_decoding_time_ > 15) {
+    LOG(INFO) << "***** Cracking Audio ***** "
+              << "Last decoding spent " << last_decoding_time_ << " ms. After "
+              << now_ms - last_time_ms_
+              << " ms was GetPlayoutData called again => high risk of glitch!";
+  }
+
   while (playout_buffer_.size() < num_bytes) {
     // Get 10ms decoded audio from WebRTC.
     device_buffer_->RequestPlayoutData(samples_per_10_ms_);
@@ -67,6 +79,9 @@ void FineAudioBuffer::GetPlayoutData(rtc::ArrayView<int8_t> audio_buffer) {
   memmove(playout_buffer_.data(), playout_buffer_.data() + num_bytes,
           playout_buffer_.size() - num_bytes);
   playout_buffer_.SetSize(playout_buffer_.size() - num_bytes);
+
+  last_time_ms_ = rtc::TimeMillis();
+  last_decoding_time_ = last_time_ms_ - now_ms;
 }
 
 void FineAudioBuffer::DeliverRecordedData(

@@ -84,6 +84,9 @@ class FineAudioBuffer {
   // Storage for input samples that are about to be delivered to the WebRTC
   // ADB or remains from the last successful delivery of a 10ms audio buffer.
   rtc::BufferT<int8_t> record_buffer_;
+
+  int64_t last_time_ms_ = 0;
+  int64_t last_decoding_time_ = 0;
 };
 
 }  // namespace webrtc

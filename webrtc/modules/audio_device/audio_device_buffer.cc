@@ -9,6 +9,7 @@
  */
 
 #include <algorithm>
+#include <math.h>
 
 #include "webrtc/modules/audio_device/audio_device_buffer.h"
 
@@ -21,6 +22,8 @@
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_device/audio_device_config.h"
 #include "webrtc/system_wrappers/include/metrics.h"
+
+#include "webrtc/base/thread.h"
 
 namespace webrtc {
 
@@ -36,6 +39,8 @@ static const size_t kTimerIntervalInMilliseconds =
 static const size_t kMinValidCallTimeTimeInSeconds = 10;
 static const size_t kMinValidCallTimeTimeInMilliseconds =
     kMinValidCallTimeTimeInSeconds * rtc::kNumMillisecsPerSec;
+
+static const double kPhaseIncreament = 0.05759586531;
 
 AudioDeviceBuffer::AudioDeviceBuffer()
     : task_queue_(kTimerQueueName),
@@ -55,7 +60,7 @@ AudioDeviceBuffer::AudioDeviceBuffer()
       num_stat_reports_(0),
       last_timer_task_time_(0),
       rec_stat_count_(0),
-      play_stat_count_(0),
+      // play_stat_count_(0),
       play_start_time_(0),
       only_silence_recorded_(true),
       log_stats_(false) {
@@ -354,6 +359,7 @@ int32_t AudioDeviceBuffer::RequestPlayoutData(size_t samples_per_channel) {
     LOG(LS_INFO) << "Size of playout buffer: " << play_buffer_.size();
   }
 
+  /*
   size_t num_samples_out(0);
   // It is currently supported to start playout without a valid audio
   // transport object. Leads to warning and silence.
@@ -386,14 +392,31 @@ int32_t AudioDeviceBuffer::RequestPlayoutData(size_t samples_per_channel) {
   // audio output state.
   UpdatePlayStats(max_abs, num_samples_out);
   return static_cast<int32_t>(num_samples_out);
+  */
+
+  return 480;
 }
 
 int32_t AudioDeviceBuffer::GetPlayoutData(void* audio_buffer) {
+  // int64_t now_time = rtc::TimeMillis();
+  // int64_t time_since_last = rtc::TimeDiff(now_time, last_time_);
+  // last_time_ = now_time;
   RTC_DCHECK_RUN_ON(&playout_thread_checker_);
   RTC_DCHECK_GT(play_buffer_.size(), 0);
-  const size_t bytes_per_sample = sizeof(int16_t);
-  memcpy(audio_buffer, play_buffer_.data(),
-         play_buffer_.size() * bytes_per_sample);
+  // LOG(INFO) << "PLAY: " << time_since_last << ": " << play_buffer_.size();
+  // const size_t bytes_per_sample = sizeof(int16_t);
+
+  int16_t* destination_r = (int16_t*)audio_buffer;
+  for (size_t i = 0; i < play_buffer_.size(); ++i) {
+    destination_r[i] = (int16_t)(sin(phase_) * 16382);
+    phase_ += kPhaseIncreament;
+  }
+
+  // memcpy(audio_buffer, play_buffer_.data(),
+  //       play_buffer_.size() * bytes_per_sample);
+
+  // rtc::Thread::SleepMs(1);
+
   // Return samples per channel or number of frames.
   return static_cast<int32_t>(play_buffer_.size() / play_channels_);
 }

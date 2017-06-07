@@ -415,6 +415,12 @@ OSStatus AudioDeviceIOS::OnGetPlayoutData(AudioUnitRenderActionFlags* flags,
                                           UInt32 bus_number,
                                           UInt32 num_frames,
                                           AudioBufferList* io_data) {
+  if (*flags != 0) {
+    LOGI() << "ERROR in OnGetPlayoutData: " << *flags;
+  }
+
+  LOGI() << "num_frames: " << num_frames;
+
   // Verify 16-bit, noninterleaved mono PCM signal format.
   RTC_DCHECK_EQ(1, io_data->mNumberBuffers);
   AudioBuffer* audio_buffer = &io_data->mBuffers[0];
