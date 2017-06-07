@@ -33,5 +33,15 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)setMaxBitrate:(nullable NSNumber *)value;
 
+- (BOOL)hasSettingForAudioOnly;
+- (BOOL)hasSettingForCreateAecDump;
+- (BOOL)hasSettingForUseLevelController;
+- (BOOL)hasSettingForUseManualAudioConfig;
+
+@property(nonatomic) BOOL audioOnly;
+@property(nonatomic) BOOL createAecDump;
+@property(nonatomic) BOOL useLevelController;
+@property(nonatomic) BOOL useManualAudioConfig;
+
 @end
 NS_ASSUME_NONNULL_END

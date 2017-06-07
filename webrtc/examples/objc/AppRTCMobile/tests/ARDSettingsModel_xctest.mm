@@ -74,4 +74,22 @@
 
   XCTAssertEqual(width, 0);
 }
+
+- (void)testStoringAudioSetting {
+  id storeMock = [self setupMockStoreWithVideoResolution:nil];
+  [[[storeMock stub] andReturnValue:@YES] hasSettingForAudioOnly];
+  [[storeMock expect] setAudioOnly:YES];
+
+  [_model storeAudioOnlySetting:YES];
+}
+
+- (void)testReturningDefaultCallOption {
+  id storeMock = [self setupMockStoreWithVideoResolution:nil];
+  [[[storeMock stub] andReturnValue:@NO] hasSettingForUseManualAudioConfig];
+  [[storeMock expect] setUseManualAudioConfig:YES];
+  [[[storeMock stub] andReturnValue:@YES] useManualAudioConfig];
+
+  XCTAssertTrue([_model currentUseManualAudioConfigSettingFromStore]);
+}
+
 @end

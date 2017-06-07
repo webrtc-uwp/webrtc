@@ -79,6 +79,50 @@ static NSArray<NSString *> *videoCodecsStaticValues() {
   [[self settingsStore] setMaxBitrate:bitrate];
 }
 
+- (BOOL)currentAudioOnlySettingFromStore {
+  if (![[self settingsStore] hasSettingForAudioOnly]) {
+    [[self settingsStore] setAudioOnly:NO];
+  }
+  return [[self settingsStore] audioOnly];
+}
+
+- (void)storeAudioOnlySetting:(BOOL)audioOnly {
+  [[self settingsStore] setAudioOnly:audioOnly];
+}
+
+- (BOOL)currentCreateAecDumpSettingFromStore {
+  if (![[self settingsStore] hasSettingForCreateAecDump]) {
+    [[self settingsStore] setCreateAecDump:NO];
+  }
+  return [[self settingsStore] createAecDump];
+}
+
+- (void)storeCreateAecDumpSetting:(BOOL)createAecDump {
+  [[self settingsStore] setCreateAecDump:createAecDump];
+}
+
+- (BOOL)currentUseLevelControllerSettingFromStore {
+  if (![[self settingsStore] hasSettingForUseLevelController]) {
+    [[self settingsStore] setUseLevelController:NO];
+  }
+  return [[self settingsStore] useLevelController];
+}
+
+- (void)storeUseLevelControllerSetting:(BOOL)useLevelController {
+  [[self settingsStore] setUseLevelController:useLevelController];
+}
+
+- (BOOL)currentUseManualAudioConfigSettingFromStore {
+  if (![[self settingsStore] hasSettingForUseManualAudioConfig]) {
+    [[self settingsStore] setUseManualAudioConfig:YES];
+  }
+  return [[self settingsStore] useManualAudioConfig];
+}
+
+- (void)storeUseManualAudioConfigSetting:(BOOL)useManualAudioConfig {
+  [[self settingsStore] setUseManualAudioConfig:useManualAudioConfig];
+}
+
 #pragma mark - Testable
 
 - (ARDSettingsStore *)settingsStore {
