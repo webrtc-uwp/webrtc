@@ -150,7 +150,15 @@ AsyncPacketSocket* BasicPacketSocketFactory::CreateClientTcpSocket(
 
     socket = ssl_adapter;
 
-    if (ssl_adapter->StartSSL(remote_address.hostname().c_str(), false) != 0) {
+    std::string address;
+    if (remote_address.IsUnresolvedIP()) {
+      address = remote_address.hostname();
+    } else {
+      // both hostname and ip are set.
+      address = remote_address.ipaddr().ToString();
+      ssl_adapter->set_sni_host_name(remote_address.hostname());
+    }
+    if (ssl_adapter->StartSSL(address.c_str(), false) != 0) {
       delete ssl_adapter;
       return NULL;
     }

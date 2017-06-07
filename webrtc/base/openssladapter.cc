@@ -360,6 +360,11 @@ OpenSSLAdapter::BeginSSL() {
   SSL_set_mode(ssl_, SSL_MODE_ENABLE_PARTIAL_WRITE |
                      SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
 
+  // Enable SNI.
+  if (!sni_host_name().empty()) {
+    SSL_set_tlsext_host_name(ssl_, sni_host_name().c_str());
+  }
+
   // the SSL object owns the bio now
   bio = nullptr;
 

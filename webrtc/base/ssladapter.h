@@ -26,6 +26,11 @@ class SSLAdapter : public AsyncSocketAdapter {
   bool ignore_bad_cert() const { return ignore_bad_cert_; }
   void set_ignore_bad_cert(bool ignore) { ignore_bad_cert_ = ignore; }
 
+  const std::string& sni_host_name() const { return sni_host_name_; }
+  void set_sni_host_name(const std::string& sni_host_name) {
+    sni_host_name_ = sni_host_name;
+  }
+
   // Do DTLS or TLS (default is TLS, if unspecified)
   virtual void SetMode(SSLMode mode) = 0;
 
@@ -42,6 +47,9 @@ class SSLAdapter : public AsyncSocketAdapter {
  private:
   // If true, the server certificate need not match the configured hostname.
   bool ignore_bad_cert_;
+
+  // TLS SNI hostname.
+  std::string sni_host_name_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

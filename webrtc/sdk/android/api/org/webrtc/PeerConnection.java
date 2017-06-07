@@ -100,6 +100,7 @@ public class PeerConnection {
     public final String username;
     public final String password;
     public final TlsCertPolicy tlsCertPolicy;
+    public final String tlsHostName;
 
     /** Convenience constructor for STUN servers. */
     public IceServer(String uri) {
@@ -111,14 +112,21 @@ public class PeerConnection {
     }
 
     public IceServer(String uri, String username, String password, TlsCertPolicy tlsCertPolicy) {
+      this(uri, username, password, tlsCertPolicy, "");
+    }
+
+    public IceServer(String uri, String username, String password, TlsCertPolicy tlsCertPolicy,
+        String tlsHostName) {
       this.uri = uri;
       this.username = username;
       this.password = password;
       this.tlsCertPolicy = tlsCertPolicy;
+      this.tlsHostName = tlsHostName;
     }
 
     public String toString() {
-      return uri + " [" + username + ":" + password + "] [" + tlsCertPolicy + "]";
+      return uri + " [" + username + ":" + password + "] [" + tlsCertPolicy + "] [" + tlsHostName
+          + "]";
     }
   }
 
