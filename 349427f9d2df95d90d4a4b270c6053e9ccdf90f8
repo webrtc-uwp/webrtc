@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "92a7661d_3c0c8095",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ARDAppClient.m",
+        "patchSetId": 2
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-07T12:38:01Z",
+      "side": 1,
+      "message": "Are these properties used anywhere or can we remove them?",
+      "range": {
+        "startLine": 129,
+        "startChar": 0,
+        "endLine": 131,
+        "endChar": 59
+      },
+      "revId": "349427f9d2df95d90d4a4b270c6053e9ccdf90f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ca018488_7bf5b8fc",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ARDAppClient.m",
+        "patchSetId": 2
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-07T12:38:01Z",
+      "side": 1,
+      "message": "I would prefer to remove these ivars and use settings directly if possible.",
+      "range": {
+        "startLine": 222,
+        "startChar": 0,
+        "endLine": 226,
+        "endChar": 95
+      },
+      "revId": "349427f9d2df95d90d4a4b270c6053e9ccdf90f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f96f1ee_f466f5ee",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ARDSettingsModel.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-07T12:38:01Z",
+      "side": 1,
+      "message": "This is a more dynamic interface than the existing settings, i.e. we use strings here instead of named methods for each setting. We could do like this instead:\n(BOOL)currentAudioOnlySettingFromStore;\n(void)storeAudioOnlySetting:(BOOL)audioOnly;\nand similar for the other call options. Is there any reason for using strings here that I have missed? Otherwise it would be nice to be consistent and I think it would simplify for users of this class.",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 105,
+        "endChar": 68
+      },
+      "revId": "349427f9d2df95d90d4a4b270c6053e9ccdf90f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51a86dd1_06d229de",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ios/ARDSettingsViewController.m",
+        "patchSetId": 2
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-07T12:38:01Z",
+      "side": 1,
+      "message": "Maybe we should call this \"Audio settings\" instead.",
+      "range": {
+        "startLine": 144,
+        "startChar": 15,
+        "endLine": 144,
+        "endChar": 28
+      },
+      "revId": "349427f9d2df95d90d4a4b270c6053e9ccdf90f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
