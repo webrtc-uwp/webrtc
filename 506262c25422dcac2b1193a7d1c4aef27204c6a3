@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5fe758a8_851140a1",
+        "filename": "webrtc/test/frame_generator.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1144186
+      },
+      "writtenOn": "2017-06-07T07:12:40Z",
+      "side": 1,
+      "message": "This and below memset relies on the I420Buffer allocating the planes with no \nextra padding. It would be nice to either: add a comment on I420Buffer::Create promising that, or compute the sizes as height * stride, or use libyuv::SetPlane.",
+      "range": {
+        "startLine": 55,
+        "startChar": 54,
+        "endLine": 55,
+        "endChar": 60
+      },
+      "revId": "506262c25422dcac2b1193a7d1c4aef27204c6a3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0719065_62a041a3",
+        "filename": "webrtc/test/frame_generator.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1144186
+      },
+      "writtenOn": "2017-06-07T07:12:40Z",
+      "side": 1,
+      "message": "Unrelated to this cl, but would it be possible to replace KeepRefUntilDone by an unnamed lambda\ncapturing i420_buffer? Would be nice to delete base/callback.h, which has very few users of which this is one.",
+      "range": {
+        "startLine": 266,
+        "startChar": 36,
+        "endLine": 266,
+        "endChar": 52
+      },
+      "revId": "506262c25422dcac2b1193a7d1c4aef27204c6a3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f2366901_a4d0985f",
+        "filename": "webrtc/test/frame_utils.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1144186
+      },
+      "writtenOn": "2017-06-07T07:12:40Z",
+      "side": 1,
+      "message": "nit: Prefer consistent line breaks and indent of all three EqualPlane calls.",
+      "range": {
+        "startLine": 64,
+        "startChar": 9,
+        "endLine": 64,
+        "endChar": 19
+      },
+      "revId": "506262c25422dcac2b1193a7d1c4aef27204c6a3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
