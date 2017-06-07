@@ -324,6 +324,29 @@
     },
     {
       "key": {
+        "uuid": "ab37d769_717c79f7",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-07T11:11:15Z",
+      "side": 1,
+      "message": "We have to support API level 16 in WebRTC. Can you make sure the necessary safe guards are in place?",
+      "range": {
+        "startLine": 27,
+        "startChar": 1,
+        "endLine": 27,
+        "endChar": 10
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "686d75dc_5764bd5a",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
         "patchSetId": 6
@@ -577,6 +600,30 @@
     },
     {
       "key": {
+        "uuid": "694e72c4_e6789afe",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-07T11:11:15Z",
+      "side": 1,
+      "message": "I would prefer this be called init to align with the C++ API. https://cs.chromium.org/chromium/src/third_party/webrtc/api/video_codecs/video_encoder.h?q\u003dwebrtc::VideoEncoder+package:%5Echromium$\u0026l\u003d117",
+      "parentUuid": "658100d9_d053995b",
+      "range": {
+        "startLine": 109,
+        "startChar": 64,
+        "endLine": 109,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "29afe333_0000903c",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
         "patchSetId": 6
@@ -617,6 +664,24 @@
     },
     {
       "key": {
+        "uuid": "fdbedd05_d5005f8d",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-07T11:11:15Z",
+      "side": 1,
+      "message": "I would prefer this be called release to align with the C++ API.",
+      "parentUuid": "061b84af_e309258b",
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "15c8d31d_87b06c63",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
         "patchSetId": 6
@@ -633,6 +698,29 @@
         "startChar": 13,
         "endLine": 171,
         "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d4b9695_9628bfd8",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-07T11:11:15Z",
+      "side": 1,
+      "message": "Support for texture frames has to be added before this can be used by WebRTC.",
+      "range": {
+        "startLine": 183,
+        "startChar": 56,
+        "endLine": 183,
+        "endChar": 62
       },
       "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
@@ -1225,6 +1313,29 @@
         "startChar": 22,
         "endLine": 16,
         "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a95e0a4c_c5a7ad86",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/RateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-07T11:11:15Z",
+      "side": 1,
+      "message": "nit: I would prefer BitrateAdjuster",
+      "range": {
+        "startLine": 14,
+        "startChar": 10,
+        "endLine": 14,
+        "endChar": 22
       },
       "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
