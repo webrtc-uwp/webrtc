@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9517d193_07a7dfbc",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ARDAppClient.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-07T15:41:17Z",
+      "side": 1,
+      "message": "Maybe we should update this comment now. I don\u0027t think we have to list every setting in |settings| since it\u0027s clear from the available methods in |settings| what it provides.",
+      "range": {
+        "startLine": 72,
+        "startChar": 0,
+        "endLine": 78,
+        "endChar": 33
+      },
+      "revId": "0638a969190f122bac960745b4dd85780e86ce05",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}

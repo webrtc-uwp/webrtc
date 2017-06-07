@@ -143,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "69c7357a_f44217f8",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ARDSettingsModel.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-07T15:41:17Z",
+      "side": 1,
+      "message": "It\u0027s unfortunate that we need so much repetitive code for individual setters and getters, but I think it\u0027s clearer this way.",
+      "parentUuid": "ae4af1e5_9b5b9732",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 105,
+        "endChar": 68
+      },
+      "revId": "349427f9d2df95d90d4a4b270c6053e9ccdf90f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "51a86dd1_06d229de",
         "filename": "webrtc/examples/objc/AppRTCMobile/ios/ARDSettingsViewController.m",
         "patchSetId": 2
