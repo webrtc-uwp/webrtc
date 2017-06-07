@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "1f023c3f_5f8e93a6",
+        "filename": "webrtc/base/ssladapter.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-06-07T20:55:58Z",
+      "side": 1,
+      "message": "Actually, thinking about this more, why does StartSSL need the IP at all? Why can\u0027t we pass the SNI hostname directly to StartSSL in all cases?",
+      "parentUuid": "025bc669_e8960172",
+      "revId": "2370fd59e57583a61b8654c56dc29237eb8c6609",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "91c2775b_7697644c",
         "filename": "webrtc/p2p/base/basicpacketsocketfactory.cc",
         "patchSetId": 2
