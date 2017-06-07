@@ -233,8 +233,21 @@ static RTCErrorType ParseIceServerUrl(
         // or credential are ommitted; this is the native equivalent.
         return RTCErrorType::INVALID_PARAMETER;
       }
+      const std::string& hostname = server.tls_sni_host_name.empty() ?
+          address : server.tls_sni_host_name;
+      rtc::SocketAddress socket_address(hostname, port);
+      if (!server.tls_sni_host_name.empty()) {
+        rtc::IPAddress ip;
+        if (!IPFromString(address, &ip)) {
+          // When tls_sni_host_name is set, the server address must be a
+          // resolved ip address.
+          LOG(LS_ERROR) << "Server address is not a valid IP.";
+          return RTCErrorType::INVALID_PARAMETER;
+        }
+        socket_address.SetResolvedIP(ip);
+      }
       cricket::RelayServerConfig config = cricket::RelayServerConfig(
-          address, port, username, server.password, turn_transport_type);
+          socket_address, username, server.password, turn_transport_type);
       if (server.tls_cert_policy ==
           PeerConnectionInterface::kTlsCertPolicyInsecureNoCheck) {
         config.tls_cert_policy =

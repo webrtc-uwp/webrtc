@@ -1683,6 +1683,9 @@ static void JavaIceServersToJsepIceServers(
                    "Lorg/webrtc/PeerConnection$TlsCertPolicy;");
     jobject j_ice_server_tls_cert_policy =
         GetObjectField(jni, j_ice_server, j_ice_server_tls_cert_policy_id);
+    jfieldID j_ice_server_tls_sni_host_name_id =
+        GetFieldID(jni, j_ice_server_class, "tlsSniHostName",
+                   "Ljava/lang/String;");
     jstring uri = reinterpret_cast<jstring>(
         GetObjectField(jni, j_ice_server, j_ice_server_uri_id));
     jstring username = reinterpret_cast<jstring>(
@@ -1691,11 +1694,14 @@ static void JavaIceServersToJsepIceServers(
         GetObjectField(jni, j_ice_server, j_ice_server_password_id));
     PeerConnectionInterface::TlsCertPolicy tls_cert_policy =
         JavaTlsCertPolicyTypeToNativeType(jni, j_ice_server_tls_cert_policy);
+    jstring tls_sni_host_name = reinterpret_cast<jstring>(
+        GetObjectField(jni, j_ice_server, j_ice_server_tls_sni_host_name_id));
     PeerConnectionInterface::IceServer server;
     server.uri = JavaToStdString(jni, uri);
     server.username = JavaToStdString(jni, username);
     server.password = JavaToStdString(jni, password);
     server.tls_cert_policy = tls_cert_policy;
+    server.tls_sni_host_name = JavaToStdString(jni, tls_sni_host_name);
     ice_servers->push_back(server);
   }
 }
