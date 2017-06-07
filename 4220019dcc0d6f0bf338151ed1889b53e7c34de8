@@ -1,0 +1,1303 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "247fdc99_1d2f5ae4",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Can you comment as to why these changes were needed?",
+      "range": {
+        "startLine": 66,
+        "startChar": 51,
+        "endLine": 66,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b3bacf3_b2cdeb62",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/DynamicBitrateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "This could use a comment.",
+      "range": {
+        "startLine": 18,
+        "startChar": 59,
+        "endLine": 18,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6758bf37_094fd59c",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/DynamicBitrateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "The rest of the code calls these \"adjustments\".  I think we should call these \"ADJUSTMENT\"s or call the other things \"corrections\" to stay consistent.  I\u0027d prefer the word \"adjustment\".",
+      "range": {
+        "startLine": 22,
+        "startChar": 57,
+        "endLine": 22,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a1f0033_611254e3",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/DynamicBitrateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "This is never used.",
+      "range": {
+        "startLine": 23,
+        "startChar": 40,
+        "endLine": 23,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e92d813_83513d0f",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/DynamicBitrateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be called targetFps?  Better yet, use BaseRateAdjuster as I suggest later.",
+      "range": {
+        "startLine": 26,
+        "startChar": 22,
+        "endLine": 26,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f3226ce_abefe68c",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/DynamicBitrateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "actial \u003d\u003e actual",
+      "range": {
+        "startLine": 43,
+        "startChar": 73,
+        "endLine": 43,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0980e157_9da1130c",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/DynamicBitrateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "With my other suggested comments, this would be:\n\nthis.targetBits +\u003d floor(targetBps / 1000.0 * actualTimeSpanMs);\nthis.actualBits +\u003d actualBits;\nthis.timeSinceLastAdjustmentMs +\u003d actualTimeSpanMs;\nint deviationBits \u003d (actualBits - targetBits);\nint deviationBytes \u003d floor(deviationBits / 8);",
+      "range": {
+        "startLine": 46,
+        "startChar": 46,
+        "endLine": 46,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "342c18b8_b3901d79",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/DynamicBitrateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Since this min/max thing exists in two places, it seems like a nice place for a helper method.  Then this can be:\n\ndeviationBytes \u003d capAbsValue(deviationBytes, BITRATE_CORRECTION_SEC * deviationThresholdBytes)",
+      "range": {
+        "startLine": 52,
+        "startChar": 61,
+        "endLine": 52,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e67a8c76_f95b3443",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/DynamicBitrateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "This could use an early return:\n\nif (timeSinceLastAdjustmentMs \u003c\u003d 1000 * BITRATE_CORRECTION_SEC) {\n  return false;\n}\n...",
+      "range": {
+        "startLine": 56,
+        "startChar": 68,
+        "endLine": 56,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c0378d12_97036d02",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/DynamicBitrateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "It seems like this 0.5 value should be a named constant up above with a clear comment.",
+      "range": {
+        "startLine": 60,
+        "startChar": 90,
+        "endLine": 60,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "08c65e61_becb9d49",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/DynamicBitrateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "This could be replaced with bitrateAdjustmentScaleExp \u003d capAbsValue(bitrateAdjustmentScaleExp, BITRATE_CORRECTION_STEPS).  And then that line could be moved up into each block above and this block could be removed, and thus simplified.",
+      "range": {
+        "startLine": 76,
+        "startChar": 7,
+        "endLine": 76,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59de377c_6a43c29a",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/DynamicBitrateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "We do we store this when we can simply recompute it on demand from targetBitrateBps?  Less state is easier to maintain.",
+      "range": {
+        "startLine": 85,
+        "startChar": 53,
+        "endLine": 85,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a9523c3_e0791f9f",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/DynamicBitrateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "If we calculate deviationBytes on demand (like I have in my above code suggestion), then we don\u0027t need to store it or do this complexity.",
+      "range": {
+        "startLine": 89,
+        "startChar": 5,
+        "endLine": 89,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e624e3d_e44e1697",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/FramerateBitrateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "If you look at my comment about making this whole interface one method, this implementation would just be:\n\npublic int getAdjustedBps() {\n  if (targetFps \u003d\u003d 0) {\n    return targetBitrateBps;\n  }\n  return targetBitrateBps * 30 / fps;\n}",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 36
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "686d75dc_5764bd5a",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Why does this have such a weird name?",
+      "range": {
+        "startLine": 34,
+        "startChar": 57,
+        "endLine": 34,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06b779e8_272978da",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be called codecName?",
+      "range": {
+        "startLine": 58,
+        "startChar": 28,
+        "endLine": 58,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba63351f_9801106e",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Please split the comment so that each variable has a different comment.\n\nAnd this one should be called minKeyFrameRequestIntervalMs.",
+      "range": {
+        "startLine": 64,
+        "startChar": 38,
+        "endLine": 64,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7a6b4cd_05b7987c",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "The comment of \"how long it\u0027s been since the last forced key frame\" doesn\u0027t match the logic or the name.  The logic is \"timestamp of frame that we were asked to encode at the time we decided to ask the codec to encode a key frame.\"  The name should be, perhaps, lastKeyFrameRequestPresentationTimestampMs.",
+      "range": {
+        "startLine": 65,
+        "startChar": 30,
+        "endLine": 65,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84f23081_e266c8f3",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "This could use a comment.",
+      "range": {
+        "startLine": 69,
+        "startChar": 46,
+        "endLine": 69,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "efb16b28_d63e5ab1",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "This should be called outputThreadRunning;",
+      "range": {
+        "startLine": 73,
+        "startChar": 43,
+        "endLine": 73,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b950fdbc_ecc6c6bf",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "This doesn\u0027t need to be a class member, I don\u0027t think.",
+      "range": {
+        "startLine": 81,
+        "startChar": 29,
+        "endLine": 81,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14c4cc64_64c40fbb",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "This could use a comment.",
+      "range": {
+        "startLine": 83,
+        "startChar": 41,
+        "endLine": 83,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3bfd7f20_f817d203",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "I think we should comment why we need both of these.  Why is one not sufficient?",
+      "range": {
+        "startLine": 97,
+        "startChar": 52,
+        "endLine": 97,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7c310c0_0d7a7d13",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "This could probably be in a separate method, like startOutputThread and can stay null until initEncode is called.",
+      "range": {
+        "startLine": 100,
+        "startChar": 38,
+        "endLine": 100,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "658100d9_d053995b",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "If this thing starts threads, it seems like it should be called start() not init.",
+      "range": {
+        "startLine": 109,
+        "startChar": 64,
+        "endLine": 109,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29afe333_0000903c",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Why does this have such a strange name?  And why are all the of the keys a named constant except for this one?",
+      "range": {
+        "startLine": 129,
+        "startChar": 67,
+        "endLine": 129,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "061b84af_e309258b",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "And this should be called stop, not release.",
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "15c8d31d_87b06c63",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we return a bool to let the caller know the frame was dropped?",
+      "range": {
+        "startLine": 171,
+        "startChar": 13,
+        "endLine": 171,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1a258b5_8e6ad98b",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Why is this way up here and not down where it is actually used?",
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "70996c84_0ca15738",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "This seems like it should be a separate method:  fillBuffer(buffer, colorFormat, i420)",
+      "range": {
+        "startLine": 198,
+        "startChar": 14,
+        "endLine": 198,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66d0cf01_dcf59faf",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "This SUPPORTED_COLOR_FORMATS thing seems kind of silly.  We could do something like this instead for fillBuffer:\n\n\n    switch (colorFormat) {\n      case MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar:\n        if (buffer) {\n          fillBufferNv12(buffer, i420.getDataY(), i420.getDataU(), i420.getDataV());\n        }\n        return true;\n      case MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar:\n      case MediaCodecInfo.CodecCapabilities.COLOR_QCOM_FormatYUV420SemiPlanar:\n      case COLOR_QCOM_FORMATYUV420PackedSemiPlanar32m:\n        if (buffer) {\n          fillBufferI420(buffer, i420.getDataY(), i420.getDataU(), i420.getDataV());\n        }\n        return true;\n      default:\n        return false;\n    }\n\nAnd then also have \n\nboolean supportsColorFormat(colorFormat) {\n  return fillBuffer(null, colorFormat, null);\n}\n\n\nAnd then use supportsColorFormat instead of SUPPORTED_COLOR_FORMATS.contains.   It\u0027s faster, \n simpler, and can\u0027t get out of sync.",
+      "range": {
+        "startLine": 201,
+        "startChar": 9,
+        "endLine": 201,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6de1a47c_255624dc",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "This whole setKeyFrame code seems way too complicated.  And it doesn\u0027t help that this method has a vague name.  Perhaps it should be maybeRequestKeyFrame?  But I think it would be more clear to say something like?\n\nif (requestedKeyFrame) {\n  Logging.d(TAG, \"Key frame requested\");\n  setCodecKeyFrameRequest(); \n  lastKeyFrameMs \u003d presentationTimestampMs;\n} else if (forcedKeyFrame(presentationTimestampUs)) {\n  Logging.d(TAG, \"Key frame forced\");\n  setCodecKeyFrameRequest(); \n  lastKeyFrameMs \u003d presentationTimestampMs;\n}",
+      "range": {
+        "startLine": 215,
+        "startChar": 0,
+        "endLine": 215,
+        "endChar": 60
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26aed149_8fd7a201",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Why don\u0027t we allow higher frame rates.  I would like to try 60fps!",
+      "range": {
+        "startLine": 234,
+        "startChar": 5,
+        "endLine": 234,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2c5c87a_b9dcbf6b",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Why do we add this 500?  To get ceil?",
+      "range": {
+        "startLine": 251,
+        "startChar": 74,
+        "endLine": 251,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dfd1edc9_6d70507b",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "boolean x \u003d false;\nif (y) {\n  x \u003d true;\n}\n\n\nCan be simplified to:\n\nboolean x \u003d y;",
+      "range": {
+        "startLine": 259,
+        "startChar": 5,
+        "endLine": 259,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "09ee3b9f_e74151d4",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Could use an early return:\n\nif (!requestedKeyFrame \u0026\u0026 !forcedKeyFrame) {\n  return;\n}\n...",
+      "range": {
+        "startLine": 260,
+        "startChar": 46,
+        "endLine": 260,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7581dbe_494687e2",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Or better yet:\n\nif (requestedKeyFrame) {\n  Logging.d(TAG, \"Key frame requested\");\n  setCodecKeyFrameRequest(); \n  lastKeyFrameMs \u003d presentationTimestampMs;\n  return;\n}\nif (forcedKeyFrame) {\n  Logging.d(TAG, \"Key frame forced\");\n  setCodecKeyFrameRequest(); \n  lastKeyFrameMs \u003d presentationTimestampMs;\n  return;\n}",
+      "range": {
+        "startLine": 269,
+        "startChar": 7,
+        "endLine": 269,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "adb0aec7_1f9cc227",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "This should go in it\u0027s own method, perhaps setCodecKeyFrameRequest",
+      "range": {
+        "startLine": 277,
+        "startChar": 7,
+        "endLine": 277,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ffebe5bd_cfe5f2fd",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "It seems like the loop should go into \"run\" and let there be a method that does one step in the loop.",
+      "range": {
+        "startLine": 283,
+        "startChar": 21,
+        "endLine": 283,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "264540db_32e0b5b2",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "This could use an early continue;\n\nif (index \u003c 0) {\n  continue;\n}\n...",
+      "range": {
+        "startLine": 287,
+        "startChar": 25,
+        "endLine": 287,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94267a9d_b4bc25c0",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "It would be more clear if we called this thing codecOutputBuffer.  \"buffer\" is too vague around here.",
+      "range": {
+        "startLine": 289,
+        "startChar": 62,
+        "endLine": 289,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "68327496_1363f3ed",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Why do we call it a \"isConfigFrame\" when it\u0027s not a frame at all?  Shouldn\u0027t we call this isConfigBuffer?  In fact, why do we even name it instead of just putting it inline?",
+      "range": {
+        "startLine": 293,
+        "startChar": 30,
+        "endLine": 293,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e24a6f38_ddb949b0",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "This could use an early continue:\n\nif (isConfigFrame) {\n  Logging.d(\n     TAG, \"Config frame generated. Offset: \" + info.offset + \". Size: \" + info.size);\n  configBuffer \u003d ByteBuffer.allocateDirect(info.size);\n  configBuffer.put(buffer);  \n  codec.releaseOutputBuffer(index, false);\n  continue;\n}\n...",
+      "range": {
+        "startLine": 297,
+        "startChar": 37,
+        "endLine": 297,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9953569c_c149ce33",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "With my other suggested comments, this would be:\n\nrateAdjuster.reportActual(info.size * 8, 1000.0 / targetFps);\n\nAlthough I think it would be more accurate to keep the delta from the last frame to this one and use that rather than \"1000.0 / targetFps\".",
+      "range": {
+        "startLine": 301,
+        "startChar": 13,
+        "endLine": 301,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6fcd9177_77836013",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Why do we do a mime type check instead of just checking if configBuffer is null or not?",
+      "range": {
+        "startLine": 305,
+        "startChar": 64,
+        "endLine": 305,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "19bbf708_5209a9c2",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Isn\u0027t it prepending, not appending?",
+      "range": {
+        "startLine": 308,
+        "startChar": 96,
+        "endLine": 308,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94225b91_49f46970",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Again, isn\u0027t it prepending, not appending?",
+      "range": {
+        "startLine": 309,
+        "startChar": 74,
+        "endLine": 309,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61785cb1_12437513",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "It seems like a helper method of frameBuffer \u003d copyBuffers(configBuffer, codecOutputBuffer), where copyBuffer is defined as copyBuffers(prefixBuffer, suffixBuffer) and prefixBuffer can be null.",
+      "range": {
+        "startLine": 312,
+        "startChar": 44,
+        "endLine": 312,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8cccb0ff_8889bc68",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "This is weird.  We keep an extra queue on the side of the entire video frame just to remember what the rotation was?  This could definitely use a comment explaining this, and it would make sense to have a simpler thing to put into the queue.  In fact, you could put a pre-filled EncodedImage.builder() that only lacks a frameBuffer.  Then you can pull it out of the queue, call setBuffer(frameBuffer).createEncodedImage().",
+      "range": {
+        "startLine": 322,
+        "startChar": 13,
+        "endLine": 322,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2474ef58_fa6cd21c",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Can we move this code into a synchronous dequeueEncodedImage and then run that in the loop while calling the callback?  Then we can separate the dequeue logic from the thread running.",
+      "range": {
+        "startLine": 341,
+        "startChar": 68,
+        "endLine": 341,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac3212c3_048fefd7",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Seems like this should be in a separate method called releaseCodec.",
+      "range": {
+        "startLine": 363,
+        "startChar": 41,
+        "endLine": 363,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f39902f_5e4dafa6",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "It seems like this should be called setCodecBitrate(bps) and take a parameter.  Then just pass rateAdjuster.getAdjustedBps() whenever calling setEncoderBitrate.",
+      "range": {
+        "startLine": 366,
+        "startChar": 32,
+        "endLine": 366,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2d160b8_cbdc43f1",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/NoOpRateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "You could probably make this into BaseRateAdjuster and then inherit from it to get common logic of storing the target bitrate and gps.",
+      "range": {
+        "startLine": 14,
+        "startChar": 48,
+        "endLine": 14,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a5bd55c_441af366",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/NoOpRateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "These ought to be targetBps and targetFps.",
+      "range": {
+        "startLine": 16,
+        "startChar": 22,
+        "endLine": 16,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41b66b17_ab80b423",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/RateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "You mean if getBitrateBps() changed?  Why not just let the caller check to see if it changed?  It\u0027s less burden on the implementation.",
+      "range": {
+        "startLine": 17,
+        "startChar": 17,
+        "endLine": 17,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0cba973_5f656ffe",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/RateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "It seems like the methods should be called:\n\nsetTargets(targetBps, targetFps);\nreportActual(actualBits, actualTimeSpanMs);\ngetAdjustedBps();",
+      "range": {
+        "startLine": 27,
+        "startChar": 22,
+        "endLine": 27,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5436fd5b_530d62f2",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/RateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-07T08:02:00Z",
+      "side": 1,
+      "message": "Why is this needed?  It\u0027s never adjusted.",
+      "range": {
+        "startLine": 30,
+        "startChar": 21,
+        "endLine": 30,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
