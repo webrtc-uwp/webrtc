@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0121f0dc_36a057b9",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ARDAppClient.m",
+        "patchSetId": 2
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-07T13:25:28Z",
+      "side": 1,
+      "message": "Yes, looks like they can be removed now.",
+      "parentUuid": "92a7661d_3c0c8095",
+      "range": {
+        "startLine": 129,
+        "startChar": 0,
+        "endLine": 131,
+        "endChar": 59
+      },
+      "revId": "349427f9d2df95d90d4a4b270c6053e9ccdf90f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ca018488_7bf5b8fc",
         "filename": "webrtc/examples/objc/AppRTCMobile/ARDAppClient.m",
         "patchSetId": 2
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "676860db_786c4e67",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ARDAppClient.m",
+        "patchSetId": 2
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-07T13:25:28Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ca018488_7bf5b8fc",
+      "range": {
+        "startLine": 222,
+        "startChar": 0,
+        "endLine": 226,
+        "endChar": 95
+      },
+      "revId": "349427f9d2df95d90d4a4b270c6053e9ccdf90f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5f96f1ee_f466f5ee",
         "filename": "webrtc/examples/objc/AppRTCMobile/ARDSettingsModel.h",
         "patchSetId": 2
@@ -59,6 +107,30 @@
       "writtenOn": "2017-06-07T12:38:01Z",
       "side": 1,
       "message": "This is a more dynamic interface than the existing settings, i.e. we use strings here instead of named methods for each setting. We could do like this instead:\n(BOOL)currentAudioOnlySettingFromStore;\n(void)storeAudioOnlySetting:(BOOL)audioOnly;\nand similar for the other call options. Is there any reason for using strings here that I have missed? Otherwise it would be nice to be consistent and I think it would simplify for users of this class.",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 105,
+        "endChar": 68
+      },
+      "revId": "349427f9d2df95d90d4a4b270c6053e9ccdf90f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae4af1e5_9b5b9732",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ARDSettingsModel.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-07T13:25:28Z",
+      "side": 1,
+      "message": "Analogously to the video resolution and codec settings, the setting has a list of valid \"values\" except for these settings each value also has an associated boolean setting. This way made it trivial to add more boolean settings in the future, and also to enumerate them in the settings UI.\n\nBut I agree that it is a tradeoff and may be more clear to have individual setters and getters for each specific setting here. What do you think?",
+      "parentUuid": "5f96f1ee_f466f5ee",
       "range": {
         "startLine": 88,
         "startChar": 0,
