@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64834495_ac732dd3",
+        "filename": "webrtc/media/engine/webrtcvideoengine2.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-06-07T21:22:05Z",
+      "side": 1,
+      "message": "nit: The name \"factory_encoder\" seems somewhat ambiguous, since this class is a factory in itself. I\u0027d call it something like \"external_encoder\".",
+      "range": {
+        "startLine": 104,
+        "startChar": 26,
+        "endLine": 104,
+        "endChar": 41
+      },
+      "revId": "caf0840dd1be1d5eedc57c02d3c1db4bb9f58adc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f781e4c_79274a09",
+        "filename": "webrtc/media/engine/webrtcvideoengine2.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-06-07T21:22:05Z",
+      "side": 1,
+      "message": "nit: Would be nice to have a comment explaining \"we need to delete the software fallback object ourselves, but call factory_-\u003eDestroyVideoEncoder to destroy the inner encoder that it\u0027s wrapping.",
+      "revId": "caf0840dd1be1d5eedc57c02d3c1db4bb9f58adc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b7b0051_8d22e795",
+        "filename": "webrtc/media/engine/webrtcvideoengine2.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-06-07T21:22:05Z",
+      "side": 1,
+      "message": "Is this condition ever expected to evaluate to false? If not, could do:\n\n} else {\n  RTC_NOTREACHED();\n}",
+      "range": {
+        "startLine": 125,
+        "startChar": 0,
+        "endLine": 125,
+        "endChar": 53
+      },
+      "revId": "caf0840dd1be1d5eedc57c02d3c1db4bb9f58adc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7d193d5_ea37e7f4",
+        "filename": "webrtc/media/engine/webrtcvideoengine2.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-06-07T21:22:05Z",
+      "side": 1,
+      "message": "Can you comment that this is a map from fallback encoder to external encoder?",
+      "range": {
+        "startLine": 133,
+        "startChar": 2,
+        "endLine": 133,
+        "endChar": 74
+      },
+      "revId": "caf0840dd1be1d5eedc57c02d3c1db4bb9f58adc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
