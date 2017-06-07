@@ -16,6 +16,7 @@
 
 namespace webrtc {
 
+class AudioProcessing;
 class VoiceEngine;
 
 // WORK IN PROGRESS
@@ -38,9 +39,11 @@ class AudioState : public rtc::RefCountInterface {
     rtc::scoped_refptr<AudioMixer> audio_mixer;
   };
 
+  virtual AudioProcessing* audio_processing() = 0;
+
   // TODO(solenberg): Replace scoped_refptr with shared_ptr once we can use it.
-  static rtc::scoped_refptr<AudioState> Create(
-      const AudioState::Config& config);
+  static rtc::scoped_refptr<AudioState> Create(const AudioState::Config& config,
+                                               AudioProcessing* apm);
 
   virtual ~AudioState() {}
 };

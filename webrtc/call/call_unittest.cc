@@ -33,15 +33,16 @@ namespace {
 struct CallHelper {
   explicit CallHelper(
       rtc::scoped_refptr<webrtc::AudioDecoderFactory> decoder_factory = nullptr)
-      : voice_engine_(decoder_factory) {
+      : apm_(webrtc::AudioProcessing::Create()),
+        voice_engine_(decoder_factory) {
     webrtc::AudioState::Config audio_state_config;
     audio_state_config.voice_engine = &voice_engine_;
     audio_state_config.audio_mixer = webrtc::AudioMixerImpl::Create();
     EXPECT_CALL(voice_engine_, audio_device_module());
-    EXPECT_CALL(voice_engine_, audio_processing());
     EXPECT_CALL(voice_engine_, audio_transport());
     webrtc::Call::Config config(&event_log_);
-    config.audio_state = webrtc::AudioState::Create(audio_state_config);
+    config.audio_state =
+        webrtc::AudioState::Create(audio_state_config, apm_.get());
     call_.reset(webrtc::Call::Create(config));
   }
 
@@ -49,6 +50,7 @@ struct CallHelper {
   webrtc::test::MockVoiceEngine* voice_engine() { return &voice_engine_; }
 
  private:
+  std::unique_ptr<webrtc::AudioProcessing> apm_;
   testing::NiceMock<webrtc::test::MockVoiceEngine> voice_engine_;
   webrtc::RtcEventLogNullImpl event_log_;
   std::unique_ptr<webrtc::Call> call_;
@@ -453,11 +455,12 @@ TEST(CallTest, RecreatingAudioStreamWithSameSsrcReusesRtpState) {
   };
   ScopedVoiceEngine voice_engine;
 
-  voice_engine.base->Init(&mock_adm);
+  std::unique_ptr<AudioProcessing> apm(AudioProcessing::Create());
+  voice_engine.base->Init(&mock_adm, apm.get());
   AudioState::Config audio_state_config;
   audio_state_config.voice_engine = voice_engine.voe;
   audio_state_config.audio_mixer = mock_mixer;
-  auto audio_state = AudioState::Create(audio_state_config);
+  auto audio_state = AudioState::Create(audio_state_config, apm.get());
   RtcEventLogNullImpl event_log;
   Call::Config call_config(&event_log);
   call_config.audio_state = audio_state;

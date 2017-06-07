@@ -25,13 +25,16 @@ namespace internal {
 class AudioState final : public webrtc::AudioState,
                          public webrtc::VoiceEngineObserver {
  public:
-  explicit AudioState(const AudioState::Config& config);
+  explicit AudioState(const AudioState::Config& config, AudioProcessing* apm);
   ~AudioState() override;
 
   VoiceEngine* voice_engine();
 
   rtc::scoped_refptr<AudioMixer> mixer();
   bool typing_noise_detected() const;
+  AudioProcessing* audio_processing() override {
+    return audio_transport_proxy_.audio_processing();
+  }
 
  private:
   // rtc::RefCountInterface implementation.

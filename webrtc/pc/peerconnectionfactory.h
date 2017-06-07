@@ -117,7 +117,8 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
       rtc::scoped_refptr<webrtc::AudioDecoderFactory> audio_decoder_factory,
       cricket::WebRtcVideoEncoderFactory* video_encoder_factory,
       cricket::WebRtcVideoDecoderFactory* video_decoder_factory,
-      rtc::scoped_refptr<AudioMixer> audio_mixer);
+      rtc::scoped_refptr<AudioMixer> audio_mixer,
+      rtc::scoped_refptr<AudioProcessing> audio_processing);
   virtual ~PeerConnectionFactory();
 
  private:
@@ -145,6 +146,7 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
   // External audio mixer. This can be NULL. In that case, internal audio mixer
   // will be created and used.
   rtc::scoped_refptr<AudioMixer> external_audio_mixer_;
+  rtc::scoped_refptr<AudioProcessing> external_apm_;
 };
 
 }  // namespace webrtc

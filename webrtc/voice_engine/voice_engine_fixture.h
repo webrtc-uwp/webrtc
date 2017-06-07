@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include "webrtc/modules/audio_device/include/fake_audio_device.h"
 #include "webrtc/test/gtest.h"
 #include "webrtc/test/mock_transport.h"
@@ -28,6 +30,7 @@ class VoiceEngineFixture : public ::testing::Test {
   MockVoEObserver observer_;
   FakeAudioDeviceModule adm_;
   MockTransport transport_;
+  std::unique_ptr<AudioProcessing> apm_;
 };
 
 }  // namespace webrtc
