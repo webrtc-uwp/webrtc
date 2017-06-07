@@ -38,4 +38,13 @@ RTC_EXPORT
 
 @end
 
+/** Default RTCVideoViewShading that will be used in RTCNSGLVideoView and
+ *  RTCEAGLVideoView if no external shader is specified. This shader will render
+ *  the video in a rectangle without any color or geometric transformations.
+ */
+RTC_EXPORT
+@interface RTCDefaultShader : NSObject<RTCVideoViewShading>
+
+@end
+
 NS_ASSUME_NONNULL_END

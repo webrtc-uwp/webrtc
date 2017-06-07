@@ -12,7 +12,6 @@
 
 #import <GLKit/GLKit.h>
 
-#import "RTCDefaultShader.h"
 #import "RTCI420TextureCache.h"
 #import "RTCNV12TextureCache.h"
 #import "WebRTC/RTCLogging.h"

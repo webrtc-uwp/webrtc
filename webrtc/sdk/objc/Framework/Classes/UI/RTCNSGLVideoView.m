@@ -18,7 +18,6 @@
 #import <CoreVideo/CVDisplayLink.h>
 #import <OpenGL/gl3.h>
 
-#import "RTCDefaultShader.h"
 #import "RTCI420TextureCache.h"
 #import "WebRTC/RTCLogging.h"
 #import "WebRTC/RTCVideoFrame.h"

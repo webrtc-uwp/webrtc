@@ -105,7 +105,6 @@ if (is_ios || is_mac) {
       sources = [
         "objc/Framework/Classes/Video/RTCAVFoundationVideoCapturerInternal.h",
         "objc/Framework/Classes/Video/RTCAVFoundationVideoCapturerInternal.mm",
-        "objc/Framework/Classes/Video/RTCDefaultShader.h",
         "objc/Framework/Classes/Video/RTCDefaultShader.mm",
         "objc/Framework/Classes/Video/RTCI420TextureCache.h",
         "objc/Framework/Classes/Video/RTCI420TextureCache.mm",

@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#import "RTCDefaultShader.h"
+#import "WebRTC/RTCVideoViewShading.h"
 
 #if TARGET_OS_IPHONE
 #import <OpenGLES/ES3/gl.h>
