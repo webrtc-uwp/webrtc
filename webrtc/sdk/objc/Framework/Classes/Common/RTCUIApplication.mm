@@ -14,9 +14,37 @@
 
 #import <UIKit/UIKit.h>
 
-bool RTCIsUIApplicationActive() {
-  UIApplicationState state = [UIApplication sharedApplication].applicationState;
-  return state == UIApplicationStateActive;
+RTCUIApplicationStatusObserver::RTCUIApplicationStatusObserver() {
+  NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+  _activeObserver = (__bridge void *)[center
+      addObserverForName:UIApplicationDidBecomeActiveNotification
+                  object:nil
+                   queue:[NSOperationQueue mainQueue]
+              usingBlock:^(NSNotification *note) {
+                _state = [UIApplication sharedApplication].applicationState;
+              }];
+
+  _backgroundObserver = (__bridge void *)[center
+      addObserverForName:UIApplicationDidEnterBackgroundNotification
+                  object:nil
+                   queue:[NSOperationQueue mainQueue]
+              usingBlock:^(NSNotification *note) {
+                _state = [UIApplication sharedApplication].applicationState;
+              }];
+
+  dispatch_async(dispatch_get_main_queue(), ^{
+    _state = [UIApplication sharedApplication].applicationState;
+  });
+}
+
+RTCUIApplicationStatusObserver::~RTCUIApplicationStatusObserver() {
+  NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+  [center removeObserver:(__bridge id)_activeObserver];
+  [center removeObserver:(__bridge id)_backgroundObserver];
+}
+
+bool RTCUIApplicationStatusObserver::IsApplicationActive() {
+  return _state == UIApplicationStateActive;
 }
 
 #endif // WEBRTC_IOS

@@ -14,8 +14,21 @@
 #include "WebRTC/RTCMacros.h"
 
 #if defined(WEBRTC_IOS)
-/** Convenience function to get UIApplicationState from C++. */
-RTC_EXTERN bool RTCIsUIApplicationActive();
+
+/** Convenience class to track UIApplicationState from C++. */
+class RTCUIApplicationStatusObserver {
+ public:
+  RTCUIApplicationStatusObserver();
+  ~RTCUIApplicationStatusObserver();
+
+  bool IsApplicationActive();
+
+ private:
+  // C++ compatible types
+  void *_activeObserver, *_backgroundObserver;
+  long _state;
+};
+
 #endif  // WEBRTC_IOS
 
 #endif  // WEBRTC_SDK_OBJC_FRAMEWORK_CLASSES_UI_RTCUIAPPLICATION_H_
