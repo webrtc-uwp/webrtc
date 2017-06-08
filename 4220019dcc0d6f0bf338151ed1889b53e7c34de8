@@ -707,6 +707,30 @@
     },
     {
       "key": {
+        "uuid": "76659d28_7b221a27",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-08T08:18:07Z",
+      "side": 1,
+      "message": "We do use the old class on older API levels so we just have to make sure this doesn\u0027t crash on older devices.",
+      "parentUuid": "bf0be87e_f675172a",
+      "range": {
+        "startLine": 27,
+        "startChar": 1,
+        "endLine": 27,
+        "endChar": 10
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "686d75dc_5764bd5a",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
         "patchSetId": 6
