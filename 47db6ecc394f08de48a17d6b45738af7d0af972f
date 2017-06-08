@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e722d286_982c1892",
+        "filename": "webrtc/test/ios/test_support.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-08T15:47:51Z",
+      "side": 1,
+      "message": "nit: add // namespace test, and // namespace rtc after brackets",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 1
+      },
+      "revId": "47db6ecc394f08de48a17d6b45738af7d0af972f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "43d04e98_876a6f64",
+        "filename": "webrtc/test/ios/test_support.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-08T15:47:51Z",
+      "side": 1,
+      "message": "It\u0027s WebRTCUnitTestDelegate here. Also, maybe rename to WebRtcUnitTestDelegate so it becomes easier to read.",
+      "range": {
+        "startLine": 21,
+        "startChar": 19,
+        "endLine": 21,
+        "endChar": 41
+      },
+      "revId": "47db6ecc394f08de48a17d6b45738af7d0af972f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a3124b6b_0b4e132a",
+        "filename": "webrtc/test/ios/test_support.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-08T15:47:51Z",
+      "side": 1,
+      "message": "nit: add // namespace rtc and // namespace test comments.",
+      "range": {
+        "startLine": 100,
+        "startChar": 1,
+        "endLine": 100,
+        "endChar": 0
+      },
+      "revId": "47db6ecc394f08de48a17d6b45738af7d0af972f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
