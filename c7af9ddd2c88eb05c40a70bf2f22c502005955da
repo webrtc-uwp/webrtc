@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e9c9f0a2_c5a085e3",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ARDSettingsModel.m",
+        "patchSetId": 4
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-08T08:26:02Z",
+      "side": 1,
+      "message": "That\u0027s true. In a previous revision of the code there was a separate configuration for the default values, but since that logic is now baked into these setters the `hasSetting...` getters are useless for the settings with a NO default (only \"useManualAudioConfig\" defaults to YES). It\u0027s a little weird to only have `hasSettingForUseManualAudioConfig` though.\n\nI think a nicer way to do it might be to use [registerDefaults](https://developer.apple.com/documentation/foundation/nsuserdefaults/1417065-registerdefaults) to register all the default values and not having to do the nil checks anywhere, and perhaps put that call in a `+initialize` method on `ARDSettingsModel`. What do you think?",
+      "parentUuid": "3fde9ae8_beed0e72",
+      "revId": "c7af9ddd2c88eb05c40a70bf2f22c502005955da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "eeba94d6_3041dbfd",
         "filename": "webrtc/examples/objc/AppRTCMobile/ARDSettingsStore.h",
         "patchSetId": 4
@@ -132,6 +150,24 @@
       "writtenOn": "2017-06-08T08:10:16Z",
       "side": 1,
       "message": "We should really update this method to be `setupMockStore`. It was written when only video resolution existed as setting. The code evolved way past it :) But I\u0027ll leave it up to you if you want to do it in this CL or not.",
+      "revId": "c7af9ddd2c88eb05c40a70bf2f22c502005955da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d6b8910d_68c8c655",
+        "filename": "webrtc/examples/objc/AppRTCMobile/tests/ARDSettingsModel_xctest.mm",
+        "patchSetId": 4
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-08T08:26:02Z",
+      "side": 1,
+      "message": "Sounds good :)",
+      "parentUuid": "e2adb62b_8fe6ba6c",
       "revId": "c7af9ddd2c88eb05c40a70bf2f22c502005955da",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
