@@ -22,6 +22,23 @@
       "revId": "0638a969190f122bac960745b4dd85780e86ce05",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "238ebefd_1b95115d",
+        "filename": "webrtc/examples/objc/AppRTCMobile/tests/ARDSettingsModel_xctest.mm",
+        "patchSetId": 3
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1167989
+      },
+      "writtenOn": "2017-06-08T08:10:16Z",
+      "side": 1,
+      "message": "Perhaps it\u0027s time to change this to `setupMockStore` only :)\nThe method was added when only video resolution tests existed but the code evolved way past it.",
+      "revId": "0638a969190f122bac960745b4dd85780e86ce05",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }

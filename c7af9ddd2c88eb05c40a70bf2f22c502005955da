@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3fde9ae8_beed0e72",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ARDSettingsModel.m",
+        "patchSetId": 4
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1167989
+      },
+      "writtenOn": "2017-06-08T08:10:16Z",
+      "side": 1,
+      "message": "Not sure we need to force storing of explicit false values. We can treat non-existing settings as false until first \"write\" happens.",
+      "revId": "c7af9ddd2c88eb05c40a70bf2f22c502005955da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eeba94d6_3041dbfd",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ARDSettingsStore.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1167989
+      },
+      "writtenOn": "2017-06-08T08:10:16Z",
+      "side": 1,
+      "message": "I don\u0027t see reason why this should be part of the interface. The properties default to NO when not present right?",
+      "revId": "c7af9ddd2c88eb05c40a70bf2f22c502005955da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa5b0846_54ce7f91",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ARDSettingsStore.m",
+        "patchSetId": 4
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1167989
+      },
+      "writtenOn": "2017-06-08T08:10:16Z",
+      "side": 1,
+      "message": "I really think we should get rid of this methods. As long as we default to NO for non-existing values it should be irrelevant if the setting is present or not.",
+      "revId": "c7af9ddd2c88eb05c40a70bf2f22c502005955da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ca595be8_06b5a294",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ios/ARDSettingsViewController.m",
+        "patchSetId": 4
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1167989
+      },
+      "writtenOn": "2017-06-08T08:10:16Z",
+      "side": 1,
+      "message": "Nit: update the pragma Call options -\u003e Audio options",
+      "revId": "c7af9ddd2c88eb05c40a70bf2f22c502005955da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92efee24_86b6a81e",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ios/ARDSettingsViewController.m",
+        "patchSetId": 4
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1167989
+      },
+      "writtenOn": "2017-06-08T08:10:16Z",
+      "side": 1,
+      "message": "Nit: perhaps rename this to labelForAudioSettingAtIndexPathRow?",
+      "revId": "c7af9ddd2c88eb05c40a70bf2f22c502005955da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c94cfe7_fc0d10dd",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ios/ARDSettingsViewController.m",
+        "patchSetId": 4
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1167989
+      },
+      "writtenOn": "2017-06-08T08:10:16Z",
+      "side": 1,
+      "message": "Nit: perhaps rename this to valueOfAudioSettingAtIndexPathRow?",
+      "revId": "c7af9ddd2c88eb05c40a70bf2f22c502005955da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ef1da35_e3427756",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ios/ARDSettingsViewController.m",
+        "patchSetId": 4
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 1167989
+      },
+      "writtenOn": "2017-06-08T08:10:16Z",
+      "side": 1,
+      "message": "Please wrap case statements in {}",
+      "revId": "c7af9ddd2c88eb05c40a70bf2f22c502005955da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2adb62b_8fe6ba6c",
+        "filename": "webrtc/examples/objc/AppRTCMobile/tests/ARDSettingsModel_xctest.mm",
+        "patchSetId": 4
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1167989
+      },
+      "writtenOn": "2017-06-08T08:10:16Z",
+      "side": 1,
+      "message": "We should really update this method to be `setupMockStore`. It was written when only video resolution existed as setting. The code evolved way past it :) But I\u0027ll leave it up to you if you want to do it in this CL or not.",
+      "revId": "c7af9ddd2c88eb05c40a70bf2f22c502005955da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
