@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "75099eff_f52eb96c",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/DynamicBitrateAdjuster.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-08T18:27:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "092dbd52_0ab146c8",
+      "range": {
+        "startLine": 47,
+        "startChar": 55,
+        "endLine": 47,
+        "endChar": 58
+      },
+      "revId": "75984a13240dc5087264254045931a2bb0203a58",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cd5ae7bb_ceff5957",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
         "patchSetId": 7
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "b66acbb2_aa7aa60e",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-08T18:27:37Z",
+      "side": 1,
+      "message": "Nice catch.  I changed deliverEncodedImage() to block up to 100 ms until an output buffer is available.  This way it won\u0027t busy loop but it will also wake up as soon as a frame is available.",
+      "parentUuid": "cd5ae7bb_ceff5957",
+      "range": {
+        "startLine": 296,
+        "startChar": 10,
+        "endLine": 296,
+        "endChar": 29
+      },
+      "revId": "75984a13240dc5087264254045931a2bb0203a58",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7eab718c_f7c546c9",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
         "patchSetId": 7
@@ -68,6 +116,30 @@
       "revId": "75984a13240dc5087264254045931a2bb0203a58",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5250d43a_400881f4",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-08T18:27:37Z",
+      "side": 1,
+      "message": "Yes, it\u0027s done mostly in response to Peter\u0027s comment.  I do like the property that it can\u0027t get out-of-sync.  But since will be your code and not mine or Peter\u0027s, I\u0027ll defer to your preference.\n\nI\u0027ve made one more stab at guaranteed consistency:  we can put the conversion methods on an enum and switch on the integer to get the right enum value up front.  Please note that it\u0027s also possible to write it as two switches (one to convert int to enum, one that takes the enum and dispatches to the right \"fill buffer\" implementation) if you really don\u0027t like the methods on the enum.\n\nIf you don\u0027t like those options at all, I\u0027ll revert to separate methods for conversion and checking what formats are supported.",
+      "parentUuid": "7eab718c_f7c546c9",
+      "range": {
+        "startLine": 389,
+        "startChar": 18,
+        "endLine": 389,
+        "endChar": 31
+      },
+      "revId": "75984a13240dc5087264254045931a2bb0203a58",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }

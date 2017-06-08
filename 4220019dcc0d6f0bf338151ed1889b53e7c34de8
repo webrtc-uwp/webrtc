@@ -731,6 +731,30 @@
     },
     {
       "key": {
+        "uuid": "abc3c62c_61a1d3e5",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-08T18:27:37Z",
+      "side": 1,
+      "message": "Since I\u0027m using the same constants and method calls as MediaCodecVideoEncoder, I believe it should work on the same devices.  That said, do we have an automated way to test it?  Or do I have to get my hands on some older devices and see if I can install/run it?",
+      "parentUuid": "76659d28_7b221a27",
+      "range": {
+        "startLine": 27,
+        "startChar": 1,
+        "endLine": 27,
+        "endChar": 10
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "686d75dc_5764bd5a",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
         "patchSetId": 6
@@ -1416,6 +1440,30 @@
       "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "694a2a3e_c7b67db2",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-08T18:27:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "57cdc335_2da72d60",
+      "range": {
+        "startLine": 171,
+        "startChar": 13,
+        "endLine": 171,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
