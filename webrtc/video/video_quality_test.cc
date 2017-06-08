@@ -81,7 +81,9 @@ void CreateVoiceEngine(VoiceEngineState* voe,
                            decoder_factory) {
   voe->voice_engine = webrtc::VoiceEngine::Create();
   voe->base = webrtc::VoEBase::GetInterface(voe->voice_engine);
-  EXPECT_EQ(0, voe->base->Init(nullptr, nullptr, decoder_factory));
+  rtc::scoped_refptr<webrtc::AudioProcessing> apm(
+      webrtc::AudioProcessing::Create());
+  EXPECT_EQ(0, voe->base->Init(nullptr, apm, decoder_factory));
   webrtc::VoEBase::ChannelConfig config;
   config.enable_voice_pacing = true;
   voe->send_channel_id = voe->base->CreateChannel(config);
@@ -1770,6 +1772,7 @@ void VideoQualityTest::RunWithRenderers(const Params& params) {
     AudioState::Config audio_state_config;
     audio_state_config.voice_engine = voe.voice_engine;
     audio_state_config.audio_mixer = AudioMixerImpl::Create();
+    audio_state_config.audio_processing = AudioProcessing::Create();
     call_config.audio_state = AudioState::Create(audio_state_config);
   }
 

@@ -159,6 +159,7 @@ rtc_static_library("libjingle_peerconnection") {
     "../logging:rtc_event_log_api",
     "../media",
     "../modules/audio_device:audio_device",
+    "../modules/audio_processing:audio_processing",
     "../p2p:rtc_p2p",
     "../stats",
     "../system_wrappers:system_wrappers",

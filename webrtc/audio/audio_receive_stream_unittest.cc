@@ -73,13 +73,13 @@ struct ConfigHelper {
         RegisterVoiceEngineObserver(_)).WillOnce(Return(0));
     EXPECT_CALL(voice_engine_,
         DeRegisterVoiceEngineObserver()).WillOnce(Return(0));
-    EXPECT_CALL(voice_engine_, audio_processing());
     EXPECT_CALL(voice_engine_, audio_device_module());
     EXPECT_CALL(voice_engine_, audio_transport());
 
     AudioState::Config config;
     config.voice_engine = &voice_engine_;
     config.audio_mixer = audio_mixer_;
+    config.audio_processing = AudioProcessing::Create();
     audio_state_ = AudioState::Create(config);
 
     EXPECT_CALL(voice_engine_, ChannelProxyFactory(kChannelId))
