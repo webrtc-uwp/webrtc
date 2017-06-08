@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "bae66601_65de430a",
+        "filename": "webrtc/audio/audio_send_stream.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1130670
+      },
+      "writtenOn": "2017-06-08T20:47:40Z",
+      "side": 1,
+      "message": ":-)",
+      "parentUuid": "0abd9ab1_1c93f7df",
+      "range": {
+        "startLine": 282,
+        "startChar": 27,
+        "endLine": 282,
+        "endChar": 43
+      },
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6cd81de9_8f0ffd4a",
         "filename": "webrtc/audio/audio_state.h",
         "patchSetId": 3
@@ -39,6 +63,24 @@
       "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6ad3ac3_f43abe0a",
+        "filename": "webrtc/audio/audio_state.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1130670
+      },
+      "writtenOn": "2017-06-08T20:47:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6cd81de9_8f0ffd4a",
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "24dc6a13_b26532ca",
+        "filename": "webrtc/audio/audio_state_unittest.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1130670
+      },
+      "writtenOn": "2017-06-08T20:47:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9f4cabf6_b0538bbb",
+      "range": {
+        "startLine": 51,
+        "startChar": 14,
+        "endLine": 51,
+        "endChar": 29
+      },
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "684cd26c_7919d459",
         "filename": "webrtc/call/audio_state.h",
         "patchSetId": 3
@@ -88,6 +154,30 @@
     },
     {
       "key": {
+        "uuid": "ea01ebec_2c030e4e",
+        "filename": "webrtc/call/audio_state.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1130670
+      },
+      "writtenOn": "2017-06-08T20:47:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "684cd26c_7919d459",
+      "range": {
+        "startLine": 39,
+        "startChar": 46,
+        "endLine": 39,
+        "endChar": 47
+      },
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "15674da4_02a25bae",
         "filename": "webrtc/media/engine/fakewebrtcvoiceengine.h",
         "patchSetId": 3
@@ -105,6 +195,24 @@
     },
     {
       "key": {
+        "uuid": "1b560403_4d36d0a5",
+        "filename": "webrtc/media/engine/fakewebrtcvoiceengine.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1130670
+      },
+      "writtenOn": "2017-06-08T20:47:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "15674da4_02a25bae",
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "640fbfa2_10f1133c",
         "filename": "webrtc/media/engine/webrtcvoiceengine.cc",
         "patchSetId": 3
@@ -116,6 +224,30 @@
       "writtenOn": "2017-06-08T13:11:57Z",
       "side": 1,
       "message": "I\u0027d prefer if we move this out to the CreatePeerConnectionFactory layer (there\u0027d be no conditional statement - the function used is what decides) and always expect to be given an APM here.",
+      "range": {
+        "startLine": 246,
+        "startChar": 24,
+        "endLine": 246,
+        "endChar": 25
+      },
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "908d7966_8987c8b2",
+        "filename": "webrtc/media/engine/webrtcvoiceengine.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1130670
+      },
+      "writtenOn": "2017-06-08T20:47:40Z",
+      "side": 1,
+      "message": "That is indeed a much better place for that.\n\nDone.",
+      "parentUuid": "640fbfa2_10f1133c",
       "range": {
         "startLine": 246,
         "startChar": 24,
@@ -151,6 +283,30 @@
     },
     {
       "key": {
+        "uuid": "f2bde461_d3869083",
+        "filename": "webrtc/media/engine/webrtcvoiceengine.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 736,
+      "author": {
+        "id": 1130670
+      },
+      "writtenOn": "2017-06-08T20:47:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e2199c9b_7137fa7c",
+      "range": {
+        "startLine": 736,
+        "startChar": 13,
+        "endLine": 736,
+        "endChar": 14
+      },
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f6ba6296_e03c5151",
         "filename": "webrtc/media/engine/webrtcvoiceengine.h",
         "patchSetId": 3
@@ -174,6 +330,30 @@
     },
     {
       "key": {
+        "uuid": "ffef3de9_0ff9ac07",
+        "filename": "webrtc/media/engine/webrtcvoiceengine.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1130670
+      },
+      "writtenOn": "2017-06-08T20:47:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f6ba6296_e03c5151",
+      "range": {
+        "startLine": 133,
+        "startChar": 29,
+        "endLine": 133,
+        "endChar": 44
+      },
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0d713284_0932d94e",
         "filename": "webrtc/ortc/ortcfactory.cc",
         "patchSetId": 3
@@ -185,6 +365,24 @@
       "writtenOn": "2017-06-08T13:11:57Z",
       "side": 1,
       "message": "Not needed?",
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b3aff306_b9e5009c",
+        "filename": "webrtc/ortc/ortcfactory.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1130670
+      },
+      "writtenOn": "2017-06-08T20:47:40Z",
+      "side": 1,
+      "message": "The compiler claims it is needed in the instantiation of rtc::scoped_refptr\u003cwebrtc::AudioProcessing\u003e on line 550.\n\nBut maybe it can be done differently without adding the include here?",
+      "parentUuid": "0d713284_0932d94e",
       "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -205,6 +403,24 @@
       "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b5e2426_1d03f921",
+        "filename": "webrtc/pc/peerconnectionfactory.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1130670
+      },
+      "writtenOn": "2017-06-08T20:47:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3ce6ffa7_7af8e8bf",
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
