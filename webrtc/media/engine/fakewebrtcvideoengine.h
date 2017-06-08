@@ -121,7 +121,9 @@ class FakeWebRtcVideoDecoderFactory : public WebRtcVideoDecoderFactory {
 class FakeWebRtcVideoEncoder : public webrtc::VideoEncoder {
  public:
   FakeWebRtcVideoEncoder()
-      : init_encode_event_(false, false), num_frames_encoded_(0) {}
+      : init_encode_event_(false, false),
+        num_frames_encoded_(0),
+        init_encode_return_code_(WEBRTC_VIDEO_CODEC_OK) {}
 
   int32_t InitEncode(const webrtc::VideoCodec* codecSettings,
                      int32_t numberOfCores,
@@ -129,7 +131,7 @@ class FakeWebRtcVideoEncoder : public webrtc::VideoEncoder {
     rtc::CritScope lock(&crit_);
     codec_settings_ = *codecSettings;
     init_encode_event_.Set();
-    return WEBRTC_VIDEO_CODEC_OK;
+    return init_encode_return_code_;
   }
 
   bool WaitForInitEncode() { return init_encode_event_.Wait(kEventTimeoutMs); }
@@ -169,11 +171,16 @@ class FakeWebRtcVideoEncoder : public webrtc::VideoEncoder {
     return num_frames_encoded_;
   }
 
+  void SetInitEncodeReturnCode(int32_t status) {
+    init_encode_return_code_ = status;
+  }
+
  private:
   rtc::CriticalSection crit_;
   rtc::Event init_encode_event_;
   int num_frames_encoded_ GUARDED_BY(crit_);
   webrtc::VideoCodec codec_settings_ GUARDED_BY(crit_);
+  int32_t init_encode_return_code_;
 };
 
 // Fake class for mocking out WebRtcVideoEncoderFactory.
@@ -182,6 +189,7 @@ class FakeWebRtcVideoEncoderFactory : public WebRtcVideoEncoderFactory {
   FakeWebRtcVideoEncoderFactory()
       : created_video_encoder_event_(false, false),
         num_created_encoders_(0),
+        encode_init_status_(WEBRTC_VIDEO_CODEC_OK),
         encoders_have_internal_sources_(false) {}
 
   webrtc::VideoEncoder* CreateVideoEncoder(
@@ -193,6 +201,7 @@ class FakeWebRtcVideoEncoderFactory : public WebRtcVideoEncoderFactory {
     encoders_.push_back(encoder);
     num_created_encoders_++;
     created_video_encoder_event_.Set();
+    encoder->SetInitEncodeReturnCode(encode_init_status_);
     return encoder;
   }
 
@@ -246,12 +255,15 @@ class FakeWebRtcVideoEncoderFactory : public WebRtcVideoEncoderFactory {
     return encoders_;
   }
 
+  void SetInitEncodeReturnCode(int32_t status) { encode_init_status_ = status; }
+
  private:
   rtc::CriticalSection crit_;
   rtc::Event created_video_encoder_event_;
   std::vector<cricket::VideoCodec> codecs_;
   std::vector<FakeWebRtcVideoEncoder*> encoders_ GUARDED_BY(crit_);
   int num_created_encoders_ GUARDED_BY(crit_);
+  int32_t encode_init_status_;
   bool encoders_have_internal_sources_;
 };
 
