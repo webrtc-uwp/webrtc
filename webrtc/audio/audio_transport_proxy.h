@@ -63,6 +63,8 @@ class AudioTransportProxy : public AudioTransport {
                       int64_t* elapsed_time_ms,
                       int64_t* ntp_time_ms) override;
 
+  AudioProcessing* audio_processing() { return apm_; }
+
  private:
   AudioTransport* voe_audio_transport_;
   AudioProcessing* apm_;

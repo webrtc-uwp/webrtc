@@ -32,6 +32,9 @@ class AudioState final : public webrtc::AudioState,
 
   rtc::scoped_refptr<AudioMixer> mixer();
   bool typing_noise_detected() const;
+  AudioProcessing* audio_processing() override {
+    return config_.audio_processing.get();
+  }
 
  private:
   // rtc::RefCountInterface implementation.
