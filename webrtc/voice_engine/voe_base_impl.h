@@ -29,12 +29,9 @@ class VoEBaseImpl : public VoEBase,
   int DeRegisterVoiceEngineObserver() override;
 
   int Init(AudioDeviceModule* external_adm = nullptr,
-           AudioProcessing* audioproc = nullptr,
+           AudioProcessing* external_apm = nullptr,
            const rtc::scoped_refptr<AudioDecoderFactory>& decoder_factory =
                nullptr) override;
-  AudioProcessing* audio_processing() override {
-    return shared_->audio_processing();
-  }
   AudioDeviceModule* audio_device_module() override {
     return shared_->audio_device();
   }

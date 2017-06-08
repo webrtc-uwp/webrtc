@@ -213,6 +213,18 @@ class MockAudioProcessing : public AudioProcessing {
 
   MOCK_CONST_METHOD0(GetConfig, AudioProcessing::Config());
 
+  // MOCK_CONST_METHOD0(AddRef, int());
+  // MOCK_CONST_METHOD0(Release, int());
+  virtual int AddRef() const { return rtc::AtomicOps::Increment(&ref_count_); }
+
+  virtual int Release() const {
+    int count = rtc::AtomicOps::Decrement(&ref_count_);
+    if (!count) {
+      delete this;
+    }
+    return count;
+  }
+
  private:
   std::unique_ptr<MockEchoCancellation> echo_cancellation_;
   std::unique_ptr<MockEchoControlMobile> echo_control_mobile_;
@@ -221,6 +233,7 @@ class MockAudioProcessing : public AudioProcessing {
   std::unique_ptr<MockLevelEstimator> level_estimator_;
   std::unique_ptr<MockNoiseSuppression> noise_suppression_;
   std::unique_ptr<MockVoiceDetection> voice_detection_;
+  mutable volatile int ref_count_ = 0;
 };
 
 }  // namespace test
