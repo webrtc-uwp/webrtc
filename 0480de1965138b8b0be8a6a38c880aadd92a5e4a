@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "f6ca809d_67e4dc60",
+        "filename": "webrtc/api/peerconnectioninterface.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-06-08T00:33:11Z",
+      "side": 1,
+      "message": "\u003e In our case IP is what we start with and the hostname is the optional one which we will use for the SNI extension.\n\nMy point is that if you just have the IP, you still *need* the hostname to connect to the TURN server (if it requires SNI). But if you have the hostname, you don\u0027t need the application to give you the IP; it\u0027s just an optimization that saves an extra DNS cache access.\n\n\u003e No, it will only be used if the address has a resolved ip address and non ip literal host name. \n\nOh, I didn\u0027t catch that. Is there a reason for that behavior? If we have a hostname, why not use it?\n\n\u003e You just moved the confusion to the upper level, as the IceServer creator need to check the returned host name value and determine weather to set this optional IP field or not\n\nThe IceServer creator should know if it has a pre-resolved IP address or not, so I don\u0027t see how it adds confusion. What\u0027s an example?\n\nAnother point: URI means \"uniform resource identifier\". Two different hostnames hosted on the same IP address (which is what SNI is used for, right?) represent different resources, so shouldn\u0027t they be using different identifiers? Meaning, if the hostname matters, shouldn\u0027t it be in the URI by definition?\n\nI don\u0027t want to hold this up forever, so if you feel strongly we can keep it as \"uri/hostname\", but I still don\u0027t understand the downside of \"uri/ip\".",
+      "parentUuid": "daaa001b_cc36bc9b",
+      "range": {
+        "startLine": 184,
+        "startChar": 4,
+        "endLine": 184,
+        "endChar": 30
+      },
+      "revId": "0480de1965138b8b0be8a6a38c880aadd92a5e4a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ffbd1a5f_18ca58d7",
         "filename": "webrtc/p2p/base/basicpacketsocketfactory.cc",
         "patchSetId": 3
