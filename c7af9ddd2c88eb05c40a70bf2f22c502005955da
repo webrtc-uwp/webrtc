@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "4ad375dc_6024a297",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ARDSettingsModel.m",
+        "patchSetId": 4
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1167989
+      },
+      "writtenOn": "2017-06-08T08:43:27Z",
+      "side": 1,
+      "message": "That sounds like a good idea. That way we\u0027ll move the logic out of the model and the consuming class (I guess ARDSettingsViewController in this case) will inject it\u0027s defaults in a form of a custom dictionary (or some other type of your choosing).",
+      "parentUuid": "e9c9f0a2_c5a085e3",
+      "revId": "c7af9ddd2c88eb05c40a70bf2f22c502005955da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "eeba94d6_3041dbfd",
         "filename": "webrtc/examples/objc/AppRTCMobile/ARDSettingsStore.h",
         "patchSetId": 4
