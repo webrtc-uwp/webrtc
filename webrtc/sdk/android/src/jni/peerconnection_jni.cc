@@ -64,7 +64,6 @@
 #include "webrtc/media/engine/webrtcvideodecoderfactory.h"
 #include "webrtc/media/engine/webrtcvideoencoderfactory.h"
 #include "webrtc/modules/utility/include/jvm_android.h"
-#include "webrtc/system_wrappers/include/field_trial.h"
 #include "webrtc/pc/webrtcsdp.h"
 #include "webrtc/sdk/android/src/jni/androidmediadecoder_jni.h"
 #include "webrtc/sdk/android/src/jni/androidmediaencoder_jni.h"
@@ -74,6 +73,8 @@
 #include "webrtc/sdk/android/src/jni/jni_helpers.h"
 #include "webrtc/sdk/android/src/jni/native_handle_impl.h"
 #include "webrtc/sdk/android/src/jni/rtcstatscollectorcallbackwrapper.h"
+#include "webrtc/sdk/android/src/jni/videodecoderfactorywrapper.h"
+#include "webrtc/system_wrappers/include/field_trial.h"
 // Adding 'nogncheck' to disable the gn include headers check.
 // We don't want to depend on 'system_wrappers:field_trial_default' because
 // clients should be able to provide their own implementation.
@@ -1319,8 +1320,12 @@ PeerConnectionFactoryInterface::Options ParseOptionsFromJava(JNIEnv* jni,
   return native_options;
 }
 
-JOW(jlong, PeerConnectionFactory_nativeCreatePeerConnectionFactory)(
-    JNIEnv* jni, jclass, jobject joptions) {
+JOW(jlong, PeerConnectionFactory_nativeCreatePeerConnectionFactory)
+(JNIEnv* jni,
+ jclass,
+ jobject joptions,
+ jobject jencoder_factory,
+ jobject jdecoder_factory) {
   // talk/ assumes pretty widely that the current Thread is ThreadManager'd, but
   // ThreadManager only WrapCurrentThread()s the thread where it is first
   // created.  Since the semantics around when auto-wrapping happens in
@@ -1354,7 +1359,12 @@ JOW(jlong, PeerConnectionFactory_nativeCreatePeerConnectionFactory)(
 
   if (video_hw_acceleration_enabled) {
     encoder_factory = new MediaCodecVideoEncoderFactory();
-    decoder_factory = new MediaCodecVideoDecoderFactory();
+    decoder_factory =
+        jdecoder_factory != nullptr
+            ? static_cast<WebRtcVideoDecoderFactory*>(
+                  new VideoDecoderFactoryWrapper(jni, jdecoder_factory))
+            : static_cast<WebRtcVideoDecoderFactory*>(
+                  new MediaCodecVideoDecoderFactory());
   }
   // Do not create network_monitor_factory only if the options are
   // provided and disable_network_monitor therein is set to true.
@@ -1519,13 +1529,13 @@ JOW(void, PeerConnectionFactory_nativeSetVideoHwAccelerationOptions)(
     encoder_factory->SetEGLContext(jni, local_egl_context);
   }
 
-  MediaCodecVideoDecoderFactory* decoder_factory =
-      static_cast<MediaCodecVideoDecoderFactory*>
-          (owned_factory->decoder_factory());
-  if (decoder_factory) {
-    LOG(LS_INFO) << "Set EGL context for HW decoding.";
-    decoder_factory->SetEGLContext(jni, remote_egl_context);
-  }
+  // MediaCodecVideoDecoderFactory* decoder_factory =
+  //     static_cast<MediaCodecVideoDecoderFactory*>
+  //         (owned_factory->decoder_factory());
+  // if (decoder_factory) {
+  //   LOG(LS_INFO) << "Set EGL context for HW decoding.";
+  //   decoder_factory->SetEGLContext(jni, remote_egl_context);
+  // }
 }
 
 static PeerConnectionInterface::IceTransportsType

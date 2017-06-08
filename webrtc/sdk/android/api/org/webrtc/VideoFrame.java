@@ -72,9 +72,11 @@ public class VideoFrame {
   private final Buffer buffer;
   private final int rotation;
   private final long timestampNs;
+  private final long timestampRtp;
   private final Matrix transformMatrix;
 
-  public VideoFrame(Buffer buffer, int rotation, long timestampNs, Matrix transformMatrix) {
+  public VideoFrame(
+      Buffer buffer, int rotation, long timestampNs, long timestampRtp, Matrix transformMatrix) {
     if (buffer == null) {
       throw new IllegalArgumentException("buffer not allowed to be null");
     }
@@ -84,6 +86,7 @@ public class VideoFrame {
     this.buffer = buffer;
     this.rotation = rotation;
     this.timestampNs = timestampNs;
+    this.timestampRtp = timestampRtp;
     this.transformMatrix = transformMatrix;
   }
 
@@ -103,6 +106,10 @@ public class VideoFrame {
    */
   public long getTimestampNs() {
     return timestampNs;
+  }
+
+  public long getTimestampRtp() {
+    return timestampRtp;
   }
 
   /**

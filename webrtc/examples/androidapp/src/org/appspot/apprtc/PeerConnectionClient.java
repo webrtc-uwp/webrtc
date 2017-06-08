@@ -26,8 +26,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.appspot.apprtc.AppRTCClient.SignalingParameters;
@@ -54,11 +54,12 @@ import org.webrtc.VideoCapturer;
 import org.webrtc.VideoRenderer;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
+import org.webrtc.codec.DummyVideoDecoderFactory;
 import org.webrtc.voiceengine.WebRtcAudioManager;
 import org.webrtc.voiceengine.WebRtcAudioRecord;
-import org.webrtc.voiceengine.WebRtcAudioTrack;
 import org.webrtc.voiceengine.WebRtcAudioRecord.AudioRecordStartErrorCode;
 import org.webrtc.voiceengine.WebRtcAudioRecord.WebRtcAudioRecordErrorCallback;
+import org.webrtc.voiceengine.WebRtcAudioTrack;
 import org.webrtc.voiceengine.WebRtcAudioTrack.WebRtcAudioTrackErrorCallback;
 import org.webrtc.voiceengine.WebRtcAudioUtils;
 
@@ -507,7 +508,7 @@ public class PeerConnectionClient {
     if (options != null) {
       Log.d(TAG, "Factory networkIgnoreMask option: " + options.networkIgnoreMask);
     }
-    factory = new PeerConnectionFactory(options);
+    factory = new PeerConnectionFactory(options, null, new DummyVideoDecoderFactory());
     Log.d(TAG, "Peer connection factory created.");
   }
 
