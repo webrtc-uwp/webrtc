@@ -1,0 +1,210 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0abd9ab1_1c93f7df",
+        "filename": "webrtc/audio/audio_send_stream.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-08T13:11:57Z",
+      "side": 1,
+      "message": "Nice, thank you!",
+      "range": {
+        "startLine": 282,
+        "startChar": 27,
+        "endLine": 282,
+        "endChar": 43
+      },
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6cd81de9_8f0ffd4a",
+        "filename": "webrtc/audio/audio_state.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-08T13:11:57Z",
+      "side": 1,
+      "message": "AudioState should own the APM, so let it keep it in a scoped_refptr in AudioState::Config and *lend* it to the AudioTransportProxy. Remove from ctors.",
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f4cabf6_b0538bbb",
+        "filename": "webrtc/audio/audio_state_unittest.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-08T13:11:57Z",
+      "side": 1,
+      "message": "Can we do with a mock?",
+      "range": {
+        "startLine": 51,
+        "startChar": 14,
+        "endLine": 51,
+        "endChar": 29
+      },
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "684cd26c_7919d459",
+        "filename": "webrtc/call/audio_state.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-08T13:11:57Z",
+      "side": 1,
+      "message": "Add AudioProcessing here instead - that\u0027s the point of a config struct after all. Remove the argument from the ctor.",
+      "range": {
+        "startLine": 39,
+        "startChar": 46,
+        "endLine": 39,
+        "endChar": 47
+      },
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "15674da4_02a25bae",
+        "filename": "webrtc/media/engine/fakewebrtcvoiceengine.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-08T13:11:57Z",
+      "side": 1,
+      "message": "Remove apm argument?",
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "640fbfa2_10f1133c",
+        "filename": "webrtc/media/engine/webrtcvoiceengine.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-08T13:11:57Z",
+      "side": 1,
+      "message": "I\u0027d prefer if we move this out to the CreatePeerConnectionFactory layer (there\u0027d be no conditional statement - the function used is what decides) and always expect to be given an APM here.",
+      "range": {
+        "startLine": 246,
+        "startChar": 24,
+        "endLine": 246,
+        "endChar": 25
+      },
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2199c9b_7137fa7c",
+        "filename": "webrtc/media/engine/webrtcvoiceengine.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 736,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-08T13:11:57Z",
+      "side": 1,
+      "message": "return audio_state_.audio_processing();",
+      "range": {
+        "startLine": 736,
+        "startChar": 13,
+        "endLine": 736,
+        "endChar": 14
+      },
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6ba6296_e03c5151",
+        "filename": "webrtc/media/engine/webrtcvoiceengine.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-08T13:11:57Z",
+      "side": 1,
+      "message": "Since it is owned by AudioState you don\u0027t actually need to store it here.",
+      "range": {
+        "startLine": 133,
+        "startChar": 29,
+        "endLine": 133,
+        "endChar": 44
+      },
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d713284_0932d94e",
+        "filename": "webrtc/ortc/ortcfactory.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-08T13:11:57Z",
+      "side": 1,
+      "message": "Not needed?",
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ce6ffa7_7af8e8bf",
+        "filename": "webrtc/pc/peerconnectionfactory.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-08T13:11:57Z",
+      "side": 1,
+      "message": "Remove. The create methods should give us one, always.",
+      "revId": "3b2b2ccc7c94d20918982c637a5fdc7255d08cd3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
