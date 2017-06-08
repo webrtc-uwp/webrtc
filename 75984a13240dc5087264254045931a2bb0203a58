@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "092dbd52_0ab146c8",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/DynamicBitrateAdjuster.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1189629
+      },
+      "writtenOn": "2017-06-08T08:04:04Z",
+      "side": 1,
+      "message": "nit: Took a while to understand this. I think it would clearer like this:\ntargetBitrateBps / targetFps / BITS_PER_BYTE",
+      "range": {
+        "startLine": 47,
+        "startChar": 55,
+        "endLine": 47,
+        "endChar": 58
+      },
+      "revId": "75984a13240dc5087264254045931a2bb0203a58",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd5ae7bb_ceff5957",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1189629
+      },
+      "writtenOn": "2017-06-08T08:04:04Z",
+      "side": 1,
+      "message": "Is this a busy loop? Shouldn\u0027t we sleep?",
+      "range": {
+        "startLine": 296,
+        "startChar": 10,
+        "endLine": 296,
+        "endChar": 29
+      },
+      "revId": "75984a13240dc5087264254045931a2bb0203a58",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7eab718c_f7c546c9",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1189629
+      },
+      "writtenOn": "2017-06-08T08:04:04Z",
+      "side": 1,
+      "message": "nit: I realize this is done to ensure consistency between isColorFormatSupported and toColorFormat but I find it ugly how this method serves a dual purpose. I would prefer to have the methods separate but if you strong prefer this feel free to keep.",
+      "range": {
+        "startLine": 389,
+        "startChar": 18,
+        "endLine": 389,
+        "endChar": 31
+      },
+      "revId": "75984a13240dc5087264254045931a2bb0203a58",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
