@@ -209,18 +209,8 @@
   weakAnswerer = answerer;
 
   // Kick off connection.
-  [caller connectToRoomWithId:roomId
-                     settings:[[ARDSettingsModel alloc] init]
-                   isLoopback:NO
-                  isAudioOnly:NO
-            shouldMakeAecDump:NO
-        shouldUseLevelControl:NO];
-  [answerer connectToRoomWithId:roomId
-                       settings:[[ARDSettingsModel alloc] init]
-                     isLoopback:NO
-                    isAudioOnly:NO
-              shouldMakeAecDump:NO
-          shouldUseLevelControl:NO];
+  [caller connectToRoomWithId:roomId settings:[[ARDSettingsModel alloc] init] isLoopback:NO];
+  [answerer connectToRoomWithId:roomId settings:[[ARDSettingsModel alloc] init] isLoopback:NO];
   [self waitForExpectationsWithTimeout:20 handler:^(NSError *error) {
     if (error) {
       XCTFail(@"Expectation failed with error %@.", error);

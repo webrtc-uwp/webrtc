@@ -14,9 +14,17 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(int, ARDSettingsSections) {
-  ARDSettingsSectionVideoResolution = 0,
+  ARDSettingsSectionAudioSettings = 0,
+  ARDSettingsSectionVideoResolution,
   ARDSettingsSectionVideoCodec,
   ARDSettingsSectionBitRate,
+};
+
+typedef NS_ENUM(int, ARDAudioSettingsOptions) {
+  ARDAudioSettingsAudioOnly = 0,
+  ARDAudioSettingsCreateAecDump,
+  ARDAudioSettingsUseLevelController,
+  ARDAudioSettingsUseManualAudioConfig,
 };
 
 @interface ARDSettingsViewController () <UITextFieldDelegate> {
@@ -93,11 +101,13 @@ typedef NS_ENUM(int, ARDSettingsSections) {
 #pragma mark - Table view data source
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-  return 3;
+  return 4;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
   switch (section) {
+    case ARDSettingsSectionAudioSettings:
+      return 4;
     case ARDSettingsSectionVideoResolution:
       return self.videoResolutionArray.count;
     case ARDSettingsSectionVideoCodec:
@@ -133,6 +143,8 @@ updateListSelectionAtIndexPath:(NSIndexPath *)indexPath
 - (nullable NSString *)tableView:(UITableView *)tableView
          titleForHeaderInSection:(NSInteger)section {
   switch (section) {
+    case ARDSettingsSectionAudioSettings:
+      return @"Audio";
     case ARDSettingsSectionVideoResolution:
       return @"Video resolution";
     case ARDSettingsSectionVideoCodec:
@@ -147,6 +159,9 @@ updateListSelectionAtIndexPath:(NSIndexPath *)indexPath
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
   switch (indexPath.section) {
+    case ARDSettingsSectionAudioSettings:
+      return [self audioSettingsTableViewCellForTableView:tableView atIndexPath:indexPath];
+
     case ARDSettingsSectionVideoResolution:
       return [self videoResolutionTableViewCellForTableView:tableView atIndexPath:indexPath];
 
@@ -273,6 +288,88 @@ updateListSelectionAtIndexPath:(NSIndexPath *)indexPath
   }
 
   [_settingsModel storeMaxBitrateSetting:bitrateNumber];
+}
+
+#pragma mark - Table view delegate(Audio settings)
+
+- (UITableViewCell *)audioSettingsTableViewCellForTableView:(UITableView *)tableView
+                                                atIndexPath:(NSIndexPath *)indexPath {
+  NSString *dequeueIdentifier = @"ARDSettingsAudioSettingsCellIdentifier";
+  UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:dequeueIdentifier];
+  if (!cell) {
+    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                  reuseIdentifier:dequeueIdentifier];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    UISwitch *switchView = [[UISwitch alloc] initWithFrame:CGRectZero];
+    switchView.tag = indexPath.row;
+    [switchView addTarget:self
+                   action:@selector(audioSettingSwitchChanged:)
+         forControlEvents:UIControlEventValueChanged];
+    cell.accessoryView = switchView;
+  }
+
+  cell.textLabel.text = [self labelForAudioSettingAtIndexPathRow:indexPath.row];
+  UISwitch *switchView = (UISwitch *)cell.accessoryView;
+  switchView.on = [self valueForAudioSettingAtIndexPathRow:indexPath.row];
+
+  return cell;
+}
+
+- (NSString *)labelForAudioSettingAtIndexPathRow:(NSInteger)setting {
+  switch (setting) {
+    case ARDAudioSettingsAudioOnly:
+      return @"Audio only";
+    case ARDAudioSettingsCreateAecDump:
+      return @"Create AecDump";
+    case ARDAudioSettingsUseLevelController:
+      return @"Use level controller";
+    case ARDAudioSettingsUseManualAudioConfig:
+      return @"Use manual audio config";
+    default:
+      return @"";
+  }
+}
+
+- (BOOL)valueForAudioSettingAtIndexPathRow:(NSInteger)setting {
+  switch (setting) {
+    case ARDAudioSettingsAudioOnly:
+      return [_settingsModel currentAudioOnlySettingFromStore];
+    case ARDAudioSettingsCreateAecDump:
+      return [_settingsModel currentCreateAecDumpSettingFromStore];
+    case ARDAudioSettingsUseLevelController:
+      return [_settingsModel currentUseLevelControllerSettingFromStore];
+    case ARDAudioSettingsUseManualAudioConfig:
+      return [_settingsModel currentUseManualAudioConfigSettingFromStore];
+    default:
+      return NO;
+  }
+}
+
+- (void)audioSettingSwitchChanged:(UISwitch *)sender {
+  switch (sender.tag) {
+    case ARDAudioSettingsAudioOnly:
+    {
+      [_settingsModel storeAudioOnlySetting:sender.isOn];
+      break;
+    }
+    case ARDAudioSettingsCreateAecDump:
+    {
+      [_settingsModel storeCreateAecDumpSetting:sender.isOn];
+      break;
+    }
+    case ARDAudioSettingsUseLevelController:
+    {
+      [_settingsModel storeUseLevelControllerSetting:sender.isOn];
+      break;
+    }
+    case ARDAudioSettingsUseManualAudioConfig:
+    {
+      [_settingsModel storeUseManualAudioConfigSetting:sender.isOn];
+      break;
+    }
+    default:
+      break;
+  }
 }
 
 @end
