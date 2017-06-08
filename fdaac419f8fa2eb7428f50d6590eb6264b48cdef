@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82960084_a24bca7a",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplication.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1163304
+      },
+      "writtenOn": "2017-06-08T15:59:42Z",
+      "side": 1,
+      "message": "You can just use the ObjC types. Also, only one declaration per line please.",
+      "range": {
+        "startLine": 28,
+        "startChar": 2,
+        "endLine": 28,
+        "endChar": 6
+      },
+      "revId": "fdaac419f8fa2eb7428f50d6590eb6264b48cdef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fc721f50_84951091",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplication.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1163304
+      },
+      "writtenOn": "2017-06-08T15:59:42Z",
+      "side": 1,
+      "message": "No need for the bridging",
+      "range": {
+        "startLine": 19,
+        "startChar": 21,
+        "endLine": 19,
+        "endChar": 29
+      },
+      "revId": "fdaac419f8fa2eb7428f50d6590eb6264b48cdef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7ab4be0_42cf7cb4",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplication.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1163304
+      },
+      "writtenOn": "2017-06-08T15:59:42Z",
+      "side": 1,
+      "message": "There is a potential data race here. Not sure what we should do about the initial state though. Do you think it\u0027s safe to assume the initial state is active?",
+      "revId": "fdaac419f8fa2eb7428f50d6590eb6264b48cdef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1226b3b2_da156f72",
+        "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/decoder.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1163304
+      },
+      "writtenOn": "2017-06-08T15:59:42Z",
+      "side": 1,
+      "message": "We try to avoid raw pointers in webrtc. Use auto stored objects when possible, otherwise smart pointer types like std::unique_ptr",
+      "range": {
+        "startLine": 78,
+        "startChar": 2,
+        "endLine": 78,
+        "endChar": 30
+      },
+      "revId": "fdaac419f8fa2eb7428f50d6590eb6264b48cdef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41fb0a2a_e3a1f0f4",
+        "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/decoder.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1163304
+      },
+      "writtenOn": "2017-06-08T15:59:42Z",
+      "side": 1,
+      "message": "No need to make this a pointer",
+      "range": {
+        "startLine": 61,
+        "startChar": 2,
+        "endLine": 61,
+        "endChar": 32
+      },
+      "revId": "fdaac419f8fa2eb7428f50d6590eb6264b48cdef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aac1b2a4_fd4036e7",
+        "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/encoder.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1163304
+      },
+      "writtenOn": "2017-06-08T15:59:42Z",
+      "side": 1,
+      "message": "Ditto for this class.",
+      "range": {
+        "startLine": 99,
+        "startChar": 34,
+        "endLine": 99,
+        "endChar": 62
+      },
+      "revId": "fdaac419f8fa2eb7428f50d6590eb6264b48cdef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
