@@ -118,6 +118,7 @@ AudioDeviceIOS::AudioDeviceIOS()
 
 AudioDeviceIOS::~AudioDeviceIOS() {
   LOGI() << "~dtor" << ios::GetCurrentThreadDescription();
+  LOGI() << "#detected playout glitches: " << num_detected_playout_glitches_;
   audio_session_observer_ = nil;
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
   Terminate();
@@ -415,10 +416,18 @@ OSStatus AudioDeviceIOS::OnGetPlayoutData(AudioUnitRenderActionFlags* flags,
                                           UInt32 bus_number,
                                           UInt32 num_frames,
                                           AudioBufferList* io_data) {
+  // LOGI() << "mSampleTime: " << time_stamp->mSampleTime;
+  // LOGI() << "mHostTime: " << time_stamp->mHostTime;
+
+  // RTCAudioSession* session = [RTCAudioSession sharedInstance];
+  // const NSTimeInterval session_buffer_duration = session.IOBufferDuration;
+  // LOGI() << "IOBufferDuration: " << session_buffer_duration;
+
   // Verify 16-bit, noninterleaved mono PCM signal format.
   RTC_DCHECK_EQ(1, io_data->mNumberBuffers);
   AudioBuffer* audio_buffer = &io_data->mBuffers[0];
   RTC_DCHECK_EQ(1, audio_buffer->mNumberChannels);
+
   // Get pointer to internal audio buffer to which new audio data shall be
   // written.
   const size_t size_in_bytes = audio_buffer->mDataByteSize;
@@ -433,10 +442,60 @@ OSStatus AudioDeviceIOS::OnGetPlayoutData(AudioUnitRenderActionFlags* flags,
     return noErr;
   }
 
+  // Measure time since last call to OnGetPlayoutData() and check if the sum of
+  // this delta time and the last processing time is larger than a threshold.
+  // If so, we have a clear indication of an a glitch in the output audio since
+  // the core audio layer will most likely run dry in this state.
+  const int64_t now_time = rtc::TimeMillis();
+  // Ensure that the delta time is zero for the first audio frame.
+  if (time_stamp->mSampleTime == num_frames) {
+    last_playout_time_ = now_time;
+  }
+  const int64_t delta_time = now_time - last_playout_time_;
+  const int glitch_threshold = 1.5 * playout_parameters_.GetBufferSizeInMilliseconds() - 1;
+  if (!changed_io_buffer_size_ &&
+      delta_time + last_playout_processing_time_ > glitch_threshold) {
+    num_detected_playout_glitches_++;
+    LOG(WARNING) << "-----.----- Audio glitch: "
+                 << "Last decoding took " << last_playout_processing_time_ << " ms. "
+                 << "Time since last OnGetPlayoutData was " << delta_time << " ms. "
+                 << "Number of detected glitches: " << num_detected_playout_glitches_;
+    RTCAudioSession* session = [RTCAudioSession sharedInstance];
+    NSTimeInterval io_buffer_duration = session.IOBufferDuration;
+    const NSTimeInterval new_io_buffer_duration = 2 * io_buffer_duration;
+    if (new_io_buffer_duration < 0.1) {
+      NSError* bufferDurationError = nil;
+      [session lockForConfiguration];
+      if (![session setPreferredIOBufferDuration:new_io_buffer_duration
+                                           error:&bufferDurationError]) {
+        RTCLogError(@"Failed to set preferred IO buffer duration: %@",
+                    bufferDurationError.localizedDescription);
+      } else {
+        changed_io_buffer_size_ = true;
+        io_buffer_duration = session.IOBufferDuration;
+        RTCLog(@"Set preferred IO buffer duration to: %f", new_io_buffer_duration);
+        RTCLog(@"New IO buffer duration is now: %f", io_buffer_duration);
+        playout_parameters_.reset(
+            playout_parameters_.sample_rate(), playout_parameters_.channels(),
+            io_buffer_duration);
+        LOG(LS_INFO) << "frames per I/O buffer: " << playout_parameters_.frames_per_buffer();
+      }
+      [session unlockForConfiguration];
+    } else {
+      RTCLogWarning(@"Required IO buffer size is too large. Bailing out.");
+    }
+  } else {
+    changed_io_buffer_size_ = false;
+  }
+
   // Read decoded 16-bit PCM samples from WebRTC (using a size that matches
   // the native I/O audio unit) and copy the result to the audio buffer in the
   // |io_data| destination.
   fine_audio_buffer_->GetPlayoutData(rtc::ArrayView<int8_t>(destination, size_in_bytes));
+
+  last_playout_time_ = rtc::TimeMillis();
+  last_playout_processing_time_ = last_playout_time_ - now_time;
+
   return noErr;
 }
 
