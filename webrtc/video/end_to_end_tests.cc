@@ -19,6 +19,7 @@
 #include "webrtc/base/checks.h"
 #include "webrtc/base/event.h"
 #include "webrtc/base/file.h"
+#include "webrtc/base/mod_ops.h"
 #include "webrtc/base/optional.h"
 #include "webrtc/base/random.h"
 #include "webrtc/base/rate_limiter.h"
@@ -41,6 +42,7 @@
 #include "webrtc/modules/video_coding/codecs/vp8/simulcast_encoder_adapter.h"
 #include "webrtc/modules/video_coding/codecs/vp9/include/vp9.h"
 #include "webrtc/modules/video_coding/include/video_coding_defines.h"
+#include "webrtc/modules/video_coding/sequence_number_util.h"
 #include "webrtc/system_wrappers/include/metrics.h"
 #include "webrtc/system_wrappers/include/metrics_default.h"
 #include "webrtc/system_wrappers/include/sleep.h"
@@ -3935,6 +3937,9 @@ void EndToEndTest::TestPictureIdStatePreservation(VideoEncoder* encoder) {
   const size_t kFrameMaxWidth = 1280;
   const size_t kFrameMaxHeight = 720;
   const size_t kFrameRate = 30;
+  const int kMaxSecondsLost = 5;
+  const int kMaxFramesLost = kFrameRate * kMaxSecondsLost;
+  const size_t kPictureIdWraparound = (1 << 15);
 
   // Use a special stream factory in this test to ensure that all simulcast
   // streams are being sent.
@@ -3987,12 +3992,14 @@ void EndToEndTest::TestPictureIdStatePreservation(VideoEncoder* encoder) {
     PictureIdObserver()
         : test::RtpRtcpObserver(kDefaultTimeoutMs), num_ssrcs_to_observe_(1) {}
 
-    void ResetExpectations(size_t num_expected_ssrcs) {
+    void ResetExpectations(size_t num_expected_ssrcs,
+                           int max_expected_picture_id_gap) {
       rtc::CritScope lock(&crit_);
       // Do not clear the timestamp and picture_id, to ensure that we check
       // consistency between reinits and recreations.
       num_packets_sent_.clear();
       num_ssrcs_to_observe_ = num_expected_ssrcs;
+      max_expected_picture_id_gap_ = max_expected_picture_id_gap;
       ssrc_observed_.clear();
     }
 
@@ -4043,13 +4050,22 @@ void EndToEndTest::TestPictureIdStatePreservation(VideoEncoder* encoder) {
         EXPECT_EQ(last_observed_picture_id_[ssrc], picture_id);
       } else {
         // Packet is a new frame.
-        EXPECT_EQ((last_observed_picture_id_[ssrc] + 1) % (1 << 15),
-                  picture_id);
+
+        // Picture id should be increasing.
+        const bool picture_id_is_increasing =
+            AheadOf<uint16_t, kPictureIdWraparound>(
+                picture_id, last_observed_picture_id_[ssrc]);
+        EXPECT_TRUE(picture_id_is_increasing);
+
+        // Picture id should not increase more than expected.
+        const int picture_id_diff = ForwardDiff<uint16_t, kPictureIdWraparound>(
+            last_observed_picture_id_[ssrc], picture_id);
+        EXPECT_LE(picture_id_diff - 1, max_expected_picture_id_gap_);
       }
       last_observed_timestamp_[ssrc] = timestamp;
       last_observed_picture_id_[ssrc] = picture_id;
 
-      // Pass the test when enough media packets have been received
+      // Pass the test when enough media packets have been received.
       // on all streams.
       if (++num_packets_sent_[ssrc] >= 10 && !ssrc_observed_[ssrc]) {
         ssrc_observed_[ssrc] = true;
@@ -4065,6 +4081,7 @@ void EndToEndTest::TestPictureIdStatePreservation(VideoEncoder* encoder) {
     std::map<uint32_t, uint32_t> last_observed_timestamp_ GUARDED_BY(crit_);
     std::map<uint32_t, uint16_t> last_observed_picture_id_ GUARDED_BY(crit_);
     std::map<uint32_t, size_t> num_packets_sent_ GUARDED_BY(crit_);
+    int max_expected_picture_id_gap_ GUARDED_BY(crit_);
     size_t num_ssrcs_to_observe_ GUARDED_BY(crit_);
     std::map<uint32_t, bool> ssrc_observed_ GUARDED_BY(crit_);
   } observer;
@@ -4094,13 +4111,23 @@ void EndToEndTest::TestPictureIdStatePreservation(VideoEncoder* encoder) {
 
   auto reinit_encoder_and_test = [this, &observer](int num_expected_ssrcs) {
     video_send_stream_->ReconfigureVideoEncoder(video_encoder_config_.Copy());
-    observer.ResetExpectations(num_expected_ssrcs);
+    // Expect continously increasing picture id, equivalent to no gaps.
+    observer.ResetExpectations(num_expected_ssrcs, 0);
     EXPECT_TRUE(observer.Wait()) << "Timed out waiting for packets.";
   };
 
-  // TODO(brandtr): Add tests where we recreate the whole VideoSendStream. This
-  // requires synchronizing the frame generator output with the packetization
-  // output, to not have any timing-dependent gaps in the picture_id sequence.
+  auto recreate_video_send_stream_and_test = [this, &observer](
+                                                 int num_expected_ssrcs) {
+    frame_generator_capturer_->Stop();
+    sender_call_->DestroyVideoSendStream(video_send_stream_);
+    video_send_stream_ = sender_call_->CreateVideoSendStream(
+        video_send_config_.Copy(), video_encoder_config_.Copy());
+    video_send_stream_->Start();
+    CreateFrameGeneratorCapturer(kFrameRate, kFrameMaxWidth, kFrameMaxHeight);
+    frame_generator_capturer_->Start();
+    observer.ResetExpectations(num_expected_ssrcs, kMaxFramesLost);
+    EXPECT_TRUE(observer.Wait()) << "Timed out waiting for packets.";
+  };
 
   // Initial test with a single stream.
   Start();
@@ -4108,15 +4135,18 @@ void EndToEndTest::TestPictureIdStatePreservation(VideoEncoder* encoder) {
 
   // Reinit the encoder and make sure the picture_id sequence is continuous.
   reinit_encoder_and_test(1);
+  recreate_video_send_stream_and_test(1);
 
   // Go up to three streams.
   video_encoder_config_.number_of_streams = 3;
   reinit_encoder_and_test(3);
+  recreate_video_send_stream_and_test(3);
   reinit_encoder_and_test(3);
 
   // Go back to one stream.
   video_encoder_config_.number_of_streams = 1;
   reinit_encoder_and_test(1);
+  recreate_video_send_stream_and_test(1);
   reinit_encoder_and_test(1);
 
   send_transport.StopSending();
