@@ -225,7 +225,7 @@ int VoEBaseImpl::DeRegisterVoiceEngineObserver() {
 
 int VoEBaseImpl::Init(
     AudioDeviceModule* external_adm,
-    AudioProcessing* audioproc,
+    AudioProcessing* external_apm,
     const rtc::scoped_refptr<AudioDecoderFactory>& decoder_factory) {
   rtc::CritScope cs(shared_->crit_sec());
   WebRtcSpl_Init();
@@ -337,33 +337,27 @@ int VoEBaseImpl::Init(
                           "Init() failed to set mono/stereo recording mode");
   }
 
-  if (!audioproc) {
-    audioproc = AudioProcessing::Create();
-    if (!audioproc) {
-      LOG(LS_ERROR) << "Failed to create AudioProcessing.";
-      shared_->SetLastError(VE_NO_MEMORY);
-      return -1;
-    }
-  }
-  shared_->set_audio_processing(audioproc);
+  shared_->set_audio_processing(external_apm);
 
   // Set the error state for any failures in this block.
   shared_->SetLastError(VE_APM_ERROR);
   // Configure AudioProcessing components.
-  if (audioproc->high_pass_filter()->Enable(true) != 0) {
+  // TODO(peah): Move this initialization to webrtcvoiceengine.cc.
+  if (external_apm->high_pass_filter()->Enable(true) != 0) {
     LOG_F(LS_ERROR) << "Failed to enable high pass filter.";
     return -1;
   }
-  if (audioproc->echo_cancellation()->enable_drift_compensation(false) != 0) {
+  if (external_apm->echo_cancellation()->enable_drift_compensation(false) !=
+      0) {
     LOG_F(LS_ERROR) << "Failed to disable drift compensation.";
     return -1;
   }
-  if (audioproc->noise_suppression()->set_level(kDefaultNsMode) != 0) {
+  if (external_apm->noise_suppression()->set_level(kDefaultNsMode) != 0) {
     LOG_F(LS_ERROR) << "Failed to set noise suppression level: "
         << kDefaultNsMode;
     return -1;
   }
-  GainControl* agc = audioproc->gain_control();
+  GainControl* agc = external_apm->gain_control();
   if (agc->set_analog_level_limits(kMinVolumeLevel, kMaxVolumeLevel) != 0) {
     LOG_F(LS_ERROR) << "Failed to set analog level limits with minimum: "
         << kMinVolumeLevel << " and maximum: " << kMaxVolumeLevel;
@@ -687,9 +681,7 @@ int32_t VoEBaseImpl::TerminateInternal() {
     shared_->set_audio_device(nullptr);
   }
 
-  if (shared_->audio_processing()) {
-    shared_->set_audio_processing(nullptr);
-  }
+  shared_->set_audio_processing(nullptr);
 
   return shared_->statistics().SetUnInitialized();
 }

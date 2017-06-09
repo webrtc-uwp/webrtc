@@ -107,6 +107,7 @@ class WebRtcVideoEncoderFactory;
 namespace webrtc {
 class AudioDeviceModule;
 class AudioMixer;
+class AudioProcessing;
 class MediaConstraintsInterface;
 
 // MediaStream container interface.
@@ -1066,6 +1067,31 @@ rtc::scoped_refptr<PeerConnectionFactoryInterface> CreatePeerConnectionFactory(
     AudioDeviceModule* default_adm,
     cricket::WebRtcVideoEncoderFactory* encoder_factory,
     cricket::WebRtcVideoDecoderFactory* decoder_factory);
+
+// Create a new instance of PeerConnectionFactoryInterface.
+//
+// |network_thread|, |worker_thread| and |signaling_thread| are
+// the only mandatory parameters.
+//
+// If non-null, a reference is added to |default_adm|, and ownership of
+// |video_encoder_factory| and |video_decoder_factory| is transferred to the
+// returned factory.
+// If |audio_mixer| is null, an internal audio mixer will be created and used.
+// If |audio_processing| is null, an internal audio processing module will be
+// created and used.
+// TODO(deadbeef): Use rtc::scoped_refptr<> and std::unique_ptr<> to make this
+// ownership transfer and ref counting more obvious.
+rtc::scoped_refptr<PeerConnectionFactoryInterface> CreatePeerConnectionFactory(
+    rtc::Thread* network_thread,
+    rtc::Thread* worker_thread,
+    rtc::Thread* signaling_thread,
+    AudioDeviceModule* default_adm,
+    rtc::scoped_refptr<AudioEncoderFactory> audio_encoder_factory,
+    rtc::scoped_refptr<AudioDecoderFactory> audio_decoder_factory,
+    cricket::WebRtcVideoEncoderFactory* video_encoder_factory,
+    cricket::WebRtcVideoDecoderFactory* video_decoder_factory,
+    rtc::scoped_refptr<AudioMixer> audio_mixer,
+    rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing);
 
 // Create a new instance of PeerConnectionFactoryInterface with external audio
 // mixer.

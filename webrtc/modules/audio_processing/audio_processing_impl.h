@@ -139,6 +139,10 @@ class AudioProcessingImpl : public AudioProcessing {
   void MutateConfig(rtc::FunctionView<void(AudioProcessing::Config*)> mutator);
   AudioProcessing::Config GetConfig() const override;
 
+  // rtc::RefCountInterface implementation.
+  int AddRef() const override;
+  int Release() const override;
+
  protected:
   // Overridden in a mock.
   virtual int InitializeLocked()
@@ -476,6 +480,9 @@ class AudioProcessingImpl : public AudioProcessing {
       agc_render_signal_queue_;
   std::unique_ptr<SwapQueue<std::vector<float>, RenderQueueItemVerifier<float>>>
       red_render_signal_queue_;
+
+  // Reference count.
+  mutable volatile int ref_count_ = 0;
 };
 
 }  // namespace webrtc
