@@ -1811,6 +1811,18 @@ AudioProcessing::Config AudioProcessingImpl::GetConfig() const {
   return config_;
 }
 
+int AudioProcessingImpl::AddRef() const {
+  return rtc::AtomicOps::Increment(&ref_count_);
+}
+
+int AudioProcessingImpl::Release() const {
+  int count = rtc::AtomicOps::Decrement(&ref_count_);
+  if (!count) {
+    delete this;
+  }
+  return count;
+}
+
 bool AudioProcessingImpl::UpdateActiveSubmoduleStates() {
   return submodule_states_.Update(
       config_.high_pass_filter.enabled,

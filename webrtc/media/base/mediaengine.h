@@ -35,6 +35,7 @@
 namespace webrtc {
 class AudioDeviceModule;
 class AudioMixer;
+class AudioProcessing;
 class Call;
 }
 
@@ -117,9 +118,13 @@ class CompositeMediaEngine : public MediaEngineInterface {
                            audio_encoder_factory,
                        const rtc::scoped_refptr<webrtc::AudioDecoderFactory>&
                            audio_decoder_factory,
-                       rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer)
-      : voice_(adm, audio_encoder_factory, audio_decoder_factory, audio_mixer) {
-  }
+                       rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer,
+                       rtc::scoped_refptr<webrtc::AudioProcessing> apm)
+      : voice_(adm,
+               audio_encoder_factory,
+               audio_decoder_factory,
+               audio_mixer,
+               apm) {}
   virtual ~CompositeMediaEngine() {}
   virtual bool Init() {
     video_.Init();

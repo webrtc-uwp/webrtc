@@ -27,6 +27,7 @@
 #include "webrtc/base/logging.h"
 #include "webrtc/logging/rtc_event_log/rtc_event_log.h"
 #include "webrtc/media/base/mediaconstants.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/ortc/ortcrtpreceiveradapter.h"
 #include "webrtc/ortc/ortcrtpsenderadapter.h"
 #include "webrtc/ortc/rtpparametersconversion.h"
@@ -543,10 +544,11 @@ OrtcFactory::CreateMediaEngine_w() {
   //
   // Note that |adm_| may be null, in which case the platform-specific default
   // AudioDeviceModule will be used.
+  rtc::scoped_refptr<AudioProcessing> apm = webrtc::AudioProcessing::Create();
   return std::unique_ptr<cricket::MediaEngineInterface>(
       cricket::WebRtcMediaEngineFactory::Create(adm_, audio_encoder_factory_,
                                                 audio_decoder_factory_, nullptr,
-                                                nullptr, nullptr));
+                                                nullptr, nullptr, apm));
 }
 
 }  // namespace webrtc
