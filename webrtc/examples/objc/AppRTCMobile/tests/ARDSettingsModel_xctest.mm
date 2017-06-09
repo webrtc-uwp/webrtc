@@ -31,6 +31,7 @@
 
   id partialMock = [OCMockObject partialMockForObject:_model];
   [[[partialMock stub] andReturn:storeMock] settingsStore];
+  [[[partialMock stub] andReturn:@[@"640x480", @"960x540", @"1280x720"]] availableVideoResolutions];
 
   return storeMock;
 }
