@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "ac5f13eb_8f95f55b",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplication.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-09T07:34:07Z",
+      "side": 1,
+      "message": "My problem when I tried that was that I then need to include Foundation or UIKit headers to get those types, and then compilation fails for decoder.cc which is purely C++. My first try was to change that into a Objective-C++ file and just turn this into a regular Objective-C class, but then the build failed in some way I did not understand.\n\nDo you think rewriting this class in Objective-C and changing the decoder to use Objective-C++ is the best way to do it, or is there some better solution?",
+      "parentUuid": "5ec823e0_d4b461ca",
+      "range": {
+        "startLine": 28,
+        "startChar": 2,
+        "endLine": 28,
+        "endChar": 6
+      },
+      "revId": "fdaac419f8fa2eb7428f50d6590eb6264b48cdef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "126c9a24_e72bf788",
         "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplication.h",
         "patchSetId": 1
@@ -60,6 +84,30 @@
       "writtenOn": "2017-06-08T16:04:04Z",
       "side": 1,
       "message": "Can we use the type UIApplicationState instead of long?",
+      "range": {
+        "startLine": 29,
+        "startChar": 2,
+        "endLine": 29,
+        "endChar": 6
+      },
+      "revId": "fdaac419f8fa2eb7428f50d6590eb6264b48cdef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d687cad_7b75256f",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplication.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-09T07:34:07Z",
+      "side": 1,
+      "message": "See above",
+      "parentUuid": "126c9a24_e72bf788",
       "range": {
         "startLine": 29,
         "startChar": 2,
@@ -112,6 +160,24 @@
     },
     {
       "key": {
+        "uuid": "aae87075_647fe39c",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplication.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-09T07:34:07Z",
+      "side": 1,
+      "message": "It could be rewritten to use dispatch_sync instead. Just need to handle the case when it is called on the main thread already and run it inline then.\n\nNot sure if it makes sense to initialize an encoder or decoder while in the background state but I guess it\u0027s possible.",
+      "parentUuid": "c7ab4be0_42cf7cb4",
+      "revId": "fdaac419f8fa2eb7428f50d6590eb6264b48cdef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1226b3b2_da156f72",
         "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/decoder.cc",
         "patchSetId": 1
@@ -123,6 +189,30 @@
       "writtenOn": "2017-06-08T15:59:42Z",
       "side": 1,
       "message": "We try to avoid raw pointers in webrtc. Use auto stored objects when possible, otherwise smart pointer types like std::unique_ptr",
+      "range": {
+        "startLine": 78,
+        "startChar": 2,
+        "endLine": 78,
+        "endChar": 30
+      },
+      "revId": "fdaac419f8fa2eb7428f50d6590eb6264b48cdef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc8f629d_01707410",
+        "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/decoder.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-09T07:34:07Z",
+      "side": 1,
+      "message": "Ok I\u0027ll read up on that, was a long time since I did any C++.",
+      "parentUuid": "1226b3b2_da156f72",
       "range": {
         "startLine": 78,
         "startChar": 2,
