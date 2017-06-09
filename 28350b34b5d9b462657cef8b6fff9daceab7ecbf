@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ca4a4271_305c8ec4",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ARDSettingsModel.m",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1167989
+      },
+      "writtenOn": "2017-06-09T13:50:15Z",
+      "side": 1,
+      "message": "nit: use `alloc init`instead of `new`.",
+      "revId": "28350b34b5d9b462657cef8b6fff9daceab7ecbf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c52a5bf8_a69756e0",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ARDSettingsModel.m",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1167989
+      },
+      "writtenOn": "2017-06-09T13:50:15Z",
+      "side": 1,
+      "message": "Perhaps [resolutionStrings copy] to return immutable copy?",
+      "revId": "28350b34b5d9b462657cef8b6fff9daceab7ecbf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
