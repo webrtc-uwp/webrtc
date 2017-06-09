@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ce8c0fe_e50a96a1",
+        "filename": "webrtc/video/end_to_end_tests.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 3993,
+      "author": {
+        "id": 1155749
+      },
+      "writtenOn": "2017-06-09T13:33:40Z",
+      "side": 1,
+      "message": "Initialize |max_expected_picture_id_gap_| here.",
+      "revId": "f72ce03035b839cd82625018394e3741589093da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ab658d7_f1669bb9",
+        "filename": "webrtc/video/end_to_end_tests.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 4068,
+      "author": {
+        "id": 1155749
+      },
+      "writtenOn": "2017-06-09T13:33:40Z",
+      "side": 1,
+      "message": "Not needed :)",
+      "revId": "f72ce03035b839cd82625018394e3741589093da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b429119f_093fa505",
+        "filename": "webrtc/video/end_to_end_tests.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 4126,
+      "author": {
+        "id": 1155749
+      },
+      "writtenOn": "2017-06-09T13:33:40Z",
+      "side": 1,
+      "message": "Seems that you need to add these to the capture list, to make MSVC happy.",
+      "range": {
+        "startLine": 4126,
+        "startChar": 33,
+        "endLine": 4126,
+        "endChar": 76
+      },
+      "revId": "f72ce03035b839cd82625018394e3741589093da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f558c56b_6ac799f6",
+        "filename": "webrtc/video/end_to_end_tests.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 4128,
+      "author": {
+        "id": 1155749
+      },
+      "writtenOn": "2017-06-09T13:33:40Z",
+      "side": 1,
+      "message": "Add a comment why we are not using 0 here, i.e., because frames are \"lost\" after being encoded due to the VideoSendStream object being destroyed.\n\n(For the SW encoder we are using here, the packetization should happen directly after, and synchronous with, the encoding. That means that the frame itself is not lost, but rather the packets that represent the frame.)",
+      "range": {
+        "startLine": 4128,
+        "startChar": 51,
+        "endLine": 4128,
+        "endChar": 65
+      },
+      "revId": "f72ce03035b839cd82625018394e3741589093da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "654a4650_e85ac912",
+        "filename": "webrtc/video/end_to_end_tests.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 4136,
+      "author": {
+        "id": 1155749
+      },
+      "writtenOn": "2017-06-09T13:33:40Z",
+      "side": 1,
+      "message": "Feel free to update this comment to reflect that we now also test recreating VideoSendStream.",
+      "range": {
+        "startLine": 4136,
+        "startChar": 5,
+        "endLine": 4136,
+        "endChar": 23
+      },
+      "revId": "f72ce03035b839cd82625018394e3741589093da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
