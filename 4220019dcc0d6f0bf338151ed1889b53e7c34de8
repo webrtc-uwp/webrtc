@@ -779,6 +779,30 @@
     },
     {
       "key": {
+        "uuid": "2c44053c_e0682cad",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-09T09:08:19Z",
+      "side": 1,
+      "message": "Unfortunately we don\u0027t have any trybots running older versions of Android at the moment. If you write a test for this class I can run the test on an older device though.",
+      "parentUuid": "abc3c62c_61a1d3e5",
+      "range": {
+        "startLine": 27,
+        "startChar": 1,
+        "endLine": 27,
+        "endChar": 10
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "686d75dc_5764bd5a",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
         "patchSetId": 6
