@@ -1,0 +1,389 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d634bdd_460b0280",
+        "filename": "webrtc/audio/audio_send_stream_unittest.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-09T14:25:49Z",
+      "side": 1,
+      "message": "... \u003d new MockAudioProcessing();",
+      "range": {
+        "startLine": 153,
+        "startChar": 48,
+        "endLine": 153,
+        "endChar": 0
+      },
+      "revId": "18cb27b477c33767b750b40c7bacd3ea9bfcf3a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd496084_ab062bd3",
+        "filename": "webrtc/audio/audio_send_stream_unittest.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-09T14:25:49Z",
+      "side": 1,
+      "message": "Remove - you have it in the audio_state_",
+      "range": {
+        "startLine": 305,
+        "startChar": 42,
+        "endLine": 305,
+        "endChar": 59
+      },
+      "revId": "18cb27b477c33767b750b40c7bacd3ea9bfcf3a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51c846e2_cc9bd1a5",
+        "filename": "webrtc/audio/audio_state.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-09T14:25:49Z",
+      "side": 1,
+      "message": "nit: config_.",
+      "range": {
+        "startLine": 26,
+        "startChar": 35,
+        "endLine": 26,
+        "endChar": 36
+      },
+      "revId": "18cb27b477c33767b750b40c7bacd3ea9bfcf3a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "efc29ab3_622456e6",
+        "filename": "webrtc/audio/audio_transport_proxy.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-09T14:25:49Z",
+      "side": 1,
+      "message": "Not needed anymore?",
+      "range": {
+        "startLine": 66,
+        "startChar": 19,
+        "endLine": 66,
+        "endChar": 35
+      },
+      "revId": "18cb27b477c33767b750b40c7bacd3ea9bfcf3a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a936737_a4832cce",
+        "filename": "webrtc/call/call_perf_tests.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-09T14:25:49Z",
+      "side": 1,
+      "message": "nit: can we stick to \"audio_processing\" everywhere?",
+      "range": {
+        "startLine": 147,
+        "startChar": 38,
+        "endLine": 147,
+        "endChar": 41
+      },
+      "revId": "18cb27b477c33767b750b40c7bacd3ea9bfcf3a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6681ed3a_89016766",
+        "filename": "webrtc/call/call_unittest.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-09T14:25:49Z",
+      "side": 1,
+      "message": "is there a .get() missing or does scoped_refptr\u003c\u003e auto convert to the the raw pointer?",
+      "range": {
+        "startLine": 460,
+        "startChar": 72,
+        "endLine": 460,
+        "endChar": 73
+      },
+      "revId": "18cb27b477c33767b750b40c7bacd3ea9bfcf3a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "15260a62_57057d8f",
+        "filename": "webrtc/media/base/mediaengine.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-09T14:25:49Z",
+      "side": 1,
+      "message": "nit: apm -\u003e audio_processing",
+      "revId": "18cb27b477c33767b750b40c7bacd3ea9bfcf3a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cca788d2_c7cd8219",
+        "filename": "webrtc/media/engine/apm_helpers_unittest.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-09T14:25:49Z",
+      "side": 1,
+      "message": "Should AudioProcessing::Create() return the scoped_refptr?",
+      "range": {
+        "startLine": 36,
+        "startChar": 47,
+        "endLine": 36,
+        "endChar": 62
+      },
+      "revId": "18cb27b477c33767b750b40c7bacd3ea9bfcf3a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a4b0712_3150e46d",
+        "filename": "webrtc/modules/audio_processing/audio_processing_impl.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-09T14:25:49Z",
+      "side": 1,
+      "message": "Please use RefCountedObject instead of rolling your own AddRef/Release.",
+      "range": {
+        "startLine": 142,
+        "startChar": 10,
+        "endLine": 142,
+        "endChar": 27
+      },
+      "revId": "18cb27b477c33767b750b40c7bacd3ea9bfcf3a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2c637aaa_13818bec",
+        "filename": "webrtc/modules/audio_processing/include/mock_audio_processing.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-09T14:25:49Z",
+      "side": 1,
+      "message": "Use RefCountedObject instead.",
+      "range": {
+        "startLine": 216,
+        "startChar": 24,
+        "endLine": 216,
+        "endChar": 30
+      },
+      "revId": "18cb27b477c33767b750b40c7bacd3ea9bfcf3a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "04da3147_e6fbccc6",
+        "filename": "webrtc/ortc/ortcfactory.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 547,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-09T14:25:49Z",
+      "side": 1,
+      "message": "Do we want to make it injectable all the way from OrtcFactory ctor?",
+      "range": {
+        "startLine": 547,
+        "startChar": 51,
+        "endLine": 547,
+        "endChar": 52
+      },
+      "revId": "18cb27b477c33767b750b40c7bacd3ea9bfcf3a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a50e6b3_91049744",
+        "filename": "webrtc/pc/peerconnectionfactory.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-09T14:25:49Z",
+      "side": 1,
+      "message": "nullptr -\u003e webrtc::AudioProcessing::Create(), here and elsewhere",
+      "range": {
+        "startLine": 134,
+        "startChar": 46,
+        "endLine": 134,
+        "endChar": 53
+      },
+      "revId": "18cb27b477c33767b750b40c7bacd3ea9bfcf3a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eecb96d9_2fc5c7e1",
+        "filename": "webrtc/pc/peerconnectionfactory.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-09T14:25:49Z",
+      "side": 1,
+      "message": "This call should really be in the CreatePCF() impls which do not take an APM as argument.",
+      "range": {
+        "startLine": 420,
+        "startChar": 34,
+        "endLine": 420,
+        "endChar": 35
+      },
+      "revId": "18cb27b477c33767b750b40c7bacd3ea9bfcf3a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87c8e212_9ac17239",
+        "filename": "webrtc/video/video_quality_test.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-09T14:25:49Z",
+      "side": 1,
+      "message": "This looks like a crash bug. \u0027apm\u0027 will go out of scope and VoE refers to a stale pointer after this function.",
+      "range": {
+        "startLine": 84,
+        "startChar": 29,
+        "endLine": 84,
+        "endChar": 44
+      },
+      "revId": "18cb27b477c33767b750b40c7bacd3ea9bfcf3a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d9ba78c4_ec849a1c",
+        "filename": "webrtc/voice_engine/test/auto_test/fakes/conference_transport.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-09T14:25:49Z",
+      "side": 1,
+      "message": "Use scoped_refptr here instead - then AudioProcessing::Create does not need to return a raw pointer and you can use RefCountedObject instead of rolling your own ref counting in AudioProcessingImpl.",
+      "range": {
+        "startLine": 150,
+        "startChar": 18,
+        "endLine": 150,
+        "endChar": 24
+      },
+      "revId": "18cb27b477c33767b750b40c7bacd3ea9bfcf3a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "343bdf8c_5d2b22f1",
+        "filename": "webrtc/voice_engine/test/auto_test/standard/codec_test.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-09T14:25:49Z",
+      "side": 1,
+      "message": "use scoped_refptr instead",
+      "range": {
+        "startLine": 32,
+        "startChar": 17,
+        "endLine": 32,
+        "endChar": 18
+      },
+      "revId": "18cb27b477c33767b750b40c7bacd3ea9bfcf3a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2081ad76_8a1e958e",
+        "filename": "webrtc/voice_engine/voice_engine_fixture.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-06-09T14:25:49Z",
+      "side": 1,
+      "message": "Should this be a MockAudioProcessing?",
+      "range": {
+        "startLine": 33,
+        "startChar": 18,
+        "endLine": 33,
+        "endChar": 33
+      },
+      "revId": "18cb27b477c33767b750b40c7bacd3ea9bfcf3a1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
