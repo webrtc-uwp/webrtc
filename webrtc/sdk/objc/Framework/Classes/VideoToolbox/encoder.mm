@@ -386,7 +386,7 @@ int H264VideoToolboxEncoder::Encode(
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
 #if defined(WEBRTC_IOS)
-  if (!RTCIsUIApplicationActive()) {
+  if (!application_status_observer_.IsApplicationActive()) {
     // Ignore all encode requests when app isn't active. In this state, the
     // hardware encoder has been invalidated by the OS.
     return WEBRTC_VIDEO_CODEC_OK;

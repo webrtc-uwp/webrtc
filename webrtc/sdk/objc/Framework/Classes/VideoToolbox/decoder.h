@@ -16,6 +16,10 @@
 
 #include <VideoToolbox/VideoToolbox.h>
 
+#if defined(WEBRTC_IOS)
+#include "Common/RTCUIApplication.h"
+#endif
+
 // This file provides a H264 encoder implementation using the VideoToolbox
 // APIs. Since documentation is almost non-existent, this is largely based on
 // the information in the VideoToolbox header files, a talk from WWDC 2014 and
@@ -52,6 +56,10 @@ class H264VideoToolboxDecoder : public H264Decoder {
   DecodedImageCallback* callback_;
   CMVideoFormatDescriptionRef video_format_;
   VTDecompressionSessionRef decompression_session_;
+
+#if defined(WEBRTC_IOS)
+  RTCUIApplicationStatusObserver application_status_observer_;
+#endif
 };  // H264VideoToolboxDecoder
 
 }  // namespace webrtc

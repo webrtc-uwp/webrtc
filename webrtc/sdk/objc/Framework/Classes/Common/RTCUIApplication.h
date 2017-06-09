@@ -11,11 +11,24 @@
 #ifndef WEBRTC_SDK_OBJC_FRAMEWORK_CLASSES_UI_RTCUIAPPLICATION_H_
 #define WEBRTC_SDK_OBJC_FRAMEWORK_CLASSES_UI_RTCUIAPPLICATION_H_
 
+#include <memory>
 #include "WebRTC/RTCMacros.h"
 
 #if defined(WEBRTC_IOS)
-/** Convenience function to get UIApplicationState from C++. */
-RTC_EXTERN bool RTCIsUIApplicationActive();
+
+/** Convenience class to track UIApplicationState from C++. */
+class RTCUIApplicationStatusObserver {
+ public:
+  RTCUIApplicationStatusObserver();
+  ~RTCUIApplicationStatusObserver();
+
+  bool IsApplicationActive();
+
+ private:
+  class Impl;
+  std::unique_ptr<Impl> impl;
+};
+
 #endif  // WEBRTC_IOS
 
 #endif  // WEBRTC_SDK_OBJC_FRAMEWORK_CLASSES_UI_RTCUIAPPLICATION_H_
