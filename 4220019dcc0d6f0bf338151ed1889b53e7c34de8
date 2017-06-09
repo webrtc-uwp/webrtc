@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "1536a5c2_87deba8c",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-09T09:00:39Z",
+      "side": 1,
+      "message": "The reason I made them long was to fit any value in unsigned 32-bit integer. However, 32-bit signed integer is enough for up to 2 Gbit/s which I think is probably enough.",
+      "parentUuid": "98b27a6a_d8043d1d",
+      "range": {
+        "startLine": 66,
+        "startChar": 51,
+        "endLine": 66,
+        "endChar": 0
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1b3bacf3_b2cdeb62",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/DynamicBitrateAdjuster.java",
         "patchSetId": 6

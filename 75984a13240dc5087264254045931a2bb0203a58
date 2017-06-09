@@ -49,6 +49,29 @@
     },
     {
       "key": {
+        "uuid": "34888011_0f827691",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-09T09:00:39Z",
+      "side": 1,
+      "message": "FYI this timestamp will likely be removed. It was supposed to be the RTP timestamp but named timeStampMs by mistake. But we might not need it at all.",
+      "range": {
+        "startLine": 226,
+        "startChar": 40,
+        "endLine": 226,
+        "endChar": 54
+      },
+      "revId": "75984a13240dc5087264254045931a2bb0203a58",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cd5ae7bb_ceff5957",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
         "patchSetId": 7
@@ -131,6 +154,30 @@
       "side": 1,
       "message": "Yes, it\u0027s done mostly in response to Peter\u0027s comment.  I do like the property that it can\u0027t get out-of-sync.  But since will be your code and not mine or Peter\u0027s, I\u0027ll defer to your preference.\n\nI\u0027ve made one more stab at guaranteed consistency:  we can put the conversion methods on an enum and switch on the integer to get the right enum value up front.  Please note that it\u0027s also possible to write it as two switches (one to convert int to enum, one that takes the enum and dispatches to the right \"fill buffer\" implementation) if you really don\u0027t like the methods on the enum.\n\nIf you don\u0027t like those options at all, I\u0027ll revert to separate methods for conversion and checking what formats are supported.",
       "parentUuid": "7eab718c_f7c546c9",
+      "range": {
+        "startLine": 389,
+        "startChar": 18,
+        "endLine": 389,
+        "endChar": 31
+      },
+      "revId": "75984a13240dc5087264254045931a2bb0203a58",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f101521b_a45e3110",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-09T09:00:39Z",
+      "side": 1,
+      "message": "I think this looks good.",
+      "parentUuid": "5250d43a_400881f4",
       "range": {
         "startLine": 389,
         "startChar": 18,
