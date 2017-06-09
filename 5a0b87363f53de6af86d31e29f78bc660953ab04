@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "aee0e960_588dfd00",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-09T17:26:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "28613887_48a69245",
+      "range": {
+        "startLine": 159,
+        "startChar": 24,
+        "endLine": 159,
+        "endChar": 30
+      },
+      "revId": "5a0b87363f53de6af86d31e29f78bc660953ab04",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8a55310e_846dfccb",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
         "patchSetId": 9
@@ -45,6 +69,30 @@
       "revId": "5a0b87363f53de6af86d31e29f78bc660953ab04",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab336bf1_1a4fdf16",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-09T17:26:52Z",
+      "side": 1,
+      "message": "Just to capture a stack trace for the log message.  I\u0027ll remove it.",
+      "parentUuid": "8a55310e_846dfccb",
+      "range": {
+        "startLine": 182,
+        "startChar": 60,
+        "endLine": 182,
+        "endChar": 76
+      },
+      "revId": "5a0b87363f53de6af86d31e29f78bc660953ab04",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "d41e27d3_111cb16e",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-09T17:26:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2a306cdd_697f7b68",
+      "range": {
+        "startLine": 188,
+        "startChar": 62,
+        "endLine": 188,
+        "endChar": 78
+      },
+      "revId": "5a0b87363f53de6af86d31e29f78bc660953ab04",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aa109561_39a9a0a4",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
         "patchSetId": 9
@@ -82,6 +154,30 @@
       "writtenOn": "2017-06-09T09:00:39Z",
       "side": 1,
       "message": "Restarting the encoder in case of error conditions and returning software fallback request if that fails has to be implemented. It can be done in a follow-up though.",
+      "range": {
+        "startLine": 221,
+        "startChar": 30,
+        "endLine": 221,
+        "endChar": 35
+      },
+      "revId": "5a0b87363f53de6af86d31e29f78bc660953ab04",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7b90dc8e_02aac4cc",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-09T17:26:52Z",
+      "side": 1,
+      "message": "I\u0027ve made an attempt at this.  However, I\u0027m not sure it\u0027s exactly what we want.  It currently attempts a reset and requests a software fallback if that doesn\u0027t work.\n\nThe current JNI layer checks if a software version of the current codec is available.  If it is, it immediately requests a fallback to software.  The fallback is also sticky--every future call to encode immediately requests a fallback.  The JNI layer only resets the codec on a hardware error if it can\u0027t find a software codec.\n\nDo we want the same behavior here?  How would we find out whether a software fallback is available?  Pass in a bit in the constructor?  Alternatively, Java component could not reset itself, but request a fallback to software.  The C++ component could determine whether a suitable fallback is available and reset the Java component if it\u0027s not.\n\nWhat do you think?",
+      "parentUuid": "aa109561_39a9a0a4",
       "range": {
         "startLine": 221,
         "startChar": 30,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "ea39106f_d05e6755",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-09T17:26:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "562792a1_af923d27",
+      "range": {
+        "startLine": 225,
+        "startChar": 40,
+        "endLine": 225,
+        "endChar": 45
+      },
+      "revId": "5a0b87363f53de6af86d31e29f78bc660953ab04",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "623402d4_a15e8ce7",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
         "patchSetId": 9
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "7ab6b74e_0b30ac1d",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-09T17:26:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "623402d4_a15e8ce7",
+      "range": {
+        "startLine": 229,
+        "startChar": 32,
+        "endLine": 229,
+        "endChar": 39
+      },
+      "revId": "5a0b87363f53de6af86d31e29f78bc660953ab04",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "09aa18ac_3b9376b7",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
         "patchSetId": 9
@@ -160,6 +304,30 @@
       "revId": "5a0b87363f53de6af86d31e29f78bc660953ab04",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb584e33_727fbd96",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-09T17:26:52Z",
+      "side": 1,
+      "message": "MediaCodec.queueInputBuffer() needs the presentation timestamp in micros.  But EncodedImage.Builder already needs the timestamp in millis, so I\u0027ve just moved all the conversions to encode().",
+      "parentUuid": "09aa18ac_3b9376b7",
+      "range": {
+        "startLine": 312,
+        "startChar": 36,
+        "endLine": 312,
+        "endChar": 59
+      },
+      "revId": "5a0b87363f53de6af86d31e29f78bc660953ab04",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
