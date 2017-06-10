@@ -100,6 +100,8 @@ public class PeerConnection {
     public final String username;
     public final String password;
     public final TlsCertPolicy tlsCertPolicy;
+    // Optional resolved IPv4/IPv6 address for the uri.
+    public final String ip;
 
     /** Convenience constructor for STUN servers. */
     public IceServer(String uri) {
@@ -111,14 +113,21 @@ public class PeerConnection {
     }
 
     public IceServer(String uri, String username, String password, TlsCertPolicy tlsCertPolicy) {
+      this(uri, username, password, tlsCertPolicy, null);
+    }
+
+    public IceServer(
+        String uri, String username, String password, TlsCertPolicy tlsCertPolicy, String ip) {
       this.uri = uri;
       this.username = username;
       this.password = password;
       this.tlsCertPolicy = tlsCertPolicy;
+      this.ip = ip;
     }
 
     public String toString() {
-      return uri + " [" + username + ":" + password + "] [" + tlsCertPolicy + "]";
+      return uri + " [" + username + ":" + password + "] [" + tlsCertPolicy + "] [" + ip
+          + "]";
     }
   }
 
