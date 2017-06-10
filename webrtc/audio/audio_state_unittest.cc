@@ -31,8 +31,6 @@ struct ConfigHelper {
         .WillOnce(testing::Return(0));
     EXPECT_CALL(mock_voice_engine, audio_device_module())
         .Times(testing::AtLeast(1));
-    EXPECT_CALL(mock_voice_engine, audio_processing())
-        .Times(testing::AtLeast(1));
     EXPECT_CALL(mock_voice_engine, audio_transport())
         .WillRepeatedly(testing::Return(&audio_transport));
 
@@ -49,6 +47,8 @@ struct ConfigHelper {
 
     audio_state_config.voice_engine = &mock_voice_engine;
     audio_state_config.audio_mixer = audio_mixer;
+    audio_state_config.audio_processing =
+        new rtc::RefCountedObject<MockAudioProcessing>();
   }
   AudioState::Config& config() { return audio_state_config; }
   MockVoiceEngine& voice_engine() { return mock_voice_engine; }

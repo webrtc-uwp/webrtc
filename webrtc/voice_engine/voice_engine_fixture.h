@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <memory>
+
 #include "webrtc/modules/audio_device/include/fake_audio_device.h"
 #include "webrtc/test/gtest.h"
 #include "webrtc/test/mock_transport.h"
@@ -16,6 +18,8 @@
 #include "webrtc/voice_engine/mock/mock_voe_observer.h"
 
 namespace webrtc {
+
+class AudioProcessing;
 
 class VoiceEngineFixture : public ::testing::Test {
  protected:
@@ -28,6 +32,7 @@ class VoiceEngineFixture : public ::testing::Test {
   MockVoEObserver observer_;
   FakeAudioDeviceModule adm_;
   MockTransport transport_;
+  rtc::scoped_refptr<AudioProcessing> apm_;
 };
 
 }  // namespace webrtc

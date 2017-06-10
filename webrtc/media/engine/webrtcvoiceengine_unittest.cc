@@ -15,6 +15,7 @@
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/byteorder.h"
 #include "webrtc/base/safe_conversions.h"
+#include "webrtc/base/scoped_ref_ptr.h"
 #include "webrtc/call/call.h"
 #include "webrtc/logging/rtc_event_log/rtc_event_log.h"
 #include "webrtc/media/base/fakemediaengine.h"
@@ -121,19 +122,21 @@ void AdmSetupExpectations(webrtc::test::MockAudioDeviceModule* adm) {
 TEST(WebRtcVoiceEngineTestStubLibrary, StartupShutdown) {
   StrictMock<webrtc::test::MockAudioDeviceModule> adm;
   AdmSetupExpectations(&adm);
-  StrictMock<webrtc::test::MockAudioProcessing> apm;
-  EXPECT_CALL(apm, ApplyConfig(testing::_));
-  EXPECT_CALL(apm, SetExtraOptions(testing::_));
-  EXPECT_CALL(apm, Initialize()).WillOnce(Return(0));
-  EXPECT_CALL(apm, DetachAecDump());
+  rtc::scoped_refptr<StrictMock<webrtc::test::MockAudioProcessing>> apm =
+      new rtc::RefCountedObject<
+          StrictMock<webrtc::test::MockAudioProcessing>>();
+  EXPECT_CALL(*apm, ApplyConfig(testing::_));
+  EXPECT_CALL(*apm, SetExtraOptions(testing::_));
+  EXPECT_CALL(*apm, Initialize()).WillOnce(Return(0));
+  EXPECT_CALL(*apm, DetachAecDump());
   StrictMock<MockTransmitMixer> transmit_mixer;
   EXPECT_CALL(transmit_mixer, EnableStereoChannelSwapping(false));
-  cricket::FakeWebRtcVoiceEngine voe(&apm, &transmit_mixer);
+  cricket::FakeWebRtcVoiceEngine voe(&transmit_mixer);
   EXPECT_FALSE(voe.IsInited());
   {
     cricket::WebRtcVoiceEngine engine(
         &adm, webrtc::MockAudioEncoderFactory::CreateUnusedFactory(),
-        webrtc::MockAudioDecoderFactory::CreateUnusedFactory(), nullptr,
+        webrtc::MockAudioDecoderFactory::CreateUnusedFactory(), nullptr, apm,
         new FakeVoEWrapper(&voe));
     EXPECT_TRUE(voe.IsInited());
   }
@@ -154,17 +157,22 @@ class WebRtcVoiceEngineTestFake : public testing::Test {
   WebRtcVoiceEngineTestFake() : WebRtcVoiceEngineTestFake("") {}
 
   explicit WebRtcVoiceEngineTestFake(const char* field_trials)
-      : apm_gc_(*apm_.gain_control()), apm_ec_(*apm_.echo_cancellation()),
-        apm_ns_(*apm_.noise_suppression()), apm_vd_(*apm_.voice_detection()),
-        call_(webrtc::Call::Config(&event_log_)), voe_(&apm_, &transmit_mixer_),
+      : apm_(new rtc::RefCountedObject<
+             StrictMock<webrtc::test::MockAudioProcessing>>()),
+        apm_gc_(*apm_->gain_control()),
+        apm_ec_(*apm_->echo_cancellation()),
+        apm_ns_(*apm_->noise_suppression()),
+        apm_vd_(*apm_->voice_detection()),
+        call_(webrtc::Call::Config(&event_log_)),
+        voe_(&transmit_mixer_),
         override_field_trials_(field_trials) {
     // AudioDeviceModule.
     AdmSetupExpectations(&adm_);
     // AudioProcessing.
-    EXPECT_CALL(apm_, ApplyConfig(testing::_));
-    EXPECT_CALL(apm_, SetExtraOptions(testing::_));
-    EXPECT_CALL(apm_, Initialize()).WillOnce(Return(0));
-    EXPECT_CALL(apm_, DetachAecDump());
+    EXPECT_CALL(*apm_, ApplyConfig(testing::_));
+    EXPECT_CALL(*apm_, SetExtraOptions(testing::_));
+    EXPECT_CALL(*apm_, Initialize()).WillOnce(Return(0));
+    EXPECT_CALL(*apm_, DetachAecDump());
     // Default Options.
     EXPECT_CALL(apm_ec_, Enable(true)).WillOnce(Return(0));
     EXPECT_CALL(apm_ec_, enable_metrics(true)).WillOnce(Return(0));
@@ -185,7 +193,7 @@ class WebRtcVoiceEngineTestFake : public testing::Test {
     auto encoder_factory = webrtc::CreateBuiltinAudioEncoderFactory();
     auto decoder_factory = webrtc::CreateBuiltinAudioDecoderFactory();
     engine_.reset(new cricket::WebRtcVoiceEngine(&adm_, encoder_factory,
-                                                 decoder_factory, nullptr,
+                                                 decoder_factory, nullptr, apm_,
                                                  new FakeVoEWrapper(&voe_)));
     send_parameters_.codecs.push_back(kPcmuCodec);
     recv_parameters_.codecs.push_back(kPcmuCodec);
@@ -194,8 +202,8 @@ class WebRtcVoiceEngineTestFake : public testing::Test {
   }
 
   bool SetupChannel() {
-    EXPECT_CALL(apm_, ApplyConfig(testing::_));
-    EXPECT_CALL(apm_, SetExtraOptions(testing::_));
+    EXPECT_CALL(*apm_, ApplyConfig(testing::_));
+    EXPECT_CALL(*apm_, SetExtraOptions(testing::_));
     channel_ = engine_->CreateChannel(&call_, cricket::MediaConfig(),
                                       cricket::AudioOptions());
     return (channel_ != nullptr);
@@ -215,7 +223,7 @@ class WebRtcVoiceEngineTestFake : public testing::Test {
     if (!channel_->AddSendStream(cricket::StreamParams::CreateLegacy(kSsrcX))) {
       return false;
     }
-    EXPECT_CALL(apm_, set_output_will_be_muted(false));
+    EXPECT_CALL(*apm_, set_output_will_be_muted(false));
     return channel_->SetAudioSend(kSsrcX, true, nullptr, &fake_source_);
   }
 
@@ -268,26 +276,26 @@ class WebRtcVoiceEngineTestFake : public testing::Test {
       EXPECT_CALL(adm_, RecordingIsInitialized()).WillOnce(Return(false));
       EXPECT_CALL(adm_, Recording()).WillOnce(Return(false));
       EXPECT_CALL(adm_, InitRecording()).WillOnce(Return(0));
-      EXPECT_CALL(apm_, ApplyConfig(testing::_));
-      EXPECT_CALL(apm_, SetExtraOptions(testing::_));
+      EXPECT_CALL(*apm_, ApplyConfig(testing::_));
+      EXPECT_CALL(*apm_, SetExtraOptions(testing::_));
     }
     channel_->SetSend(enable);
   }
 
   void SetSendParameters(const cricket::AudioSendParameters& params) {
-    EXPECT_CALL(apm_, ApplyConfig(testing::_));
-    EXPECT_CALL(apm_, SetExtraOptions(testing::_));
+    EXPECT_CALL(*apm_, ApplyConfig(testing::_));
+    EXPECT_CALL(*apm_, SetExtraOptions(testing::_));
     ASSERT_TRUE(channel_);
     EXPECT_TRUE(channel_->SetSendParameters(params));
   }
 
   void SetAudioSend(uint32_t ssrc, bool enable, cricket::AudioSource* source,
                     const cricket::AudioOptions* options = nullptr) {
-    EXPECT_CALL(apm_, set_output_will_be_muted(!enable));
+    EXPECT_CALL(*apm_, set_output_will_be_muted(!enable));
     ASSERT_TRUE(channel_);
     if (enable && options) {
-      EXPECT_CALL(apm_, ApplyConfig(testing::_));
-      EXPECT_CALL(apm_, SetExtraOptions(testing::_));
+      EXPECT_CALL(*apm_, ApplyConfig(testing::_));
+      EXPECT_CALL(*apm_, SetExtraOptions(testing::_));
     }
     EXPECT_TRUE(channel_->SetAudioSend(ssrc, enable, options, source));
   }
@@ -656,7 +664,7 @@ class WebRtcVoiceEngineTestFake : public testing::Test {
 
  protected:
   StrictMock<webrtc::test::MockAudioDeviceModule> adm_;
-  StrictMock<webrtc::test::MockAudioProcessing> apm_;
+  rtc::scoped_refptr<StrictMock<webrtc::test::MockAudioProcessing>> apm_;
   webrtc::test::MockGainControl& apm_gc_;
   webrtc::test::MockEchoCancellation& apm_ec_;
   webrtc::test::MockNoiseSuppression& apm_ns_;
@@ -2792,8 +2800,8 @@ TEST_F(WebRtcVoiceEngineTestFake, SetOptionOverridesViaChannels) {
               RecordingIsInitialized()).Times(2).WillRepeatedly(Return(false));
   EXPECT_CALL(adm_, Recording()).Times(2).WillRepeatedly(Return(false));
   EXPECT_CALL(adm_, InitRecording()).Times(2).WillRepeatedly(Return(0));
-  EXPECT_CALL(apm_, ApplyConfig(testing::_)).Times(10);
-  EXPECT_CALL(apm_, SetExtraOptions(testing::_)).Times(10);
+  EXPECT_CALL(*apm_, ApplyConfig(testing::_)).Times(10);
+  EXPECT_CALL(*apm_, SetExtraOptions(testing::_)).Times(10);
 
   std::unique_ptr<cricket::WebRtcVoiceMediaChannel> channel1(
       static_cast<cricket::WebRtcVoiceMediaChannel*>(engine_->CreateChannel(
@@ -2903,8 +2911,8 @@ TEST_F(WebRtcVoiceEngineTestFake, TestSetDscpOptions) {
   cricket::MediaConfig config;
   std::unique_ptr<cricket::VoiceMediaChannel> channel;
 
-  EXPECT_CALL(apm_, ApplyConfig(testing::_)).Times(3);
-  EXPECT_CALL(apm_, SetExtraOptions(testing::_)).Times(3);
+  EXPECT_CALL(*apm_, ApplyConfig(testing::_)).Times(3);
+  EXPECT_CALL(*apm_, SetExtraOptions(testing::_)).Times(3);
 
   channel.reset(
       engine_->CreateChannel(&call_, config, cricket::AudioOptions()));
@@ -3260,9 +3268,11 @@ TEST_F(WebRtcVoiceEngineTestFake, PreservePlayoutWhenRecreateRecvStream) {
 TEST(WebRtcVoiceEngineTest, StartupShutdown) {
   // If the VoiceEngine wants to gather available codecs early, that's fine but
   // we never want it to create a decoder at this stage.
+  rtc::scoped_refptr<webrtc::AudioProcessing> apm =
+      webrtc::AudioProcessing::Create();
   cricket::WebRtcVoiceEngine engine(
       nullptr, webrtc::MockAudioEncoderFactory::CreateUnusedFactory(),
-      webrtc::MockAudioDecoderFactory::CreateUnusedFactory(), nullptr);
+      webrtc::MockAudioDecoderFactory::CreateUnusedFactory(), nullptr, apm);
   webrtc::RtcEventLogNullImpl event_log;
   std::unique_ptr<webrtc::Call> call(
       webrtc::Call::Create(webrtc::Call::Config(&event_log)));
@@ -3281,9 +3291,11 @@ TEST(WebRtcVoiceEngineTest, StartupShutdownWithExternalADM) {
   // we could enter a tight loop since the mock would return 0.
   EXPECT_CALL(adm, TimeUntilNextProcess()).WillRepeatedly(Return(100));
   {
+    rtc::scoped_refptr<webrtc::AudioProcessing> apm =
+        webrtc::AudioProcessing::Create();
     cricket::WebRtcVoiceEngine engine(
         &adm, webrtc::MockAudioEncoderFactory::CreateUnusedFactory(),
-        webrtc::MockAudioDecoderFactory::CreateUnusedFactory(), nullptr);
+        webrtc::MockAudioDecoderFactory::CreateUnusedFactory(), nullptr, apm);
     webrtc::RtcEventLogNullImpl event_log;
     std::unique_ptr<webrtc::Call> call(
         webrtc::Call::Create(webrtc::Call::Config(&event_log)));
@@ -3298,9 +3310,11 @@ TEST(WebRtcVoiceEngineTest, StartupShutdownWithExternalADM) {
 TEST(WebRtcVoiceEngineTest, HasCorrectPayloadTypeMapping) {
   // TODO(ossu): Why are the payload types of codecs with non-static payload
   // type assignments checked here? It shouldn't really matter.
+  rtc::scoped_refptr<webrtc::AudioProcessing> apm =
+      webrtc::AudioProcessing::Create();
   cricket::WebRtcVoiceEngine engine(
       nullptr, webrtc::MockAudioEncoderFactory::CreateUnusedFactory(),
-      webrtc::MockAudioDecoderFactory::CreateUnusedFactory(), nullptr);
+      webrtc::MockAudioDecoderFactory::CreateUnusedFactory(), nullptr, apm);
   for (const cricket::AudioCodec& codec : engine.send_codecs()) {
     auto is_codec = [&codec](const char* name, int clockrate = 0) {
       return STR_CASE_CMP(codec.name.c_str(), name) == 0 &&
@@ -3339,9 +3353,11 @@ TEST(WebRtcVoiceEngineTest, HasCorrectPayloadTypeMapping) {
 
 // Tests that VoE supports at least 32 channels
 TEST(WebRtcVoiceEngineTest, Has32Channels) {
+  rtc::scoped_refptr<webrtc::AudioProcessing> apm =
+      webrtc::AudioProcessing::Create();
   cricket::WebRtcVoiceEngine engine(
       nullptr, webrtc::MockAudioEncoderFactory::CreateUnusedFactory(),
-      webrtc::MockAudioDecoderFactory::CreateUnusedFactory(), nullptr);
+      webrtc::MockAudioDecoderFactory::CreateUnusedFactory(), nullptr, apm);
   webrtc::RtcEventLogNullImpl event_log;
   std::unique_ptr<webrtc::Call> call(
       webrtc::Call::Create(webrtc::Call::Config(&event_log)));
@@ -3373,9 +3389,11 @@ TEST(WebRtcVoiceEngineTest, SetRecvCodecs) {
   // what we sent in - though it's probably reasonable to expect so, if
   // SetRecvParameters returns true.
   // I think it will become clear once audio decoder injection is completed.
+  rtc::scoped_refptr<webrtc::AudioProcessing> apm =
+      webrtc::AudioProcessing::Create();
   cricket::WebRtcVoiceEngine engine(
       nullptr, webrtc::MockAudioEncoderFactory::CreateUnusedFactory(),
-      webrtc::CreateBuiltinAudioDecoderFactory(), nullptr);
+      webrtc::CreateBuiltinAudioDecoderFactory(), nullptr, apm);
   webrtc::RtcEventLogNullImpl event_log;
   std::unique_ptr<webrtc::Call> call(
       webrtc::Call::Create(webrtc::Call::Config(&event_log)));
@@ -3411,8 +3429,10 @@ TEST(WebRtcVoiceEngineTest, CollectRecvCodecs) {
   EXPECT_CALL(*mock_decoder_factory.get(), GetSupportedDecoders())
       .WillOnce(Return(specs));
 
+  rtc::scoped_refptr<webrtc::AudioProcessing> apm =
+      webrtc::AudioProcessing::Create();
   cricket::WebRtcVoiceEngine engine(nullptr, unused_encoder_factory,
-                                    mock_decoder_factory, nullptr);
+                                    mock_decoder_factory, nullptr, apm);
   auto codecs = engine.recv_codecs();
   EXPECT_EQ(11, codecs.size());
 

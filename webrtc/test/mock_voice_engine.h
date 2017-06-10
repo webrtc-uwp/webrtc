@@ -38,7 +38,9 @@ class MockVoiceEngine : public VoiceEngineImpl {
   // http://crbug.com/428099.
   MockVoiceEngine(
       rtc::scoped_refptr<AudioDecoderFactory> decoder_factory = nullptr)
-      : decoder_factory_(decoder_factory) {
+      : decoder_factory_(decoder_factory),
+        mock_audio_processing_(
+            new rtc::RefCountedObject<MockAudioProcessing>()) {
     // Increase ref count so this object isn't automatically deleted whenever
     // interfaces are Release():d.
     ++_ref_count;
@@ -69,7 +71,7 @@ class MockVoiceEngine : public VoiceEngineImpl {
     ON_CALL(*this, audio_device_module())
         .WillByDefault(testing::Return(&mock_audio_device_));
     ON_CALL(*this, audio_processing())
-        .WillByDefault(testing::Return(&mock_audio_processing_));
+        .WillByDefault(testing::Return(mock_audio_processing_.get()));
     ON_CALL(*this, audio_transport())
         .WillByDefault(testing::Return(&mock_audio_transport_));
   }
@@ -102,7 +104,7 @@ class MockVoiceEngine : public VoiceEngineImpl {
   MOCK_METHOD3(
       Init,
       int(AudioDeviceModule* external_adm,
-          AudioProcessing* audioproc,
+          AudioProcessing* external_apm,
           const rtc::scoped_refptr<AudioDecoderFactory>& decoder_factory));
   MOCK_METHOD0(audio_processing, AudioProcessing*());
   MOCK_METHOD0(audio_device_module, AudioDeviceModule*());
@@ -257,7 +259,7 @@ class MockVoiceEngine : public VoiceEngineImpl {
   std::map<int, std::unique_ptr<MockRtpRtcp>> mock_rtp_rtcps_;
 
   MockAudioDeviceModule mock_audio_device_;
-  MockAudioProcessing mock_audio_processing_;
+  rtc::scoped_refptr<MockAudioProcessing> mock_audio_processing_;
   MockAudioTransport mock_audio_transport_;
 };
 }  // namespace test
