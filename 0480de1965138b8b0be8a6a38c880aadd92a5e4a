@@ -97,6 +97,30 @@
     },
     {
       "key": {
+        "uuid": "47a3ffc5_19d7d7d9",
+        "filename": "webrtc/api/peerconnectioninterface.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1213539
+      },
+      "writtenOn": "2017-06-10T19:29:56Z",
+      "side": 1,
+      "message": "Per our offline discussion, I implemented your suggestion to use the ip instead of host name, but the app now has to do the dirty work to take out the ip from the uri and replace it with the hostname. \nHere is what it will look like\n\n public android.util.Pair\u003cString, String\u003e SanitizeUri(String encodedUri) {\n\n      int prefixEnd \u003d encodedUri.indexOf(\":\");\n      int suffixStart \u003d encodedUri.lastIndexOf(\":\");\n      String host \u003d encodedUri.substring(prefixEnd + 1, suffixStart);\n      String ip \u003d null;\n      boolean isIpAddress \u003d false;\n      try {\n        InetAddress address \u003d InetAddress.getByName(host);\n        if (address instanceof java.net.Inet4Address ||\n            address instanceof java.net.Inet6Address) {\n          if (host.charAt(0) \u003d\u003d \u0027[\u0027) {\n            ip \u003d host.substring(1, host.length() - 1);\n          } else {\n            ip \u003d host;\n          }\n          host \u003d \"www.google.com\";\n        }\n      } catch (java.net.UnknownHostException e) {\n      }\n      return new android.util.Pair(encodedUri.substring(0, prefixEnd + 1) + host + encodedUri.substring(suffixStart, encodedUri.length()) , ip);\n    }",
+      "parentUuid": "f6ca809d_67e4dc60",
+      "range": {
+        "startLine": 184,
+        "startChar": 4,
+        "endLine": 184,
+        "endChar": 30
+      },
+      "revId": "0480de1965138b8b0be8a6a38c880aadd92a5e4a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ffbd1a5f_18ca58d7",
         "filename": "webrtc/p2p/base/basicpacketsocketfactory.cc",
         "patchSetId": 3

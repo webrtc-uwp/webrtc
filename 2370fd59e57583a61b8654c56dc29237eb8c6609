@@ -126,6 +126,24 @@
     },
     {
       "key": {
+        "uuid": "88c2eda5_99b120c1",
+        "filename": "webrtc/base/ssladapter.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1213539
+      },
+      "writtenOn": "2017-06-10T19:29:56Z",
+      "side": 1,
+      "message": "It is working now, the error was unrelated to my change. This made the code in this class much simpler",
+      "parentUuid": "eebeed57_dfc8912f",
+      "revId": "2370fd59e57583a61b8654c56dc29237eb8c6609",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "91c2775b_7697644c",
         "filename": "webrtc/p2p/base/basicpacketsocketfactory.cc",
         "patchSetId": 2
