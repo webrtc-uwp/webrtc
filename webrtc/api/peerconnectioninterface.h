@@ -181,10 +181,13 @@ class PeerConnectionInterface : public rtc::RefCountInterface {
     std::string username;
     std::string password;
     TlsCertPolicy tls_cert_policy = kTlsCertPolicySecure;
+    // Optional resolved IPv4/IPv6 address for the uri.
+    std::string ip;
 
     bool operator==(const IceServer& o) const {
       return uri == o.uri && urls == o.urls && username == o.username &&
-             password == o.password && tls_cert_policy == o.tls_cert_policy;
+             password == o.password && tls_cert_policy == o.tls_cert_policy &&
+             ip == o.ip;
     }
     bool operator!=(const IceServer& o) const { return !(*this == o); }
   };

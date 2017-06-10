@@ -210,8 +210,8 @@ static RTCErrorType ParseIceServerUrl(
     turn_transport_type = cricket::PROTO_TLS;
   }
 
-  std::string address;
-  if (!ParseHostnameAndPortFromString(hoststring, &address, &port)) {
+  std::string hostname;
+  if (!ParseHostnameAndPortFromString(hoststring, &hostname, &port)) {
     LOG(WARNING) << "Invalid hostname format: " << uri_without_transport;
     return RTCErrorType::SYNTAX_ERROR;
   }
@@ -221,10 +221,20 @@ static RTCErrorType ParseIceServerUrl(
     return RTCErrorType::SYNTAX_ERROR;
   }
 
+  rtc::SocketAddress address(hostname, port);
+  if (!server.ip.empty()) {
+    rtc::IPAddress ip;
+    if (!IPFromString(server.ip, &ip) ||
+        (!address.IsUnresolvedIP() && address.ipaddr() != ip)) {
+      LOG(LS_ERROR) << "Invalid IP " << server.ip;
+      return RTCErrorType::INVALID_PARAMETER;
+    }
+    address.SetResolvedIP(ip);
+  }
   switch (service_type) {
     case STUN:
     case STUNS:
-      stun_servers->insert(rtc::SocketAddress(address, port));
+      stun_servers->insert(address);
       break;
     case TURN:
     case TURNS: {
@@ -234,7 +244,7 @@ static RTCErrorType ParseIceServerUrl(
         return RTCErrorType::INVALID_PARAMETER;
       }
       cricket::RelayServerConfig config = cricket::RelayServerConfig(
-          address, port, username, server.password, turn_transport_type);
+          address, username, server.password, turn_transport_type);
       if (server.tls_cert_policy ==
           PeerConnectionInterface::kTlsCertPolicyInsecureNoCheck) {
         config.tls_cert_policy =
