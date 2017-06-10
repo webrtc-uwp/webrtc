@@ -30,6 +30,9 @@ class MockInitialize : public AudioProcessingImpl {
   int RealInitializeLocked() NO_THREAD_SAFETY_ANALYSIS {
     return AudioProcessingImpl::InitializeLocked();
   }
+
+  MOCK_CONST_METHOD0(AddRef, int());
+  MOCK_CONST_METHOD0(Release, int());
 };
 
 TEST(AudioProcessingImplTest, AudioParameterChangeTriggersInit) {

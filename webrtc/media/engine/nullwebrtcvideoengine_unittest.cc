@@ -31,7 +31,8 @@ class WebRtcMediaEngineNullVideo
             adm,
             audio_encoder_factory,
             audio_decoder_factory,
-            nullptr) {
+            nullptr,
+            webrtc::AudioProcessing::Create()) {
     video_.SetExternalDecoderFactory(video_decoder_factory);
     video_.SetExternalEncoderFactory(video_encoder_factory);
   }
