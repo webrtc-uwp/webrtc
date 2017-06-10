@@ -684,6 +684,30 @@
     },
     {
       "key": {
+        "uuid": "26b98355_dac30fa7",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/FramerateBitrateAdjuster.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-10T01:31:27Z",
+      "side": 1,
+      "message": "Yes, I though it could be one method until I realize it couldn\u0027t.  Please ignore.",
+      "parentUuid": "c904870a_b6aefd34",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 36
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ab37d769_717c79f7",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
         "patchSetId": 6
