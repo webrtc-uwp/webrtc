@@ -169,7 +169,9 @@ class FakeWebRtcVideoEncoder : public webrtc::VideoEncoder {
     return num_frames_encoded_;
   }
 
- private:
+  const char* ImplementationName() const override { return "fake"; }
+
+ protected:
   rtc::CriticalSection crit_;
   rtc::Event init_encode_event_;
   int num_frames_encoded_ GUARDED_BY(crit_);
@@ -246,7 +248,7 @@ class FakeWebRtcVideoEncoderFactory : public WebRtcVideoEncoderFactory {
     return encoders_;
   }
 
- private:
+ protected:
   rtc::CriticalSection crit_;
   rtc::Event created_video_encoder_event_;
   std::vector<cricket::VideoCodec> codecs_;
