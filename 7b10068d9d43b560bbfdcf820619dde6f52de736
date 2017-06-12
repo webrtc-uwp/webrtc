@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "11cece28_6fa9f026",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 10
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-12T09:43:18Z",
+      "side": 1,
+      "message": "We should ignore exceptions thrown by media codec stop if release still succeeds. Sometimes the encoder can get in a bad state where stop throws an exception but release still works. For more details see: b/36082499",
+      "range": {
+        "startLine": 413,
+        "startChar": 6,
+        "endLine": 413,
+        "endChar": 23
+      },
+      "revId": "7b10068d9d43b560bbfdcf820619dde6f52de736",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}

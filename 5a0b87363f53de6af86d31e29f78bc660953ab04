@@ -190,6 +190,30 @@
     },
     {
       "key": {
+        "uuid": "60279022_4328873e",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-12T09:43:18Z",
+      "side": 1,
+      "message": "Hmm yeah, on a second thought, maybe we should implement the retry logic completely in C++. WDYT?\n\nThe Java implementation shouldn\u0027t have to care whether a software fallback is available. So at least determining that should be implemented in C++. I don\u0027t like passing it in the constructor. I would rather the C++ just ignore software fallback request if it is not available.\n\nIt is worth noting that this return value is actually ignored from all other methods than encode. That is the main reason it has to be implemented to be \"sticky\". See: https://cs.chromium.org/chromium/src/third_party/webrtc/media/engine/videoencodersoftwarefallbackwrapper.cc  However, the stickiness can be a problem if the C++ layer determines no software fallback is available so I don\u0027t the stickiness should be implemented in Java.",
+      "parentUuid": "7b90dc8e_02aac4cc",
+      "range": {
+        "startLine": 221,
+        "startChar": 30,
+        "endLine": 221,
+        "endChar": 35
+      },
+      "revId": "5a0b87363f53de6af86d31e29f78bc660953ab04",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "562792a1_af923d27",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
         "patchSetId": 9
