@@ -23,6 +23,10 @@
 #include <VideoToolbox/VideoToolbox.h>
 #include <vector>
 
+#if defined(WEBRTC_IOS)
+#import "Common/RTCUIApplicationStatusObserver.h"
+#endif
+
 // This file provides a H264 encoder implementation using the VideoToolbox
 // APIs. Since documentation is almost non-existent, this is largely based on
 // the information in the VideoToolbox header files, a talk from WWDC 2014 and
@@ -90,6 +94,10 @@ class H264VideoToolboxEncoder : public H264Encoder {
 
   H264BitstreamParser h264_bitstream_parser_;
   std::vector<uint8_t> nv12_scale_buffer_;
+
+#if defined(WEBRTC_IOS)
+  RTCUIApplicationStatusObserver* application_status_observer_;
+#endif
 };  // H264VideoToolboxEncoder
 
 }  // namespace webrtc

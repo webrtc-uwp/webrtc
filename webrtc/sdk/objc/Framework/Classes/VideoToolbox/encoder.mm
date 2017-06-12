@@ -17,7 +17,6 @@
 
 #if defined(WEBRTC_IOS)
 #import "WebRTC/UIDevice+RTCDevice.h"
-#include "Common/RTCUIApplication.h"
 #endif
 #include "libyuv/convert_from.h"
 #include "webrtc/base/checks.h"
@@ -350,6 +349,9 @@ H264VideoToolboxEncoder::H264VideoToolboxEncoder(const cricket::VideoCodec& code
       profile_(internal::ExtractProfile(codec)) {
   LOG(LS_INFO) << "Using profile " << internal::CFStringToString(profile_);
   RTC_CHECK(cricket::CodecNamesEq(codec.name, cricket::kH264CodecName));
+#if defined(WEBRTC_IOS)
+  application_status_observer_ = [[RTCUIApplicationStatusObserver alloc] init];
+#endif
 }
 
 H264VideoToolboxEncoder::~H264VideoToolboxEncoder() {
@@ -386,7 +388,7 @@ int H264VideoToolboxEncoder::Encode(
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
 #if defined(WEBRTC_IOS)
-  if (!RTCIsUIApplicationActive()) {
+  if (![application_status_observer_ isApplicationActive]) {
     // Ignore all encode requests when app isn't active. In this state, the
     // hardware encoder has been invalidated by the OS.
     return WEBRTC_VIDEO_CODEC_OK;
