@@ -42,7 +42,8 @@ class BitrateObserver {
   virtual ~BitrateObserver() {}
 };
 
-class BitrateController : public Module {
+class BitrateController : public Module,
+                          public RtcpBandwidthObserver {
   // This class collects feedback from all streams sent to a peer (via
   // RTCPBandwidthObservers). It does one  aggregated send side bandwidth
   // estimation and divide the available bitrate between all its registered
@@ -62,6 +63,7 @@ class BitrateController : public Module {
 
   virtual ~BitrateController() {}
 
+  // Creates RtcpBandwidthObserber caller responsible to delete.
   virtual RtcpBandwidthObserver* CreateRtcpBandwidthObserver() = 0;
 
   // Deprecated
