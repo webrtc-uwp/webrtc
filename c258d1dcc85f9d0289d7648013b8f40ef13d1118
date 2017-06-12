@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f6f9e52_8edb2f8c",
+        "filename": "webrtc/video/end_to_end_tests.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 4117,
+      "author": {
+        "id": 1155749
+      },
+      "writtenOn": "2017-06-12T12:11:01Z",
+      "side": 1,
+      "message": "As discussed on Friday, I think it would be good to split this function into two: one that keeps the old behaviour of resetting the expectations w.r.t. number of packets and SSRCs to send, and one that resets the expectations w.r.t. the max picture_id gap. This would avoid races when checking the picture_id gap.",
+      "range": {
+        "startLine": 4117,
+        "startChar": 49,
+        "endLine": 4117,
+        "endChar": 52
+      },
+      "revId": "c258d1dcc85f9d0289d7648013b8f40ef13d1118",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "77663490_aefe6dbe",
+        "filename": "webrtc/video/end_to_end_tests.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 4121,
+      "author": {
+        "id": 1155749
+      },
+      "writtenOn": "2017-06-12T12:11:01Z",
+      "side": 1,
+      "message": "Does it work to \"only\" copy the constants here?",
+      "range": {
+        "startLine": 4121,
+        "startChar": 63,
+        "endLine": 4121,
+        "endChar": 64
+      },
+      "revId": "c258d1dcc85f9d0289d7648013b8f40ef13d1118",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0eed57da_db34b9ac",
+        "filename": "webrtc/video/end_to_end_tests.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 4144,
+      "author": {
+        "id": 1155749
+      },
+      "writtenOn": "2017-06-12T12:11:01Z",
+      "side": 1,
+      "message": "In order to avoid races w.r.t. the expected picture_id gap (see comment above), you could separate the reinit and recreation tests:\n\n// Reinit encoder with different number of streams.\nobserver.ResetExpectedMaxPictureIdGap(0);\nreinit_encoder_and_test(1);\nreinit_encoder_and_test(3);\nreinit_encoder_and_test(3);\nreinit_encoder_and_test(1);\nreinit_encoder_and_test(1);\n\n// Recreate VideoSendStream with different number of streams.\nobserver.ResetExpectedMaxPictureIdGap(kMaxFramesLost);\nrecreate_video_send_stream_and_test(1);\nrecreate_video_send_stream_and_test(3);\nrecreate_video_send_stream_and_test(3);\nrecreate_video_send_stream_and_test(1);\nrecreate_video_send_stream_and_test(1);",
+      "revId": "c258d1dcc85f9d0289d7648013b8f40ef13d1118",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
