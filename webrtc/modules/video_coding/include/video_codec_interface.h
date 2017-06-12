@@ -71,6 +71,7 @@ struct CodecSpecificInfoGeneric {
 
 struct CodecSpecificInfoH264 {
   H264PacketizationMode packetization_mode;
+  uint8_t simulcastIdx;
 };
 
 union CodecSpecificInfoUnion {
