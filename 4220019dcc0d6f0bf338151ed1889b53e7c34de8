@@ -827,6 +827,30 @@
     },
     {
       "key": {
+        "uuid": "7f2c9a3f_4d31da7d",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-12T16:24:30Z",
+      "side": 1,
+      "message": "This is the only example test I can find:  https://cs.chromium.org/chromium/src/third_party/webrtc/sdk/android/instrumentationtests/src/org/webrtc/MediaCodecVideoEncoderTest.java?rcl\u003d5c4d199d7c0358a9b8f35707e0f6de983d04232e\n\nI think I will need to write the factory before I can write a test, so that I can determine codec availability and create the HardwareVideoEncoder with the right arguments.\n\nThe factory is WIP.  I can add it and the test to this cl, or I can do them as a follow-up.",
+      "parentUuid": "2c44053c_e0682cad",
+      "range": {
+        "startLine": 27,
+        "startChar": 1,
+        "endLine": 27,
+        "endChar": 10
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "686d75dc_5764bd5a",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
         "patchSetId": 6
