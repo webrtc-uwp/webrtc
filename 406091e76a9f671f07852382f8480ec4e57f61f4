@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f1b58ffd_6b9ea804",
+        "filename": "webrtc/modules/audio_device/audio_device_buffer.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-12T16:27:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1d20e88d_a4cc4fdf",
+      "range": {
+        "startLine": 404,
+        "startChar": 47,
+        "endLine": 404,
+        "endChar": 52
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f69f541_6da32ef2",
         "filename": "webrtc/modules/audio_device/audio_device_buffer.cc",
         "patchSetId": 7
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "1ef0f1e5_94ba7a61",
+        "filename": "webrtc/modules/audio_device/audio_device_buffer.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-12T16:27:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0f69f541_6da32ef2",
+      "range": {
+        "startLine": 405,
+        "startChar": 14,
+        "endLine": 405,
+        "endChar": 67
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b1a7454e_f5c4a442",
         "filename": "webrtc/modules/audio_device/audio_device_buffer.h",
         "patchSetId": 7
@@ -59,6 +107,30 @@
       "writtenOn": "2017-06-12T14:00:29Z",
       "side": 1,
       "message": "I think we may just move this comment before line 261.",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 77
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30ec0d06_89335bb8",
+        "filename": "webrtc/modules/audio_device/audio_device_buffer.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-12T16:27:00Z",
+      "side": 1,
+      "message": "Do you mean that // #define PLAY_SINUS_TONE should be uncommented here?\nDoes it not make sense to have a comment above the define?",
+      "parentUuid": "b1a7454e_f5c4a442",
       "range": {
         "startLine": 25,
         "startChar": 0,
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "d10871ce_8453d39f",
+        "filename": "webrtc/modules/audio_device/audio_device_buffer.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-12T16:27:00Z",
+      "side": 1,
+      "message": "Will modify, but may I ask why? I felt that it was the preferred way.",
+      "parentUuid": "0b2b0839_3f6b89bf",
+      "range": {
+        "startLine": 261,
+        "startChar": 50,
+        "endLine": 261,
+        "endChar": 56
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "871c3291_9994f5bd",
         "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
         "patchSetId": 7
@@ -105,6 +201,30 @@
       "writtenOn": "2017-06-12T14:00:29Z",
       "side": 1,
       "message": "A question regarding putting the stats report here: what if the call crashed?",
+      "range": {
+        "startLine": 227,
+        "startChar": 24,
+        "endLine": 227,
+        "endChar": 35
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2284ea4e_29ccdc9b",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-12T16:27:00Z",
+      "side": 1,
+      "message": "Then we would not get any UMA stat but that must be the case for most stats. I don\u0027t think we will even upload UMA if we crash. In any case; StopPlayout feels OK to me. Agree?",
+      "parentUuid": "871c3291_9994f5bd",
       "range": {
         "startLine": 227,
         "startChar": 24,
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "d2b1f8b9_61aa2ec9",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-12T16:27:00Z",
+      "side": 1,
+      "message": "I used WebRTC.Audio.AverageTimeBetweenPlayoutGlitches. Hope that is OK with you.",
+      "parentUuid": "aa4a2624_65209db5",
+      "range": {
+        "startLine": 249,
+        "startChar": 11,
+        "endLine": 249,
+        "endChar": 50
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "46d3d13f_ebb7075b",
         "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
         "patchSetId": 7
@@ -151,6 +295,30 @@
       "writtenOn": "2017-06-12T14:00:29Z",
       "side": 1,
       "message": "last_playout_processing_time_ is not necessary for detecting glitches. It only provides more information to a glitch (how is it related to the decoding time). A simplified version would be\n\nOSStatus OnGetPlayoutData() {\n  const int64_t now_time \u003d rtc::TimeMillis();\n  if (now_time - last_playout_time_ \u003e threshold) {\n     // Glitch detected\n  }\n  last_playout_time_ \u003d now_time;\n  ...\n  ...\n}",
+      "range": {
+        "startLine": 426,
+        "startChar": 25,
+        "endLine": 426,
+        "endChar": 41
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8eeceada_7fa0972d",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-12T16:27:00Z",
+      "side": 1,
+      "message": "I had the same idea actually but figured you maybe wanted to get both components. But it makes sense to simplify it. Thanks!\n\nI moved it down a bit to avoid measuring when playout is not activated.",
+      "parentUuid": "46d3d13f_ebb7075b",
       "range": {
         "startLine": 426,
         "startChar": 25,
@@ -186,6 +354,30 @@
     },
     {
       "key": {
+        "uuid": "7ac45820_4dc0b66b",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-12T16:27:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f9bf2743_fc68e4c0",
+      "range": {
+        "startLine": 456,
+        "startChar": 1,
+        "endLine": 456,
+        "endChar": 46
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c618cc79_000b34f5",
         "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
         "patchSetId": 7
@@ -197,6 +389,24 @@
       "writtenOn": "2017-06-12T14:00:29Z",
       "side": 1,
       "message": "HandlePlayoutGlitchDetected is nothing more than increment a counter. Can we put it inline?",
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "665a54cc_d221f3c3",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-12T16:27:00Z",
+      "side": 1,
+      "message": "I posted a task to the main thread to ensure that no lock is needed. HandlePlayoutGlitchDetected also contains a thread check and a log so I am not sure how you want me to inline it. Keeping as is unless you feel strongly about it.",
+      "parentUuid": "c618cc79_000b34f5",
       "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
