@@ -1,0 +1,205 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1d20e88d_a4cc4fdf",
+        "filename": "webrtc/modules/audio_device/audio_device_buffer.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-12T14:00:29Z",
+      "side": 1,
+      "message": "nit: replace 16382 with (1 \u003c\u003c 14)",
+      "range": {
+        "startLine": 404,
+        "startChar": 47,
+        "endLine": 404,
+        "endChar": 52
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f69f541_6da32ef2",
+        "filename": "webrtc/modules/audio_device/audio_device_buffer.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-12T14:00:29Z",
+      "side": 1,
+      "message": "compiler may do it anyway, but good to put it as a const var out side the loop.",
+      "range": {
+        "startLine": 405,
+        "startChar": 14,
+        "endLine": 405,
+        "endChar": 67
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b1a7454e_f5c4a442",
+        "filename": "webrtc/modules/audio_device/audio_device_buffer.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-12T14:00:29Z",
+      "side": 1,
+      "message": "I think we may just move this comment before line 261.",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 77
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b2b0839_3f6b89bf",
+        "filename": "webrtc/modules/audio_device/audio_device_buffer.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-12T14:00:29Z",
+      "side": 1,
+      "message": "I am not in favor of in-class initializer.",
+      "range": {
+        "startLine": 261,
+        "startChar": 50,
+        "endLine": 261,
+        "endChar": 56
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "871c3291_9994f5bd",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-12T14:00:29Z",
+      "side": 1,
+      "message": "A question regarding putting the stats report here: what if the call crashed?",
+      "range": {
+        "startLine": 227,
+        "startChar": 24,
+        "endLine": 227,
+        "endChar": 35
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa4a2624_65209db5",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-12T14:00:29Z",
+      "side": 1,
+      "message": "since the count on glitches is on per-call-to-OnGetPlayoutData basis, it would be good to normalize against total calls to OnGetPlayoutData.\n\nA percentage would be good. Then use RTC_HISTOGRAM_PERCENTAGE\n\nBut if we end up in need of fine grid. RTC_HISTOGRAM_PERCENTAGE may have its limitation (cannot see closely into sub-1% region)\n\nHow about average playout calls between glitches? Then we use RTC_HISTOGRAMS_COUNTS_100000, with maximum duration of \"2000 seconds\". That will give us a log scale like the following\n\n1\t1.26485521685530\t1.59985871960606\t2.02358964772516\t2.55954792269954\t3.23745754281764\t4.09491506238043\t5.17947467923121\t6.55128556859551\t8.28642772854684\t10.4811313415469\t13.2571136559011\t16.7683293681101\t21.2095088792019\t26.8269579527973\t33.9322177189533\t42.9193426012878\t54.2867543932386\t68.6648845004300\t86.8511373751353\t109.854114198756\t138.949549437314\t175.751062485479\t222.299648252620\t281.176869797423\t355.648030622313\t449.843266896944\t568.986602901830\t719.685673001152\t910.298177991522\t1151.39539932645\t1456.34847750124\t1842.06996932672\t2329.95181051537\t2947.05170255181\t3727.59372031494\t4714.86636345740\t5963.62331659464\t7543.12006335462\t9540.95476349994\t12067.9264063933\t15264.1796717523\t19306.9772888325\t24420.5309454865\t30888.4359647748\t39069.3993705462\t49417.1336132384\t62505.5192527398\t79060.4321090770\t100000",
+      "range": {
+        "startLine": 249,
+        "startChar": 11,
+        "endLine": 249,
+        "endChar": 50
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "46d3d13f_ebb7075b",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-12T14:00:29Z",
+      "side": 1,
+      "message": "last_playout_processing_time_ is not necessary for detecting glitches. It only provides more information to a glitch (how is it related to the decoding time). A simplified version would be\n\nOSStatus OnGetPlayoutData() {\n  const int64_t now_time \u003d rtc::TimeMillis();\n  if (now_time - last_playout_time_ \u003e threshold) {\n     // Glitch detected\n  }\n  last_playout_time_ \u003d now_time;\n  ...\n  ...\n}",
+      "range": {
+        "startLine": 426,
+        "startChar": 25,
+        "endLine": 426,
+        "endChar": 41
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f9bf2743_fc68e4c0",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-12T14:00:29Z",
+      "side": 1,
+      "message": "I think it would be better\n\nconst int64_t now_time \u003d rtc::TimeMillis();\nif (time_stamp-\u003emSampleTime !\u003d num_frames) {\n  const int64_t delta_time \u003d now_time - last_playout_time_;\n  ...\n}\n\nlast_playout_time_ \u003d rtc::TimeMillis();",
+      "range": {
+        "startLine": 456,
+        "startChar": 1,
+        "endLine": 456,
+        "endChar": 46
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c618cc79_000b34f5",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-12T14:00:29Z",
+      "side": 1,
+      "message": "HandlePlayoutGlitchDetected is nothing more than increment a counter. Can we put it inline?",
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
