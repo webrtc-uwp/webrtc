@@ -1156,13 +1156,7 @@ int16_t WebRtcAecm_CalcSuppressionGain(AecmCore* const aecm) {
         tmp16no1 = aecm->supGainOld;
     }
     aecm->supGainOld = supGain;
-    if (tmp16no1 < aecm->supGain)
-    {
-        aecm->supGain += (int16_t)((tmp16no1 - aecm->supGain) >> 4);
-    } else
-    {
-        aecm->supGain += (int16_t)((tmp16no1 - aecm->supGain) >> 4);
-    }
+    aecm->supGain += (int16_t)((tmp16no1 - aecm->supGain) >> 4);
 
     // END: Update suppression gain
 
