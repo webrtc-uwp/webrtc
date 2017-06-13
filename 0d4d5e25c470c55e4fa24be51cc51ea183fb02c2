@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a262775b_1ec76316",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-13T08:48:43Z",
+      "side": 1,
+      "message": "\"rvalue\", without a hyphen.",
+      "range": {
+        "startLine": 7,
+        "startChar": 9,
+        "endLine": 7,
+        "endChar": 16
+      },
+      "revId": "0d4d5e25c470c55e4fa24be51cc51ea183fb02c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c75e96a_2e823766",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-13T08:48:43Z",
+      "side": 1,
+      "message": "\"deprecated\". But it isn\u0027t deprecated, since it was never allowed. Also, I wouldn\u0027t call it \"misuse\"—it was correctly used, just not style guide compliant. Maybe\n\n  Don\u0027t use rvalue reference function arguments in the audio coding module\n\n  Rvalue reference arguments are generally banned by the style guide.",
+      "revId": "0d4d5e25c470c55e4fa24be51cc51ea183fb02c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8faac67e_0d770da8",
+        "filename": "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-13T08:48:43Z",
+      "side": 1,
+      "message": "Why are you changing how the default values for audio_network_adaptor_creator and bitrate_smoother arguments are implemented? (There\u0027s no change in behavior other than no longer allowing the caller to specify audio_network_adaptor_creator but still default bitrate_smoother, right?)",
+      "revId": "0d4d5e25c470c55e4fa24be51cc51ea183fb02c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa0e02ce_d823730b",
+        "filename": "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-13T08:48:43Z",
+      "side": 1,
+      "message": "Why not pass by value here?",
+      "range": {
+        "startLine": 97,
+        "startChar": 6,
+        "endLine": 97,
+        "endChar": 39
+      },
+      "revId": "0d4d5e25c470c55e4fa24be51cc51ea183fb02c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
