@@ -1,0 +1,112 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "af7f6a5b_b69c47c7",
+        "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-13T09:04:13Z",
+      "side": 1,
+      "message": "This was previously a move assignment, since the rhs was a temporary. It can keep being one if you use std::move.",
+      "range": {
+        "startLine": 107,
+        "startChar": 27,
+        "endLine": 107,
+        "endChar": 39
+      },
+      "revId": "4e8bd409ed38247dbcf691e9fb80f04f2797a01c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b5c50cc_be7b688a",
+        "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-13T09:04:13Z",
+      "side": 1,
+      "message": "You hold this lock until the end of the block, so there\u0027s no need to introduce a new {} block.",
+      "revId": "4e8bd409ed38247dbcf691e9fb80f04f2797a01c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8aec38f_bb7a6ff2",
+        "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-13T09:04:13Z",
+      "side": 1,
+      "message": "This sequence of calls to neteq_ seems like it may fail if someone else is concurrently accessing the same NetEq instance (such as a concurrent call to the present method). Didn\u0027t the lock annotations catch this?",
+      "revId": "4e8bd409ed38247dbcf691e9fb80f04f2797a01c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "294e5e02_b6b65066",
+        "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-13T09:04:13Z",
+      "side": 1,
+      "message": "You don\u0027t release the lock until the block ends anyway, so don\u0027t introduce a new block.",
+      "revId": "4e8bd409ed38247dbcf691e9fb80f04f2797a01c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99ad7fef_56d44058",
+        "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-13T09:04:13Z",
+      "side": 1,
+      "message": "Here\u0027s another neteq_ call sequence that looks racy.",
+      "revId": "4e8bd409ed38247dbcf691e9fb80f04f2797a01c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "942600ec_d08a287d",
+        "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-13T09:04:13Z",
+      "side": 1,
+      "message": "No new block needed here either.",
+      "revId": "4e8bd409ed38247dbcf691e9fb80f04f2797a01c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
