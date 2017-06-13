@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9ceb9f9a_249c5c10",
+        "filename": "webrtc/sdk/android/src/jni/wrapped_native_i420_buffer.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-13T15:27:24Z",
+      "side": 1,
+      "message": "nit: I420Buffer",
+      "range": {
+        "startLine": 21,
+        "startChar": 14,
+        "endLine": 21,
+        "endChar": 23
+      },
+      "revId": "41d79c0d64a8f70a31fff8c8aefe71485ed9bc28",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
