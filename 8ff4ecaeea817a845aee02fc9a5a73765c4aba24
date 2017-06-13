@@ -140,6 +140,30 @@
     },
     {
       "key": {
+        "uuid": "ba399a51_45aefcef",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-13T11:43:24Z",
+      "side": 1,
+      "message": "Seconds this, I would find it cleaner to just have getSupportedCodecs where we add all the supported codecs. I also think it would be cleaner to just add codecs to this list if we are running on a new enough Android version instead of having the logic of skipping those not supported later.",
+      "parentUuid": "55cba2fa_80f7cf06",
+      "range": {
+        "startLine": 111,
+        "startChar": 68,
+        "endLine": 111,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ddba24f1_968f0b32",
         "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
         "patchSetId": 2
@@ -255,6 +279,29 @@
     },
     {
       "key": {
+        "uuid": "5b9cc375_c095c932",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-13T11:43:24Z",
+      "side": 1,
+      "message": "You can use this as a reference:\nhttps://cs.chromium.org/chromium/src/third_party/webrtc/sdk/android/src/jni/androidmediaencoder_jni.cc?type\u003dcs\u0026q\u003dMediaCodecVideoEncoderFactory::MediaCodecVideoEncoderFactory+package:%5Echromium$\u0026l\u003d1241",
+      "range": {
+        "startLine": 197,
+        "startChar": 29,
+        "endLine": 197,
+        "endChar": 37
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a10b62cb_ba290b2d",
         "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
         "patchSetId": 2
@@ -312,6 +359,30 @@
       "writtenOn": "2017-06-13T00:54:47Z",
       "side": 1,
       "message": "Yuck.  Can we not have some kind of Optional in Java?  Or even an Integer?  null is better than -1 here.",
+      "range": {
+        "startLine": 231,
+        "startChar": 0,
+        "endLine": 231,
+        "endChar": 14
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98137926_f18ae468",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-13T11:43:24Z",
+      "side": 1,
+      "message": "Unfortunately, optional is only available in Java 8. We\u0027ve used Integer and null as a replacement. I would prefer either Integer or just defining a constant for the -1 here.",
+      "parentUuid": "e9bfcb22_f1fa45f8",
       "range": {
         "startLine": 231,
         "startChar": 0,
@@ -416,6 +487,30 @@
     },
     {
       "key": {
+        "uuid": "1d5b1d25_4748ba59",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-13T11:43:24Z",
+      "side": 1,
+      "message": "The main reason is that this is how it is in C++. It is also nice that this matches the type returned by getSupportedCodecs.",
+      "parentUuid": "b706234b_06c1fcc4",
+      "range": {
+        "startLine": 16,
+        "startChar": 57,
+        "endLine": 16,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6828c50d_083e766e",
         "filename": "webrtc/sdk/android/api/org/webrtc/VideoEncoderFactory.java",
         "patchSetId": 2
@@ -427,6 +522,30 @@
       "writtenOn": "2017-06-13T00:54:47Z",
       "side": 1,
       "message": "Same going out: payload types make no sense.  \n\nAnd I don\u0027t see how SDP-level parameters make any sense either.\n\n\nShould this just be returning a list of names, or better yet a list of VideoCodecType.",
+      "range": {
+        "startLine": 19,
+        "startChar": 47,
+        "endLine": 19,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f3645705_134e2f7e",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-13T11:43:24Z",
+      "side": 1,
+      "message": "The C++ inteface returns a list of cricket::VideoCodecs. We need to be able to be able to set parameters like supported profile level for H264.",
+      "parentUuid": "6828c50d_083e766e",
       "range": {
         "startLine": 19,
         "startChar": 47,
