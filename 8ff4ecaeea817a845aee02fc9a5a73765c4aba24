@@ -555,6 +555,30 @@
       "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c537f1d4_0f220e3e",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T21:46:50Z",
+      "side": 1,
+      "message": "I don\u0027t think cricket::VideoCodecs is a good interface for this.  It\u0027s an SDP-level struct that doesn\u0027t encapsulate the idea of either \"do this for my encoder\" or \"this is what my encoder can do\" very well.\n\nIf we need those things, then I suggest we make two separate structs for it:\n\n// Do this for my encoder\nstruct VideoEncoderParameters {\n  VideoCodecType codec;\n  VideoProfile profile;\n  // ... Other stuff\n}\n\n// This is what the encoder can do \nstruct VideoEncoderCapabilities {\n  VideoCodecType codec;\n  VideoProfile profile;\n  // ... Other stuff\n}\n\n\n\nOr other things like that.  cricket::VideoCodecs does not make sense, and neither does VideoCodecInfo.",
+      "parentUuid": "f3645705_134e2f7e",
+      "range": {
+        "startLine": 19,
+        "startChar": 47,
+        "endLine": 19,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
