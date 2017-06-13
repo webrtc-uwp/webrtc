@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "066a6fc0_5fc96f0e",
+        "filename": "webrtc/modules/audio_device/audio_device_buffer.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-13T07:16:30Z",
+      "side": 1,
+      "message": "nit: this should better be named phase_increment, since it is not POD.",
+      "range": {
+        "startLine": 403,
+        "startChar": 15,
+        "endLine": 403,
+        "endChar": 30
+      },
+      "revId": "ad4c63046c1dfaa014254b7cfbf2c6f6dc1ea95f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}

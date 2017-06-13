@@ -143,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "85f6490e_c8e6334d",
+        "filename": "webrtc/modules/audio_device/audio_device_buffer.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-13T07:16:30Z",
+      "side": 1,
+      "message": "I thought that the define should be placed as macro in BUILD.gn, therefore #define PLAY_SINUS_TONE is not needed in this file.",
+      "parentUuid": "30ec0d06_89335bb8",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 77
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0b2b0839_3f6b89bf",
         "filename": "webrtc/modules/audio_device/audio_device_buffer.h",
         "patchSetId": 7
@@ -178,6 +202,30 @@
       "side": 1,
       "message": "Will modify, but may I ask why? I felt that it was the preferred way.",
       "parentUuid": "0b2b0839_3f6b89bf",
+      "range": {
+        "startLine": 261,
+        "startChar": 50,
+        "endLine": 261,
+        "endChar": 56
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "74730b13_4ad18c49",
+        "filename": "webrtc/modules/audio_device/audio_device_buffer.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-13T07:16:30Z",
+      "side": 1,
+      "message": "I feel that it is better to place all initializers together.",
+      "parentUuid": "d10871ce_8453d39f",
       "range": {
         "startLine": 261,
         "startChar": 50,
@@ -237,6 +285,30 @@
     },
     {
       "key": {
+        "uuid": "1f0da3a4_81441a89",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-13T07:16:30Z",
+      "side": 1,
+      "message": "My initial thought was that we report this on a regular time basis, e.g., every second. But it does not make sense now since we decide to report average glitch intervals per-call.",
+      "parentUuid": "2284ea4e_29ccdc9b",
+      "range": {
+        "startLine": 227,
+        "startChar": 24,
+        "endLine": 227,
+        "endChar": 35
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "aa4a2624_65209db5",
         "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
         "patchSetId": 7
@@ -272,6 +344,30 @@
       "side": 1,
       "message": "I used WebRTC.Audio.AverageTimeBetweenPlayoutGlitches. Hope that is OK with you.",
       "parentUuid": "aa4a2624_65209db5",
+      "range": {
+        "startLine": 249,
+        "startChar": 11,
+        "endLine": 249,
+        "endChar": 50
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3eeb580e_eca3d91d",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-13T07:16:30Z",
+      "side": 1,
+      "message": "I have two concerns.\n\n1. Technical infeasibility: If the time unit per-second, we cannot see sub-1-second stats. since RTC_HISTOGRAM_COUNTS_100000 starts from 1. If we choose millisecond, 100000 is only 100s, seemingly a bit (only a bit) too short\n\n2. How we use the stats. I preferred AveragePlayoutCallsBetweenGlitches, since I think the buffer size changes should be excluded in this stat. Imagine, e.g., we increase the buffer size by factor 2 and the AverageTimeBetweenPlayoutGlitches also increased by factor 2, IMO, this buffer size increase has no actual benefit. In such a case, AveragePlayoutCallsBetweenGlitches is unchanged unless there is actual benefit.",
+      "parentUuid": "d2b1f8b9_61aa2ec9",
       "range": {
         "startLine": 249,
         "startChar": 11,
@@ -410,6 +506,24 @@
       "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49ced82c_7c890fdd",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-13T07:16:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "665a54cc_d221f3c3",
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
