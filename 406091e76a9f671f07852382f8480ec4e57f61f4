@@ -167,6 +167,30 @@
     },
     {
       "key": {
+        "uuid": "005fccca_3b75c419",
+        "filename": "webrtc/modules/audio_device/audio_device_buffer.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-13T12:30:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "85f6490e_c8e6334d",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 77
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0b2b0839_3f6b89bf",
         "filename": "webrtc/modules/audio_device/audio_device_buffer.h",
         "patchSetId": 7
@@ -235,6 +259,30 @@
       "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c324d9b_885abc27",
+        "filename": "webrtc/modules/audio_device/audio_device_buffer.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-13T12:30:33Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "74730b13_4ad18c49",
+      "range": {
+        "startLine": 261,
+        "startChar": 50,
+        "endLine": 261,
+        "endChar": 56
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -309,6 +357,30 @@
     },
     {
       "key": {
+        "uuid": "ccf05a14_a38d6a4e",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-13T12:30:33Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1f0da3a4_81441a89",
+      "range": {
+        "startLine": 227,
+        "startChar": 24,
+        "endLine": 227,
+        "endChar": 35
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aa4a2624_65209db5",
         "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
         "patchSetId": 7
@@ -380,6 +452,30 @@
     },
     {
       "key": {
+        "uuid": "95080a63_24758179",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-13T12:30:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3eeb580e_eca3d91d",
+      "range": {
+        "startLine": 249,
+        "startChar": 11,
+        "endLine": 249,
+        "endChar": 50
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "46d3d13f_ebb7075b",
         "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
         "patchSetId": 7
@@ -424,6 +520,30 @@
       "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "543eb5fb_5fa1108a",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-13T12:30:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8eeceada_7fa0972d",
+      "range": {
+        "startLine": 426,
+        "startChar": 25,
+        "endLine": 426,
+        "endChar": 41
+      },
+      "revId": "406091e76a9f671f07852382f8480ec4e57f61f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
