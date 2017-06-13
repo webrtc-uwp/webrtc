@@ -15,6 +15,7 @@
 #include "webrtc/base/protobuf_utils.h"
 #include "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager.h"
 #include "webrtc/modules/audio_coding/audio_network_adaptor/mock/mock_controller.h"
+#include "webrtc/modules/audio_coding/audio_network_adaptor/mock/mock_debug_dump_writer.h"
 #include "webrtc/test/gtest.h"
 
 #if WEBRTC_ENABLE_PROTOBUF
@@ -29,6 +30,7 @@ RTC_POP_IGNORING_WUNDEF()
 
 namespace webrtc {
 
+using ::testing::_;
 using ::testing::NiceMock;
 
 namespace {
@@ -279,6 +281,10 @@ ControllerManagerStates CreateControllerManager(
   ControllerManagerStates states;
   constexpr size_t kNumEncoderChannels = 2;
   const std::vector<int> encoder_frame_lengths_ms = {20, 60};
+  auto debug_dump_writer =
+      std::unique_ptr<MockDebugDumpWriter>(new NiceMock<MockDebugDumpWriter>());
+  EXPECT_CALL(*debug_dump_writer, Die());
+  EXPECT_CALL(*debug_dump_writer, DumpControllerManagerConfig(_, _));
   states.controller_manager = ControllerManagerImpl::Create(
       config_string, kNumEncoderChannels, encoder_frame_lengths_ms,
       kMinBitrateBps, kIntialChannelsToEncode, kInitialFrameLengthMs,
