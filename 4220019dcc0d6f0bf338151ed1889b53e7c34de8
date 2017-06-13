@@ -851,6 +851,30 @@
     },
     {
       "key": {
+        "uuid": "548af751_6b1959b2",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-13T08:40:26Z",
+      "side": 1,
+      "message": "Let\u0027s do it in a follow-up then.",
+      "parentUuid": "7f2c9a3f_4d31da7d",
+      "range": {
+        "startLine": 27,
+        "startChar": 1,
+        "endLine": 27,
+        "endChar": 10
+      },
+      "revId": "4220019dcc0d6f0bf338151ed1889b53e7c34de8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "686d75dc_5764bd5a",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
         "patchSetId": 6

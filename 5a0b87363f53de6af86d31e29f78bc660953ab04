@@ -238,6 +238,30 @@
     },
     {
       "key": {
+        "uuid": "b344d82c_cb2ebde9",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-13T08:40:26Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "db39d150_9d0dcf17",
+      "range": {
+        "startLine": 221,
+        "startChar": 30,
+        "endLine": 221,
+        "endChar": 35
+      },
+      "revId": "5a0b87363f53de6af86d31e29f78bc660953ab04",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "562792a1_af923d27",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
         "patchSetId": 9
