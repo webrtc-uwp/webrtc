@@ -8,18 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-package org.webrtc;
+package org.webrtc.codec;
 
-import java.util.Map;
+import org.webrtc.VideoCodecInfo;
+import org.webrtc.VideoDecoder;
+import org.webrtc.VideoDecoderFactory;
 
-public class VideoCodecInfo {
-  public final int payload;
-  public final String name;
-  public final Map<String, String> params;
-
-  public VideoCodecInfo(int payload, String name, Map<String, String> params) {
-    this.payload = payload;
-    this.name = name;
-    this.params = params;
+public class DummyVideoDecoderFactory implements VideoDecoderFactory {
+  @Override
+  public VideoDecoder createVideoDecoder(VideoCodecInfo info) {
+    return new DummyVideoDecoder();
   }
 }

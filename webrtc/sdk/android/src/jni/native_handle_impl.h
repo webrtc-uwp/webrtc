@@ -13,9 +13,11 @@
 
 #include <jni.h>
 
+#include "webrtc/api/video/video_frame.h"
 #include "webrtc/api/video/video_frame_buffer.h"
 #include "webrtc/api/video/video_rotation.h"
 #include "webrtc/base/callback.h"
+#include "webrtc/sdk/android/src/jni/jni_helpers.h"
 
 namespace webrtc_jni {
 
@@ -24,6 +26,8 @@ namespace webrtc_jni {
 class Matrix {
  public:
   Matrix(JNIEnv* jni, jfloatArray a);
+
+  static Matrix fromAndroidGraphicsMatrix(JNIEnv* jni, jobject j_matrix);
 
   jfloatArray ToJava(JNIEnv* jni);
 
@@ -36,6 +40,8 @@ class Matrix {
   void Rotate(webrtc::VideoRotation rotation);
 
  private:
+  Matrix() {}
+
   static void Multiply(const float a[16], const float b[16], float result[16]);
   float elem_[16];
 };
@@ -80,6 +86,61 @@ class AndroidTextureBuffer : public webrtc::VideoFrameBuffer {
   // of AndroidVideoCapturerJni.
   jobject surface_texture_helper_;
   rtc::Callback0<void> no_longer_used_cb_;
+};
+
+class AndroidVideoBuffer : public webrtc::VideoFrameBuffer {
+ public:
+  AndroidVideoBuffer(JNIEnv* jni,
+                     jmethodID j_retain_id,
+                     jmethodID j_release_id,
+                     int width,
+                     int height,
+                     const Matrix& matrix,
+                     jobject j_video_frame_buffer);
+  ~AndroidVideoBuffer() override;
+
+  jobject video_frame_buffer() const;
+
+ private:
+  Type type() const override;
+  int width() const override;
+  int height() const override;
+  rtc::scoped_refptr<webrtc::I420BufferInterface> ToI420() override;
+
+  const jmethodID j_release_id_;
+  const int width_;
+  const int height_;
+  const Matrix matrix_;
+  // Holds a VideoFrame.Buffer.
+  ScopedGlobalRef<jobject> j_video_frame_buffer_;
+};
+
+class AndroidVideoBufferFactory {
+ public:
+  explicit AndroidVideoBufferFactory(JNIEnv* jni);
+
+  webrtc::VideoFrame CreateFrame(JNIEnv* jni,
+                                 jobject j_video_frame,
+                                 uint32_t timestamp_rtp) const;
+
+  rtc::scoped_refptr<AndroidVideoBuffer> CreateBuffer(
+      int width,
+      int height,
+      const Matrix& matrix,
+      jobject j_video_frame_buffer) const;
+
+ private:
+  ScopedGlobalRef<jclass> j_video_frame_class_;
+  jmethodID j_get_buffer_id_;
+  jmethodID j_get_width_id_;
+  jmethodID j_get_height_id_;
+  jmethodID j_get_rotation_id_;
+  jmethodID j_get_transform_matrix_id_;
+  jmethodID j_get_timestamp_ns_id_;
+
+  ScopedGlobalRef<jclass> j_video_frame_buffer_class_;
+  jmethodID j_retain_id_;
+  jmethodID j_release_id_;
 };
 
 }  // namespace webrtc_jni

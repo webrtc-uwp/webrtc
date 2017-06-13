@@ -14,6 +14,9 @@ package org.webrtc;
 class AndroidVideoTrackSourceObserver implements VideoCapturer.CapturerObserver {
   // Pointer to VideoTrackSourceProxy proxying AndroidVideoTrackSource.
   private final long nativeSource;
+  private final float[] matrix3x3Values = new float[9];
+  private final float[] matrix4x4Values =
+      new float[] {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
 
   public AndroidVideoTrackSourceObserver(long nativeSource) {
     this.nativeSource = nativeSource;
@@ -43,10 +46,26 @@ class AndroidVideoTrackSourceObserver implements VideoCapturer.CapturerObserver 
         nativeSource, width, height, oesTextureId, transformMatrix, rotation, timestamp);
   }
 
+  @Override
+  public void onFrameCaptured(VideoFrame frame) {
+    frame.getTransformMatrix().getValues(matrix3x3Values);
+    // TODO(magjed): Always use 3x3 matrices instead.
+    for (int i = 0; i < 3; ++i) {
+      for (int j = 0; j < 3; ++j) {
+        matrix4x4Values[i * 4 + j] = matrix3x3Values[i * 3 + j];
+      }
+    }
+    frame.retain(); // Corresponding release is in C++ VideoFrameBuffer dtor.
+    nativeOnFrameCaptured(nativeSource, frame.getWidth(), frame.getHeight(), frame.getRotation(),
+        frame.getTimestampNs(), matrix4x4Values, frame.getBuffer());
+  }
+
   private native void nativeCapturerStarted(long nativeSource, boolean success);
   private native void nativeCapturerStopped(long nativeSource);
   private native void nativeOnByteBufferFrameCaptured(long nativeSource, byte[] data, int length,
       int width, int height, int rotation, long timeStamp);
   private native void nativeOnTextureFrameCaptured(long nativeSource, int width, int height,
       int oesTextureId, float[] transformMatrix, int rotation, long timestamp);
+  private native void nativeOnFrameCaptured(long nativeSource, int width, int height, int rotation,
+      long timestampNs, float[] transformMatrix, VideoFrame.Buffer frame);
 }

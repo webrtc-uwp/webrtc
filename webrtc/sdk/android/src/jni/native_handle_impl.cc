@@ -18,6 +18,7 @@
 #include "webrtc/base/logging.h"
 #include "webrtc/base/scoped_ref_ptr.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
+#include "webrtc/sdk/android/src/jni/classreferenceholder.h"
 #include "webrtc/sdk/android/src/jni/jni_helpers.h"
 #include "webrtc/system_wrappers/include/aligned_malloc.h"
 
@@ -30,6 +31,23 @@ Matrix::Matrix(JNIEnv* jni, jfloatArray a) {
     elem_[i] = ptr[i];
   }
   jni->ReleaseFloatArrayElements(a, ptr, 0);
+}
+
+Matrix Matrix::fromAndroidGraphicsMatrix(JNIEnv* jni, jobject j_matrix) {
+  jfloatArray array_3x3 = jni->NewFloatArray(9);
+  jclass j_matrix_class = jni->FindClass("android/graphics/Matrix");
+  jni->CallVoidMethod(j_matrix,
+                      GetMethodID(jni, j_matrix_class, "getValues", "([F)V"),
+                      array_3x3);
+  jfloat* array_3x3_ptr = jni->GetFloatArrayElements(array_3x3, nullptr);
+  Matrix matrix;
+  for (int y = 0; y < 3; ++y) {
+    for (int x = 0; x < 3; ++x) {
+      matrix.elem_[y * 4 + x] = array_3x3_ptr[x + y * 3];
+    }
+  }
+  matrix.elem_[3 + 3 * 3] = 1;  // Bottom-left corner should be 1.
+  return matrix;
 }
 
 jfloatArray Matrix::ToJava(JNIEnv* jni) {
@@ -151,7 +169,7 @@ int AndroidTextureBuffer::height() const {
 rtc::scoped_refptr<webrtc::I420BufferInterface> AndroidTextureBuffer::ToI420() {
   int uv_width = (width()+7) / 8;
   int stride = 8 * uv_width;
-  int uv_height = (height()+1)/2;
+  int uv_height = (height() + 1) / 2;
   size_t size = stride * (height() + uv_height);
   // The data is owned by the frame, and the normal case is that the
   // data is deleted by the frame's destructor callback.
@@ -193,6 +211,104 @@ rtc::scoped_refptr<webrtc::I420BufferInterface> AndroidTextureBuffer::ToI420() {
   CHECK_EXCEPTION(jni) << "textureToYUV throwed an exception";
 
   return copy;
+}
+
+AndroidVideoBuffer::AndroidVideoBuffer(JNIEnv* jni,
+                                       jmethodID j_retain_id,
+                                       jmethodID j_release_id,
+                                       int width,
+                                       int height,
+                                       const Matrix& matrix,
+                                       jobject j_video_frame_buffer)
+    : j_release_id_(j_release_id),
+      width_(width),
+      height_(height),
+      matrix_(matrix),
+      j_video_frame_buffer_(jni, j_video_frame_buffer) {
+  jni->CallVoidMethod(j_video_frame_buffer, j_retain_id);
+}
+
+AndroidVideoBuffer::~AndroidVideoBuffer() {
+  JNIEnv* jni = AttachCurrentThreadIfNeeded();
+  jni->CallVoidMethod(*j_video_frame_buffer_, j_release_id_);
+}
+
+jobject AndroidVideoBuffer::video_frame_buffer() const {
+  return *j_video_frame_buffer_;
+}
+
+webrtc::VideoFrameBuffer::Type AndroidVideoBuffer::type() const {
+  return Type::kNative;
+}
+
+int AndroidVideoBuffer::width() const {
+  return width_;
+}
+
+int AndroidVideoBuffer::height() const {
+  return height_;
+}
+
+rtc::scoped_refptr<webrtc::I420BufferInterface> AndroidVideoBuffer::ToI420() {
+  // TODO(magjed) Implement using Java ToI420.
+  return nullptr;
+}
+
+AndroidVideoBufferFactory::AndroidVideoBufferFactory(JNIEnv* jni)
+    : j_video_frame_class_(jni, FindClass(jni, "org/webrtc/VideoFrame")),
+      j_get_buffer_id_(GetMethodID(jni,
+                                   *j_video_frame_class_,
+                                   "getBuffer",
+                                   "()Lorg/webrtc/VideoFrame$Buffer;")),
+      j_get_width_id_(
+          GetMethodID(jni, *j_video_frame_class_, "getWidth", "()I")),
+      j_get_height_id_(
+          GetMethodID(jni, *j_video_frame_class_, "getHeight", "()I")),
+      j_get_rotation_id_(
+          GetMethodID(jni, *j_video_frame_class_, "getRotation", "()I")),
+      j_get_transform_matrix_id_(GetMethodID(jni,
+                                             *j_video_frame_class_,
+                                             "getTransformMatrix",
+                                             "()Landroid/graphics/Matrix;")),
+      j_get_timestamp_ns_id_(
+          GetMethodID(jni, *j_video_frame_class_, "getTimestampNs", "()J")),
+      j_video_frame_buffer_class_(
+          jni,
+          FindClass(jni, "org/webrtc/VideoFrame$Buffer")),
+      j_retain_id_(
+          GetMethodID(jni, *j_video_frame_buffer_class_, "retain", "()V")),
+      j_release_id_(
+          GetMethodID(jni, *j_video_frame_buffer_class_, "release", "()V")) {}
+
+webrtc::VideoFrame AndroidVideoBufferFactory::CreateFrame(
+    JNIEnv* jni,
+    jobject j_video_frame,
+    uint32_t timestamp_rtp) const {
+  jobject j_video_frame_buffer =
+      jni->CallObjectMethod(j_video_frame, j_get_buffer_id_);
+  int width = jni->CallIntMethod(j_video_frame, j_get_width_id_);
+  int height = jni->CallIntMethod(j_video_frame, j_get_height_id_);
+  int rotation = jni->CallIntMethod(j_video_frame, j_get_rotation_id_);
+  jobject j_matrix =
+      jni->CallObjectMethod(j_video_frame, j_get_transform_matrix_id_);
+  Matrix matrix = Matrix::fromAndroidGraphicsMatrix(jni, j_matrix);
+  uint32_t timestamp_ns =
+      jni->CallLongMethod(j_video_frame, j_get_timestamp_ns_id_);
+  rtc::scoped_refptr<AndroidVideoBuffer> buffer =
+      CreateBuffer(width, height, matrix, j_video_frame_buffer);
+  return webrtc::VideoFrame(buffer, timestamp_rtp, timestamp_ns / 1000 / 1000,
+                            static_cast<webrtc::VideoRotation>(rotation));
+}
+
+rtc::scoped_refptr<AndroidVideoBuffer> AndroidVideoBufferFactory::CreateBuffer(
+    int width,
+    int height,
+    const Matrix& matrix,
+    jobject j_video_frame_buffer) const {
+  JNIEnv* jni = AttachCurrentThreadIfNeeded();
+  return new rtc::RefCountedObject<AndroidVideoBuffer>(
+      jni, j_retain_id_, j_release_id_, width, height, matrix,
+      j_video_frame_buffer);
 }
 
 }  // namespace webrtc_jni
