@@ -1,0 +1,119 @@
+/*
+ *  Copyright 2015 The WebRTC project authors. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
+ */
+
+package org.webrtc;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import android.annotation.TargetApi;
+import android.graphics.Matrix;
+import android.opengl.GLES11Ext;
+import android.opengl.GLES20;
+import android.os.Build;
+import android.support.test.filters.MediumTest;
+import android.util.Log;
+import java.nio.ByteBuffer;
+import java.util.concurrent.CountDownLatch;
+import org.chromium.base.test.BaseJUnit4ClassRunner;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.webrtc.MediaCodecVideoEncoder.OutputBufferInfo;
+
+@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
+@RunWith(BaseJUnit4ClassRunner.class)
+public class HardwareVideoEncoderTest {
+  final static String TAG = "MediaCodecVideoEncoderTest";
+
+  private static final VideoEncoder.Settings SETTINGS = new VideoEncoder.Settings(
+      1 /* core */, 640 /* width */, 480 /* height */, 300 /* kbps */, 30 /* fps */);
+
+  @Test
+  @MediumTest
+  public void testInitializeUsingYuvBuffer() {
+    HardwareVideoEncoderFactory factory = new HardwareVideoEncoderFactory();
+    VideoCodecInfo[] supportedCodecs = factory.getSupportedCodecs();
+    if (supportedCodecs.length == 0) {
+      Log.i(TAG, "No hardware encoding support, skipping testInitializeUsingYuvBuffer");
+      return;
+    }
+    VideoEncoder encoder = factory.createEncoder(supportedCodecs[0]);
+    assertEquals(encoder.initEncode(SETTINGS, null), VideoCodecStatus.OK);
+    assertEquals(encoder.release(), VideoCodecStatus.OK);
+  }
+
+  @Test
+  @MediumTest
+  public void testInitilizeUsingTextures() {
+    // TODO(mellem):  Add this case when textures are supported.
+    Log.i(TAG, "textures not implemented");
+  }
+
+  @Test
+  @MediumTest
+  public void testInitializeUsingYuvBufferReInitilizeUsingTextures() {
+    // TODO(mellem):  Add this case when textures are supported.
+    Log.i(TAG, "textures not implemented");
+  }
+
+  @Test
+  @MediumTest
+  public void testEncodeYuvBuffer() throws InterruptedException {
+    HardwareVideoEncoderFactory factory = new HardwareVideoEncoderFactory();
+    VideoCodecInfo[] supportedCodecs = factory.getSupportedCodecs();
+    if (supportedCodecs.length == 0) {
+      Log.i(TAG, "No hardware encoding support, skipping testEncodeYuvBuffer");
+      return;
+    }
+
+    VideoEncoder encoder = factory.createEncoder(supportedCodecs[0]);
+
+    final long presentationTimestampUs = 20000;
+    final CountDownLatch encodeDone = new CountDownLatch(1);
+
+    VideoEncoder.Callback callback = new VideoEncoder.Callback() {
+      @Override
+      public void onEncodedFrame(EncodedImage image, VideoEncoder.CodecSpecificInfo info) {
+        assertTrue(image.buffer.capacity() > 0);
+        assertEquals(image.encodedWidth, SETTINGS.width);
+        assertEquals(image.encodedHeight, SETTINGS.height);
+        assertEquals(image.timeStampMs, presentationTimestampUs / 1000);
+        assertEquals(image.captureTimeMs, presentationTimestampUs / 1000);
+        assertEquals(image.frameType, EncodedImage.FrameType.VideoFrameKey);
+        assertEquals(image.rotation, 0);
+        assertTrue(image.completeFrame);
+
+        encodeDone.countDown();
+      }
+    };
+
+    assertEquals(encoder.initEncode(SETTINGS, callback), VideoCodecStatus.OK);
+
+    VideoFrame.I420Buffer buffer = new I420BufferImpl(SETTINGS.width, SETTINGS.height);
+    VideoFrame frame =
+        new VideoFrame(buffer, 0 /* rotation */, presentationTimestampUs * 1000, new Matrix());
+    VideoEncoder.EncodeInfo info = new VideoEncoder.EncodeInfo(
+        new EncodedImage.FrameType[] {EncodedImage.FrameType.VideoFrameKey});
+
+    assertEquals(encoder.encode(frame, info), VideoCodecStatus.OK);
+
+    ThreadUtils.awaitUninterruptibly(encodeDone);
+
+    assertEquals(encoder.release(), VideoCodecStatus.OK);
+  }
+
+  @Test
+  @MediumTest
+  public void testEncodeUsingTextures() throws InterruptedException {
+    // TODO(mellem):  Add this case when textures are supported.
+    Log.i(TAG, "textures not implemented");
+  }
+}
