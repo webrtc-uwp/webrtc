@@ -16,6 +16,24 @@
       "revId": "742ff19e67f318bf06a05adabb9a63e12716799d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1486a9ff_1a51ae5e",
+        "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1122982
+      },
+      "writtenOn": "2017-06-13T12:11:27Z",
+      "side": 1,
+      "message": "OK. How about we remove this comment?\n\nI\u0027m not fond of the LastError method either (LastDecoderError even less so). I see three ways around this:\n1. Have each method return the error code.\n2. Have an error callback.\n3. Delete it.\n\nI\u0027m voting for #3, since LastError is only called in three places, all of them related to removing codecs, all of them resulting in a LOG(LERROR) that could just as well be made inside NetEq. LastDecoderError is not used at all, luckily.",
+      "parentUuid": "8365f181_e7e00a9b",
+      "revId": "742ff19e67f318bf06a05adabb9a63e12716799d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
