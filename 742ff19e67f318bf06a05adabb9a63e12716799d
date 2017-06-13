@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8365f181_e7e00a9b",
+        "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-13T11:06:13Z",
+      "side": 1,
+      "message": "Excellent change. But because AcmReceiver uses NetEq\u0027s LastError() method, the comment is incorrect; any sequence of calls like this\n\n  if (neteq_-\u003eFoo() !\u003d NetEq::kOK) {\n    auto err \u003d neteq_-\u003eLastError()\n\nwill break if neteq_ is accessed by someone else in between those two calls.\n\nWe either need an external lock to protect neteq_, or we need to get rid of LastError.",
+      "revId": "742ff19e67f318bf06a05adabb9a63e12716799d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
