@@ -131,6 +131,24 @@
     },
     {
       "key": {
+        "uuid": "587b25e8_72ca9b3f",
+        "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-13T11:05:54Z",
+      "side": 1,
+      "message": "Well, it would help as much as it ever does. For any lock-annotated variable x_, you can always replace the correct\n\n  rtc::CritScope lock(\u0026crit_sect_);\n  x_ \u003d ComputeNewValue(x_);\n\nwith the incorrect\n\n  int new_x;\n  {\n    rtc::CritScope lock(\u0026crit_sect_);\n    new_x \u003d ComputeNewValue(x_);\n  }\n  {\n    rtc::CritScope lock(\u0026crit_sect_);\n    x_ \u003d new_x;\n  }\n\nand the compiler won\u0027t complain. The lock annotations are useful because they remind you that you need to take the lock at all; it\u0027s up to you to not release it in the middle of what needs to be an atomic sequence of actions.\n\nIn contrast, if you have a supposedly thread-safe object that uses locks internally, any sequence of method calls\n\n  x_-\u003eMeth();\n  x_-\u003eCoke();\n\nhad better not need to be an atomic sequence. But this is exactly the situation we have with NetEq\u0027s LastError() method.",
+      "parentUuid": "b166aabc_88e14e40",
+      "revId": "4e8bd409ed38247dbcf691e9fb80f04f2797a01c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "294e5e02_b6b65066",
         "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
         "patchSetId": 1
