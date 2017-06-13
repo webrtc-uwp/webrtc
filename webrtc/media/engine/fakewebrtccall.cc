@@ -149,7 +149,7 @@ bool FakeVideoSendStream::GetVp8Settings(
     return false;
   }
 
-  *settings = vpx_settings_.vp8;
+  *settings = codec_specific_settings_.vp8;
   return true;
 }
 
@@ -159,7 +159,17 @@ bool FakeVideoSendStream::GetVp9Settings(
     return false;
   }
 
-  *settings = vpx_settings_.vp9;
+  *settings = codec_specific_settings_.vp9;
+  return true;
+}
+
+bool FakeVideoSendStream::GetH264Settings(
+    webrtc::VideoCodecH264* settings) const {
+  if (!codec_settings_set_) {
+    return false;
+  }
+
+  *settings = codec_specific_settings_.h264;
   return true;
 }
 
@@ -221,17 +231,24 @@ void FakeVideoSendStream::ReconfigureVideoEncoder(
       width, height, config);
   if (config.encoder_specific_settings != NULL) {
     if (config_.encoder_settings.payload_name == "VP8") {
-      config.encoder_specific_settings->FillVideoCodecVp8(&vpx_settings_.vp8);
+      config.encoder_specific_settings->FillVideoCodecVp8(
+          &codec_specific_settings_.vp8);
       if (!video_streams_.empty()) {
-        vpx_settings_.vp8.numberOfTemporalLayers = static_cast<unsigned char>(
-            video_streams_.back().temporal_layer_thresholds_bps.size() + 1);
+        codec_specific_settings_.vp8.numberOfTemporalLayers =
+            static_cast<unsigned char>(
+                video_streams_.back().temporal_layer_thresholds_bps.size() + 1);
       }
     } else if (config_.encoder_settings.payload_name == "VP9") {
-      config.encoder_specific_settings->FillVideoCodecVp9(&vpx_settings_.vp9);
+      config.encoder_specific_settings->FillVideoCodecVp9(
+          &codec_specific_settings_.vp9);
       if (!video_streams_.empty()) {
-        vpx_settings_.vp9.numberOfTemporalLayers = static_cast<unsigned char>(
-            video_streams_.back().temporal_layer_thresholds_bps.size() + 1);
+        codec_specific_settings_.vp9.numberOfTemporalLayers =
+            static_cast<unsigned char>(
+                video_streams_.back().temporal_layer_thresholds_bps.size() + 1);
       }
+    } else if (config_.encoder_settings.payload_name == "H264") {
+      config.encoder_specific_settings->FillVideoCodecH264(
+          &codec_specific_settings_.h264);
     } else {
       ADD_FAILURE() << "Unsupported encoder payload: "
                     << config_.encoder_settings.payload_name;
