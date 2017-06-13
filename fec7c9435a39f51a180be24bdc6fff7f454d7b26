@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "917f17a0_5c1b3ee0",
+        "filename": "webrtc/modules/rtp_rtcp/source/rtp_format_h264.cc",
+        "patchSetId": 11
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1138974
+      },
+      "writtenOn": "2017-06-13T17:12:40Z",
+      "side": 1,
+      "message": "May be set simulcastIdx to 0 for Fua too",
+      "revId": "fec7c9435a39f51a180be24bdc6fff7f454d7b26",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
