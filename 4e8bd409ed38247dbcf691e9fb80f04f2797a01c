@@ -59,6 +59,24 @@
     },
     {
       "key": {
+        "uuid": "8cea18f3_8d0b30e1",
+        "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-13T09:14:03Z",
+      "side": 1,
+      "message": "Hmm, there are no lock annotations on that member:\n\n  NetEq* neteq_;\n\nIt should probably be\n\n  NetEq* neteq_ GUARDED_BY(crit_sect_) PT_GUARDED_BY(crit_sect_);\n\nor (even better, if it works)\n\n  NetEq* const neteq_ PT_GUARDED_BY(crit_sect_);\n\n(Also, I find it puzzling that we have a raw pointer to the NetEq and don\u0027t own it. But that may be a deeper rabbit hole than appropriate for this CL.)",
+      "parentUuid": "c8aec38f_bb7a6ff2",
+      "revId": "4e8bd409ed38247dbcf691e9fb80f04f2797a01c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "294e5e02_b6b65066",
         "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
         "patchSetId": 1
