@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_coding/codecs/vp8/simulcast_rate_allocator.h"
+#include "webrtc/modules/video_coding/utility/simulcast_rate_allocator.h"
 
 #include <algorithm>
 #include <memory>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "webrtc/base/checks.h"
 
