@@ -1,0 +1,441 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8eaa4440_317889ce",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "This could use a comment.",
+      "range": {
+        "startLine": 48,
+        "startChar": 36,
+        "endLine": 48,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8545716_0a637202",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "Is this comment only relevant to framerate adjustment?  It doesn\u0027t seem to apply to dynamic adjustment.  Should it be updated?",
+      "range": {
+        "startLine": 54,
+        "startChar": 88,
+        "endLine": 54,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc968848_05cb7314",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "These are all called \"properties\" but the type is \"requirements\".  Can we pick one name?",
+      "range": {
+        "startLine": 73,
+        "startChar": 68,
+        "endLine": 73,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee331899_d34d4be6",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "It would be nice if we didn\u0027t have this dependency on PeerConnectionFactory.  Can we find another place for this field trial check?",
+      "range": {
+        "startLine": 82,
+        "startChar": 5,
+        "endLine": 82,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "771002ac_9c0d4558",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "None of the other lists are IN_ALL_CAPS, so why this one but not the others?",
+      "range": {
+        "startLine": 108,
+        "startChar": 62,
+        "endLine": 108,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55cba2fa_80f7cf06",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "If this method is \"xSupportedCodecs()\", then so should the others (vp8SupportedCodecs, vp9SupportedCodecs, etc).  But now that I look at it, it seems we should just delete all the other lists because they are only used to create this list.  So why not just put all the logic in this one place?",
+      "range": {
+        "startLine": 111,
+        "startChar": 68,
+        "endLine": 111,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ddba24f1_968f0b32",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "allSupportedCodecs() returns a list of requirements which are sometimes called properties.  Then supportedCodecs is a map of properties.",
+      "range": {
+        "startLine": 143,
+        "startChar": 84,
+        "endLine": 143,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "39479e86_13741eca",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "Couldn\u0027t we model this as 3 different VideoCodecRequirements with different minimum OS versions?",
+      "range": {
+        "startLine": 163,
+        "startChar": 11,
+        "endLine": 163,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d44a8962_a9d701b6",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "Should these key frame intervals be named constants?  \n\nAnd shouldn\u0027t there be a separate getKeyFrameInterval helper method?\n\nOr better yet, why not have them be a field in VideoEncoderRequirements along with all the other properties?",
+      "range": {
+        "startLine": 170,
+        "startChar": 33,
+        "endLine": 170,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01c42860_ac763492",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "It seems like this should be a helper method that just takes the type.",
+      "range": {
+        "startLine": 185,
+        "startChar": 5,
+        "endLine": 185,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed86ba98_167f1437",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "This file has VideoCodecInfo, VideoCodecRequirements, VideoCodedProperties, and MediaCodecInfos.  We seriously need a comment at the top explaining what all of these things are.",
+      "range": {
+        "startLine": 192,
+        "startChar": 48,
+        "endLine": 192,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a10b62cb_ba290b2d",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "I think this method would be more clear if it passed in what is actually uses: a codec name and a list of mime types.",
+      "range": {
+        "startLine": 204,
+        "startChar": 84,
+        "endLine": 204,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0689fb6_aef48d29",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "This would be more clear if it only took as an argument what it actually uses: an iterable of color formats.  And then a better name would be selectColorFormat, since it\u0027s picking the preferred one.",
+      "range": {
+        "startLine": 223,
+        "startChar": 71,
+        "endLine": 223,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9bfcb22_f1fa45f8",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "Yuck.  Can we not have some kind of Optional in Java?  Or even an Integer?  null is better than -1 here.",
+      "range": {
+        "startLine": 231,
+        "startChar": 0,
+        "endLine": 231,
+        "endChar": 14
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d4400c2_b777e56c",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "It seems like it would be cleaner for this to be two methods: one that queries the OS for codec support and one that caches it.",
+      "range": {
+        "startLine": 234,
+        "startChar": 38,
+        "endLine": 234,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d594f78c_8f76dc11",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "All of the codecs have KITKAT or greater as a minimum, so it seems like this is no-op.",
+      "range": {
+        "startLine": 244,
+        "startChar": 5,
+        "endLine": 244,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7fa4da4_199433b5",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "It seems like \"requirements\" is a misnomer here.  That just one piece of information we have about the encoders.  So, there are two pieces of information: \n\n1.  Information the OS gives us.\n2.  Information we know ourselves on top of that. \n\nAnd then these two are merged into one list of codecs.  \n\nI think we need better names to make this more clear.\n\n\n\nActually, I think we can solve this pretty easily:\n\n1.  Cache the info from the OS, not the calculated information from the OS.  Just call that MediaCodecInfo.\n2.  When we need combined knowledge, just combine it on demand rather than cacheing it.  We don\u0027t need it that often.\n3.  The static knowledge could be called something like SupportedVideoEncoder.  When we support it, that means we know something specific about it.",
+      "range": {
+        "startLine": 286,
+        "startChar": 98,
+        "endLine": 286,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b706234b_06c1fcc4",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "I don\u0027t understand why a VideoCodecInfo is passed in here.  We don\u0027t need a payload type at this level.  We really only need the codec name.  So why not just pass that in?\n\nOr better yet, a VideoCodecType.",
+      "range": {
+        "startLine": 16,
+        "startChar": 57,
+        "endLine": 16,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6828c50d_083e766e",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-13T00:54:47Z",
+      "side": 1,
+      "message": "Same going out: payload types make no sense.  \n\nAnd I don\u0027t see how SDP-level parameters make any sense either.\n\n\nShould this just be returning a list of names, or better yet a list of VideoCodecType.",
+      "range": {
+        "startLine": 19,
+        "startChar": 47,
+        "endLine": 19,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
