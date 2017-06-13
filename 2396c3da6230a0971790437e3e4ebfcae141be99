@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6b8da3e_46086314",
+        "filename": "webrtc/sdk/android/src/jni/wrapped_native_i420_buffer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-13T14:10:47Z",
+      "side": 1,
+      "message": "I think we have to add this to the classreferenceholder or use jni-\u003eFindClass?",
+      "range": {
+        "startLine": 25,
+        "startChar": 33,
+        "endLine": 25,
+        "endChar": 56
+      },
+      "revId": "2396c3da6230a0971790437e3e4ebfcae141be99",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0360d3b9_64397636",
+        "filename": "webrtc/sdk/android/src/jni/wrapped_native_i420_buffer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-13T14:10:47Z",
+      "side": 1,
+      "message": "ByteBufferI; -\u003e ByteBuffer;I",
+      "range": {
+        "startLine": 29,
+        "startChar": 19,
+        "endLine": 29,
+        "endChar": 30
+      },
+      "revId": "2396c3da6230a0971790437e3e4ebfcae141be99",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3ed6567_ddf25c7a",
+        "filename": "webrtc/sdk/android/src/jni/wrapped_native_i420_buffer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-13T14:10:47Z",
+      "side": 1,
+      "message": "Could use a comment, i.e. what it does and what class it returns.",
+      "range": {
+        "startLine": 20,
+        "startChar": 8,
+        "endLine": 20,
+        "endChar": 22
+      },
+      "revId": "2396c3da6230a0971790437e3e4ebfcae141be99",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
