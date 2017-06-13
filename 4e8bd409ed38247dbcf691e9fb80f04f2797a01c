@@ -113,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "b166aabc_88e14e40",
+        "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1122982
+      },
+      "writtenOn": "2017-06-13T10:16:26Z",
+      "side": 1,
+      "message": "That\u0027s another story. But lock annotation won\u0027t help you there either (in theory).\n\nNevertheless, I created a CL to clean up the ownership of the NetEq object: https://chromium-review.googlesource.com/c/533073/",
+      "parentUuid": "9f4aa712_9af03b26",
+      "revId": "4e8bd409ed38247dbcf691e9fb80f04f2797a01c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "294e5e02_b6b65066",
         "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
         "patchSetId": 1
