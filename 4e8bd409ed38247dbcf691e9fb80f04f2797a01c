@@ -95,6 +95,24 @@
     },
     {
       "key": {
+        "uuid": "9f4aa712_9af03b26",
+        "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-13T09:47:53Z",
+      "side": 1,
+      "message": "No. No matter how threadsafe NetEq is, it can only protect itself against concurrent access for the duration of a method call. Here, we call two NetEq methods in sequence (RemovePayloadType and LastError) and expect that no one else has called the NetEq instance in between.",
+      "parentUuid": "f74589af_f0debe11",
+      "revId": "4e8bd409ed38247dbcf691e9fb80f04f2797a01c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "294e5e02_b6b65066",
         "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
         "patchSetId": 1
