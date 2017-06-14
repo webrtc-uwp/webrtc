@@ -67,7 +67,7 @@ AudioEncoderOpusStates CreateCodec(size_t num_channels) {
   states.fake_clock->SetTimeMicros(kInitialTimeUs);
   std::weak_ptr<MockAudioNetworkAdaptor*> mock_ptr(
       states.mock_audio_network_adaptor);
-  AudioEncoderOpus::AudioNetworkAdaptorCreator creator =
+  auto creator = rtc::MakeUnique<AudioEncoderOpus::AudioNetworkAdaptorCreator>(
       [mock_ptr](const std::string&, RtcEventLog* event_log) {
         std::unique_ptr<MockAudioNetworkAdaptor> adaptor(
             new NiceMock<MockAudioNetworkAdaptor>());
@@ -78,7 +78,7 @@ AudioEncoderOpusStates CreateCodec(size_t num_channels) {
           RTC_NOTREACHED();
         }
         return adaptor;
-      };
+      });
 
   CodecInst codec_inst = kDefaultOpusSettings;
   codec_inst.channels = num_channels;
