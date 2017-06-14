@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "810c5353_ef6129bc",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8eaa4440_317889ce",
+      "range": {
+        "startLine": 48,
+        "startChar": 36,
+        "endLine": 48,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f8545716_0a637202",
         "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
         "patchSetId": 2
@@ -45,6 +69,30 @@
       "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c1ceb91d_7fc40fbc",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f8545716_0a637202",
+      "range": {
+        "startLine": 54,
+        "startChar": 88,
+        "endLine": 54,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "de142a4b_6d2545db",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "cc968848_05cb7314",
+      "range": {
+        "startLine": 73,
+        "startChar": 68,
+        "endLine": 73,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ee331899_d34d4be6",
         "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
         "patchSetId": 2
@@ -82,6 +154,30 @@
       "writtenOn": "2017-06-13T00:54:47Z",
       "side": 1,
       "message": "It would be nice if we didn\u0027t have this dependency on PeerConnectionFactory.  Can we find another place for this field trial check?",
+      "range": {
+        "startLine": 82,
+        "startChar": 5,
+        "endLine": 82,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12d8d3a2_b846cbcf",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "The only thing I can think of is passing the bit in the constructor.  Is that better?\n\nThere\u0027s also going to be a field trial associated with the H264 high-profile stuff, once I add that.",
+      "parentUuid": "ee331899_d34d4be6",
       "range": {
         "startLine": 82,
         "startChar": 5,
@@ -114,6 +210,30 @@
       "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c4bed6e_f5ad4c93",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "771002ac_9c0d4558",
+      "range": {
+        "startLine": 108,
+        "startChar": 62,
+        "endLine": 108,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -164,6 +284,30 @@
     },
     {
       "key": {
+        "uuid": "7c89e901_a1f888ff",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ba399a51_45aefcef",
+      "range": {
+        "startLine": 111,
+        "startChar": 68,
+        "endLine": 111,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ddba24f1_968f0b32",
         "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
         "patchSetId": 2
@@ -184,6 +328,30 @@
       "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2bd5a74_15da6859",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ddba24f1_968f0b32",
+      "range": {
+        "startLine": 143,
+        "startChar": 84,
+        "endLine": 143,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -210,6 +378,30 @@
     },
     {
       "key": {
+        "uuid": "77d1b11d_8d204c4e",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "Not without also specifying maximum OS versions.  Not really relevant at the moment due to my rewrite.",
+      "parentUuid": "39479e86_13741eca",
+      "range": {
+        "startLine": 163,
+        "startChar": 11,
+        "endLine": 163,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d44a8962_a9d701b6",
         "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
         "patchSetId": 2
@@ -230,6 +422,30 @@
       "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2459bfac_7c216646",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "I actually went the opposite direction and killed VideoEncoderRequirements altogether.\n\nThis now lives in a separate helper.",
+      "parentUuid": "d44a8962_a9d701b6",
+      "range": {
+        "startLine": 170,
+        "startChar": 33,
+        "endLine": 170,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -256,6 +472,30 @@
     },
     {
       "key": {
+        "uuid": "5cde0693_37069d50",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "01c42860_ac763492",
+      "range": {
+        "startLine": 185,
+        "startChar": 5,
+        "endLine": 185,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ed86ba98_167f1437",
         "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
         "patchSetId": 2
@@ -276,6 +516,30 @@
       "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ae2c0a7_b331c571",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "Ack - most of them are gone now.",
+      "parentUuid": "ed86ba98_167f1437",
+      "range": {
+        "startLine": 192,
+        "startChar": 48,
+        "endLine": 192,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -325,6 +589,30 @@
     },
     {
       "key": {
+        "uuid": "5591ec3c_2efbafdc",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a10b62cb_ba290b2d",
+      "range": {
+        "startLine": 204,
+        "startChar": 84,
+        "endLine": 204,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d0689fb6_aef48d29",
         "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
         "patchSetId": 2
@@ -345,6 +633,30 @@
       "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c6c49c14_7e6ab505",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d0689fb6_aef48d29",
+      "range": {
+        "startLine": 223,
+        "startChar": 71,
+        "endLine": 223,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -395,6 +707,30 @@
     },
     {
       "key": {
+        "uuid": "f5336959_c1b8e3fd",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "Switched to Integer and null.",
+      "parentUuid": "98137926_f18ae468",
+      "range": {
+        "startLine": 231,
+        "startChar": 0,
+        "endLine": 231,
+        "endChar": 14
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4d4400c2_b777e56c",
         "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
         "patchSetId": 2
@@ -415,6 +751,30 @@
       "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bf9b2a1b_1c5d0886",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "I don\u0027t think we actually need any caching here, the current Java layer does not do it.\n\nI\u0027ve reorganized the code into two distinct blocks:  look up a supported hardware codec for a given codec type and generate all the properties associated with a given hardware codec.",
+      "parentUuid": "4d4400c2_b777e56c",
+      "range": {
+        "startLine": 234,
+        "startChar": 38,
+        "endLine": 234,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -441,6 +801,30 @@
     },
     {
       "key": {
+        "uuid": "7a5f6dda_c578c445",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d594f78c_8f76dc11",
+      "range": {
+        "startLine": 244,
+        "startChar": 5,
+        "endLine": 244,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b7fa4da4_199433b5",
         "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
         "patchSetId": 2
@@ -461,6 +845,30 @@
       "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c99db27_4a177c8c",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b7fa4da4_199433b5",
+      "range": {
+        "startLine": 286,
+        "startChar": 98,
+        "endLine": 286,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -508,6 +916,30 @@
       "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd44dc2d_325cc7ff",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1d5b1d25_4748ba59",
+      "range": {
+        "startLine": 16,
+        "startChar": 57,
+        "endLine": 16,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -570,6 +1002,30 @@
       "side": 1,
       "message": "I don\u0027t think cricket::VideoCodecs is a good interface for this.  It\u0027s an SDP-level struct that doesn\u0027t encapsulate the idea of either \"do this for my encoder\" or \"this is what my encoder can do\" very well.\n\nIf we need those things, then I suggest we make two separate structs for it:\n\n// Do this for my encoder\nstruct VideoEncoderParameters {\n  VideoCodecType codec;\n  VideoProfile profile;\n  // ... Other stuff\n}\n\n// This is what the encoder can do \nstruct VideoEncoderCapabilities {\n  VideoCodecType codec;\n  VideoProfile profile;\n  // ... Other stuff\n}\n\n\n\nOr other things like that.  cricket::VideoCodecs does not make sense, and neither does VideoCodecInfo.",
       "parentUuid": "f3645705_134e2f7e",
+      "range": {
+        "startLine": 19,
+        "startChar": 47,
+        "endLine": 19,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c1e96a76_80272402",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T00:26:03Z",
+      "side": 1,
+      "message": "I\u0027m inclined to agree with Peter that SDP does not make sense at this layer.  I\u0027ll have to duplicate some constants and this helper method to fill it in: \nhttps://cs.chromium.org/chromium/src/third_party/webrtc/common_video/h264/profile_level_id.cc?l\u003d217\u0026rcl\u003de65f13714155819b16eebd32a1845f25258aa13c\n\nThe int id doesn\u0027t really seem to be used by this layer.  I will also need some way to interpret a VideoCodecInfo as a particular codec type (eg. VP8, VP9, H.264), or I\u0027ll need to cache which codec type corresponds to each VideoCodecInfo that I make.\n\nIt looks like the hardware layer only distinguishes between H264 and H264 high-profile on the decoder side, and the only difference is that \"high profile\" is only supported on the qcom decoder.  If that\u0027s the crucial bit, I feel like I\u0027m doing an awful lot of work to expose it.\n\nIs there a sensible way to simplify this?  Or will other \"injected\" codecs want the full SDP structure?",
+      "parentUuid": "c537f1d4_0f220e3e",
       "range": {
         "startLine": 19,
         "startChar": 47,
