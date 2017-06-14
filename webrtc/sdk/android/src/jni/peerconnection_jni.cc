@@ -64,7 +64,6 @@
 #include "webrtc/media/engine/webrtcvideodecoderfactory.h"
 #include "webrtc/media/engine/webrtcvideoencoderfactory.h"
 #include "webrtc/modules/utility/include/jvm_android.h"
-#include "webrtc/system_wrappers/include/field_trial.h"
 #include "webrtc/pc/webrtcsdp.h"
 #include "webrtc/sdk/android/src/jni/androidmediadecoder_jni.h"
 #include "webrtc/sdk/android/src/jni/androidmediaencoder_jni.h"
@@ -74,6 +73,8 @@
 #include "webrtc/sdk/android/src/jni/jni_helpers.h"
 #include "webrtc/sdk/android/src/jni/native_handle_impl.h"
 #include "webrtc/sdk/android/src/jni/rtcstatscollectorcallbackwrapper.h"
+#include "webrtc/sdk/android/src/jni/videodecoderfactorywrapper.h"
+#include "webrtc/system_wrappers/include/field_trial.h"
 // Adding 'nogncheck' to disable the gn include headers check.
 // We don't want to depend on 'system_wrappers:field_trial_default' because
 // clients should be able to provide their own implementation.
@@ -1213,18 +1214,21 @@ JOW(void, AudioTrack_nativeSetVolume)
 // single thing for Java to hold and eventually free.
 class OwnedFactoryAndThreads {
  public:
-  OwnedFactoryAndThreads(std::unique_ptr<Thread> network_thread,
-                         std::unique_ptr<Thread> worker_thread,
-                         std::unique_ptr<Thread> signaling_thread,
-                         WebRtcVideoEncoderFactory* encoder_factory,
-                         WebRtcVideoDecoderFactory* decoder_factory,
-                         rtc::NetworkMonitorFactory* network_monitor_factory,
-                         PeerConnectionFactoryInterface* factory)
+  OwnedFactoryAndThreads(
+      std::unique_ptr<Thread> network_thread,
+      std::unique_ptr<Thread> worker_thread,
+      std::unique_ptr<Thread> signaling_thread,
+      WebRtcVideoEncoderFactory* encoder_factory,
+      WebRtcVideoDecoderFactory* decoder_factory,
+      MediaCodecVideoDecoderFactory* media_codec_decoder_factory,
+      rtc::NetworkMonitorFactory* network_monitor_factory,
+      PeerConnectionFactoryInterface* factory)
       : network_thread_(std::move(network_thread)),
         worker_thread_(std::move(worker_thread)),
         signaling_thread_(std::move(signaling_thread)),
         encoder_factory_(encoder_factory),
         decoder_factory_(decoder_factory),
+        media_codec_decoder_factory_(media_codec_decoder_factory),
         network_monitor_factory_(network_monitor_factory),
         factory_(factory) {}
 
@@ -1240,6 +1244,9 @@ class OwnedFactoryAndThreads {
   Thread* worker_thread() { return worker_thread_.get(); }
   WebRtcVideoEncoderFactory* encoder_factory() { return encoder_factory_; }
   WebRtcVideoDecoderFactory* decoder_factory() { return decoder_factory_; }
+  MediaCodecVideoDecoderFactory* media_codec_decoder_factory() {
+    return media_codec_decoder_factory_;
+  }
   rtc::NetworkMonitorFactory* network_monitor_factory() {
     return network_monitor_factory_;
   }
@@ -1254,6 +1261,7 @@ class OwnedFactoryAndThreads {
   const std::unique_ptr<Thread> signaling_thread_;
   WebRtcVideoEncoderFactory* encoder_factory_;
   WebRtcVideoDecoderFactory* decoder_factory_;
+  MediaCodecVideoDecoderFactory* media_codec_decoder_factory_;
   rtc::NetworkMonitorFactory* network_monitor_factory_;
   PeerConnectionFactoryInterface* factory_;  // Const after ctor except dtor.
 };
@@ -1320,8 +1328,12 @@ PeerConnectionFactoryInterface::Options ParseOptionsFromJava(JNIEnv* jni,
   return native_options;
 }
 
-JOW(jlong, PeerConnectionFactory_nativeCreatePeerConnectionFactory)(
-    JNIEnv* jni, jclass, jobject joptions) {
+JOW(jlong, PeerConnectionFactory_nativeCreatePeerConnectionFactory)
+(JNIEnv* jni,
+ jclass,
+ jobject joptions,
+ jobject jencoder_factory,
+ jobject jdecoder_factory) {
   // talk/ assumes pretty widely that the current Thread is ThreadManager'd, but
   // ThreadManager only WrapCurrentThread()s the thread where it is first
   // created.  Since the semantics around when auto-wrapping happens in
@@ -1345,6 +1357,7 @@ JOW(jlong, PeerConnectionFactory_nativeCreatePeerConnectionFactory)(
 
   WebRtcVideoEncoderFactory* encoder_factory = nullptr;
   WebRtcVideoDecoderFactory* decoder_factory = nullptr;
+  MediaCodecVideoDecoderFactory* media_codec_decoder_factory = nullptr;
   rtc::NetworkMonitorFactory* network_monitor_factory = nullptr;
 
   PeerConnectionFactoryInterface::Options options;
@@ -1355,7 +1368,12 @@ JOW(jlong, PeerConnectionFactory_nativeCreatePeerConnectionFactory)(
 
   if (video_hw_acceleration_enabled) {
     encoder_factory = new MediaCodecVideoEncoderFactory();
-    decoder_factory = new MediaCodecVideoDecoderFactory();
+    if (jdecoder_factory != nullptr) {
+      decoder_factory = new VideoDecoderFactoryWrapper(jni, jdecoder_factory);
+    } else {
+      media_codec_decoder_factory = new MediaCodecVideoDecoderFactory();
+      decoder_factory = media_codec_decoder_factory;
+    }
   }
   // Do not create network_monitor_factory only if the options are
   // provided and disable_network_monitor therein is set to true.
@@ -1378,7 +1396,7 @@ JOW(jlong, PeerConnectionFactory_nativeCreatePeerConnectionFactory)(
   OwnedFactoryAndThreads* owned_factory = new OwnedFactoryAndThreads(
       std::move(network_thread), std::move(worker_thread),
       std::move(signaling_thread), encoder_factory, decoder_factory,
-      network_monitor_factory, factory.release());
+      media_codec_decoder_factory, network_monitor_factory, factory.release());
   owned_factory->InvokeJavaCallbacksOnFactoryThreads();
   return jlongFromPointer(owned_factory);
 }
@@ -1521,8 +1539,7 @@ JOW(void, PeerConnectionFactory_nativeSetVideoHwAccelerationOptions)(
   }
 
   MediaCodecVideoDecoderFactory* decoder_factory =
-      static_cast<MediaCodecVideoDecoderFactory*>
-          (owned_factory->decoder_factory());
+      owned_factory->media_codec_decoder_factory();
   if (decoder_factory) {
     LOG(LS_INFO) << "Set EGL context for HW decoding.";
     decoder_factory->SetEGLContext(jni, remote_egl_context);
