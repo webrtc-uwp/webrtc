@@ -91,6 +91,24 @@
     },
     {
       "key": {
+        "uuid": "255fbe65_98ca372f",
+        "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-14T13:19:08Z",
+      "side": 1,
+      "message": "per offline discussion, I split Create into two versions.",
+      "parentUuid": "5e9997e4_b2deaead",
+      "revId": "522e97a3cb224eef6683b344bf692ecd0726ba65",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ccf0eac3_aa16855d",
         "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager_unittest.cc",
         "patchSetId": 2
