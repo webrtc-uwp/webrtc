@@ -167,6 +167,24 @@
     },
     {
       "key": {
+        "uuid": "0498d1c7_8002f5a4",
+        "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1122982
+      },
+      "writtenOn": "2017-06-14T08:56:12Z",
+      "side": 1,
+      "message": "Uploaded https://chromium-review.googlesource.com/c/535533/ where Last{Decoder}Error() is deleted. It affects these lines in acm_receiver.cc, so we could consider landing that CL before this one.",
+      "parentUuid": "9887f628_2f2891a9",
+      "revId": "4e8bd409ed38247dbcf691e9fb80f04f2797a01c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "294e5e02_b6b65066",
         "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
         "patchSetId": 1
