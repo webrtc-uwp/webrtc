@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "b8924712_b8ec8085",
+        "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-14T10:44:27Z",
+      "side": 1,
+      "message": "That is a desired fact for DebugDumpWriter, IMO. Since we have not expose it, and the caller (ACM) does not need to know how to create it (due to File pointer etc.)",
+      "parentUuid": "f5a5f2ca_0fdbddb3",
+      "revId": "522e97a3cb224eef6683b344bf692ecd0726ba65",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ccf0eac3_aa16855d",
         "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager_unittest.cc",
         "patchSetId": 2
@@ -155,6 +173,24 @@
       "side": 1,
       "message": "Can we create a Test which just test the DebugDump behavior ? \n\nI would be nice not to test it for every test. Separating behavior in different test, gives better output if a test fails. \n\nI see that its may be a bit of a overkill, but I still would go for testing the params. So the test would give a clear image of what the class should do.",
       "parentUuid": "585e7862_a46237dc",
+      "revId": "522e97a3cb224eef6683b344bf692ecd0726ba65",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99dcb1cd_bb8e3e99",
+        "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-14T10:44:27Z",
+      "side": 1,
+      "message": "good suggestion. fixed",
+      "parentUuid": "ccfffaba_12a2d9cb",
       "revId": "522e97a3cb224eef6683b344bf692ecd0726ba65",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
