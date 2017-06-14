@@ -45,6 +45,30 @@
       "revId": "d6eff92512b70843b7ec7412992fd63f4767ccaf",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "02ffb406_431b117b",
+        "filename": "webrtc/sdk/android/instrumentationtests/src/org/webrtc/HardwareVideoEncoderTest.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-14T17:27:52Z",
+      "side": 1,
+      "message": "Changed to 16.  It came from the example test I found:  https://cs.chromium.org/chromium/src/third_party/webrtc/sdk/android/instrumentationtests/src/org/webrtc/MediaCodecVideoEncoderTest.java?l\u003d29\u0026rcl\u003de65f13714155819b16eebd32a1845f25258aa13c",
+      "parentUuid": "23b17461_e8db3f2f",
+      "range": {
+        "startLine": 31,
+        "startChar": 31,
+        "endLine": 31,
+        "endChar": 53
+      },
+      "revId": "d6eff92512b70843b7ec7412992fd63f4767ccaf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
