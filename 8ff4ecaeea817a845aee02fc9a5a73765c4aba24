@@ -214,6 +214,30 @@
     },
     {
       "key": {
+        "uuid": "2b5ed479_0fd627da",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-14T10:45:09Z",
+      "side": 1,
+      "message": "Sgtm.",
+      "parentUuid": "0ec6e085_ed769f10",
+      "range": {
+        "startLine": 82,
+        "startChar": 5,
+        "endLine": 82,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "771002ac_9c0d4558",
         "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
         "patchSetId": 2
@@ -1050,6 +1074,30 @@
       "side": 1,
       "message": "I\u0027m inclined to agree with Peter that SDP does not make sense at this layer.  I\u0027ll have to duplicate some constants and this helper method to fill it in: \nhttps://cs.chromium.org/chromium/src/third_party/webrtc/common_video/h264/profile_level_id.cc?l\u003d217\u0026rcl\u003de65f13714155819b16eebd32a1845f25258aa13c\n\nThe int id doesn\u0027t really seem to be used by this layer.  I will also need some way to interpret a VideoCodecInfo as a particular codec type (eg. VP8, VP9, H.264), or I\u0027ll need to cache which codec type corresponds to each VideoCodecInfo that I make.\n\nIt looks like the hardware layer only distinguishes between H264 and H264 high-profile on the decoder side, and the only difference is that \"high profile\" is only supported on the qcom decoder.  If that\u0027s the crucial bit, I feel like I\u0027m doing an awful lot of work to expose it.\n\nIs there a sensible way to simplify this?  Or will other \"injected\" codecs want the full SDP structure?",
       "parentUuid": "c537f1d4_0f220e3e",
+      "range": {
+        "startLine": 19,
+        "startChar": 47,
+        "endLine": 19,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8a4c6466_28df0fd6",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-14T10:45:09Z",
+      "side": 1,
+      "message": "The reason I would like to keep the SDP interface is that we want clients to be able to implement codecs for formats unknown to WebRTC (for example HEVC). I am open for other solutions as long as they allow this.",
+      "parentUuid": "c1e96a76_80272402",
       "range": {
         "startLine": 19,
         "startChar": 47,

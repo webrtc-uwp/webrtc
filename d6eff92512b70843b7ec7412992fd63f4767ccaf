@@ -22,6 +22,29 @@
       "revId": "d6eff92512b70843b7ec7412992fd63f4767ccaf",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23b17461_e8db3f2f",
+        "filename": "webrtc/sdk/android/instrumentationtests/src/org/webrtc/HardwareVideoEncoderTest.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-14T10:45:09Z",
+      "side": 1,
+      "message": "Why? WebRTC doesn\u0027t support API level 15.",
+      "range": {
+        "startLine": 31,
+        "startChar": 31,
+        "endLine": 31,
+        "endChar": 53
+      },
+      "revId": "d6eff92512b70843b7ec7412992fd63f4767ccaf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
