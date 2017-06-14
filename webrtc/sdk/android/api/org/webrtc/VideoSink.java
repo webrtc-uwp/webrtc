@@ -10,16 +10,14 @@
 
 package org.webrtc;
 
-import java.util.Map;
-
-public class VideoCodecInfo {
-  public final int payload;
-  public final String name;
-  public final Map<String, String> params;
-
-  public VideoCodecInfo(int payload, String name, Map<String, String> params) {
-    this.payload = payload;
-    this.name = name;
-    this.params = params;
-  }
+/**
+ * Java version of rtc::VideoSinkInterface.
+ */
+public interface VideoSink {
+  /**
+   * Implementations should call frame.addRef() if they need to hold a reference to the frame after
+   * this function returns. Each call to addRef() should be followed by a call to frame.release()
+   * when the reference is no longer needed.
+   */
+  void onFrame(VideoFrame frame);
 }

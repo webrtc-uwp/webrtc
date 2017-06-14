@@ -201,6 +201,7 @@ public class SurfaceViewRenderer
   // VideoRenderer.Callbacks interface.
   @Override
   public void renderFrame(VideoRenderer.I420Frame frame) {
+    logD("renderFrame");
     updateFrameDimensionsAndReportEvents(frame);
     eglRenderer.renderFrame(frame);
   }

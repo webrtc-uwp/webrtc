@@ -135,6 +135,7 @@ class CameraVideoCapturerTestFixtures {
         frameLock.notify();
       }
     }
+
     @Override
     public void onTextureFrameCaptured(int width, int height, int oesTextureId,
         float[] transformMatrix, int rotation, long timeStamp) {
@@ -144,6 +145,18 @@ class CameraVideoCapturerTestFixtures {
         frameHeight = height;
         frameSize = 0;
         timestamps.add(timeStamp);
+        frameLock.notify();
+      }
+    }
+
+    @Override
+    public void onFrameCaptured(VideoFrame frame) {
+      synchronized (frameLock) {
+        ++framesCaptured;
+        frameWidth = frame.getWidth();
+        frameHeight = frame.getHeight();
+        frameSize = 0;
+        timestamps.add(frame.getTimestampNs());
         frameLock.notify();
       }
     }

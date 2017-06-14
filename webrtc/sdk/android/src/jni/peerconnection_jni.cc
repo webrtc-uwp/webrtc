@@ -64,7 +64,6 @@
 #include "webrtc/media/engine/webrtcvideodecoderfactory.h"
 #include "webrtc/media/engine/webrtcvideoencoderfactory.h"
 #include "webrtc/modules/utility/include/jvm_android.h"
-#include "webrtc/system_wrappers/include/field_trial.h"
 #include "webrtc/pc/webrtcsdp.h"
 #include "webrtc/sdk/android/src/jni/androidmediadecoder_jni.h"
 #include "webrtc/sdk/android/src/jni/androidmediaencoder_jni.h"
@@ -74,6 +73,8 @@
 #include "webrtc/sdk/android/src/jni/jni_helpers.h"
 #include "webrtc/sdk/android/src/jni/native_handle_impl.h"
 #include "webrtc/sdk/android/src/jni/rtcstatscollectorcallbackwrapper.h"
+#include "webrtc/sdk/android/src/jni/videodecoderfactorywrapper.h"
+#include "webrtc/system_wrappers/include/field_trial.h"
 // Adding 'nogncheck' to disable the gn include headers check.
 // We don't want to depend on 'system_wrappers:field_trial_default' because
 // clients should be able to provide their own implementation.
@@ -846,6 +847,97 @@ class StatsObserverWrapper : public StatsObserver {
   const jmethodID j_value_ctor_;
 };
 
+// Wrapper dispatching rtc::VideoSinkInterface to a Java VideoSink instance.
+class JavaVideoSinkWrapper
+    : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+ public:
+  JavaVideoSinkWrapper(JNIEnv* jni, jobject j_sink)
+      : j_sink_(jni, j_sink),
+        j_on_frame_id_(GetMethodID(jni,
+                                   GetObjectClass(jni, j_sink),
+                                   "onFrame",
+                                   "(Lorg/webrtc/VideoFrame;)V")),
+        j_video_frame_class_(jni, jni->FindClass("org/webrtc/VideoFrameFrame")),
+        j_create_video_frame_id_(GetStaticMethodID(
+            jni,
+            *j_video_frame_class_,
+            "createVideoFrameFromJni",
+            "(Lorg/webrtc/VideoFrame$Buffer;IJ[F)Lorg/webrtc/VideoFrame;")),
+        j_wrapped_native_i420_frame_class_(
+            jni,
+            jni->FindClass("org/webrtc/WrappedNativeI420Frame")),
+        j_wrapped_native_i420_frame_ctor_id_(
+            GetMethodID(jni,
+                        *j_wrapped_native_i420_frame_class_,
+                        "<init>",
+                        "(IIILjava/nio/ByteBuffer;ILjava/"
+                        "nio/ByteBuffer;ILjava/nio/"
+                        "ByteBufferI;J)V")),
+        j_byte_buffer_class_(jni, FindClass(jni, "java/nio/ByteBuffer")) {
+    CHECK_EXCEPTION(jni);
+  }
+
+  virtual ~JavaVideoSinkWrapper() {}
+
+  void OnFrame(const webrtc::VideoFrame& video_frame) override {
+    if (video_frame.video_frame_buffer()->type() ==
+        webrtc::VideoFrameBuffer::Type::kNative) {
+      OnNativeFrame(video_frame);
+    } else {
+      OnI420Frame(video_frame);
+    }
+  }
+
+ private:
+  void OnI420Frame(const webrtc::VideoFrame& frame) {
+    JNIEnv* jni = AttachCurrentThreadIfNeeded();
+    ScopedLocalRefFrame local_ref_frame(jni);
+
+    const rtc::scoped_refptr<webrtc::PlanarYuvBuffer>& buffer =
+        frame.video_frame_buffer()->ToI420();
+    jobject y_buffer =
+        jni->NewDirectByteBuffer(const_cast<uint8_t*>(buffer->DataY()),
+                                 buffer->StrideY() * buffer->height());
+    jobject u_buffer =
+        jni->NewDirectByteBuffer(const_cast<uint8_t*>(buffer->DataU()),
+                                 buffer->StrideU() * buffer->ChromaHeight());
+    jobject v_buffer =
+        jni->NewDirectByteBuffer(const_cast<uint8_t*>(buffer->DataV()),
+                                 buffer->StrideV() * buffer->ChromaHeight());
+
+    jobject j_wrapped_native_i420_frame = jni->NewObject(
+        *j_wrapped_native_i420_frame_class_,
+        j_wrapped_native_i420_frame_ctor_id_, buffer->width(), buffer->height(),
+        static_cast<int>(frame.rotation()), y_buffer, buffer->StrideY(),
+        u_buffer, buffer->StrideU(), v_buffer, buffer->StrideV(),
+        jlongFromPointer(buffer.get()));
+    jni->CallVoidMethod(*j_sink_, j_on_frame_id_, j_wrapped_native_i420_frame);
+    CHECK_EXCEPTION(jni);
+  }
+
+  void OnNativeFrame(const webrtc::VideoFrame& frame) {
+    JNIEnv* jni = AttachCurrentThreadIfNeeded();
+    ScopedLocalRefFrame local_ref_frame(jni);
+
+    // TODO(magjed): Type check casting somehow.
+    jobject j_video_frame_buffer =
+        reinterpret_cast<AndroidVideoBuffer*>(frame.video_frame_buffer().get())
+            ->video_frame_buffer();
+    jobject j_frame = jni->CallStaticObjectMethod(*j_video_frame_class_,
+                                                  j_create_video_frame_id_);
+    jni->CallVoidMethod(*j_sink_, j_on_frame_id_, j_frame);
+    CHECK_EXCEPTION(jni);
+  }
+
+  ScopedGlobalRef<jobject> j_sink_;
+  jmethodID j_on_frame_id_;
+  ScopedGlobalRef<jclass> j_video_frame_class_;
+  jmethodID j_create_video_frame_id_;
+  ScopedGlobalRef<jclass> j_wrapped_native_i420_frame_class_;
+  jmethodID j_wrapped_native_i420_frame_ctor_id_;
+  ScopedGlobalRef<jclass> j_byte_buffer_class_;
+};
+
 // Wrapper dispatching rtc::VideoSinkInterface to a Java VideoRenderer
 // instance.
 class JavaVideoRendererWrapper
@@ -871,10 +963,26 @@ class JavaVideoRendererWrapper
 
   void OnFrame(const webrtc::VideoFrame& video_frame) override {
     ScopedLocalRefFrame local_ref_frame(jni());
-    jobject j_frame = (video_frame.video_frame_buffer()->type() ==
-                       webrtc::VideoFrameBuffer::Type::kNative)
-                          ? ToJavaTextureFrame(&video_frame)
-                          : ToJavaI420Frame(&video_frame);
+
+    jobject j_frame;
+    if (video_frame.video_frame_buffer()->type() ==
+        webrtc::VideoFrameBuffer::Type::kNative) {
+      AndroidVideoFrameBuffer* android_buffer =
+          static_cast<AndroidVideoFrameBuffer*>(
+              video_frame.video_frame_buffer().get());
+      switch (android_buffer->android_type()) {
+        case AndroidVideoFrameBuffer::AndroidType::kTextureBuffer:
+          j_frame = ToJavaI420Frame(&video_frame);
+          break;
+        case AndroidVideoFrameBuffer::AndroidType::kJavaBuffer:
+          j_frame = FromJavaFrame(&video_frame);
+          break;
+        default:
+          RTC_NOTREACHED();
+      }
+    } else {
+      j_frame = ToJavaI420Frame(&video_frame);
+    }
     // |j_callbacks_| is responsible for releasing |j_frame| with
     // VideoRenderer.renderFrameDone().
     jni()->CallVoidMethod(*j_callbacks_, j_render_frame_id_, j_frame);
@@ -932,6 +1040,13 @@ class JavaVideoRendererWrapper
         *j_frame_class_, j_texture_frame_ctor_id_, frame->width(),
         frame->height(), static_cast<int>(frame->rotation()),
         handle.oes_texture_id, sampling_matrix, javaShallowCopy(frame));
+  }
+
+  jobject FromJavaFrame(const webrtc::VideoFrame* frame) {
+    AndroidVideoBuffer* buffer =
+        static_cast<AndroidVideoBuffer*>(frame->video_frame_buffer().get());
+    return buffer->ToJavaI420Frame(jni(), frame->width(), frame->height(),
+                                   frame->rotation());
   }
 
   JNIEnv* jni() {
@@ -1320,8 +1435,12 @@ PeerConnectionFactoryInterface::Options ParseOptionsFromJava(JNIEnv* jni,
   return native_options;
 }
 
-JOW(jlong, PeerConnectionFactory_nativeCreatePeerConnectionFactory)(
-    JNIEnv* jni, jclass, jobject joptions) {
+JOW(jlong, PeerConnectionFactory_nativeCreatePeerConnectionFactory)
+(JNIEnv* jni,
+ jclass,
+ jobject joptions,
+ jobject jencoder_factory,
+ jobject jdecoder_factory) {
   // talk/ assumes pretty widely that the current Thread is ThreadManager'd, but
   // ThreadManager only WrapCurrentThread()s the thread where it is first
   // created.  Since the semantics around when auto-wrapping happens in
@@ -1355,7 +1474,12 @@ JOW(jlong, PeerConnectionFactory_nativeCreatePeerConnectionFactory)(
 
   if (video_hw_acceleration_enabled) {
     encoder_factory = new MediaCodecVideoEncoderFactory();
-    decoder_factory = new MediaCodecVideoDecoderFactory();
+    decoder_factory =
+        jdecoder_factory != nullptr
+            ? static_cast<WebRtcVideoDecoderFactory*>(
+                  new VideoDecoderFactoryWrapper(jni, jdecoder_factory))
+            : static_cast<WebRtcVideoDecoderFactory*>(
+                  new MediaCodecVideoDecoderFactory());
   }
   // Do not create network_monitor_factory only if the options are
   // provided and disable_network_monitor therein is set to true.
@@ -1520,13 +1644,13 @@ JOW(void, PeerConnectionFactory_nativeSetVideoHwAccelerationOptions)(
     encoder_factory->SetEGLContext(jni, local_egl_context);
   }
 
-  MediaCodecVideoDecoderFactory* decoder_factory =
-      static_cast<MediaCodecVideoDecoderFactory*>
-          (owned_factory->decoder_factory());
-  if (decoder_factory) {
-    LOG(LS_INFO) << "Set EGL context for HW decoding.";
-    decoder_factory->SetEGLContext(jni, remote_egl_context);
-  }
+  // MediaCodecVideoDecoderFactory* decoder_factory =
+  //     static_cast<MediaCodecVideoDecoderFactory*>
+  //         (owned_factory->decoder_factory());
+  // if (decoder_factory) {
+  //   LOG(LS_INFO) << "Set EGL context for HW decoding.";
+  //   decoder_factory->SetEGLContext(jni, remote_egl_context);
+  // }
 }
 
 static PeerConnectionInterface::IceTransportsType
@@ -2309,6 +2433,41 @@ JOW(jboolean, MediaStreamTrack_nativeSetEnabled)(
     JNIEnv* jni, jclass, jlong j_p, jboolean enabled) {
   return reinterpret_cast<MediaStreamTrackInterface*>(j_p)
       ->set_enabled(enabled);
+}
+
+JOW(void, WrappedNativeI420Frame_nativeAddRef)
+(JNIEnv* jni, jclass, jlong j_frame_pointer) {
+  reinterpret_cast<webrtc::VideoFrameBuffer*>(j_frame_pointer)->AddRef();
+}
+
+JOW(void, WrappedNativeI420Frame_nativeRelease)
+(JNIEnv* jni, jclass, jlong j_frame_pointer) {
+  reinterpret_cast<webrtc::VideoFrameBuffer*>(j_frame_pointer)->Release();
+}
+
+JOW(jlong, VideoTrack_nativeWrapVideoSink)
+(JNIEnv* jni, jclass, jobject j_sink) {
+  return jlongFromPointer(new JavaVideoSinkWrapper(jni, j_sink));
+}
+
+JOW(void, VideoTrack_nativeAddSink)
+(JNIEnv* jni, jclass, jlong j_video_track_pointer, jlong j_sink_pointer) {
+  LOG(LS_INFO) << "VideoTrack::nativeAddSink";
+  reinterpret_cast<VideoTrackInterface*>(j_video_track_pointer)
+      ->AddOrUpdateSink(
+          reinterpret_cast<rtc::VideoSinkInterface<webrtc::VideoFrame>*>(
+              j_sink_pointer),
+          rtc::VideoSinkWants());
+}
+
+JOW(void, VideoTrack_nativeRemoveSink)
+(JNIEnv* jni, jclass, jlong j_video_track_pointer, jlong j_sink_pointer) {
+  rtc::VideoSinkInterface<webrtc::VideoFrame>* sink =
+      reinterpret_cast<rtc::VideoSinkInterface<webrtc::VideoFrame>*>(
+          j_sink_pointer);
+  reinterpret_cast<VideoTrackInterface*>(j_video_track_pointer)
+      ->RemoveSink(sink);
+  delete sink;
 }
 
 JOW(void, VideoTrack_nativeAddRenderer)(

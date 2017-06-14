@@ -11,13 +11,31 @@
 package org.webrtc;
 
 import java.util.LinkedList;
+import java.util.IdentityHashMap;
 
 /** Java version of VideoTrackInterface. */
 public class VideoTrack extends MediaStreamTrack {
   private final LinkedList<VideoRenderer> renderers = new LinkedList<VideoRenderer>();
+  private final IdentityHashMap<VideoSink, Long> sinks = new IdentityHashMap<VideoSink, Long>();
 
-  public VideoTrack(long nativeTrack) {
+  /**
+   * Package protected since VideoTracks are only created from the PeerConnectionFactory.
+   */
+  VideoTrack(long nativeTrack) {
     super(nativeTrack);
+  }
+
+  public void addSink(VideoSink sink) {
+    final long nativeSink = nativeWrapSink(sink);
+    sinks.put(sink, nativeSink);
+    nativeAddSink(nativeTrack, nativeSink);
+  }
+
+  public void removeSink(VideoSink sink) {
+    final long nativeSink = sinks.remove(sink);
+    if (nativeSink != 0) {
+      nativeRemoveSink(nativeTrack, nativeSink);
+    }
   }
 
   public void addRenderer(VideoRenderer renderer) {
@@ -37,10 +55,18 @@ public class VideoTrack extends MediaStreamTrack {
     while (!renderers.isEmpty()) {
       removeRenderer(renderers.getFirst());
     }
+    for (long nativeSink : sinks.values()) {
+      nativeRemoveSink(nativeTrack, nativeSink);
+    }
+    sinks.clear();
     super.dispose();
   }
 
-  private static native void nativeAddRenderer(long nativeTrack, long nativeRenderer);
+  private static native void free(long nativeTrack);
 
+  private static native void nativeAddRenderer(long nativeTrack, long nativeRenderer);
   private static native void nativeRemoveRenderer(long nativeTrack, long nativeRenderer);
+  private static native long nativeWrapSink(VideoSink sink);
+  private static native void nativeAddSink(long nativeTrack, long nativeSink);
+  private static native void nativeRemoveSink(long nativeTrack, long nativeSink);
 }

@@ -12,6 +12,8 @@
 
 #include <utility>
 
+#include "webrtc/base/refcountedobject.h"
+
 namespace {
 // MediaCodec wants resolution to be divisible by 2.
 const int kRequiredResolutionAlignment = 2;
@@ -26,6 +28,7 @@ AndroidVideoTrackSource::AndroidVideoTrackSource(
     bool is_screencast)
     : AdaptedVideoTrackSource(kRequiredResolutionAlignment),
       signaling_thread_(signaling_thread),
+      android_video_buffer_factory_(jni),
       surface_texture_helper_(
           new rtc::RefCountedObject<webrtc_jni::SurfaceTextureHelper>(
               jni,
@@ -53,11 +56,9 @@ void AndroidVideoTrackSource::OnByteBufferFrameCaptured(const void* frame_data,
                                                         int length,
                                                         int width,
                                                         int height,
-                                                        int rotation,
+                                                        VideoRotation rotation,
                                                         int64_t timestamp_ns) {
   RTC_DCHECK(camera_thread_checker_.CalledOnValidThread());
-  RTC_DCHECK(rotation == 0 || rotation == 90 || rotation == 180 ||
-             rotation == 270);
 
   int64_t camera_time_us = timestamp_ns / rtc::kNumNanosecsPerMicrosec;
   int64_t translated_camera_time_us =
@@ -89,7 +90,7 @@ void AndroidVideoTrackSource::OnByteBufferFrameCaptured(const void* frame_data,
   y_plane += width * crop_y + crop_x;
   uv_plane += uv_width * crop_y + crop_x;
 
-  rtc::scoped_refptr<webrtc::I420Buffer> buffer =
+  rtc::scoped_refptr<I420Buffer> buffer =
       buffer_pool_.CreateBuffer(adapted_width, adapted_height);
 
   nv12toi420_scaler_.NV12ToI420Scale(
@@ -99,19 +100,16 @@ void AndroidVideoTrackSource::OnByteBufferFrameCaptured(const void* frame_data,
       buffer->MutableDataV(), buffer->StrideV(), buffer->MutableDataU(),
       buffer->StrideU(), buffer->width(), buffer->height());
 
-  OnFrame(VideoFrame(buffer, static_cast<webrtc::VideoRotation>(rotation),
-                     translated_camera_time_us));
+  OnFrame(VideoFrame(buffer, rotation, translated_camera_time_us));
 }
 
 void AndroidVideoTrackSource::OnTextureFrameCaptured(
     int width,
     int height,
-    int rotation,
+    VideoRotation rotation,
     int64_t timestamp_ns,
     const webrtc_jni::NativeHandleImpl& handle) {
   RTC_DCHECK(camera_thread_checker_.CalledOnValidThread());
-  RTC_DCHECK(rotation == 0 || rotation == 90 || rotation == 180 ||
-             rotation == 270);
 
   int64_t camera_time_us = timestamp_ns / rtc::kNumNanosecsPerMicrosec;
   int64_t translated_camera_time_us =
@@ -138,25 +136,68 @@ void AndroidVideoTrackSource::OnTextureFrameCaptured(
               crop_x / static_cast<float>(width),
               crop_y / static_cast<float>(height));
 
-  // Make a local copy, since value of apply_rotation() may change
-  // under our feet.
-  bool do_rotate = apply_rotation();
-
-  if (do_rotate) {
-    if (rotation == webrtc::kVideoRotation_90 ||
-        rotation == webrtc::kVideoRotation_270) {
+  // Note that apply_rotation() may change under our feet, so we should only
+  // check once.
+  if (apply_rotation()) {
+    if (rotation == kVideoRotation_90 || rotation == kVideoRotation_270) {
       std::swap(adapted_width, adapted_height);
     }
-    matrix.Rotate(static_cast<webrtc::VideoRotation>(rotation));
+    matrix.Rotate(rotation);
+    rotation = kVideoRotation_0;
   }
 
   OnFrame(VideoFrame(
       surface_texture_helper_->CreateTextureFrame(
           adapted_width, adapted_height,
           webrtc_jni::NativeHandleImpl(handle.oes_texture_id, matrix)),
-      do_rotate ? webrtc::kVideoRotation_0
-                : static_cast<webrtc::VideoRotation>(rotation),
-      translated_camera_time_us));
+      rotation, translated_camera_time_us));
+}
+
+void AndroidVideoTrackSource::OnFrameCaptured(int width,
+                                              int height,
+                                              int64_t timestamp_ns,
+                                              VideoRotation rotation,
+                                              const webrtc_jni::Matrix& matrix,
+                                              jobject j_video_frame_buffer) {
+  RTC_DCHECK(camera_thread_checker_.CalledOnValidThread());
+
+  int64_t camera_time_us = timestamp_ns / rtc::kNumNanosecsPerMicrosec;
+  int64_t translated_camera_time_us =
+      timestamp_aligner_.TranslateTimestamp(camera_time_us, rtc::TimeMicros());
+
+  int adapted_width;
+  int adapted_height;
+  int crop_width;
+  int crop_height;
+  int crop_x;
+  int crop_y;
+
+  if (!AdaptFrame(width, height, camera_time_us, &adapted_width,
+                  &adapted_height, &crop_width, &crop_height, &crop_x,
+                  &crop_y)) {
+    return;
+  }
+
+  webrtc_jni::Matrix adapted_matrix = matrix;
+  adapted_matrix.Crop(crop_width / static_cast<float>(width),
+                      crop_height / static_cast<float>(height),
+                      crop_x / static_cast<float>(width),
+                      crop_y / static_cast<float>(height));
+
+  // Note that apply_rotation() may change under our feet, so we should only
+  // check once.
+  if (apply_rotation()) {
+    if (rotation == kVideoRotation_90 || rotation == kVideoRotation_270) {
+      std::swap(adapted_width, adapted_height);
+    }
+    adapted_matrix.Rotate(rotation);
+    rotation = kVideoRotation_0;
+  }
+
+  rtc::scoped_refptr<VideoFrameBuffer> buffer =
+      android_video_buffer_factory_.CreateBuffer(
+          adapted_width, adapted_height, adapted_matrix, j_video_frame_buffer);
+  OnFrame(VideoFrame(buffer, rotation, translated_camera_time_us));
 }
 
 void AndroidVideoTrackSource::OnOutputFormatRequest(int width,

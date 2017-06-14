@@ -31,6 +31,8 @@ public interface VideoCapturer {
     // owned by VideoCapturer.
     void onTextureFrameCaptured(int width, int height, int oesTextureId, float[] transformMatrix,
         int rotation, long timestamp);
+
+    void onFrameCaptured(VideoFrame frame);
   }
 
   /**
