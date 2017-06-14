@@ -15,7 +15,6 @@ import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.os.Bundle;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Deque;
@@ -35,10 +34,6 @@ class HardwareVideoEncoder implements VideoEncoder {
   // Key associated with the bitrate control mode value (above). Not present as a MediaFormat
   // constant until API level 21.
   private static final String KEY_BITRATE_MODE = "bitrate-mode";
-
-  // NV12 color format supported by QCOM codec, but not declared in MediaCodec -
-  // see /hardware/qcom/media/mm-core/inc/OMX_QCOMExtns.h
-  private static final int COLOR_QCOM_FORMATYUV420PackedSemiPlanar32m = 0x7FA30C04;
 
   private static final int MAX_VIDEO_FRAMERATE = 30;
 
@@ -133,7 +128,7 @@ class HardwareVideoEncoder implements VideoEncoder {
 
     lastKeyFrameMs = -1;
 
-    codec = createCodecByName(codecName);
+    codec = MediaCodecUtils.createCodecByName(codecName);
     if (codec == null) {
       Logging.e(TAG, "Cannot create media encoder " + codecName);
       return VideoCodecStatus.ERROR;
@@ -418,15 +413,6 @@ class HardwareVideoEncoder implements VideoEncoder {
     }
   }
 
-  private static MediaCodec createCodecByName(String codecName) {
-    try {
-      return MediaCodec.createByCodecName(codecName);
-    } catch (IOException | IllegalArgumentException e) {
-      Logging.e(TAG, "createCodecByName failed", e);
-      return null;
-    }
-  }
-
   /**
    * Enumeration of supported color formats used for MediaCodec's input.
    */
@@ -463,7 +449,7 @@ class HardwareVideoEncoder implements VideoEncoder {
           return I420;
         case MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar:
         case MediaCodecInfo.CodecCapabilities.COLOR_QCOM_FormatYUV420SemiPlanar:
-        case COLOR_QCOM_FORMATYUV420PackedSemiPlanar32m:
+        case MediaCodecUtils.COLOR_QCOM_FORMATYUV420PackedSemiPlanar32m:
           return NV12;
         default:
           throw new IllegalArgumentException("Unsupported colorFormat: " + colorFormat);

@@ -15,7 +15,6 @@ import android.graphics.Matrix;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo.CodecCapabilities;
 import android.media.MediaFormat;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -39,19 +38,14 @@ class HardwareVideoDecoder implements VideoDecoder {
   private static final String FORMAT_KEY_CROP_TOP = "crop-top";
   private static final String FORMAT_KEY_CROP_BOTTOM = "crop-bottom";
 
-  // NV12 color format supported by QCOM codec, but not declared in MediaCodec -
-  // see /hardware/qcom/media/mm-core/inc/OMX_QCOMExtns.h
-  private static final int COLOR_QCOM_FORMATYVU420PackedSemiPlanar32m4ka = 0x7FA30C01;
-  private static final int COLOR_QCOM_FORMATYVU420PackedSemiPlanar16m4ka = 0x7FA30C02;
-  private static final int COLOR_QCOM_FORMATYVU420PackedSemiPlanar64x32Tile2m8ka = 0x7FA30C03;
-  private static final int COLOR_QCOM_FORMATYUV420PackedSemiPlanar32m = 0x7FA30C04;
   // Allowable color formats supported by codec - in order of preference.
   private static final Set<Integer> SUPPORTED_COLOR_FORMATS = new HashSet<>(Arrays.asList(
       CodecCapabilities.COLOR_FormatYUV420Planar, CodecCapabilities.COLOR_FormatYUV420SemiPlanar,
       CodecCapabilities.COLOR_QCOM_FormatYUV420SemiPlanar,
-      COLOR_QCOM_FORMATYVU420PackedSemiPlanar32m4ka, COLOR_QCOM_FORMATYVU420PackedSemiPlanar16m4ka,
-      COLOR_QCOM_FORMATYVU420PackedSemiPlanar64x32Tile2m8ka,
-      COLOR_QCOM_FORMATYUV420PackedSemiPlanar32m));
+      MediaCodecUtils.COLOR_QCOM_FORMATYVU420PackedSemiPlanar32m4ka,
+      MediaCodecUtils.COLOR_QCOM_FORMATYVU420PackedSemiPlanar16m4ka,
+      MediaCodecUtils.COLOR_QCOM_FORMATYVU420PackedSemiPlanar64x32Tile2m8ka,
+      MediaCodecUtils.COLOR_QCOM_FORMATYUV420PackedSemiPlanar32m));
 
   private static final int MEDIA_CODEC_RELEASE_TIMEOUT_MS = 5000;
 
@@ -97,7 +91,7 @@ class HardwareVideoDecoder implements VideoDecoder {
     sliceHeight = height;
     this.callback = callback;
 
-    codec = createCodecByName(codecName);
+    codec = MediaCodecUtils.createCodecByName(codecName);
     if (codec == null) {
       Logging.e(TAG, "Cannot create media decoder");
       return VideoCodecStatus.ERROR;
@@ -425,15 +419,6 @@ class HardwareVideoDecoder implements VideoDecoder {
   private void copyRow(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int width) {
     for (int i = 0; i < width; ++i) {
       dst.put(dstPos + i, src.get(srcPos + i));
-    }
-  }
-
-  private static MediaCodec createCodecByName(String name) {
-    try {
-      return MediaCodec.createByCodecName(name);
-    } catch (IOException | IllegalArgumentException e) {
-      Logging.e(TAG, "createCodecByName failed", e);
-      return null;
     }
   }
 }
