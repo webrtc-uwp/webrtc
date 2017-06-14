@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "af7018a9_a4fe7817",
+        "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1167080
+      },
+      "writtenOn": "2017-06-14T08:24:27Z",
+      "side": 1,
+      "message": "would prefer to not have a default param.",
+      "revId": "522e97a3cb224eef6683b344bf692ecd0726ba65",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ccf0eac3_aa16855d",
+        "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1167080
+      },
+      "writtenOn": "2017-06-14T08:24:27Z",
+      "side": 1,
+      "message": "Do we relay need the Die() function for the DebugDumpWriter ?",
+      "revId": "522e97a3cb224eef6683b344bf692ecd0726ba65",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6dd60ed3_eabb0234",
+        "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1167080
+      },
+      "writtenOn": "2017-06-14T08:24:27Z",
+      "side": 1,
+      "message": "Would be nice to test the parameters of the call as well.",
+      "revId": "522e97a3cb224eef6683b344bf692ecd0726ba65",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b01857bc_3e7ef75c",
+        "filename": "webrtc/modules/audio_coding/audio_network_adaptor/debug_dump_writer.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1167080
+      },
+      "writtenOn": "2017-06-14T08:24:27Z",
+      "side": 1,
+      "message": "Wouldn\u0027t it be better readable if you use the ifdefs the same way as we used them before.\n\u003d\u003e if def just in function impl ?",
+      "revId": "522e97a3cb224eef6683b344bf692ecd0726ba65",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
