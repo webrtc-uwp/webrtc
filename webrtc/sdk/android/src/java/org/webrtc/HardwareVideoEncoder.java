@@ -15,7 +15,6 @@ import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.os.Bundle;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Deque;
@@ -133,7 +132,7 @@ class HardwareVideoEncoder implements VideoEncoder {
 
     lastKeyFrameMs = -1;
 
-    codec = createCodecByName(codecName);
+    codec = MediaCodecUtils.createCodecByName(codecName);
     if (codec == null) {
       Logging.e(TAG, "Cannot create media encoder " + codecName);
       return VideoCodecStatus.ERROR;
@@ -415,15 +414,6 @@ class HardwareVideoEncoder implements VideoEncoder {
     } catch (IllegalStateException e) {
       Logging.e(TAG, "updateBitrate failed", e);
       return VideoCodecStatus.ERROR;
-    }
-  }
-
-  private static MediaCodec createCodecByName(String codecName) {
-    try {
-      return MediaCodec.createByCodecName(codecName);
-    } catch (IOException | IllegalArgumentException e) {
-      Logging.e(TAG, "createCodecByName failed", e);
-      return null;
     }
   }
 
