@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "445238ce_1c6ab9a2",
+        "filename": "webrtc/media/base/fakevideorenderer.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1144186
+      },
+      "writtenOn": "2017-06-14T10:56:48Z",
+      "side": 1,
+      "message": "\u003e One thing we could aim for is to get the interface to const for the callee:\n\u003e scoped_refptr\u003cconst I420BufferInterface\u003e ToI420() const;\n\u003e Then we need the return type to be const, so that I420Buffers can return |this| without const-\n\u003e casting.\n\nExactly. (Which might then cause some difficulties for move to std::shared_ptr, but that\u0027s a later problem).",
+      "parentUuid": "90b29706_9dbe4960",
+      "range": {
+        "startLine": 87,
+        "startChar": 23,
+        "endLine": 87,
+        "endChar": 29
+      },
+      "revId": "d33664e916f44988c5f23d30dd9a0993b843b03d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d94114cb_5e714c77",
         "filename": "webrtc/modules/video_capture/test/video_capture_unittest.cc",
         "patchSetId": 2
