@@ -21,6 +21,8 @@
 
 namespace webrtc {
 
+class DebugDumpWriter;
+
 class ControllerManager {
  public:
   virtual ~ControllerManager() = default;
@@ -53,7 +55,8 @@ class ControllerManagerImpl final : public ControllerManager {
       int initial_frame_length_ms,
       int initial_bitrate_bps,
       bool initial_fec_enabled,
-      bool initial_dtx_enabled);
+      bool initial_dtx_enabled,
+      DebugDumpWriter* debug_dump_writer = nullptr);
 
   explicit ControllerManagerImpl(const Config& config);
 
