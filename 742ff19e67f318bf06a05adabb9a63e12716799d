@@ -52,6 +52,24 @@
       "revId": "742ff19e67f318bf06a05adabb9a63e12716799d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a9fc86a_da0f4c66",
+        "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1122982
+      },
+      "writtenOn": "2017-06-14T12:15:10Z",
+      "side": 1,
+      "message": "I have removed LastError (https://chromium-review.googlesource.com/c/535533), and rebased (no impact on this CL). How do you feel about this change now?",
+      "parentUuid": "1fcdb3a1_4a25fa41",
+      "revId": "742ff19e67f318bf06a05adabb9a63e12716799d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
