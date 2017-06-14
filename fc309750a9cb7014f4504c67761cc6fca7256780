@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d7d383c4_40070c31",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplicationStatusObserver.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1126939
+      },
+      "writtenOn": "2017-06-14T23:37:21Z",
+      "side": 1,
+      "message": "Why was this converted to an ObjC class?\n\nNow you need to be a .mm file to observe these kind of ObjC / iOS related changes. Before, you could do it from a .cc file.\n\nWhen I filed the bug, what I had in mind was there could be a private ObjC object listening for changes hidden behind a C++ static method.",
+      "range": {
+        "startLine": 15,
+        "startChar": 11,
+        "endLine": 15,
+        "endChar": 41
+      },
+      "revId": "fc309750a9cb7014f4504c67761cc6fca7256780",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0cd9d3d5_ba2d2bf4",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplicationStatusObserver.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1126939
+      },
+      "writtenOn": "2017-06-14T23:37:21Z",
+      "side": 1,
+      "message": "Singletons are generally not a good idea - it can make writing unit tests for classes quite difficult.",
+      "range": {
+        "startLine": 17,
+        "startChar": 16,
+        "endLine": 17,
+        "endChar": 30
+      },
+      "revId": "fc309750a9cb7014f4504c67761cc6fca7256780",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3900170b_47347218",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplicationStatusObserver.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1126939
+      },
+      "writtenOn": "2017-06-14T23:37:21Z",
+      "side": 1,
+      "message": "doco that this is safe on any thread?",
+      "range": {
+        "startLine": 19,
+        "startChar": 8,
+        "endLine": 19,
+        "endChar": 27
+      },
+      "revId": "fc309750a9cb7014f4504c67761cc6fca7256780",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90638866_c12e7e7b",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplicationStatusObserver.m",
+        "patchSetId": 5
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1126939
+      },
+      "writtenOn": "2017-06-14T23:37:21Z",
+      "side": 1,
+      "message": "instancetype not id?",
+      "range": {
+        "startLine": 31,
+        "startChar": 3,
+        "endLine": 31,
+        "endChar": 5
+      },
+      "revId": "fc309750a9cb7014f4504c67761cc6fca7256780",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8cc7edff_f29d9e40",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplicationStatusObserver.m",
+        "patchSetId": 5
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1126939
+      },
+      "writtenOn": "2017-06-14T23:37:21Z",
+      "side": 1,
+      "message": "implicit self retain. Now this class can never dealloc.\nUse weakify/strongify",
+      "range": {
+        "startLine": 38,
+        "startChar": 22,
+        "endLine": 38,
+        "endChar": 28
+      },
+      "revId": "fc309750a9cb7014f4504c67761cc6fca7256780",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d80f8efd_0a3fe594",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplicationStatusObserver.m",
+        "patchSetId": 5
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1126939
+      },
+      "writtenOn": "2017-06-14T23:37:21Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 45,
+        "startChar": 22,
+        "endLine": 45,
+        "endChar": 28
+      },
+      "revId": "fc309750a9cb7014f4504c67761cc6fca7256780",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c071b64_b5cb0fe1",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplicationStatusObserver.m",
+        "patchSetId": 5
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1126939
+      },
+      "writtenOn": "2017-06-14T23:37:21Z",
+      "side": 1,
+      "message": "if you needed to init, should just dispatch async on main queue",
+      "range": {
+        "startLine": 48,
+        "startChar": 4,
+        "endLine": 48,
+        "endChar": 20
+      },
+      "revId": "fc309750a9cb7014f4504c67761cc6fca7256780",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01f7d984_b09580b2",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplicationStatusObserver.m",
+        "patchSetId": 5
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1126939
+      },
+      "writtenOn": "2017-06-14T23:37:21Z",
+      "side": 1,
+      "message": "you almost never should be doing dispatch_sync because it blocks threads",
+      "range": {
+        "startLine": 55,
+        "startChar": 6,
+        "endLine": 55,
+        "endChar": 19
+      },
+      "revId": "fc309750a9cb7014f4504c67761cc6fca7256780",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
