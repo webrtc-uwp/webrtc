@@ -190,6 +190,30 @@
     },
     {
       "key": {
+        "uuid": "0ec6e085_ed769f10",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-14T01:05:00Z",
+      "side": 1,
+      "message": "I think passing in configuration that is derived from field trials further up the stack is better than having this low of level code check field trials.  So, yes, pass in something.",
+      "parentUuid": "12d8d3a2_b846cbcf",
+      "range": {
+        "startLine": 82,
+        "startChar": 5,
+        "endLine": 82,
+        "endChar": 0
+      },
+      "revId": "8ff4ecaeea817a845aee02fc9a5a73765c4aba24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "771002ac_9c0d4558",
         "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
         "patchSetId": 2

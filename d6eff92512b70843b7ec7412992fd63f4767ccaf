@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74b7d84d_c4f18c9f",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-14T01:05:00Z",
+      "side": 1,
+      "message": "Wow, this file is *waaaaay* better.  It looks great now.  Thanks for doing that.",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 73
+      },
+      "revId": "d6eff92512b70843b7ec7412992fd63f4767ccaf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
