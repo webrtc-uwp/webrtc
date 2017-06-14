@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a39d400_fe94907d",
+        "filename": "webrtc/api/peerconnectioninterface.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-06-14T18:37:13Z",
+      "side": 1,
+      "message": "I think this can be an rtc::IPAddress.",
+      "range": {
+        "startLine": 185,
+        "startChar": 4,
+        "endLine": 185,
+        "endChar": 15
+      },
+      "revId": "85b00a9337cff12cacaa693af9d9f51831875421",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
