@@ -22,6 +22,30 @@
       "revId": "41d79c0d64a8f70a31fff8c8aefe71485ed9bc28",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1d6cc47_2d212875",
+        "filename": "webrtc/sdk/android/src/jni/wrapped_native_i420_buffer.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-14T17:03:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9ceb9f9a_249c5c10",
+      "range": {
+        "startLine": 21,
+        "startChar": 14,
+        "endLine": 21,
+        "endChar": 23
+      },
+      "revId": "41d79c0d64a8f70a31fff8c8aefe71485ed9bc28",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
