@@ -155,6 +155,24 @@
     },
     {
       "key": {
+        "uuid": "6021f590_6464076d",
+        "filename": "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-14T08:57:44Z",
+      "side": 1,
+      "message": "it was \"AudioNetworkAdaptorCreator\u0026\u0026 audio_network_adaptor_creator \u003d\u003d nullptr\" that I had to remove the default value.\n\nBut look at the latest PS, I can, in principle, introduce default value back, but I\u0027d prefer not to, since default values are not good.",
+      "parentUuid": "23a0b7cb_3c9e63f3",
+      "revId": "0d4d5e25c470c55e4fa24be51cc51ea183fb02c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "aa0e02ce_d823730b",
         "filename": "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.h",
         "patchSetId": 2
@@ -214,6 +232,30 @@
       "side": 1,
       "message": "But you will make a copy when you assign it to a member variable. Whereas if you pass it by value and remember to use std::move every time you assign, you\u0027ll never have to copy.\n\nOh well. Using const ref is a perfectly fine way to do it, just as long as you remember that you can\u0027t avoid paying for a copy when you want to assign it.\n\n(The good thing with using rvalue refs like you did previously is that the caller can\u0027t forget to use std::move. Which is why I personally don\u0027t agree with the style guide on rvalue ref arguments.)",
       "parentUuid": "de3a0087_01997e78",
+      "range": {
+        "startLine": 97,
+        "startChar": 6,
+        "endLine": 97,
+        "endChar": 39
+      },
+      "revId": "0d4d5e25c470c55e4fa24be51cc51ea183fb02c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "175d5297_8b71e2c1",
+        "filename": "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-14T08:57:44Z",
+      "side": 1,
+      "message": "I also liked the rvalue ref arguments.\n\nI am not quite in favor of pass-by-value, since even if the caller needs to remember to use std::move, rather than be forced to use std::move.\n\nI think pass-by-unique-pointer would be a good compromise. Take a look at the new PS and see if you like it.",
+      "parentUuid": "62582223_ad0548c8",
       "range": {
         "startLine": 97,
         "startChar": 6,
