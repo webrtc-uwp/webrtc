@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "f5a5f2ca_0fdbddb3",
+        "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1167080
+      },
+      "writtenOn": "2017-06-14T09:45:23Z",
+      "side": 1,
+      "message": "to pass a nullptr the other classes don\u0027t have to know DebugDumpWriter.",
+      "parentUuid": "2f6d353c_f91db9b2",
+      "revId": "522e97a3cb224eef6683b344bf692ecd0726ba65",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ccf0eac3_aa16855d",
         "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager_unittest.cc",
         "patchSetId": 2
@@ -69,6 +87,24 @@
       "revId": "522e97a3cb224eef6683b344bf692ecd0726ba65",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "15f81076_03363804",
+        "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1167080
+      },
+      "writtenOn": "2017-06-14T09:45:23Z",
+      "side": 1,
+      "message": "I\u0027m ok with removing the Die functions in a different CL.",
+      "parentUuid": "0580b3e4_2e0250ba",
+      "revId": "522e97a3cb224eef6683b344bf692ecd0726ba65",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -107,6 +143,24 @@
     },
     {
       "key": {
+        "uuid": "ccfffaba_12a2d9cb",
+        "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1167080
+      },
+      "writtenOn": "2017-06-14T09:45:23Z",
+      "side": 1,
+      "message": "Can we create a Test which just test the DebugDump behavior ? \n\nI would be nice not to test it for every test. Separating behavior in different test, gives better output if a test fails. \n\nI see that its may be a bit of a overkill, but I still would go for testing the params. So the test would give a clear image of what the class should do.",
+      "parentUuid": "585e7862_a46237dc",
+      "revId": "522e97a3cb224eef6683b344bf692ecd0726ba65",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b01857bc_3e7ef75c",
         "filename": "webrtc/modules/audio_coding/audio_network_adaptor/debug_dump_writer.cc",
         "patchSetId": 2
@@ -136,6 +190,24 @@
       "side": 1,
       "message": "The function cannot be defined if protobuf is not in use.",
       "parentUuid": "b01857bc_3e7ef75c",
+      "revId": "522e97a3cb224eef6683b344bf692ecd0726ba65",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef2147aa_bfb72cff",
+        "filename": "webrtc/modules/audio_coding/audio_network_adaptor/debug_dump_writer.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1167080
+      },
+      "writtenOn": "2017-06-14T09:45:23Z",
+      "side": 1,
+      "message": "Oh right you pass a proto type in.",
+      "parentUuid": "a6302740_0c856172",
       "revId": "522e97a3cb224eef6683b344bf692ecd0726ba65",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
