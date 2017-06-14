@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e75a910_a31feabd",
+        "filename": "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-14T10:55:09Z",
+      "side": 1,
+      "message": "Do you really need this template argument? The whole point of MakeUnique is to deduce this for you.",
+      "range": {
+        "startLine": 363,
+        "startChar": 26,
+        "endLine": 363,
+        "endChar": 52
+      },
+      "revId": "4768dd34ea7c9311cf7def253b59831bf4c5d58f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ceb832b6_70937a26",
+        "filename": "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-14T10:55:09Z",
+      "side": 1,
+      "message": "I think I liked the const\u0026 version better. unique_ptr introduces an extra heap indirection which is (1) costly and (2) non-idiomatic, since std::function is intended to be passed by value and copied (it even requires the wrapped callable to be copyable, and barfs if you give it a move-only callable).\n\nThe alternative to passing a std::function by value or const\u0026 is, IMO, to make AudioNetworkAdaptorCreator an interface instead of a std::function, and then pass around unique_ptr\u003cAudioNetworkAdaptorCreator\u003e. That\u0027s efficient and idiomatic. The downside is that you can no longer have a conversion from lambdas to AudioNetworkAdaptorCreator in that case.",
+      "range": {
+        "startLine": 97,
+        "startChar": 6,
+        "endLine": 97,
+        "endChar": 49
+      },
+      "revId": "4768dd34ea7c9311cf7def253b59831bf4c5d58f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9409022b_41a33ae9",
+        "filename": "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus_unittest.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-14T10:55:09Z",
+      "side": 1,
+      "message": "Same here.",
+      "range": {
+        "startLine": 70,
+        "startChar": 33,
+        "endLine": 70,
+        "endChar": 77
+      },
+      "revId": "4768dd34ea7c9311cf7def253b59831bf4c5d58f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}

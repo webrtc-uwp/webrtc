@@ -173,6 +173,24 @@
     },
     {
       "key": {
+        "uuid": "2afa9779_170ef89c",
+        "filename": "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-14T10:55:09Z",
+      "side": 1,
+      "message": "Did you really have to? If you can initialize a AudioNetworkAdaptorCreator\u0026\u0026 to nullptr, you should be able to do the same with AudioNetworkAdaptorCreator.\n\n(I agree with you on the general undesirability of default values, though, so don\u0027t actually do it. I just wondered if the compiler had actually told you that defaulting to nullptr was an error.)",
+      "parentUuid": "6021f590_6464076d",
+      "revId": "0d4d5e25c470c55e4fa24be51cc51ea183fb02c2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "aa0e02ce_d823730b",
         "filename": "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.h",
         "patchSetId": 2
