@@ -579,11 +579,18 @@ class AudioDeviceTest : public ::testing::Test {
   rtc::LoggingSeverity old_sev_;
 };
 
-TEST_F(AudioDeviceTest, ConstructDestruct) {
+// TODO(kthelgason): Reenable these tests.
+// See crbug.com/webrtc/7812.
+#if TARGET_IPHONE_SIMULATOR
+#define MAYBE_TEST_F(f, name) TEST_F(f, DISABLED_##name)
+#else
+#define MAYBE_TEST_F TEST_F
+#endif
+MAYBE_TEST_F(AudioDeviceTest, ConstructDestruct) {
   // Using the test fixture to create and destruct the audio device module.
 }
 
-TEST_F(AudioDeviceTest, InitTerminate) {
+MAYBE_TEST_F(AudioDeviceTest, InitTerminate) {
   // Initialization is part of the test fixture.
   EXPECT_TRUE(audio_device()->Initialized());
   EXPECT_EQ(0, audio_device()->Terminate());
@@ -593,7 +600,7 @@ TEST_F(AudioDeviceTest, InitTerminate) {
 // Tests that playout can be initiated, started and stopped. No audio callback
 // is registered in this test.
 // Failing when running on real iOS devices: bugs.webrtc.org/6889.
-TEST_F(AudioDeviceTest, DISABLED_StartStopPlayout) {
+MAYBE_TEST_F(AudioDeviceTest, DISABLED_StartStopPlayout) {
   StartPlayout();
   StopPlayout();
   StartPlayout();
@@ -602,7 +609,7 @@ TEST_F(AudioDeviceTest, DISABLED_StartStopPlayout) {
 
 // Tests that recording can be initiated, started and stopped. No audio callback
 // is registered in this test.
-TEST_F(AudioDeviceTest, StartStopRecording) {
+MAYBE_TEST_F(AudioDeviceTest, StartStopRecording) {
   StartRecording();
   StopRecording();
   StartRecording();
@@ -613,7 +620,7 @@ TEST_F(AudioDeviceTest, StartStopRecording) {
 // which will require a new call to InitPlayout(). This test does not call
 // StartPlayout() while being uninitialized since doing so will hit a
 // RTC_DCHECK.
-TEST_F(AudioDeviceTest, StopPlayoutRequiresInitToRestart) {
+MAYBE_TEST_F(AudioDeviceTest, StopPlayoutRequiresInitToRestart) {
   EXPECT_EQ(0, audio_device()->InitPlayout());
   EXPECT_EQ(0, audio_device()->StartPlayout());
   EXPECT_EQ(0, audio_device()->StopPlayout());
@@ -627,7 +634,7 @@ TEST_F(AudioDeviceTest, StopPlayoutRequiresInitToRestart) {
 // ensuring that audio starts for both ADMs.
 
 // Failing when running on real iOS devices: bugs.webrtc.org/6889.
-TEST_F(AudioDeviceTest, DISABLED_StartPlayoutOnTwoInstances) {
+MAYBE_TEST_F(AudioDeviceTest, DISABLED_StartPlayoutOnTwoInstances) {
   // Create and initialize a second/extra ADM instance. The default ADM is
   // created by the test harness.
   rtc::scoped_refptr<AudioDeviceModule> second_audio_device =
@@ -680,7 +687,7 @@ TEST_F(AudioDeviceTest, DISABLED_StartPlayoutOnTwoInstances) {
 
 // Start playout and verify that the native audio layer starts asking for real
 // audio samples to play out using the NeedMorePlayData callback.
-TEST_F(AudioDeviceTest, StartPlayoutVerifyCallbacks) {
+MAYBE_TEST_F(AudioDeviceTest, StartPlayoutVerifyCallbacks) {
   MockAudioTransportIOS mock(kPlayout);
   mock.HandleCallbacks(test_is_done_.get(), nullptr, kNumCallbacks);
   EXPECT_CALL(mock, NeedMorePlayData(playout_frames_per_10ms_buffer(),
@@ -695,7 +702,7 @@ TEST_F(AudioDeviceTest, StartPlayoutVerifyCallbacks) {
 
 // Start recording and verify that the native audio layer starts feeding real
 // audio samples via the RecordedDataIsAvailable callback.
-TEST_F(AudioDeviceTest, StartRecordingVerifyCallbacks) {
+MAYBE_TEST_F(AudioDeviceTest, StartRecordingVerifyCallbacks) {
   MockAudioTransportIOS mock(kRecording);
   mock.HandleCallbacks(test_is_done_.get(), nullptr, kNumCallbacks);
   EXPECT_CALL(mock,
@@ -713,7 +720,7 @@ TEST_F(AudioDeviceTest, StartRecordingVerifyCallbacks) {
 
 // Start playout and recording (full-duplex audio) and verify that audio is
 // active in both directions.
-TEST_F(AudioDeviceTest, StartPlayoutAndRecordingVerifyCallbacks) {
+MAYBE_TEST_F(AudioDeviceTest, StartPlayoutAndRecordingVerifyCallbacks) {
   MockAudioTransportIOS mock(kPlayout | kRecording);
   mock.HandleCallbacks(test_is_done_.get(), nullptr, kNumCallbacks);
   EXPECT_CALL(mock, NeedMorePlayData(playout_frames_per_10ms_buffer(),
@@ -737,7 +744,7 @@ TEST_F(AudioDeviceTest, StartPlayoutAndRecordingVerifyCallbacks) {
 // Start playout and read audio from an external PCM file when the audio layer
 // asks for data to play out. Real audio is played out in this test but it does
 // not contain any explicit verification that the audio quality is perfect.
-TEST_F(AudioDeviceTest, RunPlayoutWithFileAsSource) {
+MAYBE_TEST_F(AudioDeviceTest, RunPlayoutWithFileAsSource) {
   // TODO(henrika): extend test when mono output is supported.
   EXPECT_EQ(1, playout_channels());
   NiceMock<MockAudioTransportIOS> mock(kPlayout);
@@ -754,7 +761,7 @@ TEST_F(AudioDeviceTest, RunPlayoutWithFileAsSource) {
   StopPlayout();
 }
 
-TEST_F(AudioDeviceTest, Devices) {
+MAYBE_TEST_F(AudioDeviceTest, Devices) {
   // Device enumeration is not supported. Verify fixed values only.
   EXPECT_EQ(1, audio_device()->PlayoutDevices());
   EXPECT_EQ(1, audio_device()->RecordingDevices());
@@ -773,7 +780,7 @@ TEST_F(AudioDeviceTest, Devices) {
 // recording side and decreased by the playout side.
 // TODO(henrika): tune the final test parameters after running tests on several
 // different devices.
-TEST_F(AudioDeviceTest, RunPlayoutAndRecordingInFullDuplex) {
+MAYBE_TEST_F(AudioDeviceTest, RunPlayoutAndRecordingInFullDuplex) {
   EXPECT_EQ(record_channels(), playout_channels());
   EXPECT_EQ(record_sample_rate(), playout_sample_rate());
   NiceMock<MockAudioTransportIOS> mock(kPlayout | kRecording);
@@ -802,7 +809,7 @@ TEST_F(AudioDeviceTest, RunPlayoutAndRecordingInFullDuplex) {
 // - Store time differences in a vector and calculate min, max and average.
 // This test requires a special hardware called Audio Loopback Dongle.
 // See http://source.android.com/devices/audio/loopback.html for details.
-TEST_F(AudioDeviceTest, DISABLED_MeasureLoopbackLatency) {
+MAYBE_TEST_F(AudioDeviceTest, DISABLED_MeasureLoopbackLatency) {
   EXPECT_EQ(record_channels(), playout_channels());
   EXPECT_EQ(record_sample_rate(), playout_sample_rate());
   NiceMock<MockAudioTransportIOS> mock(kPlayout | kRecording);
@@ -844,7 +851,7 @@ TEST_F(AudioDeviceTest, DISABLED_MeasureLoopbackLatency) {
 // As RTCAudioSession keeps its own interrupted state, the fix is to initialize
 // AudioDeviceIOS's is_interrupted_ flag to RTCAudioSession's isInterrupted
 // flag in AudioDeviceIOS.InitPlayOrRecord.
-TEST_F(AudioDeviceTest, testInterruptedAudioSession) {
+MAYBE_TEST_F(AudioDeviceTest, testInterruptedAudioSession) {
   RTCAudioSession *session = [RTCAudioSession sharedInstance];
   std::unique_ptr<webrtc::AudioDeviceIOS> audio_device;
   audio_device.reset(new webrtc::AudioDeviceIOS());
