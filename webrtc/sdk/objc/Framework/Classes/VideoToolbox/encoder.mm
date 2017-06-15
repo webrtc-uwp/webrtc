@@ -39,9 +39,9 @@ const int kLowH264QpThreshold = 28;
 const int kHighH264QpThreshold = 39;
 
 // Convenience function for creating a dictionary.
-inline CFDictionaryRef CreateCFDictionary(CFTypeRef* keys,
-                                          CFTypeRef* values,
-                                          size_t size) {
+rtc::ScopedCFTypeRef<CFDictionaryRef> CreateCFDictionary(CFTypeRef* keys,
+                                                         CFTypeRef* values,
+                                                         size_t size) {
   return CFDictionaryCreate(kCFAllocatorDefault, keys, values, size,
                             &kCFTypeDictionaryKeyCallBacks,
                             &kCFTypeDictionaryValueCallBacks);
@@ -69,10 +69,9 @@ std::string CFStringToString(const CFStringRef cf_string) {
 void SetVTSessionProperty(VTSessionRef session,
                           CFStringRef key,
                           int32_t value) {
-  CFNumberRef cfNum =
-      CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &value);
-  OSStatus status = VTSessionSetProperty(session, key, cfNum);
-  CFRelease(cfNum);
+  rtc::ScopedCFTypeRef<CFNumberRef> cfNum = {
+      CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &value)};
+  OSStatus status = VTSessionSetProperty(session, key, cfNum.get());
   if (status != noErr) {
     std::string key_string = CFStringToString(key);
     LOG(LS_ERROR) << "VTSessionSetProperty failed to set: " << key_string
@@ -85,10 +84,9 @@ void SetVTSessionProperty(VTSessionRef session,
                           CFStringRef key,
                           uint32_t value) {
   int64_t value_64 = value;
-  CFNumberRef cfNum =
-      CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &value_64);
-  OSStatus status = VTSessionSetProperty(session, key, cfNum);
-  CFRelease(cfNum);
+  rtc::ScopedCFTypeRef<CFNumberRef> cfNum = {
+      CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &value_64)};
+  OSStatus status = VTSessionSetProperty(session, key, cfNum.get());
   if (status != noErr) {
     std::string key_string = CFStringToString(key);
     LOG(LS_ERROR) << "VTSessionSetProperty failed to set: " << key_string
@@ -343,7 +341,6 @@ namespace webrtc {
 // of time.
 H264VideoToolboxEncoder::H264VideoToolboxEncoder(const cricket::VideoCodec& codec)
     : callback_(nullptr),
-      compression_session_(nullptr),
       bitrate_adjuster_(Clock::GetRealTimeClock(), .5, .95),
       packetization_mode_(H264PacketizationMode::NonInterleaved),
       profile_(internal::ExtractProfile(codec)) {
@@ -395,7 +392,7 @@ int H264VideoToolboxEncoder::Encode(
 
   // Get a pixel buffer from the pool and copy frame data over.
   CVPixelBufferPoolRef pixel_buffer_pool =
-      VTCompressionSessionGetPixelBufferPool(compression_session_);
+      VTCompressionSessionGetPixelBufferPool(compression_session_.get());
 #if defined(WEBRTC_IOS)
   if (!pixel_buffer_pool) {
     // Kind of a hack. On backgrounding, the compression session seems to get
@@ -404,8 +401,7 @@ int H264VideoToolboxEncoder::Encode(
     // Resetting the session when this happens fixes the issue.
     // In addition we request a keyframe so video can recover quickly.
     ResetCompressionSession();
-    pixel_buffer_pool =
-        VTCompressionSessionGetPixelBufferPool(compression_session_);
+    pixel_buffer_pool = VTCompressionSessionGetPixelBufferPool(compression_session_.get());
     is_keyframe_required = true;
     LOG(LS_INFO) << "Resetting compression session due to invalid pool.";
   }
@@ -459,7 +455,7 @@ int H264VideoToolboxEncoder::Encode(
 
   CMTime presentation_time_stamp =
       CMTimeMake(frame.render_time_ms(), 1000);
-  CFDictionaryRef frame_properties = nullptr;
+  rtc::ScopedCFTypeRef<CFDictionaryRef> frame_properties = {nullptr};
   if (is_keyframe_required) {
     CFTypeRef keys[] = {kVTEncodeFrameOptionKey_ForceKeyFrame};
     CFTypeRef values[] = {kCFBooleanTrue};
@@ -476,12 +472,13 @@ int H264VideoToolboxEncoder::Encode(
   // Update the bitrate if needed.
   SetBitrateBps(bitrate_adjuster_.GetAdjustedBitrateBps());
 
-  OSStatus status = VTCompressionSessionEncodeFrame(
-      compression_session_, pixel_buffer, presentation_time_stamp,
-      kCMTimeInvalid, frame_properties, encode_params.release(), nullptr);
-  if (frame_properties) {
-    CFRelease(frame_properties);
-  }
+  OSStatus status = VTCompressionSessionEncodeFrame(compression_session_.get(),
+                                                    pixel_buffer,
+                                                    presentation_time_stamp,
+                                                    kCMTimeInvalid,
+                                                    frame_properties.get(),
+                                                    encode_params.release(),
+                                                    nullptr);
   if (pixel_buffer) {
     CVBufferRelease(pixel_buffer);
   }
@@ -536,52 +533,42 @@ int H264VideoToolboxEncoder::ResetCompressionSession() {
     kCVPixelBufferIOSurfacePropertiesKey,
     kCVPixelBufferPixelFormatTypeKey
   };
-  CFDictionaryRef io_surface_value =
+  rtc::ScopedCFTypeRef<CFDictionaryRef> io_surface_value =
       internal::CreateCFDictionary(nullptr, nullptr, 0);
   int64_t nv12type = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange;
-  CFNumberRef pixel_format =
-      CFNumberCreate(nullptr, kCFNumberLongType, &nv12type);
-  CFTypeRef values[attributes_size] = {kCFBooleanTrue, io_surface_value,
-                                       pixel_format};
-  CFDictionaryRef source_attributes =
+  rtc::ScopedCFTypeRef<CFNumberRef> pixel_format = {
+      CFNumberCreate(nullptr, kCFNumberLongType, &nv12type)};
+  CFTypeRef values[attributes_size] = {kCFBooleanTrue, io_surface_value.get(), pixel_format.get()};
+  rtc::ScopedCFTypeRef<CFDictionaryRef> source_attributes =
       internal::CreateCFDictionary(keys, values, attributes_size);
-  if (io_surface_value) {
-    CFRelease(io_surface_value);
-    io_surface_value = nullptr;
-  }
-  if (pixel_format) {
-    CFRelease(pixel_format);
-    pixel_format = nullptr;
-  }
-  OSStatus status = VTCompressionSessionCreate(
-      nullptr,  // use default allocator
-      width_, height_, kCMVideoCodecType_H264,
-      nullptr,  // use default encoder
-      source_attributes,
-      nullptr,  // use default compressed data allocator
-      internal::VTCompressionOutputCallback, this, &compression_session_);
-  if (source_attributes) {
-    CFRelease(source_attributes);
-    source_attributes = nullptr;
-  }
+  VTCompressionSessionRef compression_session_out = nullptr;
+  OSStatus status = VTCompressionSessionCreate(kCFAllocatorDefault,
+                                               width_,
+                                               height_,
+                                               kCMVideoCodecType_H264,
+                                               nullptr,  // use default encoder
+                                               source_attributes.get(),
+                                               nullptr,  // use default compressed data allocator
+                                               internal::VTCompressionOutputCallback,
+                                               this,
+                                               &compression_session_out);
   if (status != noErr) {
     LOG(LS_ERROR) << "Failed to create compression session: " << status;
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
+  compression_session_ = compression_session_out;
   ConfigureCompressionSession();
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
 void H264VideoToolboxEncoder::ConfigureCompressionSession() {
   RTC_DCHECK(compression_session_);
-  internal::SetVTSessionProperty(compression_session_,
-                                 kVTCompressionPropertyKey_RealTime, true);
-  internal::SetVTSessionProperty(compression_session_,
-                                 kVTCompressionPropertyKey_ProfileLevel,
-                                 profile_);
-  internal::SetVTSessionProperty(compression_session_,
-                                 kVTCompressionPropertyKey_AllowFrameReordering,
-                                 false);
+  internal::SetVTSessionProperty(
+      compression_session_.get(), kVTCompressionPropertyKey_RealTime, true);
+  internal::SetVTSessionProperty(
+      compression_session_.get(), kVTCompressionPropertyKey_ProfileLevel, profile_);
+  internal::SetVTSessionProperty(
+      compression_session_.get(), kVTCompressionPropertyKey_AllowFrameReordering, false);
   SetEncoderBitrateBps(target_bitrate_bps_);
   // TODO(tkchin): Look at entropy mode and colorspace matrices.
   // TODO(tkchin): Investigate to see if there's any way to make this work.
@@ -594,18 +581,14 @@ void H264VideoToolboxEncoder::ConfigureCompressionSession() {
   // Set a relatively large value for keyframe emission (7200 frames or
   // 4 minutes).
   internal::SetVTSessionProperty(
-      compression_session_,
-      kVTCompressionPropertyKey_MaxKeyFrameInterval, 7200);
+      compression_session_.get(), kVTCompressionPropertyKey_MaxKeyFrameInterval, 7200);
   internal::SetVTSessionProperty(
-      compression_session_,
-      kVTCompressionPropertyKey_MaxKeyFrameIntervalDuration, 240);
+      compression_session_.get(), kVTCompressionPropertyKey_MaxKeyFrameIntervalDuration, 240);
 }
 
 void H264VideoToolboxEncoder::DestroyCompressionSession() {
   if (compression_session_) {
-    VTCompressionSessionInvalidate(compression_session_);
-    CFRelease(compression_session_);
-    compression_session_ = nullptr;
+    VTCompressionSessionInvalidate(compression_session_.get());
   }
 }
 
@@ -625,42 +608,26 @@ void H264VideoToolboxEncoder::SetBitrateBps(uint32_t bitrate_bps) {
 
 void H264VideoToolboxEncoder::SetEncoderBitrateBps(uint32_t bitrate_bps) {
   if (compression_session_) {
-    internal::SetVTSessionProperty(compression_session_,
-                                   kVTCompressionPropertyKey_AverageBitRate,
-                                   bitrate_bps);
+    internal::SetVTSessionProperty(
+        compression_session_.get(), kVTCompressionPropertyKey_AverageBitRate, bitrate_bps);
 
     // TODO(tkchin): Add a helper method to set array value.
     int64_t data_limit_bytes_per_second_value = static_cast<int64_t>(
         bitrate_bps * internal::kLimitToAverageBitRateFactor / 8);
-    CFNumberRef bytes_per_second =
-        CFNumberCreate(kCFAllocatorDefault,
-                       kCFNumberSInt64Type,
-                       &data_limit_bytes_per_second_value);
+    rtc::ScopedCFTypeRef<CFNumberRef> bytes_per_second = {CFNumberCreate(
+        kCFAllocatorDefault, kCFNumberSInt64Type, &data_limit_bytes_per_second_value)};
     int64_t one_second_value = 1;
-    CFNumberRef one_second =
-        CFNumberCreate(kCFAllocatorDefault,
-                       kCFNumberSInt64Type,
-                       &one_second_value);
-    const void* nums[2] = { bytes_per_second, one_second };
-    CFArrayRef data_rate_limits =
-        CFArrayCreate(nullptr, nums, 2, &kCFTypeArrayCallBacks);
-    OSStatus status =
-        VTSessionSetProperty(compression_session_,
-                             kVTCompressionPropertyKey_DataRateLimits,
-                             data_rate_limits);
-    if (bytes_per_second) {
-      CFRelease(bytes_per_second);
-    }
-    if (one_second) {
-      CFRelease(one_second);
-    }
-    if (data_rate_limits) {
-      CFRelease(data_rate_limits);
-    }
+    rtc::ScopedCFTypeRef<CFNumberRef> one_second = {
+        CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &one_second_value)};
+    const void* nums[2] = {bytes_per_second.get(), one_second.get()};
+    rtc::ScopedCFTypeRef<CFArrayRef> data_rate_limits = {
+        CFArrayCreate(nullptr, nums, 2, &kCFTypeArrayCallBacks)};
+    OSStatus status = VTSessionSetProperty(compression_session_.get(),
+                                           kVTCompressionPropertyKey_DataRateLimits,
+                                           data_rate_limits.get());
     if (status != noErr) {
       LOG(LS_ERROR) << "Failed to set data rate limit";
     }
-
     encoder_bitrate_bps_ = bitrate_bps;
   }
 }

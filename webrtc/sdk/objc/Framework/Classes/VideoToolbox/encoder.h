@@ -19,6 +19,7 @@
 #include "webrtc/media/base/codec.h"
 #include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
 #include "webrtc/modules/video_coding/utility/quality_scaler.h"
+#include "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h"
 
 #include <VideoToolbox/VideoToolbox.h>
 #include <vector>
@@ -78,7 +79,7 @@ class H264VideoToolboxEncoder : public H264Encoder {
   void SetEncoderBitrateBps(uint32_t bitrate_bps);
 
   EncodedImageCallback* callback_;
-  VTCompressionSessionRef compression_session_;
+  rtc::ScopedCFTypeRef<VTCompressionSessionRef> compression_session_;
   BitrateAdjuster bitrate_adjuster_;
   H264PacketizationMode packetization_mode_;
   uint32_t target_bitrate_bps_;
