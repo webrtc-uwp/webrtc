@@ -10,11 +10,19 @@
 
 package org.webrtc;
 
-/** Factory for creating VideoEncoders. */
-interface VideoEncoderFactory {
-  /** Creates an encoder for the given video codec. */
-  public VideoEncoder createEncoder(VideoCodecInfo info);
+/** Enumeration of supported video codec types. */
+enum VideoCodecType {
+  VP8("video/x-vnd.on2.vp8"),
+  VP9("video/x-vnd.on2.vp9"),
+  H264("video/avc");
 
-  /** Enumerates the list of supported video codecs. */
-  public VideoCodecInfo[] getSupportedCodecs();
+  private final String mimeType;
+
+  private VideoCodecType(String mimeType) {
+    this.mimeType = mimeType;
+  }
+
+  String mimeType() {
+    return mimeType;
+  }
 }
