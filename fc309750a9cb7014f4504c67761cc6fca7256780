@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "505e4041_50a9ed1a",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplicationStatusObserver.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-15T07:32:07Z",
+      "side": 1,
+      "message": "Since it requires subscribing to NSNotificationCenter it needs some sort of lifecycle -- if you look at patch set 2, the first idea was to make it into a pure C++ class that subscribed to the notifications on initialization and unsubscribed again when deallocated.\n\nIt was turned into an ObjC class after some discussions, but the gist was that it could be implemented cleaner (without using pImpl to hide internal ObjC types from the header) and there was no downside to turning the files using it into Obj-C++ files.",
+      "parentUuid": "d7d383c4_40070c31",
+      "range": {
+        "startLine": 15,
+        "startChar": 11,
+        "endLine": 15,
+        "endChar": 41
+      },
+      "revId": "fc309750a9cb7014f4504c67761cc6fca7256780",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0cd9d3d5_ba2d2bf4",
         "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplicationStatusObserver.h",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2017-06-14T23:37:21Z",
       "side": 1,
       "message": "Singletons are generally not a good idea - it can make writing unit tests for classes quite difficult.",
+      "range": {
+        "startLine": 17,
+        "startChar": 16,
+        "endLine": 17,
+        "endChar": 30
+      },
+      "revId": "fc309750a9cb7014f4504c67761cc6fca7256780",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d5ca714_24204643",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplicationStatusObserver.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-15T07:32:07Z",
+      "side": 1,
+      "message": "It was turned into a singleton in patch set 4, if you look at patch set 3 you can see the class as it looked before. The reasoning was that it is a wrapper around the `[UIApplication sharedApplication]` singleton anyway, and it doesn\u0027t make sense that every object adds extra observers to notification center that will all update simultaneously. It also becomes slightly easier to use since the using classes don\u0027t need to track their own instances. But you\u0027re right it makes it slightly more difficult to test. What is your opinion when choosing between these priorities?",
+      "parentUuid": "0cd9d3d5_ba2d2bf4",
       "range": {
         "startLine": 17,
         "startChar": 16,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "9ed1be15_bdc73674",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplicationStatusObserver.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-15T07:32:07Z",
+      "side": 1,
+      "message": "Yes good idea",
+      "parentUuid": "3900170b_47347218",
+      "range": {
+        "startLine": 19,
+        "startChar": 8,
+        "endLine": 19,
+        "endChar": 27
+      },
+      "revId": "fc309750a9cb7014f4504c67761cc6fca7256780",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "90638866_c12e7e7b",
         "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplicationStatusObserver.m",
         "patchSetId": 5
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "e5c0c576_a20bb5e3",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplicationStatusObserver.m",
+        "patchSetId": 5
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-15T07:32:07Z",
+      "side": 1,
+      "message": "Oops, yes",
+      "parentUuid": "90638866_c12e7e7b",
+      "range": {
+        "startLine": 31,
+        "startChar": 3,
+        "endLine": 31,
+        "endChar": 5
+      },
+      "revId": "fc309750a9cb7014f4504c67761cc6fca7256780",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8cc7edff_f29d9e40",
         "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplicationStatusObserver.m",
         "patchSetId": 5
@@ -105,6 +201,30 @@
       "writtenOn": "2017-06-14T23:37:21Z",
       "side": 1,
       "message": "implicit self retain. Now this class can never dealloc.\nUse weakify/strongify",
+      "range": {
+        "startLine": 38,
+        "startChar": 22,
+        "endLine": 38,
+        "endChar": 28
+      },
+      "revId": "fc309750a9cb7014f4504c67761cc6fca7256780",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a9caa84_7191e3a1",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplicationStatusObserver.m",
+        "patchSetId": 5
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-15T07:32:07Z",
+      "side": 1,
+      "message": "In patch set 3 it was implemented in the way you describe. I removed the weakify/strongify in patch set 4 when turning it into a singleton, since it will not dealloc for the lifetime of the app (it has the same lifecycle as the UIApplication instance it tracks). Refer to the singleton or not discussion :)",
+      "parentUuid": "8cc7edff_f29d9e40",
       "range": {
         "startLine": 38,
         "startChar": 22,
@@ -174,6 +294,30 @@
       "writtenOn": "2017-06-14T23:37:21Z",
       "side": 1,
       "message": "you almost never should be doing dispatch_sync because it blocks threads",
+      "range": {
+        "startLine": 55,
+        "startChar": 6,
+        "endLine": 55,
+        "endChar": 19
+      },
+      "revId": "fc309750a9cb7014f4504c67761cc6fca7256780",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb3fad1b_89178734",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/RTCUIApplicationStatusObserver.m",
+        "patchSetId": 5
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-15T07:32:07Z",
+      "side": 1,
+      "message": "This makes sense. Would it still be safe to access the _state variable (through the `isApplicationActive` method) directly after the class was instantiated if it was dispatched async, or would that have to be dealt with somehow? (like having a special value before the first real value has been accessed on the main thread)",
+      "parentUuid": "01f7d984_b09580b2",
       "range": {
         "startLine": 55,
         "startChar": 6,
