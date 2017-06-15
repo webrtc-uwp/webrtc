@@ -203,6 +203,7 @@ android_library("libjingle_peerconnection_java") {
     "api/org/webrtc/VideoDecoder.java",
     "api/org/webrtc/VideoDecoderFactory.java",
     "api/org/webrtc/VideoEncoder.java",
+    "api/org/webrtc/VideoEncoderFactory.java",
     "api/org/webrtc/VideoFileRenderer.java",
     "api/org/webrtc/VideoFrame.java",
     "api/org/webrtc/VideoRenderer.java",
