@@ -18,13 +18,13 @@
 #include "webrtc/common_types.h"
 #include "webrtc/common_video/include/video_bitrate_allocator.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/modules/video_coding/codecs/vp8/temporal_layers.h"
 #include "webrtc/modules/video_coding/encoded_frame.h"
 #include "webrtc/modules/video_coding/include/video_codec_initializer.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/modules/video_coding/jitter_buffer.h"
 #include "webrtc/modules/video_coding/packet.h"
 #include "webrtc/modules/video_coding/timing.h"
+#include "webrtc/modules/video_coding/utility/temporal_layers.h"
 #include "webrtc/system_wrappers/include/clock.h"
 
 namespace webrtc {
@@ -110,20 +110,23 @@ class VideoCodingModuleImpl : public VideoCodingModule {
   int32_t RegisterSendCodec(const VideoCodec* sendCodec,
                             uint32_t numberOfCores,
                             uint32_t maxPayloadSize) override {
-    if (sendCodec != nullptr && sendCodec->codecType == kVideoCodecVP8) {
-      // Set up a rate allocator and temporal layers factory for this vp8
-      // instance. The codec impl will have a raw pointer to the TL factory,
+    if (sendCodec != nullptr && ((sendCodec->codecType == kVideoCodecVP8) ||
+                                 (sendCodec->codecType == kVideoCodecH264))) {
+      // Set up a rate allocator and, if VP8, a temporal layers factory.
+      // The VP8 codec impl will have a raw pointer to the TL factory,
       // and will call it when initializing. Since this can happen
       // asynchronously keep the instance alive until destruction or until a
-      // new send codec is registered.
-      VideoCodec vp8_codec = *sendCodec;
+      // new send codec is registered. The H264 codec impl is not aware of the
+      // TL factory and will be safely ignored in the rate allocator.
+      VideoCodec codec = *sendCodec;
       std::unique_ptr<TemporalLayersFactory> tl_factory(
           new TemporalLayersFactory());
-      vp8_codec.VP8()->tl_factory = tl_factory.get();
+      if (sendCodec->codecType == kVideoCodecVP8) {
+        codec.VP8()->tl_factory = tl_factory.get();
+      }
       rate_allocator_ = VideoCodecInitializer::CreateBitrateAllocator(
-          vp8_codec, std::move(tl_factory));
-      return sender_.RegisterSendCodec(&vp8_codec, numberOfCores,
-                                       maxPayloadSize);
+          codec, std::move(tl_factory));
+      return sender_.RegisterSendCodec(&codec, numberOfCores, maxPayloadSize);
     }
     return sender_.RegisterSendCodec(sendCodec, numberOfCores, maxPayloadSize);
   }

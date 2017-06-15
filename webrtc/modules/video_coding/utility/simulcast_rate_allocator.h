@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_SIMULCAST_RATE_ALLOCATOR_H_
-#define WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_SIMULCAST_RATE_ALLOCATOR_H_
+#ifndef WEBRTC_MODULES_VIDEO_CODING_UTILITY_SIMULCAST_RATE_ALLOCATOR_H_
+#define WEBRTC_MODULES_VIDEO_CODING_UTILITY_SIMULCAST_RATE_ALLOCATOR_H_
 
 #include <stdint.h>
 
@@ -19,7 +19,7 @@
 #include "webrtc/api/video_codecs/video_encoder.h"
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/common_video/include/video_bitrate_allocator.h"
-#include "webrtc/modules/video_coding/codecs/vp8/temporal_layers.h"
+#include "webrtc/modules/video_coding/utility/temporal_layers.h"
 
 namespace webrtc {
 
@@ -48,4 +48,4 @@ class SimulcastRateAllocator : public VideoBitrateAllocator,
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_SIMULCAST_RATE_ALLOCATOR_H_
+#endif  // WEBRTC_MODULES_VIDEO_CODING_UTILITY_SIMULCAST_RATE_ALLOCATOR_H_

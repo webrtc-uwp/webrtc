@@ -14,7 +14,7 @@
 
 #include <vector>
 
-#include "webrtc/modules/video_coding/codecs/vp8/temporal_layers.h"
+#include "webrtc/modules/video_coding/utility/temporal_layers.h"
 
 #include "webrtc/base/optional.h"
 

@@ -27,15 +27,15 @@
 #include "webrtc/call/call.h"
 #include "webrtc/common_video/h264/profile_level_id.h"
 #include "webrtc/media/engine/constants.h"
-#include "webrtc/media/engine/internalencoderfactory.h"
 #include "webrtc/media/engine/internaldecoderfactory.h"
+#include "webrtc/media/engine/internalencoderfactory.h"
 #include "webrtc/media/engine/simulcast.h"
-#include "webrtc/media/engine/videoencodersoftwarefallbackwrapper.h"
 #include "webrtc/media/engine/videodecodersoftwarefallbackwrapper.h"
+#include "webrtc/media/engine/videoencodersoftwarefallbackwrapper.h"
 #include "webrtc/media/engine/webrtcmediaengine.h"
 #include "webrtc/media/engine/webrtcvideoencoderfactory.h"
 #include "webrtc/media/engine/webrtcvoiceengine.h"
-#include "webrtc/modules/video_coding/codecs/vp8/simulcast_encoder_adapter.h"
+#include "webrtc/modules/video_coding/simulcast_encoder_adapter.h"
 #include "webrtc/system_wrappers/include/field_trial.h"
 
 using DegradationPreference = webrtc::VideoSendStream::DegradationPreference;
@@ -67,13 +67,14 @@ class EncoderFactoryAdapter : public webrtc::VideoEncoderFactory {
  public:
   // EncoderFactoryAdapter doesn't take ownership of |factory|, which is owned
   // by e.g. PeerConnectionFactory.
-  explicit EncoderFactoryAdapter(cricket::WebRtcVideoEncoderFactory* factory)
-      : factory_(factory) {}
+  explicit EncoderFactoryAdapter(cricket::WebRtcVideoEncoderFactory* factory,
+                                 const cricket::VideoCodec& codec)
+      : factory_(factory), codec_(codec) {}
   virtual ~EncoderFactoryAdapter() {}
 
   // Implement webrtc::VideoEncoderFactory.
   webrtc::VideoEncoder* Create() override {
-    return factory_->CreateVideoEncoder(VideoCodec(kVp8CodecName));
+    return factory_->CreateVideoEncoder(codec_);
   }
 
   void Destroy(webrtc::VideoEncoder* encoder) override {
@@ -82,6 +83,65 @@ class EncoderFactoryAdapter : public webrtc::VideoEncoderFactory {
 
  private:
   cricket::WebRtcVideoEncoderFactory* const factory_;
+  const cricket::VideoCodec codec_;
+};
+
+// An encoder factory that wraps Create requests to an external encoder factory
+// with a webrtc::VideoEncoderSoftwareFallbackWrapper.
+class SoftwareFallbackEncoderFactory
+    : public cricket::WebRtcVideoEncoderFactory {
+ public:
+  // SoftwareFallbackEncoderFactory doesn't take ownership of |factory|, which
+  // is owned by e.g. PeerConnectionFactory.
+  explicit SoftwareFallbackEncoderFactory(
+      cricket::WebRtcVideoEncoderFactory* factory)
+      : factory_(factory) {
+    RTC_DCHECK(factory_ != nullptr);
+  }
+
+  webrtc::VideoEncoder* CreateVideoEncoder(
+      const cricket::VideoCodec& codec) override {
+    webrtc::VideoEncoder* external_encoder =
+        factory_->CreateVideoEncoder(codec);
+    webrtc::VideoEncoder* fallback_wrapped_encoder =
+        new webrtc::VideoEncoderSoftwareFallbackWrapper(codec,
+                                                        external_encoder);
+    // Save a mapping of the fallback wrapped encoder to the factory encoder so
+    // we can clean up both encoders together in DestroyVideoEncoder.
+    external_encoders_.insert(
+        std::make_pair(fallback_wrapped_encoder, external_encoder));
+    return fallback_wrapped_encoder;
+  }
+
+  const std::vector<cricket::VideoCodec>& supported_codecs() const override {
+    return factory_->supported_codecs();
+  }
+
+  bool EncoderTypeHasInternalSource(
+      webrtc::VideoCodecType type) const override {
+    return factory_->EncoderTypeHasInternalSource(type);
+  }
+
+  void DestroyVideoEncoder(webrtc::VideoEncoder* encoder) override {
+    // The passed-in encoder is a software fallback wrapped encoder.
+    // First, fetch the external encoder wrapped by it.
+    auto external_encoder = external_encoders_.find(encoder);
+    // We do not own the external encoder, so have the external encoder factory
+    // destroy it.
+    if (external_encoder != external_encoders_.end()) {
+      factory_->DestroyVideoEncoder(external_encoder->second);
+    } else {
+      RTC_NOTREACHED();
+    }
+    // We do own the software fallback wrapped encoder, so delete it here.
+    delete encoder;
+  }
+
+ private:
+  cricket::WebRtcVideoEncoderFactory* const factory_;
+  // This maps the fallback software fallback wrapped encoders to the
+  // wrapped external encoders.
+  std::map<webrtc::VideoEncoder*, webrtc::VideoEncoder*> external_encoders_;
 };
 
 // An encoder factory that wraps Create requests for simulcastable codec types
@@ -93,15 +153,29 @@ class WebRtcSimulcastEncoderFactory
   // WebRtcSimulcastEncoderFactory doesn't take ownership of |factory|, which is
   // owned by e.g. PeerConnectionFactory.
   explicit WebRtcSimulcastEncoderFactory(
-      cricket::WebRtcVideoEncoderFactory* factory)
-      : factory_(factory) {}
+      cricket::WebRtcVideoEncoderFactory* factory,
+      bool external) {
+    if (external) {
+      // If the encoder factory here is external, we will wrap it in a
+      // software fallback encoder factory before use.
+      software_fallback_encoder_factory_.reset(
+          new SoftwareFallbackEncoderFactory(factory));
+      factory_ = software_fallback_encoder_factory_.get();
+    } else {
+      // For internal factories, we can use the factory as-is. In such cases,
+      // we do not take ownership of any pointers.
+      factory_ = factory;
+    }
+  }
 
   static bool UseSimulcastEncoderFactory(
       const std::vector<cricket::VideoCodec>& codecs) {
-    // If any codec is VP8, use the simulcast factory. If asked to create a
-    // non-VP8 codec, we'll just return a contained factory encoder directly.
+    // If any codec is VP8 or H264, use the simulcast factory. If asked to
+    // create a non-VP8 / non-H264 codec, we'll just return a contained factory
+    // encoder directly.
     for (const auto& codec : codecs) {
-      if (CodecNamesEq(codec.name.c_str(), kVp8CodecName)) {
+      if (CodecNamesEq(codec.name.c_str(), kVp8CodecName) ||
+          CodecNamesEq(codec.name.c_str(), kH264CodecName)) {
         return true;
       }
     }
@@ -112,9 +186,10 @@ class WebRtcSimulcastEncoderFactory
       const cricket::VideoCodec& codec) override {
     RTC_DCHECK(factory_ != NULL);
     // If it's a codec type we can simulcast, create a wrapped encoder.
-    if (CodecNamesEq(codec.name.c_str(), kVp8CodecName)) {
+    if (CodecNamesEq(codec.name.c_str(), kVp8CodecName) ||
+        CodecNamesEq(codec.name.c_str(), kH264CodecName)) {
       return new webrtc::SimulcastEncoderAdapter(
-          new EncoderFactoryAdapter(factory_));
+          new EncoderFactoryAdapter(factory_, codec));
     }
     webrtc::VideoEncoder* encoder = factory_->CreateVideoEncoder(codec);
     if (encoder) {
@@ -149,6 +224,8 @@ class WebRtcSimulcastEncoderFactory
 
  private:
   cricket::WebRtcVideoEncoderFactory* factory_;
+  std::unique_ptr<cricket::WebRtcVideoEncoderFactory>
+      software_fallback_encoder_factory_;
   // A list of encoders that were created without being wrapped in a
   // SimulcastEncoderAdapter.
   std::vector<webrtc::VideoEncoder*> non_simulcast_encoders_;
@@ -230,8 +307,7 @@ static bool ValidateStreamParams(const StreamParams& sp) {
 
 // Returns true if the given codec is disallowed from doing simulcast.
 bool IsCodecBlacklistedForSimulcast(const std::string& codec_name) {
-  return CodecNamesEq(codec_name, kH264CodecName) ||
-         CodecNamesEq(codec_name, kVp9CodecName);
+  return CodecNamesEq(codec_name, kVp9CodecName);
 }
 
 // The selected thresholds for QVGA and VGA corresponded to a QP around 10.
@@ -311,11 +387,14 @@ class EncoderStreamFactory
       RTC_DCHECK_EQ(1, encoder_config.number_of_streams);
     }
     if (encoder_config.number_of_streams > 1 ||
-        (CodecNamesEq(codec_name_, kVp8CodecName) && is_screencast_ &&
-         conference_mode_)) {
+        ((CodecNamesEq(codec_name_, kVp8CodecName) ||
+          CodecNamesEq(codec_name_, kH264CodecName)) &&
+         is_screencast_ && conference_mode_)) {
+      bool temporal_layers_supported = CodecNamesEq(codec_name_, kVp8CodecName);
       return GetSimulcastConfig(encoder_config.number_of_streams, width, height,
                                 encoder_config.max_bitrate_bps, max_qp_,
-                                max_framerate_, is_screencast_);
+                                max_framerate_, is_screencast_,
+                                temporal_layers_supported);
     }
 
     // For unset max bitrates set default bitrate for non-simulcast.
@@ -545,8 +624,8 @@ void WebRtcVideoEngine::SetExternalEncoderFactory(
   if (encoder_factory &&
       WebRtcSimulcastEncoderFactory::UseSimulcastEncoderFactory(
           encoder_factory->supported_codecs())) {
-    simulcast_encoder_factory_.reset(
-        new WebRtcSimulcastEncoderFactory(encoder_factory));
+    simulcast_encoder_factory_.reset(new WebRtcSimulcastEncoderFactory(
+        encoder_factory, true /* external */));
     encoder_factory = simulcast_encoder_factory_.get();
   }
   external_encoder_factory_ = encoder_factory;
@@ -1776,13 +1855,15 @@ WebRtcVideoChannel::WebRtcVideoSendStream::CreateVideoEncoder(
 
   // Try creating internal encoder.
   if (FindMatchingCodec(internal_encoder_factory_->supported_codecs(), codec)) {
-    if (parameters_.encoder_config.content_type ==
-            webrtc::VideoEncoderConfig::ContentType::kScreen &&
-        parameters_.conference_mode && UseSimulcastScreenshare()) {
-      // TODO(sprang): Remove this adapter once libvpx supports simulcast with
-      // same-resolution substreams.
+    if (CodecNamesEq(codec.name.c_str(), kH264CodecName) ||
+        (parameters_.encoder_config.content_type ==
+             webrtc::VideoEncoderConfig::ContentType::kScreen &&
+         parameters_.conference_mode && UseSimulcastScreenshare())) {
+      // TODO(sprang): Remove this adapter for VP8 once libvpx supports
+      // simulcast with same-resolution substreams, and for H264 once the
+      // OpenH264 wrapper supports simulcast.
       WebRtcSimulcastEncoderFactory adapter_factory(
-          internal_encoder_factory_.get());
+          internal_encoder_factory_.get(), false /* external */);
       return AllocatedEncoder(adapter_factory.CreateVideoEncoder(codec), codec,
                               false /* is_external */);
     }
