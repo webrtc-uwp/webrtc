@@ -1,0 +1,274 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4c1d7d1_ed3f5404",
+        "filename": "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCCVPixelBuffer.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-15T11:54:10Z",
+      "side": 1,
+      "message": "We shouldn\u0027t need this cast since RTCMutableI420Buffer is a subclass of RTCI420Buffer, right?",
+      "range": {
+        "startLine": 174,
+        "startChar": 9,
+        "endLine": 174,
+        "endChar": 25
+      },
+      "revId": "d3c3290538e13ab027116d0c22caf59c9b2debd6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84a19f94_7316dd13",
+        "filename": "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCI420Buffer.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-15T11:54:10Z",
+      "side": 1,
+      "message": "Actually, I think it will be better to base this on top of a rtc::scoped_refptr\u003cwebrtc::I420BufferInterface\u003e. We will need such a class anyway in RTCVideoRendererAdapter.mm. We can add a private initWithNativeI420 in RTCI420Buffer+Private.h that we use from RTCVideoRendererAdapter.",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 15
+      },
+      "revId": "d3c3290538e13ab027116d0c22caf59c9b2debd6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63cec729_be91179c",
+        "filename": "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCVideoFrame.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-15T11:54:10Z",
+      "side": 1,
+      "message": "Eventually I would like to remove these functions and let clients call [buffer toI420] themselves (similar to the C++ interface). I\u0027m not sure we can do that right away, and it\u0027s probably good to keep backwards compatibility for a while. I think it would be better to use isKindOfClass to verify that the buffer is an RTCI420Buffer and then just cast instead of calling toI420 here.",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 1
+      },
+      "revId": "d3c3290538e13ab027116d0c22caf59c9b2debd6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1260247c_9f993875",
+        "filename": "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCVideoRendererAdapter.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-15T11:54:10Z",
+      "side": 1,
+      "message": "I don\u0027t think we need to do this check. You have an id\u003cRTCVideoFrameBuffer at this point, so just create the RTCVideoFrame from it.",
+      "range": {
+        "startLine": 37,
+        "startChar": 6,
+        "endLine": 37,
+        "endChar": 70
+      },
+      "revId": "d3c3290538e13ab027116d0c22caf59c9b2debd6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bebcd9ed_bcf1b5f3",
+        "filename": "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCVideoRendererAdapter.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-15T11:54:10Z",
+      "side": 1,
+      "message": "Here we need to do:\nrtc_frame_buffer \u003d [[RTCI420Buffer alloc] initWithNativeI420:video_frame_buffer-\u003eToI420()];\n\nFYI - If you select VP8 as codec in AppRTCMobile, I think you will exercise this path.",
+      "range": {
+        "startLine": 46,
+        "startChar": 6,
+        "endLine": 46,
+        "endChar": 13
+      },
+      "revId": "d3c3290538e13ab027116d0c22caf59c9b2debd6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f212eca_b68dc02a",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Video/objc_frame_buffer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-15T11:54:10Z",
+      "side": 1,
+      "message": "Will this retain and release |frame_buffer_| properly? It\u0027s not clear to me why we would ever compile this in a non-ObjC++ context.",
+      "range": {
+        "startLine": 41,
+        "startChar": 2,
+        "endLine": 41,
+        "endChar": 26
+      },
+      "revId": "d3c3290538e13ab027116d0c22caf59c9b2debd6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed7fdaaa_24553c67",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Video/objc_frame_buffer.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-15T11:54:10Z",
+      "side": 1,
+      "message": "I would like to make an anonymous namespace here where you place ObjCI420FrameBuffer and define it directly, i.e. you don\u0027t even need a header file for it. Like this:\n\nnamespace {\n\nclass ObjCI420FrameBuffer : public I420BufferInterface {\n public:\n  explicit ObjCI420FrameBuffer(id\u003cRTCI420Buffer\u003e frame_buffer)\n    : frame_buffer_(frame_buffer) {}\n\n  ~ObjCI420FrameBuffer() override {}\n\n  int width() const override { return frame_buffer_.width; }\n  int height() const override { return frame_buffer_.height; }\n\n  const uint8_t* DataY() const override { return frame_buffer_.dataY; }\n  const uint8_t* DataU() const override { return frame_buffer_.dataU; }\n  const uint8_t* DataV() const override { return frame_buffer_.dataV; }\n\n  int StrideY() const override { return frame_buffer_.strideY; }\n  int StrideU() const override { return frame_buffer_.strideU; }\n  int StrideV() const override { return frame_buffer_.strideV; }\n\n private:\n  id\u003cRTCI420Buffer\u003e frame_buffer_;\n};\n\n}  // namespace",
+      "revId": "d3c3290538e13ab027116d0c22caf59c9b2debd6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd1dca26_96ea413e",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Video/objc_frame_buffer.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-15T11:54:10Z",
+      "side": 1,
+      "message": "You can remove \u0027VideoFrameBuffer::\u0027 since we are already in that namespace.",
+      "range": {
+        "startLine": 32,
+        "startChar": 9,
+        "endLine": 32,
+        "endChar": 27
+      },
+      "revId": "d3c3290538e13ab027116d0c22caf59c9b2debd6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9384429d_ac1005f7",
+        "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/encoder.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-15T11:54:10Z",
+      "side": 1,
+      "message": "nil?",
+      "range": {
+        "startLine": 415,
+        "startChar": 34,
+        "endLine": 415,
+        "endChar": 38
+      },
+      "revId": "d3c3290538e13ab027116d0c22caf59c9b2debd6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b5b44e1_d819f5b6",
+        "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrame.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-15T11:54:10Z",
+      "side": 1,
+      "message": "Let\u0027s deprecate these functions as well. Clients should use [buffer toI420] instead.",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 46,
+        "endChar": 43
+      },
+      "revId": "d3c3290538e13ab027116d0c22caf59c9b2debd6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b2d2d61_38ef2984",
+        "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrameBuffer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-15T11:54:10Z",
+      "side": 1,
+      "message": "This is not very pretty but I understand we can\u0027t use std::vector in the signature. Maybe we should rewrite it and send in an **NSArray or just a pointer to memory that needs to be of sufficient size.",
+      "range": {
+        "startLine": 84,
+        "startChar": 74,
+        "endLine": 84,
+        "endChar": 82
+      },
+      "revId": "d3c3290538e13ab027116d0c22caf59c9b2debd6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a924e82a_7ad060e6",
+        "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrameBuffer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-15T11:54:10Z",
+      "side": 1,
+      "message": "We need to add public init functions, i.e. initWithWidth height, etc.",
+      "range": {
+        "startLine": 89,
+        "startChar": 11,
+        "endLine": 89,
+        "endChar": 24
+      },
+      "revId": "d3c3290538e13ab027116d0c22caf59c9b2debd6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
