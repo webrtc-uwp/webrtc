@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "092bd1c2_d4f2276d",
+        "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-15T10:22:58Z",
+      "side": 1,
+      "message": "Maybe theoretical, but moving this call out of the critical section allows someone else to remap the payload type before we get around to calling InsertPacket() below. There\u0027s even a similar race inside RtpHeaderToDecoder...\n\nThis is pretty much the same problem as with LasteError(); although each NetEq method call protects itself, the caller needs to make two or more NetEq calls in an atomic sequence.",
+      "range": {
+        "startLine": 86,
+        "startChar": 6,
+        "endLine": 86,
+        "endChar": 24
+      },
+      "revId": "4e8bd409ed38247dbcf691e9fb80f04f2797a01c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "af7f6a5b_b69c47c7",
         "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
         "patchSetId": 1
@@ -18,6 +41,29 @@
         "startChar": 27,
         "endLine": 107,
         "endChar": 39
+      },
+      "revId": "4e8bd409ed38247dbcf691e9fb80f04f2797a01c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0e67986_4398c4a4",
+        "filename": "webrtc/modules/audio_coding/acm2/acm_receiver.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-15T10:22:58Z",
+      "side": 1,
+      "message": "Oh, look---another race...",
+      "range": {
+        "startLine": 132,
+        "startChar": 45,
+        "endLine": 132,
+        "endChar": 71
       },
       "revId": "4e8bd409ed38247dbcf691e9fb80f04f2797a01c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
