@@ -1,0 +1,555 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3958f383_9e5b3fac",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "This could use a comment explaining that will come from MediaFormat.KEY_XXX.   In fact, I would even rename them MEDIA_FORMAT_KEY_XXX instead of FORMAT_KEY_XXX to make it clear.",
+      "range": {
+        "startLine": 40,
+        "startChar": 69,
+        "endLine": 40,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90beb030_809fe297",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "In order of preference?  In a HashSet???    The code only ever checks for presence, not order, anyway.  So this comment is wrong.",
+      "range": {
+        "startLine": 48,
+        "startChar": 73,
+        "endLine": 48,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "831b29c9_2980562d",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "Seems kind of silly to have a hashset for this when a simple isColorFormatSupported(X) function with a switch statement will do.  \n\nAlso, don\u0027t we have the exact same code in the Encoder?  Should we pull it out into a common place?",
+      "range": {
+        "startLine": 54,
+        "startChar": 51,
+        "endLine": 54,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "893656a2_546c13f5",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "This could use a comment explaining what effect it has.  If we hit this timeout, what happens?",
+      "range": {
+        "startLine": 56,
+        "startChar": 65,
+        "endLine": 56,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c4abd0f0_05c5e791",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "This could use a comment explaining what effect it has.  If we hit this timeout, what happens?",
+      "range": {
+        "startLine": 58,
+        "startChar": 69,
+        "endLine": 58,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ce65153_0e1f921f",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "Why do we need both?  Can\u0027t we infer the codecName from the codecType?",
+      "range": {
+        "startLine": 61,
+        "startChar": 41,
+        "endLine": 61,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21155dbc_c4bf911e",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "These could use comments about which threads do what.",
+      "range": {
+        "startLine": 64,
+        "startChar": 31,
+        "endLine": 64,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9680c43e_5f842875",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "If these come from the settings, why not just store a settings?",
+      "range": {
+        "startLine": 71,
+        "startChar": 30,
+        "endLine": 71,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b6474d99_0d68dc72",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "These could use come comments.",
+      "range": {
+        "startLine": 75,
+        "startChar": 35,
+        "endLine": 75,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c0fa13bd_88610a41",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "This could really use a comment.",
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1da1ce06_44904d33",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "It seems like the things passed in should be grouped together (width, height, callback) and the things computed and updated regularly should be grouped separately (stride, sliceHeight).",
+      "range": {
+        "startLine": 100,
+        "startChar": 29,
+        "endLine": 100,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9dcd0b0d_cf48f81c",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "It should be documented somewhere that decoderThread \u003d\u003d \"thread initDecode is called\".  In fact, I think it would make sense to move this line of setting it into initDecode, and then move the checkOnDecoderThread from resetCodec to initDecodeInternal.  That would make it more clear when it set and the fact that it cannot change without initDecode being called again.",
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5d4240b_5e43c343",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "It seems like these should be grouped with stride and slideHeight.",
+      "range": {
+        "startLine": 120,
+        "startChar": 28,
+        "endLine": 120,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e27217e_bccee004",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": ", \u003d\u003e ;",
+      "range": {
+        "startLine": 177,
+        "startChar": 73,
+        "endLine": 177,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "570a1518_f111dec8",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "This seems like it\u0027s the opposite of initDecodeInternal.  Perhaps it should be called deinitDecodeInternal?",
+      "range": {
+        "startLine": 220,
+        "startChar": 37,
+        "endLine": 220,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37044e41_8e51436b",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "It seems like this should be called reinitDecodeInternal, to go along with init and deinit.",
+      "range": {
+        "startLine": 245,
+        "startChar": 68,
+        "endLine": 245,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d9f78504_90a467e8",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "No log at least?",
+      "range": {
+        "startLine": 276,
+        "startChar": 23,
+        "endLine": 276,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "688b4536_3879b353",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "Where does this magic 3/2 come from?",
+      "range": {
+        "startLine": 282,
+        "startChar": 47,
+        "endLine": 282,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71b12f2e_dc7e6d20",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "Obviously \"info.size \u003c stride * height * 3 / 2\" is not true at this point, so why not just remove it?",
+      "range": {
+        "startLine": 287,
+        "startChar": 44,
+        "endLine": 287,
+        "endChar": 45
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d011650_aaaf3003",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "So where does this formula come from?",
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32095e9e_cd12522b",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "It seems like this whole if block could be put in a helper method.  Something like copyYuv420Planar.",
+      "range": {
+        "startLine": 301,
+        "startChar": 70,
+        "endLine": 301,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a2bab96e_c663beff",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we check the colorFormat that it really is NV12?",
+      "range": {
+        "startLine": 330,
+        "startChar": 14,
+        "endLine": 330,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f3a4d394_c51a889b",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "Same here, something like copyNv12",
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99075da0_6570f94a",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "Should this just call release()?  What\u0027s the point of setting running \u003d false without releasing everything?",
+      "range": {
+        "startLine": 385,
+        "startChar": 98,
+        "endLine": 385,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d489f530_220c8d88",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-15T23:59:32Z",
+      "side": 1,
+      "message": "Same here about release().  Even if we a different \"stopRunning()\" method, we should use it, I think, in both of these places.",
+      "range": {
+        "startLine": 398,
+        "startChar": 15,
+        "endLine": 398,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
