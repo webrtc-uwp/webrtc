@@ -119,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "f35b5d3b_099af4ad",
+        "filename": "webrtc/sdk/android/src/jni/native_handle_impl.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T07:35:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ba158b58_b6529bb8",
+      "range": {
+        "startLine": 356,
+        "startChar": 66,
+        "endLine": 356,
+        "endChar": 77
+      },
+      "revId": "02e879bb0e8b6c3e5909ac4b1e89671ceb9078ff",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b86e3c26_5cd4e6d1",
         "filename": "webrtc/sdk/android/src/jni/native_handle_impl.h",
         "patchSetId": 4
