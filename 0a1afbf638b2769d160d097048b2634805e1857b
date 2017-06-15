@@ -1,0 +1,187 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39deb19c_df975081",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T08:36:18Z",
+      "side": 1,
+      "message": "These seem to be accessed from multiple threads, is this safe?",
+      "range": {
+        "startLine": 68,
+        "startChar": 14,
+        "endLine": 68,
+        "endChar": 19
+      },
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "162e4464_0a8bb26b",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T08:36:18Z",
+      "side": 1,
+      "message": "Is it safe using MediaCodec on multiple threads?",
+      "range": {
+        "startLine": 259,
+        "startChar": 15,
+        "endLine": 259,
+        "endChar": 34
+      },
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec8f7b74_a6efd620",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T08:36:18Z",
+      "side": 1,
+      "message": "We never release the output buffer?",
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90a5ea45_7bbdb8e1",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T08:36:18Z",
+      "side": 1,
+      "message": "Hmm, it might be interesting to try to avoid the copy here and construct a frame buffer that calls releaseOutputBuffer once all the references have been released. These optimizations can be done later though.",
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "904f044e_2bc4da29",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T08:36:18Z",
+      "side": 1,
+      "message": "QP will probably be parsed by C++. We just provide a way for the decoders to provide it if they can get it easily.",
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65e698fb_9576f395",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T08:36:18Z",
+      "side": 1,
+      "message": "We should do frame.release after this unless you think it is better for the callback to assume owenership transfer for the frame.",
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1639bf7_14727c54",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T08:36:18Z",
+      "side": 1,
+      "message": "It gets confusing what method is called on what thread, can you add thread checkers?",
+      "range": {
+        "startLine": 353,
+        "startChar": 15,
+        "endLine": 353,
+        "endChar": 23
+      },
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bbef1cad_df6a09e7",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T08:36:18Z",
+      "side": 1,
+      "message": "We don\u0027t want to crash if stop fails, please remove.",
+      "range": {
+        "startLine": 404,
+        "startChar": 6,
+        "endLine": 404,
+        "endChar": 23
+      },
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "caf49bd4_39d19102",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T08:36:18Z",
+      "side": 1,
+      "message": "I wonder if we should implement these in JNI for performance.",
+      "range": {
+        "startLine": 416,
+        "startChar": 15,
+        "endLine": 416,
+        "endChar": 24
+      },
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
