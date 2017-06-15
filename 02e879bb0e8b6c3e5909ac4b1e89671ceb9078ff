@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1f70e400_ceed0ed2",
+        "filename": "webrtc/sdk/android/src/jni/native_handle_impl.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T07:34:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1b8365d4_003220de",
+      "range": {
+        "startLine": 49,
+        "startChar": 2,
+        "endLine": 49,
+        "endChar": 67
+      },
+      "revId": "02e879bb0e8b6c3e5909ac4b1e89671ceb9078ff",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "52bdd6b9_d634ea3e",
         "filename": "webrtc/sdk/android/src/jni/native_handle_impl.cc",
         "patchSetId": 4
@@ -45,6 +69,30 @@
       "revId": "02e879bb0e8b6c3e5909ac4b1e89671ceb9078ff",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7327d78_3219168e",
+        "filename": "webrtc/sdk/android/src/jni/native_handle_impl.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T07:34:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "52bdd6b9_d634ea3e",
+      "range": {
+        "startLine": 259,
+        "startChar": 28,
+        "endLine": 259,
+        "endChar": 43
+      },
+      "revId": "02e879bb0e8b6c3e5909ac4b1e89671ceb9078ff",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -94,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "795d3a39_1dc374a6",
+        "filename": "webrtc/sdk/android/src/jni/native_handle_impl.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T07:34:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b86e3c26_5cd4e6d1",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 21
+      },
+      "revId": "02e879bb0e8b6c3e5909ac4b1e89671ceb9078ff",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d7c90303_9d46bbe4",
         "filename": "webrtc/sdk/android/src/jni/native_handle_impl.h",
         "patchSetId": 4
@@ -114,6 +186,30 @@
       "revId": "02e879bb0e8b6c3e5909ac4b1e89671ceb9078ff",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6cc0b894_c83b7abf",
+        "filename": "webrtc/sdk/android/src/jni/native_handle_impl.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T07:34:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d7c90303_9d46bbe4",
+      "range": {
+        "startLine": 67,
+        "startChar": 14,
+        "endLine": 67,
+        "endChar": 28
+      },
+      "revId": "02e879bb0e8b6c3e5909ac4b1e89671ceb9078ff",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -140,6 +236,30 @@
     },
     {
       "key": {
+        "uuid": "43ceec78_2cebee40",
+        "filename": "webrtc/sdk/android/src/jni/peerconnection_jni.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 883,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T07:34:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "972bd672_b60fd1c9",
+      "range": {
+        "startLine": 883,
+        "startChar": 20,
+        "endLine": 883,
+        "endChar": 35
+      },
+      "revId": "02e879bb0e8b6c3e5909ac4b1e89671ceb9078ff",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4dc5f7d2_aab3ec1c",
         "filename": "webrtc/sdk/android/src/jni/peerconnection_jni.cc",
         "patchSetId": 4
@@ -160,6 +280,30 @@
       "revId": "02e879bb0e8b6c3e5909ac4b1e89671ceb9078ff",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c85323a7_f36500c9",
+        "filename": "webrtc/sdk/android/src/jni/peerconnection_jni.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 886,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T07:34:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4dc5f7d2_aab3ec1c",
+      "range": {
+        "startLine": 886,
+        "startChar": 20,
+        "endLine": 886,
+        "endChar": 33
+      },
+      "revId": "02e879bb0e8b6c3e5909ac4b1e89671ceb9078ff",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
