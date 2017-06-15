@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ed132d16_eb7f6eba",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-15T18:20:20Z",
+      "side": 1,
+      "message": "Stride and sliceHeight are initialized once by the decoder thread, while the output thread is not running, and then only used by the output thread.\n\nWidth and height are set on the decoder thread in init, while the output thread is not running.  The output thread is only allowed to modify them before the first frame is decoded.  I\u0027m not sure I understand why, but that\u0027s what MediaCodecVideoDecoder does:  https://cs.chromium.org/chromium/src/third_party/webrtc/sdk/android/api/org/webrtc/MediaCodecVideoDecoder.java?l\u003d621\u0026rcl\u003de65f13714155819b16eebd32a1845f25258aa13c\n\nIs it ok to make it so that the output thread never changes width or height?  I think it just needs to check that the codec has not changed them either.  Unless for some reason it\u0027s actually ok for the codec to spit out different dimensions, as long as it does so before it starts decoding frames.\n\nFor now, there is some possibility that width and height will get out of sync, if the codec changes them before decoding the first frame.  So I\u0027ve made them volatile.",
+      "parentUuid": "39deb19c_df975081",
+      "range": {
+        "startLine": 68,
+        "startChar": 14,
+        "endLine": 68,
+        "endChar": 19
+      },
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6dafa5b8_5fe739fd",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
         "patchSetId": 1
@@ -45,6 +69,30 @@
       "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee30e16e_391ea859",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-15T18:20:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6dafa5b8_5fe739fd",
+      "range": {
+        "startLine": 151,
+        "startChar": 4,
+        "endLine": 151,
+        "endChar": 26
+      },
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "5cfd9c4c_1cabadbe",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-15T18:20:20Z",
+      "side": 1,
+      "message": "Yes, it has its own internal synchronization.",
+      "parentUuid": "162e4464_0a8bb26b",
+      "range": {
+        "startLine": 259,
+        "startChar": 15,
+        "endLine": 259,
+        "endChar": 34
+      },
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec8f7b74_a6efd620",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
         "patchSetId": 1
@@ -85,6 +157,24 @@
       "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83934f18_ff3c2a9a",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-15T18:20:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ec8f7b74_a6efd620",
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -105,6 +195,24 @@
     },
     {
       "key": {
+        "uuid": "d4505e36_d3256a80",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-15T18:20:20Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "90a5ea45_7bbdb8e1",
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "904f044e_2bc4da29",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
         "patchSetId": 1
@@ -122,6 +230,24 @@
     },
     {
       "key": {
+        "uuid": "9ca29ce9_f74eea48",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-15T18:20:20Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "904f044e_2bc4da29",
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "65e698fb_9576f395",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
         "patchSetId": 1
@@ -136,6 +262,24 @@
       "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4cb2fa2_bdcf275a",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-15T18:20:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "65e698fb_9576f395",
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -162,6 +306,30 @@
     },
     {
       "key": {
+        "uuid": "5d4a7bd5_d0dcbfcf",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-15T18:20:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a1639bf7_14727c54",
+      "range": {
+        "startLine": 353,
+        "startChar": 15,
+        "endLine": 353,
+        "endChar": 23
+      },
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bbef1cad_df6a09e7",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
         "patchSetId": 1
@@ -185,6 +353,30 @@
     },
     {
       "key": {
+        "uuid": "19dca387_2ba10aaf",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-15T18:20:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bbef1cad_df6a09e7",
+      "range": {
+        "startLine": 404,
+        "startChar": 6,
+        "endLine": 404,
+        "endChar": 23
+      },
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "caf49bd4_39d19102",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
         "patchSetId": 1
@@ -205,6 +397,30 @@
       "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a95df42_840aa0c1",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-15T18:20:20Z",
+      "side": 1,
+      "message": "It would be much nicer to reuse libyuv.  If that had a JNI wrapper I\u0027d use it.\n\nAlternately, if we can avoid copying data in and out of the output buffers until the C++ layer (eg. per your suggested optimization above), we might not need these at all.\n\nIt might be worth a follow-up.  I\u0027ve left some notes about possible optimizations.",
+      "parentUuid": "caf49bd4_39d19102",
+      "range": {
+        "startLine": 416,
+        "startChar": 15,
+        "endLine": 416,
+        "endChar": 24
+      },
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
