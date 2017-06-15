@@ -69,6 +69,7 @@ enum AudioDeviceMessageType : uint32_t {
   kMessageTypeValidRouteChange,
   kMessageTypeCanPlayOrRecordChange,
   kMessageTypePlayoutGlitchDetected,
+  kMessageOutputVolumeChange,
 };
 
 using ios::CheckAndLogError;
@@ -115,7 +116,8 @@ AudioDeviceIOS::AudioDeviceIOS()
       has_configured_session_(false),
       num_detected_playout_glitches_(0),
       last_playout_time_(0),
-      num_playout_callbacks_(0) {
+      num_playout_callbacks_(0),
+      last_output_volume_change_time_(0) {
   LOGI() << "ctor" << ios::GetCurrentThreadDescription();
   thread_ = rtc::Thread::Current();
   audio_session_observer_ =
@@ -378,6 +380,11 @@ void AudioDeviceIOS::OnCanPlayOrRecordChange(bool can_play_or_record) {
                 new rtc::TypedMessageData<bool>(can_play_or_record));
 }
 
+void AudioDeviceIOS::OnChangedOutputVolume() {
+  RTC_DCHECK(thread_);
+  thread_->Post(RTC_FROM_HERE, this, kMessageOutputVolumeChange);
+}
+
 OSStatus AudioDeviceIOS::OnDeliverRecordedData(AudioUnitRenderActionFlags* flags,
                                                const AudioTimeStamp* time_stamp,
                                                UInt32 bus_number,
@@ -455,20 +462,33 @@ OSStatus AudioDeviceIOS::OnGetPlayoutData(AudioUnitRenderActionFlags* flags,
   }
 
   // Measure time since last call to OnGetPlayoutData() and see if it is larger
-  // than a well defined threshold. If so, we have a clear indication of a
-  // glitch in the output audio since the core audio layer will most likely run
-  // dry in this state.
+  // than a well defined threshold which depends on the current IO buffer size.
+  // If so, we have an indication of a glitch in the output audio since the
+  // core audio layer will most likely run dry in this state.
   ++num_playout_callbacks_;
   const int64_t now_time = rtc::TimeMillis();
   if (time_stamp->mSampleTime != num_frames) {
     const int64_t delta_time = now_time - last_playout_time_;
     const int glitch_threshold =
-        1.5 * playout_parameters_.GetBufferSizeInMilliseconds() - 1;
+        1.6 * playout_parameters_.GetBufferSizeInMilliseconds();
     if (delta_time > glitch_threshold) {
-      RTCLogWarning(@"Playout audio glitch detected.\n"
-                     "  Time since last OnGetPlayoutData was %lld ms.",
-                    delta_time);
-      thread_->Post(RTC_FROM_HERE, this, kMessageTypePlayoutGlitchDetected);
+      RTCLogWarning(@"Possible playout audio glitch detected.\n"
+                     "  Time since last OnGetPlayoutData was %lld ms.\n"
+                     "  num_frames: %u",
+                    delta_time,
+                    num_frames);
+      // Exclude extreme delta values since they do most likely not correspond
+      // to a real glitch. Instead, the most probable cause is that a headset
+      // has been plugged in or out. There are more direct ways to detect
+      // audio device changes (see HandleValidRouteChange()) but experiments
+      // show that using it leads to more complex implementations.
+      // TODO(henrika): more tests might be needed to come up with an even
+      // better upper limit.
+      if (delta_time < 100) {
+        thread_->Post(RTC_FROM_HERE, this, kMessageTypePlayoutGlitchDetected);
+      } else {
+        RTCLog(@"Glitch warning is ignored. Probably caused by device switch.");
+      }
     }
   }
   last_playout_time_ = now_time;
@@ -501,6 +521,9 @@ void AudioDeviceIOS::OnMessage(rtc::Message *msg) {
     }
     case kMessageTypePlayoutGlitchDetected:
       HandlePlayoutGlitchDetected();
+      break;
+    case kMessageOutputVolumeChange:
+      HandleOutputVolumeChange();
       break;
   }
 }
@@ -582,6 +605,7 @@ void AudioDeviceIOS::HandleSampleRateChange(float sample_rate) {
   // Sample rate and buffer size are the same, no work to do.
   if (std::abs(current_sample_rate - session_sample_rate) <= DBL_EPSILON &&
       current_frames_per_buffer == session_frames_per_buffer) {
+    RTCLog(@"Ignoring sample rate change since audio parameters are intact.");
     return;
   }
 
@@ -619,10 +643,31 @@ void AudioDeviceIOS::HandleSampleRateChange(float sample_rate) {
 }
 
 void AudioDeviceIOS::HandlePlayoutGlitchDetected() {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  // Don't update metrics if we're interrupted since a "glitch" is expected
+  // in this state.
+  if (is_interrupted_) {
+    RTCLog(@"Ignoring audio glitch due to interruption.");
+    return;
+  }
+  // Avoid doing glitch detection for two seconds after a volume change
+  // has been detected to reduce the risk of false alarm.
+  if (last_output_volume_change_time_ > 0 &&
+      rtc::TimeSince(last_output_volume_change_time_) < 2000) {
+    RTCLog(@"Ignoring audio glitch due to recent output volume change.");
+    return;
+  }
   num_detected_playout_glitches_++;
   RTCLog(@"Number of detected playout glitches: %lld",
          num_detected_playout_glitches_);
+}
+
+void AudioDeviceIOS::HandleOutputVolumeChange() {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTCLog(@"Output volume change detected.");
+  // Store time of this detection so it can be used to defer detection of
+  // glitches too close in time to this event.
+  last_output_volume_change_time_ = rtc::TimeMillis();
 }
 
 void AudioDeviceIOS::UpdateAudioDeviceBuffer() {

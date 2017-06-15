@@ -17,6 +17,7 @@
 #include "webrtc/base/buffer.h"
 #include "webrtc/base/gtest_prod_util.h"
 #include "webrtc/base/thread.h"
+#include "webrtc/base/thread_annotations.h"
 #include "webrtc/base/thread_checker.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
 #include "webrtc/modules/audio_device/ios/audio_session_observer.h"
@@ -166,6 +167,7 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
   void OnInterruptionEnd() override;
   void OnValidRouteChange() override;
   void OnCanPlayOrRecordChange(bool can_play_or_record) override;
+  void OnChangedOutputVolume() override;
 
   // VoiceProcessingAudioUnitObserver methods.
   OSStatus OnDeliverRecordedData(AudioUnitRenderActionFlags* flags,
@@ -190,6 +192,7 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
   void HandleCanPlayOrRecordChange(bool can_play_or_record);
   void HandleSampleRateChange(float sample_rate);
   void HandlePlayoutGlitchDetected();
+  void HandleOutputVolumeChange();
 
   // Uses current |playout_parameters_| and |record_parameters_| to inform the
   // audio device buffer (ADB) about our internal audio parameters.
@@ -296,7 +299,13 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
   int64_t last_playout_time_;
 
   // Counts number of playout callbacks per call.
+  // The value isupdated on the native I/O thread and later read on the
+  // creating thread (see thread_checker_) but at this stage no audio is
+  // active. Hence, it is a "thread safe" design and no lock is needed.
   int64_t num_playout_callbacks_;
+
+  // Contains the time for when the last output volume change was detected.
+  int64_t last_output_volume_change_time_ ACCESS_ON(thread_checker_);
 
   // Exposes private members for testing purposes only.
   FRIEND_TEST_ALL_PREFIXES(AudioDeviceTest, testInterruptedAudioSession);
