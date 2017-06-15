@@ -9,8 +9,9 @@
  */
 
 #import "RTCVideoRendererAdapter+Private.h"
-
-#import "RTCVideoFrame+Private.h"
+#import "WebRTC/RTCVideoFrame.h"
+#import "WebRTC/RTCVideoFrameBuffer.h"
+#import "objc_frame_buffer.h"
 
 #include <memory>
 
@@ -25,12 +26,26 @@ class VideoRendererAdapter
   }
 
   void OnFrame(const webrtc::VideoFrame& nativeVideoFrame) override {
-    RTCVideoFrame* videoFrame = [[RTCVideoFrame alloc]
-        initWithVideoBuffer:nativeVideoFrame.video_frame_buffer()
-                   rotation:static_cast<RTCVideoRotation>(
-                                nativeVideoFrame.rotation())
-                timeStampNs:nativeVideoFrame.timestamp_us() *
-                            rtc::kNumNanosecsPerMicrosec];
+    rtc::scoped_refptr<VideoFrameBuffer> video_frame_buffer = nativeVideoFrame.video_frame_buffer();
+    RTCVideoFrame* videoFrame;
+    if (video_frame_buffer->type() == VideoFrameBuffer::Type::kNative) {
+      rtc::scoped_refptr<ObjCFrameBuffer> objc_frame_buffer(
+          static_cast<ObjCFrameBuffer*>(video_frame_buffer.get()));
+      id<RTCVideoFrameBuffer> rtc_frame_buffer =
+          (id<RTCVideoFrameBuffer>)objc_frame_buffer->wrapped_frame_buffer();
+
+      if ([rtc_frame_buffer isKindOfClass:[RTCCVPixelBuffer class]]) {
+        videoFrame = [[RTCVideoFrame alloc]
+            initWithBuffer:rtc_frame_buffer
+                  rotation:static_cast<RTCVideoRotation>(nativeVideoFrame.rotation())
+               timeStampNs:nativeVideoFrame.timestamp_us() * rtc::kNumNanosecsPerMicrosec];
+      } else {
+        // TODO
+      }
+    } else {
+      // TODO
+    }
+
     CGSize current_size = (videoFrame.rotation % 180 == 0)
                               ? CGSizeMake(videoFrame.width, videoFrame.height)
                               : CGSizeMake(videoFrame.height, videoFrame.width);

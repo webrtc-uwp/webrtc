@@ -22,6 +22,8 @@ typedef NS_ENUM(NSInteger, RTCVideoRotation) {
   RTCVideoRotation_270 = 270,
 };
 
+@protocol RTCVideoFrameBuffer;
+
 // RTCVideoFrame is an ObjectiveC version of webrtc::VideoFrame.
 RTC_EXPORT
 @interface RTCVideoFrame : NSObject
@@ -47,16 +49,21 @@ RTC_EXPORT
 @property(nonatomic, readonly) int64_t timeStampNs;
 
 /** The native handle should be a pixel buffer on iOS. */
-@property(nonatomic, readonly) CVPixelBufferRef nativeHandle;
+@property(nonatomic, readonly)
+    CVPixelBufferRef nativeHandle DEPRECATED_MSG_ATTRIBUTE("use buffer instead");
+
+@property(nonatomic, readonly) id<RTCVideoFrameBuffer> buffer;
 
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)new NS_UNAVAILABLE;
 
 /** Initialize an RTCVideoFrame from a pixel buffer, rotation, and timestamp.
+ *  Deprecated - initialize with a RTCCVPixelBuffer instead
  */
 - (instancetype)initWithPixelBuffer:(CVPixelBufferRef)pixelBuffer
                            rotation:(RTCVideoRotation)rotation
-                        timeStampNs:(int64_t)timeStampNs;
+                        timeStampNs:(int64_t)timeStampNs
+    DEPRECATED_MSG_ATTRIBUTE("use initWithBuffer instead");
 
 /** Initialize an RTCVideoFrame from a pixel buffer combined with cropping and
  *  scaling. Cropping will be applied first on the pixel buffer, followed by
@@ -70,7 +77,14 @@ RTC_EXPORT
                               cropX:(int)cropX
                               cropY:(int)cropY
                            rotation:(RTCVideoRotation)rotation
-                        timeStampNs:(int64_t)timeStampNs;
+                        timeStampNs:(int64_t)timeStampNs
+    DEPRECATED_MSG_ATTRIBUTE("use initWithBuffer instead");
+
+/** Initialize an RTCVideoFrame from a frame buffer, rotation, and timestamp.
+ */
+- (instancetype)initWithBuffer:(id<RTCVideoFrameBuffer>)frameBuffer
+                      rotation:(RTCVideoRotation)rotation
+                   timeStampNs:(int64_t)timeStampNs;
 
 /** Return a frame that is guaranteed to be I420, i.e. it is possible to access
  *  the YUV data on it.
