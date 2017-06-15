@@ -27,9 +27,9 @@
 #include "webrtc/common_video/include/i420_buffer_pool.h"
 #include "webrtc/common_video/include/video_frame.h"
 #include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
-#include "webrtc/modules/video_coding/codecs/vp8/temporal_layers.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/modules/video_coding/utility/quality_scaler.h"
+#include "webrtc/modules/video_coding/utility/temporal_layers.h"
 
 namespace webrtc {
 

@@ -38,9 +38,9 @@
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
 #include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
 #include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
-#include "webrtc/modules/video_coding/codecs/vp8/simulcast_encoder_adapter.h"
 #include "webrtc/modules/video_coding/codecs/vp9/include/vp9.h"
 #include "webrtc/modules/video_coding/include/video_coding_defines.h"
+#include "webrtc/modules/video_coding/simulcast_encoder_adapter.h"
 #include "webrtc/system_wrappers/include/metrics.h"
 #include "webrtc/system_wrappers/include/metrics_default.h"
 #include "webrtc/system_wrappers/include/sleep.h"
@@ -138,6 +138,9 @@ class EndToEndTest : public test::CallTest {
   void TestSendsSetSsrcs(size_t num_ssrcs, bool send_single_ssrc_first);
   void TestRtpStatePreservation(bool use_rtx, bool provoke_rtcpsr_before_rtp);
   void TestPictureIdStatePreservation(VideoEncoder* encoder);
+  void TestSimulcastTxAndRx(VideoEncoder* encoder,
+                            const std::string& payload_name,
+                            bool do_picture_id_tests = false);
   void VerifyHistogramStats(bool use_rtx, bool use_red, bool screenshare);
   void VerifyNewVideoSendStreamsRespectNetworkState(
       MediaType network_to_bring_up,
@@ -146,6 +149,29 @@ class EndToEndTest : public test::CallTest {
   void VerifyNewVideoReceiveStreamsRespectNetworkState(
       MediaType network_to_bring_up,
       Transport* transport);
+};
+
+// Helper class for simulcast tests.
+class VideoEncoderFactoryAdapter : public webrtc::VideoEncoderFactory {
+ public:
+  explicit VideoEncoderFactoryAdapter(
+      cricket::WebRtcVideoEncoderFactory* factory,
+      cricket::VideoCodec codec)
+      : factory_(factory), codec_(codec) {}
+  virtual ~VideoEncoderFactoryAdapter() {}
+
+  // Implements webrtc::VideoEncoderFactory.
+  webrtc::VideoEncoder* Create() override {
+    return factory_->CreateVideoEncoder(codec_);
+  }
+
+  void Destroy(webrtc::VideoEncoder* encoder) override {
+    return factory_->DestroyVideoEncoder(encoder);
+  }
+
+ private:
+  cricket::WebRtcVideoEncoderFactory* const factory_;
+  const cricket::VideoCodec codec_;
 };
 
 TEST_F(EndToEndTest, ReceiverCanBeStartedTwice) {
@@ -3936,6 +3962,12 @@ TEST_F(EndToEndTest, RestartingSendStreamKeepsRtpAndRtcpTimestampsSynced) {
 }
 
 void EndToEndTest::TestPictureIdStatePreservation(VideoEncoder* encoder) {
+  TestSimulcastTxAndRx(encoder, "VP8", true);
+}
+
+void EndToEndTest::TestSimulcastTxAndRx(VideoEncoder* encoder,
+                                        const std::string& payload_name,
+                                        bool do_picture_id_tests) {
   const size_t kFrameMaxWidth = 1280;
   const size_t kFrameMaxHeight = 720;
   const size_t kFrameRate = 30;
@@ -3967,7 +3999,7 @@ void EndToEndTest::TestPictureIdStatePreservation(VideoEncoder* encoder) {
         }
 
         // test::CreateVideoStreams does not return frame sizes for the lower
-        // streams that are accepted by VP8Impl::InitEncode.
+        // streams that are accepted by [H264|VP8]Impl::InitEncode.
         // TODO(brandtr): Fix the problem in test::CreateVideoStreams, rather
         // than overriding the values here.
         streams[1].width = streams[2].width / 2;
@@ -3986,10 +4018,13 @@ void EndToEndTest::TestPictureIdStatePreservation(VideoEncoder* encoder) {
     }
   };
 
-  class PictureIdObserver : public test::RtpRtcpObserver {
+  class PacketObserver : public test::RtpRtcpObserver {
    public:
-    PictureIdObserver()
-        : test::RtpRtcpObserver(kDefaultTimeoutMs), num_ssrcs_to_observe_(1) {}
+    PacketObserver(const std::string& payload_name, bool do_picture_id_tests)
+        : test::RtpRtcpObserver(kDefaultTimeoutMs),
+          num_ssrcs_to_observe_(1),
+          payload_name_(payload_name),
+          do_picture_id_tests_(do_picture_id_tests) {}
 
     void ResetExpectations(size_t num_expected_ssrcs) {
       rtc::CritScope lock(&crit_);
@@ -4021,19 +4056,25 @@ void EndToEndTest::TestPictureIdStatePreservation(VideoEncoder* encoder) {
         return SEND_PACKET;
       }
 
-      // VP8 header.
-      std::unique_ptr<RtpDepacketizer> depacketizer(
-          RtpDepacketizer::Create(kRtpVideoVp8));
+      bool is_vp8 = (payload_name_ == "VP8");
+      // VP8/H264 header.
+      std::unique_ptr<RtpDepacketizer> depacketizer;
+      if (is_vp8) {
+        depacketizer.reset(RtpDepacketizer::Create(kRtpVideoVp8));
+      } else {
+        depacketizer.reset(RtpDepacketizer::Create(kRtpVideoH264));
+      }
       RtpDepacketizer::ParsedPayload parsed_payload;
       EXPECT_TRUE(depacketizer->Parse(
           &parsed_payload, &packet[header.headerLength],
           length - header.headerLength - header.paddingLength));
       const uint16_t picture_id =
-          parsed_payload.type.Video.codecHeader.VP8.pictureId;
+          (is_vp8) ? parsed_payload.type.Video.codecHeader.VP8.pictureId : 0;
 
       // If this is the first packet, we have nothing to compare to.
-      if (last_observed_timestamp_.find(ssrc) ==
-          last_observed_timestamp_.end()) {
+      if (is_vp8 && do_picture_id_tests_ &&
+          (last_observed_timestamp_.find(ssrc) ==
+           last_observed_timestamp_.end())) {
         last_observed_timestamp_[ssrc] = timestamp;
         last_observed_picture_id_[ssrc] = picture_id;
         ++num_packets_sent_[ssrc];
@@ -4041,17 +4082,19 @@ void EndToEndTest::TestPictureIdStatePreservation(VideoEncoder* encoder) {
         return SEND_PACKET;
       }
 
-      // Verify continuity and monotonicity of picture_id sequence.
-      if (last_observed_timestamp_[ssrc] == timestamp) {
-        // Packet belongs to same frame as before.
-        EXPECT_EQ(last_observed_picture_id_[ssrc], picture_id);
-      } else {
-        // Packet is a new frame.
-        EXPECT_EQ((last_observed_picture_id_[ssrc] + 1) % (1 << 15),
-                  picture_id);
+      if (is_vp8 && do_picture_id_tests_) {
+        // Verify continuity and monotonicity of picture_id sequence.
+        if (last_observed_timestamp_[ssrc] == timestamp) {
+          // Packet belongs to same frame as before.
+          EXPECT_EQ(last_observed_picture_id_[ssrc], picture_id);
+        } else {
+          // Packet is a new frame.
+          EXPECT_EQ((last_observed_picture_id_[ssrc] + 1) % (1 << 15),
+                    picture_id);
+        }
+        last_observed_timestamp_[ssrc] = timestamp;
+        last_observed_picture_id_[ssrc] = picture_id;
       }
-      last_observed_timestamp_[ssrc] = timestamp;
-      last_observed_picture_id_[ssrc] = picture_id;
 
       // Pass the test when enough media packets have been received
       // on all streams.
@@ -4071,7 +4114,9 @@ void EndToEndTest::TestPictureIdStatePreservation(VideoEncoder* encoder) {
     std::map<uint32_t, size_t> num_packets_sent_ GUARDED_BY(crit_);
     size_t num_ssrcs_to_observe_ GUARDED_BY(crit_);
     std::map<uint32_t, bool> ssrc_observed_ GUARDED_BY(crit_);
-  } observer;
+    const std::string payload_name_;
+    bool do_picture_id_tests_;
+  } observer(payload_name, do_picture_id_tests);
 
   Call::Config config(event_log_.get());
   CreateCalls(config, config);
@@ -4087,7 +4132,7 @@ void EndToEndTest::TestPictureIdStatePreservation(VideoEncoder* encoder) {
 
   CreateSendConfig(kNumSsrcs, 0, 0, &send_transport);
   video_send_config_.encoder_settings.encoder = encoder;
-  video_send_config_.encoder_settings.payload_name = "VP8";
+  video_send_config_.encoder_settings.payload_name = payload_name;
   video_encoder_config_.video_stream_factory =
       new rtc::RefCountedObject<VideoStreamFactory>();
   video_encoder_config_.number_of_streams = 1;
@@ -4137,32 +4182,33 @@ TEST_F(EndToEndTest, PictureIdStateRetainedAfterReinitingVp8) {
 
 TEST_F(EndToEndTest,
        PictureIdStateRetainedAfterReinitingSimulcastEncoderAdapter) {
-  class VideoEncoderFactoryAdapter : public webrtc::VideoEncoderFactory {
-   public:
-    explicit VideoEncoderFactoryAdapter(
-        cricket::WebRtcVideoEncoderFactory* factory)
-        : factory_(factory) {}
-    virtual ~VideoEncoderFactoryAdapter() {}
-
-    // Implements webrtc::VideoEncoderFactory.
-    webrtc::VideoEncoder* Create() override {
-      return factory_->CreateVideoEncoder(
-          cricket::VideoCodec(cricket::kVp8CodecName));
-    }
-
-    void Destroy(webrtc::VideoEncoder* encoder) override {
-      return factory_->DestroyVideoEncoder(encoder);
-    }
-
-   private:
-    cricket::WebRtcVideoEncoderFactory* const factory_;
-  };
-
   cricket::InternalEncoderFactory internal_encoder_factory;
   SimulcastEncoderAdapter simulcast_encoder_adapter(
-      new VideoEncoderFactoryAdapter(&internal_encoder_factory));
+      new VideoEncoderFactoryAdapter(
+          &internal_encoder_factory,
+          cricket::VideoCodec(cricket::kVp8CodecName)));
 
   TestPictureIdStatePreservation(&simulcast_encoder_adapter);
+}
+
+TEST_F(EndToEndTest, Vp8SimulcastTest) {
+  cricket::InternalEncoderFactory internal_encoder_factory;
+  SimulcastEncoderAdapter simulcast_encoder_adapter(
+      new VideoEncoderFactoryAdapter(
+          &internal_encoder_factory,
+          cricket::VideoCodec(cricket::kVp8CodecName)));
+
+  TestSimulcastTxAndRx(&simulcast_encoder_adapter, "VP8");
+}
+
+TEST_F(EndToEndTest, H264SimulcastTest) {
+  cricket::InternalEncoderFactory internal_encoder_factory;
+  SimulcastEncoderAdapter simulcast_encoder_adapter(
+      new VideoEncoderFactoryAdapter(
+          &internal_encoder_factory,
+          cricket::VideoCodec(cricket::kH264CodecName)));
+
+  TestSimulcastTxAndRx(&simulcast_encoder_adapter, "H264");
 }
 
 // This test is flaky on linux_memcheck. Disable on all linux bots until

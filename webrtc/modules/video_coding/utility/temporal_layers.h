@@ -1,16 +1,16 @@
 /* Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
-*
-*  Use of this source code is governed by a BSD-style license
-*  that can be found in the LICENSE file in the root of the source
-*  tree. An additional intellectual property rights grant can be found
-*  in the file PATENTS.  All contributing project authors may
-*  be found in the AUTHORS file in the root of the source tree.
-*/
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
+ */
 /*
-* This file defines the interface for doing temporal layers with VP8.
-*/
-#ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_TEMPORAL_LAYERS_H_
-#define WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_TEMPORAL_LAYERS_H_
+ * This file defines the interface for doing temporal layers with VP8.
+ */
+#ifndef WEBRTC_MODULES_VIDEO_CODING_UTILITY_TEMPORAL_LAYERS_H_
+#define WEBRTC_MODULES_VIDEO_CODING_UTILITY_TEMPORAL_LAYERS_H_
 
 #include <vector>
 
@@ -129,4 +129,4 @@ class TemporalLayersListener {
 };
 
 }  // namespace webrtc
-#endif  // WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_TEMPORAL_LAYERS_H_
+#endif  // WEBRTC_MODULES_VIDEO_CODING_UTILITY_TEMPORAL_LAYERS_H_
