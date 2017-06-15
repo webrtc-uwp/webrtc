@@ -26,7 +26,17 @@ static NSArray<NSString *> *videoCodecsStaticValues() {
 
 @implementation ARDSettingsModel
 
-- (NSArray<NSString *> *)availableVideoResolutions {
++ (void)initialize {
+  [ARDSettingsStore setDefaultsForVideoResolution:[self defaultVideoResolutionSetting]
+                                       videoCodec:[self defaultVideoCodecSetting]
+                                          bitrate:nil
+                                        audioOnly:NO
+                                    createAecDump:NO
+                               useLevelController:NO
+                             useManualAudioConfig:YES];
+}
+
++ (NSArray<NSString *> *)availableVideoResolutions {
   NSMutableSet<NSArray<NSNumber *> *> *resolutions =
       [[NSMutableSet<NSArray<NSNumber *> *> alloc] init];
   for (AVCaptureDevice *device in [RTCCameraVideoCapturer captureDevices]) {
@@ -56,38 +66,27 @@ static NSArray<NSString *> *videoCodecsStaticValues() {
 }
 
 - (NSString *)currentVideoResolutionSettingFromStore {
-  NSString *resolution = [[self settingsStore] videoResolution];
-  if (!resolution) {
-    resolution = [self defaultVideoResolutionSetting];
-    // To ensure consistency add the default to the store.
-    [[self settingsStore] setVideoResolution:resolution];
-  }
-  return resolution;
+  return [[self settingsStore] videoResolution];
 }
 
 - (BOOL)storeVideoResolutionSetting:(NSString *)resolution {
-  if (![[self availableVideoResolutions] containsObject:resolution]) {
+  if (![[self.class availableVideoResolutions] containsObject:resolution]) {
     return NO;
   }
   [[self settingsStore] setVideoResolution:resolution];
   return YES;
 }
 
-- (NSArray<NSString *> *)availableVideoCodecs {
++ (NSArray<NSString *> *)availableVideoCodecs {
   return videoCodecsStaticValues();
 }
 
 - (NSString *)currentVideoCodecSettingFromStore {
-  NSString *videoCodec = [[self settingsStore] videoCodec];
-  if (!videoCodec) {
-    videoCodec = [self defaultVideoCodecSetting];
-    [[self settingsStore] setVideoCodec:videoCodec];
-  }
-  return videoCodec;
+  return [[self settingsStore] videoCodec];
 }
 
 - (BOOL)storeVideoCodecSetting:(NSString *)videoCodec {
-  if (![[self availableVideoCodecs] containsObject:videoCodec]) {
+  if (![[self.class availableVideoCodecs] containsObject:videoCodec]) {
     return NO;
   }
   [[self settingsStore] setVideoCodec:videoCodec];
@@ -100,6 +99,38 @@ static NSArray<NSString *> *videoCodecsStaticValues() {
 
 - (void)storeMaxBitrateSetting:(nullable NSNumber *)bitrate {
   [[self settingsStore] setMaxBitrate:bitrate];
+}
+
+- (BOOL)currentAudioOnlySettingFromStore {
+  return [[self settingsStore] audioOnly];
+}
+
+- (void)storeAudioOnlySetting:(BOOL)audioOnly {
+  [[self settingsStore] setAudioOnly:audioOnly];
+}
+
+- (BOOL)currentCreateAecDumpSettingFromStore {
+  return [[self settingsStore] createAecDump];
+}
+
+- (void)storeCreateAecDumpSetting:(BOOL)createAecDump {
+  [[self settingsStore] setCreateAecDump:createAecDump];
+}
+
+- (BOOL)currentUseLevelControllerSettingFromStore {
+  return [[self settingsStore] useLevelController];
+}
+
+- (void)storeUseLevelControllerSetting:(BOOL)useLevelController {
+  [[self settingsStore] setUseLevelController:useLevelController];
+}
+
+- (BOOL)currentUseManualAudioConfigSettingFromStore {
+  return [[self settingsStore] useManualAudioConfig];
+}
+
+- (void)storeUseManualAudioConfigSetting:(BOOL)useManualAudioConfig {
+  [[self settingsStore] setUseManualAudioConfig:useManualAudioConfig];
 }
 
 #pragma mark - Testable
@@ -124,8 +155,12 @@ static NSArray<NSString *> *videoCodecsStaticValues() {
 
 #pragma mark -
 
-- (NSString *)defaultVideoResolutionSetting {
++ (NSString *)defaultVideoResolutionSetting {
   return [self availableVideoResolutions][0];
+}
+
++ (NSString *)defaultVideoCodecSetting {
+  return videoCodecsStaticValues()[0];
 }
 
 - (int)videoResolutionComponentAtIndex:(int)index inString:(NSString *)resolution {
@@ -137,10 +172,6 @@ static NSArray<NSString *> *videoCodecsStaticValues() {
     return 0;
   }
   return components[index].intValue;
-}
-
-- (NSString *)defaultVideoCodecSetting {
-  return videoCodecsStaticValues()[0];
 }
 
 @end
