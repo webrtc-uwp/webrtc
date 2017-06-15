@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "80f294fc_8a8e1d84",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T09:19:42Z",
+      "side": 1,
+      "message": "There is a problem that this method should return the codec in order of preference. So the order should be VP8, VP9, H264-high, H264",
+      "range": {
+        "startLine": 96,
+        "startChar": 26,
+        "endLine": 96,
+        "endChar": 44
+      },
+      "revId": "a03fcf44f8cb673f701c16fbb108ffc35313e32e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a329b2d_99fb7920",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T09:19:42Z",
+      "side": 1,
+      "message": "nit: I don\u0027t quite like how this method looks like now. Can we add a helper method getCodecProperties?",
+      "revId": "a03fcf44f8cb673f701c16fbb108ffc35313e32e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0887f111_09ef6b92",
+        "filename": "webrtc/sdk/android/instrumentationtests/src/org/webrtc/HardwareVideoEncoderTest.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T09:19:42Z",
+      "side": 1,
+      "message": "nit: 2017",
+      "range": {
+        "startLine": 2,
+        "startChar": 14,
+        "endLine": 2,
+        "endChar": 18
+      },
+      "revId": "a03fcf44f8cb673f701c16fbb108ffc35313e32e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "506c8367_230f2c41",
+        "filename": "webrtc/sdk/android/instrumentationtests/src/org/webrtc/HardwareVideoEncoderTest.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-15T09:19:42Z",
+      "side": 1,
+      "message": "nit: Initialize",
+      "range": {
+        "startLine": 58,
+        "startChar": 14,
+        "endLine": 58,
+        "endChar": 40
+      },
+      "revId": "a03fcf44f8cb673f701c16fbb108ffc35313e32e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
