@@ -22,6 +22,30 @@
       "revId": "9af73de3c04d6a8972a4f15ae8a687562a44d161",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ffb7b580_d69d4465",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoRenderer.java",
+        "patchSetId": 7
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-16T08:10:12Z",
+      "side": 1,
+      "message": ":D Oops.",
+      "parentUuid": "a842a796_e2612bdc",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 31
+      },
+      "revId": "9af73de3c04d6a8972a4f15ae8a687562a44d161",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }

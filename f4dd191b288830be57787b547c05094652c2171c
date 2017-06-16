@@ -22,6 +22,30 @@
       "revId": "f4dd191b288830be57787b547c05094652c2171c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ae1ddbc_f8123e1d",
+        "filename": "webrtc/sdk/android/src/jni/native_handle_impl.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-16T08:10:12Z",
+      "side": 0,
+      "message": "Done",
+      "parentUuid": "2fa175aa_827ca00f",
+      "range": {
+        "startLine": 66,
+        "startChar": 1,
+        "endLine": 66,
+        "endChar": 8
+      },
+      "revId": "f4dd191b288830be57787b547c05094652c2171c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
