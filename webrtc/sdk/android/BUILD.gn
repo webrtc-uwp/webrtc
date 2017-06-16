@@ -46,6 +46,10 @@ rtc_static_library("libjingle_peerconnection_jni") {
     "src/jni/rtcstatscollectorcallbackwrapper.h",
     "src/jni/surfacetexturehelper_jni.cc",
     "src/jni/surfacetexturehelper_jni.h",
+    "src/jni/videodecoderfactorywrapper.cc",
+    "src/jni/videodecoderfactorywrapper.h",
+    "src/jni/videodecoderwrapper.cc",
+    "src/jni/videodecoderwrapper.h",
     "src/jni/wrapped_native_i420_buffer.cc",
     "src/jni/wrapped_native_i420_buffer.h",
   ]
@@ -197,6 +201,7 @@ android_library("libjingle_peerconnection_java") {
     "api/org/webrtc/VideoCodecInfo.java",
     "api/org/webrtc/VideoCodecStatus.java",
     "api/org/webrtc/VideoDecoder.java",
+    "api/org/webrtc/VideoDecoderFactory.java",
     "api/org/webrtc/VideoEncoder.java",
     "api/org/webrtc/VideoFileRenderer.java",
     "api/org/webrtc/VideoFrame.java",
@@ -216,6 +221,7 @@ android_library("libjingle_peerconnection_java") {
     "src/java/org/webrtc/FramerateBitrateAdjuster.java",
     "src/java/org/webrtc/HardwareVideoEncoder.java",
     "src/java/org/webrtc/Histogram.java",
+    "src/java/org/webrtc/VideoDecoderWrapperCallback.java",
     "src/java/org/webrtc/WrappedNativeI420Buffer.java",
     "src/java/org/webrtc/YuvConverter.java",
   ]
