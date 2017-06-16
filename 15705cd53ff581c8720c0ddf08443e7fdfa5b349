@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9c80d1e_1f7f7999",
+        "filename": "webrtc/pc/iceserverparsing.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-06-16T06:46:21Z",
+      "side": 1,
+      "message": "As mentioned before, this message could be more descriptive. The comment above it could just be folded into it.",
+      "range": {
+        "startLine": 244,
+        "startChar": 14,
+        "endLine": 244,
+        "endChar": 22
+      },
+      "revId": "15705cd53ff581c8720c0ddf08443e7fdfa5b349",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
