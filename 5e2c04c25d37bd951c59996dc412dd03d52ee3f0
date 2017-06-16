@@ -404,6 +404,30 @@
     },
     {
       "key": {
+        "uuid": "a7ff2a34_517cce88",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-16T09:00:02Z",
+      "side": 1,
+      "message": "We have:\nY plane: width * height bytes\nU plane: width * height / 2 bytes\nV plane: width * height / 2 bytes\n\nWhen you sum these you get width * height * 3 / 2.",
+      "parentUuid": "688b4536_3879b353",
+      "range": {
+        "startLine": 282,
+        "startChar": 47,
+        "endLine": 282,
+        "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "71b12f2e_dc7e6d20",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
         "patchSetId": 2
@@ -438,6 +462,29 @@
       "writtenOn": "2017-06-15T23:59:32Z",
       "side": 1,
       "message": "So where does this formula come from?",
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9bc63351_26a68364",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-16T09:00:02Z",
+      "side": 1,
+      "message": "nit: make these TODOs",
+      "range": {
+        "startLine": 298,
+        "startChar": 18,
+        "endLine": 298,
+        "endChar": 30
+      },
       "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -546,6 +593,29 @@
         "startChar": 15,
         "endLine": 398,
         "endChar": 0
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a18a964_a4115db4",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-16T09:00:02Z",
+      "side": 1,
+      "message": "Can you use ThreadUtils.ThreadChecker?",
+      "range": {
+        "startLine": 457,
+        "startChar": 15,
+        "endLine": 457,
+        "endChar": 34
       },
       "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",

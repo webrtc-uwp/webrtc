@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "9f9c8694_59241534",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-16T09:00:02Z",
+      "side": 1,
+      "message": "On the old implementation dequeueOutputBuffer was called on the same thread as all the other methods. I suggest you come up with safe synchronization rules (possibly adding locks) and document them with comments.",
+      "parentUuid": "ed132d16_eb7f6eba",
+      "range": {
+        "startLine": 68,
+        "startChar": 14,
+        "endLine": 68,
+        "endChar": 19
+      },
+      "revId": "0a1afbf638b2769d160d097048b2634805e1857b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6dafa5b8_5fe739fd",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
         "patchSetId": 1
