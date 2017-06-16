@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "52e78ba9_977f50ea",
+        "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-16T15:25:11Z",
+      "side": 1,
+      "message": "I am in favor of one function. So two votes for one function. I hope Michael will be ok with it.",
+      "parentUuid": "148375ce_4fded7a6",
+      "revId": "53a215d37bd9fa2c4fbcc528ec9c12e0c6ff5e40",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e7b480da_4e578e39",
         "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager_unittest.cc",
         "patchSetId": 4
