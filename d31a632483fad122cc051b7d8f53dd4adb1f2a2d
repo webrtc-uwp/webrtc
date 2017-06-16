@@ -45,6 +45,122 @@
       "revId": "d31a632483fad122cc051b7d8f53dd4adb1f2a2d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "09a09f51_d2b19a0e",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoDecoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-16T09:07:18Z",
+      "side": 1,
+      "message": "For decoder factory this should indeed be the case.",
+      "parentUuid": "9a857785_c27c011e",
+      "range": {
+        "startLine": 39,
+        "startChar": 59,
+        "endLine": 39,
+        "endChar": 0
+      },
+      "revId": "d31a632483fad122cc051b7d8f53dd4adb1f2a2d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "662d364d_f7f1e994",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoDecoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-16T09:07:18Z",
+      "side": 1,
+      "message": "This was a mistake in the design, it should be String type. C++ gets webrtc::VideoCodecType.",
+      "range": {
+        "startLine": 19,
+        "startChar": 36,
+        "endLine": 19,
+        "endChar": 50
+      },
+      "revId": "d31a632483fad122cc051b7d8f53dd4adb1f2a2d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1c17b4f_c2353d84",
+        "filename": "webrtc/sdk/android/instrumentationtests/src/org/webrtc/HardwareVideoDecoderTest.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-16T09:07:18Z",
+      "side": 1,
+      "message": "nit: Have you checked how long these tests take?",
+      "range": {
+        "startLine": 37,
+        "startChar": 3,
+        "endLine": 37,
+        "endChar": 13
+      },
+      "revId": "d31a632483fad122cc051b7d8f53dd4adb1f2a2d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "77f8f7d8_d9aecdb6",
+        "filename": "webrtc/sdk/android/instrumentationtests/src/org/webrtc/HardwareVideoDecoderTest.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-16T09:07:18Z",
+      "side": 1,
+      "message": "nit: SETTINGS.width",
+      "range": {
+        "startLine": 119,
+        "startChar": 47,
+        "endLine": 119,
+        "endChar": 50
+      },
+      "revId": "d31a632483fad122cc051b7d8f53dd4adb1f2a2d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f74e43d_dc266582",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/MediaCodecUtils.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-16T09:07:18Z",
+      "side": 1,
+      "message": "I don\u0027t think this method is very useful. The null checks are not shorter than the exception handling here.",
+      "range": {
+        "startLine": 56,
+        "startChar": 20,
+        "endLine": 56,
+        "endChar": 37
+      },
+      "revId": "d31a632483fad122cc051b7d8f53dd4adb1f2a2d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
