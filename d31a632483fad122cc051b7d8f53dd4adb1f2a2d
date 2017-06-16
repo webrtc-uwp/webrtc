@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd0a21e7_71995abb",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoDecoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-16T00:02:29Z",
+      "side": 1,
+      "message": "I think I\u0027ve seen this list three times now.  Can we consolidate them?",
+      "range": {
+        "startLine": 36,
+        "startChar": 66,
+        "endLine": 36,
+        "endChar": 0
+      },
+      "revId": "d31a632483fad122cc051b7d8f53dd4adb1f2a2d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a857785_c27c011e",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoDecoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-16T00:02:29Z",
+      "side": 1,
+      "message": "I still think we shouldn\u0027t bother with this silly VideoCodecInfo class when all we use is the name.",
+      "range": {
+        "startLine": 39,
+        "startChar": 59,
+        "endLine": 39,
+        "endChar": 0
+      },
+      "revId": "d31a632483fad122cc051b7d8f53dd4adb1f2a2d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
