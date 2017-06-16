@@ -19,6 +19,13 @@
 @synthesize credential = _credential;
 @synthesize tlsCertPolicy = _tlsCertPolicy;
 
+/**
+  If the URIs in |urls| only contain IP addresses, this field can be used
+  to indicate the hostname, which may be necessary for TLS (using the SNI
+  extension). If |urls| itself contains the hostname, this isn't necessary.
+ */
+@synthesize hostname = _hostname;
+
 - (instancetype)initWithURLStrings:(NSArray<NSString *> *)urlStrings {
   return [self initWithURLStrings:urlStrings
                          username:nil
@@ -38,21 +45,36 @@
                           username:(NSString *)username
                         credential:(NSString *)credential
                      tlsCertPolicy:(RTCTlsCertPolicy)tlsCertPolicy {
+  return [self initWithURLStrings:urlStrings
+                         username:username
+                       credential:credential
+                    tlsCertPolicy:RTCTlsCertPolicySecure
+                         hsotname:nil];
+}
+
+- (instancetype)initWithURLStrings:(NSArray<NSString *> *)urlStrings
+                          username:(NSString *)username
+                        credential:(NSString *)credential
+                     tlsCertPolicy:(RTCTlsCertPolicy)tlsCertPolicy
+                          hostname:(NSString *)hostname {
   NSParameterAssert(urlStrings.count);
   if (self = [super init]) {
     _urlStrings = [[NSArray alloc] initWithArray:urlStrings copyItems:YES];
     _username = [username copy];
     _credential = [credential copy];
     _tlsCertPolicy = tlsCertPolicy;
+    _hostname = hostname;
   }
   return self;
 }
 
 - (NSString *)description {
-  return
-      [NSString stringWithFormat:@"RTCIceServer:\n%@\n%@\n%@\n%@", _urlStrings,
-                                 _username, _credential,
-                                 [self stringForTlsCertPolicy:_tlsCertPolicy]];
+  return [NSString stringWithFormat:@"RTCIceServer:\n%@\n%@\n%@\n%@\n%@",
+                                    _urlStrings,
+                                    _username,
+                                    _credential,
+                                    [self stringForTlsCertPolicy:_tlsCertPolicy],
+                                    _hostname];
 }
 
 #pragma mark - Private
@@ -71,6 +93,7 @@
 
   iceServer.username = [NSString stdStringForString:_username];
   iceServer.password = [NSString stdStringForString:_credential];
+  iceServer.hostname = [NSString stdStringForString:_hostname];
 
   [_urlStrings enumerateObjectsUsingBlock:^(NSString *url,
                                             NSUInteger idx,
@@ -100,6 +123,7 @@
   }
   NSString *username = [NSString stringForStdString:nativeServer.username];
   NSString *credential = [NSString stringForStdString:nativeServer.password];
+  NSString *hostname = [NSString stringForStdString:nativeServer.hostname];
   RTCTlsCertPolicy tlsCertPolicy;
 
   switch (nativeServer.tls_cert_policy) {
@@ -114,7 +138,8 @@
   self = [self initWithURLStrings:urls
                          username:username
                        credential:credential
-                    tlsCertPolicy:tlsCertPolicy];
+                    tlsCertPolicy:tlsCertPolicy
+                         hostname:hostname];
   return self;
 }
 
