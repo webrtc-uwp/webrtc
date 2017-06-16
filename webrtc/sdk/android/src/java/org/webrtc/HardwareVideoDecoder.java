@@ -37,13 +37,6 @@ class HardwareVideoDecoder implements VideoDecoder {
   private static final String MEDIA_FORMAT_KEY_CROP_TOP = "crop-top";
   private static final String MEDIA_FORMAT_KEY_CROP_BOTTOM = "crop-bottom";
 
-  // NV12 color format supported by QCOM codec, but not declared in MediaCodec -
-  // see /hardware/qcom/media/mm-core/inc/OMX_QCOMExtns.h
-  private static final int COLOR_QCOM_FORMATYVU420PackedSemiPlanar32m4ka = 0x7FA30C01;
-  private static final int COLOR_QCOM_FORMATYVU420PackedSemiPlanar16m4ka = 0x7FA30C02;
-  private static final int COLOR_QCOM_FORMATYVU420PackedSemiPlanar64x32Tile2m8ka = 0x7FA30C03;
-  private static final int COLOR_QCOM_FORMATYUV420PackedSemiPlanar32m = 0x7FA30C04;
-
   // MediaCodec.release() occasionally hangs.  Release stops waiting and reports failure after
   // this timeout.
   private static final int MEDIA_CODEC_RELEASE_TIMEOUT_MS = 5000;
@@ -126,9 +119,10 @@ class HardwareVideoDecoder implements VideoDecoder {
     hasDecodedFirstFrame = false;
     keyFrameRequired = true;
 
-    codec = createCodecByName(codecName);
-    if (codec == null) {
-      Logging.e(TAG, "Cannot create media decoder");
+    try {
+      codec = MediaCodec.createByCodecName(codecName);
+    } catch (IOException | IllegalArgumentException e) {
+      Logging.e(TAG, "Cannot create media decoder " + codecName);
       return VideoCodecStatus.ERROR;
     }
     try {
@@ -458,18 +452,12 @@ class HardwareVideoDecoder implements VideoDecoder {
   }
 
   private boolean isSupportedColorFormat(int colorFormat) {
-    switch (colorFormat) {
-      case CodecCapabilities.COLOR_FormatYUV420Planar:
-      case CodecCapabilities.COLOR_FormatYUV420SemiPlanar:
-      case CodecCapabilities.COLOR_QCOM_FormatYUV420SemiPlanar:
-      case COLOR_QCOM_FORMATYVU420PackedSemiPlanar32m4ka:
-      case COLOR_QCOM_FORMATYVU420PackedSemiPlanar16m4ka:
-      case COLOR_QCOM_FORMATYVU420PackedSemiPlanar64x32Tile2m8ka:
-      case COLOR_QCOM_FORMATYUV420PackedSemiPlanar32m:
+    for (int supported : MediaCodecUtils.DECODER_COLOR_FORMATS) {
+      if (supported == colorFormat) {
         return true;
-      default:
-        return false;
+      }
     }
+    return false;
   }
 
   private static void copyI420(ByteBuffer src, int offset, VideoFrame.I420Buffer frameBuffer,
@@ -537,15 +525,6 @@ class HardwareVideoDecoder implements VideoDecoder {
   private static void copyRow(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int width) {
     for (int i = 0; i < width; ++i) {
       dst.put(dstPos + i, src.get(srcPos + i));
-    }
-  }
-
-  private static MediaCodec createCodecByName(String name) {
-    try {
-      return MediaCodec.createByCodecName(name);
-    } catch (IOException | IllegalArgumentException e) {
-      Logging.e(TAG, "createCodecByName failed", e);
-      return null;
     }
   }
 }
