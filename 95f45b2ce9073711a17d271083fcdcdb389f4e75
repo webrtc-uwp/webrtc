@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bcd4bcb5_d586a2af",
+        "filename": "webrtc/pc/iceserverparsing.cc",
+        "patchSetId": 8
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-06-16T19:29:48Z",
+      "side": 1,
+      "message": "\"IceServer has hostname field set, but URI does not contain an IP address.\"",
+      "range": {
+        "startLine": 247,
+        "startChar": 28,
+        "endLine": 247,
+        "endChar": 38
+      },
+      "revId": "95f45b2ce9073711a17d271083fcdcdb389f4e75",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
