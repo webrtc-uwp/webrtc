@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f2ac9195_c984bded",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 3
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-16T08:49:02Z",
+      "side": 1,
+      "message": "Since it is a posted task, how accurate is the timestamp?",
+      "range": {
+        "startLine": 385,
+        "startChar": 11,
+        "endLine": 385,
+        "endChar": 15
+      },
+      "revId": "6af9b3983c00625a5b7bf060cdfc834ad589d600",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e1edce8_d5c10e25",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 3
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-16T08:49:02Z",
+      "side": 1,
+      "message": "can we detect device switch (like we do to volume change)?",
+      "range": {
+        "startLine": 485,
+        "startChar": 10,
+        "endLine": 485,
+        "endChar": 20
+      },
+      "revId": "6af9b3983c00625a5b7bf060cdfc834ad589d600",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
