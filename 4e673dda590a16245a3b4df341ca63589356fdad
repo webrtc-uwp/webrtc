@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24348ccc_bd1ba281",
+        "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCIceServer.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1126939
+      },
+      "writtenOn": "2017-06-16T22:40:43Z",
+      "side": 1,
+      "message": "@property(nonatomic, readonly, nullable)",
+      "range": {
+        "startLine": 44,
+        "startChar": 21,
+        "endLine": 44,
+        "endChar": 29
+      },
+      "revId": "4e673dda590a16245a3b4df341ca63589356fdad",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
