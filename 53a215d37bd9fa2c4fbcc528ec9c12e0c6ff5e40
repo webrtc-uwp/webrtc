@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f28fa7c3_504fb6bc",
+        "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-16T13:17:09Z",
+      "side": 1,
+      "message": "to avoid using default value.",
+      "parentUuid": "7d222c95_7635e6b8",
+      "revId": "53a215d37bd9fa2c4fbcc528ec9c12e0c6ff5e40",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e7b480da_4e578e39",
         "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager_unittest.cc",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2017-06-16T13:06:42Z",
       "side": 1,
       "message": "It looks to me like you\u0027ve added two straightforward lines to Create and then 30 lines of tests. Are there some corner-cases I\u0027m not seeing?",
+      "revId": "53a215d37bd9fa2c4fbcc528ec9c12e0c6ff5e40",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b3a05398_4ebb1a1e",
+        "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager_unittest.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-16T13:17:09Z",
+      "side": 1,
+      "message": "Most of this test are preparatory work. 348-359 being preparation for the protobuf string that passes to the creation function. 364-372 being setting expectation values.",
+      "parentUuid": "e7b480da_4e578e39",
       "revId": "53a215d37bd9fa2c4fbcc528ec9c12e0c6ff5e40",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
