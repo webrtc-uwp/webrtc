@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "8d9c302e_93d7d95b",
+        "filename": "webrtc/sdk/android/src/jni/peerconnection_jni.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 1703,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-16T21:53:33Z",
+      "side": 1,
+      "message": "Can you ensure this works correctly if hostname is null?",
+      "revId": "c7f056e855f8bd3c6f31498f7c0353d00fdf69c3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8502f7c0_b4a044b5",
         "filename": "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCIceServer.mm",
         "patchSetId": 10
