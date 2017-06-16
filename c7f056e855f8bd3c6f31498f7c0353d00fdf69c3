@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8502f7c0_b4a044b5",
+        "filename": "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCIceServer.mm",
+        "patchSetId": 10
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1126939
+      },
+      "writtenOn": "2017-06-16T21:42:54Z",
+      "side": 1,
+      "message": "typo?",
+      "range": {
+        "startLine": 46,
+        "startChar": 25,
+        "endLine": 46,
+        "endChar": 33
+      },
+      "revId": "c7f056e855f8bd3c6f31498f7c0353d00fdf69c3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f073a276_578eca6c",
+        "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCIceServer.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1126939
+      },
+      "writtenOn": "2017-06-16T21:42:54Z",
+      "side": 1,
+      "message": "Is this an array or just a string? (It\u0027s a string below in ctor)\nnit: pluralize to hostnames if it is an array\n\nIf it is an array, doco what the mapping is? Is there a guarantee that the length of hostnames is equal to the urlStrings and it\u0027s a 1:1 mapping?",
+      "range": {
+        "startLine": 44,
+        "startChar": 35,
+        "endLine": 44,
+        "endChar": 36
+      },
+      "revId": "c7f056e855f8bd3c6f31498f7c0353d00fdf69c3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
