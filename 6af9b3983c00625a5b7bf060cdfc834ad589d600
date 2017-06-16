@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "32f33f85_59d9e2ce",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 3
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-16T08:57:16Z",
+      "side": 1,
+      "message": "It will not be super accurate but that does not matter. I avoid doing glitch checking for 2 seconds now but 3 works as well. It is not tested on all iPhone devices but it works well on iPhone7 as is. This way we don\u0027t need any locks and that is worth a lot.",
+      "parentUuid": "f2ac9195_c984bded",
+      "range": {
+        "startLine": 385,
+        "startChar": 11,
+        "endLine": 385,
+        "endChar": 15
+      },
+      "revId": "6af9b3983c00625a5b7bf060cdfc834ad589d600",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6e1edce8_d5c10e25",
         "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2017-06-16T08:49:02Z",
       "side": 1,
       "message": "can we detect device switch (like we do to volume change)?",
+      "range": {
+        "startLine": 485,
+        "startChar": 10,
+        "endLine": 485,
+        "endChar": 20
+      },
+      "revId": "6af9b3983c00625a5b7bf060cdfc834ad589d600",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b50dc08_c83163a4",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 3
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-16T08:57:16Z",
+      "side": 1,
+      "message": "Good question. Yes, it is possible but it is much more complicated since it involves a long sequence of different callbacks: sample rate change, routing change, microphone change etc. I tried it but it turned out to be too complex. Also, audio callbacks turned out to become active before the sequence of changes had stopped. Hence, I could not find any good reference point. I instead looked at the delta times and found that they were always \u003e 120 in combination with device switches and figured it would be much less complex to use really high values as trigger instead.",
+      "parentUuid": "6e1edce8_d5c10e25",
       "range": {
         "startLine": 485,
         "startChar": 10,
