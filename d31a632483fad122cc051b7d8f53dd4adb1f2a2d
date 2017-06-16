@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5f007954_1c505bad",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoDecoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-16T22:44:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dd0a21e7_71995abb",
+      "range": {
+        "startLine": 36,
+        "startChar": 66,
+        "endLine": 36,
+        "endChar": 0
+      },
+      "revId": "d31a632483fad122cc051b7d8f53dd4adb1f2a2d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a857785_c27c011e",
         "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoDecoderFactory.java",
         "patchSetId": 2
@@ -72,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "186922e3_eb203afb",
+        "filename": "webrtc/sdk/android/api/org/webrtc/HardwareVideoDecoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-16T22:44:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "09a09f51_d2b19a0e",
+      "range": {
+        "startLine": 39,
+        "startChar": 59,
+        "endLine": 39,
+        "endChar": 0
+      },
+      "revId": "d31a632483fad122cc051b7d8f53dd4adb1f2a2d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "662d364d_f7f1e994",
         "filename": "webrtc/sdk/android/api/org/webrtc/VideoDecoderFactory.java",
         "patchSetId": 2
@@ -95,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "52500832_46b3c522",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoDecoderFactory.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-16T22:44:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "662d364d_f7f1e994",
+      "range": {
+        "startLine": 19,
+        "startChar": 36,
+        "endLine": 19,
+        "endChar": 50
+      },
+      "revId": "d31a632483fad122cc051b7d8f53dd4adb1f2a2d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f1c17b4f_c2353d84",
         "filename": "webrtc/sdk/android/instrumentationtests/src/org/webrtc/HardwareVideoDecoderTest.java",
         "patchSetId": 2
@@ -106,6 +178,30 @@
       "writtenOn": "2017-06-16T09:07:18Z",
       "side": 1,
       "message": "nit: Have you checked how long these tests take?",
+      "range": {
+        "startLine": 37,
+        "startChar": 3,
+        "endLine": 37,
+        "endChar": 13
+      },
+      "revId": "d31a632483fad122cc051b7d8f53dd4adb1f2a2d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47ff9b4c_17d38eb2",
+        "filename": "webrtc/sdk/android/instrumentationtests/src/org/webrtc/HardwareVideoDecoderTest.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-16T22:44:29Z",
+      "side": 1,
+      "message": "They each take about 1.8 seconds.  Should they be small tests at that length?",
+      "parentUuid": "f1c17b4f_c2353d84",
       "range": {
         "startLine": 37,
         "startChar": 3,
@@ -141,6 +237,30 @@
     },
     {
       "key": {
+        "uuid": "e7676b0d_06d9f00c",
+        "filename": "webrtc/sdk/android/instrumentationtests/src/org/webrtc/HardwareVideoDecoderTest.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-16T22:44:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "77f8f7d8_d9aecdb6",
+      "range": {
+        "startLine": 119,
+        "startChar": 47,
+        "endLine": 119,
+        "endChar": 50
+      },
+      "revId": "d31a632483fad122cc051b7d8f53dd4adb1f2a2d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4f74e43d_dc266582",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/MediaCodecUtils.java",
         "patchSetId": 2
@@ -161,6 +281,30 @@
       "revId": "d31a632483fad122cc051b7d8f53dd4adb1f2a2d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a89a0dc8_fe1843b4",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/MediaCodecUtils.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-16T22:44:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4f74e43d_dc266582",
+      "range": {
+        "startLine": 56,
+        "startChar": 20,
+        "endLine": 56,
+        "endChar": 37
+      },
+      "revId": "d31a632483fad122cc051b7d8f53dd4adb1f2a2d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
