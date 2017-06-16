@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b1fc97c_3eeb09d2",
+        "filename": "webrtc/sdk/android/instrumentationtests/src/org/webrtc/HardwareVideoEncoderTest.java",
+        "patchSetId": 12
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-16T08:39:35Z",
+      "side": 1,
+      "message": "If this is something that takes \u003c 1 second, make it a small test. Same for other.",
+      "range": {
+        "startLine": 42,
+        "startChar": 3,
+        "endLine": 42,
+        "endChar": 13
+      },
+      "revId": "ad94042d74803ec99e0a3d7870610a84d8f5f897",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e8c6b86_a0eeaedf",
+        "filename": "webrtc/sdk/android/instrumentationtests/src/org/webrtc/HardwareVideoEncoderTest.java",
+        "patchSetId": 12
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-16T08:39:35Z",
+      "side": 1,
+      "message": "nit: I think this should have warning level.",
+      "range": {
+        "startLine": 48,
+        "startChar": 10,
+        "endLine": 48,
+        "endChar": 11
+      },
+      "revId": "ad94042d74803ec99e0a3d7870610a84d8f5f897",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "117160b6_ba28ff8a",
+        "filename": "webrtc/sdk/android/instrumentationtests/src/org/webrtc/HardwareVideoEncoderTest.java",
+        "patchSetId": 12
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-16T08:39:35Z",
+      "side": 1,
+      "message": "Maybe we should add these tests when the implementation exists.",
+      "range": {
+        "startLine": 58,
+        "startChar": 14,
+        "endLine": 58,
+        "endChar": 41
+      },
+      "revId": "ad94042d74803ec99e0a3d7870610a84d8f5f897",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
