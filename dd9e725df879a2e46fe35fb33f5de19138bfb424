@@ -34,6 +34,24 @@
       "revId": "dd9e725df879a2e46fe35fb33f5de19138bfb424",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21f3f814_129fc577",
+        "filename": "webrtc/pc/iceserverparsing.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-06-16T04:56:50Z",
+      "side": 1,
+      "message": "hmm, OK. I would prefer to keep this simple, so I think the way you had it (with just the hostname.empty check) is better.\n\nA comment at the start of this section would be good to explain the intent, for posterity.",
+      "parentUuid": "eaa86c95_fd4d9a6d",
+      "revId": "dd9e725df879a2e46fe35fb33f5de19138bfb424",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
