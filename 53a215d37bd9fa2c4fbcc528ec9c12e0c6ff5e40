@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d222c95_7635e6b8",
+        "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1146556
+      },
+      "writtenOn": "2017-06-16T13:06:42Z",
+      "side": 1,
+      "message": "Why do you need two versions of Create? Backwards-compatibility? I see there was some offline discussion, but I wasn\u0027t part of that. :)",
+      "revId": "53a215d37bd9fa2c4fbcc528ec9c12e0c6ff5e40",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e7b480da_4e578e39",
+        "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager_unittest.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1146556
+      },
+      "writtenOn": "2017-06-16T13:06:42Z",
+      "side": 1,
+      "message": "It looks to me like you\u0027ve added two straightforward lines to Create and then 30 lines of tests. Are there some corner-cases I\u0027m not seeing?",
+      "revId": "53a215d37bd9fa2c4fbcc528ec9c12e0c6ff5e40",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
