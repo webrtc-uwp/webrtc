@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a0f16aed_e350d207",
+        "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/encoder.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-16T08:38:16Z",
+      "side": 0,
+      "message": "You should still set |unique_ptr| to nullptr here.",
+      "range": {
+        "startLine": 608,
+        "startChar": 4,
+        "endLine": 608,
+        "endChar": 35
+      },
+      "revId": "67561a6411f308d122c5707e9a5ec574ad59cd3a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
