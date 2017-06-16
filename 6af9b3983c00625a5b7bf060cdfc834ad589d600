@@ -117,6 +117,30 @@
       "revId": "6af9b3983c00625a5b7bf060cdfc834ad589d600",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f380b65a_095ff9fb",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 3
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-16T09:34:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "40fcf1b8_7a753047",
+      "range": {
+        "startLine": 485,
+        "startChar": 10,
+        "endLine": 485,
+        "endChar": 20
+      },
+      "revId": "6af9b3983c00625a5b7bf060cdfc834ad589d600",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
