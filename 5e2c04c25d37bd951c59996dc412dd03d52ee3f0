@@ -895,6 +895,30 @@
     },
     {
       "key": {
+        "uuid": "d24f920d_6d150d70",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-06-16T23:58:13Z",
+      "side": 1,
+      "message": "Oh, I misread it.  Maybe I was going cross-eyed at this point in the file.",
+      "parentUuid": "dfb4d867_23d0772a",
+      "range": {
+        "startLine": 287,
+        "startChar": 44,
+        "endLine": 287,
+        "endChar": 45
+      },
+      "revId": "5e2c04c25d37bd951c59996dc412dd03d52ee3f0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0d011650_aaaf3003",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
         "patchSetId": 2
