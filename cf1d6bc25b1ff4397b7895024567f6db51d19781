@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "90ebee92_e01de487",
+        "filename": "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCI420Buffer.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-17T15:35:12Z",
+      "side": 1,
+      "message": "These static cast are not very nice, but the alternative would be to duplicate all code in this file, so I think it\u0027s ok.",
+      "range": {
+        "startLine": 96,
+        "startChar": 0,
+        "endLine": 106,
+        "endChar": 1
+      },
+      "revId": "cf1d6bc25b1ff4397b7895024567f6db51d19781",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15334d51_9f62df22",
+        "filename": "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCVideoFrame.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-17T15:35:12Z",
+      "side": 1,
+      "message": "Use RTCI420Buffer instead of RTCYUVPlanarBuffer.",
+      "range": {
+        "startLine": 34,
+        "startChar": 44,
+        "endLine": 34,
+        "endChar": 62
+      },
+      "revId": "cf1d6bc25b1ff4397b7895024567f6db51d19781",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cbb4ad91_da0ea8bb",
+        "filename": "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCVideoFrame.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-17T15:35:12Z",
+      "side": 1,
+      "message": "nullptr",
+      "range": {
+        "startLine": 37,
+        "startChar": 11,
+        "endLine": 37,
+        "endChar": 15
+      },
+      "revId": "cf1d6bc25b1ff4397b7895024567f6db51d19781",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05fc8136_4a9081c5",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Video/objc_frame_buffer.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-17T15:35:12Z",
+      "side": 1,
+      "message": "unused include",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 16,
+        "endChar": 17
+      },
+      "revId": "cf1d6bc25b1ff4397b7895024567f6db51d19781",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "863a45e9_ed9f4ca0",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Video/objc_frame_buffer.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-17T15:35:12Z",
+      "side": 1,
+      "message": "add comment: // namespace",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 1
+      },
+      "revId": "cf1d6bc25b1ff4397b7895024567f6db51d19781",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e652ba3_cb064e76",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Video/objc_frame_buffer.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-17T15:35:12Z",
+      "side": 1,
+      "message": "I would prefer to just define this together with the declaration, or did that cause compile warnings? At least move this inside the anonymous namespace directly after the declaration.",
+      "range": {
+        "startLine": 80,
+        "startChar": 0,
+        "endLine": 113,
+        "endChar": 1
+      },
+      "revId": "cf1d6bc25b1ff4397b7895024567f6db51d19781",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
