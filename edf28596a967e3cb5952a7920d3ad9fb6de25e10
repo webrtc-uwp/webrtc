@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52c52e6d_a29cb35e",
+        "filename": "webrtc/sdk/android/src/jni/video_renderer_jni.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-19T13:51:10Z",
+      "side": 0,
+      "message": "Looks scary, why was this here before but not anymore?",
+      "range": {
+        "startLine": 12,
+        "startChar": 7,
+        "endLine": 12,
+        "endChar": 16
+      },
+      "revId": "edf28596a967e3cb5952a7920d3ad9fb6de25e10",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}

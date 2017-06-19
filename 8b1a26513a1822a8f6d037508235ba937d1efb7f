@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ad85df38_643bcf4b",
+        "filename": "webrtc/sdk/android/src/jni/media_jni.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-19T13:51:10Z",
+      "side": 1,
+      "message": "Can\u0027t we just return unique_ptr?",
+      "range": {
+        "startLine": 18,
+        "startChar": 30,
+        "endLine": 18,
+        "endChar": 47
+      },
+      "revId": "8b1a26513a1822a8f6d037508235ba937d1efb7f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "24039067_c3a324e3",
+        "filename": "webrtc/sdk/android/src/jni/media_jni.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-19T13:51:10Z",
+      "side": 1,
+      "message": "Can\u0027t we just return unique_ptr?",
+      "range": {
+        "startLine": 22,
+        "startChar": 37,
+        "endLine": 22,
+        "endChar": 61
+      },
+      "revId": "8b1a26513a1822a8f6d037508235ba937d1efb7f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67efd7cf_dd1efc56",
+        "filename": "webrtc/sdk/android/src/jni/videofilerenderer_jni.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-19T13:51:10Z",
+      "side": 1,
+      "message": "This is defined in classreferenceholder.h, can we just include it?",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 0
+      },
+      "revId": "8b1a26513a1822a8f6d037508235ba937d1efb7f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
