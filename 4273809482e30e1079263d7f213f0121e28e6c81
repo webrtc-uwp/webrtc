@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ce9ca1a_c66d9a41",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Video/objc_frame_buffer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-19T15:30:38Z",
+      "side": 1,
+      "message": "Is this include needed anymore?",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 29
+      },
+      "revId": "4273809482e30e1079263d7f213f0121e28e6c81",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bbb08df7_4b6054e2",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Video/objc_frame_buffer.mm",
+        "patchSetId": 4
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-19T15:30:38Z",
+      "side": 1,
+      "message": "These includes look to be unused.",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 61
+      },
+      "revId": "4273809482e30e1079263d7f213f0121e28e6c81",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cfac8fda_a535e0f4",
+        "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrameBuffer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-19T15:30:38Z",
+      "side": 1,
+      "message": "Rename tmpBufferVoid to tmpBuffer? Also, comment that the size of |tmpBuffer| needs to be bufferSizeForCroppingAndScalingToWidth.",
+      "range": {
+        "startLine": 86,
+        "startChar": 84,
+        "endLine": 86,
+        "endChar": 99
+      },
+      "revId": "4273809482e30e1079263d7f213f0121e28e6c81",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
