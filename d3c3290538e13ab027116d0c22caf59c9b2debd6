@@ -308,6 +308,30 @@
     },
     {
       "key": {
+        "uuid": "e44acde3_c5c66961",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Video/objc_frame_buffer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-19T07:08:22Z",
+      "side": 1,
+      "message": "Ah! Indeed that works and is much nicer.",
+      "parentUuid": "936ed794_49595f05",
+      "range": {
+        "startLine": 41,
+        "startChar": 2,
+        "endLine": 41,
+        "endChar": 26
+      },
+      "revId": "d3c3290538e13ab027116d0c22caf59c9b2debd6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ed7fdaaa_24553c67",
         "filename": "webrtc/sdk/objc/Framework/Classes/Video/objc_frame_buffer.mm",
         "patchSetId": 1
@@ -458,6 +482,30 @@
       "revId": "d3c3290538e13ab027116d0c22caf59c9b2debd6",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80a5d940_f7d49c28",
+        "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/encoder.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-19T07:08:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6779a77a_8573674d",
+      "range": {
+        "startLine": 415,
+        "startChar": 34,
+        "endLine": 415,
+        "endChar": 38
+      },
+      "revId": "d3c3290538e13ab027116d0c22caf59c9b2debd6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
