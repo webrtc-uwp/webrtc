@@ -214,6 +214,30 @@
     },
     {
       "key": {
+        "uuid": "3bfd5f03_0e222f9b",
+        "filename": "webrtc/sdk/android/instrumentationtests/src/org/webrtc/HardwareVideoDecoderTest.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-19T14:08:05Z",
+      "side": 1,
+      "message": "No, MediumTest is fine then.",
+      "parentUuid": "47ff9b4c_17d38eb2",
+      "range": {
+        "startLine": 37,
+        "startChar": 3,
+        "endLine": 37,
+        "endChar": 13
+      },
+      "revId": "d31a632483fad122cc051b7d8f53dd4adb1f2a2d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "77f8f7d8_d9aecdb6",
         "filename": "webrtc/sdk/android/instrumentationtests/src/org/webrtc/HardwareVideoDecoderTest.java",
         "patchSetId": 2
