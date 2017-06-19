@@ -22,6 +22,30 @@
       "revId": "edf28596a967e3cb5952a7920d3ad9fb6de25e10",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb51d2b8_8b08a292",
+        "filename": "webrtc/sdk/android/src/jni/video_renderer_jni.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-19T15:16:44Z",
+      "side": 0,
+      "message": "It exists in peerconnection_jni, I guess that\u0027s why it was added here. We don\u0027t use it in our other jni files though. I think this is just some unneeded legacy stuff (it was added 2013-07-10 to peerconnection_jni). Let\u0027s be brave and not add it to new jni files.",
+      "parentUuid": "52c52e6d_a29cb35e",
+      "range": {
+        "startLine": 12,
+        "startChar": 7,
+        "endLine": 12,
+        "endChar": 16
+      },
+      "revId": "edf28596a967e3cb5952a7920d3ad9fb6de25e10",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }

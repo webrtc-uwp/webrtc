@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "10b66f09_8bca49a2",
+        "filename": "webrtc/sdk/android/src/jni/media_jni.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-19T15:16:44Z",
+      "side": 1,
+      "message": "No, we need a complete type when instantiating.",
+      "parentUuid": "ad85df38_643bcf4b",
+      "range": {
+        "startLine": 18,
+        "startChar": 30,
+        "endLine": 18,
+        "endChar": 47
+      },
+      "revId": "8b1a26513a1822a8f6d037508235ba937d1efb7f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "24039067_c3a324e3",
         "filename": "webrtc/sdk/android/src/jni/media_jni.cc",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "0fb74beb_6c7e89a5",
+        "filename": "webrtc/sdk/android/src/jni/media_jni.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-19T15:16:44Z",
+      "side": 1,
+      "message": "No, we need a complete type when instantiating.",
+      "parentUuid": "24039067_c3a324e3",
+      "range": {
+        "startLine": 22,
+        "startChar": 37,
+        "endLine": 22,
+        "endChar": 61
+      },
+      "revId": "8b1a26513a1822a8f6d037508235ba937d1efb7f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "67efd7cf_dd1efc56",
         "filename": "webrtc/sdk/android/src/jni/videofilerenderer_jni.cc",
         "patchSetId": 3
@@ -68,6 +116,30 @@
       "revId": "8b1a26513a1822a8f6d037508235ba937d1efb7f",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cbe25e35_2cd456a7",
+        "filename": "webrtc/sdk/android/src/jni/videofilerenderer_jni.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-19T15:16:44Z",
+      "side": 1,
+      "message": "I inlined this instead. I don\u0027t like this macro and I rather see what\u0027s going on than to save a a few characters. Clang-format works better on the function declaration as well if I inline this macro.",
+      "parentUuid": "67efd7cf_dd1efc56",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 0
+      },
+      "revId": "8b1a26513a1822a8f6d037508235ba937d1efb7f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
