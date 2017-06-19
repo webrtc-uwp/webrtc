@@ -22,6 +22,30 @@
       "revId": "e6630545bbd897cf6903a2e1f0f9f3dcc493a53d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ef1ce13_02d737f5",
+        "filename": "webrtc/common_video/libyuv/include/webrtc_libyuv.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-19T14:46:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4d8beb9f_fd979f5e",
+      "range": {
+        "startLine": 119,
+        "startChar": 1,
+        "endLine": 119,
+        "endChar": 44
+      },
+      "revId": "e6630545bbd897cf6903a2e1f0f9f3dcc493a53d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
