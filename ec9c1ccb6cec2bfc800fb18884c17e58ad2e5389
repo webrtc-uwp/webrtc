@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1718f1b_a12b49c2",
+        "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1146556
+      },
+      "writtenOn": "2017-06-19T12:18:03Z",
+      "side": 1,
+      "message": "Oh, I meant adding DebugDumpWriter* but without adding a default value to it, so that callers would have to explicitly add the nullptr. Or are the callsites downstream and we need to ensure API compatibility? If so, I might have lead you down the wrong track; for that case I believe the two variant version is better with the added caveat that there\u0027s a plan for updating downstream projects and removing the old version of Create.\n\nI don\u0027t personally mind default arguments (in fact, I like them), but I believe the style guide disagrees with me and says they shouldn\u0027t be used. :/",
+      "revId": "ec9c1ccb6cec2bfc800fb18884c17e58ad2e5389",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
