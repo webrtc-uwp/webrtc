@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5faa252f_1fb2ecc6",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-19T13:51:56Z",
+      "side": 1,
+      "message": "nit: Can you change this to a different message for clarity? Also, I think this is also a parameter error.",
+      "range": {
+        "startLine": 166,
+        "startChar": 22,
+        "endLine": 166,
+        "endChar": 46
+      },
+      "revId": "4f29bd780deb1c85829703e1a8713885b447263e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5bcacf97_038ca7fa",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-19T13:51:56Z",
+      "side": 1,
+      "message": "Now that the retry logic will be in the JNI layer, I find it strange if the decoder returns FALLBACK_SOFTWARE and then gets restarted. I think we should change these to ERROR.",
+      "range": {
+        "startLine": 204,
+        "startChar": 30,
+        "endLine": 204,
+        "endChar": 47
+      },
+      "revId": "4f29bd780deb1c85829703e1a8713885b447263e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d155cd4b_63a684ae",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-19T13:51:56Z",
+      "side": 1,
+      "message": "Reusing the variables here is confusing. In addition, this is not position of U-plane but its size.",
+      "range": {
+        "startLine": 497,
+        "startChar": 6,
+        "endLine": 497,
+        "endChar": 36
+      },
+      "revId": "4f29bd780deb1c85829703e1a8713885b447263e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a895843d_c0c5cab8",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-19T13:51:56Z",
+      "side": 1,
+      "message": "nit: I would prefer inlining this method.\n\n    try {\n      codec \u003d MediaCodec.createByCodecName(name);\n    } catch (IOException | IllegalArgumentException e) {\n      Logging.e(TAG, \"Cannot create media decoder\", e);\n      return VideoCodecStatus.ERROR;\n    }",
+      "range": {
+        "startLine": 543,
+        "startChar": 28,
+        "endLine": 543,
+        "endChar": 45
+      },
+      "revId": "4f29bd780deb1c85829703e1a8713885b447263e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
