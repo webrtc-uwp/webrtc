@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f0227019_18d1c37f",
+        "filename": "webrtc/modules/audio_coding/neteq/tools/neteq_delay_analyzer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1122982
+      },
+      "writtenOn": "2017-06-20T12:50:04Z",
+      "side": 1,
+      "message": "I could not make this work with std::ostream_iterator\u003cfloat\u003e.",
+      "parentUuid": "60a8aa24_0a5eb04c",
+      "range": {
+        "startLine": 211,
+        "startChar": 0,
+        "endLine": 211,
+        "endChar": 24
+      },
+      "revId": "dcd5255c712ff4361f3a79ac4a791f7a6b73169a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a5a373ee_b8047550",
         "filename": "webrtc/modules/audio_coding/neteq/tools/neteq_delay_analyzer.cc",
         "patchSetId": 1
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "a02cac97_76ea2cd0",
+        "filename": "webrtc/modules/audio_coding/neteq/tools/neteq_delay_analyzer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1122982
+      },
+      "writtenOn": "2017-06-20T12:50:04Z",
+      "side": 1,
+      "message": "The correct way to do it is\n#include \"webrtc/base/format_macros.h\"\n...\nprintf(\"SSRC %\" PRId64 \"\\n\", static_cast\u003cint64_t\u003e(*ssrc_it));\n\nBut, this line was a rouge rebel from debugging. Now deleted.",
+      "parentUuid": "a5a373ee_b8047550",
+      "range": {
+        "startLine": 242,
+        "startChar": 18,
+        "endLine": 242,
+        "endChar": 20
+      },
+      "revId": "dcd5255c712ff4361f3a79ac4a791f7a6b73169a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "39918c81_29f4f3e4",
         "filename": "webrtc/modules/audio_coding/neteq/tools/neteq_rtpplay.cc",
         "patchSetId": 1
@@ -62,6 +110,24 @@
       "revId": "dcd5255c712ff4361f3a79ac4a791f7a6b73169a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94b3e85c_fbc16ba1",
+        "filename": "webrtc/modules/audio_coding/neteq/tools/neteq_rtpplay.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1122982
+      },
+      "writtenOn": "2017-06-20T12:50:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "39918c81_29f4f3e4",
+      "revId": "dcd5255c712ff4361f3a79ac4a791f7a6b73169a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
