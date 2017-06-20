@@ -45,10 +45,13 @@ Matrix Matrix::fromAndroidGraphicsMatrix(JNIEnv* jni, jobject j_matrix) {
   memset(matrix.elem_, 0, sizeof(matrix.elem_));
   for (int y = 0; y < 3; ++y) {
     for (int x = 0; x < 3; ++x) {
-      matrix.elem_[y * 4 + x] = array_3x3_ptr[x + y * 3];
+      int target_y = y == 2 ? 3 : y;
+      int target_x = x == 2 ? 3 : x;
+
+      matrix.elem_[target_y * 4 + target_x] = array_3x3_ptr[y * 3 + x];
     }
   }
-  matrix.elem_[3 + 3 * 3] = 1;  // Bottom-right corner should be 1.
+  matrix.elem_[3 * 4 + 3] = 1;  // Z-scale should be 1.
   return matrix;
 }
 
