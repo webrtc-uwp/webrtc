@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ade21a01_e63248d1",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-20T14:53:37Z",
+      "side": 1,
+      "message": "It turns out this can not be called before dequeueOutputBuffer has been called once and it has returned the new configured size. This causes the the decoder to drop the keyframe and fail.",
+      "range": {
+        "startLine": 202,
+        "startChar": 20,
+        "endLine": 202,
+        "endChar": 38
+      },
+      "revId": "72dfb9120765ad0c7d752ce197a3c1277ef23c5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e37e54bb_91e746f8",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-20T14:53:37Z",
+      "side": 1,
+      "message": "FYI I implemented this, will send out for review once this is landed",
+      "range": {
+        "startLine": 358,
+        "startChar": 24,
+        "endLine": 358,
+        "endChar": 68
+      },
+      "revId": "72dfb9120765ad0c7d752ce197a3c1277ef23c5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "921c1fe6_26ae8e32",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-20T14:53:37Z",
+      "side": 1,
+      "message": "This looks broken, we are writing to every second place.",
+      "range": {
+        "startLine": 520,
+        "startChar": 35,
+        "endLine": 520,
+        "endChar": 46
+      },
+      "revId": "72dfb9120765ad0c7d752ce197a3c1277ef23c5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
