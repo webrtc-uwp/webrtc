@@ -180,6 +180,11 @@ rtc_static_library("rtc_media") {
     include_dirs += [ "$rtc_libyuv_dir/include" ]
   }
 
+  if (current_os == "win" || current_os == "winrt_81" ||
+      current_os == "winrt_81_phone" || current_os == "winrt_10") {
+    deps += [ "//third_party/h264_winrt:webrtc_h264_winrt" ]
+  }
+
   if (rtc_enable_sctp && rtc_build_usrsctp) {
     include_dirs += [
       # TODO(jiayl): move this into the public_configs of
