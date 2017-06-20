@@ -46,6 +46,30 @@
       "revId": "647441b35b85812df8bb5fdf1503cda3cb65890a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "622481e9_0fbdd504",
+        "filename": "webrtc/api/video/video_frame_buffer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1144186
+      },
+      "writtenOn": "2017-06-20T09:55:44Z",
+      "side": 1,
+      "message": "\u003e Let\u0027s try to change the return type of GetI420 to a raw pointer.\n\nMake sense, can we do that as a cl to be landed before this one?\n\n\u003e For ToI420, I\u0027m aware it will be problematic if/when we move to std::shared_ptr. I don\u0027t want to spend any time on it now, since I\u0027m not sure we will ever move to std::shared_ptr.\n\nOk. Nevertheless some thoughts below.\n \n\u003e One solution I can think of is to make a deep copy in ToI420 if the frame is already I420BufferInterface (or simply disallow calling ToI420 for I420BufferInterface), and instead introduce a static function\n\nA static method would solve part of the problem, it could even call some private/protected method passing the shared pointer (or even refcount pointer only) as an argument, to enable that method to return a shared pointer.",
+      "parentUuid": "816e59ac_e9bacee1",
+      "range": {
+        "startLine": 21,
+        "startChar": 21,
+        "endLine": 21,
+        "endChar": 40
+      },
+      "revId": "647441b35b85812df8bb5fdf1503cda3cb65890a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
