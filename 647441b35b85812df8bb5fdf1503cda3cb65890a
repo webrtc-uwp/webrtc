@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e3061f2_a809796a",
+        "filename": "webrtc/api/video/video_frame_buffer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1144186
+      },
+      "writtenOn": "2017-06-20T07:14:52Z",
+      "side": 1,
+      "message": "This works fine with scoped_refptr, even if it\u0027s not entirely kosher to convert from raw pointer to scoped_refptr. And it won\u0027t work, as far as I understand, if we ever try to replace scoped_refptr with std::shared_ptr. The Get* functions can be changed to return raw const pointer, but we can\u0027t do that with ToI420.\n\nSo I wonder if you have any plan, or if we\u0027re just punting those issues until we actually try to adopt shared_ptr. Should we ask some c++ expert? I\u0027d wish there were some way to declare a particular method that can be called only on a shared_ptr, making |this| a shared_ptr.",
+      "range": {
+        "startLine": 21,
+        "startChar": 21,
+        "endLine": 21,
+        "endChar": 40
+      },
+      "revId": "647441b35b85812df8bb5fdf1503cda3cb65890a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea214a3e_5472fe3e",
+        "filename": "webrtc/common_video/video_frame_buffer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1144186
+      },
+      "writtenOn": "2017-06-20T07:14:52Z",
+      "side": 0,
+      "message": "This means that \"native handle\" is completely gone? Nice.",
+      "range": {
+        "startLine": 24,
+        "startChar": 20,
+        "endLine": 24,
+        "endChar": 38
+      },
+      "revId": "4eccdaa31415375f18e927420119ab197737be69",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
