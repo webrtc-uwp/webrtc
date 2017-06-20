@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "06c8d36b_b7353a9c",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-20T17:28:28Z",
+      "side": 1,
+      "message": "I put in a latch to signal when the first dequeue has happened.  I\u0027m not sure if I\u0027m getting this right, since my only test (the instrumentation test in the follow-up cl) didn\u0027t seem to have a problem before.\n\nI can\u0027t really see how the existing MediaCodecVideoDecoder guarantees this.  All I see is that decode sometimes drains output buffers before grabbing an input buffer.  But it looks like it would always be a no-op on the first call to decode, due to checks like this:\n\nhttps://cs.chromium.org/chromium/src/third_party/webrtc/sdk/android/src/jni/androidmediadecoder_jni.cc?l\u003d702\u0026rcl\u003de9cc1fe00713026a257a65e0fb958d6f3573aec7\n\nI tried putting the countDown() call inside the branch for INFO_OUTPUT_FORMAT_CHANGED, but that actually caused by one test to hang and time out.  I can only surmise that we don\u0027t always get an output format change at startup.  At least my hardware and OS (Nexus 5x running Android 7.1.2) don\u0027t yield one.\n\nFor now, this is the best I can come up with:  wait until the output thread has called dequeueOutputBuffer at least once.\n\nLet me know if you have a better idea and would like help implementing it.  I\u0027m happy to make further changes in a follow up.  For now I\u0027m going to submit what I have.  It sounds like you\u0027re already building on top of it and I don\u0027t want to block you.",
+      "parentUuid": "ade21a01_e63248d1",
+      "range": {
+        "startLine": 202,
+        "startChar": 20,
+        "endLine": 202,
+        "endChar": 38
+      },
+      "revId": "72dfb9120765ad0c7d752ce197a3c1277ef23c5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e37e54bb_91e746f8",
         "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
         "patchSetId": 5
@@ -68,6 +92,30 @@
       "revId": "72dfb9120765ad0c7d752ce197a3c1277ef23c5e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e053ab18_c5422c99",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1187699
+      },
+      "writtenOn": "2017-06-20T17:28:28Z",
+      "side": 1,
+      "message": "Good catch.  Fixed.\n\nThe instrumentation test doesn\u0027t catch details like this--it\u0027s just looking for calls to succeed.  Is there any better way to test the encoder and decoder?  I\u0027d be happy to add more unit tests in a follow-up cl.",
+      "parentUuid": "921c1fe6_26ae8e32",
+      "range": {
+        "startLine": 520,
+        "startChar": 35,
+        "endLine": 520,
+        "endChar": 46
+      },
+      "revId": "72dfb9120765ad0c7d752ce197a3c1277ef23c5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
