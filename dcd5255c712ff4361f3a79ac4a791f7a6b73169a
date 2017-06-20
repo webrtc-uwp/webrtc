@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60a8aa24_0a5eb04c",
+        "filename": "webrtc/modules/audio_coding/neteq/tools/neteq_delay_analyzer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1128279
+      },
+      "writtenOn": "2017-06-20T12:15:28Z",
+      "side": 1,
+      "message": "It\u0027s easier to change the output separator if you use output_iterator here (and below).",
+      "range": {
+        "startLine": 211,
+        "startChar": 0,
+        "endLine": 211,
+        "endChar": 24
+      },
+      "revId": "dcd5255c712ff4361f3a79ac4a791f7a6b73169a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5a373ee_b8047550",
+        "filename": "webrtc/modules/audio_coding/neteq/tools/neteq_delay_analyzer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1128279
+      },
+      "writtenOn": "2017-06-20T12:15:28Z",
+      "side": 1,
+      "message": "I think this should be %lli, li is a long int, which is only guaranteed to be 32 bit.",
+      "range": {
+        "startLine": 242,
+        "startChar": 18,
+        "endLine": 242,
+        "endChar": 20
+      },
+      "revId": "dcd5255c712ff4361f3a79ac4a791f7a6b73169a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "39918c81_29f4f3e4",
+        "filename": "webrtc/modules/audio_coding/neteq/tools/neteq_rtpplay.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1128279
+      },
+      "writtenOn": "2017-06-20T12:15:28Z",
+      "side": 1,
+      "message": "Is the std::dec necessary here? I thought std::dec/std::hex only affected how numbers are printed?",
+      "revId": "dcd5255c712ff4361f3a79ac4a791f7a6b73169a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
