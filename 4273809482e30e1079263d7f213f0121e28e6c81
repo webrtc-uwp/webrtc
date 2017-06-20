@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "329b0940_6a7bb1e5",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Video/objc_frame_buffer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-20T06:53:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1ce9ca1a_c66d9a41",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 29
+      },
+      "revId": "4273809482e30e1079263d7f213f0121e28e6c81",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bbb08df7_4b6054e2",
         "filename": "webrtc/sdk/objc/Framework/Classes/Video/objc_frame_buffer.mm",
         "patchSetId": 4
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "e4f8c85a_fd4b383c",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Video/objc_frame_buffer.mm",
+        "patchSetId": 4
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-20T06:53:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bbb08df7_4b6054e2",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 61
+      },
+      "revId": "4273809482e30e1079263d7f213f0121e28e6c81",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cfac8fda_a535e0f4",
         "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrameBuffer.h",
         "patchSetId": 4
@@ -68,6 +116,30 @@
       "revId": "4273809482e30e1079263d7f213f0121e28e6c81",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2bbb3c5_36865fd9",
+        "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCVideoFrameBuffer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-20T06:53:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cfac8fda_a535e0f4",
+      "range": {
+        "startLine": 86,
+        "startChar": 84,
+        "endLine": 86,
+        "endChar": 99
+      },
+      "revId": "4273809482e30e1079263d7f213f0121e28e6c81",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
