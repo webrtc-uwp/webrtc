@@ -16,6 +16,24 @@
       "revId": "a1934d9a9633b4b7a4d1e361c42c5189b025b706",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72ff8bc1_cf473ced",
+        "filename": "webrtc/modules/audio_coding/neteq/tools/neteq_rtpplay.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1122982
+      },
+      "writtenOn": "2017-06-20T14:45:42Z",
+      "side": 1,
+      "message": "My bad. Not only one bad, but several. Turns out that clang style warnings are disabled in this file, which led to several bad things.",
+      "parentUuid": "31b8d80a_2860bac7",
+      "revId": "a1934d9a9633b4b7a4d1e361c42c5189b025b706",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
