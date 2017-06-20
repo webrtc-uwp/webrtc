@@ -244,7 +244,6 @@ if (!build_with_chromium) {
     visibility = [ "//:default" ]
 
     sources = []
-    complete_static_lib = true
     defines = []
 
     deps = [
@@ -269,6 +268,12 @@ if (!build_with_chromium) {
       "video",
       "voice_engine",
     ]
+
+    # Testing shared_library.
+    #deps += [
+    #  "system_wrappers:field_trial_default",
+    #  "system_wrappers:metrics_default",
+    #]
 
     if (rtc_enable_protobuf) {
       defines += [ "ENABLE_RTC_EVENT_LOG" ]

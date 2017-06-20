@@ -323,7 +323,7 @@ template("rtc_executable") {
 }
 
 template("rtc_static_library") {
-  static_library(target_name) {
+  shared_library(target_name) {
     forward_variables_from(invoker,
                            "*",
                            [
