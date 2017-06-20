@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "165b7442_553a1b80",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoRenderer.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-20T16:16:04Z",
+      "side": 1,
+      "message": "Use RendererCommon.verticalFlipMatrix() instead.",
+      "range": {
+        "startLine": 65,
+        "startChar": 6,
+        "endLine": 65,
+        "endChar": 20
+      },
+      "revId": "1c2dd0eb32f4209813bbc5b1e41aafbd78c79f88",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5104917_42b86471",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoRenderer.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-20T16:16:04Z",
+      "side": 1,
+      "message": "I don\u0027t like this change, the samplingMatrix argument should be correct. Where are these VideoFrames generated? Set the vertical flip matrix there instead.",
+      "range": {
+        "startLine": 124,
+        "startChar": 8,
+        "endLine": 124,
+        "endChar": 27
+      },
+      "revId": "1c2dd0eb32f4209813bbc5b1e41aafbd78c79f88",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fc02d1fc_c9f1300d",
+        "filename": "webrtc/sdk/android/src/jni/native_handle_impl.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-20T16:16:04Z",
+      "side": 1,
+      "message": "This is starting to get complicated. Maybe it would be easier to unroll this loop?",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 0
+      },
+      "revId": "1c2dd0eb32f4209813bbc5b1e41aafbd78c79f88",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
