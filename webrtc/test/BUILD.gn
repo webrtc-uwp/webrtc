@@ -499,7 +499,9 @@ rtc_source_set("test_common") {
     "//testing/gtest",
   ]
   if (!is_android && !build_with_chromium) {
-    deps += [ "../modules/video_capture:video_capture_internal_impl" ]
+    if (!is_mac && !is_ios) {
+      deps += [ "../modules/video_capture:video_capture_internal_impl" ]
+    }
   }
 }
 

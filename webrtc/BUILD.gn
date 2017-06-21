@@ -259,7 +259,6 @@ if (!build_with_chromium) {
       "logging",
       "media",
       "modules",
-      "modules/video_capture:video_capture_internal_impl",
       "ortc",
       "p2p",
       "pc",
@@ -270,6 +269,10 @@ if (!build_with_chromium) {
       "video",
       "voice_engine",
     ]
+
+    if (!is_mac && !is_ios) {
+      deps += [ "modules/video_capture:video_capture_internal_impl" ]
+    }
 
     if (rtc_enable_protobuf) {
       defines += [ "ENABLE_RTC_EVENT_LOG" ]
@@ -301,7 +304,6 @@ if (!build_with_chromium) {
         "modules/audio_processing:audio_processing_tests",
         "modules/remote_bitrate_estimator:bwe_simulations_tests",
         "modules/rtp_rtcp:test_packet_masks_metrics",
-        "modules/video_capture:video_capture_internal_impl",
         "modules/video_coding:plot_videoprocessor_integrationtest",
         "ortc:ortc_unittests",
         "pc:peerconnection_unittests",
@@ -320,6 +322,9 @@ if (!build_with_chromium) {
         ]
       } else {
         deps += [ "modules/video_capture:video_capture_tests" ]
+      }
+      if (!is_mac && !is_ios) {
+        deps += [ "modules/video_capture:video_capture_internal_impl" ]
       }
       if (!is_ios) {
         deps += [

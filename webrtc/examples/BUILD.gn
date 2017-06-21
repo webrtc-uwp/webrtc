@@ -242,7 +242,10 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
         "//webrtc/sdk:objc_peerconnection",
       ]
     }
-    libs = [ "QuartzCore.framework" ]
+    libs = [
+      "CoreMedia.framework",
+      "QuartzCore.framework",
+    ]
   }
 
   if (is_ios) {
