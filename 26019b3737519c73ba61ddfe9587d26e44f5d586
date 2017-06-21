@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c1523aee_bb11890a",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 987,
+      "author": {
+        "id": 1001604
+      },
+      "writtenOn": "2017-06-21T21:36:47Z",
+      "side": 1,
+      "message": "Only speaking TLS 1.2 will break WebRTC + OpenSSL talking to pre-(D)TLS-1.2 servers. Are all your WebRTC + OpenSSL consumers are fine?",
+      "range": {
+        "startLine": 987,
+        "startChar": 53,
+        "endLine": 987,
+        "endChar": 69
+      },
+      "revId": "26019b3737519c73ba61ddfe9587d26e44f5d586",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8874802_5bf75c53",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 987,
+      "author": {
+        "id": 1001604
+      },
+      "writtenOn": "2017-06-21T21:36:47Z",
+      "side": 1,
+      "message": "This isn\u0027t quite true. OpenSSL has TLS_method, except that before OpenSSL 1.1.0, it\u0027s called SSLv23_method for historical reasons. (Either name works for BoringSSL. TLS_method is preferred as it\u0027s less confusing, but if SSLv23_method is more compatible, that works.)\n\nWhat it doesn\u0027t have is the min/max proto version APIs. It instead has options (SSL_CTX_set_options / SSL_CTX_clear_options) named SSL_OP_NO_SSLv3, SSL_OP_NO_TLSv1, etc. Those work in BoringSSL fine, they\u0027re just kinda janky.",
+      "range": {
+        "startLine": 987,
+        "startChar": 21,
+        "endLine": 987,
+        "endChar": 51
+      },
+      "revId": "26019b3737519c73ba61ddfe9587d26e44f5d586",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0a70cbbd_ddf0b76b",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 995,
+      "author": {
+        "id": 1001604
+      },
+      "writtenOn": "2017-06-21T21:36:47Z",
+      "side": 1,
+      "message": "FWIW, both of these settings are already the default in BoringSSL.",
+      "revId": "26019b3737519c73ba61ddfe9587d26e44f5d586",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c02aa74_2653ed41",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 997,
+      "author": {
+        "id": 1001604
+      },
+      "writtenOn": "2017-06-21T21:36:47Z",
+      "side": 1,
+      "message": "This still won\u0027t build in OpenSSL 1.0.1, only 1.0.2+. (Do you care about 1.0.1?)",
+      "range": {
+        "startLine": 997,
+        "startChar": 49,
+        "endLine": 997,
+        "endChar": 71
+      },
+      "revId": "26019b3737519c73ba61ddfe9587d26e44f5d586",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}

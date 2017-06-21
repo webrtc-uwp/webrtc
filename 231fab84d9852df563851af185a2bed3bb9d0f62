@@ -33,6 +33,24 @@
       "revId": "231fab84d9852df563851af185a2bed3bb9d0f62",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91292f4d_8ec3410a",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 1015,
+      "author": {
+        "id": 1001604
+      },
+      "writtenOn": "2017-06-21T21:36:47Z",
+      "side": 1,
+      "message": "There\u0027s always code search, if your goal is to match Chromium...\nhttps://cs.chromium.org/chromium/src/net/socket/ssl_client_socket_impl.cc?rcl\u003d0f29527597298df4a879ee6e8bd082993248c740\u0026l\u003d946\n\nHowever, if you do that and you support OpenSSL, you will also need to pull in all the !foo lines in the existing one to avoid regressing OpenSSL. We omit a lot of them because BoringSSL doesn\u0027t support a lot of ancient ciphers.",
+      "parentUuid": "4551894d_88f841f7",
+      "revId": "231fab84d9852df563851af185a2bed3bb9d0f62",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
