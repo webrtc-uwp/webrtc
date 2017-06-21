@@ -20,8 +20,10 @@
 #include "webrtc/base/location.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/optional.h"
+#include "webrtc/base/ptr_util.h"
 #include "webrtc/base/trace_event.h"
 #include "webrtc/call/rtp_stream_receiver_controller_interface.h"
+#include "webrtc/call/rtx_receive_stream.h"
 #include "webrtc/common_types.h"
 #include "webrtc/common_video/h264/profile_level_id.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
@@ -230,8 +232,11 @@ VideoReceiveStream::VideoReceiveStream(
   media_receiver_ = receiver_controller->CreateReceiver(
       config_.rtp.remote_ssrc, &rtp_video_stream_receiver_);
   if (config.rtp.rtx_ssrc) {
+    rtx_receive_stream_ = rtc::MakeUnique<RtxReceiveStream>(
+        &rtp_video_stream_receiver_, config.rtp.rtx_payload_types,
+        config_.rtp.remote_ssrc);
     rtx_receiver_ = receiver_controller->CreateReceiver(
-        config_.rtp.rtx_ssrc, &rtp_video_stream_receiver_);
+        config_.rtp.rtx_ssrc, rtx_receive_stream_.get());
   }
 }
 

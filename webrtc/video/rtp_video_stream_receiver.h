@@ -177,8 +177,6 @@ class RtpVideoStreamReceiver : public RtpData,
 
   rtc::CriticalSection receive_cs_;
   bool receiving_ GUARDED_BY(receive_cs_);
-  uint8_t restored_packet_[IP_PACKET_SIZE] GUARDED_BY(receive_cs_);
-  bool restored_packet_in_use_ GUARDED_BY(receive_cs_);
   int64_t last_packet_log_ms_ GUARDED_BY(receive_cs_);
 
   const std::unique_ptr<RtpRtcp> rtp_rtcp_;
