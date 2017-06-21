@@ -105,6 +105,24 @@
       "revId": "231fab84d9852df563851af185a2bed3bb9d0f62",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "583406dc_0edd427c",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 1015,
+      "author": {
+        "id": 1001604
+      },
+      "writtenOn": "2017-06-21T22:09:04Z",
+      "side": 1,
+      "message": "renegotiation_info is always sent and not configurable. But, yes, you will need to do more work than just the cipher suite to match Chromium. See that file. Off-hand, you\u0027ll also need to enable GREASE.\n\nAs far as cipher suites go, my suggestion was just to take the existing Chromium line and append the !ADH:!LOW:!EXP:!MD5 that you currently have. Each of those directives is a no-op in BoringSSL.\n\nRe HMAC-SHA256 and HMAC-SHA384, see the comment in that file. Those select legacy CBC ciphers which are known broken and insecure. The HMAC-SHA1 ciphers aren\u0027t any better, but we\u0027re stuck with those for the time being and aren\u0027t going to ship the others if we don\u0027t need to.",
+      "parentUuid": "48f7a046_fed38628",
+      "revId": "231fab84d9852df563851af185a2bed3bb9d0f62",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
