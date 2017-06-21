@@ -173,6 +173,24 @@
     },
     {
       "key": {
+        "uuid": "c02739b2_c34216c2",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 995,
+      "author": {
+        "id": 1213539
+      },
+      "writtenOn": "2017-06-21T22:19:37Z",
+      "side": 1,
+      "message": "removed in the latest version",
+      "parentUuid": "459f825a_bdb64089",
+      "revId": "26019b3737519c73ba61ddfe9587d26e44f5d586",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8c02aa74_2653ed41",
         "filename": "webrtc/base/openssladapter.cc",
         "patchSetId": 5

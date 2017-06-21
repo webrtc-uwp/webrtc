@@ -123,6 +123,24 @@
       "revId": "231fab84d9852df563851af185a2bed3bb9d0f62",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "036d0506_fbb4d1f5",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 1015,
+      "author": {
+        "id": 1213539
+      },
+      "writtenOn": "2017-06-21T22:19:37Z",
+      "side": 1,
+      "message": "Justin, Can we take care of the other extensions in a separate CLs, IMHO the version is the most urgent thing to do now, and don\u0027t want to delay it anymore",
+      "parentUuid": "583406dc_0edd427c",
+      "revId": "231fab84d9852df563851af185a2bed3bb9d0f62",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
