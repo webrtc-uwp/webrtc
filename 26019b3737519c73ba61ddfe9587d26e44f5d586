@@ -48,6 +48,54 @@
     },
     {
       "key": {
+        "uuid": "d951b896_216c48e1",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 987,
+      "author": {
+        "id": 1213539
+      },
+      "writtenOn": "2017-06-21T22:06:37Z",
+      "side": 1,
+      "message": "As I mentioned before (Justin can confirm again) \n- This code is very rarely used, doubt if anyone else using it\n- Everyone using it should migrate to V1.2\n- We already have requested everyone to move to BoringSSL",
+      "parentUuid": "c1523aee_bb11890a",
+      "range": {
+        "startLine": 987,
+        "startChar": 53,
+        "endLine": 987,
+        "endChar": 69
+      },
+      "revId": "26019b3737519c73ba61ddfe9587d26e44f5d586",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4693ca7_356a09bd",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 987,
+      "author": {
+        "id": 1213539
+      },
+      "writtenOn": "2017-06-21T22:06:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f8874802_5bf75c53",
+      "range": {
+        "startLine": 987,
+        "startChar": 21,
+        "endLine": 987,
+        "endChar": 51
+      },
+      "revId": "26019b3737519c73ba61ddfe9587d26e44f5d586",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0a70cbbd_ddf0b76b",
         "filename": "webrtc/base/openssladapter.cc",
         "patchSetId": 5
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "dcf21d35_1648250b",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 995,
+      "author": {
+        "id": 1213539
+      },
+      "writtenOn": "2017-06-21T22:06:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0a70cbbd_ddf0b76b",
+      "revId": "26019b3737519c73ba61ddfe9587d26e44f5d586",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8c02aa74_2653ed41",
         "filename": "webrtc/base/openssladapter.cc",
         "patchSetId": 5
@@ -76,6 +142,30 @@
       "writtenOn": "2017-06-21T21:36:47Z",
       "side": 1,
       "message": "This still won\u0027t build in OpenSSL 1.0.1, only 1.0.2+. (Do you care about 1.0.1?)",
+      "range": {
+        "startLine": 997,
+        "startChar": 49,
+        "endLine": 997,
+        "endChar": 71
+      },
+      "revId": "26019b3737519c73ba61ddfe9587d26e44f5d586",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1716820d_1885be80",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 997,
+      "author": {
+        "id": 1213539
+      },
+      "writtenOn": "2017-06-21T22:06:37Z",
+      "side": 1,
+      "message": "Since we are moving away anyway from OpenSSL, I think this should be fine",
+      "parentUuid": "8c02aa74_2653ed41",
       "range": {
         "startLine": 997,
         "startChar": 49,

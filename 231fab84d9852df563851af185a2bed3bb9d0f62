@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5e02718d_dfa7c9f6",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 986,
+      "author": {
+        "id": 1213539
+      },
+      "writtenOn": "2017-06-21T22:06:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a33872fe_cd5fac17",
+      "revId": "231fab84d9852df563851af185a2bed3bb9d0f62",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4551894d_88f841f7",
         "filename": "webrtc/base/openssladapter.cc",
         "patchSetId": 4
@@ -65,6 +83,24 @@
       "writtenOn": "2017-06-21T22:00:42Z",
       "side": 1,
       "message": "I\u0027m fine with using a vanilla config for OpenSSL users - they should be using BoringSSL anyway.\nLet\u0027s match Chromium when using BoringSSL.\n\nNote that there may be other bits that we want to match Chromium on, e.g. extensions:\n            \n            Extension: renegotiation_info\n                Type: renegotiation_info (0xff01)\n                Length: 1\n                Renegotiation Info extension\n                    Renegotiation info extension length: 0",
+      "parentUuid": "91292f4d_8ec3410a",
+      "revId": "231fab84d9852df563851af185a2bed3bb9d0f62",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48f7a046_fed38628",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 1015,
+      "author": {
+        "id": 1213539
+      },
+      "writtenOn": "2017-06-21T22:06:37Z",
+      "side": 1,
+      "message": "I will merge the two ciphers but just out of curosity, why HMAC256 and HMAC384 are excluded?",
       "parentUuid": "91292f4d_8ec3410a",
       "revId": "231fab84d9852df563851af185a2bed3bb9d0f62",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
