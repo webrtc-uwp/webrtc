@@ -182,7 +182,7 @@ rtc_static_library("rtc_media") {
 
   if (current_os == "win" || current_os == "winrt_81" ||
       current_os == "winrt_81_phone" || current_os == "winrt_10") {
-    deps += [ "//third_party/h264_winrt:webrtc_h264_winrt" ]
+    deps += [ "//third_party/winrt_h264:winrt_h264" ]
   }
 
   if (rtc_enable_sctp && rtc_build_usrsctp) {
