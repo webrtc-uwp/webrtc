@@ -575,12 +575,29 @@ TEST_F(PosixSignalDeliveryTest, InsanelyManySignals) {
 }
 
 // Test that a signal during a Wait() call is detected.
-TEST_F(PosixSignalDeliveryTest, SignalDuringWait) {
+TEST_F(PosixSignalDeliveryTest, SignalDuringWait1) {
+  ss_->SetPosixSignalHandler(SIGALRM, &RecordSignal);
+}
+
+// Test that a signal during a Wait() call is detected.
+TEST_F(PosixSignalDeliveryTest, SignalDuringWait2) {
+  ss_->SetPosixSignalHandler(SIGALRM, &RecordSignal);
+  alarm(1);
+}
+
+// Test that a signal during a Wait() call is detected.
+TEST_F(PosixSignalDeliveryTest, SignalDuringWait3) {
+  ss_->SetPosixSignalHandler(SIGALRM, &RecordSignal);
+  alarm(1);
+  EXPECT_TRUE(ss_->Wait(1500, true));
+}
+
+// Test that a signal during a Wait() call is detected.
+TEST_F(PosixSignalDeliveryTest, SignalDuringWait4) {
   ss_->SetPosixSignalHandler(SIGALRM, &RecordSignal);
   alarm(1);
   EXPECT_TRUE(ss_->Wait(1500, true));
   EXPECT_TRUE(ExpectSignal(SIGALRM));
-  EXPECT_TRUE(ExpectNone());
 }
 
 class RaiseSigTermRunnable : public Runnable {
