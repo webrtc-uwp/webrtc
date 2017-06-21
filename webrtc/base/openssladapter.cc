@@ -982,8 +982,8 @@ bool OpenSSLAdapter::ConfigureTrustedRootCertificates(SSL_CTX* ctx) {
 
 SSL_CTX*
 OpenSSLAdapter::SetupSSLContext() {
-  SSL_CTX* ctx = SSL_CTX_new(ssl_mode_ == SSL_MODE_DTLS ?
-      DTLSv1_client_method() : TLSv1_client_method());
+  SSL_CTX* ctx = SSL_CTX_new(ssl_mode_ == SSL_MODE_DTLS ? DTLSv1_2_method()
+                                                        : TLSv1_2_method());
   if (ctx == nullptr) {
     unsigned long error = ERR_get_error();  // NOLINT: type used by OpenSSL.
     LOG(LS_WARNING) << "SSL_CTX creation failed: "
