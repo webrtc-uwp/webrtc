@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a33872fe_cd5fac17",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 986,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-06-21T21:14:52Z",
+      "side": 1,
+      "message": "Add comment to explain this code",
+      "revId": "231fab84d9852df563851af185a2bed3bb9d0f62",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4551894d_88f841f7",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 1015,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-06-21T21:14:52Z",
+      "side": 1,
+      "message": "Is this the right cipher list?\n\nI believe Chromium uses \"DEFAULT:!NULL:!aNULL:!SHA256:!SHA384:!aECDH:!AESGCM+AES256:!aPSK\"\n\nPlease check with davidben to be sure though.",
+      "revId": "231fab84d9852df563851af185a2bed3bb9d0f62",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
