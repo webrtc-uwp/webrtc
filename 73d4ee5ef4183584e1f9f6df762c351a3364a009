@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a11d8a9_098c27e2",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 1014,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-06-21T23:35:40Z",
+      "side": 1,
+      "message": "Add a comment for posterity here, please",
+      "revId": "73d4ee5ef4183584e1f9f6df762c351a3364a009",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
