@@ -982,8 +982,18 @@ bool OpenSSLAdapter::ConfigureTrustedRootCertificates(SSL_CTX* ctx) {
 
 SSL_CTX*
 OpenSSLAdapter::SetupSSLContext() {
-  SSL_CTX* ctx = SSL_CTX_new(ssl_mode_ == SSL_MODE_DTLS ?
-      DTLSv1_client_method() : TLSv1_client_method());
+  SSL_CTX* ctx = nullptr;
+#ifdef OPENSSL_IS_BORINGSSL
+  ctx = SSL_CTX_new(ssl_mode_ == SSL_MODE_DTLS ? DTLS_method() : TLS_method());
+  SSL_CTX_set_min_proto_version(
+      ctx, ssl_mode_ == SSL_MODE_DTLS ? DTLS1_VERSION : TLS1_VERSION);
+  SSL_CTX_set_max_proto_version(
+      ctx, ssl_mode_ == SSL_MODE_DTLS ? DTLS1_2_VERSION : TLS1_2_VERSION);
+#else
+  SSL_CTX* ctx =
+      SSL_CTX_new(ssl_mode_ == SSL_MODE_DTLS ? DTLSv1_2_client_method()
+                                             : TLSv1_2_client_method());
+#endif  // OPENSSL_IS_BORINGSSL
   if (ctx == nullptr) {
     unsigned long error = ERR_get_error();  // NOLINT: type used by OpenSSL.
     LOG(LS_WARNING) << "SSL_CTX creation failed: "
