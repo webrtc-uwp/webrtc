@@ -218,14 +218,9 @@ class FakeFlexfecReceiveStream final : public webrtc::FlexfecReceiveStream {
   const webrtc::FlexfecReceiveStream::Config& GetConfig() const;
 
  private:
-  // webrtc::FlexfecReceiveStream implementation.
-  void Start() override;
-  void Stop() override;
-
   webrtc::FlexfecReceiveStream::Stats GetStats() const override;
 
   webrtc::FlexfecReceiveStream::Config config_;
-  bool receiving_;
 };
 
 class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {

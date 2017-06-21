@@ -41,16 +41,11 @@ class FlexfecReceiveStreamImpl : public FlexfecReceiveStream,
   // RtpPacketSinkInterface.
   void OnRtpPacket(const RtpPacketReceived& packet) override;
 
-  // Implements FlexfecReceiveStream.
-  void Start() override;
-  void Stop() override;
   Stats GetStats() const override;
 
  private:
   // Config.
   const Config config_;
-  bool started_ GUARDED_BY(crit_);
-  rtc::CriticalSection crit_;
 
   // Erasure code interfacing.
   const std::unique_ptr<FlexfecReceiver> receiver_;

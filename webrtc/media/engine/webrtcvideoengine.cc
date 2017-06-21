@@ -2374,7 +2374,6 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::
   }
   if (flexfec_config_.IsCompleteAndEnabled()) {
     flexfec_stream_ = call_->CreateFlexfecReceiveStream(flexfec_config_);
-    flexfec_stream_->Start();
   }
 }
 
