@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "bc372065_8cf287c3",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 987,
+      "author": {
+        "id": 1001604
+      },
+      "writtenOn": "2017-06-21T22:11:44Z",
+      "side": 1,
+      "message": "(The comment still isn\u0027t true.)",
+      "parentUuid": "f4693ca7_356a09bd",
+      "range": {
+        "startLine": 987,
+        "startChar": 21,
+        "endLine": 987,
+        "endChar": 51
+      },
+      "revId": "26019b3737519c73ba61ddfe9587d26e44f5d586",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0a70cbbd_ddf0b76b",
         "filename": "webrtc/base/openssladapter.cc",
         "patchSetId": 5
@@ -125,6 +149,24 @@
       "side": 1,
       "message": "Done",
       "parentUuid": "0a70cbbd_ddf0b76b",
+      "revId": "26019b3737519c73ba61ddfe9587d26e44f5d586",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "459f825a_bdb64089",
+        "filename": "webrtc/base/openssladapter.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 995,
+      "author": {
+        "id": 1001604
+      },
+      "writtenOn": "2017-06-21T22:11:44Z",
+      "side": 1,
+      "message": "(These two lines are still redundant.)",
+      "parentUuid": "dcf21d35_1648250b",
       "revId": "26019b3737519c73ba61ddfe9587d26e44f5d586",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
