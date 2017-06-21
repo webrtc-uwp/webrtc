@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-#include "webrtc/modules/video_coding/codecs/vp8/simulcast_encoder_adapter.h"
+#include "webrtc/modules/video_coding/simulcast_encoder_adapter.h"
 #include "webrtc/test/call_test.h"
 #include "webrtc/test/frame_generator.h"
 #include "webrtc/test/testsupport/trace_to_stderr.h"

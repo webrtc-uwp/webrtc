@@ -15,10 +15,10 @@
 #include "webrtc/common_types.h"
 #include "webrtc/common_video/include/video_bitrate_allocator.h"
 #include "webrtc/modules/video_coding/codecs/vp8/screenshare_layers.h"
-#include "webrtc/modules/video_coding/codecs/vp8/simulcast_rate_allocator.h"
-#include "webrtc/modules/video_coding/codecs/vp8/temporal_layers.h"
 #include "webrtc/modules/video_coding/include/video_coding_defines.h"
 #include "webrtc/modules/video_coding/utility/default_video_bitrate_allocator.h"
+#include "webrtc/modules/video_coding/utility/simulcast_rate_allocator.h"
+#include "webrtc/modules/video_coding/utility/temporal_layers.h"
 #include "webrtc/system_wrappers/include/clock.h"
 
 namespace webrtc {
@@ -70,7 +70,9 @@ VideoCodecInitializer::CreateBitrateAllocator(
   std::unique_ptr<VideoBitrateAllocator> rate_allocator;
 
   switch (codec.codecType) {
-    case kVideoCodecVP8: {
+    case kVideoCodecVP8:
+    // Intentionally fall-through
+    case kVideoCodecH264: {
       // Set up default VP8 temporal layer factory, if not provided.
       rate_allocator.reset(
           new SimulcastRateAllocator(codec, std::move(tl_factory)));

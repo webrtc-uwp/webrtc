@@ -25,10 +25,10 @@
 #include "webrtc/common_video/include/video_bitrate_allocator.h"
 #include "webrtc/common_video/include/video_frame.h"
 #include "webrtc/modules/pacing/paced_sender.h"
-#include "webrtc/modules/video_coding/codecs/vp8/temporal_layers.h"
 #include "webrtc/modules/video_coding/include/video_codec_initializer.h"
 #include "webrtc/modules/video_coding/include/video_coding.h"
 #include "webrtc/modules/video_coding/include/video_coding_defines.h"
+#include "webrtc/modules/video_coding/utility/temporal_layers.h"
 #include "webrtc/video/overuse_frame_detector.h"
 #include "webrtc/video/send_statistics_proxy.h"
 

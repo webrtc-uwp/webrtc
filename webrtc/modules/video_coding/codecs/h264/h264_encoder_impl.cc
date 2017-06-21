@@ -390,6 +390,8 @@ int32_t H264EncoderImpl::Encode(const VideoFrame& input_frame,
     CodecSpecificInfo codec_specific;
     codec_specific.codecType = kVideoCodecH264;
     codec_specific.codecSpecific.H264.packetization_mode = packetization_mode_;
+    // This codec is not simulcast aware. So force simulcast index to 0.
+    codec_specific.codecSpecific.H264.simulcastIdx = 0;
     encoded_image_callback_->OnEncodedImage(encoded_image_, &codec_specific,
                                             &frag_header);
   }
