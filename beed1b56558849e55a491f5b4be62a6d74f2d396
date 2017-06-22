@@ -22,6 +22,30 @@
       "revId": "beed1b56558849e55a491f5b4be62a6d74f2d396",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34514603_d6257d16",
+        "filename": "webrtc/modules/audio_conference_mixer/source/audio_conference_mixer_impl.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1153539
+      },
+      "writtenOn": "2017-06-22T12:26:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3d04a596_4cf6c482",
+      "range": {
+        "startLine": 376,
+        "startChar": 49,
+        "endLine": 376,
+        "endChar": 50
+      },
+      "revId": "beed1b56558849e55a491f5b4be62a6d74f2d396",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
