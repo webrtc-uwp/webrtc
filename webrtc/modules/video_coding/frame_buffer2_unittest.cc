@@ -525,5 +525,13 @@ TEST_F(TestFrameBuffer2, ForwardJumps) {
   ExtractFrame();
 }
 
+// TODO(philipel): implement more unittests related to invalid references.
+TEST_F(TestFrameBuffer2, InvalidReferences) {
+  EXPECT_EQ(-1, InsertFrame(0, 0, 1000, false, 2));
+  EXPECT_EQ(1, InsertFrame(1, 0, 2000, false));
+  ExtractFrame();
+  EXPECT_EQ(2, InsertFrame(2, 0, 3000, false, 1));
+}
+
 }  // namespace video_coding
 }  // namespace webrtc
