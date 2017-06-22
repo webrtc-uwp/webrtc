@@ -64,7 +64,10 @@ class HardwareVideoDecoder implements VideoDecoder {
   // caller and must be used to call initDecode, decode, and release.
   private ThreadChecker decoderThreadChecker;
 
-  private volatile boolean running = false;
+  // Lock that guards the codec state so we can rely on it being in EXECUTING state when running is
+  // true.
+  private final Object stateLock = new Object();
+  private boolean running = false; // Guarded by stateLock
   private volatile Exception shutdownException = null;
 
   private CountDownLatch ouputDequeuedSignal;
@@ -104,6 +107,8 @@ class HardwareVideoDecoder implements VideoDecoder {
     return initDecodeInternal(settings.width, settings.height, callback);
   }
 
+  ByteBuffer[] inputBuffers;
+
   private VideoCodecStatus initDecodeInternal(int width, int height, Callback callback) {
     decoderThreadChecker.checkIsOnValidThread();
     if (outputThread != null) {
@@ -138,8 +143,12 @@ class HardwareVideoDecoder implements VideoDecoder {
       release();
       return VideoCodecStatus.ERROR;
     }
+    inputBuffers = codec.getInputBuffers();
+    Logging.d(TAG, "Got input buffers: " + inputBuffers.length);
 
-    running = true;
+    synchronized (stateLock) {
+      running = true;
+    }
     ouputDequeuedSignal = new CountDownLatch(1);
     outputThread = createOutputThread();
     outputThread.start();
@@ -204,12 +213,14 @@ class HardwareVideoDecoder implements VideoDecoder {
 
     // TODO(mellem):  Support textures.
     int index;
-    try {
-      index = codec.dequeueInputBuffer(0 /* timeout */);
-    } catch (IllegalStateException e) {
-      Logging.e(TAG, "dequeueInputBuffer failed", e);
-      return VideoCodecStatus.FALLBACK_SOFTWARE;
-    }
+    do {
+      try {
+        index = codec.dequeueInputBuffer(10000 /* timeout */);
+      } catch (IllegalStateException e) {
+        Logging.e(TAG, "dequeueInputBuffer failed", e);
+        return VideoCodecStatus.FALLBACK_SOFTWARE;
+      }
+    } while (index < 0);
     if (index < 0) {
       // Decoder is falling behind.  No input buffers available.
       // The decoder can't simply drop frames; it might lose a key frame.
@@ -219,7 +230,7 @@ class HardwareVideoDecoder implements VideoDecoder {
 
     ByteBuffer buffer;
     try {
-      buffer = codec.getInputBuffers()[index];
+      buffer = inputBuffers[index];
     } catch (IllegalStateException e) {
       Logging.e(TAG, "getInputBuffers failed", e);
       return VideoCodecStatus.FALLBACK_SOFTWARE;
@@ -258,10 +269,14 @@ class HardwareVideoDecoder implements VideoDecoder {
 
   @Override
   public VideoCodecStatus release() {
-    decoderThreadChecker.checkIsOnValidThread();
+    // TODO(sakal): This is not called on the correct thread but is still called synchronously.
+    // Re-enable the check once this is called on the correct thread.
+    // decoderThreadChecker.checkIsOnValidThread();
     try {
       // The outputThread actually stops and releases the codec once running is false.
-      running = false;
+      synchronized (stateLock) {
+        running = false;
+      }
       if (!ThreadUtils.joinUninterruptibly(outputThread, MEDIA_CODEC_RELEASE_TIMEOUT_MS)) {
         // Log an exception to capture the stack trace and turn it into a TIMEOUT error.
         Logging.e(TAG, "Media encoder release timeout", new RuntimeException());
@@ -292,11 +307,15 @@ class HardwareVideoDecoder implements VideoDecoder {
     return initDecodeInternal(newWidth, newHeight, callback);
   }
 
+  ByteBuffer[] outputBuffers;
   private Thread createOutputThread() {
+    Logging.d(TAG, "outputThread.create");
     return new Thread("HardwareVideoDecoder.outputThread") {
       @Override
       public void run() {
+        Logging.d(TAG, "outputThread.run");
         outputThreadChecker = new ThreadChecker();
+        outputBuffers = codec.getOutputBuffers();
         while (running) {
           deliverDecodedFrame();
         }
@@ -307,6 +326,7 @@ class HardwareVideoDecoder implements VideoDecoder {
 
   private void deliverDecodedFrame() {
     outputThreadChecker.checkIsOnValidThread();
+    Logging.v(TAG, "deliverDecodedFrame");
     try {
       MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
       // Block until an output buffer is available (up to 100 milliseconds).  If the timeout is
@@ -319,7 +339,9 @@ class HardwareVideoDecoder implements VideoDecoder {
         reformat(codec.getOutputFormat());
         return;
       }
-
+      if (result == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
+        outputBuffers = codec.getOutputBuffers();
+      }
       if (result < 0) {
         Logging.v(TAG, "dequeueOutputBuffer returned " + result);
         return;
@@ -356,22 +378,29 @@ class HardwareVideoDecoder implements VideoDecoder {
         stride = info.size * 2 / (height * 3);
       }
 
-      ByteBuffer buffer = codec.getOutputBuffers()[result];
+      ByteBuffer buffer = outputBuffers[result];
       buffer.position(info.offset);
       buffer.limit(info.size);
 
-      VideoFrame.I420Buffer frameBuffer = new I420BufferImpl(width, height);
+      final VideoFrame.I420Buffer frameBuffer;
 
-      // TODO(mellem):  As an optimization, avoid copying data here.  Wrap the output buffers into
-      // the frame buffer without copying or reformatting.
       // TODO(mellem):  As an optimization, use libyuv via JNI to copy/reformatting data.
       if (colorFormat == CodecCapabilities.COLOR_FormatYUV420Planar) {
-        copyI420(buffer, info.offset, frameBuffer, stride, sliceHeight, width, height);
+        if (sliceHeight % 2 == 0) {
+          frameBuffer =
+              createBufferFromI420(buffer, result, info.offset, stride, sliceHeight, width, height);
+        } else {
+          frameBuffer = new I420BufferImpl(width, height);
+          // Optimal path is not possible because we have to copy the last rows of U- and V-planes.
+          copyI420(buffer, info.offset, frameBuffer, stride, sliceHeight, width, height);
+          codec.releaseOutputBuffer(result, false);
+        }
       } else {
+        frameBuffer = new I420BufferImpl(width, height);
         // All other supported color formats are NV12.
         nv12ToI420(buffer, info.offset, frameBuffer, stride, sliceHeight, width, height);
+        codec.releaseOutputBuffer(result, false);
       }
-      codec.releaseOutputBuffer(result, false);
 
       long presentationTimeNs = info.presentationTimeUs * 1000;
       VideoFrame frame =
@@ -471,6 +500,97 @@ class HardwareVideoDecoder implements VideoDecoder {
       }
     }
     return false;
+  }
+
+  private VideoFrame.I420Buffer createBufferFromI420(final ByteBuffer buffer,
+      final int outputBufferIndex, final int offset, final int stride, final int sliceHeight,
+      final int width, final int height) {
+    final int uvStride = stride / 2;
+    final int chromaWidth = (width + 1) / 2;
+    final int chromaHeight = (height + 1) / 2;
+
+    final int yPos = offset;
+    final int uPos = yPos + stride * sliceHeight;
+    final int vPos = uPos + uvStride * sliceHeight / 2;
+
+    return new VideoFrame.I420Buffer() {
+      private int refCount = 1;
+
+      @Override
+      public ByteBuffer getDataY() {
+        ByteBuffer data = buffer.slice();
+        data.position(yPos);
+        data.limit(yPos + getStrideY() * height);
+        return data;
+      }
+
+      @Override
+      public ByteBuffer getDataU() {
+        ByteBuffer data = buffer.slice();
+        data.position(uPos);
+        data.limit(uPos + getStrideU() * chromaHeight);
+        return data;
+      }
+
+      @Override
+      public ByteBuffer getDataV() {
+        ByteBuffer data = buffer.slice();
+        data.position(vPos);
+        data.limit(vPos + getStrideV() * chromaHeight);
+        return data;
+      }
+
+      @Override
+      public int getStrideY() {
+        return stride;
+      }
+
+      @Override
+      public int getStrideU() {
+        return uvStride;
+      }
+
+      @Override
+      public int getStrideV() {
+        return uvStride;
+      }
+
+      @Override
+      public int getWidth() {
+        return width;
+      }
+
+      @Override
+      public int getHeight() {
+        return height;
+      }
+
+      @Override
+      public VideoFrame.I420Buffer toI420() {
+        return this;
+      }
+
+      @Override
+      public void retain() {
+        refCount++;
+      }
+
+      @Override
+      public void release() {
+        refCount--;
+
+        if (refCount == 0) {
+          synchronized (stateLock) {
+            if (!running) {
+              Logging.d(TAG, "Not releasing the frame because the decoder is no longer running.");
+              return;
+            }
+
+            codec.releaseOutputBuffer(outputBufferIndex, false);
+          }
+        }
+      }
+    };
   }
 
   private static void copyI420(ByteBuffer src, int offset, VideoFrame.I420Buffer frameBuffer,
