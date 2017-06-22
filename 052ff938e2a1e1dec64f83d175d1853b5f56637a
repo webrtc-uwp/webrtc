@@ -2,6 +2,121 @@
   "comments": [
     {
       "key": {
+        "uuid": "95cd0130_ff560d3a",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-22T14:10:52Z",
+      "side": 1,
+      "message": "Can you move this into the ScopedCFTypeRef class?",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 43
+      },
+      "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e40a3345_02e1f336",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-22T14:10:52Z",
+      "side": 1,
+      "message": "Can we come up with a better name than ASSUME?",
+      "range": {
+        "startLine": 19,
+        "startChar": 34,
+        "endLine": 19,
+        "endChar": 40
+      },
+      "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "43758093_42ebafbe",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-22T14:10:52Z",
+      "side": 1,
+      "message": "I think you can remove these \u003cT\u003e, it should be implicit.",
+      "range": {
+        "startLine": 26,
+        "startChar": 17,
+        "endLine": 26,
+        "endChar": 20
+      },
+      "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd473524_17df87eb",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-22T14:10:52Z",
+      "side": 1,
+      "message": "We are potentially leaking the previous value here. Also, I don\u0027t think we need a move constructor for the pointer, maybe for a ScopedCFTypeRef.",
+      "range": {
+        "startLine": 52,
+        "startChar": 4,
+        "endLine": 52,
+        "endChar": 26
+      },
+      "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1ac0650_c5a43dc8",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-22T14:10:52Z",
+      "side": 1,
+      "message": "I\u0027m not sure this is a good function. My main concern is how we should handle any existing |ptr_|. We could release any existing |ptr_|, but then the function is kind of strange.",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 3
+      },
+      "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7e9dd5bc_0bd4ed8d",
         "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/encoder.mm",
         "patchSetId": 3
