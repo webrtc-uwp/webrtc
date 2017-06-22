@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4331d8ad_6b7dad29",
+        "filename": "webrtc/base/buffer.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1126902
+      },
+      "writtenOn": "2017-06-22T09:25:56Z",
+      "side": 1,
+      "message": "Nit: I can haz a blank line here?",
+      "revId": "4951a36e0949d8bcbcbd95a77c17fcb95a8e6921",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
