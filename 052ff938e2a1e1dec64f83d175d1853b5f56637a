@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e9dd5bc_0bd4ed8d",
+        "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/encoder.mm",
+        "patchSetId": 3
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-22T14:02:48Z",
+      "side": 1,
+      "message": "Was it intentional to change from kCFNumberSInt64Type to kCFNumberSInt32Type here?",
+      "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1eead8c3_b57e2efe",
+        "filename": "webrtc/sdk/objc/Framework/UnitTests/scoped_cftyperef_unittests.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-22T14:02:48Z",
+      "side": 1,
+      "message": "Should this comment be outside the block?",
+      "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
