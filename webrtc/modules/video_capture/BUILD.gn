@@ -122,7 +122,9 @@ if (!build_with_chromium) {
 
       libs = [ "Strmiids.lib" ]
 
-      deps += [ "//third_party/winsdk_samples" ]
+      if (!is_winrt) {
+        deps += [ "//third_party/winsdk_samples" ]
+      }
     }
     if (is_ios || is_mac) {
       sources = [
