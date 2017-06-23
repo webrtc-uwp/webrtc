@@ -173,6 +173,12 @@ rtc_static_library("rtc_base_approved") {
     "type_traits.h",
   ]
 
+  if (is_winrt) {
+    deps += [ "//third_party/winrt_compat:winrt_compat" ]
+    sources -= [ "platform_file.cc" ]
+    sources += [ "../../third_party/winrt_compat/webrtc/webrtc/base/platform_file.cc" ]
+  }
+
   if (is_android) {
     libs += [ "log" ]
   }
@@ -198,6 +204,10 @@ rtc_static_library("rtc_base_approved") {
       "logging.h",
       "logging_mac.mm",
     ]
+    if (is_winrt) {
+      sources -= [ "logging.cc" ]
+      sources += [ "../../third_party/winrt_compat/webrtc/webrtc/base/logging.cc" ]
+    }
   }
   if (is_component_build && is_win) {
     # Copy the VS runtime DLLs into the isolate so that they don't have to be
@@ -478,6 +488,12 @@ rtc_static_library("rtc_base") {
     "thread.h",
   ]
 
+  if (is_winrt) {
+    deps += [ "//third_party/winrt_compat:winrt_compat" ]
+    sources -= [ "socketadapters.cc" ]
+    sources += [ "../../third_party/winrt_compat/webrtc/webrtc/base/socketadapters.cc" ]
+  }
+
   # TODO(henrike): issue 3307, make rtc_base build with the Chromium default
   # compiler settings.
   suppressed_configs += [ "//build/config/compiler:chromium_code" ]
@@ -523,6 +539,12 @@ rtc_static_library("rtc_base") {
         "win32socketserver.cc",
         "win32socketserver.h",
       ]
+      if (is_winrt) {
+        sources -= [
+          "win32socketserver.cc",
+          "win32socketserver.h",
+        ]
+      }
     }
 
     if (rtc_build_json) {
@@ -605,6 +627,15 @@ rtc_static_library("rtc_base") {
       "winping.cc",
       "winping.h",
     ]
+
+    if (is_winrt) {
+      sources -= [
+        "win32filesystem.cc",
+        "win32filesystem.h",
+        "win32window.cc",
+        "win32window.h",
+      ]
+    }
 
     libs += [
       "crypt32.lib",
