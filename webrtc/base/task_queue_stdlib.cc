@@ -20,8 +20,8 @@ typedef std::chrono::system_clock::time_point Time;
 namespace rtc {
 namespace {
 
-  using Priority = TaskQueue::Priority;
-  static thread_local void *g_thread_context {};
+using Priority = TaskQueue::Priority;
+static thread_local void *g_thread_context {};
 
 static void *GetQueuePtrTls()
 {
