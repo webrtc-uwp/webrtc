@@ -111,6 +111,9 @@ rtc_source_set("test_main") {
     "//testing/gtest",
     "//third_party/gflags",
   ]
+  if (is_winrt) {
+    configs += [ "//third_party/winrt_compat:ignore_threading_model_warning" ]
+  }
 }
 
 rtc_source_set("fileutils") {
