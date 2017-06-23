@@ -45,6 +45,9 @@ group("examples") {
       ":stunserver",
       ":turnserver",
     ]
+    if (is_winrt) {
+      public_deps -= [ ":peerconnection_client" ]
+    }
   }
 }
 
@@ -486,53 +489,55 @@ if (is_linux || is_win) {
     }
   }
 
-  rtc_executable("peerconnection_client") {
-    sources = [
-      "peerconnection/client/conductor.cc",
-      "peerconnection/client/conductor.h",
-      "peerconnection/client/defaults.cc",
-      "peerconnection/client/defaults.h",
-      "peerconnection/client/peer_connection_client.cc",
-      "peerconnection/client/peer_connection_client.h",
-    ]
+  if (!is_winrt) {
+    rtc_executable("peerconnection_client") {
+      sources = [
+        "peerconnection/client/conductor.cc",
+        "peerconnection/client/conductor.h",
+        "peerconnection/client/defaults.cc",
+        "peerconnection/client/defaults.h",
+        "peerconnection/client/peer_connection_client.cc",
+        "peerconnection/client/peer_connection_client.h",
+      ]
 
-    if (!build_with_chromium && is_clang) {
-      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
-      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
-    }
-    if (is_win) {
-      sources += [
-        "peerconnection/client/flagdefs.h",
-        "peerconnection/client/main.cc",
-        "peerconnection/client/main_wnd.cc",
-        "peerconnection/client/main_wnd.h",
+      if (!build_with_chromium && is_clang) {
+        # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+        suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+      }
+      if (is_win) {
+        sources += [
+          "peerconnection/client/flagdefs.h",
+          "peerconnection/client/main.cc",
+          "peerconnection/client/main_wnd.cc",
+          "peerconnection/client/main_wnd.h",
+        ]
+        cflags = [ "/wd4245" ]
+        configs += [ "//build/config/win:windowed" ]
+      }
+      deps = [
+        "//third_party/libyuv",
+        "//webrtc/pc:libjingle_peerconnection",
+        "//webrtc/system_wrappers:field_trial_default",
+        "//webrtc/system_wrappers:metrics_default",
       ]
-      cflags = [ "/wd4245" ]
-      configs += [ "//build/config/win:windowed" ]
-    }
-    deps = [
-      "//third_party/libyuv",
-      "//webrtc/pc:libjingle_peerconnection",
-      "//webrtc/system_wrappers:field_trial_default",
-      "//webrtc/system_wrappers:metrics_default",
-    ]
-    if (is_linux) {
-      sources += [
-        "peerconnection/client/linux/main.cc",
-        "peerconnection/client/linux/main_wnd.cc",
-        "peerconnection/client/linux/main_wnd.h",
-      ]
-      libs = [
-        "X11",
-        "Xcomposite",
-        "Xext",
-        "Xrender",
-      ]
-      deps += [ "//build/config/linux/gtk" ]
-    }
-    configs += [ ":peerconnection_client_warnings_config" ]
-    if (rtc_build_json) {
-      deps += [ "//third_party/jsoncpp" ]
+      if (is_linux) {
+        sources += [
+          "peerconnection/client/linux/main.cc",
+          "peerconnection/client/linux/main_wnd.cc",
+          "peerconnection/client/linux/main_wnd.h",
+        ]
+        libs = [
+          "X11",
+          "Xcomposite",
+          "Xext",
+          "Xrender",
+        ]
+        deps += [ "//build/config/linux/gtk" ]
+      }
+      configs += [ ":peerconnection_client_warnings_config" ]
+      if (rtc_build_json) {
+        deps += [ "//third_party/jsoncpp" ]
+      }
     }
   }
 

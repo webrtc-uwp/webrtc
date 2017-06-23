@@ -27,11 +27,6 @@ BEGIN_PROXY_MAP(VideoTrackSource)
   PROXY_CONSTMETHOD0(bool, is_screencast)
   PROXY_CONSTMETHOD0(rtc::Optional<bool>, needs_denoising)
   PROXY_METHOD1(bool, GetStats, Stats*)
-  PROXY_METHOD0(bool, Suspend)
-  PROXY_METHOD0(bool, Resume)
-  PROXY_METHOD0(bool, IsSuspended)
-  PROXY_METHOD1(void, SetIsH264Source, bool)
-  PROXY_METHOD0(bool, IsH264Source)
   PROXY_WORKER_METHOD2(void,
                        AddOrUpdateSink,
                        rtc::VideoSinkInterface<VideoFrame>*,

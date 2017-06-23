@@ -477,6 +477,9 @@ if (rtc_include_tests) {
         ":unpack_aecdump",
         "test/py_quality_assessment",
       ]
+      if (is_winrt) {
+        public_deps -= [ "test/py_quality_assessment" ]
+      }
     }
   }
 
@@ -755,6 +758,9 @@ if (rtc_include_tests) {
       "//testing/gtest",
       "//third_party/gflags",
     ]
+    if (is_winrt) {
+      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
+    }
   }
 
   rtc_executable("click_annotate") {
@@ -770,6 +776,9 @@ if (rtc_include_tests) {
       "../../system_wrappers:metrics_default",
       "../../system_wrappers:system_wrappers",
     ]
+    if (is_winrt) {
+      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
+    }
   }
 
   rtc_executable("nonlinear_beamformer_test") {
