@@ -330,7 +330,11 @@ rtc_static_library("rtc_task_queue") {
         ]
       }
       if (is_win) {
-        sources += [ "task_queue_win.cc" ]
+        if (is_winrt) {
+          sources += [ "task_queue_stdlib.cc" ]
+        } else {
+          sources += [ "task_queue_win.cc" ]
+        }
       }
     }
   }

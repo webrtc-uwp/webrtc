@@ -26,6 +26,17 @@
 #include "webrtc/base/platform_thread.h"
 #endif
 
+#ifdef WINRT
+#define WEBRTC_BASE_QUEUED_TASK_USING_STDLIB
+#endif //WINRT
+
+#ifdef WEBRTC_BASE_QUEUED_TASK_USING_STDLIB
+#include <condition_variable>
+#include <queue>
+#include <atomic>
+#include <map>
+#endif //WEBRTC_BASE_QUEUED_TASK_USING_STDLIB
+
 #if defined(WEBRTC_BUILD_LIBEVENT)
 #include "webrtc/base/refcountedobject.h"
 #include "webrtc/base/scoped_ref_ptr.h"
@@ -242,7 +253,49 @@ class LOCKABLE TaskQueue {
   }
 
  private:
-#if defined(WEBRTC_BUILD_LIBEVENT)
+#if defined(WEBRTC_BASE_QUEUED_TASK_USING_STDLIB)
+   typedef std::unique_ptr<QueuedTask> QueueTasksUniPtr;
+   typedef uint64_t OrderId;
+   typedef std::pair<OrderId, QueueTasksUniPtr> OrderedQueueTaskPair;
+   typedef std::queue<OrderedQueueTaskPair> QueueTaskQueue;
+   typedef std::chrono::milliseconds Milliseconds;
+   typedef std::chrono::microseconds Microseconds;
+   typedef std::chrono::system_clock::time_point Time;
+   typedef std::mutex Lock;
+
+   struct DelayedEntryTimeout
+   {
+     Time next_fire_at_{};
+     OrderId order_{};
+
+     bool operator<(const DelayedEntryTimeout &o) const
+     {
+       return std::tie(next_fire_at_, order_) < std::tie(o.next_fire_at_, o.order_);
+     }
+   };
+
+   typedef std::map<DelayedEntryTimeout, QueueTasksUniPtr> DelayTimeoutQueueMap;
+
+   static void ThreadMain(void* context);
+
+   void notifyWake();
+
+   std::mutex flag_lock_;
+   std::condition_variable flag_notify_;
+
+   PlatformThread thread_;
+   std::atomic<bool> thread_should_quit_{};
+   std::atomic<bool> thread_did_quit_{};
+
+   rtc::CriticalSection pending_lock_;
+
+   OrderId thread_posting_order_{} GUARDED_BY(pending_lock_);
+   QueueTaskQueue pending_queue_ GUARDED_BY(pending_lock_);
+   DelayTimeoutQueueMap delayed_queue_ GUARDED_BY(pending_lock_);
+
+#undef WEBRTC_BASE_QUEUED_TASK_USING_STDLIB
+
+#elif defined(WEBRTC_BUILD_LIBEVENT)
   static void ThreadMain(void* context);
   static void OnWakeup(int socket, short flags, void* context);  // NOLINT
   static void RunTask(int fd, short flags, void* context);       // NOLINT

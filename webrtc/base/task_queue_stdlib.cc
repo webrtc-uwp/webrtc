@@ -20,7 +20,8 @@ typedef std::chrono::system_clock::time_point Time;
 namespace rtc {
 namespace {
 
-static thread_local void *g_thread_context {};
+  using Priority = TaskQueue::Priority;
+  static thread_local void *g_thread_context {};
 
 static void *GetQueuePtrTls()
 {
@@ -37,11 +38,25 @@ static Time now()
   return std::chrono::system_clock::now(); 
 }
 
+ThreadPriority TaskQueuePriorityToThreadPriority(Priority priority) {
+  switch (priority) {
+  case Priority::HIGH:
+    return kRealtimePriority;
+  case Priority::LOW:
+    return kLowPriority;
+  case Priority::NORMAL:
+    return kNormalPriority;
+  default:
+    RTC_NOTREACHED();
+    break;
+  }
+  return kNormalPriority;
+}
 
 }  // namespace
 
-TaskQueue::TaskQueue(const char* queue_name)
-    : thread_(&TaskQueue::ThreadMain, this, queue_name) {
+TaskQueue::TaskQueue(const char* queue_name, Priority priority /*= NORMAL*/)
+    : thread_(&TaskQueue::ThreadMain, this, queue_name, TaskQueuePriorityToThreadPriority(priority)) {
   RTC_DCHECK(queue_name);
   thread_.Start();
 }
@@ -123,7 +138,7 @@ void TaskQueue::PostTaskAndReply(std::unique_ptr<QueuedTask> task,
 }
 
 // static
-bool TaskQueue::ThreadMain(void* context) {
+void TaskQueue::ThreadMain(void* context) {
 
   TaskQueue *me = static_cast<TaskQueue *>(context);
   SetQueuePtr(me);
@@ -194,7 +209,6 @@ bool TaskQueue::ThreadMain(void* context) {
   } while (true);
 
   me->thread_did_quit_ = true;
-  return false;
 }
 
 void TaskQueue::notifyWake()
