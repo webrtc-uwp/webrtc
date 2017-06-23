@@ -144,14 +144,6 @@ class VideoCapturer : public sigslot::has_slots<>,
     return capture_state_;
   }
 
-  // Suspend/Resume flow default behavior
-  virtual bool Suspend() override { return false; }
-  virtual bool Resume() override { return false; }
-  virtual bool IsSuspended() override { return false; }
-
-  void SetIsH264Source(bool isH264) override { }
-  bool IsH264Source() override { return false; }
-
   virtual bool apply_rotation() { return apply_rotation_; }
 
   // Returns true if the capturer is screencasting. This can be used to

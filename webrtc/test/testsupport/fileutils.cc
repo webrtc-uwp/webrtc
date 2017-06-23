@@ -141,7 +141,7 @@ std::string ProjectRootPath() {
   }
 #ifdef WINRT
   return path + kPathDelimiter;
-#endif // WINRT
+#else
   if (relative_dir_path_set) {
     path = path + kPathDelimiter + relative_dir_path;
   }
@@ -159,7 +159,8 @@ std::string ProjectRootPath() {
     fprintf(stderr, "Cannot find project root directory!\n");
     return kCannotFindProjectRootDir;
   }
-#endif
+#endif /* WINRT */
+#endif /* defined(WEBRTC_IOS) */
 }
 
 std::string OutputPath() {

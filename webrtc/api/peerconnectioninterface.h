@@ -986,8 +986,6 @@ class PeerConnectionFactoryInterface : public rtc::RefCountInterface {
   // TODO(ivoc) Remove after Chrome is updated.
   virtual void StopRtcEventLog() = 0;
 
-  virtual cricket::MediaEngineInterface* GetMediaEngine() = 0;
-
  protected:
   // Dtor and ctor protected as objects shouldn't be created or deleted via
   // this interface.

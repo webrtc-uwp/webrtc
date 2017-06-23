@@ -39,13 +39,6 @@ struct VideoSinkWants {
 template <typename VideoFrameT>
 class VideoSourceInterface {
  public:
-  virtual bool Suspend() = 0;
-  virtual bool Resume() = 0;
-  virtual bool IsSuspended() = 0;
-
-  virtual void SetIsH264Source(bool isH264) = 0;
-  virtual bool IsH264Source() = 0;
-
   virtual void AddOrUpdateSink(VideoSinkInterface<VideoFrameT>* sink,
                                const VideoSinkWants& wants) = 0;
   // RemoveSink must guarantee that at the time the method returns,
