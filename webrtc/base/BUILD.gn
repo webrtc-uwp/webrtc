@@ -710,6 +710,9 @@ if (rtc_include_tests) {
       "//testing/gmock",
       "//testing/gtest",
     ]
+    if (is_winrt) {
+      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
+    }
 
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
@@ -785,7 +788,7 @@ if (rtc_include_tests) {
       ":rtc_base_tests_main",
       "//testing/gtest",
     ]
-    if (is_win) {
+    if ((is_win) && (!is_winrt)) {
       sources += [ "win32socketserver_unittest.cc" ]
     }
 
@@ -917,6 +920,9 @@ if (rtc_include_tests) {
         "win32_unittest.cc",
         "win32window_unittest.cc",
       ]
+      if (is_winrt) {
+        sources -= [ "win32window_unittest.cc" ]
+      }
     }
     if (is_mac) {
       sources += [ "macutils_unittest.cc" ]

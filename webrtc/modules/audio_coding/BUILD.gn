@@ -1917,6 +1917,9 @@ if (rtc_include_tests) {
       ":isac_test_util",
       "../../base:rtc_base_approved",
     ]
+    if (is_winrt) {
+      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
+    }
 
     include_dirs = [
       "codecs/isac/main/include",
