@@ -665,16 +665,14 @@ void BlackFramesGenerator::Cleanup() {
   }
 }
 
-VideoCaptureWinRT::VideoCaptureWinRT(const int32_t id)
-  : VideoCaptureImpl(id),
-    device_(nullptr),
+VideoCaptureWinRT::VideoCaptureWinRT()
+  : device_(nullptr),
     camera_location_(Panel::Unknown),
     display_orientation_(nullptr),
     fake_device_(nullptr),
     last_frame_info_(),
     video_encoding_properties_(nullptr),
     media_encoding_profile_(nullptr) {
-  _captureDelay = 120;
   if (VideoCommonWinRT::GetCoreDispatcher() == nullptr) {
     LOG(LS_INFO) << "Using AppStateDispatcher as orientation source";
     AppStateDispatcher::Instance()->AddObserver(this);
@@ -696,8 +694,7 @@ VideoCaptureWinRT::~VideoCaptureWinRT() {
   }
 }
 
-int32_t VideoCaptureWinRT::Init(const int32_t id,
-  const char* device_unique_id) {
+int32_t VideoCaptureWinRT::Init(const char* device_unique_id) {
   CriticalSectionScoped cs(&_apiCs);
   const int32_t device_unique_id_length = (int32_t)strlen(device_unique_id);
   if (device_unique_id_length > kVideoCaptureUniqueNameLength) {

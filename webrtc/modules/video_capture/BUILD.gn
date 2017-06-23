@@ -104,26 +104,38 @@ if (!build_with_chromium) {
       deps += [ "../..:webrtc_common" ]
     }
     if (is_win) {
-      sources = [
-        "windows/device_info_ds.cc",
-        "windows/device_info_ds.h",
-        "windows/device_info_mf.cc",
-        "windows/device_info_mf.h",
-        "windows/help_functions_ds.cc",
-        "windows/help_functions_ds.h",
-        "windows/sink_filter_ds.cc",
-        "windows/sink_filter_ds.h",
-        "windows/video_capture_ds.cc",
-        "windows/video_capture_ds.h",
-        "windows/video_capture_factory_windows.cc",
-        "windows/video_capture_mf.cc",
-        "windows/video_capture_mf.h",
-      ]
-
-      libs = [ "Strmiids.lib" ]
-
       if (!is_winrt) {
+        sources = [
+          "windows/device_info_ds.cc",
+          "windows/device_info_ds.h",
+          "windows/device_info_mf.cc",
+          "windows/device_info_mf.h",
+          "windows/help_functions_ds.cc",
+          "windows/help_functions_ds.h",
+          "windows/sink_filter_ds.cc",
+          "windows/sink_filter_ds.h",
+          "windows/video_capture_ds.cc",
+          "windows/video_capture_ds.h",
+          "windows/video_capture_factory_windows.cc",
+          "windows/video_capture_mf.cc",
+          "windows/video_capture_mf.h",
+        ]
+
         deps += [ "//third_party/winsdk_samples" ]
+
+        libs = [ "Strmiids.lib" ]
+      } else {
+        sources = [
+          "windows/device_info_winrt.cc",
+          "windows/device_info_winrt.h",
+          "windows/video_capture_factory_windows.cc",
+          "windows/video_capture_sink_winrt.cc",
+          "windows/video_capture_sink_winrt.h",
+          "windows/video_capture_winrt.cc",
+          "windows/video_capture_winrt.h",
+        ]
+
+        deps += [ "//third_party/libyuv" ]
       }
     }
     if (is_ios || is_mac) {

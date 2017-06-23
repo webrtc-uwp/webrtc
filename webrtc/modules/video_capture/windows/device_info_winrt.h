@@ -48,9 +48,9 @@ private ref class MediaCaptureDevicesWinRT sealed {
 class DeviceInfoWinRT : public DeviceInfoImpl {
  public:
   // Factory function.
-  static std::unique_ptr<DeviceInfoWinRT> Create(const int32_t id);
+  static DeviceInfoWinRT* Create();
 
-  explicit DeviceInfoWinRT(const int32_t id);
+  explicit DeviceInfoWinRT();
   virtual ~DeviceInfoWinRT();
 
   virtual uint32_t NumberOfDevices();

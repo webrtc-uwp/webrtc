@@ -68,9 +68,9 @@ class VideoCaptureWinRT
       public AppStateObserver,
       public DisplayOrientationListener {
  public:
-  explicit VideoCaptureWinRT(const int32_t id);
+  explicit VideoCaptureWinRT();
 
-  int32_t Init(const int32_t id, const char* device_id);
+  int32_t Init(const char* device_id);
 
   // Overrides from VideoCaptureImpl.
   virtual int32_t StartCapture(const VideoCaptureCapability& capability);

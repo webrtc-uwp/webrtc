@@ -133,16 +133,16 @@ void MediaCaptureDevicesWinRT::RemoveMediaCapture(Platform::String^ device_id) {
 }
 
 // static
-std::unique_ptr<DeviceInfoWinRT> DeviceInfoWinRT::Create(const int32_t id) {
-	std::unique_ptr<DeviceInfoWinRT> winrt_info(new DeviceInfoWinRT(id));
-  if (winrt_info->Init() != 0) {
-    winrt_info.reset();
+DeviceInfoWinRT* DeviceInfoWinRT::Create() {
+	DeviceInfoWinRT* winrt_info = new DeviceInfoWinRT();
+  if (!winrt_info || winrt_info->Init() != 0) {
+    delete winrt_info;
     LOG(LS_ERROR) << "Failed to initialize device info object.";
   }
   return winrt_info;
 }
 
-DeviceInfoWinRT::DeviceInfoWinRT(const int32_t id) : DeviceInfoImpl(id) {
+DeviceInfoWinRT::DeviceInfoWinRT() {
 }
 
 DeviceInfoWinRT::~DeviceInfoWinRT() {
