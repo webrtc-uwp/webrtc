@@ -75,13 +75,44 @@ void VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage,
                        "this one.";
     return;
   }
+#ifdef WINRT
+  static const int32_t kMaxDeltaDelayMs = 10000;
+  int32_t endToEndDecodingFinished = static_cast<int32_t>(
+      Clock::GetRealTimeClock()->TimeInMilliseconds()
+      + Clock::CurrentNtpDeltaMs - decodedImage.ntp_time_ms());
 
+  int32_t endToEndDelay = static_cast<int32_t>(frameInfo->renderTimeMs
+      + Clock::CurrentNtpDeltaMs - decodedImage.ntp_time_ms());
+  // we only finished decoding, however, 'renderTimeMs' is the value we
+  // expect the video element to show the frame already considered the
+  // audo/video sync delay.
+
+  // ntp_time_ms will be only valid after rtcp packet has been exchanged,
+  // before that, it is invalid. We can not validate the ntp_time_ms here,
+  // thereby, just do a quick check to remove obvious invalid values
+  if (endToEndDecodingFinished > 0 &&
+      endToEndDecodingFinished < kMaxDeltaDelayMs) {
+      TRACE_COUNTER1("webrtc", "EndToEndVideoDecoded",
+          endToEndDecodingFinished);
+  }
+
+  if (endToEndDelay > 0 &&
+      endToEndDelay < kMaxDeltaDelayMs) {
+      TRACE_COUNTER1("webrtc", "EndToEndVideoDelay", endToEndDelay);
+  }
+  else {
+      endToEndDelay = 0; //reset
+  }
+#endif // WINRT
   const int64_t now_ms = _clock->TimeInMilliseconds();
   if (!decode_time_ms) {
     decode_time_ms =
         rtc::Optional<int32_t>(now_ms - frameInfo->decodeStartTimeMs);
   }
   _timing->StopDecodeTimer(decodedImage.timestamp(), *decode_time_ms, now_ms,
+#ifdef WINRT
+                           endToEndDelay,
+#endif
                            frameInfo->renderTimeMs);
 
   decodedImage.set_timestamp_us(
