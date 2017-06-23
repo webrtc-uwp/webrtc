@@ -126,6 +126,9 @@ void VideoStreamDecoder::OnFrameBufferTimingsUpdated(int decode_ms,
                                                      int target_delay_ms,
                                                      int jitter_buffer_ms,
                                                      int min_playout_delay_ms,
+#ifdef WINRT
+                                                     int current_endtoend_delay_ms,
+#endif
                                                      int render_delay_ms) {}
 
 void VideoStreamDecoder::OnCompleteFrame(bool is_keyframe, size_t size_bytes) {}

@@ -70,6 +70,9 @@ class VCMTiming {
   int32_t StopDecodeTimer(uint32_t time_stamp,
                           int32_t decode_time_ms,
                           int64_t now_ms,
+#ifdef WINRT
+                          int current_endtoend_delay_ms,
+#endif // WINRT
                           int64_t render_time_ms);
 
   // Used to report that a frame is passed to decoding. Updates the timestamp
@@ -100,6 +103,9 @@ class VCMTiming {
                           int* target_delay_ms,
                           int* jitter_buffer_ms,
                           int* min_playout_delay_ms,
+#ifdef WINRT
+                          int* current_endtoend_delay_ms,
+#endif // WINRT
                           int* render_delay_ms) const;
 
   enum { kDefaultRenderDelayMs = 10 };
@@ -129,6 +135,9 @@ class VCMTiming {
   int max_playout_delay_ms_ GUARDED_BY(crit_sect_);
   int jitter_delay_ms_ GUARDED_BY(crit_sect_);
   int current_delay_ms_ GUARDED_BY(crit_sect_);
+#ifdef WINRT
+  int current_endtoend_delay_ms_ GUARDED_BY(crit_sect_);
+#endif // WINRT
   int last_decode_ms_ GUARDED_BY(crit_sect_);
   uint32_t prev_frame_timestamp_ GUARDED_BY(crit_sect_);
 
