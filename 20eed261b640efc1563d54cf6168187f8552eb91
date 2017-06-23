@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93998231_391382d1",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-23T11:08:54Z",
+      "side": 1,
+      "message": "Unused?",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 41
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98ccd986_897970f5",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-23T11:08:54Z",
+      "side": 1,
+      "message": "Remove these (you are not using them anyway).",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 28
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27e56fc0_1b5f2ac0",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-23T11:08:54Z",
+      "side": 1,
+      "message": "Use jlongFromPointer",
+      "range": {
+        "startLine": 101,
+        "startChar": 36,
+        "endLine": 101,
+        "endChar": 65
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c81043d5_2f39a5cc",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-23T11:08:54Z",
+      "side": 1,
+      "message": "Only create ScopedLocalRefFrame when you need them.",
+      "range": {
+        "startLine": 123,
+        "startChar": 2,
+        "endLine": 123,
+        "endChar": 21
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "052b8aa2_efdb748f",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-23T11:08:54Z",
+      "side": 1,
+      "message": "Add a comment explaining why this is needed (dropped frames).",
+      "range": {
+        "startLine": 174,
+        "startChar": 0,
+        "endLine": 182,
+        "endChar": 64
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5533030d_7eeaea8c",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-23T11:08:54Z",
+      "side": 1,
+      "message": "You want to check if jqp is null in java? I think there is some function call you should do and that just checking against nullptr in C++ is dangerous.",
+      "range": {
+        "startLine": 194,
+        "startChar": 6,
+        "endLine": 194,
+        "endChar": 20
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7520c63_496245bf",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-23T11:08:54Z",
+      "side": 1,
+      "message": "Use static_cast instead.",
+      "range": {
+        "startLine": 226,
+        "startChar": 32,
+        "endLine": 226,
+        "endChar": 38
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0c28e11f_0d0f40fb",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-23T11:08:54Z",
+      "side": 1,
+      "message": "Consider queue...",
+      "range": {
+        "startLine": 16,
+        "startChar": 10,
+        "endLine": 16,
+        "endChar": 15
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "767fa62e_922b7468",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-23T11:08:54Z",
+      "side": 1,
+      "message": "This class is something we should possible expose publicly, if someone wants to use our HW codecs outside of our peerconnection API.",
+      "range": {
+        "startLine": 26,
+        "startChar": 6,
+        "endLine": 26,
+        "endChar": 25
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1885015b_b759643f",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-23T11:08:54Z",
+      "side": 1,
+      "message": "Move this below struct FrameExtraInfo.",
+      "range": {
+        "startLine": 57,
+        "startChar": 2,
+        "endLine": 57,
+        "endChar": 42
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
