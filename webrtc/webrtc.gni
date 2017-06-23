@@ -244,9 +244,6 @@ template("rtc_test") {
     configs += invoker.configs
     configs -= rtc_remove_configs
     configs -= invoker.suppressed_configs
-    if (is_winrt) {
-      configs += [ "//third_party/winrt_compat:ignore_threading_model_warning" ]
-    }
     public_configs = [ rtc_common_inherited_config ]
     if (defined(invoker.public_configs)) {
       public_configs += invoker.public_configs
@@ -286,9 +283,6 @@ template("rtc_executable") {
     configs += invoker.configs
     configs -= rtc_remove_configs
     configs -= invoker.suppressed_configs
-    if (is_winrt) {
-      configs += [ "//third_party/winrt_compat:ignore_threading_model_warning" ]
-    }
     deps = [
       "//build/config/sanitizers:deps",
     ]

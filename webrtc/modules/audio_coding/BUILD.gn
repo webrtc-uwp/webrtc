@@ -1266,6 +1266,9 @@ if (rtc_include_tests) {
       "//testing/gtest",
       "//third_party/gflags:gflags",
     ]
+    if (is_winrt) {
+      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
+    }
   }  # insert_packet_with_timing
 
   audio_decoder_unittests_resources =
@@ -1383,6 +1386,9 @@ if (rtc_include_tests) {
         "../../test:test_support",
         "//third_party/gflags",
       ]
+      if (is_winrt) {
+        deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
+      }
     }
   }
 
@@ -1609,6 +1615,9 @@ if (rtc_include_tests) {
       "../../base:rtc_base_approved",
       "../../common_audio",
     ]
+    if (is_winrt) {
+      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
+    }
 
     configs += [ ":RTPencode_config" ]
 
@@ -1639,6 +1648,9 @@ if (rtc_include_tests) {
     deps = [
       ":neteq_test_tools",
     ]
+    if (is_winrt) {
+      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
+    }
   }
 
   rtc_executable("rtpcat") {
@@ -1654,6 +1666,9 @@ if (rtc_include_tests) {
       "../../test:rtp_test_utils",
       "//testing/gtest",
     ]
+    if (is_winrt) {
+      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
+    }
   }
 
   rtc_executable("RTPtimeshift") {
@@ -1668,6 +1683,9 @@ if (rtc_include_tests) {
       "../../test:test_support",
       "//testing/gtest",
     ]
+    if (is_winrt) {
+      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
+    }
   }
 
   rtc_executable("RTPjitter") {
@@ -1678,6 +1696,9 @@ if (rtc_include_tests) {
       "../../test:test_support",
       "//testing/gtest",
     ]
+    if (is_winrt) {
+      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
+    }
     sources = [
       "neteq/test/RTPjitter.cc",
     ]
@@ -1698,6 +1719,9 @@ if (rtc_include_tests) {
       "//testing/gtest",
       "//third_party/gflags:gflags",
     ]
+    if (is_winrt) {
+      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
+    }
 
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).

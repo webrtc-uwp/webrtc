@@ -14,7 +14,7 @@
 #include "webrtc/p2p/base/relayserver.h"
 #include "webrtc/base/thread.h"
 
-int main(int argc, char **argv) {
+int main(int argc, char *argv[]) {
   if (argc != 3) {
     std::cerr << "usage: relayserver internal-address external-address"
               << std::endl;
