@@ -75,7 +75,6 @@ OveruseDetector::OveruseDetector()
       // some offsets between timestamp and time of arrival, which could be 
       // interpreted as bandwidth limitation. Relax the overuse_detection threshold
       overusing_time_threshold_(1000),
-      options_(options),
       threshold_(250.0),
 #else // WINRT
       overusing_time_threshold_(100),

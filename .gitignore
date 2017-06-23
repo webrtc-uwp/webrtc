@@ -104,3 +104,4 @@ chromium/src/third_party/opus
 chromium/src/third_party/protobuf
 chromium/src/third_party/usrsctp
 chromium/src/third_party/yasm
+chromium/src/tools/protoc_wrapper/
