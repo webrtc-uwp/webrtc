@@ -201,130 +201,132 @@ if (rtc_include_tests) {
     }
   }
 
-  rtc_static_library("channel_transport") {
-    testonly = true
-    sources = [
-      "test/channel_transport/channel_transport.cc",
-      "test/channel_transport/channel_transport.h",
-      "test/channel_transport/traffic_control_win.cc",
-      "test/channel_transport/traffic_control_win.h",
-      "test/channel_transport/udp_socket2_manager_win.cc",
-      "test/channel_transport/udp_socket2_manager_win.h",
-      "test/channel_transport/udp_socket2_win.cc",
-      "test/channel_transport/udp_socket2_win.h",
-      "test/channel_transport/udp_socket_manager_posix.cc",
-      "test/channel_transport/udp_socket_manager_posix.h",
-      "test/channel_transport/udp_socket_manager_wrapper.cc",
-      "test/channel_transport/udp_socket_manager_wrapper.h",
-      "test/channel_transport/udp_socket_posix.cc",
-      "test/channel_transport/udp_socket_posix.h",
-      "test/channel_transport/udp_socket_wrapper.cc",
-      "test/channel_transport/udp_socket_wrapper.h",
-      "test/channel_transport/udp_transport.h",
-      "test/channel_transport/udp_transport_impl.cc",
-      "test/channel_transport/udp_transport_impl.h",
-    ]
+  if (!is_winrt) {
+    rtc_static_library("channel_transport") {
+      testonly = true
+      sources = [
+        "test/channel_transport/channel_transport.cc",
+        "test/channel_transport/channel_transport.h",
+        "test/channel_transport/traffic_control_win.cc",
+        "test/channel_transport/traffic_control_win.h",
+        "test/channel_transport/udp_socket2_manager_win.cc",
+        "test/channel_transport/udp_socket2_manager_win.h",
+        "test/channel_transport/udp_socket2_win.cc",
+        "test/channel_transport/udp_socket2_win.h",
+        "test/channel_transport/udp_socket_manager_posix.cc",
+        "test/channel_transport/udp_socket_manager_posix.h",
+        "test/channel_transport/udp_socket_manager_wrapper.cc",
+        "test/channel_transport/udp_socket_manager_wrapper.h",
+        "test/channel_transport/udp_socket_posix.cc",
+        "test/channel_transport/udp_socket_posix.h",
+        "test/channel_transport/udp_socket_wrapper.cc",
+        "test/channel_transport/udp_socket_wrapper.h",
+        "test/channel_transport/udp_transport.h",
+        "test/channel_transport/udp_transport_impl.cc",
+        "test/channel_transport/udp_transport_impl.h",
+      ]
 
-    configs += [ ":channel_transport_warnings_config" ]
+      configs += [ ":channel_transport_warnings_config" ]
 
-    if (!build_with_chromium && is_clang) {
-      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
-      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
-    }
+      if (!build_with_chromium && is_clang) {
+        # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+        suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+      }
 
-    deps = [
-      "..:webrtc_common",
-      "../api:transport_api",
-      "../system_wrappers",
-      "//testing/gtest",
-    ]
-  }
-
-  rtc_test("voice_engine_unittests") {
-    deps = [
-      ":channel_transport",
-      ":voice_engine",
-      "//testing/gmock",
-      "//testing/gtest",
-      "//third_party/gflags",
-      "//webrtc/common_audio",
-      "//webrtc/modules/audio_coding",
-      "//webrtc/modules/audio_conference_mixer",
-      "//webrtc/modules/audio_device",
-      "//webrtc/modules/audio_processing",
-      "//webrtc/modules/media_file",
-      "//webrtc/modules/rtp_rtcp",
-      "//webrtc/modules/utility",
-      "//webrtc/system_wrappers",
-      "//webrtc/test:test_main",
-    ]
-
-    if (is_android) {
-      deps += [ "//testing/android/native_test:native_test_native_code" ]
-      shard_timeout = 900
-    }
-
-    sources = [
-      "channel_unittest.cc",
-      "file_player_unittests.cc",
-      "test/channel_transport/udp_socket_manager_unittest.cc",
-      "test/channel_transport/udp_socket_wrapper_unittest.cc",
-      "test/channel_transport/udp_transport_unittest.cc",
-      "transport_feedback_packet_loss_tracker_unittest.cc",
-      "utility_unittest.cc",
-      "voe_audio_processing_unittest.cc",
-      "voe_base_unittest.cc",
-      "voe_codec_unittest.cc",
-      "voe_network_unittest.cc",
-      "voice_engine_fixture.cc",
-      "voice_engine_fixture.h",
-    ]
-
-    data = [
-      "//resources/utility/encapsulated_pcm16b_8khz.wav",
-      "//resources/utility/encapsulated_pcmu_8khz.wav",
-    ]
-
-    if (is_win) {
-      defines = [ "WEBRTC_DRIFT_COMPENSATION_SUPPORTED" ]
-
-      cflags = [
-        # TODO(kjellander): Bug 261: fix this warning.
-        "/wd4373",  # Virtual function override.
+      deps = [
+        "..:webrtc_common",
+        "../api:transport_api",
+        "../system_wrappers",
+        "//testing/gtest",
       ]
     }
 
-    if (!build_with_chromium && is_clang) {
-      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
-      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    rtc_test("voice_engine_unittests") {
+      deps = [
+        ":channel_transport",
+        ":voice_engine",
+        "//testing/gmock",
+        "//testing/gtest",
+        "//third_party/gflags",
+        "//webrtc/common_audio",
+        "//webrtc/modules/audio_coding",
+        "//webrtc/modules/audio_conference_mixer",
+        "//webrtc/modules/audio_device",
+        "//webrtc/modules/audio_processing",
+        "//webrtc/modules/media_file",
+        "//webrtc/modules/rtp_rtcp",
+        "//webrtc/modules/utility",
+        "//webrtc/system_wrappers",
+        "//webrtc/test:test_main",
+      ]
+
+      if (is_android) {
+        deps += [ "//testing/android/native_test:native_test_native_code" ]
+        shard_timeout = 900
+      }
+
+      sources = [
+        "channel_unittest.cc",
+        "file_player_unittests.cc",
+        "test/channel_transport/udp_socket_manager_unittest.cc",
+        "test/channel_transport/udp_socket_wrapper_unittest.cc",
+        "test/channel_transport/udp_transport_unittest.cc",
+        "transport_feedback_packet_loss_tracker_unittest.cc",
+        "utility_unittest.cc",
+        "voe_audio_processing_unittest.cc",
+        "voe_base_unittest.cc",
+        "voe_codec_unittest.cc",
+        "voe_network_unittest.cc",
+        "voice_engine_fixture.cc",
+        "voice_engine_fixture.h",
+      ]
+
+      data = [
+        "//resources/utility/encapsulated_pcm16b_8khz.wav",
+        "//resources/utility/encapsulated_pcmu_8khz.wav",
+      ]
+
+      if (is_win) {
+        defines = [ "WEBRTC_DRIFT_COMPENSATION_SUPPORTED" ]
+
+        cflags = [
+          # TODO(kjellander): Bug 261: fix this warning.
+          "/wd4373",  # Virtual function override.
+        ]
+      }
+
+      if (!build_with_chromium && is_clang) {
+        # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+        suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+      }
+    }
+
+    rtc_executable("voe_cmd_test") {
+      testonly = true
+
+      deps = [
+        ":channel_transport",
+        ":voice_engine",
+        "//testing/gtest",
+        "//third_party/gflags",
+        "//webrtc/logging:rtc_event_log_api",
+        "//webrtc/system_wrappers",
+        "//webrtc/system_wrappers:system_wrappers_default",
+        "//webrtc/test:test_support",
+      ]
+
+      sources = [
+        "test/cmd_test/voe_cmd_test.cc",
+      ]
+
+      if (!build_with_chromium && is_clang) {
+        # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+        suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+      }
     }
   }
 
-  rtc_executable("voe_cmd_test") {
-    testonly = true
-
-    deps = [
-      ":channel_transport",
-      ":voice_engine",
-      "//testing/gtest",
-      "//third_party/gflags",
-      "//webrtc/logging:rtc_event_log_api",
-      "//webrtc/system_wrappers",
-      "//webrtc/system_wrappers:system_wrappers_default",
-      "//webrtc/test:test_support",
-    ]
-
-    sources = [
-      "test/cmd_test/voe_cmd_test.cc",
-    ]
-
-    if (!build_with_chromium && is_clang) {
-      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
-      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
-    }
-  }
-
-  if (!is_ios) {
+  if ((!is_ios) && (!is_winrt)) {
     rtc_executable("voe_auto_test") {
       testonly = true
 
