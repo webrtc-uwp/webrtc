@@ -45,6 +45,12 @@ rtc_static_library("common_video") {
     "video_render_frames.cc",
     "video_render_frames.h",
   ]
+  if (is_winrt) {
+    sources += [
+      "video_common_winrt.cc",
+      "video_common_winrt.h",
+    ]
+  }
 
   include_dirs = [ "../modules/interface" ]
 
