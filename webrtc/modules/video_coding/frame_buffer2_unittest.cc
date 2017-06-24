@@ -63,6 +63,9 @@ class VCMTimingFake : public VCMTiming {
                   int* target_delay_ms,
                   int* jitter_buffer_ms,
                   int* min_playout_delay_ms,
+#ifdef WINRT
+                  int* current_endtoend_delay_ms,
+#endif // WINRT
                   int* render_delay_ms) const override {
     return true;
   }
@@ -108,6 +111,7 @@ class VCMReceiveStatisticsCallbackMock : public VCMReceiveStatisticsCallback {
   MOCK_METHOD2(OnCompleteFrame, void(bool is_keyframe, size_t size_bytes));
   MOCK_METHOD1(OnDiscardedPacketsUpdated, void(int discarded_packets));
   MOCK_METHOD1(OnFrameCountsUpdated, void(const FrameCounts& frame_counts));
+#ifndef WINRT
   MOCK_METHOD7(OnFrameBufferTimingsUpdated,
                void(int decode_ms,
                     int max_decode_ms,
@@ -116,6 +120,17 @@ class VCMReceiveStatisticsCallbackMock : public VCMReceiveStatisticsCallback {
                     int jitter_buffer_ms,
                     int min_playout_delay_ms,
                     int render_delay_ms));
+#else
+  MOCK_METHOD8(OnFrameBufferTimingsUpdated,
+               void(int decode_ms,
+                    int max_decode_ms,
+                    int current_delay_ms,
+                    int target_delay_ms,
+                    int jitter_buffer_ms,
+                    int min_playout_delay_ms,
+                    int current_endtoend_delay_ms,
+                    int render_delay_ms));
+#endif /* ndef WINRT */
 };
 
 class TestFrameBuffer2 : public ::testing::Test {
@@ -478,8 +493,13 @@ TEST_F(TestFrameBuffer2, StatsCallback) {
   const int kFrameSize = 5000;
 
   EXPECT_CALL(stats_callback_, OnCompleteFrame(true, kFrameSize));
+#ifndef WINRT
   EXPECT_CALL(stats_callback_,
               OnFrameBufferTimingsUpdated(_, _, _, _, _, _, _));
+#else
+  EXPECT_CALL(stats_callback_,
+              OnFrameBufferTimingsUpdated(_, _, _, _, _, _, _, _));
+#endif /*ndef WINRT */
 
   {
     std::unique_ptr<FrameObjectFake> frame(new FrameObjectFake());

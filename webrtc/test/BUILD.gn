@@ -445,6 +445,12 @@ rtc_source_set("test_renderer") {
     "win/d3d_renderer.cc",
     "win/d3d_renderer.h",
   ]
+  if (is_winrt) {
+    sources -= [
+      "win/d3d_renderer.cc",
+      "win/d3d_renderer.h",
+    ]
+  }
   if (!is_linux && !is_mac && !is_win) {
     sources += [ "null_platform_renderer.cc" ]
   }

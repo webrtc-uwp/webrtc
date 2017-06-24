@@ -137,10 +137,18 @@ TEST_F(ReceiveStatisticsProxyTest, GetStatsReportsDecodeTimingStats) {
   const int kMinPlayoutDelayMs = 6;
   const int kRenderDelayMs = 7;
   const int64_t kRttMs = 8;
+#ifdef WINRT
+  const int kEndToEndDelayMs = 9;
+#endif /* WINRT */
+
   statistics_proxy_->OnRttUpdate(kRttMs, 0);
   statistics_proxy_->OnFrameBufferTimingsUpdated(
       kDecodeMs, kMaxDecodeMs, kCurrentDelayMs, kTargetDelayMs, kJitterBufferMs,
-      kMinPlayoutDelayMs, kRenderDelayMs);
+      kMinPlayoutDelayMs,
+#ifdef WINRT
+      kEndToEndDelayMs,
+#endif /* WINRT */
+      kRenderDelayMs);
   VideoReceiveStream::Stats stats = statistics_proxy_->GetStats();
   EXPECT_EQ(kDecodeMs, stats.decode_ms);
   EXPECT_EQ(kMaxDecodeMs, stats.max_decode_ms);
@@ -148,6 +156,9 @@ TEST_F(ReceiveStatisticsProxyTest, GetStatsReportsDecodeTimingStats) {
   EXPECT_EQ(kTargetDelayMs, stats.target_delay_ms);
   EXPECT_EQ(kJitterBufferMs, stats.jitter_buffer_ms);
   EXPECT_EQ(kMinPlayoutDelayMs, stats.min_playout_delay_ms);
+#ifdef WINRT
+  EXPECT_EQ(kEndToEndDelayMs, stats.current_endtoend_delay_ms);
+#endif /* WINRT */
   EXPECT_EQ(kRenderDelayMs, stats.render_delay_ms);
 }
 

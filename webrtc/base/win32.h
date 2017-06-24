@@ -41,6 +41,10 @@ typedef struct _TOKEN_MANDATORY_LABEL {
 #include "webrtc/base/stringutils.h"
 #include "webrtc/base/basictypes.h"
 
+#ifdef WINRT
+#include "../../third_party/winrt_compat/winrt_compat_win.h"
+#endif /* WINRT */
+
 namespace rtc {
 
 const char* win32_inet_ntop(int af, const void *src, char* dst, socklen_t size);
@@ -144,15 +148,6 @@ inline bool IsCurrentProcessLowIntegrity() {
 #endif // !defined(WINRT)
 
 bool AdjustCurrentProcessPrivilege(const TCHAR* privilege, bool to_enable);
-
-#if defined(WINRT)
-// Some functions can be switch over to the ******Ex() version.
-#define InitializeCriticalSection(a) InitializeCriticalSectionEx(a, 0, 0)
-#undef CreateEvent
-#define CreateEvent(lpEventAttributes, bManualReset, bInitialState, lpName) CreateEventEx(lpEventAttributes, lpName, (bManualReset?CREATE_EVENT_MANUAL_RESET:0) | (bInitialState?CREATE_EVENT_INITIAL_SET:0), EVENT_ALL_ACCESS)
-#define WaitForSingleObject(a, b) WaitForSingleObjectEx(a, b, FALSE)
-#define WaitForMultipleObjects(a, b, c, d) WaitForMultipleObjectsEx(a, b, c, d, FALSE) 
-#endif // defined(WINRT)
 
 }  // namespace rtc
 

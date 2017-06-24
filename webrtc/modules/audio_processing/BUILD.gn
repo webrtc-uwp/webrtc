@@ -684,9 +684,6 @@ if (rtc_include_tests) {
         "../../system_wrappers:system_wrappers_default",
         "//third_party/gflags:gflags",
       ]
-      if (is_winrt) {
-        deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-      }
     }  # unpack_aecdump
 
     rtc_executable("audioproc_f") {
@@ -714,9 +711,6 @@ if (rtc_include_tests) {
         "//testing/gtest",
         "//third_party/gflags:gflags",
       ]
-      if (is_winrt) {
-        deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-      }
     }  # audioproc_f
   }
 
@@ -758,9 +752,6 @@ if (rtc_include_tests) {
       "//testing/gtest",
       "//third_party/gflags",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
   }
 
   rtc_executable("click_annotate") {
@@ -776,9 +767,6 @@ if (rtc_include_tests) {
       "../../system_wrappers:metrics_default",
       "../../system_wrappers:system_wrappers",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
   }
 
   rtc_executable("nonlinear_beamformer_test") {
@@ -794,9 +782,6 @@ if (rtc_include_tests) {
       "../../system_wrappers:metrics_default",
       "//third_party/gflags",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
   }
 
   if (rtc_enable_intelligibility_enhancer) {

@@ -631,6 +631,9 @@ rtc_static_library("rtc_base") {
       "winping.cc",
       "winping.h",
     ]
+    if (is_winrt) {
+      public_deps += [ "//third_party/winrt_compat:winrt_compat" ]
+    }
 
     if (is_winrt) {
       sources -= [ "win32filesystem.cc" ]

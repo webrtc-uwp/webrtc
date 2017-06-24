@@ -556,9 +556,6 @@ if (is_linux || is_win) {
       "//webrtc/base:rtc_base_approved",
       "//webrtc/tools:command_line_parser",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
       suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
@@ -574,9 +571,6 @@ if (is_linux || is_win) {
       "//webrtc/system_wrappers:field_trial_default",
       "//webrtc/system_wrappers:metrics_default",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
       suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
@@ -592,9 +586,6 @@ if (is_linux || is_win) {
       "//webrtc/system_wrappers:field_trial_default",
       "//webrtc/system_wrappers:metrics_default",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
       suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
@@ -610,9 +601,6 @@ if (is_linux || is_win) {
       "//webrtc/system_wrappers:field_trial_default",
       "//webrtc/system_wrappers:metrics_default",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
       suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
@@ -638,8 +626,5 @@ if (!build_with_chromium) {
       "../p2p:rtc_p2p",
       "../system_wrappers:field_trial_default",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
   }
 }

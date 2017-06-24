@@ -120,9 +120,6 @@ if (rtc_enable_protobuf) {
         "../test:rtp_test_utils",
         "//third_party/gflags",
       ]
-      if (is_winrt) {
-        deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-      }
 
       if (!build_with_chromium && is_clang) {
         # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
@@ -147,9 +144,6 @@ if (rtc_enable_protobuf) {
         "../modules/rtp_rtcp:rtp_rtcp",
         "//third_party/gflags",
       ]
-      if (is_winrt) {
-        deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-      }
       if (!build_with_chromium && is_clang) {
         # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
         suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]

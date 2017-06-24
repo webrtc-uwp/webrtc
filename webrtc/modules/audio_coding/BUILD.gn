@@ -1266,9 +1266,6 @@ if (rtc_include_tests) {
       "//testing/gtest",
       "//third_party/gflags:gflags",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
   }  # insert_packet_with_timing
 
   audio_decoder_unittests_resources =
@@ -1386,9 +1383,6 @@ if (rtc_include_tests) {
         "../../test:test_support",
         "//third_party/gflags",
       ]
-      if (is_winrt) {
-        deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-      }
     }
   }
 
@@ -1615,9 +1609,6 @@ if (rtc_include_tests) {
       "../../base:rtc_base_approved",
       "../../common_audio",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
 
     configs += [ ":RTPencode_config" ]
 
@@ -1648,9 +1639,6 @@ if (rtc_include_tests) {
     deps = [
       ":neteq_test_tools",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
   }
 
   rtc_executable("rtpcat") {
@@ -1666,9 +1654,6 @@ if (rtc_include_tests) {
       "../../test:rtp_test_utils",
       "//testing/gtest",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
   }
 
   rtc_executable("RTPtimeshift") {
@@ -1683,9 +1668,6 @@ if (rtc_include_tests) {
       "../../test:test_support",
       "//testing/gtest",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
   }
 
   rtc_executable("RTPjitter") {
@@ -1696,9 +1678,6 @@ if (rtc_include_tests) {
       "../../test:test_support",
       "//testing/gtest",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
     sources = [
       "neteq/test/RTPjitter.cc",
     ]
@@ -1719,9 +1698,6 @@ if (rtc_include_tests) {
       "//testing/gtest",
       "//third_party/gflags:gflags",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
 
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
@@ -1860,7 +1836,7 @@ if (rtc_include_tests) {
 
   rtc_executable("isac_test") {
     testonly = true
-
+    is_c_main = true
     sources = [
       "codecs/isac/main/test/simpleKenny.c",
     ]
@@ -1890,9 +1866,6 @@ if (rtc_include_tests) {
     deps = [
       ":g711",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
   }
 
   rtc_executable("g722_test") {
@@ -1906,9 +1879,6 @@ if (rtc_include_tests) {
       ":g722",
       "../..:webrtc_common",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
   }
 
   rtc_executable("isac_api_test") {
@@ -1923,9 +1893,6 @@ if (rtc_include_tests) {
       ":isac_test_util",
       "../../base:rtc_base_approved",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
 
     include_dirs = [
       "codecs/isac/main/include",
@@ -1956,6 +1923,7 @@ if (rtc_include_tests) {
 
   rtc_executable("ilbc_test") {
     testonly = true
+    is_c_main = true
 
     sources = [
       "codecs/ilbc/test/iLBC_test.c",

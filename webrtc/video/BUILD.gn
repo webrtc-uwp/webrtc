@@ -136,9 +136,6 @@ if (rtc_include_tests) {
       "//testing/gtest",
       "//third_party/gflags",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
       suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
@@ -160,9 +157,6 @@ if (rtc_include_tests) {
       "../test:test_renderer",
       "//third_party/gflags",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from Chrome's Clang plugins.
       # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
@@ -183,9 +177,6 @@ if (rtc_include_tests) {
       "../test:test_renderer",
       "//third_party/gflags",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
-    }
     if (!is_android) {
       deps += [ "../modules/video_capture:video_capture_internal_impl" ]
     }
@@ -224,6 +215,9 @@ if (rtc_include_tests) {
       "//testing/gmock",
       "//testing/gtest",
     ]
+    if (is_winrt) {
+      deps += [ "//third_party/winrt_compat:force_include_std" ]
+    }
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
       suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
