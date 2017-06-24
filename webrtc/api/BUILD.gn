@@ -143,7 +143,7 @@ rtc_source_set("transport_api") {
   ]
 }
 
-rtc_source_set("video_frame_api") {
+static_library("video_frame_api") {
   sources = [
     "video/i420_buffer.cc",
     "video/i420_buffer.h",
@@ -168,36 +168,6 @@ rtc_source_set("video_frame_api") {
   } else {
     # Need to add a directory normally exported by libyuv.
     include_dirs = [ "$rtc_libyuv_dir/include" ]
-  }
-}
-
-if (is_winrt) {
-  rtc_static_library("video_frame_api_static") {
-    sources = [
-      "video/i420_buffer.cc",
-      "video/i420_buffer.h",
-      "video/video_frame.cc",
-      "video/video_frame.h",
-      "video/video_frame_buffer.h",
-      "video/video_rotation.h",
-    ]
-
-    deps = [
-      "../base:rtc_base_approved",
-      "../system_wrappers",
-    ]
-
-    # TODO(nisse): This logic is duplicated in multiple places.
-    # Define in a single place.
-    if (rtc_build_libyuv) {
-      deps += [ "$rtc_libyuv_dir" ]
-      public_deps = [
-        "$rtc_libyuv_dir",
-      ]
-    } else {
-      # Need to add a directory normally exported by libyuv.
-      include_dirs = [ "$rtc_libyuv_dir/include" ]
-    }
   }
 }
 

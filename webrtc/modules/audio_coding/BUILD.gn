@@ -1890,6 +1890,9 @@ if (rtc_include_tests) {
     deps = [
       ":g711",
     ]
+    if (is_winrt) {
+      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
+    }
   }
 
   rtc_executable("g722_test") {
@@ -1903,6 +1906,9 @@ if (rtc_include_tests) {
       ":g722",
       "../..:webrtc_common",
     ]
+    if (is_winrt) {
+      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
+    }
   }
 
   rtc_executable("isac_api_test") {

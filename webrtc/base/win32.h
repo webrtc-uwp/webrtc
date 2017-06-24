@@ -136,6 +136,11 @@ inline bool IsCurrentProcessLowIntegrity() {
   return (GetCurrentProcessIntegrityLevel(&level) &&
       level < SECURITY_MANDATORY_MEDIUM_RID);
 }
+#else
+inline bool IsCurrentProcessLowIntegrity() {
+  // Assume this is not a low integrity level run for the sake of unit tests and building.
+  return false;
+}
 #endif // !defined(WINRT)
 
 bool AdjustCurrentProcessPrivilege(const TCHAR* privilege, bool to_enable);

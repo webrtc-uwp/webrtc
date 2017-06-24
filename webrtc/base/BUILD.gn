@@ -633,9 +633,9 @@ rtc_static_library("rtc_base") {
     ]
 
     if (is_winrt) {
+      sources -= [ "win32filesystem.cc" ]
+      sources += [ "../../third_party/winrt_compat/webrtc/webrtc/base/win32filesystem.cc" ]
       sources -= [
-        "win32filesystem.cc",
-        "win32filesystem.h",
         "win32window.cc",
         "win32window.h",
       ]
