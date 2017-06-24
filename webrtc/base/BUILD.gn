@@ -206,7 +206,7 @@ rtc_static_library("rtc_base_approved") {
     ]
     if (is_winrt) {
       sources -= [ "logging.cc" ]
-      sources += [ "../../third_party/winrt_compat/webrtc/webrtc/base/logging.cc" ]
+      sources += [ "//third_party/winrt_compat/webrtc/webrtc/base/logging.cc" ]
     }
   }
   if (is_component_build && is_win) {
