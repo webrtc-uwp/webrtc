@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a347022c_f670f76e",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ios/ARDVideoCallViewController.m",
+        "patchSetId": 2
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-26T12:43:47Z",
+      "side": 1,
+      "message": "I was thinking about this also but unsure about what would be the best way to do it. There is some kind of debug overlay that can be accessed by tapping the screen three times when in a call, perhaps it could be added to that view? Or maybe show it visually in some more prominent way, what do you think is best?",
+      "parentUuid": "54d43bf2_e341c685",
+      "range": {
+        "startLine": 167,
+        "startChar": 0,
+        "endLine": 167,
+        "endChar": 1
+      },
+      "revId": "9039ce4628376bda020e662117a52813fdb1fc59",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e2665d8e_3444f662",
         "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
         "patchSetId": 2
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "de9e8de1_6039135d",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 676,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-26T12:43:47Z",
+      "side": 1,
+      "message": "Basically we need to dispatch to some other queue so we don\u0027t run the client\u0027s implemented delegate methods on the thread that AudioDeviceIOS runs on.\n\nThe other notify* methods are called from RTCAudioSession inside selectors called from NSNotificationCenter. These are called from the same thread that the notifications are posted on. For the AVAudioSession related notifications that are handled there, they are documented as being posted on the main thread. So I thought it made sense to match that.",
+      "parentUuid": "e2665d8e_3444f662",
+      "range": {
+        "startLine": 676,
+        "startChar": 2,
+        "endLine": 676,
+        "endChar": 16
+      },
+      "revId": "9039ce4628376bda020e662117a52813fdb1fc59",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "aaf9c12d_1cc02d7c",
         "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
         "patchSetId": 2
@@ -59,6 +107,30 @@
       "writtenOn": "2017-06-26T11:57:04Z",
       "side": 1,
       "message": "Is |num_detected_playout_glitches_| captured by-value in this block? Otherwise it doesn\u0027t look thread safe.",
+      "range": {
+        "startLine": 678,
+        "startChar": 42,
+        "endLine": 678,
+        "endChar": 72
+      },
+      "revId": "9039ce4628376bda020e662117a52813fdb1fc59",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "03c0e7c8_a4ac3060",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-26T12:43:47Z",
+      "side": 1,
+      "message": "From reading up on this, it looks like C++ instance variables are indeed not copied by value by Objective-C blocks, instead using an implicit this pointer. I think this could be resolved by assigning the value of num_detected_playout_glitches_ to a local int64_t variable inside the method, and then referencing that variable in the block instead.",
+      "parentUuid": "aaf9c12d_1cc02d7c",
       "range": {
         "startLine": 678,
         "startChar": 42,
