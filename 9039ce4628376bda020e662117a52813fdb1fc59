@@ -143,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "fa65f79d_1c4f53d0",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-26T13:35:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "03c0e7c8_a4ac3060",
+      "range": {
+        "startLine": 678,
+        "startChar": 42,
+        "endLine": 678,
+        "endChar": 72
+      },
+      "revId": "9039ce4628376bda020e662117a52813fdb1fc59",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1b27f775_8b78df4d",
         "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCAudioSession.h",
         "patchSetId": 2
@@ -163,6 +187,30 @@
       "revId": "9039ce4628376bda020e662117a52813fdb1fc59",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67cd79e6_45addbe3",
+        "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCAudioSession.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-26T13:35:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1b27f775_8b78df4d",
+      "range": {
+        "startLine": 81,
+        "startChar": 0,
+        "endLine": 81,
+        "endChar": 1
+      },
+      "revId": "9039ce4628376bda020e662117a52813fdb1fc59",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
