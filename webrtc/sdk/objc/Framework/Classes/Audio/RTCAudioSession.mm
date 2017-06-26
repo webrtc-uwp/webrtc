@@ -42,6 +42,9 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
   BOOL _isAudioEnabled;
   BOOL _canPlayOrRecord;
   BOOL _isInterrupted;
+
+  // This should only be accessed when locked for configuration.
+  NSMutableArray<RTCAudioSessionConfiguration *> *_initialConfigurations;
 }
 
 @synthesize session = _session;
@@ -93,6 +96,8 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
                forKeyPath:kRTCAudioSessionOutputVolumeSelector
                   options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld
                   context:nil];
+
+    _initialConfigurations = [[NSMutableArray alloc] init];
 
     RTCLog(@"RTCAudioSession (%p): init.", self);
   }
@@ -689,6 +694,9 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
   }
   RTCLog(@"Configuring audio session for WebRTC.");
 
+  // Save the current AVAudioSession state so we can revert back to it.
+  [_initialConfigurations addObject:[RTCAudioSessionConfiguration currentConfiguration]];
+
   // Configure the AVAudioSession and activate it.
   // Provide an error even if there isn't one so we can log it.
   NSError *error = nil;
@@ -751,7 +759,9 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
     return NO;
   }
   RTCLog(@"Unconfiguring audio session for WebRTC.");
-  [self setActive:NO error:outError];
+
+  [self setConfiguration:_initialConfigurations.lastObject active:NO error:outError];
+  [_initialConfigurations removeLastObject];
 
   return YES;
 }

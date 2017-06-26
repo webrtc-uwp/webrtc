@@ -33,12 +33,11 @@ RTC_EXPORT
 @property(nonatomic, assign) NSInteger inputNumberOfChannels;
 @property(nonatomic, assign) NSInteger outputNumberOfChannels;
 
-/** Initializes configuration to defaults. */
-- (instancetype)init NS_DESIGNATED_INITIALIZER;
-
+/** Returns the default configuration that WebRTC needs. */
++ (instancetype)defaultWebRTCConfig;
 /** Returns the current configuration of the audio session. */
 + (instancetype)currentConfiguration;
-/** Returns the configuration that WebRTC needs. */
+/** Returns the configuration that WebRTC needs (defaults to defaultWebRTCConfig). */
 + (instancetype)webRTCConfiguration;
 /** Provide a way to override the default configuration. */
 + (void)setWebRTCConfiguration:(RTCAudioSessionConfiguration *)configuration;
