@@ -168,6 +168,7 @@ rtc_static_library("media_jni") {
     "//webrtc/call:call_interfaces",
     "//webrtc/logging:rtc_event_log_api",
     "//webrtc/media:rtc_audio_video",
+    "//webrtc/modules/audio_processing:audio_processing",
   ]
 
   if (is_clang) {

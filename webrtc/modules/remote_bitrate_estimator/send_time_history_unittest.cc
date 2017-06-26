@@ -69,7 +69,7 @@ TEST_F(SendTimeHistoryTest, AddRemoveOne) {
   const PacketFeedback kSentPacket(0, 1, kSeqNo, 1, kPacingInfo);
   AddPacketWithSendTime(kSeqNo, 1, 1, kPacingInfo);
 
-  PacketFeedback received_packet(0, 0, kSeqNo, 0, kPacingInfo);
+  PacketFeedback received_packet(0, 665, kSeqNo, 101, kPacingInfo);
   EXPECT_TRUE(history_.GetFeedback(&received_packet, false));
   EXPECT_EQ(kSentPacket, received_packet);
 

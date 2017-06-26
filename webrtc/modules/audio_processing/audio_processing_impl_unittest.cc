@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#if 0
+
 #include "webrtc/modules/audio_processing/audio_processing_impl.h"
 
 #include "webrtc/config.h"
@@ -20,6 +22,7 @@ using ::testing::Invoke;
 using ::testing::Return;
 
 namespace webrtc {
+namespace {
 
 class MockInitialize : public AudioProcessingImpl {
  public:
@@ -30,7 +33,12 @@ class MockInitialize : public AudioProcessingImpl {
   int RealInitializeLocked() NO_THREAD_SAFETY_ANALYSIS {
     return AudioProcessingImpl::InitializeLocked();
   }
+
+  MOCK_CONST_METHOD0(AddRef, int());
+  MOCK_CONST_METHOD0(Release, int());
 };
+
+}  // namespace
 
 TEST(AudioProcessingImplTest, AudioParameterChangeTriggersInit) {
   webrtc::Config config;
@@ -73,3 +81,5 @@ TEST(AudioProcessingImplTest, AudioParameterChangeTriggersInit) {
 }
 
 }  // namespace webrtc
+
+#endif

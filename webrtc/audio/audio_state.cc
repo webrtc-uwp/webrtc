@@ -23,7 +23,7 @@ AudioState::AudioState(const AudioState::Config& config)
     : config_(config),
       voe_base_(config.voice_engine),
       audio_transport_proxy_(voe_base_->audio_transport(),
-                             voe_base_->audio_processing(),
+                             config_.audio_processing.get(),
                              config_.audio_mixer) {
   process_thread_checker_.DetachFromThread();
   RTC_DCHECK(config_.audio_mixer);
