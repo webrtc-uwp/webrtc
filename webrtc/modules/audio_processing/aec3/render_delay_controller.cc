@@ -112,13 +112,13 @@ size_t RenderDelayControllerImpl::GetDelay(
         ComputeNewBufferDelay(delay_, echo_path_delay_samples_);
     if (new_delay != delay_ && align_call_counter_ > kNumBlocksPerSecond) {
       delay_ = new_delay;
-    }
 
-    // Update render delay buffer headroom.
-    blocks_since_last_delay_estimate_ = 0;
-    const int headroom = echo_path_delay_samples_ - delay_ * kBlockSize;
-    RTC_DCHECK_LE(0, headroom);
-    headroom_samples_ = rtc::Optional<size_t>(headroom);
+      // Update render delay buffer headroom.
+      blocks_since_last_delay_estimate_ = 0;
+      const int headroom = echo_path_delay_samples_ - delay_ * kBlockSize;
+      RTC_DCHECK_LE(0, headroom);
+      headroom_samples_ = rtc::Optional<size_t>(headroom);
+    }
   } else if (++blocks_since_last_delay_estimate_ > 20 * kNumBlocksPerSecond) {
     headroom_samples_ = rtc::Optional<size_t>();
   }
