@@ -64,45 +64,46 @@ static RTCAudioSessionConfiguration *gWebRTCConfiguration = nil;
 @synthesize inputNumberOfChannels = _inputNumberOfChannels;
 @synthesize outputNumberOfChannels = _outputNumberOfChannels;
 
-- (instancetype)init {
-  if (self = [super init]) {
-    // Use a category which supports simultaneous recording and playback.
-    // By default, using this category implies that our app’s audio is
-    // nonmixable, hence activating the session will interrupt any other
-    // audio sessions which are also nonmixable.
-    _category = AVAudioSessionCategoryPlayAndRecord;
-    _categoryOptions = AVAudioSessionCategoryOptionAllowBluetooth;
-
-    // Specify mode for two-way voice communication (e.g. VoIP).
-    _mode = AVAudioSessionModeVoiceChat;
-
-    // Set the session's sample rate or the hardware sample rate.
-    // It is essential that we use the same sample rate as stream format
-    // to ensure that the I/O unit does not have to do sample rate conversion.
-    // Set the preferred audio I/O buffer duration, in seconds.
-    NSUInteger processorCount = [NSProcessInfo processInfo].processorCount;
-    // Use best sample rate and buffer duration if the CPU has more than one
-    // core.
-    if (processorCount > 1 && [UIDevice deviceType] != RTCDeviceTypeIPhone4S) {
-      _sampleRate = kRTCAudioSessionHighPerformanceSampleRate;
-      _ioBufferDuration = kRTCAudioSessionHighPerformanceIOBufferDuration;
-    } else {
-      _sampleRate = kRTCAudioSessionLowComplexitySampleRate;
-      _ioBufferDuration = kRTCAudioSessionLowComplexityIOBufferDuration;
-    }
-
-    // We try to use mono in both directions to save resources and format
-    // conversions in the audio unit. Some devices does only support stereo;
-    // e.g. wired headset on iPhone 6.
-    // TODO(henrika): add support for stereo if needed.
-    _inputNumberOfChannels = kRTCAudioSessionPreferredNumberOfChannels;
-    _outputNumberOfChannels = kRTCAudioSessionPreferredNumberOfChannels;
-  }
-  return self;
++ (void)initialize {
+  gWebRTCConfiguration = [self defaultWebRTCConfig];
 }
 
-+ (void)initialize {
-  gWebRTCConfiguration = [[self alloc] init];
++ (instancetype)defaultWebRTCConfig {
+  RTCAudioSessionConfiguration *config = [[RTCAudioSessionConfiguration alloc] init];
+
+  // Use a category which supports simultaneous recording and playback.
+  // By default, using this category implies that our app’s audio is
+  // nonmixable, hence activating the session will interrupt any other
+  // audio sessions which are also nonmixable.
+  config.category = AVAudioSessionCategoryPlayAndRecord;
+  config.categoryOptions = AVAudioSessionCategoryOptionAllowBluetooth;
+
+  // Specify mode for two-way voice communication (e.g. VoIP).
+  config.mode = AVAudioSessionModeVoiceChat;
+
+  // Set the session's sample rate or the hardware sample rate.
+  // It is essential that we use the same sample rate as stream format
+  // to ensure that the I/O unit does not have to do sample rate conversion.
+  // Set the preferred audio I/O buffer duration, in seconds.
+  NSUInteger processorCount = [NSProcessInfo processInfo].processorCount;
+  // Use best sample rate and buffer duration if the CPU has more than one
+  // core.
+  if (processorCount > 1 && [UIDevice deviceType] != RTCDeviceTypeIPhone4S) {
+    config.sampleRate = kRTCAudioSessionHighPerformanceSampleRate;
+    config.ioBufferDuration = kRTCAudioSessionHighPerformanceIOBufferDuration;
+  } else {
+    config.sampleRate = kRTCAudioSessionLowComplexitySampleRate;
+    config.ioBufferDuration = kRTCAudioSessionLowComplexityIOBufferDuration;
+  }
+
+  // We try to use mono in both directions to save resources and format
+  // conversions in the audio unit. Some devices does only support stereo;
+  // e.g. wired headset on iPhone 6.
+  // TODO(henrika): add support for stereo if needed.
+  config.inputNumberOfChannels = kRTCAudioSessionPreferredNumberOfChannels;
+  config.outputNumberOfChannels = kRTCAudioSessionPreferredNumberOfChannels;
+
+  return config;
 }
 
 + (instancetype)currentConfiguration {
