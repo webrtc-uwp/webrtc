@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3257469e_aafe8d62",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-26T11:15:06Z",
+      "side": 1,
+      "message": "Try to remove default NULL argument.",
+      "range": {
+        "startLine": 37,
+        "startChar": 69,
+        "endLine": 37,
+        "endChar": 76
+      },
+      "revId": "c49b34473ee483be1c2e0b243cb183b8f9025456",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
