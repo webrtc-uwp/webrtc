@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "76bcf80f_4e7799ad",
+        "filename": "webrtc/media/engine/webrtcvideoengine.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 1777,
+      "author": {
+        "id": 1126892
+      },
+      "writtenOn": "2017-06-26T09:38:56Z",
+      "side": 1,
+      "message": "Should this not be:\nif (codec_settings.ulpfec.red_payload_type !\u003d -1 \u0026\u0026 codec_settings.ulpfec.red_rtx_payload_type !\u003d -1) {",
+      "revId": "06ec1cb1db9ad00faf1252b2b8d37edf21fe38f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ed80575_fe7b9531",
+        "filename": "webrtc/media/engine/webrtcvideoengine.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 1778,
+      "author": {
+        "id": 1126892
+      },
+      "writtenOn": "2017-06-26T09:38:56Z",
+      "side": 1,
+      "message": "// RED and RTX enabled, use RED RTX payload type.",
+      "revId": "06ec1cb1db9ad00faf1252b2b8d37edf21fe38f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "696e7fc6_9969fb3b",
+        "filename": "webrtc/media/engine/webrtcvideoengine.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 1781,
+      "author": {
+        "id": 1126892
+      },
+      "writtenOn": "2017-06-26T09:38:56Z",
+      "side": 1,
+      "message": "Should this really be an else if? What should we do if both rtx_payload_type  and red_rtx_payload_type are set? I\u0027d expect that we could send on any of them in that case, but in practice maybe we only send on the red rtx one? It at least deserves a comment.",
+      "revId": "06ec1cb1db9ad00faf1252b2b8d37edf21fe38f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
