@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "733092c5_ebcce9e2",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 3
+      },
+      "lineNbr": 676,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-26T15:35:40Z",
+      "side": 1,
+      "message": "It would also be possible to skip the counter in the callback altogether and only report \"glitch detected\". The observer could then decide what to do and add its own counter if needed. Just an idea.",
+      "range": {
+        "startLine": 676,
+        "startChar": 2,
+        "endLine": 676,
+        "endChar": 9
+      },
+      "revId": "203de33d25c170430e0f01ff694926168a6e9bab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
