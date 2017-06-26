@@ -22,6 +22,30 @@
       "revId": "f8a24ab594f0ba34bd02c0ca969012e6f7274391",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6000a360_fc1fc9dd",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Audio/RTCAudioSession.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-26T12:18:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cc1621a8_c2ef2328",
+      "range": {
+        "startLine": 47,
+        "startChar": 50,
+        "endLine": 47,
+        "endChar": 72
+      },
+      "revId": "f8a24ab594f0ba34bd02c0ca969012e6f7274391",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
