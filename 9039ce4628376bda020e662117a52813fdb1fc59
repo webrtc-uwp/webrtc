@@ -48,6 +48,29 @@
     },
     {
       "key": {
+        "uuid": "aaf9c12d_1cc02d7c",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-26T11:57:04Z",
+      "side": 1,
+      "message": "Is |num_detected_playout_glitches_| captured by-value in this block? Otherwise it doesn\u0027t look thread safe.",
+      "range": {
+        "startLine": 678,
+        "startChar": 42,
+        "endLine": 678,
+        "endChar": 72
+      },
+      "revId": "9039ce4628376bda020e662117a52813fdb1fc59",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1b27f775_8b78df4d",
         "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCAudioSession.h",
         "patchSetId": 2
