@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ea3e5a59_db055f39",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-26T07:26:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "93998231_391382d1",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 41
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "98ccd986_897970f5",
         "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.cc",
         "patchSetId": 9
@@ -45,6 +69,30 @@
       "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed6ee449_43c381aa",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-26T07:26:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "98ccd986_897970f5",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 28
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "482ee3de_a50d5f4b",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-26T07:26:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "27e56fc0_1b5f2ac0",
+      "range": {
+        "startLine": 101,
+        "startChar": 36,
+        "endLine": 101,
+        "endChar": 65
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c81043d5_2f39a5cc",
         "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.cc",
         "patchSetId": 9
@@ -91,6 +163,30 @@
       "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9e749eb_8d7a9e63",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-26T07:26:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c81043d5_2f39a5cc",
+      "range": {
+        "startLine": 123,
+        "startChar": 2,
+        "endLine": 123,
+        "endChar": 21
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "98469dee_c25cd20a",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-26T07:26:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "052b8aa2_efdb748f",
+      "range": {
+        "startLine": 174,
+        "startChar": 0,
+        "endLine": 182,
+        "endChar": 64
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5533030d_7eeaea8c",
         "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.cc",
         "patchSetId": 9
@@ -137,6 +257,30 @@
       "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ee9f527_2aea950d",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-26T07:26:16Z",
+      "side": 1,
+      "message": "It should be safe according to this: https://stackoverflow.com/questions/2346615/jni-how-can-i-check-if-jobject-is-a-null-object-in-native-c-code",
+      "parentUuid": "5533030d_7eeaea8c",
+      "range": {
+        "startLine": 194,
+        "startChar": 6,
+        "endLine": 194,
+        "endChar": 20
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "40dbf6c1_136b05f0",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-26T07:26:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b7520c63_496245bf",
+      "range": {
+        "startLine": 226,
+        "startChar": 32,
+        "endLine": 226,
+        "endChar": 38
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0c28e11f_0d0f40fb",
         "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.h",
         "patchSetId": 9
@@ -183,6 +351,30 @@
       "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16e4e11c_55d0955d",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-26T07:26:16Z",
+      "side": 1,
+      "message": "Since I call clear on the deque, I don\u0027t think it\u0027s worth moving over to queue.",
+      "parentUuid": "0c28e11f_0d0f40fb",
+      "range": {
+        "startLine": 16,
+        "startChar": 10,
+        "endLine": 16,
+        "endChar": 15
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -209,6 +401,30 @@
     },
     {
       "key": {
+        "uuid": "9eea1ac3_fe3fc0e9",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-26T07:26:16Z",
+      "side": 1,
+      "message": "Agree but I think we should leave it here for now. We don\u0027t have any publicly exposed JNI code right now and we have to figure out the details.",
+      "parentUuid": "767fa62e_922b7468",
+      "range": {
+        "startLine": 26,
+        "startChar": 6,
+        "endLine": 26,
+        "endChar": 25
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1885015b_b759643f",
         "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.h",
         "patchSetId": 9
@@ -229,6 +445,30 @@
       "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec2f11dc_5faa4ff1",
+        "filename": "webrtc/sdk/android/src/jni/videodecoderwrapper.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-26T07:26:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1885015b_b759643f",
+      "range": {
+        "startLine": 57,
+        "startChar": 2,
+        "endLine": 57,
+        "endChar": 42
+      },
+      "revId": "20eed261b640efc1563d54cf6168187f8552eb91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
