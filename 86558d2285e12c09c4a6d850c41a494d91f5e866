@@ -16,6 +16,24 @@
       "revId": "86558d2285e12c09c4a6d850c41a494d91f5e866",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0e81558_1bbc8f45",
+        "filename": "webrtc/sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 570,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-26T13:10:39Z",
+      "side": 1,
+      "message": "Actually, they are invalidated right away. I made the decoder wait for all of them to be released now.",
+      "parentUuid": "ca864058_c5c9e3dd",
+      "revId": "86558d2285e12c09c4a6d850c41a494d91f5e866",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
