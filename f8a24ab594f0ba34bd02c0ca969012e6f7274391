@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc1621a8_c2ef2328",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Audio/RTCAudioSession.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-26T11:52:55Z",
+      "side": 1,
+      "message": "Why do we call this variable something with \"initial\"? Something like \"_configurationStack\" would be more intuitive to me. Also, a brief comment explaining what it\u0027s used for would be nice.",
+      "range": {
+        "startLine": 47,
+        "startChar": 50,
+        "endLine": 47,
+        "endChar": 72
+      },
+      "revId": "f8a24ab594f0ba34bd02c0ca969012e6f7274391",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
