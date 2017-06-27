@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "691008cd_ac4e14a1",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoRenderer.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-27T11:32:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "165b7442_553a1b80",
+      "range": {
+        "startLine": 65,
+        "startChar": 6,
+        "endLine": 65,
+        "endChar": 20
+      },
+      "revId": "1c2dd0eb32f4209813bbc5b1e41aafbd78c79f88",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d5104917_42b86471",
         "filename": "webrtc/sdk/android/api/org/webrtc/VideoRenderer.java",
         "patchSetId": 2
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "2902bc17_ca1fc3a3",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoRenderer.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-27T11:32:20Z",
+      "side": 1,
+      "message": "I thought about this. Don\u0027t you think it is unexpected that if you pass in an I420 frame with an identity matrix, it will be rendered upside down?\n\nWe would have to have a condition that if we output an I420 frame, we have to flip the matrix.\n\nI now implemented multiplying the two matrices, do you think this is better?",
+      "parentUuid": "d5104917_42b86471",
+      "range": {
+        "startLine": 124,
+        "startChar": 8,
+        "endLine": 124,
+        "endChar": 27
+      },
+      "revId": "1c2dd0eb32f4209813bbc5b1e41aafbd78c79f88",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fc02d1fc_c9f1300d",
         "filename": "webrtc/sdk/android/src/jni/native_handle_impl.cc",
         "patchSetId": 2
@@ -68,6 +116,30 @@
       "revId": "1c2dd0eb32f4209813bbc5b1e41aafbd78c79f88",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ca4cf73e_b7a6549a",
+        "filename": "webrtc/sdk/android/src/jni/native_handle_impl.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-27T11:32:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fc02d1fc_c9f1300d",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 0
+      },
+      "revId": "1c2dd0eb32f4209813bbc5b1e41aafbd78c79f88",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
