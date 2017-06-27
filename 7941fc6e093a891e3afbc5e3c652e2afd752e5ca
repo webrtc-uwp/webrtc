@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9e46491_ede68dc1",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Audio/RTCAudioSessionConfiguration.m",
+        "patchSetId": 2
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1126939
+      },
+      "writtenOn": "2017-06-27T23:07:28Z",
+      "side": 0,
+      "message": "I think it is reasonable to init to reasonable defaults. Why do we want to have everything start at 0 / nil? Basically it means config is unusable unless user explicitly configures each one.",
+      "range": {
+        "startLine": 67,
+        "startChar": 16,
+        "endLine": 67,
+        "endChar": 20
+      },
+      "revId": "7941fc6e093a891e3afbc5e3c652e2afd752e5ca",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}

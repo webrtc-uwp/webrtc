@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "104b83b6_8087319d",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Audio/RTCAudioSession.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 1126939
+      },
+      "writtenOn": "2017-06-27T23:07:28Z",
+      "side": 1,
+      "message": "check for nil or assert if impossible?",
+      "range": {
+        "startLine": 764,
+        "startChar": 45,
+        "endLine": 764,
+        "endChar": 55
+      },
+      "revId": "7b478e06bab23f1b840386516474a0671ab283ce",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
