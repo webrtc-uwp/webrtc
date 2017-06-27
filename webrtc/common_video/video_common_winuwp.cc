@@ -1,13 +1,13 @@
-#include "video_common_winuwp.h"
+#include "video_common_winrt.h"
 
-Windows::UI::Core::CoreDispatcher^ webrtc::VideoCommonWinUWP::windowDispatcher;
+Windows::UI::Core::CoreDispatcher^ webrtc::VideoCommonWinRT::windowDispatcher;
 
-void webrtc::VideoCommonWinUWP::SetCoreDispatcher(Windows::UI::Core::CoreDispatcher ^ inWindowDispatcher)
+void webrtc::VideoCommonWinRT::SetCoreDispatcher(Windows::UI::Core::CoreDispatcher ^ inWindowDispatcher)
 {
 	windowDispatcher = inWindowDispatcher;
 }
 
-Windows::UI::Core::CoreDispatcher ^ webrtc::VideoCommonWinUWP::GetCoreDispatcher()
+Windows::UI::Core::CoreDispatcher ^ webrtc::VideoCommonWinRT::GetCoreDispatcher()
 {
 	return windowDispatcher;
 }
