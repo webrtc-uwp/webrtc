@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea5731a2_9004ecab",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoRenderer.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-27T14:53:10Z",
+      "side": 1,
+      "message": "It should probably be the other way around.",
+      "range": {
+        "startLine": 117,
+        "startChar": 44,
+        "endLine": 117,
+        "endChar": 95
+      },
+      "revId": "294ce1f07cf60c1c8032cbb03ccb8a069d2266ce",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05c6a0b2_03658e66",
+        "filename": "webrtc/sdk/android/src/jni/native_handle_impl.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-27T14:53:10Z",
+      "side": 1,
+      "message": "Can you add a comment that the conversion is like this:\nx1 y1 0 w1\nx2 y2 0 w2\n 0  0 1  0\nx3 y3 0 w3",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 53
+      },
+      "revId": "294ce1f07cf60c1c8032cbb03ccb8a069d2266ce",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
