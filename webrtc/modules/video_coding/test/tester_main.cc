@@ -16,12 +16,6 @@
 #include "webrtc/modules/video_coding/test/receiver_tests.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
-#ifdef WINRT
-//WinRT runtime doesn't support basic executables. Test are run using WinRT application as runner
-//and this project as a static library, so we need exclusive main function name.
-#define main video_coding_tester_main
-#endif
-
 DEFINE_string(codec, "VP8", "Codec to use (VP8 or I420).");
 DEFINE_int32(width, 352, "Width in pixels of the frames in the input file.");
 DEFINE_int32(height, 288, "Height in pixels of the frames in the input file.");

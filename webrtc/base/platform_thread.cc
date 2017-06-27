@@ -189,14 +189,14 @@ void PlatformThread::Stop() {
     return;
 
 #if defined(WEBRTC_WIN)
-#if defined(WINRT)
+#if defined(WINUWP)
   stop_ = true;
-#else // WINRT
+#else // WINUWP
   // Set stop_ to |true| on the worker thread.
   bool queued = QueueAPC(&RaiseFlag, reinterpret_cast<ULONG_PTR>(&stop_));
   // Queuing the APC can fail if the thread is being terminated.
   RTC_CHECK(queued || GetLastError() == ERROR_GEN_FAILURE);
-#endif // WINRT
+#endif // WINUWP
   WaitForSingleObject(thread_, INFINITE);
   CloseHandle(thread_);
   thread_ = nullptr;

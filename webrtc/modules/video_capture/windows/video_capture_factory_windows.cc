@@ -10,11 +10,11 @@
 
 #include "webrtc/base/refcount.h"
 #include "webrtc/base/scoped_ref_ptr.h"
-#ifndef WINRT
+#ifndef WINUWP
 #include "webrtc/modules/video_capture/windows/video_capture_ds.h"
 #include "webrtc/modules/video_capture/windows/video_capture_mf.h"
 #else
-#include "webrtc/modules/video_capture/windows/video_capture_winrt.h"
+#include "webrtc/modules/video_capture/windows/video_capture_winuwp.h"
 #endif
 
 namespace webrtc {
@@ -22,11 +22,11 @@ namespace videocapturemodule {
 
 // static
 VideoCaptureModule::DeviceInfo* VideoCaptureImpl::CreateDeviceInfo() {
-#ifndef WINRT
+#ifndef WINUWP
   // TODO(tommi): Use the Media Foundation version on Vista and up.
   return DeviceInfoDS::Create();
 #else
-  return DeviceInfoWinRT::Create();
+  return DeviceInfoWinUWP::Create();
 #endif
 }
 
@@ -35,13 +35,13 @@ rtc::scoped_refptr<VideoCaptureModule> VideoCaptureImpl::Create(
   if (device_id == nullptr)
     return nullptr;
 
-#ifndef WINRT
+#ifndef WINUWP
   // TODO(tommi): Use Media Foundation implementation for Vista and up.
   rtc::scoped_refptr<VideoCaptureDS> capture(
       new rtc::RefCountedObject<VideoCaptureDS>());
 #else
-  rtc::scoped_refptr<VideoCaptureWinRT> capture(
-      new rtc::RefCountedObject<VideoCaptureWinRT>());
+  rtc::scoped_refptr<VideoCaptureWinUWP> capture(
+      new rtc::RefCountedObject<VideoCaptureWinUWP>());
 #endif
   if (capture->Init(device_id) != 0) {
     return nullptr;

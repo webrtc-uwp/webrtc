@@ -10,17 +10,11 @@
 
 #include "webrtc/system_wrappers/source/event_timer_win.h"
 
-#ifndef WINRT
+#ifndef WINUWP
 #include "Mmsystem.h"
 #else
 using namespace Windows::System::Threading;
 using namespace Windows::Foundation;
-#endif
-
-#ifdef WINRT
-#undef CreateEvent
-#define CreateEvent(lpEventAttributes, bManualReset, bInitialState, lpName) CreateEventEx(lpEventAttributes, lpName, (bManualReset?CREATE_EVENT_MANUAL_RESET:0) | (bInitialState?CREATE_EVENT_INITIAL_SET:0), EVENT_ALL_ACCESS)
-#define WaitForSingleObject(a, b) WaitForSingleObjectEx(a, b, FALSE)
 #endif
 
 namespace webrtc {
@@ -30,7 +24,7 @@ EventTimerWrapper* EventTimerWrapper::Create() {
   return new EventTimerWin();
 }
 
-#ifndef WINRT
+#ifndef WINUWP
 class EventTimerWin::Impl
 {
 public:
@@ -99,7 +93,7 @@ private:
   uint32_t timerID_;
 };
 
-#else // WinRT
+#else // WinUWP
 class EventTimerWin::Impl
 {
 public:

@@ -308,7 +308,7 @@ void LogMessage::ConfigureLogging(const char* params) {
     }
   }
 
-#if defined(WEBRTC_WIN) && !defined(WINRT)
+#if defined(WEBRTC_WIN) && !defined(WINUWP)
   if ((LS_NONE != debug_level) && !::IsDebuggerPresent()) {
     // First, attempt to attach to our parent's console... so if you invoke
     // from the command line, we'll see the output there.  Otherwise, create
@@ -370,7 +370,7 @@ void LogMessage::OutputToDebug(const std::string& str,
   // Perhaps stderr should be controlled by a preference, as on Mac?
   OutputDebugStringA(str.c_str());
   if (log_to_stderr) {
-#ifndef WINRT
+#ifndef WINUWP
     // This handles dynamically allocated consoles, too.
     if (HANDLE error_handle = ::GetStdHandle(STD_ERROR_HANDLE)) {
       log_to_stderr = false;
@@ -378,7 +378,7 @@ void LogMessage::OutputToDebug(const std::string& str,
       ::WriteFile(error_handle, str.data(), static_cast<DWORD>(str.size()),
                   &written, 0);
     }
-#endif // ndef WINRT
+#endif // ndef WINUWP
   }
 #endif  // WEBRTC_WIN
 #if defined(WEBRTC_ANDROID)

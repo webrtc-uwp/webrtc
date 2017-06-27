@@ -516,10 +516,10 @@ const char* StatsReport::Value::display_name() const {
       return "googMaxDecodeMs";
     case kStatsValueNameCurrentDelayMs:
       return "googCurrentDelayMs";
-#ifdef WINRT
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
     case kStatsValueNameCurrentEndToEndDelayMs:
-      return "winrtEndToEndDelayMs";
-#endif
+      return "winuwpEndToEndDelayMs";
+#endif /* WEBRTC_FEATURE_END_TO_END_DELAY */
     case kStatsValueNameTargetDelayMs:
       return "googTargetDelayMs";
     case kStatsValueNameJitterBufferMs:

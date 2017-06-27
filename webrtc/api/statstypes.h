@@ -146,9 +146,9 @@ class StatsReport {
     kStatsValueNameContentName,
     kStatsValueNameCpuLimitedResolution,
     kStatsValueNameCurrentDelayMs,
-#ifdef WINRT
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
     kStatsValueNameCurrentEndToEndDelayMs,
-#endif // WINRT
+#endif /* WEBRTC_FEATURE_END_TO_END_DELAY */
     kStatsValueNameDecodeMs,
     kStatsValueNameDecodingCNG,
     kStatsValueNameDecodingCTN,

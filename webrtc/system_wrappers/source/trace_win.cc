@@ -25,7 +25,7 @@ TraceWindows::~TraceWindows() {
 }
 
 
-#if defined(WINRT)
+#if defined(WINUWP)
 DWORD TraceWindows::timeGetTime() {
     LARGE_INTEGER freq, t;
     QueryPerformanceFrequency(&freq);
@@ -93,15 +93,6 @@ int32_t TraceWindows::AddDateTimeInfo(char* trace_message) const {
   TCHAR sz_date_str[20];
   TCHAR sz_time_str[20];
 
-#if defined(WINRT)
-  // Create date string (e.g. Apr 04 2002)
-  GetDateFormatEx(LOCALE_NAME_SYSTEM_DEFAULT, 0, &sys_time, TEXT("MMM dd yyyy"),
-                sz_date_str, 20, NULL);
-
-  // Create time string (e.g. 15:32:08)
-  GetDateFormatEx(LOCALE_NAME_SYSTEM_DEFAULT, 0, &sys_time,
-                  TEXT("HH':'mm':'ss"), sz_time_str, 20, NULL);
-#else
   // Create date string (e.g. Apr 04 2002)
   GetDateFormat(LOCALE_SYSTEM_DEFAULT, 0, &sys_time, TEXT("MMM dd yyyy"),
                 sz_date_str, 20);
@@ -109,7 +100,7 @@ int32_t TraceWindows::AddDateTimeInfo(char* trace_message) const {
   // Create time string (e.g. 15:32:08)
   GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, &sys_time, TEXT("HH':'mm':'ss"),
                 sz_time_str, 20);
-#endif
+
   sprintf(trace_message, "Local Date: %ls Local Time: %ls", sz_date_str,
           sz_time_str);
 

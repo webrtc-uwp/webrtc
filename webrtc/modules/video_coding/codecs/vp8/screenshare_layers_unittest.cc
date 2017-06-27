@@ -494,9 +494,6 @@ TEST_F(ScreenshareLayerTest, RespectsMaxIntervalBetweenFrames) {
             layers_->EncodeFlags(kTwoSecondsLater + 90));
 }
 
-// Disabled for WinRT because we can't link to the default and full
-// implementations in our single gtest_runner app.
-#if !defined(WINRT)
 TEST_F(ScreenshareLayerTest, UpdatesHistograms) {
   metrics::Reset();
   ConfigureBitrates();
@@ -574,7 +571,6 @@ TEST_F(ScreenshareLayerTest, UpdatesHistograms) {
             metrics::NumEvents("WebRTC.Video.Screenshare.Layer1.TargetBitrate",
                                kDefaultTl1BitrateKbps));
 }
-#endif // WINRT
 
 TEST_F(ScreenshareLayerTest, AllowsUpdateConfigBeforeSetRates) {
   vpx_codec_enc_cfg_t cfg = GetConfig();

@@ -492,9 +492,6 @@ TEST_F(TestBasicJitterBuffer, SinglePacketFrame) {
   jitter_buffer_->ReleaseFrame(frame_out);
 }
 
-// Disabled for WinRT because we can't link to the default and full
-// implementations in our single gtest_runner app.
-#if !defined(WINRT)
 TEST_F(TestBasicJitterBuffer, VerifyHistogramStats) {
   metrics::Reset();
   // Always start with a complete key frame when not allowing errors.
@@ -532,7 +529,6 @@ TEST_F(TestBasicJitterBuffer, VerifyHistogramStats) {
       1, metrics::NumSamples("WebRTC.Video.CompleteFramesReceivedPerSecond"));
   EXPECT_EQ(1, metrics::NumSamples("WebRTC.Video.KeyFramesReceivedInPermille"));
 }
-#endif
 
 TEST_F(TestBasicJitterBuffer, DualPacketFrame) {
   packet_->frameType = kVideoFrameKey;

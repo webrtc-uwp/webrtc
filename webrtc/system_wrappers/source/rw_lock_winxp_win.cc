@@ -10,13 +10,6 @@
 
 #include "webrtc/system_wrappers/source/rw_lock_winxp_win.h"
 
-#if defined(WINRT)
-#  ifdef InitializeCriticalSection
-#    undef InitializeCriticalSection
-#  endif
-#define InitializeCriticalSection(a) InitializeCriticalSectionEx(a, 0, 0)
-#endif
-
 namespace webrtc {
 namespace {
 class ScopedLock {

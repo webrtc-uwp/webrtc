@@ -693,7 +693,7 @@ std::string quote(const std::string& str) {
   return result;
 }
 
-#if defined(WEBRTC_WIN) && !defined(WINRT) // SSPI not available in WinRT it would seem.
+#if defined(WEBRTC_WIN) && !defined(WINUWP)
 struct NegotiateAuthContext : public HttpAuthContext {
   CredHandle cred;
   CtxtHandle ctx;
@@ -710,7 +710,7 @@ struct NegotiateAuthContext : public HttpAuthContext {
     FreeCredentialsHandle(&cred);
   }
 };
-#endif // WEBRTC_WIN
+#endif // defined(WEBRTC_WIN) && !defined(WINUWP)
 
 HttpAuthResult HttpAuthenticate(
   const char * challenge, size_t len,
@@ -816,7 +816,7 @@ HttpAuthResult HttpAuthenticate(
     return HAR_RESPONSE;
   }
 
-#if defined(WEBRTC_WIN) && !defined(WINRT)
+#if defined(WEBRTC_WIN) && !defined(WINUWP)
 #if 1
   bool want_negotiate = (_stricmp(auth_method.c_str(), "negotiate") == 0);
   bool want_ntlm = (_stricmp(auth_method.c_str(), "ntlm") == 0);
@@ -1001,7 +1001,7 @@ HttpAuthResult HttpAuthenticate(
     return HAR_RESPONSE;
   }
 #endif
-#endif // defined(WEBRTC_WIN) && !defined(WINRT)
+#endif // defined(WEBRTC_WIN) && !defined(WINUWP)
 
   return HAR_IGNORE;
 }

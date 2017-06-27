@@ -201,7 +201,7 @@ if (rtc_include_tests) {
     }
   }
 
-  if (!is_winrt) {
+  if (!is_winuwp) {
     rtc_static_library("channel_transport") {
       testonly = true
       sources = [
@@ -326,7 +326,7 @@ if (rtc_include_tests) {
     }
   }
 
-  if ((!is_ios) && (!is_winrt)) {
+  if ((!is_ios) && (!is_winuwp)) {
     rtc_executable("voe_auto_test") {
       testonly = true
 

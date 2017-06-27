@@ -84,6 +84,7 @@ rtc_static_library("rtc_base_approved") {
   defines = []
   libs = []
   deps = []
+  public_deps = []
   all_dependent_configs = [ ":rtc_base_approved_all_dependent_config" ]
 
   sources = [
@@ -173,10 +174,8 @@ rtc_static_library("rtc_base_approved") {
     "type_traits.h",
   ]
 
-  if (is_winrt) {
-    deps += [ "//third_party/winrt_compat:winrt_compat" ]
-    sources -= [ "platform_file.cc" ]
-    sources += [ "../../third_party/winrt_compat/webrtc/webrtc/base/platform_file.cc" ]
+  if (is_winuwp) {
+    public_deps += [ "//third_party/winuwp_compat:force_include_all" ]
   }
 
   if (is_android) {
@@ -204,10 +203,6 @@ rtc_static_library("rtc_base_approved") {
       "logging.h",
       "logging_mac.mm",
     ]
-    if (is_winrt) {
-      sources -= [ "logging.cc" ]
-      sources += [ "//third_party/winrt_compat/webrtc/webrtc/base/logging.cc" ]
-    }
   }
   if (is_component_build && is_win) {
     # Copy the VS runtime DLLs into the isolate so that they don't have to be
@@ -330,7 +325,7 @@ rtc_static_library("rtc_task_queue") {
         ]
       }
       if (is_win) {
-        if (is_winrt) {
+        if (is_winuwp) {
           sources += [ "task_queue_stdlib.cc" ]
         } else {
           sources += [ "task_queue_win.cc" ]
@@ -492,10 +487,8 @@ rtc_static_library("rtc_base") {
     "thread.h",
   ]
 
-  if (is_winrt) {
-    deps += [ "//third_party/winrt_compat:winrt_compat" ]
-    sources -= [ "socketadapters.cc" ]
-    sources += [ "../../third_party/winrt_compat/webrtc/webrtc/base/socketadapters.cc" ]
+  if (is_winuwp) {
+    public_deps += [ "//third_party/winuwp_compat:force_include_all" ]
   }
 
   # TODO(henrike): issue 3307, make rtc_base build with the Chromium default
@@ -543,7 +536,7 @@ rtc_static_library("rtc_base") {
         "win32socketserver.cc",
         "win32socketserver.h",
       ]
-      if (is_winrt) {
+      if (is_winuwp) {
         sources -= [
           "win32socketserver.cc",
           "win32socketserver.h",
@@ -631,13 +624,7 @@ rtc_static_library("rtc_base") {
       "winping.cc",
       "winping.h",
     ]
-    if (is_winrt) {
-      public_deps += [ "//third_party/winrt_compat:winrt_compat" ]
-    }
-
-    if (is_winrt) {
-      sources -= [ "win32filesystem.cc" ]
-      sources += [ "../../third_party/winrt_compat/webrtc/webrtc/base/win32filesystem.cc" ]
+    if (is_winuwp) {
       sources -= [
         "win32window.cc",
         "win32window.h",
@@ -713,8 +700,8 @@ if (rtc_include_tests) {
       "//testing/gmock",
       "//testing/gtest",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:wrap_main_utf8_cc" ]
+    if (is_winuwp) {
+      deps += [ "//third_party/winuwp_compat:wrap_main_utf8_cc" ]
     }
 
     if (!build_with_chromium && is_clang) {
@@ -791,7 +778,7 @@ if (rtc_include_tests) {
       ":rtc_base_tests_main",
       "//testing/gtest",
     ]
-    if ((is_win) && (!is_winrt)) {
+    if ((is_win) && (!is_winuwp)) {
       sources += [ "win32socketserver_unittest.cc" ]
     }
 
@@ -923,7 +910,7 @@ if (rtc_include_tests) {
         "win32_unittest.cc",
         "win32window_unittest.cc",
       ]
-      if (is_winrt) {
+      if (is_winuwp) {
         sources -= [ "win32window_unittest.cc" ]
       }
     }

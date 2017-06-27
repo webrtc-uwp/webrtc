@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_AUDIO_DEVICE_WIN_AUDIO_DEVICE_WASAPI_WIN_H_
 #define WEBRTC_MODULES_AUDIO_DEVICE_WIN_AUDIO_DEVICE_WASAPI_WIN_H_
 
-#if (_MSC_VER >= 1400) && defined(WINRT)  // only include for VS 2005 and higher
+#if (_MSC_VER >= 1400) && defined(WINUWP)  // only include for VS 2005 and higher
 
 #include "webrtc/modules/audio_device/audio_device_generic.h"
 

@@ -15,7 +15,7 @@
 #ifndef WEBRTC_SPL_SPL_INL_H_
 #define WEBRTC_SPL_SPL_INL_H_
 
-#ifdef WINRT
+#ifdef WINUWP
 #include <winapifamily.h>
 #endif
 

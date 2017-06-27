@@ -580,7 +580,7 @@ struct MediaReceiverInfo {
       : bytes_rcvd(0),
         packets_rcvd(0),
         packets_lost(0),
-#ifdef WINRT
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
         end_to_end_delay_ms(0),
 #endif
         fraction_lost(0.0) {
@@ -618,7 +618,7 @@ struct MediaReceiverInfo {
   int packets_rcvd;
   int packets_lost;
   float fraction_lost;
-#ifdef WINRT
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
   int end_to_end_delay_ms;
 #endif
   std::string codec_name;

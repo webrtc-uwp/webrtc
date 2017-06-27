@@ -12,7 +12,6 @@
 
 #include "webrtc/call/call.h"
 #include "webrtc/system_wrappers/include/clock.h"
-#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/test/fake_network_pipe.h"
 #include "webrtc/test/gmock.h"
 #include "webrtc/test/gtest.h"

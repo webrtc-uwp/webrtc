@@ -191,18 +191,18 @@ void VCMTiming::UpdateCurrentDelay(int64_t render_time_ms,
 int32_t VCMTiming::StopDecodeTimer(uint32_t time_stamp,
                                    int32_t decode_time_ms,
                                    int64_t now_ms,
-#ifdef WINRT
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
                                    int current_endtoend_delay_ms,
-#endif
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
                                    int64_t render_time_ms) {
   CriticalSectionScoped cs(crit_sect_);
   codec_timer_->AddTiming(decode_time_ms, now_ms);
   assert(decode_time_ms >= 0);
   last_decode_ms_ = decode_time_ms;
 
-#ifdef WINRT
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
   current_endtoend_delay_ms_ = current_endtoend_delay_ms;
-#endif
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
 
   // Update stats.
   ++num_decoded_frames_;
@@ -303,9 +303,9 @@ bool VCMTiming::GetTimings(int* decode_ms,
                            int* target_delay_ms,
                            int* jitter_buffer_ms,
                            int* min_playout_delay_ms,
-#ifdef WINRT
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
                            int* current_endtoend_delay_ms,
-#endif
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
                            int* render_delay_ms) const {
   CriticalSectionScoped cs(crit_sect_);
   *decode_ms = last_decode_ms_;
@@ -314,9 +314,9 @@ bool VCMTiming::GetTimings(int* decode_ms,
   *target_delay_ms = TargetDelayInternal();
   *jitter_buffer_ms = jitter_delay_ms_;
   *min_playout_delay_ms = min_playout_delay_ms_;
-#ifdef WINRT
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
   *current_endtoend_delay_ms =  current_endtoend_delay_ms_,
-#endif
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
   *render_delay_ms = render_delay_ms_;
   return (num_decoded_frames_ > 0);
 }

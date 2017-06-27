@@ -252,7 +252,7 @@ TEST_F(TestVp8ImplUnitTest, EncoderParameterTest) {
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, decoder_->InitDecode(&codec_inst_, 1));
 }
 
-TEST_F(TestVp8Impl, DecodedQpEqualsEncodedQp) {
+TEST_F(TestVp8ImplUnitTest, DecodedQpEqualsEncodedQp) {
   SetUpEncodeDecode();
   encoder_->Encode(*input_frame_, nullptr, nullptr);
   EXPECT_GT(WaitForEncodedFrame(), 0u);

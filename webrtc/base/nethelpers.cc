@@ -142,7 +142,7 @@ int inet_pton(int af, const char* src, void *dst) {
 }
 
 bool HasIPv6Enabled() {
-#if defined(WINRT)
+#if defined(WINUWP)
     return true;
 #elif defined(WEBRTC_WIN)
   if (IsWindowsVistaOrLater()) {

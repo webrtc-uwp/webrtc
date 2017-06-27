@@ -48,7 +48,7 @@
 #ifndef WEBRTC_ARCH_ARM_V7
 // For ARMv7 platforms, these are inline functions in spl_inl_armv7.h
 #if !(defined(WINAPI_FAMILY) && WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
-// For WINRT on Windows Phone, these are inline functions in spl_inl_neon.h
+// For WINUWP on Windows Phone, these are inline functions in spl_inl_neon.h
 #ifndef MIPS32_LE
 // For MIPS platforms, these are inline functions in spl_inl_mips.h
 #define WEBRTC_SPL_MUL_16_16(a, b) \

@@ -2411,9 +2411,9 @@ WebRtcVideoChannel2::WebRtcVideoReceiveStream::GetVideoReceiverInfo(
   info.target_delay_ms = stats.target_delay_ms;
   info.jitter_buffer_ms = stats.jitter_buffer_ms;
   info.min_playout_delay_ms = stats.min_playout_delay_ms;
-#ifdef WINRT
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
   info.end_to_end_delay_ms = stats.current_endtoend_delay_ms;
-#endif
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
   info.render_delay_ms = stats.render_delay_ms;
   info.frames_received = stats.frame_counts.key_frames +
                          stats.frame_counts.delta_frames;

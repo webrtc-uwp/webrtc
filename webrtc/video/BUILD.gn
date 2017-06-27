@@ -215,8 +215,8 @@ if (rtc_include_tests) {
       "//testing/gmock",
       "//testing/gtest",
     ]
-    if (is_winrt) {
-      deps += [ "//third_party/winrt_compat:force_include_std" ]
+    if (is_winuwp) {
+      deps += [ "//third_party/winuwp_compat:force_include_std" ]
     }
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).

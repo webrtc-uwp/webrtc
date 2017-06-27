@@ -67,9 +67,9 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
                                    int target_delay_ms,
                                    int jitter_buffer_ms,
                                    int min_playout_delay_ms,
-#ifdef WINRT
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
                                    int current_endtoend_delay_ms,
-#endif
+#endif /* WEBRTC_FEATURE_END_TO_END_DELAY */
                                    int render_delay_ms) override;
 
   // Overrides RtcpStatisticsCallback.
@@ -143,7 +143,9 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
   SampleCounter target_delay_counter_ GUARDED_BY(crit_);
   SampleCounter current_delay_counter_ GUARDED_BY(crit_);
   SampleCounter delay_counter_ GUARDED_BY(crit_);
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
   SampleCounter e2e_delay_counter_ GUARDED_BY(crit_);
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
   MaxCounter freq_offset_counter_ GUARDED_BY(crit_);
   int64_t first_report_block_time_ms_ GUARDED_BY(crit_);
   ReportBlockStats report_block_stats_ GUARDED_BY(crit_);

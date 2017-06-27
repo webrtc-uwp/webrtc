@@ -329,7 +329,7 @@ if (!build_with_chromium) {
       if (rtc_enable_protobuf) {
         deps += [ "logging:rtc_event_log2rtp_dump" ]
       }
-      if (is_winrt) {
+      if (is_winuwp) {
         deps -= [
           "voice_engine:voe_cmd_test",
           "voice_engine:voe_auto_test",

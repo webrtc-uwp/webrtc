@@ -28,7 +28,7 @@ void TraceLog::EnableTraceInternalStorage() {
   if (traces_storage_enabled_)
     return;  // already enabled.
 
-#if WINRT
+#if WINUWP
   Platform::String^ path_w =
     Windows::Storage::ApplicationData::Current->LocalFolder->Path;
   int len8 = WideCharToMultiByte(CP_UTF8, 0, path_w->Data(), path_w->Length(),
@@ -44,14 +44,14 @@ void TraceLog::EnableTraceInternalStorage() {
     traces_memory_limit_ = 1024 * 1024;  // 1mb
     traces_storage_enabled_ = true;
   }
-#endif
+#endif // WINUWP
 }
 
-#ifdef WINRT
+#ifdef WINUWP
 int64 TraceLog::CurrentTraceMemUsage(){
   return this->oss_.tellp();
 }
-#endif
+#endif // WINUWP
 
 TraceLog::~TraceLog() {
   if (tw_) {

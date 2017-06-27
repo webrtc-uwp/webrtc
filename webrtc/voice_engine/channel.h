@@ -523,9 +523,9 @@ class Channel
   // TODO(ossu): Remove once GetAudioDecoderFactory() is no longer needed.
   rtc::scoped_refptr<AudioDecoderFactory> decoder_factory_;
 
-#ifdef WINRT
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
   int current_endtoend_delay_ms_ GUARDED_BY(ts_stats_lock_);
-#endif // WINRT
+#endif /* WEBRTC_FEATURE_END_TO_END_DELAY */
 };
 
 }  // namespace voe

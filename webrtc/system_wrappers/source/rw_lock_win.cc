@@ -59,7 +59,7 @@ void RWLockWin::ReleaseLockShared() {
   release_srw_lock_shared(&lock_);
 }
 
-#ifndef WINRT
+#ifndef WINUWP
 bool RWLockWin::LoadModule() {
   if (module_load_attempted) {
     return native_rw_locks_supported;
@@ -95,7 +95,7 @@ bool RWLockWin::LoadModule() {
   return native_rw_locks_supported;
 }
 #else
-// Those symbols are present on WinRT, map them directly.
+// Those symbols are present on WinUWP, map them directly.
 bool RWLockWin::LoadModule() {
     if (module_load_attempted) {
         return native_rw_locks_supported;

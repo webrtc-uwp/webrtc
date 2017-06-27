@@ -26,9 +26,9 @@ NativeHandleBuffer::NativeHandleBuffer(void* native_handle,
                                        int height)
     : native_handle_(native_handle), width_(width), height_(height) {
   RTC_DCHECK(native_handle != nullptr);
-  // On WinRT, we use NativeHandleBuffer to store encoded H264 samples
+  // On WinUWP, we use NativeHandleBuffer to store encoded H264 samples
   // Those samples don't have a width/height.
-#ifndef WINRT
+#ifndef WINUWP
   RTC_DCHECK_GT(width, 0);
   RTC_DCHECK_GT(height, 0);
 #endif

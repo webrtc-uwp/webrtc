@@ -42,10 +42,10 @@ class TraceLog : public sigslot::has_slots<sigslot::multi_threaded_local> {
   bool Save(const std::string& file_name);
   bool Save(const std::string& addr, int port);
 
-#ifdef WINRT
+#ifdef WINUWP
   //get the size of current trace data in the memory
   int64 CurrentTraceMemUsage();
-#endif
+#endif /* WINUWP */
 
  private:
   static bool processMessages(void* args);

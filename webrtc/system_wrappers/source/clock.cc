@@ -83,7 +83,7 @@ class RealTimeClock : public Clock {
   }
 };
 
-#if defined(_WIN32) && !defined(WINRT)
+#if defined(_WIN32) && !defined(WINUWP)
 // TODO(pbos): Consider modifying the implementation to synchronize itself
 // against system time (update ref_point_, make it non-const) periodically to
 // prevent clock drift.
@@ -186,17 +186,17 @@ class WindowsRealTimeClock : public RealTimeClock {
 };
 
 
-#elif defined(WINRT)
+#elif defined(WINUWP)
 // TODO(pbos): Consider modifying the implementation to synchronize itself
 // against system time (update ref_point_, make it non-const) periodically to
 // prevent clock drift.
-class WinRTRealTimeClock : public RealTimeClock {
+class WinUWPRealTimeClock : public RealTimeClock {
  public:
-    WinRTRealTimeClock()
+    WinUWPRealTimeClock()
         : last_time_ms_(),
         ref_point_(GetSystemReferencePoint()) {}
 
-    virtual ~WinRTRealTimeClock() {}
+    virtual ~WinUWPRealTimeClock() {}
 
  protected:
     struct ReferencePoint {
@@ -212,7 +212,7 @@ class WinRTRealTimeClock : public RealTimeClock {
         GetTimeZoneInformation(&timeZone);
         timeZoneBias = timeZone.Bias * 60 * 1000;  // milliseconds
       }
-      //(todo) winrt: according to msdn GetSystemTimeAsFileTime() which was used to get refernce point
+      //(todo) winuwp: according to msdn GetSystemTimeAsFileTime() which was used to get refernce point
       // the precision will be in the range <15ms. For now, let's use TickTime::MillisecondTimestamp(), which already
       // use GetSystemTimeAsFileTime() to get reference time; in addition, the app might have synced it with ntp server
       uint64_t timestamp = rtc::TimeMillis() + timeZoneBias; //in milliseconds
@@ -313,13 +313,15 @@ class UnixRealTimeClock : public RealTimeClock {
 };
 #endif
 
-#if defined(WINRT)
-typedef WinRTRealTimeClock WindowsRealTimeClock;
+#if defined(WINUWP)
+typedef WinUWPRealTimeClock WindowsRealTimeClock;
+#endif //defined (WINUWP)
 
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
 const int64_t Clock::CurrentNtpDeltaMs =
             Clock::GetRealTimeClock()->CurrentNtpInMilliseconds() -
 						rtc::TimeMillis();
-#endif
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
 
 #if defined(_WIN32)
 static WindowsRealTimeClock* volatile g_shared_clock = nullptr;

@@ -409,9 +409,9 @@ void FrameBuffer::UpdateJitterDelay() {
   int target_delay_ms;
   int jitter_buffer_ms;
   int min_playout_delay_ms;
-#ifdef WINRT
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
   int current_endtoend_delay_ms;
-#endif
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
   int render_delay_ms;
   if (timing_->GetTimings(&decode_ms,
                           &max_decode_ms,
@@ -419,9 +419,9 @@ void FrameBuffer::UpdateJitterDelay() {
                           &target_delay_ms,
                           &jitter_buffer_ms,
                           &min_playout_delay_ms,
-#ifdef WINRT
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
                           &current_endtoend_delay_ms,
-#endif
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
                           &render_delay_ms)) {
     stats_callback_->OnFrameBufferTimingsUpdated(decode_ms,
       max_decode_ms,
@@ -429,9 +429,9 @@ void FrameBuffer::UpdateJitterDelay() {
       target_delay_ms,
       jitter_buffer_ms,
       min_playout_delay_ms,
-#ifdef WINRT
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
       current_endtoend_delay_ms,
-#endif
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
       render_delay_ms);
   }
 }

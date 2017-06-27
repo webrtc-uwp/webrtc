@@ -194,14 +194,14 @@ int VoEBaseImpl::Init(
     return -1;
 #else
     // Create the internal ADM implementation.
-#if defined(WINRT)
-    // Use AudioDeviceModule::kWindowsWasapiAudio for WinRT
+#if defined(WINUWP)
+    // Use AudioDeviceModule::kWindowsWasapiAudio for WinUWP
     shared_->set_audio_device(AudioDeviceModuleImpl::Create(
         VoEId(shared_->instance_id(), -1), AudioDeviceModule::kWindowsWasapiAudio));
-#else // defined(WINRT)
+#else // defined(WINUWP)
     shared_->set_audio_device(AudioDeviceModule::Create(
         VoEId(shared_->instance_id(), -1), shared_->audio_device_layer()));
-#endif // defined(WINRT)
+#endif // defined(WINUWP)
 
     if (shared_->audio_device() == nullptr) {
       shared_->SetLastError(VE_NO_MEMORY, kTraceCritical,

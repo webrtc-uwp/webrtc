@@ -88,9 +88,9 @@ TEST(ReceiverTiming, Tests) {
     timing.StopDecodeTimer(
         timeStamp, clock.TimeInMilliseconds() - startTimeMs,
         clock.TimeInMilliseconds(),
-#ifdef WINRT
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
         0,//dummy data
-#endif
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
         timing.RenderTimeMs(timeStamp, clock.TimeInMilliseconds()));
     timeStamp += 90000 / 25;
     clock.AdvanceTimeMilliseconds(1000 / 25 - 10);

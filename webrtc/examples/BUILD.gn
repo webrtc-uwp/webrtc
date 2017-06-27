@@ -45,7 +45,7 @@ group("examples") {
       ":stunserver",
       ":turnserver",
     ]
-    if (is_winrt) {
+    if (is_winuwp) {
       public_deps -= [ ":peerconnection_client" ]
     }
   }
@@ -489,7 +489,7 @@ if (is_linux || is_win) {
     }
   }
 
-  if (!is_winrt) {
+  if (!is_winuwp) {
     rtc_executable("peerconnection_client") {
       sources = [
         "peerconnection/client/conductor.cc",

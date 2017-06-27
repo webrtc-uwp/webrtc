@@ -29,11 +29,11 @@
 #define GET_CURRENT_DIR getcwd
 #endif
 
-#ifdef WINRT
+#ifdef WINUWP
 #include <objbase.h>
 
 #include "webrtc/base/pathutils.h"
-#endif // WINRT
+#endif // WINUWP
 
 #include <sys/stat.h>  // To check for directory existence.
 #ifndef S_ISDIR  // Not defined in stat.h on Windows.
@@ -68,7 +68,7 @@ const char* kPathDelimiter = "/";
 
 #ifdef WEBRTC_ANDROID
 const char* kRootDirName = "/sdcard/chromium_tests_root/";
-#elif WINRT
+#elif WINUWP
 const char* kProjectRootFileName = "";
 const char* kFallbackPath = "./";
 #else
@@ -139,7 +139,7 @@ std::string ProjectRootPath() {
   if (path == kFallbackPath) {
     return kCannotFindProjectRootDir;
   }
-#ifdef WINRT
+#ifdef WINUWP
   return path + kPathDelimiter;
 #else
   if (relative_dir_path_set) {
@@ -159,12 +159,12 @@ std::string ProjectRootPath() {
     fprintf(stderr, "Cannot find project root directory!\n");
     return kCannotFindProjectRootDir;
   }
-#endif /* WINRT */
+#endif /* WINUWP */
 #endif /* defined(WEBRTC_IOS) */
 }
 
 std::string OutputPath() {
-#if defined(WINRT)
+#if defined(WINUWP)
   auto folder = Windows::Storage::ApplicationData::Current->LocalFolder;
   wchar_t buffer[255];
   wcsncpy_s(buffer, 255, folder->Path->Data(), _TRUNCATE);
@@ -184,17 +184,6 @@ std::string OutputPath() {
 #endif
 }
 
-#if defined(WINRT)
-std::string WorkingDir() {
-  // Consider the app installation location as the working directory for WinRT
-  Windows::Storage::StorageFolder^ installedLocation =
-    Windows::ApplicationModel::Package::Current->InstalledLocation;
-  const wchar_t* installLocPtr = installedLocation->Path->Data();
-  std::wstring installLocWstr = installLocPtr;
-  std::string installLocStr(installLocWstr.begin(), installLocWstr.end());
-  return installLocStr.empty() ? kFallbackPath : installLocStr;
-}
-#else // WINRT
 std::string WorkingDir() {
   char path_buffer[FILENAME_MAX];
   if (!GET_CURRENT_DIR(path_buffer, sizeof(path_buffer))) {
@@ -204,14 +193,13 @@ std::string WorkingDir() {
     return std::string(path_buffer);
   }
 }
-#endif // WINRT
 
 #endif  // !WEBRTC_ANDROID
 
 // Generate a temporary filename in a safe way.
 // Largely copied from talk/base/{unixfilesystem,win32filesystem}.cc.
 std::string TempFilename(const std::string &dir, const std::string &prefix) {
-#if defined(WINRT)
+#if defined(WINUWP)
   rtc::Pathname fullpath = dir;
   GUID g;
   CoCreateGuid(&g);

@@ -37,8 +37,8 @@
 
 namespace webrtc {
 
-#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS) || defined(WINRT)
-// WINRT: Use AECM version for WinRT (not only for phone), investigate why kEcAEc mode doesn't work as well for the desktop
+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS) || defined(WINUWP)
+// WINUWP: Use AECM version for WinUWP (not only for phone), investigate why kEcAEc mode doesn't work as well for the desktop
 static const EcModes kDefaultEcMode = kEcAecm;
 #else
 static const EcModes kDefaultEcMode = kEcAec;

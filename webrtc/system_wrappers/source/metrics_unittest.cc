@@ -44,9 +44,6 @@ TEST_F(MetricsTest, InitiallyNoSamples) {
   EXPECT_EQ(0, metrics::NumEvents("NonExisting", kSample));
 }
 
-// Disabled for WinRT because we can't link to the default and full
-// implementations in our single gtest_runner app.
-#if !defined(WINRT)
 TEST_F(MetricsTest, RtcHistogramPercent_AddSample) {
   const std::string kName = "Percentage";
   RTC_HISTOGRAM_PERCENTAGE(kName, kSample);
@@ -126,7 +123,5 @@ TEST_F(MetricsTest, RtcHistogram_FailsForNonConstantName) {
   EXPECT_DEATH(AddSample("NotConstantName1", kSample), "");
 }
 #endif
-
-#endif // !defined(WINRT)
 
 }  // namespace webrtc

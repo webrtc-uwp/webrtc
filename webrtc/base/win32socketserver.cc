@@ -17,9 +17,7 @@
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/winping.h"
-#if !defined(WINRT)
 #include "webrtc/base/win32window.h"
-#endif
 
 
 namespace rtc {

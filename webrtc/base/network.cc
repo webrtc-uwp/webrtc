@@ -513,7 +513,7 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
 
 #elif defined(WEBRTC_WIN)
 
-#if defined(WINRT)
+#if defined(WINUWP)
 bool BasicNetworkManager::CreateNetworks(bool include_ignored,
                                          NetworkList* networks) const {
 
@@ -561,7 +561,7 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
   }
   return true;
 }
-#else // defined(WINRT)
+#else // defined(WINUWP)
 
 unsigned int GetPrefix(PIP_ADAPTER_PREFIX prefixlist,
               const IPAddress& ip, IPAddress* prefix) {
@@ -707,7 +707,7 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
   }
   return true;
 }
-#endif  // defined(WINRT)
+#endif  // defined(WINUWP)
 #endif  // WEBRTC_WIN
 
 #if defined(WEBRTC_LINUX)

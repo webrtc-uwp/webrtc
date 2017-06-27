@@ -180,8 +180,8 @@ bool BitBuffer::ReadExponentialGolomb(uint32_t* val) {
   // read the value.
   size_t value_bit_count = zero_bit_count + 1;
   if (value_bit_count > 32 || !ReadBits(val, value_bit_count)) {
-#ifdef WINRT
-    // HACK(winrt): We sometimes get larger bit count numbers with the
+#ifdef WINUWP
+    // HACK(winuwp): We sometimes get larger bit count numbers with the
     // Windows H264 encoder.  Try to continue as gracefully as possible.
     if (value_bit_count > 32) {
       ReadBits(val, 32);
@@ -191,10 +191,10 @@ bool BitBuffer::ReadExponentialGolomb(uint32_t* val) {
       RTC_CHECK(Seek(original_byte_offset, original_bit_offset));
       return false;
     }
-#else // WINRT
+#else // WINUWP
     RTC_CHECK(Seek(original_byte_offset, original_bit_offset));
     return false;
-#endif // WINRT
+#endif // WINUWP
   }
   *val -= 1;
   return true;

@@ -11,7 +11,7 @@
 #ifndef WEBRTC_BASE_WIN32WINDOW_H_
 #define WEBRTC_BASE_WIN32WINDOW_H_
 
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) && !defined(WINUWP)
 
 #include "webrtc/base/win32.h"
 
@@ -55,6 +55,6 @@ class Win32Window {
 
 }  // namespace rtc
 
-#endif  // WEBRTC_WIN 
+#endif  // defined(WEBRTC_WIN) && !defined(WINUWP)
 
 #endif  // WEBRTC_BASE_WIN32WINDOW_H_

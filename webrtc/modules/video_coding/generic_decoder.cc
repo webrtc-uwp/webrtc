@@ -75,7 +75,7 @@ void VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage,
                        "this one.";
     return;
   }
-#ifdef WINRT
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
   static const int32_t kMaxDeltaDelayMs = 10000;
   int32_t endToEndDecodingFinished = static_cast<int32_t>(
       Clock::GetRealTimeClock()->TimeInMilliseconds()
@@ -103,16 +103,16 @@ void VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage,
   else {
       endToEndDelay = 0; //reset
   }
-#endif // WINRT
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
   const int64_t now_ms = _clock->TimeInMilliseconds();
   if (!decode_time_ms) {
     decode_time_ms =
         rtc::Optional<int32_t>(now_ms - frameInfo->decodeStartTimeMs);
   }
   _timing->StopDecodeTimer(decodedImage.timestamp(), *decode_time_ms, now_ms,
-#ifdef WINRT
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
                            endToEndDelay,
-#endif
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
                            frameInfo->renderTimeMs);
 
   decodedImage.set_timestamp_us(

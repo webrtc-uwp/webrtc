@@ -109,19 +109,6 @@ using Windows::Foundation::TypedEventHandler;
 #pragma comment(lib, "uuid.lib")
 #pragma comment(lib, "ole32.lib")
 
-
-#if defined(WINRT)
-#undef CreateEvent
-#define WaitForSingleObject(a, b) WaitForSingleObjectEx(a, b, FALSE)
-#define InitializeCriticalSection(a) InitializeCriticalSectionEx(a, 0, 0)
-#define CreateEvent(lpEventAttributes, bManualReset, bInitialState, lpName) \
-  CreateEventEx(lpEventAttributes, lpName, \
-    (bManualReset?CREATE_EVENT_MANUAL_RESET:0) | \
-    (bInitialState?CREATE_EVENT_INITIAL_SET:0), EVENT_ALL_ACCESS)
-#define WaitForMultipleObjects(a, b, c, d) \
-  WaitForMultipleObjectsEx(a, b, c, d, FALSE)
-#endif
-
 typedef struct tagTHREADNAME_INFO {
   DWORD dwType;        // must be 0x1000
   LPCSTR szName;       // pointer to name (in user addr space)

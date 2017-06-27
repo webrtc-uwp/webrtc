@@ -56,11 +56,6 @@ class WebRtcVideoCapturer : public VideoCapturer,
   bool IsRunning() override;
   bool IsScreencast() const override { return false; }
 
-  virtual bool Suspend();
-  virtual bool Resume();
-  virtual bool IsSuspended();
-
-
  protected:
   void OnSinkWantsChanged(const rtc::VideoSinkWants& wants) override;
   // Override virtual methods of the parent class VideoCapturer.

@@ -14,10 +14,6 @@
 #include "webrtc/modules/audio_coding/codecs/isac/fix/source/fft.h"
 #include "webrtc/modules/audio_coding/codecs/isac/fix/source/settings.h"
 
-#ifdef WINRT
-#define inline __inline
-#endif /* WINRT */
-
 // Tables are defined in transform_tables.c file.
 // Cosine table 1 in Q14.
 extern const int16_t WebRtcIsacfix_kCosTab1[FRAMESAMPLES/2];

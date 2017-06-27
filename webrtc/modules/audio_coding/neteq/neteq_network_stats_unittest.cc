@@ -123,10 +123,6 @@ class NetEqNetworkStatsTest : public NetEqExternalDecoderTest {
   static const int kPayloadSizeByte = 30;
   static const int kFrameSizeMs = 20;
 
-#ifdef WINRT
-#undef IGNORE
-#endif 
-
 enum logic {
   kIgnore,
   kEqual,

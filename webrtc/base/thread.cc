@@ -76,7 +76,7 @@ void ThreadManager::SetCurrentThread(Thread *thread) {
 
 #if defined(WEBRTC_WIN)
 ThreadManager::ThreadManager() {
-#ifdef WINRT
+#ifdef WINUWP
   key_ = FlsAlloc(NULL);
 #else
   key_ = TlsAlloc();
@@ -88,7 +88,7 @@ ThreadManager::ThreadManager() {
 
 ThreadManager::~ThreadManager() {
   UnwrapCurrentThread();
-#ifdef WINRT
+#ifdef WINUWP
   FlsFree(key_);
 #else
   TlsFree(key_);
@@ -96,7 +96,7 @@ ThreadManager::~ThreadManager() {
 }
 
 Thread *ThreadManager::CurrentThread() {
-#ifdef WINRT
+#ifdef WINUWP
   return static_cast<Thread *>(FlsGetValue(key_));
 #else
   return static_cast<Thread *>(TlsGetValue(key_));
@@ -104,7 +104,7 @@ Thread *ThreadManager::CurrentThread() {
 }
 
 void ThreadManager::SetCurrentThread(Thread *thread) {
-#ifdef WINRT
+#ifdef WINUWP
   FlsSetValue(key_, thread);
 #else
   TlsSetValue(key_, thread);
@@ -526,7 +526,7 @@ bool Thread::WrapCurrentWithThreadManager(ThreadManager* thread_manager,
 
 #if defined(WEBRTC_WIN)
   if (need_synchronize_access) {
-#if defined(WINRT)
+#if defined(WINUWP)
     thread_ = GetCurrentThread();
 #else
     // We explicitly ask for no rights other than synchronization.

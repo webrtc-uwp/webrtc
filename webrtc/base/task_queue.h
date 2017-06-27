@@ -26,10 +26,6 @@
 #include "webrtc/base/platform_thread.h"
 #endif
 
-#ifdef WINRT
-#define WEBRTC_BASE_QUEUED_TASK_USING_STDLIB
-#endif //WINRT
-
 #ifdef WEBRTC_BASE_QUEUED_TASK_USING_STDLIB
 #include <condition_variable>
 #include <queue>

@@ -27,7 +27,7 @@ class TraceWindows : public TraceImpl {
 
   virtual int32_t AddDateTimeInfo(char* trace_message) const;
 
-#if defined(WINRT)
+#if defined(WINUWP)
   static DWORD timeGetTime();
 #endif
 

@@ -88,6 +88,8 @@ if (!build_with_chromium) {
   rtc_static_library("video_capture_internal_impl") {
     configs += [ ":video_capture_internal_impl_warnings_config" ]
 
+    libs = []
+
     deps = [
       ":video_capture_module",
       "../../base:rtc_base_approved",
@@ -104,7 +106,7 @@ if (!build_with_chromium) {
       deps += [ "../..:webrtc_common" ]
     }
     if (is_win) {
-      if (!is_winrt) {
+      if (!is_winuwp) {
         sources = [
           "windows/device_info_ds.cc",
           "windows/device_info_ds.h",
@@ -123,19 +125,23 @@ if (!build_with_chromium) {
 
         deps += [ "//third_party/winsdk_samples" ]
 
-        libs = [ "Strmiids.lib" ]
+        libs += [ "Strmiids.lib" ]
       } else {
         sources = [
-          "windows/device_info_winrt.cc",
-          "windows/device_info_winrt.h",
+          "windows/device_info_winuwp.cc",
+          "windows/device_info_winuwp.h",
           "windows/video_capture_factory_windows.cc",
-          "windows/video_capture_sink_winrt.cc",
-          "windows/video_capture_sink_winrt.h",
-          "windows/video_capture_winrt.cc",
-          "windows/video_capture_winrt.h",
+          "windows/video_capture_sink_winuwp.cc",
+          "windows/video_capture_sink_winuwp.h",
+          "windows/video_capture_winuwp.cc",
+          "windows/video_capture_winuwp.h",
         ]
 
         deps += [ "//third_party/libyuv" ]
+        libs += [ 
+          "Mfplat.lib",
+          "mfuuid.lib",
+        ]
       }
     }
     if (is_ios || is_mac) {

@@ -41,10 +41,6 @@ typedef struct _TOKEN_MANDATORY_LABEL {
 #include "webrtc/base/stringutils.h"
 #include "webrtc/base/basictypes.h"
 
-#ifdef WINRT
-#include "../../third_party/winrt_compat/winrt_compat_win.h"
-#endif /* WINRT */
-
 namespace rtc {
 
 const char* win32_inet_ntop(int af, const void *src, char* dst, socklen_t size);
@@ -94,7 +90,7 @@ inline uint64_t ToUInt64(const FILETIME& ft) {
   return r.QuadPart;
 }
 
-#if defined(WINRT)
+#if defined(WINUWP)
 inline bool IsWindowsVistaOrLater() {
     return true;
 }
@@ -106,7 +102,7 @@ inline bool IsWindowsXpOrLater() {
 inline bool IsWindows8OrLater() {
     return true;
 }
-#else // defined(WINRT)
+#else // defined(WINUWP)
 enum WindowsMajorVersions {
   kWindows2000 = 5,
   kWindowsVista = 6,
@@ -129,9 +125,9 @@ inline bool IsWindows8OrLater() {
   return (GetOsVersion(&major, &minor, nullptr) &&
           (major > kWindowsVista || (major == kWindowsVista && minor >= 2)));
 }
-#endif // defined(WINRT)
+#endif // defined(WINUWP)
 
-#if !defined(WINRT)
+#if !defined(WINUWP)
 // Determine the current integrity level of the process.
 bool GetCurrentProcessIntegrityLevel(int* level);
 
@@ -140,12 +136,13 @@ inline bool IsCurrentProcessLowIntegrity() {
   return (GetCurrentProcessIntegrityLevel(&level) &&
       level < SECURITY_MANDATORY_MEDIUM_RID);
 }
-#else
+#else /* !defined(WINUWP) */
 inline bool IsCurrentProcessLowIntegrity() {
-  // Assume this is not a low integrity level run for the sake of unit tests and building.
+  // Assume this is NOT a low integrity level run as application privileges
+  // can be requested in manifest as appropriate.
   return false;
 }
-#endif // !defined(WINRT)
+#endif // !defined(WINUWP)
 
 bool AdjustCurrentProcessPrivilege(const TCHAR* privilege, bool to_enable);
 
