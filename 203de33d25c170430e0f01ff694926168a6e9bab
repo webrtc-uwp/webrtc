@@ -46,6 +46,30 @@
       "revId": "203de33d25c170430e0f01ff694926168a6e9bab",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c757854_a1849fb0",
+        "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
+        "patchSetId": 3
+      },
+      "lineNbr": 676,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-27T08:55:22Z",
+      "side": 1,
+      "message": "Keep it as is.",
+      "parentUuid": "9d62b4f3_a0510e93",
+      "range": {
+        "startLine": 676,
+        "startChar": 2,
+        "endLine": 676,
+        "endChar": 9
+      },
+      "revId": "203de33d25c170430e0f01ff694926168a6e9bab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
