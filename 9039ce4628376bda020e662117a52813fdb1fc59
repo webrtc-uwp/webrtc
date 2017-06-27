@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "344f96ba_a2ef5ad0",
+        "filename": "webrtc/examples/objc/AppRTCMobile/ios/ARDVideoCallViewController.m",
+        "patchSetId": 2
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1215177
+      },
+      "writtenOn": "2017-06-27T08:07:51Z",
+      "side": 1,
+      "message": "After some investigation it seems that adding it was a bit more work than I anticipated. The debug view does not seem to work in audio only calls at all right now. It\u0027s probably better to add this feature as a new separate issue if needed.",
+      "parentUuid": "fccf2a8a_78221896",
+      "range": {
+        "startLine": 167,
+        "startChar": 0,
+        "endLine": 167,
+        "endChar": 1
+      },
+      "revId": "9039ce4628376bda020e662117a52813fdb1fc59",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e2665d8e_3444f662",
         "filename": "webrtc/modules/audio_device/ios/audio_device_ios.mm",
         "patchSetId": 2
