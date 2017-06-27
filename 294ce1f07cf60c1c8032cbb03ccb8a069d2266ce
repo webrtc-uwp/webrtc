@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1057cdb1_06ada3ce",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoRenderer.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-27T15:02:25Z",
+      "side": 1,
+      "message": "Good catch, Done",
+      "parentUuid": "ea5731a2_9004ecab",
+      "range": {
+        "startLine": 117,
+        "startChar": 44,
+        "endLine": 117,
+        "endChar": 95
+      },
+      "revId": "294ce1f07cf60c1c8032cbb03ccb8a069d2266ce",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "05c6a0b2_03658e66",
         "filename": "webrtc/sdk/android/src/jni/native_handle_impl.cc",
         "patchSetId": 4
@@ -45,6 +69,30 @@
       "revId": "294ce1f07cf60c1c8032cbb03ccb8a069d2266ce",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9679d534_98542d84",
+        "filename": "webrtc/sdk/android/src/jni/native_handle_impl.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-06-27T15:02:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "05c6a0b2_03658e66",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 53
+      },
+      "revId": "294ce1f07cf60c1c8032cbb03ccb8a069d2266ce",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
