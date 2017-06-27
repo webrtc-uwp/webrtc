@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a6e3905_db413f9d",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-27T11:17:04Z",
+      "side": 1,
+      "message": "I want a newline after the methods that are non-oneliners.",
+      "range": {
+        "startLine": 29,
+        "startChar": 1,
+        "endLine": 29,
+        "endChar": 3
+      },
+      "revId": "ea4ef0fd59bdfe17e3a9f5b97b4cf1ac1fcf9fdf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d008ff17_a3bd6279",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-27T11:17:04Z",
+      "side": 1,
+      "message": "Remove this \u003cT\u003e as well and in the other unnecessary places.",
+      "range": {
+        "startLine": 41,
+        "startChar": 17,
+        "endLine": 41,
+        "endChar": 20
+      },
+      "revId": "ea4ef0fd59bdfe17e3a9f5b97b4cf1ac1fcf9fdf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3debba62_1f77ba34",
+        "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/encoder.mm",
+        "patchSetId": 4
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-27T11:17:04Z",
+      "side": 1,
+      "message": "I think we should avoid using using-directives unless it\u0027s saves a lot of characters, and \u0027rtc::\u0027 is short.",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 20
+      },
+      "revId": "ea4ef0fd59bdfe17e3a9f5b97b4cf1ac1fcf9fdf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}

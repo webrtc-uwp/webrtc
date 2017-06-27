@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "50534067_64e34403",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-27T11:17:04Z",
+      "side": 1,
+      "message": "I thought they were an implementation detail and that clients would only use AdoptCF() and ScopedCF(). Isn\u0027t that the case?",
+      "parentUuid": "431d5226_41c0cad5",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 43
+      },
+      "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "43758093_42ebafbe",
         "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
         "patchSetId": 3
@@ -190,6 +214,30 @@
     },
     {
       "key": {
+        "uuid": "5e62b00a_e83e6f5a",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-27T11:17:04Z",
+      "side": 1,
+      "message": "Yes, please remove this function because I don\u0027t think it makes sense (const T\u0026 rhs should be enough).",
+      "parentUuid": "7f52dc28_27874f38",
+      "range": {
+        "startLine": 52,
+        "startChar": 4,
+        "endLine": 52,
+        "endChar": 26
+      },
+      "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f1ac0650_c5a43dc8",
         "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
         "patchSetId": 3
@@ -234,6 +282,30 @@
       "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f587b79c_5a3dacee",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-06-27T11:17:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9b0ab706_6319bc0b",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 3
+      },
+      "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
