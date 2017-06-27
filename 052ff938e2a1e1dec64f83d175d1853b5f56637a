@@ -48,6 +48,54 @@
     },
     {
       "key": {
+        "uuid": "0e763a6b_c7730be6",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1163304
+      },
+      "writtenOn": "2017-06-27T08:28:00Z",
+      "side": 1,
+      "message": "Instead of coming up with a better name for this I changes ADOPT to RETAIN. That way at least we are consistent with chromium and can blame them for the bad name :)",
+      "parentUuid": "e40a3345_02e1f336",
+      "range": {
+        "startLine": 19,
+        "startChar": 34,
+        "endLine": 19,
+        "endChar": 40
+      },
+      "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "431d5226_41c0cad5",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1163304
+      },
+      "writtenOn": "2017-06-27T08:28:00Z",
+      "side": 1,
+      "message": "Yes, but since it\u0027s a template class it becomes really tedious (and inefficient). To use it you have to type ScopedCFTypeRef\u003cSomeCFTypeRef\u003e::ScopedPolicy::ASSUME which is super long.",
+      "parentUuid": "95cd0130_ff560d3a",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 43
+      },
+      "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "43758093_42ebafbe",
         "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
         "patchSetId": 3
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "bc351913_59e9b495",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1163304
+      },
+      "writtenOn": "2017-06-27T08:28:00Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "43758093_42ebafbe",
+      "range": {
+        "startLine": 26,
+        "startChar": 17,
+        "endLine": 26,
+        "endChar": 20
+      },
+      "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cd473524_17df87eb",
         "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
         "patchSetId": 3
@@ -82,6 +154,30 @@
       "writtenOn": "2017-06-22T14:10:52Z",
       "side": 1,
       "message": "We are potentially leaking the previous value here. Also, I don\u0027t think we need a move constructor for the pointer, maybe for a ScopedCFTypeRef.",
+      "range": {
+        "startLine": 52,
+        "startChar": 4,
+        "endLine": 52,
+        "endChar": 26
+      },
+      "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f52dc28_27874f38",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1163304
+      },
+      "writtenOn": "2017-06-27T08:28:00Z",
+      "side": 1,
+      "message": "You\u0027re right. I felt like I had to include a bunch of stuff but I\u0027m now leaning towards only implementing stuff that\u0027s used. We can then add methods as we need them.",
+      "parentUuid": "cd473524_17df87eb",
       "range": {
         "startLine": 52,
         "startChar": 4,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "9b0ab706_6319bc0b",
+        "filename": "webrtc/sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1163304
+      },
+      "writtenOn": "2017-06-27T08:28:00Z",
+      "side": 1,
+      "message": "Chromiums implementation has a function like this, and I have a concrete use case for it. I think it\u0027s common enough that we should include this, and the DCHECK and comment will hopefully prevent incorrect usage.",
+      "parentUuid": "f1ac0650_c5a43dc8",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 3
+      },
+      "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7e9dd5bc_0bd4ed8d",
         "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/encoder.mm",
         "patchSetId": 3
@@ -134,6 +254,24 @@
     },
     {
       "key": {
+        "uuid": "2c2372b7_1438d7e2",
+        "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/encoder.mm",
+        "patchSetId": 3
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1163304
+      },
+      "writtenOn": "2017-06-27T08:28:00Z",
+      "side": 1,
+      "message": "D\u0027oh! Good catch, thanks.",
+      "parentUuid": "7e9dd5bc_0bd4ed8d",
+      "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1eead8c3_b57e2efe",
         "filename": "webrtc/sdk/objc/Framework/UnitTests/scoped_cftyperef_unittests.cc",
         "patchSetId": 3
@@ -145,6 +283,24 @@
       "writtenOn": "2017-06-22T14:02:48Z",
       "side": 1,
       "message": "Should this comment be outside the block?",
+      "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7121cc9a_db9e3635",
+        "filename": "webrtc/sdk/objc/Framework/UnitTests/scoped_cftyperef_unittests.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1163304
+      },
+      "writtenOn": "2017-06-27T08:28:00Z",
+      "side": 1,
+      "message": "No, this is actually the right place. When `scoped_num` gets set to a new CFNumberRef it should CFRelease the old one.",
+      "parentUuid": "1eead8c3_b57e2efe",
       "revId": "052ff938e2a1e1dec64f83d175d1853b5f56637a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
