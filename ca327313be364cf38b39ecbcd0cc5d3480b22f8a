@@ -16,6 +16,24 @@
       "revId": "ca327313be364cf38b39ecbcd0cc5d3480b22f8a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ee0f325_35896290",
+        "filename": "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-27T15:51:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c509f843_5a4a2816",
+      "revId": "ca327313be364cf38b39ecbcd0cc5d3480b22f8a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
