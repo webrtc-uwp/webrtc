@@ -22,7 +22,7 @@ include_rules = [
   "+webrtc/base",
   "+webrtc/modules/include",
   "+webrtc/test",
-  "+webrtc/tools",
+  "+webrtc/rtc_tools",
 ]
 
 # The below rules will be removed when webrtc:4243 is fixed.
