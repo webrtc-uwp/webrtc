@@ -141,6 +141,30 @@
       "revId": "b56d7a3e3c00da8401899e53e90b4356c425d69f",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "613c9c80_31db83fe",
+        "filename": "webrtc/common_audio/signal_processing/splitting_filter.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1184474
+      },
+      "writtenOn": "2017-06-28T12:41:13Z",
+      "side": 1,
+      "message": "I tried the code below using cpp.sh and C++11, it looks like no cast is needed.\n\n#include \u003ccstdint\u003e\n#include \u003ciostream\u003e\nint main()\n{\n  int16_t x16 \u003d 32000;\n  int32_t x32_cast \u003d (int32_t)x16 * (1 \u003c\u003c 10);\n  int32_t x32_nocast \u003d x16 * (1 \u003c\u003c 10);\n  std::cout \u003c\u003c x32_cast \u003c\u003c std::endl;\n  std::cout \u003c\u003c x32_nocast \u003c\u003c std::endl;\n}",
+      "parentUuid": "de119b95_c0978605",
+      "range": {
+        "startLine": 145,
+        "startChar": 23,
+        "endLine": 145,
+        "endChar": 31
+      },
+      "revId": "b56d7a3e3c00da8401899e53e90b4356c425d69f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
