@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "e5f2c07f_d6e6ecff",
+        "filename": "webrtc/common_audio/signal_processing/splitting_filter.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1153539
+      },
+      "writtenOn": "2017-06-28T12:51:30Z",
+      "side": 1,
+      "message": "The multiplication is a shift even when compiling with default settings and \u0027is_debug\u003dtrue\u0027 (no optimization) on linux:\n\n0x00000000004c7e76 \u003cWebRtcSpl_AnalysisQMF+294\u003e: shl    $0xa,%edx\n\nconstexpr wouldn\u0027t work because this is C code. I don\u0027t know if it\u0027s possible to declare vars in the loop, but if we want to be consistent, we should put a new var at the top.",
+      "parentUuid": "451b7c46_c24b0347",
+      "range": {
+        "startLine": 144,
+        "startChar": 46,
+        "endLine": 144,
+        "endChar": 55
+      },
+      "revId": "b56d7a3e3c00da8401899e53e90b4356c425d69f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "14daf990_d8c5ed58",
         "filename": "webrtc/common_audio/signal_processing/splitting_filter.c",
         "patchSetId": 2
@@ -156,6 +180,30 @@
       "side": 1,
       "message": "I tried the code below using cpp.sh and C++11, it looks like no cast is needed.\n\n#include \u003ccstdint\u003e\n#include \u003ciostream\u003e\nint main()\n{\n  int16_t x16 \u003d 32000;\n  int32_t x32_cast \u003d (int32_t)x16 * (1 \u003c\u003c 10);\n  int32_t x32_nocast \u003d x16 * (1 \u003c\u003c 10);\n  std::cout \u003c\u003c x32_cast \u003c\u003c std::endl;\n  std::cout \u003c\u003c x32_nocast \u003c\u003c std::endl;\n}",
       "parentUuid": "de119b95_c0978605",
+      "range": {
+        "startLine": 145,
+        "startChar": 23,
+        "endLine": 145,
+        "endChar": 31
+      },
+      "revId": "b56d7a3e3c00da8401899e53e90b4356c425d69f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5700de41_2bc87e22",
+        "filename": "webrtc/common_audio/signal_processing/splitting_filter.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1153539
+      },
+      "writtenOn": "2017-06-28T12:51:30Z",
+      "side": 1,
+      "message": "That may still be unsafe. Reading the documentation [1], I see that integer multiplication operands seems to be always be promoted to at least \u0027int\u0027. But \u0027int\u0027 may have variable size on different platforms. I suggest we just leave the cast. There are lots of precedents [2]\n\n[1] http://en.cppreference.com/w/cpp/language/implicit_conversion#Integral_promotion\n[2] \n https://cs.chromium.org/chromium/src/third_party/webrtc/modules/audio_processing/low_cut_filter.cc?sq\u003dpackage:chromium\u0026type\u003dcs\u0026l\u003d62",
+      "parentUuid": "613c9c80_31db83fe",
       "range": {
         "startLine": 145,
         "startChar": 23,
