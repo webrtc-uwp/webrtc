@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50373b0d_c7edbbc2",
+        "filename": "webrtc/examples/androidapp/src/org/appspot/apprtc/AppRTCBluetoothManager.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-28T13:13:31Z",
+      "side": 1,
+      "message": "I would prefer to make the code more symmetric compared with start() where we do:\n\nstart() {\n  ..\n  if (bluetoothAdapter \u003d\u003d null) {\n      Log.w(TAG, \"Device does not support Bluetooth\");\n      return;\n  }\n...\n\nDo the same here, like so:\n\npublic void stop() {\n  ThreadUtils.checkIsOnMainThread();\n  if (bluetoothAdapter \u003d\u003d null) {\n      return;\n  }\n  unregisterReceiver(bluetoothHeadsetReceiver);\n  Log.d(TAG, \"stop: BT state\u003d\" + bluetoothState);\n  ...",
+      "range": {
+        "startLine": 285,
+        "startChar": 8,
+        "endLine": 285,
+        "endChar": 26
+      },
+      "revId": "bbb164f7a496546cd931ea4cb9f682df45346eec",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
