@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6578fbc9_2aa05903",
+        "filename": "webrtc/common_audio/signal_processing/splitting_filter.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1153289
+      },
+      "writtenOn": "2017-06-28T11:46:45Z",
+      "side": 1,
+      "message": "Almost, but not completely sure 1\u003c\u003c10 will be a constant.",
+      "parentUuid": "7f033b68_3fcf0484",
+      "range": {
+        "startLine": 144,
+        "startChar": 46,
+        "endLine": 144,
+        "endChar": 55
+      },
+      "revId": "b56d7a3e3c00da8401899e53e90b4356c425d69f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "14daf990_d8c5ed58",
         "filename": "webrtc/common_audio/signal_processing/splitting_filter.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2017-06-28T11:33:52Z",
       "side": 1,
       "message": "Is the casting to 32 bit really necessary?",
+      "range": {
+        "startLine": 145,
+        "startChar": 23,
+        "endLine": 145,
+        "endChar": 31
+      },
+      "revId": "b56d7a3e3c00da8401899e53e90b4356c425d69f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b0d7779_a8d63f4f",
+        "filename": "webrtc/common_audio/signal_processing/splitting_filter.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1153289
+      },
+      "writtenOn": "2017-06-28T11:46:45Z",
+      "side": 1,
+      "message": "in_data is int16, and the result int32. Both operands have to be int32 in the multiplication. I\u0027m not sure whether explicit casting is required to force multiplication in int32 numbers, but I think it\u0027s better to be safe!\n\nI could look up the semantics and/or ask smbd who knows. WDYT?",
+      "parentUuid": "14daf990_d8c5ed58",
       "range": {
         "startLine": 145,
         "startChar": 23,
