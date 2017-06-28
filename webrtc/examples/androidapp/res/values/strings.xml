@@ -94,6 +94,11 @@
     <string name="pref_flexfec_dlg">Enable FlexFEC.</string>
     <string name="pref_flexfec_default">false</string>
 
+    <string name="pref_injectable_video_codecs_key">injectable_video_codecs_preference</string>
+    <string name="pref_injectable_video_codecs_title">Use injectable video codecs.</string>
+    <string name="pref_injectable_video_codecs_dlg">Use injectable video codecs.</string>
+    <string name="pref_injectable_video_codecs_default">false</string>
+
     <string name="pref_value_enabled">Enabled</string>
     <string name="pref_value_disabled">Disabled</string>
 
