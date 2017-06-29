@@ -22,6 +22,30 @@
       "revId": "97f5ff47f4686ae9b55b500b671bdb92eae42424",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c36331de_6375bb1d",
+        "filename": "PRESUBMIT.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 645,
+      "author": {
+        "id": 1177499
+      },
+      "writtenOn": "2017-06-29T13:01:21Z",
+      "side": 1,
+      "message": "Thanks, I forgot to remove this when I created the custom filter.",
+      "parentUuid": "d1225022_1e18470f",
+      "range": {
+        "startLine": 645,
+        "startChar": 4,
+        "endLine": 645,
+        "endChar": 40
+      },
+      "revId": "97f5ff47f4686ae9b55b500b671bdb92eae42424",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
