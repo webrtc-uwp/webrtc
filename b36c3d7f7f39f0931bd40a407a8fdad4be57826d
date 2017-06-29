@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6937db08_840e804a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 16
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1215543
+      },
+      "writtenOn": "2017-06-29T13:23:56Z",
+      "side": 1,
+      "message": "Points to chromium bug now, should be written: webrtc:5840",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 9
+      },
+      "revId": "b36c3d7f7f39f0931bd40a407a8fdad4be57826d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
