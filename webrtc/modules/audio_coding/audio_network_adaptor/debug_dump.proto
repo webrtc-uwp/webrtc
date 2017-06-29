@@ -2,6 +2,7 @@ syntax = "proto2";
 option optimize_for = LITE_RUNTIME;
 package webrtc.audio_network_adaptor.debug_dump;
 
+
 message NetworkMetrics {
   optional int32 uplink_bandwidth_bps = 1;
   optional float uplink_packet_loss_fraction = 2;
@@ -34,3 +35,4 @@ message Event {
   optional NetworkMetrics network_metrics = 3;
   optional EncoderRuntimeConfig encoder_runtime_config = 4;
 }
+
