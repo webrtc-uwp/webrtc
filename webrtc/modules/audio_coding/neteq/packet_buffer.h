@@ -106,8 +106,9 @@ class PacketBuffer {
   // Discards all packets that are (strictly) older than timestamp_limit.
   virtual int DiscardAllOldPackets(uint32_t timestamp_limit);
 
-  // Removes all packets with a specific payload type from the buffer.
-  virtual void DiscardPacketsWithPayloadType(uint8_t payload_type);
+  // Removes all packets with a specific payload type from the buffer. Returns
+  // number of packets discarded.
+  virtual int DiscardPacketsWithPayloadType(uint8_t payload_type);
 
   // Returns the number of packets in the buffer, including duplicates and
   // redundant packets.
