@@ -1231,7 +1231,8 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
   if (private_submodules_->echo_canceller3) {
     const int new_agc_level = gain_control()->stream_analog_level();
     capture_.echo_path_gain_change =
-        abs(capture_.previous_agc_level - new_agc_level) > 5;
+        (gain_control()->mode() == GainControl::Mode::kAdaptiveAnalog) &&
+        (abs(capture_.previous_agc_level - new_agc_level) > 5);
     capture_.previous_agc_level = new_agc_level;
     private_submodules_->echo_canceller3->AnalyzeCapture(capture_buffer);
   }
