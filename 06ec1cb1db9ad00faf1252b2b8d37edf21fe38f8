@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a1eac204_47ed52b6",
+        "filename": "webrtc/media/engine/webrtcvideoengine.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 1777,
+      "author": {
+        "id": 1161604
+      },
+      "writtenOn": "2017-06-29T06:38:06Z",
+      "side": 1,
+      "message": "Thanks for the reply.\nYou are right, we should check ULPFEC RED PT and ULPFEC RED RTX PT.",
+      "parentUuid": "76bcf80f_4e7799ad",
+      "revId": "06ec1cb1db9ad00faf1252b2b8d37edf21fe38f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8ed80575_fe7b9531",
         "filename": "webrtc/media/engine/webrtcvideoengine.cc",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "efac8f45_09019520",
+        "filename": "webrtc/media/engine/webrtcvideoengine.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 1778,
+      "author": {
+        "id": 1161604
+      },
+      "writtenOn": "2017-06-29T06:38:06Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8ed80575_fe7b9531",
+      "revId": "06ec1cb1db9ad00faf1252b2b8d37edf21fe38f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "696e7fc6_9969fb3b",
         "filename": "webrtc/media/engine/webrtcvideoengine.cc",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2017-06-26T09:38:56Z",
       "side": 1,
       "message": "Should this really be an else if? What should we do if both rtx_payload_type  and red_rtx_payload_type are set? I\u0027d expect that we could send on any of them in that case, but in practice maybe we only send on the red rtx one? It at least deserves a comment.",
+      "revId": "06ec1cb1db9ad00faf1252b2b8d37edf21fe38f8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a3ef05b1_1827d966",
+        "filename": "webrtc/media/engine/webrtcvideoengine.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 1781,
+      "author": {
+        "id": 1161604
+      },
+      "writtenOn": "2017-06-29T06:38:06Z",
+      "side": 1,
+      "message": "Yes, It at least deserves a comment.\nAccording to RFC 2198, the sender will send RED by default, but also may send original media.\nIn WebRTC, We only send RED for ULPFEC and original video stream, if RTX enabled we also should send RTX for RED(in my opinion).",
+      "parentUuid": "696e7fc6_9969fb3b",
       "revId": "06ec1cb1db9ad00faf1252b2b8d37edf21fe38f8",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
