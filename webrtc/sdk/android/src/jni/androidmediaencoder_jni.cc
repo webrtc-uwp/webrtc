@@ -123,6 +123,16 @@ class MediaCodecVideoEncoder : public webrtc::VideoEncoder {
   bool SupportsNativeHandle() const override { return egl_context_ != nullptr; }
   const char* ImplementationName() const override;
 
+  // Called by Java code.
+  bool FillInputBuffer(JNIEnv* jni,
+                       int input_buffer_index,
+                       uint8_t const* buffer_y,
+                       int stride_y,
+                       uint8_t const* buffer_u,
+                       int stride_u,
+                       uint8_t const* buffer_v,
+                       int stride_v);
+
  private:
   class EncodeTask : public rtc::QueuedTask {
    public:
@@ -159,7 +169,7 @@ class MediaCodecVideoEncoder : public webrtc::VideoEncoder {
   // Reconfigure to match |frame| in width, height. Also reconfigures the
   // encoder if |frame| is a texture/byte buffer and the encoder is initialized
   // for byte buffer/texture. Returns false if reconfiguring fails.
-  bool MaybeReconfigureEncoder(const webrtc::VideoFrame& frame);
+  bool MaybeReconfigureEncoder(JNIEnv* jni, const webrtc::VideoFrame& frame);
   bool EncodeByteBuffer(JNIEnv* jni,
                         bool key_frame,
                         const webrtc::VideoFrame& frame,
@@ -167,6 +177,10 @@ class MediaCodecVideoEncoder : public webrtc::VideoEncoder {
   bool EncodeTexture(JNIEnv* jni,
                      bool key_frame,
                      const webrtc::VideoFrame& frame);
+  bool EncodeJavaFrame(JNIEnv* jni,
+                       bool key_frame,
+                       jobject frame,
+                       int input_buffer_index);
 
   // Helper accessors for MediaCodecVideoEncoder$OutputBufferInfo members.
   int GetOutputBufferInfoIndex(JNIEnv* jni, jobject j_output_buffer_info);
@@ -209,6 +223,7 @@ class MediaCodecVideoEncoder : public webrtc::VideoEncoder {
   jmethodID j_dequeue_input_buffer_method_;
   jmethodID j_encode_buffer_method_;
   jmethodID j_encode_texture_method_;
+  jmethodID j_encode_frame_method_;
   jmethodID j_release_method_;
   jmethodID j_set_rates_method_;
   jmethodID j_dequeue_output_buffer_method_;
@@ -218,6 +233,9 @@ class MediaCodecVideoEncoder : public webrtc::VideoEncoder {
   jfieldID j_info_buffer_field_;
   jfieldID j_info_is_key_frame_field_;
   jfieldID j_info_presentation_timestamp_us_field_;
+
+  const JavaVideoFrameFactory video_frame_factory_;
+  ScopedGlobalRef<jclass> j_video_frame_texture_buffer_class_;
 
   // State that is valid only between InitEncode() and the next Release().
   int width_;   // Frame width in pixels.
@@ -328,6 +346,10 @@ MediaCodecVideoEncoder::MediaCodecVideoEncoder(JNIEnv* jni,
                                      *j_media_codec_video_encoder_class_,
                                      "<init>",
                                      "()V"))),
+      video_frame_factory_(jni),
+      j_video_frame_texture_buffer_class_(
+          jni,
+          FindClass(jni, "org/webrtc/VideoFrame$TextureBuffer")),
       inited_(false),
       use_surface_(false),
       egl_context_(egl_context),
@@ -352,6 +374,9 @@ MediaCodecVideoEncoder::MediaCodecVideoEncoder(JNIEnv* jni,
   j_encode_texture_method_ = GetMethodID(
         jni, *j_media_codec_video_encoder_class_, "encodeTexture",
         "(ZI[FJ)Z");
+  j_encode_frame_method_ =
+      GetMethodID(jni, *j_media_codec_video_encoder_class_, "encodeFrame",
+                  "(JZLorg/webrtc/VideoFrame;I)Z");
   j_release_method_ =
       GetMethodID(jni, *j_media_codec_video_encoder_class_, "release", "()V");
   j_set_rates_method_ = GetMethodID(
@@ -735,7 +760,7 @@ int32_t MediaCodecVideoEncoder::Encode(
   VideoFrame input_frame(input_buffer, frame.timestamp(),
                          frame.render_time_ms(), frame.rotation());
 
-  if (!MaybeReconfigureEncoder(input_frame)) {
+  if (!MaybeReconfigureEncoder(jni, input_frame)) {
     ALOGE << "Failed to reconfigure encoder.";
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
@@ -743,10 +768,11 @@ int32_t MediaCodecVideoEncoder::Encode(
   const bool key_frame =
       frame_types->front() != webrtc::kVideoFrameDelta || send_key_frame;
   bool encode_status = true;
-  if (input_frame.video_frame_buffer()->type() !=
-      webrtc::VideoFrameBuffer::Type::kNative) {
-    int j_input_buffer_index = jni->CallIntMethod(
-        *j_media_codec_video_encoder_, j_dequeue_input_buffer_method_);
+
+  int j_input_buffer_index = -1;
+  if (!use_surface_) {
+    j_input_buffer_index = jni->CallIntMethod(*j_media_codec_video_encoder_,
+                                              j_dequeue_input_buffer_method_);
     if (CheckException(jni)) {
       ALOGE << "Exception in dequeu input buffer.";
       return ProcessHWErrorOnEncode();
@@ -767,10 +793,30 @@ int32_t MediaCodecVideoEncoder::Encode(
     } else if (j_input_buffer_index == -2) {
       return ProcessHWErrorOnEncode();
     }
+  }
+
+  if (input_frame.video_frame_buffer()->type() !=
+      webrtc::VideoFrameBuffer::Type::kNative) {
     encode_status =
         EncodeByteBuffer(jni, key_frame, input_frame, j_input_buffer_index);
   } else {
-    encode_status = EncodeTexture(jni, key_frame, input_frame);
+    AndroidVideoFrameBuffer* android_buffer =
+        static_cast<AndroidVideoFrameBuffer*>(
+            input_frame.video_frame_buffer().get());
+    switch (android_buffer->android_type()) {
+      case AndroidVideoFrameBuffer::AndroidType::kTextureBuffer:
+        encode_status = EncodeTexture(jni, key_frame, input_frame);
+        break;
+      case AndroidVideoFrameBuffer::AndroidType::kJavaBuffer:
+        encode_status = EncodeJavaFrame(
+            jni, key_frame,
+            video_frame_factory_.ConvertFrameToJavaFrame(jni, input_frame),
+            j_input_buffer_index);
+        break;
+      default:
+        RTC_NOTREACHED();
+        return WEBRTC_VIDEO_CODEC_ERROR;
+    }
   }
 
   if (!encode_status) {
@@ -801,10 +847,32 @@ int32_t MediaCodecVideoEncoder::Encode(
 }
 
 bool MediaCodecVideoEncoder::MaybeReconfigureEncoder(
+    JNIEnv* jni,
     const webrtc::VideoFrame& frame) {
   RTC_DCHECK_CALLED_SEQUENTIALLY(&encoder_queue_checker_);
 
-  const bool reconfigure_due_to_format = frame.is_texture() != use_surface_;
+  bool is_texture;
+  if (frame.video_frame_buffer()->type() ==
+      webrtc::VideoFrameBuffer::Type::kNative) {
+    AndroidVideoFrameBuffer* android_buffer =
+        static_cast<AndroidVideoFrameBuffer*>(frame.video_frame_buffer().get());
+    AndroidVideoFrameBuffer::AndroidType android_type =
+        android_buffer->android_type();
+    if (android_type == AndroidVideoFrameBuffer::AndroidType::kTextureBuffer) {
+      is_texture = true;
+    } else if (android_type ==
+               AndroidVideoFrameBuffer::AndroidType::kJavaBuffer) {
+      jobject java_buffer = static_cast<AndroidVideoBuffer*>(android_buffer)
+                                ->video_frame_buffer();
+      is_texture =
+          jni->IsInstanceOf(java_buffer, *j_video_frame_texture_buffer_class_);
+    } else {
+      RTC_NOTREACHED();
+    }
+  } else {
+    is_texture = false;
+  }
+  const bool reconfigure_due_to_format = is_texture != use_surface_;
   const bool reconfigure_due_to_size =
       frame.width() != width_ || frame.height() != height_;
 
@@ -829,7 +897,7 @@ bool MediaCodecVideoEncoder::MaybeReconfigureEncoder(
 
   Release();
 
-  return InitEncodeInternal(width_, height_, 0, 0, frame.is_texture()) ==
+  return InitEncodeInternal(width_, height_, 0, 0, is_texture) ==
          WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -840,6 +908,33 @@ bool MediaCodecVideoEncoder::EncodeByteBuffer(JNIEnv* jni,
   RTC_DCHECK_CALLED_SEQUENTIALLY(&encoder_queue_checker_);
   RTC_CHECK(!use_surface_);
 
+  rtc::scoped_refptr<webrtc::I420BufferInterface> i420_buffer =
+      frame.video_frame_buffer()->ToI420();
+  if (!FillInputBuffer(jni, input_buffer_index, i420_buffer->DataY(),
+                       i420_buffer->StrideY(), i420_buffer->DataU(),
+                       i420_buffer->StrideU(), i420_buffer->DataV(),
+                       i420_buffer->StrideV())) {
+    return false;
+  }
+  bool encode_status = jni->CallBooleanMethod(
+      *j_media_codec_video_encoder_, j_encode_buffer_method_, key_frame,
+      input_buffer_index, yuv_size_, current_timestamp_us_);
+  if (CheckException(jni)) {
+    ALOGE << "Exception in encode buffer.";
+    ProcessHWError(true /* reset_if_fallback_unavailable */);
+    return false;
+  }
+  return encode_status;
+}
+
+bool MediaCodecVideoEncoder::FillInputBuffer(JNIEnv* jni,
+                                             int input_buffer_index,
+                                             uint8_t const* buffer_y,
+                                             int stride_y,
+                                             uint8_t const* buffer_u,
+                                             int stride_u,
+                                             uint8_t const* buffer_v,
+                                             int stride_v) {
   jobject j_input_buffer = input_buffers_[input_buffer_index];
   uint8_t* yuv_buffer =
       reinterpret_cast<uint8_t*>(jni->GetDirectBufferAddress(j_input_buffer));
@@ -849,26 +944,12 @@ bool MediaCodecVideoEncoder::EncodeByteBuffer(JNIEnv* jni,
     return false;
   }
   RTC_CHECK(yuv_buffer) << "Indirect buffer??";
-  rtc::scoped_refptr<webrtc::I420BufferInterface> i420_buffer =
-      frame.video_frame_buffer()->ToI420();
-  RTC_CHECK(!libyuv::ConvertFromI420(
-      i420_buffer->DataY(), i420_buffer->StrideY(), i420_buffer->DataU(),
-      i420_buffer->StrideU(), i420_buffer->DataV(), i420_buffer->StrideV(),
-      yuv_buffer, width_, width_, height_, encoder_fourcc_))
-      << "ConvertFromI420 failed";
 
-  bool encode_status = jni->CallBooleanMethod(*j_media_codec_video_encoder_,
-                                              j_encode_buffer_method_,
-                                              key_frame,
-                                              input_buffer_index,
-                                              yuv_size_,
-                                              current_timestamp_us_);
-  if (CheckException(jni)) {
-    ALOGE << "Exception in encode buffer.";
-    ProcessHWError(true /* reset_if_fallback_unavailable */);
-    return false;
-  }
-  return encode_status;
+  RTC_CHECK(!libyuv::ConvertFromI420(buffer_y, stride_y, buffer_u, stride_u,
+                                     buffer_v, stride_v, yuv_buffer, width_,
+                                     width_, height_, encoder_fourcc_))
+      << "ConvertFromI420 failed";
+  return true;
 }
 
 bool MediaCodecVideoEncoder::EncodeTexture(JNIEnv* jni,
@@ -886,6 +967,21 @@ bool MediaCodecVideoEncoder::EncodeTexture(JNIEnv* jni,
       handle.oes_texture_id, sampling_matrix, current_timestamp_us_);
   if (CheckException(jni)) {
     ALOGE << "Exception in encode texture.";
+    ProcessHWError(true /* reset_if_fallback_unavailable */);
+    return false;
+  }
+  return encode_status;
+}
+
+bool MediaCodecVideoEncoder::EncodeJavaFrame(JNIEnv* jni,
+                                             bool key_frame,
+                                             jobject frame,
+                                             int input_buffer_index) {
+  bool encode_status = jni->CallBooleanMethod(
+      *j_media_codec_video_encoder_, j_encode_frame_method_,
+      jlongFromPointer(this), key_frame, frame, input_buffer_index);
+  if (CheckException(jni)) {
+    ALOGE << "Exception in encode frame.";
     ProcessHWError(true /* reset_if_fallback_unavailable */);
     return false;
   }
@@ -1370,6 +1466,28 @@ void MediaCodecVideoEncoderFactory::DestroyVideoEncoder(
     webrtc::VideoEncoder* encoder) {
   ALOGD << "Destroy video encoder.";
   delete encoder;
+}
+
+JOW(void, MediaCodecVideoEncoder_nativeFillBuffer)
+(JNIEnv* jni,
+ jlong native_encoder,
+ jint input_buffer,
+ jobject j_buffer_y,
+ jint stride_y,
+ jobject j_buffer_u,
+ jint stride_u,
+ jobject j_buffer_v,
+ jint stride_v) {
+  uint8_t* buffer_y =
+      static_cast<uint8_t*>(jni->GetDirectBufferAddress(j_buffer_y));
+  uint8_t* buffer_u =
+      static_cast<uint8_t*>(jni->GetDirectBufferAddress(j_buffer_u));
+  uint8_t* buffer_v =
+      static_cast<uint8_t*>(jni->GetDirectBufferAddress(j_buffer_v));
+
+  reinterpret_cast<MediaCodecVideoEncoder*>(native_encoder)
+      ->FillInputBuffer(jni, input_buffer, buffer_y, stride_y, buffer_u,
+                        stride_u, buffer_v, stride_v);
 }
 
 }  // namespace webrtc_jni

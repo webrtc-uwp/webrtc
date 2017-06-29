@@ -598,6 +598,39 @@ public class MediaCodecVideoEncoder {
     }
   }
 
+  boolean encodeFrame(long nativeEncoder, boolean isKeyframe, VideoFrame frame, int inputBuffer) {
+    checkOnMediaCodecThread();
+    try {
+      long presentationTimestampUs = TimeUnit.NANOSECONDS.toMicros(frame.getTimestampNs());
+      checkKeyFrameRequired(isKeyframe, presentationTimestampUs);
+
+      VideoFrame.Buffer buffer = frame.getBuffer();
+      if (buffer instanceof VideoFrame.TextureBuffer) {
+        VideoFrame.TextureBuffer textureBuffer = (VideoFrame.TextureBuffer) buffer;
+        eglBase.makeCurrent();
+        // TODO(perkj): glClear() shouldn't be necessary since every pixel is covered anyway,
+        // but it's a workaround for bug webrtc:5147.
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+        drawer.drawOes(textureBuffer.getTextureId(),
+            RendererCommon.convertMatrixFromAndroidGraphicsMatrix(frame.getTransformMatrix()),
+            width, height, 0, 0, width, height);
+        eglBase.swapBuffers(frame.getTimestampNs());
+      } else {
+        VideoFrame.I420Buffer i420Buffer = buffer.toI420();
+        nativeFillBuffer(nativeEncoder, inputBuffer, i420Buffer.getDataY(), i420Buffer.getStrideY(),
+            i420Buffer.getDataU(), i420Buffer.getStrideU(), i420Buffer.getDataV(),
+            i420Buffer.getStrideV());
+        i420Buffer.release();
+        mediaCodec.queueInputBuffer(inputBuffer, 0, frame.getWidth() * frame.getHeight() * 3 / 2,
+            presentationTimestampUs, 0);
+      }
+      return true;
+    } catch (RuntimeException e) {
+      Logging.e(TAG, "encodeFrame failed", e);
+      return false;
+    }
+  }
+
   void release() {
     Logging.d(TAG, "Java releaseEncoder");
     checkOnMediaCodecThread();
@@ -881,4 +914,7 @@ public class MediaCodecVideoEncoder {
       return false;
     }
   }
+
+  private static native void nativeFillBuffer(long nativeEncoder, int inputBuffer, ByteBuffer dataY,
+      int strideY, ByteBuffer dataU, int strideU, ByteBuffer dataV, int strideV);
 }
