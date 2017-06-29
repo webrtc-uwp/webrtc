@@ -97,6 +97,30 @@
     },
     {
       "key": {
+        "uuid": "1053a6ea_fee5967e",
+        "filename": "webrtc/common_audio/signal_processing/splitting_filter.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1135140
+      },
+      "writtenOn": "2017-06-29T06:23:59Z",
+      "side": 1,
+      "message": "Then just put\nconst int32_t multiplier \u003d 1 \u003c\u003c 10;\noutside of the loop. That works.",
+      "parentUuid": "e5f2c07f_d6e6ecff",
+      "range": {
+        "startLine": 144,
+        "startChar": 46,
+        "endLine": 144,
+        "endChar": 55
+      },
+      "revId": "b56d7a3e3c00da8401899e53e90b4356c425d69f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "14daf990_d8c5ed58",
         "filename": "webrtc/common_audio/signal_processing/splitting_filter.c",
         "patchSetId": 2
@@ -204,6 +228,30 @@
       "side": 1,
       "message": "That may still be unsafe. Reading the documentation [1], I see that integer multiplication operands seems to be always be promoted to at least \u0027int\u0027. But \u0027int\u0027 may have variable size on different platforms. I suggest we just leave the cast. There are lots of precedents [2]\n\n[1] http://en.cppreference.com/w/cpp/language/implicit_conversion#Integral_promotion\n[2] \n https://cs.chromium.org/chromium/src/third_party/webrtc/modules/audio_processing/low_cut_filter.cc?sq\u003dpackage:chromium\u0026type\u003dcs\u0026l\u003d62",
       "parentUuid": "613c9c80_31db83fe",
+      "range": {
+        "startLine": 145,
+        "startChar": 23,
+        "endLine": 145,
+        "endChar": 31
+      },
+      "revId": "b56d7a3e3c00da8401899e53e90b4356c425d69f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "038877c0_61449d7d",
+        "filename": "webrtc/common_audio/signal_processing/splitting_filter.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1135140
+      },
+      "writtenOn": "2017-06-29T06:23:59Z",
+      "side": 1,
+      "message": "If you do the multiplication as\nhalf_in2[i] \u003d multiplier * in_data[k];\n(which you should for performance reasons)\nthen the cast is not needed. \nin_data[k] will be promoted to int32_t since multiplier is int32_t.\n\nWDYT?",
+      "parentUuid": "5700de41_2bc87e22",
       "range": {
         "startLine": 145,
         "startChar": 23,
