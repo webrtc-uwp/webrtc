@@ -87,6 +87,12 @@ public class VideoFrame {
     this.transformMatrix = transformMatrix;
   }
 
+  // Called from native code.
+  VideoFrame(Buffer buffer, int rotation, long timestampNs, float[] transformMatrix) {
+    this(buffer, rotation, timestampNs,
+        RendererCommon.convertMatrixToAndroidGraphicsMatrix(transformMatrix));
+  }
+
   public Buffer getBuffer() {
     return buffer;
   }
