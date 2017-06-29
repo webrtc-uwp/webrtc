@@ -70,6 +70,30 @@
       "revId": "647441b35b85812df8bb5fdf1503cda3cb65890a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1224d2b3_22a030e1",
+        "filename": "webrtc/api/video/video_frame_buffer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1144186
+      },
+      "writtenOn": "2017-06-29T12:26:49Z",
+      "side": 1,
+      "message": "I asked kwiberg@ about the issues with returning a shared_ptr to |this|. If I understood him correctly, there is some C++ magic for supporting that use, even though I don\u0027t know the fine details.",
+      "parentUuid": "622481e9_0fbdd504",
+      "range": {
+        "startLine": 21,
+        "startChar": 21,
+        "endLine": 21,
+        "endChar": 40
+      },
+      "revId": "647441b35b85812df8bb5fdf1503cda3cb65890a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
