@@ -346,4 +346,30 @@ rtc::scoped_refptr<AndroidVideoBuffer> AndroidVideoBufferFactory::CreateBuffer(
       j_video_frame_buffer);
 }
 
+JavaVideoFrameFactory::JavaVideoFrameFactory(JNIEnv* jni)
+    : j_video_frame_class_(jni, FindClass(jni, "org/webrtc/VideoFrame")) {
+  j_video_frame_constructor_id_ =
+      GetMethodID(jni, *j_video_frame_class_, "<init>",
+                  "(Lorg/webrtc/VideoFrame$Buffer;IJ[F)V");
+}
+
+jobject JavaVideoFrameFactory::ConvertFrameToJavaFrame(
+    JNIEnv* jni,
+    webrtc::VideoFrame const& frame) const {
+  RTC_DCHECK(frame.video_frame_buffer()->type() ==
+             webrtc::VideoFrameBuffer::Type::kNative);
+  AndroidVideoFrameBuffer* android_buffer =
+      static_cast<AndroidVideoFrameBuffer*>(frame.video_frame_buffer().get());
+  RTC_DCHECK(android_buffer->android_type() ==
+             AndroidVideoFrameBuffer::AndroidType::kJavaBuffer);
+  AndroidVideoBuffer* android_video_buffer =
+      static_cast<AndroidVideoBuffer*>(android_buffer);
+  jobject buffer = android_video_buffer->video_frame_buffer();
+  return jni->NewObject(
+      *j_video_frame_class_, j_video_frame_constructor_id_, buffer,
+      static_cast<jint>(frame.rotation()),
+      static_cast<jlong>(frame.timestamp_us() * rtc::kNumNanosecsPerMicrosec),
+      android_video_buffer->matrix().ToJava(jni));
+}
+
 }  // namespace webrtc_jni
