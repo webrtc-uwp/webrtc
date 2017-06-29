@@ -102,7 +102,6 @@ RtpVideoStreamReceiver::RtpVideoStreamReceiver(
       rtp_receive_statistics_(ReceiveStatistics::Create(clock_)),
       ulpfec_receiver_(UlpfecReceiver::Create(config->rtp.remote_ssrc, this)),
       receiving_(false),
-      restored_packet_in_use_(false),
       last_packet_log_ms_(-1),
       rtp_rtcp_(CreateRtpRtcpModule(rtp_receive_statistics_.get(),
                                     transport,
@@ -142,12 +141,8 @@ RtpVideoStreamReceiver::RtpVideoStreamReceiver(
   rtp_receive_statistics_->SetMaxReorderingThreshold(max_reordering_threshold);
 
   if (config_.rtp.rtx_ssrc) {
+    // Needed for rtp_payload_registry_.RtxEnabled().
     rtp_payload_registry_.SetRtxSsrc(config_.rtp.rtx_ssrc);
-
-    for (const auto& kv : config_.rtp.rtx_payload_types) {
-      RTC_DCHECK(kv.second != 0);
-      rtp_payload_registry_.SetRtxPayloadType(kv.second, kv.first);
-    }
   }
 
   if (IsUlpfecEnabled()) {
@@ -464,32 +459,7 @@ void RtpVideoStreamReceiver::ParseAndHandleEncapsulatingHeader(
     }
     ulpfec_receiver_->ProcessReceivedFec();
   } else if (rtp_payload_registry_.IsRtx(header)) {
-    if (header.headerLength + header.paddingLength == packet_length) {
-      // This is an empty packet and should be silently dropped before trying to
-      // parse the RTX header.
-      return;
-    }
-    // Remove the RTX header and parse the original RTP header.
-    if (packet_length < header.headerLength)
-      return;
-    if (packet_length > sizeof(restored_packet_))
-      return;
-    rtc::CritScope lock(&receive_cs_);
-    if (restored_packet_in_use_) {
-      LOG(LS_WARNING) << "Multiple RTX headers detected, dropping packet.";
-      return;
-    }
-    if (!rtp_payload_registry_.RestoreOriginalPacket(
-            restored_packet_, packet, &packet_length, config_.rtp.remote_ssrc,
-            header)) {
-      LOG(LS_WARNING) << "Incoming RTX packet: Invalid RTP header ssrc: "
-                      << header.ssrc << " payload type: "
-                      << static_cast<int>(header.payloadType);
-      return;
-    }
-    restored_packet_in_use_ = true;
-    OnRecoveredPacket(restored_packet_, packet_length);
-    restored_packet_in_use_ = false;
+    LOG(LS_WARNING) << "Unexpected RTX packet on media ssrc";
   }
 }
 

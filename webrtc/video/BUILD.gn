@@ -65,6 +65,9 @@ rtc_static_library("video") {
     "../base:weak_ptr",
     "../call:call_interfaces",
     "../call:rtp_interfaces",
+
+    # For RtxReceiveStream
+    "../call:rtp_receiver",
     "../common_video",
     "../logging:rtc_event_log_api",
     "../media:rtc_media_base",
