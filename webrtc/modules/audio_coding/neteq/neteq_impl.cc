@@ -68,7 +68,8 @@ NetEqImpl::Dependencies::Dependencies(
       timestamp_scaler(new TimestampScaler(*decoder_database)),
       accelerate_factory(new AccelerateFactory),
       expand_factory(new ExpandFactory),
-      preemptive_expand_factory(new PreemptiveExpandFactory) {}
+      preemptive_expand_factory(new PreemptiveExpandFactory),
+      stats(new StatisticsCalculator) {}
 
 NetEqImpl::Dependencies::~Dependencies() = default;
 
@@ -89,6 +90,7 @@ NetEqImpl::NetEqImpl(const NetEq::Config& config,
       expand_factory_(std::move(deps.expand_factory)),
       accelerate_factory_(std::move(deps.accelerate_factory)),
       preemptive_expand_factory_(std::move(deps.preemptive_expand_factory)),
+      stats_(std::move(deps.stats)),
       last_mode_(kModeNormal),
       decoded_buffer_length_(kMaxFrameSize),
       decoded_buffer_(new int16_t[decoded_buffer_length_]),
@@ -217,7 +219,10 @@ void NetEqImpl::SetCodecs(const std::map<int, SdpAudioFormat>& codecs) {
   const std::vector<int> changed_payload_types =
       decoder_database_->SetCodecs(codecs);
   for (const int pt : changed_payload_types) {
-    packet_buffer_->DiscardPacketsWithPayloadType(pt);
+    const int packets_discarded =
+        packet_buffer_->DiscardPacketsWithPayloadType(pt);
+    if (packets_discarded != 0)
+      stats_->PacketsDiscarded(packets_discarded);
   }
 }
 
@@ -268,7 +273,10 @@ int NetEqImpl::RemovePayloadType(uint8_t rtp_payload_type) {
   rtc::CritScope lock(&crit_sect_);
   int ret = decoder_database_->Remove(rtp_payload_type);
   if (ret == DecoderDatabase::kOK || ret == DecoderDatabase::kDecoderNotFound) {
-    packet_buffer_->DiscardPacketsWithPayloadType(rtp_payload_type);
+    const int packets_discarded =
+        packet_buffer_->DiscardPacketsWithPayloadType(rtp_payload_type);
+    if (packets_discarded != 0)
+      stats_->PacketsDiscarded(packets_discarded);
     return kOK;
   }
   return kFail;
@@ -373,9 +381,9 @@ int NetEqImpl::NetworkStatistics(NetEqNetworkStatistics* stats) {
       sync_buffer_->FutureLength();
   assert(delay_manager_.get());
   assert(decision_logic_.get());
-  stats_.GetNetworkStatistics(fs_hz_, total_samples_in_buffers,
-                              decoder_frame_length_, *delay_manager_.get(),
-                              *decision_logic_.get(), stats);
+  stats_->GetNetworkStatistics(fs_hz_, total_samples_in_buffers,
+                               decoder_frame_length_, *delay_manager_.get(),
+                               *decision_logic_.get(), stats);
   return 0;
 }
 
@@ -825,7 +833,7 @@ int NetEqImpl::GetAudioInternal(AudioFrame* audio_frame, bool* muted) {
   *muted = false;
   last_decoded_timestamps_.clear();
   tick_timer_->Increment();
-  stats_.IncreaseCounter(output_size_samples_, fs_hz_);
+  stats_->IncreaseCounter(output_size_samples_, fs_hz_);
 
   // Check for muted state.
   if (enable_muted_state_ && expand_->Muted() && packet_buffer_->Empty()) {
@@ -839,7 +847,7 @@ int NetEqImpl::GetAudioInternal(AudioFrame* audio_frame, bool* muted) {
             : timestamp_scaler_->ToExternal(playout_timestamp_) -
                   static_cast<uint32_t>(audio_frame->samples_per_channel_);
     audio_frame->num_channels_ = sync_buffer_->Channels();
-    stats_.ExpandedNoiseSamples(output_size_samples_);
+    stats_->ExpandedNoiseSamples(output_size_samples_);
     *muted = true;
     return 0;
   }
@@ -1063,7 +1071,10 @@ int NetEqImpl::GetDecision(Operations* operation,
   uint32_t end_timestamp = sync_buffer_->end_timestamp();
   if (!new_codec_) {
     const uint32_t five_seconds_samples = 5 * fs_hz_;
-    packet_buffer_->DiscardOldPackets(end_timestamp, five_seconds_samples);
+    const int parkets_discarded =
+        packet_buffer_->DiscardOldPackets(end_timestamp, five_seconds_samples);
+    if (parkets_discarded != 0)
+      stats_->PacketsDiscarded(parkets_discarded);
   }
   const Packet* packet = packet_buffer_->PeekNextPacket();
 
@@ -1087,9 +1098,14 @@ int NetEqImpl::GetDecision(Operations* operation,
       if (packet_buffer_->DiscardNextPacket() != PacketBuffer::kOK) {
         assert(false);  // Must be ok by design.
       }
+      stats_->PacketsDiscarded(1);
+
       // Check buffer again.
       if (!new_codec_) {
-        packet_buffer_->DiscardOldPackets(end_timestamp, 5 * fs_hz_);
+        const int parkets_discarded =
+            packet_buffer_->DiscardOldPackets(end_timestamp, 5 * fs_hz_);
+        if (parkets_discarded != 0)
+          stats_->PacketsDiscarded(parkets_discarded);
       }
       packet = packet_buffer_->PeekNextPacket();
     }
@@ -1168,7 +1184,7 @@ int NetEqImpl::GetDecision(Operations* operation,
     decision_logic_->SoftReset();
     buffer_level_filter_->Reset();
     delay_manager_->Reset();
-    stats_.ResetMcu();
+    stats_->ResetMcu();
   }
 
   size_t required_samples = output_size_samples_;
@@ -1276,7 +1292,7 @@ int NetEqImpl::GetDecision(Operations* operation,
       // if comfort noise is not played. If comfort noise was just played,
       // this adjustment of timestamp is only done to get back in sync with the
       // stream timestamp; no loss to report.
-      stats_.LostSamples(packet->timestamp - end_timestamp);
+      stats_->LostSamples(packet->timestamp - end_timestamp);
     }
 
     if (*operation != kRfc3389Cng) {
@@ -1541,10 +1557,10 @@ void NetEqImpl::DoMerge(int16_t* decoded_buffer, size_t decoded_length,
   // Update in-call and post-call statistics.
   if (expand_->MuteFactor(0) == 0) {
     // Expand generates only noise.
-    stats_.ExpandedNoiseSamplesCorrection(expand_length_correction);
+    stats_->ExpandedNoiseSamplesCorrection(expand_length_correction);
   } else {
     // Expansion generates more than only noise.
-    stats_.ExpandedVoiceSamplesCorrection(expand_length_correction);
+    stats_->ExpandedVoiceSamplesCorrection(expand_length_correction);
   }
 
   last_mode_ = kModeMerge;
@@ -1568,10 +1584,10 @@ int NetEqImpl::DoExpand(bool play_dtmf) {
     // Update in-call and post-call statistics.
     if (expand_->MuteFactor(0) == 0) {
       // Expand operation generates only noise.
-      stats_.ExpandedNoiseSamples(length);
+      stats_->ExpandedNoiseSamples(length);
     } else {
       // Expand operation generates more than only noise.
-      stats_.ExpandedVoiceSamples(length);
+      stats_->ExpandedVoiceSamples(length);
     }
 
     last_mode_ = kModeExpand;
@@ -1621,7 +1637,7 @@ int NetEqImpl::DoAccelerate(int16_t* decoded_buffer,
   Accelerate::ReturnCodes return_code =
       accelerate_->Process(decoded_buffer, decoded_length, fast_accelerate,
                            algorithm_buffer_.get(), &samples_removed);
-  stats_.AcceleratedSamples(samples_removed);
+  stats_->AcceleratedSamples(samples_removed);
   switch (return_code) {
     case Accelerate::kSuccess:
       last_mode_ = kModeAccelerateSuccess;
@@ -1701,7 +1717,7 @@ int NetEqImpl::DoPreemptiveExpand(int16_t* decoded_buffer,
       decoded_buffer, decoded_length,
       old_borrowed_samples_per_channel,
       algorithm_buffer_.get(), &samples_added);
-  stats_.PreemptiveExpandedSamples(samples_added);
+  stats_->PreemptiveExpandedSamples(samples_added);
   switch (return_code) {
     case PreemptiveExpand::kSuccess:
       last_mode_ = kModePreemptiveExpandSuccess;
@@ -1874,7 +1890,7 @@ void NetEqImpl::DoAlternativePlc(bool increase_timestamp) {
     length = output_size_samples_;
     algorithm_buffer_->Zeros(length);
     // By not advancing the timestamp, NetEq inserts samples.
-    stats_.AddZeros(length);
+    stats_->AddZeros(length);
   }
   if (increase_timestamp) {
     sync_buffer_->IncreaseEndTimestamp(static_cast<uint32_t>(length));
@@ -1938,7 +1954,7 @@ int NetEqImpl::ExtractPackets(size_t required_samples,
       assert(false);  // Should always be able to extract a packet here.
       return -1;
     }
-    stats_.StoreWaitingTime(packet->waiting_time->ElapsedMs());
+    stats_->StoreWaitingTime(packet->waiting_time->ElapsedMs());
     RTC_DCHECK(!packet->empty());
 
     if (first_packet) {
@@ -1962,7 +1978,7 @@ int NetEqImpl::ExtractPackets(size_t required_samples,
       packet_duration = packet->frame->Duration();
       // TODO(ossu): Is this the correct way to track Opus FEC packets?
       if (packet->priority.codec_level > 0) {
-        stats_.SecondaryDecodedSamples(
+        stats_->SecondaryDecodedSamples(
             rtc::dchecked_cast<int>(packet_duration));
       }
     } else if (!has_cng_packet) {
@@ -2003,7 +2019,10 @@ int NetEqImpl::ExtractPackets(size_t required_samples,
     // we could end up in the situation where we never decode anything, since
     // all incoming packets are considered too old but the buffer will also
     // never be flooded and flushed.
-    packet_buffer_->DiscardAllOldPackets(timestamp_);
+    const int parkets_discarded =
+        packet_buffer_->DiscardAllOldPackets(timestamp_);
+    if (parkets_discarded != 0)
+      stats_->PacketsDiscarded(parkets_discarded);
   }
 
   return rtc::dchecked_cast<int>(extracted_samples);
@@ -2013,7 +2032,7 @@ void NetEqImpl::UpdatePlcComponents(int fs_hz, size_t channels) {
   // Delete objects and create new ones.
   expand_.reset(expand_factory_->Create(background_noise_.get(),
                                         sync_buffer_.get(), &random_vector_,
-                                        &stats_, fs_hz, channels));
+                                        stats_.get(), fs_hz, channels));
   merge_.reset(new Merge(fs_hz, channels, expand_.get(), sync_buffer_.get()));
 }
 

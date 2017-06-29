@@ -54,6 +54,7 @@ class MockPacketBuffer : public PacketBuffer {
       int(uint32_t timestamp_limit, uint32_t horizon_samples));
   MOCK_METHOD1(DiscardAllOldPackets,
       int(uint32_t timestamp_limit));
+  MOCK_METHOD1(DiscardPacketsWithPayloadType, int(uint8_t payload_type));
   MOCK_CONST_METHOD0(NumPacketsInBuffer,
       size_t());
   MOCK_METHOD1(IncrementWaitingTimes,
