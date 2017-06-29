@@ -79,7 +79,7 @@ class AecState {
 
   // Returns the decay factor for the echo reverberation.
   // TODO(peah): Make this adaptive.
-  float ReverbDecayFactor() const { return 0.f; }
+  float ReverbDecayFactor() const { return 0.7f; }
 
   // Returns whether the echo suppression gain should be forced to zero.
   bool ForcedZeroGain() const { return force_zero_gain_; }
