@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f3694be8_058b2ef6",
+        "filename": "webrtc/examples/androidapp/src/org/appspot/apprtc/AppRTCBluetoothManager.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1001300
+      },
+      "writtenOn": "2017-06-29T07:55:11Z",
+      "side": 1,
+      "message": "Nit, follow style in start() and avoid new line between sections. Same for rest of this method.",
+      "revId": "924b4358b03924aa6942e4eb1ee78f742cf3f42f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
