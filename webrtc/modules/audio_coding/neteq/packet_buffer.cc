@@ -218,29 +218,34 @@ int PacketBuffer::DiscardNextPacket() {
 
 int PacketBuffer::DiscardOldPackets(uint32_t timestamp_limit,
                                     uint32_t horizon_samples) {
+  int packets_discarded = 0;
   while (!Empty() && timestamp_limit != buffer_.front().timestamp &&
          IsObsoleteTimestamp(buffer_.front().timestamp, timestamp_limit,
                              horizon_samples)) {
     if (DiscardNextPacket() != kOK) {
       assert(false);  // Must be ok by design.
     }
+    ++packets_discarded;
   }
-  return 0;
+  return packets_discarded;
 }
 
 int PacketBuffer::DiscardAllOldPackets(uint32_t timestamp_limit) {
   return DiscardOldPackets(timestamp_limit, 0);
 }
 
-void PacketBuffer::DiscardPacketsWithPayloadType(uint8_t payload_type) {
+int PacketBuffer::DiscardPacketsWithPayloadType(uint8_t payload_type) {
+  int packets_discarded = 0;
   for (auto it = buffer_.begin(); it != buffer_.end(); /* */) {
     const Packet& packet = *it;
     if (packet.payload_type == payload_type) {
       it = buffer_.erase(it);
+      ++packets_discarded;
     } else {
       ++it;
     }
   }
+  return packets_discarded;
 }
 
 size_t PacketBuffer::NumPacketsInBuffer() const {

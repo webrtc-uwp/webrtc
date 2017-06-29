@@ -112,6 +112,7 @@ class NetEqImpl : public webrtc::NetEq {
     std::unique_ptr<AccelerateFactory> accelerate_factory;
     std::unique_ptr<ExpandFactory> expand_factory;
     std::unique_ptr<PreemptiveExpandFactory> preemptive_expand_factory;
+    std::unique_ptr<StatisticsCalculator> stats;
   };
 
   // Creates a new NetEqImpl object.
@@ -387,6 +388,7 @@ class NetEqImpl : public webrtc::NetEq {
       GUARDED_BY(crit_sect_);
   const std::unique_ptr<PreemptiveExpandFactory> preemptive_expand_factory_
       GUARDED_BY(crit_sect_);
+  const std::unique_ptr<StatisticsCalculator> stats_ GUARDED_BY(crit_sect_);
 
   std::unique_ptr<BackgroundNoise> background_noise_ GUARDED_BY(crit_sect_);
   std::unique_ptr<DecisionLogic> decision_logic_ GUARDED_BY(crit_sect_);
@@ -400,7 +402,6 @@ class NetEqImpl : public webrtc::NetEq {
   RandomVector random_vector_ GUARDED_BY(crit_sect_);
   std::unique_ptr<ComfortNoise> comfort_noise_ GUARDED_BY(crit_sect_);
   Rtcp rtcp_ GUARDED_BY(crit_sect_);
-  StatisticsCalculator stats_ GUARDED_BY(crit_sect_);
   int fs_hz_ GUARDED_BY(crit_sect_);
   int fs_mult_ GUARDED_BY(crit_sect_);
   int last_output_sample_rate_hz_ GUARDED_BY(crit_sect_);

@@ -24,6 +24,7 @@
 #include "webrtc/modules/audio_coding/neteq/mock/mock_dtmf_tone_generator.h"
 #include "webrtc/modules/audio_coding/neteq/mock/mock_packet_buffer.h"
 #include "webrtc/modules/audio_coding/neteq/mock/mock_red_payload_splitter.h"
+#include "webrtc/modules/audio_coding/neteq/mock/mock_statistics_calculator.h"
 #include "webrtc/modules/audio_coding/neteq/neteq_impl.h"
 #include "webrtc/modules/audio_coding/neteq/preemptive_expand.h"
 #include "webrtc/modules/audio_coding/neteq/sync_buffer.h"
@@ -40,6 +41,7 @@ using ::testing::ReturnNull;
 using ::testing::_;
 using ::testing::SetArgPointee;
 using ::testing::SetArrayArgument;
+using ::testing::StrictMock;
 using ::testing::InSequence;
 using ::testing::Invoke;
 using ::testing::WithArg;
@@ -129,6 +131,11 @@ class NetEqImplTest : public ::testing::Test {
       deps.red_payload_splitter = std::move(mock);
     }
     red_payload_splitter_ = deps.red_payload_splitter.get();
+
+    std::unique_ptr<MockStatisticsCalculator> mock(
+        new StrictMock<MockStatisticsCalculator>);
+    mock_statistics_calculator_ = mock.get();
+    deps.stats = std::move(mock);
 
     deps.timestamp_scaler = std::unique_ptr<TimestampScaler>(
         new TimestampScaler(*deps.decoder_database.get()));
@@ -246,6 +253,7 @@ class NetEqImplTest : public ::testing::Test {
   MockRedPayloadSplitter* mock_payload_splitter_ = nullptr;
   RedPayloadSplitter* red_payload_splitter_ = nullptr;
   bool use_mock_payload_splitter_ = true;
+  MockStatisticsCalculator* mock_statistics_calculator_ = nullptr;
 };
 
 
@@ -278,12 +286,18 @@ TEST_F(NetEqImplTest, RegisterPayloadType) {
 
 TEST_F(NetEqImplTest, RemovePayloadType) {
   CreateInstance();
-  uint8_t rtp_payload_type = 0;
-  EXPECT_CALL(*mock_decoder_database_, Remove(rtp_payload_type))
+  constexpr uint8_t kRtpPayloadType = 0;  // Arbitrary.
+  constexpr int kPacketsDiscarded = 3;    // Arbitrary.
+  EXPECT_CALL(*mock_decoder_database_, Remove(kRtpPayloadType))
       .WillOnce(Return(DecoderDatabase::kDecoderNotFound));
+  EXPECT_CALL(*mock_packet_buffer_,
+              DiscardPacketsWithPayloadType(kRtpPayloadType))
+      .WillOnce(Return(kPacketsDiscarded));
+  EXPECT_CALL(*mock_statistics_calculator_, PacketsDiscarded(kPacketsDiscarded))
+      .Times(1);
   // Check that kOK is returned when database returns kDecoderNotFound, because
   // removing a payload type that was never registered is not an error.
-  EXPECT_EQ(NetEq::kOK, neteq_->RemovePayloadType(rtp_payload_type));
+  EXPECT_EQ(NetEq::kOK, neteq_->RemovePayloadType(kRtpPayloadType));
 }
 
 TEST_F(NetEqImplTest, RemoveAllPayloadTypes) {
@@ -617,6 +631,8 @@ TEST_F(NetEqImplTest, ReorderedPacket) {
                                           dummy_output + kPayloadLengthSamples),
                       SetArgPointee<4>(AudioDecoder::kSpeech),
                       Return(kPayloadLengthSamples)));
+
+  EXPECT_CALL(*mock_statistics_calculator_, PacketsDiscarded(1)).Times(1);
 
   // Pull audio once.
   EXPECT_EQ(NetEq::kOK, neteq_->GetAudio(&output, &muted));
