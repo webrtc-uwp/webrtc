@@ -24,7 +24,8 @@ enum class BlockProcessorApiCall { kCapture, kRender };
 
 class BlockProcessorImpl final : public BlockProcessor {
  public:
-  BlockProcessorImpl(int sample_rate_hz,
+  BlockProcessorImpl(const AudioProcessing::Config::EchoCanceller3& config,
+                     int sample_rate_hz,
                      std::unique_ptr<RenderDelayBuffer> render_buffer,
                      std::unique_ptr<RenderDelayController> delay_controller,
                      std::unique_ptr<EchoRemover> echo_remover);
@@ -56,6 +57,7 @@ class BlockProcessorImpl final : public BlockProcessor {
 int BlockProcessorImpl::instance_count_ = 0;
 
 BlockProcessorImpl::BlockProcessorImpl(
+    const AudioProcessing::Config::EchoCanceller3& config,
     int sample_rate_hz,
     std::unique_ptr<RenderDelayBuffer> render_buffer,
     std::unique_ptr<RenderDelayController> delay_controller,
@@ -168,36 +170,40 @@ void BlockProcessorImpl::UpdateEchoLeakageStatus(bool leakage_detected) {
 
 }  // namespace
 
-BlockProcessor* BlockProcessor::Create(int sample_rate_hz) {
+BlockProcessor* BlockProcessor::Create(
+    const AudioProcessing::Config::EchoCanceller3& config,
+    int sample_rate_hz) {
   std::unique_ptr<RenderDelayBuffer> render_buffer(
       RenderDelayBuffer::Create(NumBandsForRate(sample_rate_hz)));
   std::unique_ptr<RenderDelayController> delay_controller(
       RenderDelayController::Create(sample_rate_hz));
   std::unique_ptr<EchoRemover> echo_remover(
-      EchoRemover::Create(sample_rate_hz));
-  return Create(sample_rate_hz, std::move(render_buffer),
+      EchoRemover::Create(config, sample_rate_hz));
+  return Create(config, sample_rate_hz, std::move(render_buffer),
                 std::move(delay_controller), std::move(echo_remover));
 }
 
 BlockProcessor* BlockProcessor::Create(
+    const AudioProcessing::Config::EchoCanceller3& config,
     int sample_rate_hz,
     std::unique_ptr<RenderDelayBuffer> render_buffer) {
   std::unique_ptr<RenderDelayController> delay_controller(
       RenderDelayController::Create(sample_rate_hz));
   std::unique_ptr<EchoRemover> echo_remover(
-      EchoRemover::Create(sample_rate_hz));
-  return Create(sample_rate_hz, std::move(render_buffer),
+      EchoRemover::Create(config, sample_rate_hz));
+  return Create(config, sample_rate_hz, std::move(render_buffer),
                 std::move(delay_controller), std::move(echo_remover));
 }
 
 BlockProcessor* BlockProcessor::Create(
+    const AudioProcessing::Config::EchoCanceller3& config,
     int sample_rate_hz,
     std::unique_ptr<RenderDelayBuffer> render_buffer,
     std::unique_ptr<RenderDelayController> delay_controller,
     std::unique_ptr<EchoRemover> echo_remover) {
-  return new BlockProcessorImpl(sample_rate_hz, std::move(render_buffer),
-                                std::move(delay_controller),
-                                std::move(echo_remover));
+  return new BlockProcessorImpl(
+      config, sample_rate_hz, std::move(render_buffer),
+      std::move(delay_controller), std::move(echo_remover));
 }
 
 }  // namespace webrtc
