@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "aea0bf48_8d400abd",
+        "filename": "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-30T14:47:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8e75a910_a31feabd",
+      "range": {
+        "startLine": 363,
+        "startChar": 26,
+        "endLine": 363,
+        "endChar": 52
+      },
+      "revId": "4768dd34ea7c9311cf7def253b59831bf4c5d58f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ceb832b6_70937a26",
         "filename": "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.h",
         "patchSetId": 4
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "c3f17bee_aeb2ce78",
+        "filename": "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-30T14:47:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ceb832b6_70937a26",
+      "range": {
+        "startLine": 97,
+        "startChar": 6,
+        "endLine": 97,
+        "endChar": 49
+      },
+      "revId": "4768dd34ea7c9311cf7def253b59831bf4c5d58f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9409022b_41a33ae9",
         "filename": "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus_unittest.cc",
         "patchSetId": 4
@@ -68,6 +116,30 @@
       "revId": "4768dd34ea7c9311cf7def253b59831bf4c5d58f",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d8c13ec_f38f1f28",
+        "filename": "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus_unittest.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-06-30T14:47:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9409022b_41a33ae9",
+      "range": {
+        "startLine": 70,
+        "startChar": 33,
+        "endLine": 70,
+        "endChar": 77
+      },
+      "revId": "4768dd34ea7c9311cf7def253b59831bf4c5d58f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
