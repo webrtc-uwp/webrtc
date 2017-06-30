@@ -1774,13 +1774,20 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::SetCodec(
 
   // Set RTX payload type if RTX is enabled.
   if (!parameters_.config.rtp.rtx.ssrcs.empty()) {
-    if (codec_settings.rtx_payload_type == -1) {
-      LOG(LS_WARNING) << "RTX SSRCs configured but there's no configured RTX "
-                         "payload type. Ignoring.";
-      parameters_.config.rtp.rtx.ssrcs.clear();
-    } else {
-      parameters_.config.rtp.rtx.payload_type = codec_settings.rtx_payload_type;
-    }
+      //According to RFC 2198, the sender will send RED by default, but also may send original media.
+      //In WebRTC, we only send RED for ULPFEC and original video stream, if RTX enabled we also should send RTX for RED.
+      if (codec_settings.ulpfec.red_payload_type != -1 && codec_settings.ulpfec.red_rtx_payload_type != -1) {
+          //RED and RTX enabled, use RED RTX payload type.
+          parameters_.config.rtp.rtx.payload_type = codec_settings.ulpfec.red_rtx_payload_type;
+      }
+      else if (codec_settings.rtx_payload_type != -1) {
+          parameters_.config.rtp.rtx.payload_type = codec_settings.rtx_payload_type;
+      }
+      else {
+          LOG(LS_WARNING) << "RTX SSRCs configured but there's no configured RTX "
+              "payload type. Ignoring.";
+          parameters_.config.rtp.rtx.ssrcs.clear();
+      }
   }
 
   parameters_.config.rtp.nack.rtp_history_ms =
