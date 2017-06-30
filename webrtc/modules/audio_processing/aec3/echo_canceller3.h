@@ -63,9 +63,12 @@ class Aec3RenderQueueItemVerifier {
 class EchoCanceller3 {
  public:
   // Normal c-tor to use.
-  EchoCanceller3(int sample_rate_hz, bool use_highpass_filter);
+  EchoCanceller3(const AudioProcessing::Config::EchoCanceller3& config,
+                 int sample_rate_hz,
+                 bool use_highpass_filter);
   // Testing c-tor that is used only for testing purposes.
-  EchoCanceller3(int sample_rate_hz,
+  EchoCanceller3(const AudioProcessing::Config::EchoCanceller3& config,
+                 int sample_rate_hz,
                  bool use_highpass_filter,
                  std::unique_ptr<BlockProcessor> block_processor);
   ~EchoCanceller3();
