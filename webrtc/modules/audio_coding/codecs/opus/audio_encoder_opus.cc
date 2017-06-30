@@ -357,36 +357,35 @@ rtc::Optional<int> AudioEncoderOpus::Config::GetNewComplexity() const {
              : rtc::Optional<int>(complexity);
 }
 
+AudioEncoderOpus::AudioEncoderOpus(const Config& config)
+    : AudioEncoderOpus(
+          config,
+          [this](const ProtoString& config_string, RtcEventLog* event_log) {
+            return DefaultAudioNetworkAdaptorCreator(config_string, event_log);
+          },
+          // We choose 5sec as initial time constant due to empirical data.
+          rtc::MakeUnique<SmoothingFilterImpl>(5000)) {}
+
 AudioEncoderOpus::AudioEncoderOpus(
     const Config& config,
-    AudioNetworkAdaptorCreator&& audio_network_adaptor_creator,
+    const AudioNetworkAdaptorCreator& audio_network_adaptor_creator,
     std::unique_ptr<SmoothingFilter> bitrate_smoother)
-    : send_side_bwe_with_overhead_(webrtc::field_trial::IsEnabled(
-          "WebRTC-SendSideBwe-WithOverhead")),
+    : send_side_bwe_with_overhead_(
+          webrtc::field_trial::IsEnabled("WebRTC-SendSideBwe-WithOverhead")),
       packet_loss_rate_(0.0),
       inst_(nullptr),
       packet_loss_fraction_smoother_(new PacketLossFractionSmoother()),
-      audio_network_adaptor_creator_(
-          audio_network_adaptor_creator
-              ? std::move(audio_network_adaptor_creator)
-              : [this](const ProtoString& config_string,
-                       RtcEventLog* event_log) {
-                  return DefaultAudioNetworkAdaptorCreator(config_string,
-                                                           event_log);
-              }),
-      bitrate_smoother_(bitrate_smoother
-          ? std::move(bitrate_smoother) : std::unique_ptr<SmoothingFilter>(
-              // We choose 5sec as initial time constant due to empirical data.
-              new SmoothingFilterImpl(5000))) {
+      audio_network_adaptor_creator_(std::move(audio_network_adaptor_creator)),
+      bitrate_smoother_(std::move(bitrate_smoother)) {
   RTC_CHECK(RecreateEncoderInstance(config));
 }
 
 AudioEncoderOpus::AudioEncoderOpus(const CodecInst& codec_inst)
-    : AudioEncoderOpus(CreateConfig(codec_inst), nullptr) {}
+    : AudioEncoderOpus(CreateConfig(codec_inst)) {}
 
 AudioEncoderOpus::AudioEncoderOpus(int payload_type,
                                    const SdpAudioFormat& format)
-    : AudioEncoderOpus(CreateConfig(payload_type, format), nullptr) {}
+    : AudioEncoderOpus(CreateConfig(payload_type, format)) {}
 
 AudioEncoderOpus::~AudioEncoderOpus() {
   RTC_CHECK_EQ(0, WebRtcOpus_EncoderFree(inst_));

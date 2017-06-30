@@ -21,6 +21,7 @@
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/base/optional.h"
 #include "webrtc/base/protobuf_utils.h"
+#include "webrtc/base/ptr_util.h"
 #include "webrtc/common_audio/smoothing_filter.h"
 #include "webrtc/modules/audio_coding/audio_network_adaptor/include/audio_network_adaptor.h"
 #include "webrtc/modules/audio_coding/codecs/opus/opus_interface.h"
@@ -87,10 +88,14 @@ class AudioEncoderOpus final : public AudioEncoder {
   using AudioNetworkAdaptorCreator =
       std::function<std::unique_ptr<AudioNetworkAdaptor>(const std::string&,
                                                          RtcEventLog*)>;
+
+  AudioEncoderOpus(const Config& config);
+
+  // Dependency injection for testing.
   AudioEncoderOpus(
       const Config& config,
-      AudioNetworkAdaptorCreator&& audio_network_adaptor_creator = nullptr,
-      std::unique_ptr<SmoothingFilter> bitrate_smoother = nullptr);
+      const AudioNetworkAdaptorCreator& audio_network_adaptor_creator,
+      std::unique_ptr<SmoothingFilter> bitrate_smoother);
 
   explicit AudioEncoderOpus(const CodecInst& codec_inst);
   AudioEncoderOpus(int payload_type, const SdpAudioFormat& format);
@@ -180,7 +185,7 @@ class AudioEncoderOpus final : public AudioEncoder {
   int next_frame_length_ms_;
   int complexity_;
   std::unique_ptr<PacketLossFractionSmoother> packet_loss_fraction_smoother_;
-  AudioNetworkAdaptorCreator audio_network_adaptor_creator_;
+  const AudioNetworkAdaptorCreator audio_network_adaptor_creator_;
   std::unique_ptr<AudioNetworkAdaptor> audio_network_adaptor_;
   rtc::Optional<size_t> overhead_bytes_per_packet_;
   const std::unique_ptr<SmoothingFilter> bitrate_smoother_;
