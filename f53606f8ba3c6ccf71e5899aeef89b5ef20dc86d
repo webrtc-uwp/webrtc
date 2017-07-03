@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6836df69_a9ed3e18",
+        "filename": "webrtc/sdk/android/api/org/webrtc/MediaCodecVideoEncoder.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-07-03T09:31:43Z",
+      "side": 1,
+      "message": "I think we have to support at least cropping and scaling. We could make support assertions on the shape of the matrix and only support that for now. I don\u0027t see the need for arbitrary matrices at this point. We could implement some slow fallback sampling for that case if we want to.",
+      "range": {
+        "startLine": 623,
+        "startChar": 8,
+        "endLine": 623,
+        "endChar": 67
+      },
+      "revId": "f53606f8ba3c6ccf71e5899aeef89b5ef20dc86d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "459b8aa8_0bf53e03",
+        "filename": "webrtc/sdk/android/api/org/webrtc/MediaCodecVideoEncoder.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-07-03T09:31:43Z",
+      "side": 1,
+      "message": "What about odd width/height here?",
+      "range": {
+        "startLine": 629,
+        "startChar": 52,
+        "endLine": 629,
+        "endChar": 96
+      },
+      "revId": "f53606f8ba3c6ccf71e5899aeef89b5ef20dc86d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ea351ba_c26707dd",
+        "filename": "webrtc/sdk/android/api/org/webrtc/RendererCommon.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-07-03T09:31:43Z",
+      "side": 1,
+      "message": "import android.graphics.Matrix?",
+      "range": {
+        "startLine": 262,
+        "startChar": 16,
+        "endLine": 262,
+        "endChar": 39
+      },
+      "revId": "f53606f8ba3c6ccf71e5899aeef89b5ef20dc86d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6af69e01_a31cfb18",
+        "filename": "webrtc/sdk/android/src/jni/native_handle_impl.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-07-03T09:31:43Z",
+      "side": 1,
+      "message": "Maybe rename to just ToJavaFrame or CreateJavaFrame",
+      "range": {
+        "startLine": 171,
+        "startChar": 10,
+        "endLine": 171,
+        "endChar": 33
+      },
+      "revId": "f53606f8ba3c6ccf71e5899aeef89b5ef20dc86d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
