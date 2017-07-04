@@ -12,6 +12,7 @@
 
 #include "webrtc/api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "webrtc/modules/audio_coding/neteq/mock/mock_decoder_database.h"
+#include "webrtc/modules/audio_coding/neteq/mock/mock_statistics_calculator.h"
 #include "webrtc/modules/audio_coding/neteq/packet.h"
 #include "webrtc/modules/audio_coding/neteq/packet_buffer.h"
 #include "webrtc/modules/audio_coding/neteq/tick_timer.h"
@@ -19,6 +20,7 @@
 #include "webrtc/test/gtest.h"
 
 using ::testing::Return;
+using ::testing::StrictMock;
 using ::testing::_;
 
 namespace webrtc {
@@ -307,12 +309,13 @@ TEST(PacketBuffer, DiscardPackets) {
 
   // Discard them one by one and make sure that the right packets are at the
   // front of the buffer.
+  StrictMock<MockStatisticsCalculator> mock_stats;
   uint32_t current_ts = start_ts;
   for (int i = 0; i < 10; ++i) {
     uint32_t ts;
     EXPECT_EQ(PacketBuffer::kOK, buffer.NextTimestamp(&ts));
     EXPECT_EQ(current_ts, ts);
-    EXPECT_EQ(PacketBuffer::kOK, buffer.DiscardNextPacket());
+    EXPECT_EQ(PacketBuffer::kOK, buffer.DiscardNextPacket(&mock_stats));
     current_ts += ts_increment;
   }
   EXPECT_TRUE(buffer.Empty());
@@ -452,8 +455,10 @@ TEST(PacketBuffer, Failures) {
             buffer->NextHigherTimestamp(0, &temp_ts));
   EXPECT_EQ(NULL, buffer->PeekNextPacket());
   EXPECT_FALSE(buffer->GetNextPacket());
-  EXPECT_EQ(PacketBuffer::kBufferEmpty, buffer->DiscardNextPacket());
-  EXPECT_EQ(0, buffer->DiscardAllOldPackets(0));  // 0 packets discarded.
+
+  StrictMock<MockStatisticsCalculator> mock_stats;
+  EXPECT_EQ(PacketBuffer::kBufferEmpty, buffer->DiscardNextPacket(&mock_stats));
+  buffer->DiscardAllOldPackets(0, &mock_stats);
 
   // Insert one packet to make the buffer non-empty.
   EXPECT_EQ(PacketBuffer::kOK,
