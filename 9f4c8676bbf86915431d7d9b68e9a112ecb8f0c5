@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8929a33_b9155e19",
+        "filename": "webrtc/modules/audio_coding/neteq/packet_buffer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1122982
+      },
+      "writtenOn": "2017-07-04T12:41:29Z",
+      "side": 1,
+      "message": "Can\u0027t you just call stats-\u003ePacketsDiscarded(1) here instead?",
+      "range": {
+        "startLine": 245,
+        "startChar": 8,
+        "endLine": 245,
+        "endChar": 25
+      },
+      "revId": "9f4c8676bbf86915431d7d9b68e9a112ecb8f0c5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
