@@ -283,6 +283,7 @@ OpenSSLAdapter::OpenSSLAdapter(AsyncSocket* socket)
       ssl_(nullptr),
       ssl_ctx_(nullptr),
       ssl_mode_(SSL_MODE_TLS),
+      ssl_session_cache_(nullptr),
       custom_verification_succeeded_(false) {}
 
 OpenSSLAdapter::~OpenSSLAdapter() {
@@ -319,13 +320,13 @@ OpenSSLAdapter::StartSSL(const char* hostname, bool restartable) {
 
 int
 OpenSSLAdapter::BeginSSL() {
-  LOG(LS_INFO) << "BeginSSL: " << ssl_host_name_;
+  LOG(LS_INFO) << "OpenSSLAdapter::BeginSSL: " << ssl_host_name_;
   RTC_DCHECK(state_ == SSL_CONNECTING);
 
   int err = 0;
   BIO* bio = nullptr;
 
-  // First set up the context
+  // First set up the context.
   if (!ssl_ctx_)
     ssl_ctx_ = SetupSSLContext();
 
@@ -360,15 +361,31 @@ OpenSSLAdapter::BeginSSL() {
   SSL_set_mode(ssl_, SSL_MODE_ENABLE_PARTIAL_WRITE |
                      SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
 
-  // Enable SNI.
+  // Enable SNI, if a hostname is supplied.
   if (!ssl_host_name_.empty()) {
     SSL_set_tlsext_host_name(ssl_, ssl_host_name_.c_str());
   }
 
-  // the SSL object owns the bio now
+  // Enable session caching, if desired.
+  if (ssl_session_cache_) {
+    SSL_CTX_set_session_cache_mode(ssl_ctx_, SSL_SESS_CACHE_CLIENT);
+    SSL_CTX_sess_set_new_cb(ssl_ctx_, &OpenSSLAdapter::OnNewSession);
+
+    void* cached = nullptr;
+    if (ssl_session_cache_->LookupSession(ssl_host_name_, &cached)) {
+      if (SSL_set_session(ssl_, static_cast<SSLSession*>(cached)) != 0) {
+        err = -1;
+        goto ssl_error;
+      }
+
+      LOG(LS_INFO) << "Attempting to resume session to " << ssl_host_name_;
+    }
+  }
+
+  // The SSL object owns the bio now.
   bio = nullptr;
 
-  // Do the connect
+  // Do the connect.
   err = ContinueSSL();
   if (err != 0)
     goto ssl_error;
@@ -436,8 +453,7 @@ OpenSSLAdapter::ContinueSSL() {
   return 0;
 }
 
-void
-OpenSSLAdapter::Error(const char* context, int err, bool signal) {
+void OpenSSLAdapter::Error(const char* context, int err, bool signal) {
   LOG(LS_WARNING) << "OpenSSLAdapter::Error("
                   << context << ", " << err << ")";
   state_ = SSL_ERROR;
@@ -446,9 +462,8 @@ OpenSSLAdapter::Error(const char* context, int err, bool signal) {
     AsyncSocketAdapter::OnCloseEvent(this, err);
 }
 
-void
-OpenSSLAdapter::Cleanup() {
-  LOG(LS_INFO) << "Cleanup";
+void OpenSSLAdapter::Cleanup() {
+  LOG(LS_INFO) << "OpenSSLAdapter::Cleanup";
 
   state_ = SSL_NONE;
   ssl_read_needs_write_ = false;
@@ -672,15 +687,13 @@ int OpenSSLAdapter::RecvFrom(void* pv,
   return SOCKET_ERROR;
 }
 
-int
-OpenSSLAdapter::Close() {
+int OpenSSLAdapter::Close() {
   Cleanup();
   state_ = restartable_ ? SSL_WAIT : SSL_NONE;
   return AsyncSocketAdapter::Close();
 }
 
-Socket::ConnState
-OpenSSLAdapter::GetState() const {
+Socket::ConnState OpenSSLAdapter::GetState() const {
   //if (signal_close_)
   //  return CS_CONNECTED;
   ConnState state = socket_->GetState();
@@ -690,8 +703,7 @@ OpenSSLAdapter::GetState() const {
   return state;
 }
 
-void
-OpenSSLAdapter::OnMessage(Message* msg) {
+void OpenSSLAdapter::OnMessage(Message* msg) {
   if (MSG_TIMEOUT == msg->message_id) {
     LOG(LS_INFO) << "DTLS timeout expired";
     DTLSv1_handle_timeout(ssl_);
@@ -699,8 +711,7 @@ OpenSSLAdapter::OnMessage(Message* msg) {
   }
 }
 
-void
-OpenSSLAdapter::OnConnectEvent(AsyncSocket* socket) {
+void OpenSSLAdapter::OnConnectEvent(AsyncSocket* socket) {
   LOG(LS_INFO) << "OpenSSLAdapter::OnConnectEvent";
   if (state_ != SSL_WAIT) {
     RTC_DCHECK(state_ == SSL_NONE);
@@ -714,8 +725,7 @@ OpenSSLAdapter::OnConnectEvent(AsyncSocket* socket) {
   }
 }
 
-void
-OpenSSLAdapter::OnReadEvent(AsyncSocket* socket) {
+void OpenSSLAdapter::OnReadEvent(AsyncSocket* socket) {
   //LOG(LS_INFO) << "OpenSSLAdapter::OnReadEvent";
 
   if (state_ == SSL_NONE) {
@@ -744,8 +754,7 @@ OpenSSLAdapter::OnReadEvent(AsyncSocket* socket) {
   AsyncSocketAdapter::OnReadEvent(socket);
 }
 
-void
-OpenSSLAdapter::OnWriteEvent(AsyncSocket* socket) {
+void OpenSSLAdapter::OnWriteEvent(AsyncSocket* socket) {
   //LOG(LS_INFO) << "OpenSSLAdapter::OnWriteEvent";
 
   if (state_ == SSL_NONE) {
@@ -785,8 +794,7 @@ OpenSSLAdapter::OnWriteEvent(AsyncSocket* socket) {
   AsyncSocketAdapter::OnWriteEvent(socket);
 }
 
-void
-OpenSSLAdapter::OnCloseEvent(AsyncSocket* socket, int err) {
+void OpenSSLAdapter::OnCloseEvent(AsyncSocket* socket, int err) {
   LOG(LS_INFO) << "OpenSSLAdapter::OnCloseEvent(" << err << ")";
   AsyncSocketAdapter::OnCloseEvent(socket, err);
 }
@@ -886,8 +894,7 @@ bool OpenSSLAdapter::SSLPostConnectionCheck(SSL* ssl, const char* host) {
 
 // We only use this for tracing and so it is only needed in debug mode
 
-void
-OpenSSLAdapter::SSLInfoCallback(const SSL* s, int where, int ret) {
+void OpenSSLAdapter::SSLInfoCallback(const SSL* s, int where, int ret) {
   const char* str = "undefined";
   int w = where & ~SSL_ST_MASK;
   if (w & SSL_ST_CONNECT) {
@@ -913,8 +920,7 @@ OpenSSLAdapter::SSLInfoCallback(const SSL* s, int where, int ret) {
 
 #endif
 
-int
-OpenSSLAdapter::SSLVerifyCallback(int ok, X509_STORE_CTX* store) {
+int OpenSSLAdapter::SSLVerifyCallback(int ok, X509_STORE_CTX* store) {
 #if !defined(NDEBUG)
   if (!ok) {
     char data[256];
@@ -959,6 +965,14 @@ OpenSSLAdapter::SSLVerifyCallback(int ok, X509_STORE_CTX* store) {
   return ok;
 }
 
+int OpenSSLAdapter::NewSSLSessionCallback(SSL* ssl, SSL_SESSION* session) {
+  OpenSSLAdapter* stream =
+      reinterpret_cast<OpenSSLAdapter*>(SSL_get_app_data(ssl));
+  RTC_DCHECK(stream->ssl_session_cache_);
+  stream->ssl_session_cache_->Set(stream->ssl_host_name_, session);
+  return 1;  // We've taken ownership of the session. (TODO: handle expiry)
+}
+
 bool OpenSSLAdapter::ConfigureTrustedRootCertificates(SSL_CTX* ctx) {
   // Add the root cert that we care about to the SSL context
   int count_of_added_certs = 0;
@@ -980,8 +994,7 @@ bool OpenSSLAdapter::ConfigureTrustedRootCertificates(SSL_CTX* ctx) {
   return count_of_added_certs > 0;
 }
 
-SSL_CTX*
-OpenSSLAdapter::SetupSSLContext() {
+SSL_CTX* OpenSSLAdapter::SetupSSLContext() {
   // Use (D)TLS 1.2.
   // Note: BoringSSL supports a range of versions by setting max/min version
   // (Default V1.0 to V1.2). However (D)TLSv1_2_client_method functions used

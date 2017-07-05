@@ -23,16 +23,36 @@ typedef struct x509_store_ctx_st X509_STORE_CTX;
 
 namespace rtc {
 
+class SSLSessionCache {
+ public:
+  bool Lookup(const std::string& hostname, void** session) {
+    auto it = sessions_.find(hostname);
+    if (it == sessions_.end) {
+      return false;
+    }
+    *session = it->second;
+    return true;
+  }
+  void Set(const std::string& hostname, const void* session) {
+    // TODO: Figure out what happens if there's already a value for the key
+    sessions_[hostname] = session;
+  }
+ private:
+  std::map<std::string, void*> sessions_;
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 
 class OpenSSLAdapter : public SSLAdapter, public MessageHandler {
-public:
+ public:
   static bool InitializeSSL(VerificationCallback callback);
   static bool InitializeSSLThread();
   static bool CleanupSSL();
 
   OpenSSLAdapter(AsyncSocket* socket);
   ~OpenSSLAdapter() override;
+
+  void set_session_cache(SSLSessionCache* cache) { ssl_session_cache_ = cache; }
 
   void SetMode(SSLMode mode) override;
   int StartSSL(const char* hostname, bool restartable) override;
@@ -101,6 +121,7 @@ private:
   std::string ssl_host_name_;
   // Do DTLS or not
   SSLMode ssl_mode_;
+  SSLSessionCache* ssl_session_cache_;
 
   bool custom_verification_succeeded_;
 };
