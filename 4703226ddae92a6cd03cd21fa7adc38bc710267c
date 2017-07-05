@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8dfaf79b_7c4e972d",
+        "filename": "webrtc/modules/audio_coding/neteq/packet_buffer_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-07-05T08:23:14Z",
+      "side": 1,
+      "message": "clang-format moved it up, I undo it here.",
+      "range": {
+        "startLine": 17,
+        "startChar": 25,
+        "endLine": 17,
+        "endChar": 37
+      },
+      "revId": "4703226ddae92a6cd03cd21fa7adc38bc710267c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
