@@ -319,6 +319,7 @@ TEST(AudioReceiveStreamTest, GetStats) {
             stats.accelerate_rate);
   EXPECT_EQ(Q14ToFloat(kNetworkStats.currentPreemptiveRate),
             stats.preemptive_expand_rate);
+  EXPECT_EQ(Q14ToFloat(kNetworkStats.currentDiscardRate), stats.discard_rate);
   EXPECT_EQ(kAudioDecodeStats.calls_to_silence_generator,
             stats.decoding_calls_to_silence_generator);
   EXPECT_EQ(kAudioDecodeStats.calls_to_neteq, stats.decoding_calls_to_neteq);

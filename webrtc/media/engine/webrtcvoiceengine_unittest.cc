@@ -599,6 +599,7 @@ class WebRtcVoiceEngineTestFake : public testing::Test {
     stats.secondary_decoded_rate = 1.23f;
     stats.accelerate_rate = 4.56f;
     stats.preemptive_expand_rate = 7.89f;
+    stats.discard_rate = 0.12f;
     stats.decoding_calls_to_silence_generator = 12;
     stats.decoding_calls_to_neteq = 345;
     stats.decoding_normal = 67890;
@@ -635,6 +636,7 @@ class WebRtcVoiceEngineTestFake : public testing::Test {
     EXPECT_EQ(info.secondary_decoded_rate, stats.secondary_decoded_rate);
     EXPECT_EQ(info.accelerate_rate, stats.accelerate_rate);
     EXPECT_EQ(info.preemptive_expand_rate, stats.preemptive_expand_rate);
+    EXPECT_EQ(info.discard_rate, stats.discard_rate);
     EXPECT_EQ(info.decoding_calls_to_silence_generator,
               stats.decoding_calls_to_silence_generator);
     EXPECT_EQ(info.decoding_calls_to_neteq, stats.decoding_calls_to_neteq);

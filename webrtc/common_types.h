@@ -363,7 +363,7 @@ struct NetworkStatistics {
   bool jitterPeaksFound;
   // Loss rate (network + late); fraction between 0 and 1, scaled to Q14.
   uint16_t currentPacketLossRate;
-  // Late loss rate; fraction between 0 and 1, scaled to Q14.
+  // Discard rate (late + redundant); fraction between 0 and 1, scaled to Q14.
   uint16_t currentDiscardRate;
   // fraction (of original stream) of synthesized audio inserted through
   // expansion (in Q14)
