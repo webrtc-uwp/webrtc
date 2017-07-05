@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da8b1a93_b113c224",
+        "filename": "webrtc/api/statstypes.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 556,
+      "author": {
+        "id": 1122982
+      },
+      "writtenOn": "2017-07-05T13:50:58Z",
+      "side": 1,
+      "message": "In the same spirit, how about googAudioDiscardRate?",
+      "range": {
+        "startLine": 556,
+        "startChar": 14,
+        "endLine": 556,
+        "endChar": 29
+      },
+      "revId": "99fef494cc858365e1f198107f607a2f61578a1a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c09a9aba_8daff621",
+        "filename": "webrtc/api/statstypes.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1122982
+      },
+      "writtenOn": "2017-07-05T13:50:58Z",
+      "side": 1,
+      "message": "I think this should specify that we are dealing with audio. How about kStatsValueNameAudioDiscardRate?",
+      "range": {
+        "startLine": 158,
+        "startChar": 4,
+        "endLine": 158,
+        "endChar": 30
+      },
+      "revId": "99fef494cc858365e1f198107f607a2f61578a1a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
