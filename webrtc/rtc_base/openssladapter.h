@@ -11,6 +11,7 @@
 #ifndef WEBRTC_RTC_BASE_OPENSSLADAPTER_H_
 #define WEBRTC_RTC_BASE_OPENSSLADAPTER_H_
 
+#include <map>
 #include <string>
 #include "webrtc/rtc_base/buffer.h"
 #include "webrtc/rtc_base/messagehandler.h"
@@ -20,19 +21,42 @@
 typedef struct ssl_st SSL;
 typedef struct ssl_ctx_st SSL_CTX;
 typedef struct x509_store_ctx_st X509_STORE_CTX;
+typedef struct ssl_session_st SSL_SESSION;
 
 namespace rtc {
+
+class SSLSessionCache {
+ public:
+  SSLSessionCache();
+  ~SSLSessionCache();
+  bool Lookup(const std::string& hostname, void** session) {
+    auto it = sessions_.find(hostname);
+    if (it == sessions_.end()) {
+      return false;
+    }
+    *session = it->second;
+    return true;
+  }
+  void Set(const std::string& hostname, void* session) {
+    // TODO: Figure out what happens if there's already a value for the key
+    sessions_[hostname] = session;
+  }
+ private:
+  std::map<std::string, void*> sessions_;
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 
 class OpenSSLAdapter : public SSLAdapter, public MessageHandler {
-public:
+ public:
   static bool InitializeSSL(VerificationCallback callback);
   static bool InitializeSSLThread();
   static bool CleanupSSL();
 
   OpenSSLAdapter(AsyncSocket* socket);
   ~OpenSSLAdapter() override;
+
+  void set_session_cache(SSLSessionCache* cache) { ssl_session_cache_ = cache; }
 
   void SetMode(SSLMode mode) override;
   int StartSSL(const char* hostname, bool restartable) override;
@@ -76,11 +100,12 @@ private:
                                bool ignore_bad_cert);
   bool SSLPostConnectionCheck(SSL* ssl, const char* host);
 #if !defined(NDEBUG)
-  static void SSLInfoCallback(const SSL* s, int where, int ret);
+  static void SSLInfoCallback(const SSL* ssl, int where, int ret);
 #endif
   static int SSLVerifyCallback(int ok, X509_STORE_CTX* store);
   static VerificationCallback custom_verify_callback_;
   friend class OpenSSLStreamAdapter;  // for custom_verify_callback_;
+  static int NewSSLSessionCallback(SSL* ssl, SSL_SESSION* session);
 
   static bool ConfigureTrustedRootCertificates(SSL_CTX* ctx);
   SSL_CTX* SetupSSLContext();
@@ -101,6 +126,7 @@ private:
   std::string ssl_host_name_;
   // Do DTLS or not
   SSLMode ssl_mode_;
+  SSLSessionCache* ssl_session_cache_;
 
   bool custom_verification_succeeded_;
 };
