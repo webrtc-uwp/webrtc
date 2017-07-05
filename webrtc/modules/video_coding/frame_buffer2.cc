@@ -281,7 +281,8 @@ int FrameBuffer::InsertFrame(std::unique_ptr<FrameObject> frame) {
   if (!ValidReferences(*frame)) {
     LOG(LS_WARNING) << "Frame with (picture_id:spatial_id) (" << key.picture_id
                     << ":" << static_cast<int>(key.spatial_layer)
-                    << ") has invalid frame references, dropping frame.";
+                    << ") has invalid frame references, dropping frame and clearing buffer.";
+    ClearFramesAndHistory();
     return last_continuous_picture_id;
   }
 
