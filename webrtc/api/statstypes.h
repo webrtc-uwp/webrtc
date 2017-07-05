@@ -155,6 +155,7 @@ class StatsReport {
     kStatsValueNameDecodingPLC,
     kStatsValueNameDecodingPLCCNG,
     kStatsValueNameDer,
+    kStatsValueNameDiscardRate,
     kStatsValueNameDtlsCipher,
     kStatsValueNameEchoCancellationQualityMin,
     kStatsValueNameEchoDelayMedian,

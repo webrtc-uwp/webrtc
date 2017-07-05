@@ -54,6 +54,7 @@ class AudioReceiveStream {
     float secondary_decoded_rate = 0.0f;
     float accelerate_rate = 0.0f;
     float preemptive_expand_rate = 0.0f;
+    float discard_rate = 0.0f;
     int32_t decoding_calls_to_silence_generator = 0;
     int32_t decoding_calls_to_neteq = 0;
     int32_t decoding_normal = 0;
