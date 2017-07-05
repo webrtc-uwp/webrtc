@@ -22,6 +22,53 @@
       "revId": "aa5d399bdb6406535b910a783acff8772fa31c91",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e49f66f3_a87197cd",
+        "filename": "webrtc/modules/audio_coding/neteq/packet_buffer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1122982
+      },
+      "writtenOn": "2017-07-05T06:04:59Z",
+      "side": 1,
+      "message": "I don\u0027t think this is correct. The method discards all packets in the range [timestamp_limit - horizon_samples, timestamp_limit], if I\u0027m not mistaken. Take a look at the comments for IsObsoleteTimestamp, which is used by this method.",
+      "parentUuid": "bad9710d_c3379cf2",
+      "range": {
+        "startLine": 98,
+        "startChar": 5,
+        "endLine": 98,
+        "endChar": 13
+      },
+      "revId": "aa5d399bdb6406535b910a783acff8772fa31c91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9077ccba_026ab55c",
+        "filename": "webrtc/modules/audio_coding/neteq/packet_buffer_unittest.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1122982
+      },
+      "writtenOn": "2017-07-05T06:04:59Z",
+      "side": 1,
+      "message": "invok -\u003e invoke",
+      "range": {
+        "startLine": 479,
+        "startChar": 33,
+        "endLine": 479,
+        "endChar": 38
+      },
+      "revId": "aa5d399bdb6406535b910a783acff8772fa31c91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
