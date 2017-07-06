@@ -355,6 +355,27 @@ void BasicPortAllocatorSession::RegatherOnFailedNetworks() {
   }
 }
 
+void BasicPortAllocatorSession::RegatherOnAllNetworks() {
+  std::vector<rtc::Network*> networks = GetNetworks();
+  if (networks.empty()) {
+    return;
+  }
+
+  LOG(LS_INFO) << "Regather on all networks";
+
+  std::vector<PortData*> ports_to_prune = GetUnprunedPorts(networks);
+  if (!ports_to_prune.empty()) {
+    LOG(LS_INFO) << "Prune " << ports_to_prune.size() << " ports";
+    PrunePortsAndRemoveCandidates(ports_to_prune);
+  }
+
+  if (allocation_started_ && network_manager_started_ && !IsStopped()) {
+    SignalIceRegathering(this, IceRegatheringReason::CLIENT_REQUEST);
+
+    DoAllocate();
+  }
+}
+
 std::vector<PortInterface*> BasicPortAllocatorSession::ReadyPorts() const {
   std::vector<PortInterface*> ret;
   for (const PortData& data : ports_) {

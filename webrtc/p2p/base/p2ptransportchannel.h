@@ -280,6 +280,7 @@ class P2PTransportChannel : public IceTransportInternal,
   void OnMessage(rtc::Message* pmsg) override;
   void OnCheckAndPing();
   void OnRegatherOnFailedNetworks();
+  void OnRegatherOnAllNetworks();
 
   uint32_t GetNominationAttr(Connection* conn) const;
   bool GetUseCandidateAttr(Connection* conn, NominationMode mode) const;

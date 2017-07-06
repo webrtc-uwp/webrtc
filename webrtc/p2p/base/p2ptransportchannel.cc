@@ -32,7 +32,8 @@ namespace {
 enum {
   MSG_SORT_AND_UPDATE_STATE = 1,
   MSG_CHECK_AND_PING,
-  MSG_REGATHER_ON_FAILED_NETWORKS
+  MSG_REGATHER_ON_FAILED_NETWORKS,
+  MSG_REGATHER_ON_ALL_NETWORKS
 };
 
 // The minimum improvement in RTT that justifies a switch.
@@ -428,6 +429,14 @@ void P2PTransportChannel::SetIceConfig(const IceConfig& config) {
     LOG(LS_INFO) << "Set regather_on_failed_networks_interval to "
                  << *config_.regather_on_failed_networks_interval;
   }
+
+  if (config.regather_on_all_networks_interval) {
+    config_.regather_on_all_networks_interval =
+        config.regather_on_all_networks_interval;
+    LOG(LS_INFO) << "Set regather_on_all_networks_interval to "
+                 << *config_.regather_on_all_networks_interval;
+  }
+
   if (config.receiving_switching_delay) {
     config_.receiving_switching_delay = config.receiving_switching_delay;
     LOG(LS_INFO) << "Set receiving_switching_delay to"
@@ -1077,6 +1086,11 @@ void P2PTransportChannel::MaybeStartPinging() {
     thread()->PostDelayed(RTC_FROM_HERE,
                           *config_.regather_on_failed_networks_interval, this,
                           MSG_REGATHER_ON_FAILED_NETWORKS);
+    if (config_.regather_on_all_networks_interval) {
+      thread()->PostDelayed(RTC_FROM_HERE,
+                            *config_.regather_on_all_networks_interval, this,
+                            MSG_REGATHER_ON_ALL_NETWORKS);
+    }
     started_pinging_ = true;
   }
 }
@@ -1528,6 +1542,9 @@ void P2PTransportChannel::OnMessage(rtc::Message *pmsg) {
     case MSG_REGATHER_ON_FAILED_NETWORKS:
       OnRegatherOnFailedNetworks();
       break;
+    case MSG_REGATHER_ON_ALL_NETWORKS:
+      OnRegatherOnAllNetworks();
+      break;
     default:
       RTC_NOTREACHED();
       break;
@@ -1911,6 +1928,17 @@ void P2PTransportChannel::OnRegatherOnFailedNetworks() {
   thread()->PostDelayed(RTC_FROM_HERE,
                         *config_.regather_on_failed_networks_interval, this,
                         MSG_REGATHER_ON_FAILED_NETWORKS);
+}
+
+void P2PTransportChannel::OnRegatherOnAllNetworks() {
+  // TODO
+  if (!allocator_sessions_.empty() && allocator_session()->IsCleared()) {
+    allocator_session()->RegatherOnAllNetworks();
+  }
+
+  thread()->PostDelayed(RTC_FROM_HERE,
+                        *config_.regather_on_all_networks_interval, this,
+                        MSG_REGATHER_ON_ALL_NETWORKS);
 }
 
 void P2PTransportChannel::PruneAllPorts() {

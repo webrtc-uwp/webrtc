@@ -1362,6 +1362,40 @@ TEST_F(P2PTransportChannelTest,
   DestroyChannels();
 }
 
+// Tests that ICE regathering occurs regularly when
+// regather_on_all_networks_interval configuration value is set.
+TEST_F(P2PTransportChannelTest, TestIceRegatherOnAllNetworksContinual) {
+  rtc::ScopedFakeClock clock;
+  ConfigureEndpoints(OPEN, OPEN, kOnlyLocalPorts, kOnlyLocalPorts);
+
+  // ep1 gathers continually but ep2 does not.
+  IceConfig config1 = CreateIceConfig(1000, GATHER_CONTINUALLY);
+  config1.regather_on_all_networks_interval = rtc::Optional<int>(2000);
+  IceConfig config2;
+  config2.regather_on_all_networks_interval = rtc::Optional<int>(2000);
+  CreateChannels(config1, config2);
+
+  EXPECT_TRUE_SIMULATED_WAIT(ep1_ch1()->receiving() && ep1_ch1()->writable() &&
+                                 ep2_ch1()->receiving() &&
+                                 ep2_ch1()->writable(),
+                             kDefaultTimeout, clock);
+
+  fw()->AddRule(false, rtc::FP_ANY, rtc::FD_ANY, kPublicAddrs[0]);
+  // Timeout value such that all connections are deleted.
+  const int kNetworkGatherDuration = 11000;
+  SIMULATED_WAIT(false, kNetworkGatherDuration, clock);
+  // Expect regathering to happen 5 times in 11s with 2s interval
+  EXPECT_LE(5, GetMetricsObserver(0)->GetEnumCounter(
+                   webrtc::kEnumCounterIceRegathering,
+                   static_cast<int>(IceRegatheringReason::CLIENT_REQUEST)));
+  // Expect no regathering if continual gathering not configured
+  EXPECT_EQ(0, GetMetricsObserver(1)->GetEnumCounter(
+                   webrtc::kEnumCounterIceRegathering,
+                   static_cast<int>(IceRegatheringReason::CLIENT_REQUEST)));
+
+  DestroyChannels();
+}
+
 // Test that we properly create a connection on a STUN ping from unknown address
 // when the signaling is slow.
 TEST_F(P2PTransportChannelTest, PeerReflexiveCandidateBeforeSignaling) {
