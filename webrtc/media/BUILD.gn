@@ -101,6 +101,8 @@ rtc_static_library("rtc_media") {
   libs = []
   deps = []
   sources = [
+    "devices/winuwpdevicemanager.cc",
+    "devices/winuwpdevicemanager.h",
     "engine/apm_helpers.cc",
     "engine/apm_helpers.h",
     "engine/internaldecoderfactory.cc",

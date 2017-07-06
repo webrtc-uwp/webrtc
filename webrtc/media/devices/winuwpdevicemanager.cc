@@ -29,7 +29,6 @@
 #include "webrtc/base/win32.h"  // ToUtf8
 #include "webrtc/base/win32window.h"
 #include "webrtc/modules/video_capture/video_capture_factory.h"
-#include "webrtc/media/base/mediacommon.h"
 
 namespace {
 
@@ -125,9 +124,9 @@ namespace cricket {
   bool WinUWPDeviceManager::GetVideoCaptureDevices(
     std::vector<Device>* devices) {
     devices->clear();
-		std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> devInfo =
-			std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo>(
-      webrtc::VideoCaptureFactory::CreateDeviceInfo(0));
+    std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> devInfo =
+      std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo>(
+      webrtc::VideoCaptureFactory::CreateDeviceInfo());
     int deviceCount = devInfo->NumberOfDevices();
     const unsigned int KMaxDeviceNameLength = 128;
     const unsigned int KMaxUniqueIdLength = 256;
@@ -165,7 +164,7 @@ namespace cricket {
 			LOG(LS_ERROR) << "No video capturer factory for devices.";
 			return NULL;
 		}
-		cricket::VideoCapturer* capturer =
+		std::unique_ptr<cricket::VideoCapturer> capturer =
 			video_device_capturer_factory_->Create(device);
 		if (!capturer) {
 			return NULL;
@@ -177,7 +176,7 @@ namespace cricket {
 		if (has_max) {
 			capturer->ConstrainSupportedFormats(video_format);
 		}
-		return capturer;
+		return capturer.get();
 	}
 
 	bool WinUWPDeviceManager::GetMaxFormat(const Device& device,

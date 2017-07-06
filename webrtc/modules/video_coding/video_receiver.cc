@@ -390,6 +390,8 @@ VideoCodecType VideoReceiver::ReceiveCodec() const {
   return _codecDataBase.ReceiveCodec();
 }
 
+bool globalRequestKeyFrame = false;
+
 // Incoming packet from network parsed and ready for decode, non blocking.
 int32_t VideoReceiver::IncomingPacket(const uint8_t* incomingPayload,
                                       size_t payloadLength,
