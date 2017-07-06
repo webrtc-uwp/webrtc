@@ -537,6 +537,10 @@ rtc_static_library("rtc_base") {
         "win32socketserver.h",
       ]
       if (is_winuwp) {
+        sources += [
+          "loggingserver.cc",
+          "loggingserver.h",
+        ]
         sources -= [
           "win32socketserver.cc",
           "win32socketserver.h",
