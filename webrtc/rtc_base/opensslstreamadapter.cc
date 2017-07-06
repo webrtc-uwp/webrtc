@@ -798,6 +798,8 @@ int OpenSSLStreamAdapter::BeginSSL() {
   SSL_set_mode(ssl_, SSL_MODE_ENABLE_PARTIAL_WRITE |
                SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
 
+  SSL_CTX_set_session_cache_mode(ssl_ctx_, SSL_SESS_CACHE_SERVER);
+
 #if !defined(OPENSSL_IS_BORINGSSL)
   // Specify an ECDH group for ECDHE ciphers, otherwise OpenSSL cannot
   // negotiate them when acting as the server. Use NIST's P-256 which is
