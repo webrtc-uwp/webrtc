@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2dc65def_f7aef0ec",
+        "filename": "webrtc/rtc_base/gunit.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-07T19:57:43Z",
+      "side": 1,
+      "message": "I know one can look at the gtest source code to see how these macros work, but it may be helpful to add a brief comment here explaining it. It\u0027s not completely obvious that this is done to  allow \u0027EXPECT_TRUE_WAIT(...) \u003c\u003c \"message\"\u0027 to work.",
+      "revId": "df8813ee307d66b9600c9c23597d78cfb5bf92ef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "650bdec5_c1c2dd61",
+        "filename": "webrtc/rtc_base/gunit.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-07T19:57:43Z",
+      "side": 1,
+      "message": "I noticed the gtest code uses different labels for different macros; do you know if there\u0027s any reason for that?",
+      "range": {
+        "startLine": 53,
+        "startChar": 24,
+        "endLine": 53,
+        "endChar": 36
+      },
+      "revId": "df8813ee307d66b9600c9c23597d78cfb5bf92ef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
