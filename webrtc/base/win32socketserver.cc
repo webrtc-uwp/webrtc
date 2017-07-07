@@ -16,8 +16,8 @@
 #include "webrtc/base/byteorder.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
-#include "webrtc/base/winping.h"
 #include "webrtc/base/win32window.h"
+#include "webrtc/base/winping.h"
 
 
 namespace rtc {

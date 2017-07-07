@@ -27,10 +27,6 @@
 #include "webrtc/modules/video_coding/include/video_coding_defines.h"
 #include "webrtc/system_wrappers/include/event_wrapper.h"
 
-#ifdef CreateEvent
-#undef CreateEvent
-#endif
-
 namespace webrtc {
 
 class Clock;

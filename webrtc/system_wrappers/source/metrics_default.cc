@@ -304,5 +304,4 @@ int MinSample(const std::string& name) {
 }
 
 }  // namespace metrics
-
 }  // namespace webrtc

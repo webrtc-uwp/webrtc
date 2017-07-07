@@ -20,8 +20,6 @@
 
 namespace webrtc {
 
-// Namespace needed to resolve class name collision (OpusTest).
-// The other OpusTest class is in opus_test.cc of modules_test project
 using test::AudioLoop;
 using ::testing::TestWithParam;
 using ::testing::Values;
