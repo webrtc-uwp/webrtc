@@ -229,7 +229,7 @@ rtc_static_library("g711") {
   ]
 }
 
-rtc_source_set("g711_c") {
+rtc_static_library("g711_c") {
   visibility = [ ":*" ]  # Only targets in this file can depend on this.
   sources = [
     "codecs/g711/g711.c",
@@ -271,7 +271,7 @@ rtc_static_library("g722") {
   ]
 }
 
-rtc_source_set("g722_c") {
+rtc_static_library("g722_c") {
   visibility = [ ":*" ]  # Only targets in this file can depend on this.
   sources = [
     "codecs/g722/g722_decode.c",
@@ -315,7 +315,7 @@ rtc_static_library("ilbc") {
   ]
 }
 
-rtc_source_set("ilbc_c") {
+rtc_static_library("ilbc_c") {
   visibility = [ ":*" ]  # Only targets in this file can depend on this.
   sources = [
     "codecs/ilbc/abs_quant.c",
@@ -609,7 +609,7 @@ rtc_static_library("isac_fix") {
   }
 }
 
-rtc_source_set("isac_fix_common") {
+rtc_static_library("isac_fix_common") {
   visibility = [ ":*" ]  # Only targets in this file can depend on this.
   sources = [
     "codecs/isac/fix/source/codec.h",
@@ -620,7 +620,7 @@ rtc_source_set("isac_fix_common") {
   public_configs = [ ":isac_fix_config" ]
 }
 
-rtc_source_set("isac_fix_c") {
+rtc_static_library("isac_fix_c") {
   visibility = [ ":*" ]  # Only targets in this file can depend on this.
   sources = [
     "codecs/isac/fix/include/audio_decoder_isacfix.h",
@@ -787,7 +787,7 @@ rtc_static_library("pcm16b") {
   public_configs = [ ":pcm16b_config" ]
 }
 
-rtc_source_set("pcm16b_c") {
+rtc_static_library("pcm16b_c") {
   visibility = [ ":*" ]  # Only targets in this file can depend on this.
   sources = [
     "codecs/pcm16b/pcm16b.c",
@@ -840,7 +840,7 @@ rtc_static_library("webrtc_opus") {
   }
 }
 
-rtc_source_set("webrtc_opus_c") {
+rtc_static_library("webrtc_opus_c") {
   visibility = [ ":*" ]  # Only targets in this file can depend on this.
   sources = [
     "codecs/opus/opus_inst.h",

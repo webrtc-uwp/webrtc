@@ -301,7 +301,7 @@ rtc_static_library("audio_processing") {
   ]
 }
 
-rtc_source_set("audio_processing_c") {
+rtc_static_library("audio_processing_c") {
   visibility = [ ":*" ]  # Only targets in this file can depend on this.
   sources = [
     "agc/legacy/analog_agc.c",
