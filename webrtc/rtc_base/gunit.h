@@ -48,27 +48,29 @@
   if (bool res = true) {                                          \
     WAIT_(ex, timeout, res);                                      \
     if (!res)                                                     \
-      goto GTEST_CONCAT_TOKEN_(gunit_label_, __LINE__);           \
+      goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__); \
   } else                                                          \
-    GTEST_CONCAT_TOKEN_(gunit_label_, __LINE__): EXPECT_TRUE(ex)
+    GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__):        \
+      EXPECT_TRUE(ex)
 
 #define EXPECT_EQ_WAIT(v1, v2, timeout)                           \
   GTEST_AMBIGUOUS_ELSE_BLOCKER_                                   \
   if (bool res = true) {                                          \
     WAIT_(v1 == v2, timeout, res);                                \
     if (!res)                                                     \
-      goto GTEST_CONCAT_TOKEN_(gunit_label_, __LINE__);           \
+      goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__); \
   } else                                                          \
-    GTEST_CONCAT_TOKEN_(gunit_label_, __LINE__): EXPECT_EQ(v1, v2)
+    GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__):        \
+      EXPECT_EQ(v1, v2)
 
 #define ASSERT_TRUE_WAIT(ex, timeout)                             \
   GTEST_AMBIGUOUS_ELSE_BLOCKER_                                   \
   if (bool res = true) {                                          \
     WAIT_(ex, timeout, res);                                      \
     if (!res)                                                     \
-      goto GTEST_CONCAT_TOKEN_(gunit_label_, __LINE__); \
+      goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__); \
   } else                                                          \
-    GTEST_CONCAT_TOKEN_(gunit_label_, __LINE__):        \
+    GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__):        \
       ASSERT_TRUE(ex)
 
 #define ASSERT_EQ_WAIT(v1, v2, timeout)                           \
@@ -76,9 +78,10 @@
   if (bool res = true) {                                          \
     WAIT_(v1 == v2, timeout, res);                                \
     if (!res)                                                     \
-      goto GTEST_CONCAT_TOKEN_(gunit_label_, __LINE__);           \
+      goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__); \
   } else                                                          \
-    GTEST_CONCAT_TOKEN_(gunit_label_, __LINE__): ASSERT_EQ(v1, v2)
+    GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__):        \
+      ASSERT_EQ(v1, v2)
 
 // Version with a "soft" timeout and a margin. This logs if the timeout is
 // exceeded, but it only fails if the expression still isn't true after the
@@ -94,9 +97,10 @@
                     << "ms";                                               \
     WAIT_(ex, margin, res);                                                \
     if (!res)                                                              \
-      goto GTEST_CONCAT_TOKEN_(gunit_label_, __LINE__);                    \
+      goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__);          \
   } else                                                                   \
-    GTEST_CONCAT_TOKEN_(gunit_label_, __LINE__): EXPECT_TRUE(ex)
+    GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__):                 \
+      EXPECT_TRUE(ex)
 
 // Wait until "ex" is true, or "timeout" expires, using fake clock where
 // messages are processed every millisecond.
@@ -135,26 +139,29 @@
   if (bool res = true) {                                          \
     SIMULATED_WAIT_(v1 == v2, timeout, res, clock);               \
     if (!res)                                                     \
-      goto GTEST_CONCAT_TOKEN_(gunit_label_, __LINE__); \
+      goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__); \
   } else                                                          \
-    GTEST_CONCAT_TOKEN_(gunit_label_, __LINE__): EXPECT_EQ(v1, v2)
+    GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__):        \
+      EXPECT_EQ(v1, v2)
 
 #define ASSERT_TRUE_SIMULATED_WAIT(ex, timeout, clock)            \
   GTEST_AMBIGUOUS_ELSE_BLOCKER_                                   \
   if (bool res = true) {                                          \
     SIMULATED_WAIT_(ex, timeout, res, clock);                     \
     if (!res)                                                     \
-      goto GTEST_CONCAT_TOKEN_(gunit_label_, __LINE__); \
+      goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__); \
   } else                                                          \
-    GTEST_CONCAT_TOKEN_(gunit_label_, __LINE__): ASSERT_TRUE(ex)
+    GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__):        \
+      ASSERT_TRUE(ex)
 
 #define ASSERT_EQ_SIMULATED_WAIT(v1, v2, timeout, clock)          \
   GTEST_AMBIGUOUS_ELSE_BLOCKER_                                   \
   if (bool res = true) {                                          \
     SIMULATED_WAIT_(v1 == v2, timeout, res, clock);               \
     if (!res)                                                     \
-      goto GTEST_CONCAT_TOKEN_(gunit_label_, __LINE__); \
+      goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__); \
   } else                                                          \
-    GTEST_CONCAT_TOKEN_(gunit_label_, __LINE__): ASSERT_EQ(v1, v2)
+    GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__):        \
+      ASSERT_EQ(v1, v2)
 
 #endif  // WEBRTC_RTC_BASE_GUNIT_H_
