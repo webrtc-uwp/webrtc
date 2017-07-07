@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a2efb19f_838f97e1",
+        "filename": "webrtc/ortc/ortcfactory_integrationtest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-07-07T15:20:06Z",
+      "side": 1,
+      "message": "oh, thanks, fixed.",
+      "parentUuid": "83d0be54_0ce6f19a",
+      "revId": "9efcbefaba14e3d7a2ae1d486b4a6b96cbbbab99",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5d6fcd75_568b7b9f",
         "filename": "webrtc/ortc/ortcfactory_integrationtest.cc",
         "patchSetId": 1
@@ -30,6 +48,30 @@
       "writtenOn": "2017-07-05T20:17:21Z",
       "side": 1,
       "message": "Minor suggestion: Instead of doing an unconditional log, can you change this to do more granular \"EXPECT_GE\"s? For example, here\u0027s what the PeerConnection integration tests do: https://cs.chromium.org/chromium/src/third_party/webrtc/pc/peerconnection_integrationtest.cc?q\u003dpeerconnection_integ\u0026l\u003d1119",
+      "range": {
+        "startLine": 330,
+        "startChar": 15,
+        "endLine": 330,
+        "endChar": 16
+      },
+      "revId": "9efcbefaba14e3d7a2ae1d486b4a6b96cbbbab99",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59f22348_364a397a",
+        "filename": "webrtc/ortc/ortcfactory_integrationtest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-07-07T15:20:06Z",
+      "side": 1,
+      "message": "That is good too, although a bit repetitive to line 315 ~ 322. I would like EXPECT_TRUE_WAIT to allow \u003c\u003c suffix as other EXPECTs do. I made a change to let that happen, please take a look at that one (I made it dependent CL) first. Then the new patch set that based on that one.",
+      "parentUuid": "5d6fcd75_568b7b9f",
       "range": {
         "startLine": 330,
         "startChar": 15,
