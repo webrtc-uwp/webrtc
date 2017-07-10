@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9a5d25ea_e868835e",
+        "filename": "webrtc/rtc_base/gunit.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-07-10T09:54:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2dc65def_f7aef0ec",
+      "revId": "df8813ee307d66b9600c9c23597d78cfb5bf92ef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "650bdec5_c1c2dd61",
         "filename": "webrtc/rtc_base/gunit.h",
         "patchSetId": 4
@@ -30,6 +48,30 @@
       "writtenOn": "2017-07-07T19:57:43Z",
       "side": 1,
       "message": "I noticed the gtest code uses different labels for different macros; do you know if there\u0027s any reason for that?",
+      "range": {
+        "startLine": 53,
+        "startChar": 24,
+        "endLine": 53,
+        "endChar": 36
+      },
+      "revId": "df8813ee307d66b9600c9c23597d78cfb5bf92ef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dca02157_b524dad5",
+        "filename": "webrtc/rtc_base/gunit.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-07-10T09:54:56Z",
+      "side": 1,
+      "message": "It is only a label for goto, as long as there is no conflicting labels, it should be fine.",
+      "parentUuid": "650bdec5_c1c2dd61",
       "range": {
         "startLine": 53,
         "startChar": 24,
