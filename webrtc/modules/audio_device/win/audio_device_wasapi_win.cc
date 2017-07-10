@@ -361,14 +361,6 @@ HRESULT AudioInterfaceActivator::ActivateCompleted(
         goto exit;
       }
 
-      if (m_AudioDevice->_ptrAudioBuffer) {
-        // Update the audio buffer with the selected parameters
-        m_AudioDevice->_ptrAudioBuffer->SetRecordingSampleRate(
-          Wfx.nSamplesPerSec);
-        m_AudioDevice->_ptrAudioBuffer->SetRecordingChannels(
-          (uint8_t)Wfx.nChannels);
-      }
-
       // Get the capture client
       hr = audioClient->GetService(__uuidof(IAudioCaptureClient),
         reinterpret_cast<void**>(&m_AudioDevice->_ptrCaptureClient));
@@ -598,14 +590,6 @@ HRESULT AudioInterfaceActivator::ActivateCompleted(
 
       if (FAILED(hr)) {
         goto exit;
-      }
-
-      if (m_AudioDevice->_ptrAudioBuffer) {
-        // Update the audio buffer with the selected parameters
-        m_AudioDevice->_ptrAudioBuffer->SetPlayoutSampleRate(
-          Wfx.nSamplesPerSec);
-        m_AudioDevice->_ptrAudioBuffer->SetPlayoutChannels(
-          (uint8_t)Wfx.nChannels);
       }
 
       // Get the render client
@@ -1101,6 +1085,12 @@ int32_t AudioDeviceWindowsWasapi::InitSpeaker() {
     }
   }, concurrency::task_continuation_context::use_arbitrary()).wait();
 
+  if (_ptrAudioBuffer) {
+    // Update the audio buffer with the selected parameters
+    _ptrAudioBuffer->SetPlayoutSampleRate(_playSampleRate);
+    _ptrAudioBuffer->SetPlayoutChannels((uint8_t)_playChannels);
+  }
+
   if (_ptrClientOut == nullptr) {  // Initialize audio output device failed
     LOG(LS_ERROR) << "Failed to initialize the audio playout enpoint device";
     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
@@ -1224,6 +1214,12 @@ int32_t AudioDeviceWindowsWasapi::InitMicrophone() {
         rtc::ToUtf8(ex->Message->Data()).c_str());
     }
   }, concurrency::task_continuation_context::use_arbitrary()).wait();
+
+  if (_ptrAudioBuffer) {
+    // Update the audio buffer with the selected parameters
+    _ptrAudioBuffer->SetRecordingSampleRate(_recSampleRate);
+    _ptrAudioBuffer->SetRecordingChannels((uint8_t)_recChannels);
+  }
 
   if (_ptrClientIn == nullptr) {
     LOG(LS_ERROR) << "Failed to initialize the capturing enpoint device";

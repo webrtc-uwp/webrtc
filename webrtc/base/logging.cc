@@ -17,6 +17,11 @@
 #define snprintf _snprintf
 #endif
 #undef ERROR  // wingdi.h
+
+#if defined(WINUWP)
+#include <stdlib.h>
+#include "webrtc/base/win32.h"
+#endif // defined(WINUWP)
 #endif
 
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
@@ -154,7 +159,17 @@ LogMessage::LogMessage(const char* file,
       case ERRCTX_HRESULT: {
         char msgbuf[256];
         DWORD flags = FORMAT_MESSAGE_FROM_SYSTEM;
+#if defined(WINUWP)
+        HMODULE hmod = NULL;
+        if (module) {
+          wchar_t modulew[255];
+          size_t temp;
+          mbstowcs_s(&temp, modulew, 255, module, _TRUNCATE);
+          hmod = LoadPackagedLibrary(modulew, 0);
+        }
+#else // defined(WINUWP)
         HMODULE hmod = GetModuleHandleA(module);
+#endif // defined(WINUWP)
         if (hmod)
           flags |= FORMAT_MESSAGE_FROM_HMODULE;
         if (DWORD len = FormatMessageA(
@@ -365,7 +380,10 @@ void LogMessage::OutputToDebug(const std::string& str,
     CFRelease(key);
   }
 #endif
-#if defined(WEBRTC_WIN)
+#if defined(WINUWP)
+  // Always log to the debugger.
+  OutputDebugString(rtc::ToUtf16(str).c_str());
+#elif defined(WEBRTC_WIN)
   // Always log to the debugger.
   // Perhaps stderr should be controlled by a preference, as on Mac?
   OutputDebugStringA(str.c_str());
