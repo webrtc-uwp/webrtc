@@ -176,7 +176,7 @@ namespace cricket {
 		if (has_max) {
 			capturer->ConstrainSupportedFormats(video_format);
 		}
-		return capturer.get();
+		return capturer.release();
 	}
 
 	bool WinUWPDeviceManager::GetMaxFormat(const Device& device,
