@@ -947,7 +947,7 @@ void Connection::set_write_state(WriteState value) {
   WriteState old_value = write_state_;
   write_state_ = value;
   if (value != old_value) {
-    LOG_J(LS_VERBOSE, this) << "set_write_state from: " << old_value << " to "
+    LOG_J(LS_INFO, this) << "set_write_state from: " << old_value << " to "
                             << value;
     SignalStateChange(this);
   }

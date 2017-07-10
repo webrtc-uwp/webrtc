@@ -184,6 +184,13 @@ struct IceConfig {
   // active network having no connection on it.
   rtc::Optional<int> regather_on_failed_networks_interval;
 
+  // Interval to perform ICE regathering on all networks
+  // The interval is sampled from a uniform distribution [a-b, a+b]
+  // where a is regather_on_all_networks_interval and
+  //       b is regather_on_all_networks_interval_range
+  rtc::Optional<int> regather_on_all_networks_interval;
+  int regather_on_all_networks_interval_range = 0;
+
   // The time period in which we will not switch the selected connection
   // when a new connection becomes receiving but the selected connection is not
   // in case that the selected connection may become receiving soon.
