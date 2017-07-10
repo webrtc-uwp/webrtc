@@ -325,6 +325,7 @@ class P2PTransportChannelTestBase : public testing::Test,
     bool ready_to_send_ = false;
   };
 
+
   ChannelData* GetChannelData(rtc::PacketTransportInternal* transport) {
     if (ep1_.HasTransport(transport))
       return ep1_.GetChannelData(transport);
@@ -1360,6 +1361,91 @@ TEST_F(P2PTransportChannelTest,
                    static_cast<int>(IceRegatheringReason::NETWORK_FAILURE)));
 
   DestroyChannels();
+}
+
+// Tests that ICE regathering occurs regularly when
+// regather_on_all_networks_interval configuration value is set.
+TEST_F(P2PTransportChannelTest, TestIceRegatherOnAllNetworksContinual) {
+  rtc::ScopedFakeClock clock;
+  ConfigureEndpoints(OPEN, OPEN, kOnlyLocalPorts, kOnlyLocalPorts);
+
+  // ep1 gathers continually but ep2 does not.
+  const int kRegatherInterval = 2000;
+  IceConfig config1 = CreateIceConfig(1000, GATHER_CONTINUALLY);
+  config1.auto_regather_interval.emplace(kRegatherInterval, kRegatherInterval);
+  IceConfig config2;
+  config2.auto_regather_interval.emplace(kRegatherInterval, kRegatherInterval);
+  CreateChannels(config1, config2);
+
+  EXPECT_TRUE_SIMULATED_WAIT(ep1_ch1()->receiving() && ep1_ch1()->writable() &&
+                                 ep2_ch1()->receiving() &&
+                                 ep2_ch1()->writable(),
+                             kDefaultTimeout, clock);
+
+  fw()->AddRule(false, rtc::FP_ANY, rtc::FD_ANY, kPublicAddrs[0]);
+  // Timeout value such that all connections are deleted.
+  const int kNetworkGatherDuration = 11000;
+  SIMULATED_WAIT(false, kNetworkGatherDuration, clock);
+  // Expect regathering to happen 5 times in 11s with 2s interval
+  EXPECT_LE(5, GetMetricsObserver(0)->GetEnumCounter(
+                   webrtc::kEnumCounterIceRegathering,
+                   static_cast<int>(IceRegatheringReason::CLIENT_REQUEST)));
+  // Expect no regathering if continual gathering not configured
+  EXPECT_EQ(0, GetMetricsObserver(1)->GetEnumCounter(
+                   webrtc::kEnumCounterIceRegathering,
+                   static_cast<int>(IceRegatheringReason::CLIENT_REQUEST)));
+
+  DestroyChannels();
+}
+
+TEST_F(P2PTransportChannelTest, TestIceRegatherOnAllNetworksChangesTurn) {
+  rtc::ScopedFakeClock clock;
+  ConfigureEndpoints(
+      NAT_PORT_RESTRICTED, NAT_SYMMETRIC,
+      kDefaultPortAllocatorFlags | PORTALLOCATOR_ENABLE_SHARED_SOCKET,
+      kDefaultPortAllocatorFlags | PORTALLOCATOR_ENABLE_SHARED_SOCKET);
+  set_force_relay(true);
+
+  IceConfig config1 = CreateIceConfig(1000, GATHER_CONTINUALLY);
+  const int kRegatherInterval = 2000;
+  const int kNumRegathers = 2;
+  config1.auto_regather_interval.emplace(kRegatherInterval, kRegatherInterval);
+  IceConfig config2 = CreateIceConfig(1000, GATHER_CONTINUALLY);
+  CreateChannels(config1, config2);
+
+  EXPECT_TRUE_SIMULATED_WAIT(ep1_ch1()->receiving() && ep1_ch1()->writable() &&
+                                 ep2_ch1()->receiving() &&
+                                 ep2_ch1()->writable(),
+                             kMediumTimeout, clock);
+
+  const Connection* initial_selected = ep1_ch1()->selected_connection();
+  LOG(INFO) << "Initial selected connection: " <<
+      reinterpret_cast<const void*>(initial_selected);
+  LOG(INFO) << initial_selected->ToString();
+  LOG(INFO) << "All connections:";
+  LOG(INFO) << "";
+  for (Connection* conn : ep1_ch1()->connections()) {
+    LOG(INFO) << conn->ToString();
+  }
+
+  const int kWaitRegather =
+      kRegatherInterval * kNumRegathers + kRegatherInterval / 2;
+  SIMULATED_WAIT(false, kWaitRegather, clock);
+  EXPECT_EQ(kNumRegathers, GetMetricsObserver(0)->GetEnumCounter(
+                   webrtc::kEnumCounterIceRegathering,
+                   static_cast<int>(IceRegatheringReason::CLIENT_REQUEST)));
+
+  const Connection* new_selected = ep1_ch1()->selected_connection();
+  LOG(INFO) << "New selected connection: " <<
+      reinterpret_cast<const void*>(new_selected);
+  LOG(INFO) << new_selected->ToString();
+  LOG(INFO) << "All connections:";
+  LOG(INFO) << "";
+  for (Connection* conn : ep1_ch1()->connections()) {
+    LOG(INFO) << conn->ToString();
+  }
+
+  ASSERT_NE(initial_selected, new_selected);
 }
 
 // Test that we properly create a connection on a STUN ping from unknown address
