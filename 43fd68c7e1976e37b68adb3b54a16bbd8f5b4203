@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dbc10200_406a5fa1",
+        "filename": "webrtc/p2p/base/p2ptransportchannel.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-11T21:30:11Z",
+      "side": 1,
+      "message": "I would just call this rand_.",
+      "range": {
+        "startLine": 388,
+        "startChar": 27,
+        "endLine": 388,
+        "endChar": 0
+      },
+      "revId": "43fd68c7e1976e37b68adb3b54a16bbd8f5b4203",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e151bfd6_d348e717",
+        "filename": "webrtc/rtc_base/timeutils.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-11T21:30:11Z",
+      "side": 1,
+      "message": "I don\u0027t think we need the comment about randomness or microseconds.  Just say that it\u0027s defined as somewhere between min and max inclusive.",
+      "range": {
+        "startLine": 131,
+        "startChar": 29,
+        "endLine": 131,
+        "endChar": 0
+      },
+      "revId": "43fd68c7e1976e37b68adb3b54a16bbd8f5b4203",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf804f3d_b858e10b",
+        "filename": "webrtc/rtc_base/timeutils.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-11T21:30:11Z",
+      "side": 1,
+      "message": "These should just be min() and max().",
+      "range": {
+        "startLine": 140,
+        "startChar": 37,
+        "endLine": 140,
+        "endChar": 0
+      },
+      "revId": "43fd68c7e1976e37b68adb3b54a16bbd8f5b4203",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
