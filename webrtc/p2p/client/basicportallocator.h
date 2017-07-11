@@ -112,6 +112,7 @@ class BasicPortAllocatorSession : public PortAllocatorSession,
   std::vector<Candidate> ReadyCandidates() const override;
   bool CandidatesAllocationDone() const override;
   void RegatherOnFailedNetworks() override;
+  void RegatherOnAllNetworks() override;
   void PruneAllPorts() override;
 
  protected:
@@ -185,7 +186,7 @@ class BasicPortAllocatorSession : public PortAllocatorSession,
   void OnConfigStop();
   void AllocatePorts();
   void OnAllocate();
-  void DoAllocate();
+  void DoAllocate(bool disable_equivalent = true);
   void OnNetworksChanged();
   void OnAllocationSequenceObjectsCreated();
   void DisableEquivalentPhases(rtc::Network* network,

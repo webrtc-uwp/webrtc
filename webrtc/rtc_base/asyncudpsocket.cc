@@ -106,6 +106,9 @@ void AsyncUDPSocket::OnReadEvent(AsyncSocket* socket) {
   int64_t timestamp;
   int len = socket_->RecvFrom(buf_, size_, &remote_addr, &timestamp);
   if (len < 0) {
+    if (socket_->GetError() == EAGAIN) {
+      return;
+    }
     // An error here typically means we got an ICMP error in response to our
     // send datagram, indicating the remote address was unreachable.
     // When doing ICE, this kind of thing will often happen.
