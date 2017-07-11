@@ -32,7 +32,8 @@ namespace {
 enum {
   MSG_SORT_AND_UPDATE_STATE = 1,
   MSG_CHECK_AND_PING,
-  MSG_REGATHER_ON_FAILED_NETWORKS
+  MSG_REGATHER_ON_FAILED_NETWORKS,
+  MSG_REGATHER_ON_ALL_NETWORKS
 };
 
 // The minimum improvement in RTT that justifies a switch.
@@ -111,6 +112,8 @@ P2PTransportChannel::P2PTransportChannel(const std::string& transport_name,
       ice_role_(ICEROLE_UNKNOWN),
       tiebreaker_(0),
       gathering_state_(kIceGatheringNew),
+      rand_dev_(),
+      rand_gen_(rand_dev_()),
       check_receiving_interval_(MIN_CHECK_RECEIVING_INTERVAL * 5),
       config_(MIN_CHECK_RECEIVING_INTERVAL * 50 /* receiving_timeout */,
               DEFAULT_BACKUP_CONNECTION_PING_INTERVAL,
@@ -428,6 +431,14 @@ void P2PTransportChannel::SetIceConfig(const IceConfig& config) {
     LOG(LS_INFO) << "Set regather_on_failed_networks_interval to "
                  << *config_.regather_on_failed_networks_interval;
   }
+
+  if (config.auto_regather_interval) {
+    config_.auto_regather_interval = config.auto_regather_interval;
+    LOG(LS_INFO) << "Set auto_regather_interval to "
+                 << "[" << config_.auto_regather_interval->first
+                 << ", " << config_.auto_regather_interval->second << "]";
+  }
+
   if (config.receiving_switching_delay) {
     config_.receiving_switching_delay = config.receiving_switching_delay;
     LOG(LS_INFO) << "Set receiving_switching_delay to"
@@ -1077,6 +1088,11 @@ void P2PTransportChannel::MaybeStartPinging() {
     thread()->PostDelayed(RTC_FROM_HERE,
                           *config_.regather_on_failed_networks_interval, this,
                           MSG_REGATHER_ON_FAILED_NETWORKS);
+    if (config_.auto_regather_interval) {
+      thread()->PostDelayed(RTC_FROM_HERE,
+                            SampleRegatherOnAllNetworksDelay(), this,
+                            MSG_REGATHER_ON_ALL_NETWORKS);
+    }
     started_pinging_ = true;
   }
 }
@@ -1182,8 +1198,40 @@ int P2PTransportChannel::CompareConnectionCandidates(
 
   // If we're still tied at this point, prefer a younger generation.
   // (Younger generation means a larger generation number).
-  return (a->remote_candidate().generation() + a->port()->generation()) -
-         (b->remote_candidate().generation() + b->port()->generation());
+  int cmp = (a->remote_candidate().generation() + a->port()->generation()) -
+            (b->remote_candidate().generation() + b->port()->generation());
+  if (cmp != 0) {
+    return cmp;
+  }
+
+  // A periodic regather (triggered by the regather_on_all_networks_interval)
+  // will cause an ICE restart without a new set of ICE ufrag/password, so
+  // everything about the new candidate will appear the same as the old
+  // candidate. However, the periodic regather will first prune the old ports
+  // so we should prefer candidate that do not have their port/remote candidate
+  // pruned already.
+  bool aHasPruned = IsPortPruned(a->port()) ||
+      IsRemoteCandidatePruned(a->remote_candidate());
+  bool bHasPruned = IsPortPruned(b->port()) ||
+      IsRemoteCandidatePruned(b->remote_candidate());
+  if (!aHasPruned && bHasPruned) {
+    return a_is_better;
+  }
+  if (aHasPruned && !bHasPruned) {
+    return b_is_better;
+  }
+
+  // Otherwise, must be equal
+  return 0;
+}
+
+bool P2PTransportChannel::IsPortPruned(const Port* port) const {
+  return std::find(ports_.begin(), ports_.end(), port) == ports_.end();
+}
+
+bool P2PTransportChannel::IsRemoteCandidatePruned(const Candidate& cand) const {
+  return std::find(remote_candidates_.begin(), remote_candidates_.end(), cand)
+      == remote_candidates_.end();
 }
 
 int P2PTransportChannel::CompareConnections(
@@ -1527,6 +1575,9 @@ void P2PTransportChannel::OnMessage(rtc::Message *pmsg) {
       break;
     case MSG_REGATHER_ON_FAILED_NETWORKS:
       OnRegatherOnFailedNetworks();
+      break;
+    case MSG_REGATHER_ON_ALL_NETWORKS:
+      OnRegatherOnAllNetworks();
       break;
     default:
       RTC_NOTREACHED();
@@ -1913,6 +1964,16 @@ void P2PTransportChannel::OnRegatherOnFailedNetworks() {
                         MSG_REGATHER_ON_FAILED_NETWORKS);
 }
 
+void P2PTransportChannel::OnRegatherOnAllNetworks() {
+  if (!allocator_sessions_.empty() && allocator_session()->IsCleared()) {
+    allocator_session()->RegatherOnAllNetworks();
+  }
+
+  thread()->PostDelayed(RTC_FROM_HERE,
+                        SampleRegatherOnAllNetworksDelay(), this,
+                        MSG_REGATHER_ON_ALL_NETWORKS);
+}
+
 void P2PTransportChannel::PruneAllPorts() {
   pruned_ports_.insert(pruned_ports_.end(), ports_.begin(), ports_.end());
   ports_.clear();
@@ -2064,6 +2125,13 @@ void P2PTransportChannel::set_receiving(bool receiving) {
   }
   receiving_ = receiving;
   SignalReceivingState(this);
+}
+
+int P2PTransportChannel::SampleRegatherOnAllNetworksDelay() {
+  auto interval = config_.auto_regather_interval;
+  RTC_DCHECK(interval);
+  std::uniform_int_distribution<> dist(interval->first, interval->second);
+  return dist(rand_gen_);
 }
 
 }  // namespace cricket

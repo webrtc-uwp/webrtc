@@ -355,6 +355,31 @@ void BasicPortAllocatorSession::RegatherOnFailedNetworks() {
   }
 }
 
+void BasicPortAllocatorSession::RegatherOnAllNetworks() {
+  std::vector<rtc::Network*> networks = GetNetworks();
+  if (networks.empty()) {
+    return;
+  }
+
+  LOG(LS_INFO) << "Regather on all networks";
+
+  // Prune all ports first
+  // This also signals to our peer to prune remote candidates
+  std::vector<PortData*> ports_to_prune = GetUnprunedPorts(networks);
+  if (!ports_to_prune.empty()) {
+    LOG(LS_INFO) << "Prune " << ports_to_prune.size() << " ports";
+    PrunePortsAndRemoveCandidates(ports_to_prune);
+  }
+
+  if (allocation_started_ && network_manager_started_ && !IsStopped()) {
+    SignalIceRegathering(this, IceRegatheringReason::CLIENT_REQUEST);
+
+    // We expect to generate candidates that are equivalent to what we have now
+    // Force DoAllocate to generate them instead of skipping
+    DoAllocate(false /* disable_equivalent */);
+  }
+}
+
 std::vector<PortInterface*> BasicPortAllocatorSession::ReadyPorts() const {
   std::vector<PortInterface*> ret;
   for (const PortData& data : ports_) {
@@ -586,7 +611,7 @@ std::vector<rtc::Network*> BasicPortAllocatorSession::GetNetworks() {
 
 // For each network, see if we have a sequence that covers it already.  If not,
 // create a new sequence to create the appropriate ports.
-void BasicPortAllocatorSession::DoAllocate() {
+void BasicPortAllocatorSession::DoAllocate(bool disable_equivalent) {
   bool done_signal_needed = false;
   std::vector<rtc::Network*> networks = GetNetworks();
   if (networks.empty()) {
@@ -622,13 +647,15 @@ void BasicPortAllocatorSession::DoAllocate() {
         continue;
       }
 
-      // Disable phases that would only create ports equivalent to
-      // ones that we have already made.
-      DisableEquivalentPhases(networks[i], config, &sequence_flags);
+      if (disable_equivalent) {
+        // Disable phases that would only create ports equivalent to
+        // ones that we have already made.
+        DisableEquivalentPhases(networks[i], config, &sequence_flags);
 
-      if ((sequence_flags & DISABLE_ALL_PHASES) == DISABLE_ALL_PHASES) {
-        // New AllocationSequence would have nothing to do, so don't make it.
-        continue;
+        if ((sequence_flags & DISABLE_ALL_PHASES) == DISABLE_ALL_PHASES) {
+          // New AllocationSequence would have nothing to do, so don't make it.
+          continue;
+        }
       }
 
       AllocationSequence* sequence =

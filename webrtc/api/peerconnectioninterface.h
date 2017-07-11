@@ -453,9 +453,40 @@ class PeerConnectionInterface : public rtc::RefCountInterface {
     // (STUN pings), in milliseconds.
     rtc::Optional<int> ice_check_min_interval;
 
+
+    // Auto Regathering
+    // If set, WebRTC will periodically create and propose candidates without
+    // starting a new ICE generation. The regathering happens continuously with
+    // delay specified in milliseconds by the uniform distribution [a, b].
+
+    // Returns distribution parameters [a, b] if auto regathering enabled
+    rtc::Optional< std::pair<int, int> > auto_regather_interval() const {
+      rtc::Optional< std::pair<int, int> > o;
+      if (auto_regather_interval_a_ && auto_regather_interval_b_) {
+        o.emplace(*auto_regather_interval_a_, *auto_regather_interval_b_);
+      }
+      return o;
+    }
+
+    // Set auto regather delay sampled from the uniform distribution [a, b]
+    void set_auto_regather_interval(int a, int b) {
+      auto_regather_interval_a_.emplace(a);
+      auto_regather_interval_b_.emplace(b);
+    }
+
+    // Clears the auto regather delay and disables auto regathering
+    void clear_auto_regather_interval() {
+      auto_regather_interval_a_.reset();
+      auto_regather_interval_b_.reset();
+    }
+
     //
     // Don't forget to update operator== if adding something.
     //
+
+   private:
+    rtc::Optional<int> auto_regather_interval_a_;
+    rtc::Optional<int> auto_regather_interval_b_;
   };
 
   // See: https://www.w3.org/TR/webrtc/#idl-def-rtcofferansweroptions
