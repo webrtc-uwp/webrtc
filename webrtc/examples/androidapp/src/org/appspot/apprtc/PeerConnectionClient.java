@@ -604,6 +604,7 @@ public class PeerConnectionClient {
     rtcConfig.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
     // Use ECDSA encryption.
     rtcConfig.keyType = PeerConnection.KeyType.ECDSA;
+    rtcConfig.iceRegatherIntervalRange = new PeerConnection.IntervalRange(3000, 7000);
 
     peerConnection = factory.createPeerConnection(rtcConfig, pcConstraints, pcObserver);
 
