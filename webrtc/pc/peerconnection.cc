@@ -1199,7 +1199,9 @@ bool PeerConnection::SetConfiguration(const RTCConfiguration& configuration,
 
   if (modified_config.ice_check_min_interval !=
       configuration_.ice_check_min_interval) {
-    session_->SetIceConfig(session_->ParseIceConfig(modified_config));
+    if (!session_->SetIceConfig(session_->ParseIceConfig(modified_config))) {
+      return SafeSetError(RTCErrorType::INVALID_PARAMETER, error);
+    }
   }
 
   configuration_ = modified_config;

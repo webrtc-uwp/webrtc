@@ -550,7 +550,9 @@ bool WebRtcSession::Initialize(
     certificate = rtc_configuration.certificates[0];
   }
 
-  SetIceConfig(ParseIceConfig(rtc_configuration));
+  if (!SetIceConfig(ParseIceConfig(rtc_configuration))) {
+    return false;
+  }
 
   if (options.disable_encryption) {
     dtls_enabled_ = false;
@@ -1227,8 +1229,16 @@ cricket::IceConfig WebRtcSession::ParseIceConfig(
   return ice_config;
 }
 
-void WebRtcSession::SetIceConfig(const cricket::IceConfig& config) {
+bool WebRtcSession::SetIceConfig(const cricket::IceConfig& config) {
+  if (config.regather_all_networks_interval_range &&
+      config.continual_gathering_policy == cricket::GATHER_ONCE) {
+    LOG(LS_ERROR)
+        << "SetIceConfig: regather_all_networks_interval_range "
+        << "specified but continual gathering policy is GATHER_ONCE";
+    return false;
+  }
   transport_controller_->SetIceConfig(config);
+  return true;
 }
 
 void WebRtcSession::MaybeStartGathering() {

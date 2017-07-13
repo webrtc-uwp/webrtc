@@ -253,7 +253,7 @@ class WebRtcSession :
   cricket::IceConfig ParseIceConfig(
       const PeerConnectionInterface::RTCConfiguration& config) const;
 
-  void SetIceConfig(const cricket::IceConfig& ice_config);
+  bool SetIceConfig(const cricket::IceConfig& ice_config);
 
   // Start gathering candidates for any new transports, or transports doing an
   // ICE restart.
