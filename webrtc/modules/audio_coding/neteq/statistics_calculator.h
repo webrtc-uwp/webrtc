@@ -64,7 +64,7 @@ class StatisticsCalculator {
   void AddZeros(size_t num_samples);
 
   // Reports that |num_packets| packets were discarded.
-  virtual void PacketsDiscarded(size_t num_packets);
+  void PacketsDiscarded(size_t num_packets);
 
   // Reports that |num_samples| were lost.
   void LostSamples(size_t num_samples);

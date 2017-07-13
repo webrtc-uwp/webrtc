@@ -20,7 +20,6 @@
 namespace webrtc {
 
 class DecoderDatabase;
-class StatisticsCalculator;
 class TickTimer;
 
 // This is the actual buffer holding the packets before decoding.
@@ -93,24 +92,22 @@ class PacketBuffer {
   // Discards the first packet in the buffer. The packet is deleted.
   // Returns PacketBuffer::kBufferEmpty if the buffer is empty,
   // PacketBuffer::kOK otherwise.
-  virtual int DiscardNextPacket(StatisticsCalculator* stats);
+  virtual int DiscardNextPacket();
 
   // Discards all packets that are (strictly) older than timestamp_limit,
   // but newer than timestamp_limit - horizon_samples. Setting horizon_samples
   // to zero implies that the horizon is set to half the timestamp range. That
   // is, if a packet is more than 2^31 timestamps into the future compared with
   // timestamp_limit (including wrap-around), it is considered old.
-  virtual void DiscardOldPackets(uint32_t timestamp_limit,
-                                 uint32_t horizon_samples,
-                                 StatisticsCalculator* stats);
+  // Returns number of packets discarded.
+  virtual int DiscardOldPackets(uint32_t timestamp_limit,
+                                uint32_t horizon_samples);
 
   // Discards all packets that are (strictly) older than timestamp_limit.
-  virtual void DiscardAllOldPackets(uint32_t timestamp_limit,
-                                    StatisticsCalculator* stats);
+  virtual int DiscardAllOldPackets(uint32_t timestamp_limit);
 
   // Removes all packets with a specific payload type from the buffer.
-  virtual void DiscardPacketsWithPayloadType(uint8_t payload_type,
-                                             StatisticsCalculator* stats);
+  virtual void DiscardPacketsWithPayloadType(uint8_t payload_type);
 
   // Returns the number of packets in the buffer, including duplicates and
   // redundant packets.

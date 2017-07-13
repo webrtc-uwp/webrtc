@@ -18,7 +18,6 @@
 
 #include "webrtc/api/audio_codecs/audio_decoder.h"
 #include "webrtc/modules/audio_coding/neteq/decoder_database.h"
-#include "webrtc/modules/audio_coding/neteq/statistics_calculator.h"
 #include "webrtc/modules/audio_coding/neteq/tick_timer.h"
 #include "webrtc/rtc_base/logging.h"
 
@@ -207,49 +206,38 @@ rtc::Optional<Packet> PacketBuffer::GetNextPacket() {
   return packet;
 }
 
-int PacketBuffer::DiscardNextPacket(StatisticsCalculator* stats) {
+int PacketBuffer::DiscardNextPacket() {
   if (Empty()) {
     return kBufferEmpty;
   }
   // Assert that the packet sanity checks in InsertPacket method works.
   RTC_DCHECK(!buffer_.front().empty());
   buffer_.pop_front();
-  stats->PacketsDiscarded(1);
   return kOK;
 }
 
-void PacketBuffer::DiscardOldPackets(uint32_t timestamp_limit,
-                                     uint32_t horizon_samples,
-                                     StatisticsCalculator* stats) {
-  const size_t old_size = buffer_.size();
+int PacketBuffer::DiscardOldPackets(uint32_t timestamp_limit,
+                                     uint32_t horizon_samples) {
   buffer_.remove_if([timestamp_limit, horizon_samples](const Packet& p) {
     return timestamp_limit != p.timestamp &&
            IsObsoleteTimestamp(p.timestamp, timestamp_limit, horizon_samples);
   });
-  if (old_size > buffer_.size()) {
-    stats->PacketsDiscarded(old_size - buffer_.size());
-  }
+  return 0;
 }
 
-void PacketBuffer::DiscardAllOldPackets(uint32_t timestamp_limit,
-                                        StatisticsCalculator* stats) {
-  DiscardOldPackets(timestamp_limit, 0, stats);
+int PacketBuffer::DiscardAllOldPackets(uint32_t timestamp_limit) {
+  return DiscardOldPackets(timestamp_limit, 0);
 }
 
-void PacketBuffer::DiscardPacketsWithPayloadType(uint8_t payload_type,
-                                                 StatisticsCalculator* stats) {
-  int packets_discarded = 0;
+void PacketBuffer::DiscardPacketsWithPayloadType(uint8_t payload_type) {
   for (auto it = buffer_.begin(); it != buffer_.end(); /* */) {
     const Packet& packet = *it;
     if (packet.payload_type == payload_type) {
       it = buffer_.erase(it);
-      ++packets_discarded;
     } else {
       ++it;
     }
   }
-  if (packets_discarded > 0)
-    stats->PacketsDiscarded(packets_discarded);
 }
 
 size_t PacketBuffer::NumPacketsInBuffer() const {
