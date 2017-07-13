@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee30178a_5b63472b",
+        "filename": "webrtc/pc/peerconnection.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1202,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-13T16:30:50Z",
+      "side": 1,
+      "message": "This delegates the responsibility of validating the parameters to WebRtcSession, but I think it makes more sense to keep it here in PeerConnection. I\u0027d suggest:\n\n1. Adding a method like this:\n\n// Ensures the configuration doesn\u0027t have any parameters with invalid values,\n// or values that conflict with other parameters.\n//\n// Returns RTCError::OK() if there are no issues.\nRTCError ValidateConfiguration(const RTCConfiguration\u0026 config);\n\n2. Call that method from here (though higher up; before any WebRtcSession method is called), and from PeerConnection::Initialize.\n\n3. Add a DCHECK down in P2PTransportChannel:\n\nif (config.regather_all_networks_interval_range) {\n  // Config validation is assumed to have already happened at the API layer.\n  RTC_DCHECK(config.continual_gathering_policy !\u003d GATHER_ONCE);\n  ...\n}",
+      "revId": "3b4972a5e4eee93323ef8937777544d02c87e824",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
