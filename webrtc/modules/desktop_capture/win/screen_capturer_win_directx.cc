@@ -12,8 +12,10 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
+#include "webrtc/modules/desktop_capture/win/screen_capture_utils.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/ptr_util.h"
@@ -110,29 +112,32 @@ void ScreenCapturerWinDirectx::CaptureFrame() {
 }
 
 bool ScreenCapturerWinDirectx::GetSourceList(SourceList* sources) {
-  int screen_count = controller_->ScreenCount();
-  for (int i = 0; i < screen_count; i++) {
-    sources->push_back({i});
+  std::vector<std::string> device_names;
+  if (!controller_->GetDeviceNames(&device_names)) {
+    return false;
   }
-  return true;
+
+  return GetScreenListFromDeviceNames(device_names, sources);
 }
 
 bool ScreenCapturerWinDirectx::SelectSource(SourceId id) {
-  if (id == current_screen_id_) {
-    return true;
-  }
-
   if (id == kFullDesktopScreenId) {
     current_screen_id_ = id;
     return true;
   }
 
-  int screen_count = controller_->ScreenCount();
-  if (id >= 0 && id < screen_count) {
-    current_screen_id_ = id;
-    return true;
+  std::vector<std::string> device_names;
+  if (!controller_->GetDeviceNames(&device_names)) {
+    return false;
   }
-  return false;
+
+  int index;
+  if (!GetIndexFromScreenId(id, device_names, &index)) {
+    return false;
+  }
+
+  current_screen_id_ = index;
+  return true;
 }
 
 }  // namespace webrtc

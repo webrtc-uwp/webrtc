@@ -12,6 +12,10 @@
 
 #include <windows.h>
 
+#include <string>
+#include <vector>
+
+#include "webrtc/modules/desktop_capture/desktop_capturer.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/win32.h"
 
@@ -44,6 +48,64 @@ bool GetScreenList(DesktopCapturer::SourceList* screens,
     }
   }
   return true;
+}
+
+bool GetScreenListFromDeviceNames(const std::vector<std::string>& device_names,
+                                  DesktopCapturer::SourceList* screens) {
+  RTC_DCHECK_EQ(screens->size(), 0U);
+
+  DesktopCapturer::SourceList gdi_screens;
+  std::vector<std::string> gdi_names;
+  if (!GetScreenList(&gdi_screens, &gdi_names)) {
+    return false;
+  }
+
+  RTC_DCHECK_EQ(gdi_screens.size(), gdi_names.size());
+
+  ScreenId max_screen_id = -1;
+  for (const DesktopCapturer::Source& screen : gdi_screens) {
+    if (screen.id > max_screen_id) {
+      max_screen_id = screen.id;
+    }
+  }
+
+  for (size_t i = 0; i < device_names.size(); i++) {
+    for (size_t j = 0; j < gdi_names.size(); j++) {
+      if (device_names[i] == gdi_names[j]) {
+        screens->push_back({ gdi_screens[j] });
+        break;
+      }
+    }
+    if (screens->size() == i) {
+      // devices_names[i] has not been found in gdi_names, so use max_screen_id.
+      max_screen_id++;
+      screens->push_back({ max_screen_id });
+    }
+  }
+
+  return true;
+}
+
+bool GetIndexFromScreenId(ScreenId id,
+                          const std::vector<std::string>& device_names,
+                          int* index) {
+  RTC_DCHECK(index);
+
+  DesktopCapturer::SourceList screens;
+  if (!GetScreenListFromDeviceNames(device_names, &screens)) {
+    return false;
+  }
+
+  RTC_DCHECK_EQ(device_names.size(), screens.size());
+
+  for (size_t i = 0; i < screens.size(); i++) {
+    if (screens[i].id == id) {
+      *index = static_cast<int>(i);
+      return true;
+    }
+  }
+
+  return false;
 }
 
 bool IsScreenValid(DesktopCapturer::SourceId screen, std::wstring* device_key) {

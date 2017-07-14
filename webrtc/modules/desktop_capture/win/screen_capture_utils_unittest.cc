@@ -22,11 +22,30 @@ TEST(ScreenCaptureUtilsTest, GetScreenList) {
   DesktopCapturer::SourceList screens;
   std::vector<std::string> device_names;
 
-  GetScreenList(&screens);
+  ASSERT_TRUE(GetScreenList(&screens));
   screens.clear();
-  GetScreenList(&screens, &device_names);
+  ASSERT_TRUE(GetScreenList(&screens, &device_names));
 
   ASSERT_EQ(screens.size(), device_names.size());
+}
+
+// This test cannot ensure GetScreenListFromDeviceNames() won't reorder the
+// devices in its output, since the device name is missing.
+TEST(ScreenCaptureUtilsTest, GetScreenListFromDeviceNamesAndGetIndex) {
+  const std::vector<std::string> device_names = {
+    "\\\\.\\DISPLAY0",
+    "\\\\.\\DISPLAY1",
+    "\\\\.\\DISPLAY2",
+  };
+  DesktopCapturer::SourceList screens;
+  ASSERT_TRUE(GetScreenListFromDeviceNames(device_names, &screens));
+  ASSERT_EQ(device_names.size(), screens.size());
+
+  for (size_t i = 0; i < screens.size(); i++) {
+    int index;
+    ASSERT_TRUE(GetIndexFromScreenId(screens[i].id, device_names, &index));
+    ASSERT_EQ(index, static_cast<int>(i));
+  }
 }
 
 }  // namespace webrtc
