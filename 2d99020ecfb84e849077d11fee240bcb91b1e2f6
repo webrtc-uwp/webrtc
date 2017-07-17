@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64e929c8_678aa33d",
+        "filename": "webrtc/modules/desktop_capture/win/screen_capture_utils.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1116023
+      },
+      "writtenOn": "2017-07-17T18:54:42Z",
+      "side": 1,
+      "message": "RTC_DCHECK(screens-\u003eempty());",
+      "range": {
+        "startLine": 55,
+        "startChar": 1,
+        "endLine": 55,
+        "endChar": 36
+      },
+      "revId": "2d99020ecfb84e849077d11fee240bcb91b1e2f6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c59370c1_2bd90b4e",
+        "filename": "webrtc/modules/desktop_capture/win/screen_capture_utils.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1116023
+      },
+      "writtenOn": "2017-07-17T18:54:42Z",
+      "side": 1,
+      "message": "This can be replaced with std::find() call and it would make this code clearer. (You can calculate index by subtracting iterators, i.e. it - gdi_names.begin() )",
+      "range": {
+        "startLine": 73,
+        "startChar": 4,
+        "endLine": 74,
+        "endChar": 44
+      },
+      "revId": "2d99020ecfb84e849077d11fee240bcb91b1e2f6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26117a47_0a8be302",
+        "filename": "webrtc/modules/desktop_capture/win/screen_capture_utils.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1116023
+      },
+      "writtenOn": "2017-07-17T18:54:42Z",
+      "side": 1,
+      "message": "The two new functions are used only in screen_capturer_win_directx.cc. I don\u0027t think they need to be in screen_capture_utils. Move them there? It may be appropriate to move the code itself to GetSource() and SelectSource().",
+      "range": {
+        "startLine": 34,
+        "startChar": 5,
+        "endLine": 34,
+        "endChar": 33
+      },
+      "revId": "2d99020ecfb84e849077d11fee240bcb91b1e2f6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
