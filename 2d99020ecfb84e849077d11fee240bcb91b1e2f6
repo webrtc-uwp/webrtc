@@ -68,6 +68,30 @@
       "revId": "2d99020ecfb84e849077d11fee240bcb91b1e2f6",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47f3880a_a209360a",
+        "filename": "webrtc/modules/desktop_capture/win/screen_capture_utils.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-17T21:26:10Z",
+      "side": 1,
+      "message": "I placed them here mainly for unittests, though the test cases cannot cover every aspect.\nI will move them into the ScreenCapturerWinDirectx and test them there.",
+      "parentUuid": "26117a47_0a8be302",
+      "range": {
+        "startLine": 34,
+        "startChar": 5,
+        "endLine": 34,
+        "endChar": 33
+      },
+      "revId": "2d99020ecfb84e849077d11fee240bcb91b1e2f6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
