@@ -103,9 +103,8 @@ class DxgiDuplicatorController {
   int ScreenCount();
 
  private:
-  // DxgiFrameContext calls private Unregister(Context*) function during
-  // destructing.
-  friend DxgiFrameContext::~DxgiFrameContext();
+  // DxgiFrameContext calls private Unregister(Context*) function in Reset().
+  friend void DxgiFrameContext::Reset();
 
   // A private constructor to ensure consumers to use
   // DxgiDuplicatorController::Instance().
