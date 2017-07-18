@@ -484,6 +484,10 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
               rtc::MakeArrayView(ptr, len + 1));
           break;
         }
+        case kRtpExtensionMediaId: {
+          header->extension.media_id.Set(rtc::MakeArrayView(ptr, len + 1));
+          break;
+        }
         case kRtpExtensionNone:
         case kRtpExtensionNumberOfExtensions: {
           RTC_NOTREACHED() << "Invalid extension type: " << type;
