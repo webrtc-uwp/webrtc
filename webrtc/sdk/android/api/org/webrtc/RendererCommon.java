@@ -258,6 +258,51 @@ public class RendererCommon {
     return matrix;
   }
 
+  /** Converts a float[16] matrix array to android.graphics.Matrix. */
+  public static android.graphics.Matrix convertMatrixToAndroidGraphicsMatrix(float[] matrix4x4) {
+    // clang-format off
+    float[] values = {
+        matrix4x4[0 * 4 + 0], matrix4x4[1 * 4 + 0], matrix4x4[3 * 4 + 0],
+        matrix4x4[0 * 4 + 1], matrix4x4[1 * 4 + 1], matrix4x4[3 * 4 + 1],
+        matrix4x4[0 * 4 + 3], matrix4x4[1 * 4 + 3], matrix4x4[3 * 4 + 3],
+    };
+    // clang-format on
+
+    android.graphics.Matrix matrix = new android.graphics.Matrix();
+    matrix.setValues(values);
+    return matrix;
+  }
+
+  /** Converts android.graphics.Matrix to a float[16] matrix array. */
+  public static float[] convertMatrixFromAndroidGraphicsMatrix(android.graphics.Matrix matrix) {
+    float[] values = new float[9];
+    matrix.getValues(values);
+
+    // The android.graphics.Matrix looks like this:
+    // [x1 y1 w1]
+    // [x2 y2 w2]
+    // [x3 y3 w3]
+    // We want to contruct a matrix that looks like this:
+    // [x1 y1  0 w1]
+    // [x2 y2  0 w2]
+    // [ 0  0  1  0]
+    // [x3 y3  0 w3]
+    // Since it is stored in column-major order, it looks like this:
+    // [x1 x2 0 x3
+    //  y1 y2 0 y3
+    //   0  0 1  0
+    //  w1 w2 0 w3]
+    // clang-format off
+    float[] matrix4x4 = {
+        values[0 * 3 + 0],  values[1 * 3 + 0], 0,  values[2 * 3 + 0],
+        values[0 * 3 + 1],  values[1 * 3 + 1], 0,  values[2 * 3 + 1],
+        0,                  0,                 1,  0,
+        values[0 * 3 + 2],  values[1 * 3 + 2], 0,  values[2 * 3 + 2],
+    };
+    // clang-format on
+    return matrix4x4;
+  }
+
   /**
    * Calculate display size based on scaling type, video aspect ratio, and maximum display size.
    */
