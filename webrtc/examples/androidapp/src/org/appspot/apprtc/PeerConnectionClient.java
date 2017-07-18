@@ -26,8 +26,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.appspot.apprtc.AppRTCClient.SignalingParameters;
@@ -36,6 +36,7 @@ import org.webrtc.AudioTrack;
 import org.webrtc.CameraVideoCapturer;
 import org.webrtc.DataChannel;
 import org.webrtc.EglBase;
+import org.webrtc.HardwareVideoDecoderFactory;
 import org.webrtc.IceCandidate;
 import org.webrtc.Logging;
 import org.webrtc.MediaConstraints;
@@ -56,9 +57,9 @@ import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
 import org.webrtc.voiceengine.WebRtcAudioManager;
 import org.webrtc.voiceengine.WebRtcAudioRecord;
-import org.webrtc.voiceengine.WebRtcAudioTrack;
 import org.webrtc.voiceengine.WebRtcAudioRecord.AudioRecordStartErrorCode;
 import org.webrtc.voiceengine.WebRtcAudioRecord.WebRtcAudioRecordErrorCallback;
+import org.webrtc.voiceengine.WebRtcAudioTrack;
 import org.webrtc.voiceengine.WebRtcAudioTrack.WebRtcAudioTrackErrorCallback;
 import org.webrtc.voiceengine.WebRtcAudioUtils;
 
@@ -183,6 +184,7 @@ public class PeerConnectionClient {
     public final String videoCodec;
     public final boolean videoCodecHwAcceleration;
     public final boolean videoFlexfecEnabled;
+    public final boolean videoInjectableCodecsEnabled;
     public final int audioStartBitrate;
     public final String audioCodec;
     public final boolean noAudioProcessing;
@@ -197,23 +199,24 @@ public class PeerConnectionClient {
 
     public PeerConnectionParameters(boolean videoCallEnabled, boolean loopback, boolean tracing,
         int videoWidth, int videoHeight, int videoFps, int videoMaxBitrate, String videoCodec,
-        boolean videoCodecHwAcceleration, boolean videoFlexfecEnabled, int audioStartBitrate,
-        String audioCodec, boolean noAudioProcessing, boolean aecDump, boolean useOpenSLES,
-        boolean disableBuiltInAEC, boolean disableBuiltInAGC, boolean disableBuiltInNS,
-        boolean enableLevelControl, boolean disableWebRtcAGCAndHPF) {
+        boolean videoCodecHwAcceleration, boolean videoFlexfecEnabled,
+        boolean videoInjectableCodecsEnabled, int audioStartBitrate, String audioCodec,
+        boolean noAudioProcessing, boolean aecDump, boolean useOpenSLES, boolean disableBuiltInAEC,
+        boolean disableBuiltInAGC, boolean disableBuiltInNS, boolean enableLevelControl,
+        boolean disableWebRtcAGCAndHPF) {
       this(videoCallEnabled, loopback, tracing, videoWidth, videoHeight, videoFps, videoMaxBitrate,
-          videoCodec, videoCodecHwAcceleration, videoFlexfecEnabled, audioStartBitrate, audioCodec,
-          noAudioProcessing, aecDump, useOpenSLES, disableBuiltInAEC, disableBuiltInAGC,
-          disableBuiltInNS, enableLevelControl, disableWebRtcAGCAndHPF, null);
+          videoCodec, videoCodecHwAcceleration, videoFlexfecEnabled, videoInjectableCodecsEnabled,
+          audioStartBitrate, audioCodec, noAudioProcessing, aecDump, useOpenSLES, disableBuiltInAEC,
+          disableBuiltInAGC, disableBuiltInNS, enableLevelControl, disableWebRtcAGCAndHPF, null);
     }
 
     public PeerConnectionParameters(boolean videoCallEnabled, boolean loopback, boolean tracing,
         int videoWidth, int videoHeight, int videoFps, int videoMaxBitrate, String videoCodec,
-        boolean videoCodecHwAcceleration, boolean videoFlexfecEnabled, int audioStartBitrate,
-        String audioCodec, boolean noAudioProcessing, boolean aecDump, boolean useOpenSLES,
-        boolean disableBuiltInAEC, boolean disableBuiltInAGC, boolean disableBuiltInNS,
-        boolean enableLevelControl, boolean disableWebRtcAGCAndHPF,
-        DataChannelParameters dataChannelParameters) {
+        boolean videoCodecHwAcceleration, boolean videoFlexfecEnabled,
+        boolean videoInjectableCodecsEnabled, int audioStartBitrate, String audioCodec,
+        boolean noAudioProcessing, boolean aecDump, boolean useOpenSLES, boolean disableBuiltInAEC,
+        boolean disableBuiltInAGC, boolean disableBuiltInNS, boolean enableLevelControl,
+        boolean disableWebRtcAGCAndHPF, DataChannelParameters dataChannelParameters) {
       this.videoCallEnabled = videoCallEnabled;
       this.loopback = loopback;
       this.tracing = tracing;
@@ -223,6 +226,7 @@ public class PeerConnectionClient {
       this.videoMaxBitrate = videoMaxBitrate;
       this.videoCodec = videoCodec;
       this.videoFlexfecEnabled = videoFlexfecEnabled;
+      this.videoInjectableCodecsEnabled = videoInjectableCodecsEnabled;
       this.videoCodecHwAcceleration = videoCodecHwAcceleration;
       this.audioStartBitrate = audioStartBitrate;
       this.audioCodec = audioCodec;
@@ -507,7 +511,13 @@ public class PeerConnectionClient {
     if (options != null) {
       Log.d(TAG, "Factory networkIgnoreMask option: " + options.networkIgnoreMask);
     }
-    factory = new PeerConnectionFactory(options);
+    if (peerConnectionParameters.videoInjectableCodecsEnabled) {
+      factory = new PeerConnectionFactory(options, null, new HardwareVideoDecoderFactory());
+    } else {
+      // TODO(sakal): Remove this branch and setting once built-in video codecs are not supported
+      // anymore.
+      factory = new PeerConnectionFactory(options, null, null);
+    }
     Log.d(TAG, "Peer connection factory created.");
   }
 

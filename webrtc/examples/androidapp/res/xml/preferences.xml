@@ -82,6 +82,12 @@
             android:title="@string/pref_flexfec_title"
             android:dialogTitle="@string/pref_flexfec_dlg"
             android:defaultValue="@string/pref_flexfec_default" />
+
+        <CheckBoxPreference
+            android:key="@string/pref_injectable_video_codecs_key"
+            android:title="@string/pref_injectable_video_codecs_title"
+            android:dialogTitle="@string/pref_injectable_video_codecs_dlg"
+            android:defaultValue="@string/pref_injectable_video_codecs_default" />
     </PreferenceCategory>
 
     <PreferenceCategory

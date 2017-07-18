@@ -96,6 +96,8 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
   public static final String EXTRA_HWCODEC_ENABLED = "org.appspot.apprtc.HWCODEC";
   public static final String EXTRA_CAPTURETOTEXTURE_ENABLED = "org.appspot.apprtc.CAPTURETOTEXTURE";
   public static final String EXTRA_FLEXFEC_ENABLED = "org.appspot.apprtc.FLEXFEC";
+  public static final String EXTRA_INJECTABLE_VIDEO_CODECS_ENABLED =
+      "org.appspot.apprtc.INJECTABLE_VIDEO_CODECS";
   public static final String EXTRA_AUDIO_BITRATE = "org.appspot.apprtc.AUDIO_BITRATE";
   public static final String EXTRA_AUDIOCODEC = "org.appspot.apprtc.AUDIOCODEC";
   public static final String EXTRA_NOAUDIOPROCESSING_ENABLED =
@@ -318,6 +320,7 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
             intent.getIntExtra(EXTRA_VIDEO_BITRATE, 0), intent.getStringExtra(EXTRA_VIDEOCODEC),
             intent.getBooleanExtra(EXTRA_HWCODEC_ENABLED, true),
             intent.getBooleanExtra(EXTRA_FLEXFEC_ENABLED, false),
+            intent.getBooleanExtra(EXTRA_INJECTABLE_VIDEO_CODECS_ENABLED, false),
             intent.getIntExtra(EXTRA_AUDIO_BITRATE, 0), intent.getStringExtra(EXTRA_AUDIOCODEC),
             intent.getBooleanExtra(EXTRA_NOAUDIOPROCESSING_ENABLED, false),
             intent.getBooleanExtra(EXTRA_AECDUMP_ENABLED, false),

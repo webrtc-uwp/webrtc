@@ -362,6 +362,11 @@ public class ConnectActivity extends Activity {
     boolean flexfecEnabled = sharedPrefGetBoolean(R.string.pref_flexfec_key,
         CallActivity.EXTRA_FLEXFEC_ENABLED, R.string.pref_flexfec_default, useValuesFromIntent);
 
+    boolean injectableVideoCodecsEnabled =
+        sharedPrefGetBoolean(R.string.pref_injectable_video_codecs_key,
+            CallActivity.EXTRA_INJECTABLE_VIDEO_CODECS_ENABLED,
+            R.string.pref_injectable_video_codecs_default, useValuesFromIntent);
+
     // Check Disable Audio Processing flag.
     boolean noAudioProcessing = sharedPrefGetBoolean(R.string.pref_noaudioprocessing_key,
         CallActivity.EXTRA_NOAUDIOPROCESSING_ENABLED, R.string.pref_noaudioprocessing_default,
@@ -521,6 +526,8 @@ public class ConnectActivity extends Activity {
       intent.putExtra(CallActivity.EXTRA_HWCODEC_ENABLED, hwCodec);
       intent.putExtra(CallActivity.EXTRA_CAPTURETOTEXTURE_ENABLED, captureToTexture);
       intent.putExtra(CallActivity.EXTRA_FLEXFEC_ENABLED, flexfecEnabled);
+      intent.putExtra(
+          CallActivity.EXTRA_INJECTABLE_VIDEO_CODECS_ENABLED, injectableVideoCodecsEnabled);
       intent.putExtra(CallActivity.EXTRA_NOAUDIOPROCESSING_ENABLED, noAudioProcessing);
       intent.putExtra(CallActivity.EXTRA_AECDUMP_ENABLED, aecDump);
       intent.putExtra(CallActivity.EXTRA_OPENSLES_ENABLED, useOpenSLES);
