@@ -44,6 +44,23 @@ class ScreenCapturerWinDirectx : public DesktopCapturer {
   // consumers should not cache the result returned by this function.
   static bool RetrieveD3dInfo(D3dInfo* info);
 
+  // Maps |device_names| with the result from GetScreenList() and creates a new
+  // SourceList to include only the ones in |device_names|. If this function
+  // returns true, consumers can always assume |device_names|.size() equals to
+  // |screens|->size(), meanwhile |device_names|[i] and |screens|[i] indicate
+  // the same monitor on the system.
+  // Public for test only.
+  static bool GetScreenListFromDeviceNames(
+      const std::vector<std::string>& device_names,
+      DesktopCapturer::SourceList* screens);
+
+  // Maps |id| with the result from GetScreenListFromDeviceNames() and writes
+  // the index of the entity in |device_names| into |index|.
+  // Public for test only.
+  static bool GetIndexFromScreenId(ScreenId id,
+                                   const std::vector<std::string>& device_names,
+                                   int* index);
+
   explicit ScreenCapturerWinDirectx();
 
   ~ScreenCapturerWinDirectx() override;
