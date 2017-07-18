@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "71e2381c_82b93286",
+        "filename": "webrtc/modules/desktop_capture/win/screen_capturer_win_directx.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-18T17:13:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f697bd30_3db221c5",
+      "range": {
+        "startLine": 62,
+        "startChar": 4,
+        "endLine": 62,
+        "endChar": 36
+      },
+      "revId": "a7929a02c3876a7618e01244dd6391bf735d22da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5ffe3479_dc3aac57",
         "filename": "webrtc/modules/desktop_capture/win/screen_capturer_win_directx.cc",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "d6aed759_d4140fba",
+        "filename": "webrtc/modules/desktop_capture/win/screen_capturer_win_directx.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-18T17:13:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5ffe3479_dc3aac57",
+      "range": {
+        "startLine": 67,
+        "startChar": 2,
+        "endLine": 67,
+        "endChar": 52
+      },
+      "revId": "a7929a02c3876a7618e01244dd6391bf735d22da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e43d782a_df2d1ca1",
         "filename": "webrtc/modules/desktop_capture/win/screen_capturer_win_directx.cc",
         "patchSetId": 3
@@ -68,6 +116,30 @@
       "revId": "a7929a02c3876a7618e01244dd6391bf735d22da",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06bc5260_0d5d1c06",
+        "filename": "webrtc/modules/desktop_capture/win/screen_capturer_win_directx.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-18T17:13:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e43d782a_df2d1ca1",
+      "range": {
+        "startLine": 86,
+        "startChar": 4,
+        "endLine": 86,
+        "endChar": 14
+      },
+      "revId": "a7929a02c3876a7618e01244dd6391bf735d22da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
