@@ -313,6 +313,29 @@
     },
     {
       "key": {
+        "uuid": "380da72d_1c833b1e",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1224374
+      },
+      "writtenOn": "2017-07-18T18:01:47Z",
+      "side": 1,
+      "message": "Do we really need to fail here? wouldn\u0027t be safer to re-establish the connection if resumption failed?",
+      "range": {
+        "startLine": 378,
+        "startChar": 0,
+        "endLine": 378,
+        "endChar": 68
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5e3addec_e6c87c9e",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -712,6 +735,29 @@
     },
     {
       "key": {
+        "uuid": "4cc54e84_39b3f658",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1094,
+      "author": {
+        "id": 1224374
+      },
+      "writtenOn": "2017-07-18T18:01:47Z",
+      "side": 1,
+      "message": "hmm this is interesting. Not sure how this would work, currently I see 3 TLS connections to the same host www.google.com, with this code, it means we will only cache one of them, I\u0027m not sure what is the difference between them, but the question is if we are going to terminate all of them, then this code won\u0027t work",
+      "range": {
+        "startLine": 1094,
+        "startChar": 4,
+        "endLine": 1094,
+        "endChar": 20
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "eb6e2853_a0af288e",
         "filename": "webrtc/rtc_base/openssladapter.h",
         "patchSetId": 3
@@ -828,6 +874,29 @@
     },
     {
       "key": {
+        "uuid": "613bf0ee_551dbe28",
+        "filename": "webrtc/rtc_base/openssladapter.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1224374
+      },
+      "writtenOn": "2017-07-18T18:01:47Z",
+      "side": 1,
+      "message": "Don\u0027t you have any memory concerns about shipping this with out eviction, should we at least add an upper limit on the cache size ?",
+      "range": {
+        "startLine": 117,
+        "startChar": 0,
+        "endLine": 117,
+        "endChar": 56
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9c44e121_7b75e81b",
         "filename": "webrtc/rtc_base/openssladapter.h",
         "patchSetId": 3
@@ -910,6 +979,29 @@
       "side": 1,
       "message": "Yes. Left for a separate CL to wire it into BPSF.",
       "parentUuid": "f3774f76_c4c0e078",
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd629b3e_a7aa27ad",
+        "filename": "webrtc/rtc_base/openssladapter.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1224374
+      },
+      "writtenOn": "2017-07-18T18:01:47Z",
+      "side": 1,
+      "message": "Please add a TODO for the eviction implementation",
+      "range": {
+        "startLine": 135,
+        "startChar": 0,
+        "endLine": 135,
+        "endChar": 48
+      },
       "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
