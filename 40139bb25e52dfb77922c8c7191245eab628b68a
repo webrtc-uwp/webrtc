@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc66a673_7bd4ebd2",
+        "filename": "webrtc/modules/audio_coding/neteq/packet_buffer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1146556
+      },
+      "writtenOn": "2017-07-18T16:10:19Z",
+      "side": 1,
+      "message": "Either only dereference stats if it\u0027s not null, or add a DCHECK to the start of the method to ensure stats is always not null. (The same applies to the other methods taking a StatisticsCalculator*.)",
+      "revId": "40139bb25e52dfb77922c8c7191245eab628b68a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c49ac0aa_042a5bfb",
+        "filename": "webrtc/modules/audio_coding/neteq/packet_buffer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1146556
+      },
+      "writtenOn": "2017-07-18T16:10:19Z",
+      "side": 1,
+      "message": "It seems strange to me that StatisticsCalculator is sent along to each call, but I checked the previous CL and it looks like that was the best way forward.",
+      "revId": "40139bb25e52dfb77922c8c7191245eab628b68a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
