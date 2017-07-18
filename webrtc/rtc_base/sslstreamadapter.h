@@ -126,6 +126,31 @@ enum { SSE_MSG_TRUNC = 0xff0001 };
 // Used to send back UMA histogram value. Logged when Dtls handshake fails.
 enum class SSLHandshakeError { UNKNOWN, INCOMPATIBLE_CIPHERSUITE, MAX_VALUE };
 
+class SSLStreamAdapter;
+
+// Class for creating SSL streams with shared state, e.g. a session cache.
+class SSLStreamAdapterFactory {
+ public:
+  virtual ~SSLStreamAdapterFactory() {}
+
+  // These methods work identically to those on SSLStreamAdapter itself.
+  // It is an error to call them after creating an SSLStreamAdapter.
+  virtual void SetIdentity(SSLIdentity* identity) = 0;
+  virtual void SetMode(SSLMode mode) = 0;
+  virtual void SetRole(SSLRole role) = 0;
+  virtual void SetMaxProtocolVersion(SSLProtocolVersion version) = 0;
+
+  // Sets whether the server should check the client certificate.
+  // This function should only be used in test code.
+  virtual void SetClientAuthEnabled(bool enabled) = 0;
+
+  // Create a new SSLStreamAdapter using the specified settings.
+  virtual SSLStreamAdapter* CreateAdapter(StreamInterface* stream) = 0;
+
+  static SSLStreamAdapterFactory* Create();
+};
+
+// An abstract SSL stream, independent of transport.
 class SSLStreamAdapter : public StreamAdapterInterface {
  public:
   // Instantiate an SSLStreamAdapter wrapping the given stream,
@@ -136,11 +161,9 @@ class SSLStreamAdapter : public StreamAdapterInterface {
   explicit SSLStreamAdapter(StreamInterface* stream);
   ~SSLStreamAdapter() override;
 
+  // Method to disable cert checks for tests. Do not use in prod code.
   void set_ignore_bad_cert(bool ignore) { ignore_bad_cert_ = ignore; }
   bool ignore_bad_cert() const { return ignore_bad_cert_; }
-
-  void set_client_auth_enabled(bool enabled) { client_auth_enabled_ = enabled; }
-  bool client_auth_enabled() const { return client_auth_enabled_; }
 
   // Specify our SSL identity: key and certificate. SSLStream takes ownership
   // of the SSLIdentity object and will free it when appropriate. Should be
@@ -267,11 +290,6 @@ class SSLStreamAdapter : public StreamAdapterInterface {
   // server_name, and in fact missing certificate authority and other
   // verification errors are ignored.
   bool ignore_bad_cert_;
-
-  // If true (default), the client is required to provide a certificate during
-  // handshake. If no certificate is given, handshake fails. This applies to
-  // server mode only.
-  bool client_auth_enabled_;
 };
 
 }  // namespace rtc
