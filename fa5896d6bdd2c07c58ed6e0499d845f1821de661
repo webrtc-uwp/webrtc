@@ -758,6 +758,30 @@
     },
     {
       "key": {
+        "uuid": "da765205_82fc3250",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1094,
+      "author": {
+        "id": 1224374
+      },
+      "writtenOn": "2017-07-18T18:04:10Z",
+      "side": 1,
+      "message": "Ok this might be worth than I initially thought! Given that we have 3 connections with the same host name, this means all of them will be using the same session concurrently, don\u0027t think this will work! We might need to add a flag to the cache if the session is active or something like that, but this would make the code more complicated. Need to think more about that",
+      "parentUuid": "4cc54e84_39b3f658",
+      "range": {
+        "startLine": 1094,
+        "startChar": 4,
+        "endLine": 1094,
+        "endChar": 20
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "eb6e2853_a0af288e",
         "filename": "webrtc/rtc_base/openssladapter.h",
         "patchSetId": 3
