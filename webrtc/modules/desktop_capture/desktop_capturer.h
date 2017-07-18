@@ -29,6 +29,9 @@ class DesktopCaptureOptions;
 class DesktopFrame;
 
 // Abstract interface for screen and window capturers.
+// Implementations are required to return DesktopFrame through
+// DesktopCapturer::Callback::OnCaptureResult(), and ensure that the top-left
+// monitor always starts from (0, 0).
 class DesktopCapturer {
  public:
   enum class Result {
