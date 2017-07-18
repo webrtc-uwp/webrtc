@@ -110,14 +110,16 @@ std::vector<int> GetSupportedDtlsSrtpCryptoSuites(
   return crypto_suites;
 }
 
+SSLStreamAdapterFactory* SSLStreamAdapterFactory::Create() {
+  return new OpenSSLStreamAdapterFactory();
+}
+
 SSLStreamAdapter* SSLStreamAdapter::Create(StreamInterface* stream) {
   return new OpenSSLStreamAdapter(stream);
 }
 
 SSLStreamAdapter::SSLStreamAdapter(StreamInterface* stream)
-    : StreamAdapterInterface(stream),
-      ignore_bad_cert_(false),
-      client_auth_enabled_(true) {}
+    : StreamAdapterInterface(stream), ignore_bad_cert_(false) {}
 
 SSLStreamAdapter::~SSLStreamAdapter() {}
 

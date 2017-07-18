@@ -16,12 +16,21 @@
 
 namespace rtc {
 
-///////////////////////////////////////////////////////////////////////////////
+class SSLAdapter;
+
+// Class for creating SSL adapters with shared state, e.g. a session cache.
+class SSLAdapterFactory {
+ public:
+  virtual ~SSLAdapterFactory() {}
+  virtual void SetMode(SSLMode mode) = 0;
+  virtual SSLAdapter* CreateAdapter(AsyncSocket* socket) = 0;
+
+  static SSLAdapterFactory* Create();
+};
 
 class SSLAdapter : public AsyncSocketAdapter {
  public:
-  explicit SSLAdapter(AsyncSocket* socket)
-    : AsyncSocketAdapter(socket), ignore_bad_cert_(false) { }
+  explicit SSLAdapter(AsyncSocket* socket) : AsyncSocketAdapter(socket) {}
 
   bool ignore_bad_cert() const { return ignore_bad_cert_; }
   void set_ignore_bad_cert(bool ignore) { ignore_bad_cert_ = ignore; }
@@ -34,6 +43,10 @@ class SSLAdapter : public AsyncSocketAdapter {
   // negotiation will begin as soon as the socket connects.
   virtual int StartSSL(const char* hostname, bool restartable) = 0;
 
+  // When called after SSL has been established,
+  // returns if the session was resumed or not.
+  virtual bool IsResumedSession() = 0;
+
   // Create the default SSL adapter for this platform. On failure, returns null
   // and deletes |socket|. Otherwise, the returned SSLAdapter takes ownership
   // of |socket|.
@@ -41,7 +54,7 @@ class SSLAdapter : public AsyncSocketAdapter {
 
  private:
   // If true, the server certificate need not match the configured hostname.
-  bool ignore_bad_cert_;
+  bool ignore_bad_cert_ = false;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -57,8 +70,6 @@ bool InitializeSSLThread();
 
 // Call to cleanup additional threads, and also the main thread.
 bool CleanupSSL();
-
-///////////////////////////////////////////////////////////////////////////////
 
 }  // namespace rtc
 
