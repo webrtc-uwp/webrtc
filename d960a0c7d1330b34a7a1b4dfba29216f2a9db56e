@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eed8ab2b_19bd1556",
+        "filename": "webrtc/sdk/android/src/jni/peerconnection_jni.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 1544,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-07-18T07:26:35Z",
+      "side": 1,
+      "message": "So far we\u0027ve used our own FindClass from classreferenceholder.h for WebRTC classes. Can we keep doing that here as well?",
+      "range": {
+        "startLine": 1544,
+        "startChar": 6,
+        "endLine": 1544,
+        "endChar": 20
+      },
+      "revId": "d960a0c7d1330b34a7a1b4dfba29216f2a9db56e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
