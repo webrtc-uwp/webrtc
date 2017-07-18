@@ -22,6 +22,30 @@
       "revId": "d960a0c7d1330b34a7a1b4dfba29216f2a9db56e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42c25f93_aa87f477",
+        "filename": "webrtc/sdk/android/src/jni/peerconnection_jni.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 1544,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-18T17:04:36Z",
+      "side": 1,
+      "message": "Sure, looks like there\u0027s still several places that use `jni-\u003eFindClass` (PeerConnection is the big culprit). I\u0027ve made a new bug to convert all of these over together: https://bugs.chromium.org/p/webrtc/issues/detail?id\u003d8004",
+      "parentUuid": "eed8ab2b_19bd1556",
+      "range": {
+        "startLine": 1544,
+        "startChar": 6,
+        "endLine": 1544,
+        "endChar": 20
+      },
+      "revId": "d960a0c7d1330b34a7a1b4dfba29216f2a9db56e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
