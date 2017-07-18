@@ -974,6 +974,30 @@
     },
     {
       "key": {
+        "uuid": "786f8f2f_51ea386c",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1094,
+      "author": {
+        "id": 1224374
+      },
+      "writtenOn": "2017-07-18T19:33:10Z",
+      "side": 1,
+      "message": "For reference, here is the session cache implementation in Chrome\nhttps://cs.chromium.org/chromium/src/net/ssl/ssl_client_session_cache.h?q\u003dssl_client_session_cache.h\u0026sq\u003dpackage:chromium\u0026dr\u003dCSs\u0026l\u003d5",
+      "parentUuid": "c7023001_42df9957",
+      "range": {
+        "startLine": 1094,
+        "startChar": 4,
+        "endLine": 1094,
+        "endChar": 20
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "eb6e2853_a0af288e",
         "filename": "webrtc/rtc_base/openssladapter.h",
         "patchSetId": 3
