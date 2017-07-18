@@ -120,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "30e4f8a4_01df20a2",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T19:10:11Z",
+      "side": 1,
+      "message": "No, since Adapter::Cleanup will happen regardless, leading to a misref.",
+      "parentUuid": "9fb8cfd2_1abd368a",
+      "range": {
+        "startLine": 292,
+        "startChar": 29,
+        "endLine": 292,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4d9646ea_502b88ae",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -313,6 +337,30 @@
     },
     {
       "key": {
+        "uuid": "91c5a10c_8e7dafad",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T19:10:11Z",
+      "side": 1,
+      "message": "I like that idea, and it\u0027s not too complicated. Let me take a shot at it.",
+      "parentUuid": "60a9d1f0_e2c3ab19",
+      "range": {
+        "startLine": 375,
+        "startChar": 66,
+        "endLine": 375,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "380da72d_1c833b1e",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -324,6 +372,30 @@
       "writtenOn": "2017-07-18T18:01:47Z",
       "side": 1,
       "message": "Do we really need to fail here? wouldn\u0027t be safer to re-establish the connection if resumption failed?",
+      "range": {
+        "startLine": 378,
+        "startChar": 0,
+        "endLine": 378,
+        "endChar": 68
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fff44e29_d1455233",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T19:10:11Z",
+      "side": 1,
+      "message": "Let me look at SSL_set_session to understand whether it is safe to continue upon failure.",
+      "parentUuid": "380da72d_1c833b1e",
       "range": {
         "startLine": 378,
         "startChar": 0,
@@ -501,6 +573,30 @@
     },
     {
       "key": {
+        "uuid": "478a5fb9_d3d5ae10",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 974,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T19:10:11Z",
+      "side": 1,
+      "message": "No, but the SSL* is per-adapter, and that\u0027s where the app data comes from. i.e., I can\u0027t get the factory pointer here.",
+      "parentUuid": "b13ec0b3_a98a97a4",
+      "range": {
+        "startLine": 974,
+        "startChar": 75,
+        "endLine": 974,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6a9e8cb5_e12ee682",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -605,6 +701,30 @@
       "writtenOn": "2017-07-18T16:27:15Z",
       "side": 1,
       "message": "It seems like this method belongs more in the OpenSSLAdapterFactory than in the OpenSSLAdapter.",
+      "range": {
+        "startLine": 1004,
+        "startChar": 73,
+        "endLine": 1004,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "228ebdd5_67ec6e1c",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1004,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T19:10:11Z",
+      "side": 1,
+      "message": "Makes sense.",
+      "parentUuid": "14b3f87f_c4b7744f",
       "range": {
         "startLine": 1004,
         "startChar": 73,
@@ -735,6 +855,30 @@
     },
     {
       "key": {
+        "uuid": "980eb9cd_5c3226b6",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1062,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T19:10:11Z",
+      "side": 1,
+      "message": "This is only for c2s; the remote endpoint does not participate. This feels like a theoretical concern at the moment.",
+      "parentUuid": "2ce5d5e9_cba68471",
+      "range": {
+        "startLine": 1062,
+        "startChar": 32,
+        "endLine": 1062,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4cc54e84_39b3f658",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -794,6 +938,30 @@
       "side": 1,
       "message": "worse*",
       "parentUuid": "da765205_82fc3250",
+      "range": {
+        "startLine": 1094,
+        "startChar": 4,
+        "endLine": 1094,
+        "endChar": 20
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7023001_42df9957",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1094,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T19:10:11Z",
+      "side": 1,
+      "message": "Will add unit test to cover this scenario (concurrent sessions)",
+      "parentUuid": "5aeedfa4_ba626031",
       "range": {
         "startLine": 1094,
         "startChar": 4,
@@ -1103,6 +1271,24 @@
       "side": 1,
       "message": "I think SSLFoo already provides no value and we should just collapse it and reduce the complexity.  I agree that could be done in a separate CL, but it seems like a waste to continue perpetuating something that gives no value.",
       "parentUuid": "3879b510_83d80935",
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60fe6281_ae4630bd",
+        "filename": "webrtc/rtc_base/ssladapter.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T19:10:11Z",
+      "side": 1,
+      "message": "That seems hostile to the concept of dependency injection / testability. I don\u0027t think this is the time or place to make such a change.",
+      "parentUuid": "8dc93041_517713b6",
       "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
