@@ -757,6 +757,9 @@ if (rtc_include_tests) {
         "//testing/gtest",
         "//third_party/gflags:gflags",
       ]
+      if (is_ios) {
+        deps += [ "../../rtc_base:rtc_base_apple" ]
+      }
     }  # audioproc_f
   }
 
@@ -800,6 +803,9 @@ if (rtc_include_tests) {
       "//testing/gtest",
       "//third_party/gflags",
     ]
+    if (is_ios) {
+      deps += [ "../../rtc_base:rtc_base_apple" ]
+    }
   }
 
   rtc_executable("click_annotate") {

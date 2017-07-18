@@ -398,6 +398,15 @@ rtc_source_set("rtc_json") {
   }
 }
 
+rtc_static_library("rtc_base_apple") {
+  sources = [
+    "applefilesystem.mm",
+  ]
+  deps = [
+    ":rtc_base",
+  ]
+}
+
 rtc_static_library("rtc_base") {
   cflags = []
   cflags_cc = []
@@ -414,7 +423,6 @@ rtc_static_library("rtc_base") {
   all_dependent_configs = [ ":rtc_base_all_dependent_config" ]
 
   sources = [
-    "applefilesystem.mm",
     "asyncinvoker-inl.h",
     "asyncinvoker.cc",
     "asyncinvoker.h",

@@ -620,6 +620,7 @@ if (is_ios || is_mac) {
           ":objc_peerconnection",
           ":objc_ui",
           "../base:rtc_base_approved",
+          "../rtc_base:rtc_base_apple",
           "../system_wrappers:field_trial_default",
           "../system_wrappers:metrics_default",
         ]

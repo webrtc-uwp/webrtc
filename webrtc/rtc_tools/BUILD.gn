@@ -177,6 +177,9 @@ if (rtc_include_internal_audio_device) {
       "../system_wrappers:system_wrappers_default",
       "//build/win:default_exe_manifest",
     ]
+    if (is_ios) {
+      deps += [ "../rtc_base:rtc_base_apple" ]
+    }
   }
 }
 
@@ -249,6 +252,9 @@ if (rtc_include_tests) {
         "../test:field_trial",
         "../test:test_support",
       ]
+      if (is_ios) {
+        deps += [ "../rtc_base:rtc_base_apple" ]
+      }
     }
   }
 
@@ -272,6 +278,10 @@ if (rtc_include_tests) {
       "//build/win:default_exe_manifest",
       "//testing/gtest",
     ]
+
+    if (is_ios) {
+      deps += [ "../rtc_base:rtc_base_apple" ]
+    }
   }
 
   tools_unittests_resources = [
@@ -327,7 +337,10 @@ if (rtc_include_tests) {
       shard_timeout = 900
     }
     if (is_ios) {
-      deps += [ ":tools_unittests_bundle_data" ]
+      deps += [
+        ":tools_unittests_bundle_data",
+        "../rtc_base:rtc_base_apple",
+      ]
     }
   }
 

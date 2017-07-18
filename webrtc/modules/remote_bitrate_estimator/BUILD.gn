@@ -245,5 +245,9 @@ if (rtc_include_tests) {
         "/wd4373",  # virtual function override.
       ]
     }
+
+    if (is_ios) {
+      deps += [ "../../rtc_base:rtc_base_apple" ]
+    }
   }
 }

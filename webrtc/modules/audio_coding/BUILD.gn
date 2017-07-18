@@ -1420,6 +1420,9 @@ if (rtc_include_tests) {
       "//testing/gtest",
       "//third_party/gflags:gflags",
     ]
+    if (is_ios) {
+      deps += [ "../../rtc_base:rtc_base_apple" ]
+    }
   }  # delay_test
 
   rtc_executable("insert_packet_with_timing") {
@@ -1450,6 +1453,9 @@ if (rtc_include_tests) {
       "//testing/gtest",
       "//third_party/gflags:gflags",
     ]
+    if (is_ios) {
+      deps += [ "../../rtc_base:rtc_base_apple" ]
+    }
   }  # insert_packet_with_timing
 
   audio_decoder_unittests_resources =
@@ -1502,7 +1508,10 @@ if (rtc_include_tests) {
       shard_timeout = 900
     }
     if (is_ios) {
-      deps += [ ":audio_decoder_unittests_bundle_data" ]
+      deps += [
+        ":audio_decoder_unittests_bundle_data",
+        "../../rtc_base:rtc_base_apple",
+      ]
     }
   }  # audio_decoder_unittests
 
@@ -1545,6 +1554,9 @@ if (rtc_include_tests) {
         "../../test:test_support",
         "//third_party/gflags",
       ]
+      if (is_ios) {
+        deps += [ "../../rtc_base:rtc_base_apple" ]
+      }
     }
   }
 
@@ -1579,6 +1591,9 @@ if (rtc_include_tests) {
       "../audio_processing",
       "//testing/gtest",
     ]
+    if (is_ios) {
+      deps += [ "../../rtc_base:rtc_base_apple" ]
+    }
   }
 
   rtc_source_set("neteq_test_support") {
@@ -1768,6 +1783,9 @@ if (rtc_include_tests) {
       "../../test:test_support",
       "//testing/gtest",
     ]
+    if (is_ios) {
+      deps += [ "../../rtc_base:rtc_base_apple" ]
+    }
   }
 
   rtc_executable("RTPjitter") {
@@ -1781,6 +1799,9 @@ if (rtc_include_tests) {
     sources = [
       "neteq/test/RTPjitter.cc",
     ]
+    if (is_ios) {
+      deps += [ "../../rtc_base:rtc_base_apple" ]
+    }
   }
 
   rtc_executable("rtp_analyze") {
@@ -1803,6 +1824,9 @@ if (rtc_include_tests) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
       suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
     }
+    if (is_ios) {
+      deps += [ "../../rtc_base:rtc_base_apple" ]
+    }
   }
 
   rtc_executable("neteq_opus_quality_test") {
@@ -1821,6 +1845,9 @@ if (rtc_include_tests) {
       "//testing/gtest",
       "//third_party/gflags",
     ]
+    if (is_ios) {
+      deps += [ "../../rtc_base:rtc_base_apple" ]
+    }
   }
 
   rtc_executable("neteq_speed_test") {
@@ -1838,6 +1865,9 @@ if (rtc_include_tests) {
       "../../test:test_support",
       "//third_party/gflags",
     ]
+    if (is_ios) {
+      deps += [ "../../rtc_base:rtc_base_apple" ]
+    }
   }
 
   rtc_executable("neteq_ilbc_quality_test") {
@@ -1859,6 +1889,9 @@ if (rtc_include_tests) {
       "//testing/gtest",
       "//third_party/gflags",
     ]
+    if (is_ios) {
+      deps += [ "../../rtc_base:rtc_base_apple" ]
+    }
   }
 
   rtc_executable("neteq_isac_quality_test") {
@@ -1877,6 +1910,10 @@ if (rtc_include_tests) {
       "//testing/gtest",
       "//third_party/gflags",
     ]
+
+    if (is_ios) {
+      deps += [ "../../rtc_base:rtc_base_apple" ]
+    }
   }
 
   rtc_executable("neteq_pcmu_quality_test") {
@@ -1895,6 +1932,9 @@ if (rtc_include_tests) {
       "//testing/gtest",
       "//third_party/gflags",
     ]
+    if (is_ios) {
+      deps += [ "../../rtc_base:rtc_base_apple" ]
+    }
   }
 
   rtc_executable("isac_fix_test") {
@@ -1914,6 +1954,9 @@ if (rtc_include_tests) {
         # Disable warnings to enable Win64 build, issue 1323.
         "/wd4267",  # size_t to int truncation
       ]
+    }
+    if (is_ios) {
+      deps += [ "../../rtc_base:rtc_base_apple" ]
     }
   }
 
@@ -2051,6 +2094,9 @@ if (rtc_include_tests) {
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
       suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+    if (is_ios) {
+      deps += [ "../../rtc_base:rtc_base_apple" ]
     }
   }
 

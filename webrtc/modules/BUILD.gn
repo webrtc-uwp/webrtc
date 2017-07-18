@@ -81,7 +81,10 @@ if (rtc_include_tests) {
     }
 
     if (is_ios) {
-      deps += [ ":modules_tests_bundle_data" ]
+      deps += [
+        ":modules_tests_bundle_data",
+        "../rtc_base:rtc_base_apple",
+      ]
     }
 
     if (!build_with_chromium && is_clang) {
@@ -252,7 +255,10 @@ if (rtc_include_tests) {
     }
     if (is_ios) {
       info_plist = "../test/ios/Info.plist"
-      deps += [ ":modules_unittests_bundle_data" ]
+      deps += [
+        ":modules_unittests_bundle_data",
+        "../rtc_base:rtc_base_apple",
+      ]
       configs += [ "..:common_objc" ]
       ldflags = [ "-ObjC" ]
     }

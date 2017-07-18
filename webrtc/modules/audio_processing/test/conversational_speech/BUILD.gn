@@ -26,6 +26,9 @@ rtc_executable("conversational_speech_generator") {
     "../../../../../webrtc/test:test_support",
     "//third_party/gflags",
   ]
+  if (is_ios) {
+    deps += [ "../../../../rtc_base:rtc_base_apple" ]
+  }
 }
 
 rtc_static_library("lib") {

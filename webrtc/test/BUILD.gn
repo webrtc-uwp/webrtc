@@ -315,7 +315,11 @@ if (!build_with_chromium) {
     }
 
     if (is_ios) {
-      deps += [ ":test_support_unittests_bundle_data" ]
+      deps += [
+        ":test_support_unittests_bundle_data",
+        "../rtc_base:rtc_base_apple",
+        "../rtc_base:rtc_base_approved",
+      ]
     }
 
     deps += [
