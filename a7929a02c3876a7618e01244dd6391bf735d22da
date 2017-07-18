@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f697bd30_3db221c5",
+        "filename": "webrtc/modules/desktop_capture/win/screen_capturer_win_directx.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1116023
+      },
+      "writtenOn": "2017-07-18T01:15:39Z",
+      "side": 1,
+      "message": "max_screen_id \u003d std::max(max_screen_id, screen.id)",
+      "range": {
+        "startLine": 62,
+        "startChar": 4,
+        "endLine": 62,
+        "endChar": 36
+      },
+      "revId": "a7929a02c3876a7618e01244dd6391bf735d22da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ffe3479_dc3aac57",
+        "filename": "webrtc/modules/desktop_capture/win/screen_capturer_win_directx.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1116023
+      },
+      "writtenOn": "2017-07-18T01:15:39Z",
+      "side": 1,
+      "message": "for (auto\u0026 name : device_names)",
+      "range": {
+        "startLine": 67,
+        "startChar": 2,
+        "endLine": 67,
+        "endChar": 52
+      },
+      "revId": "a7929a02c3876a7618e01244dd6391bf735d22da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e43d782a_df2d1ca1",
+        "filename": "webrtc/modules/desktop_capture/win/screen_capturer_win_directx.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1116023
+      },
+      "writtenOn": "2017-07-18T01:15:39Z",
+      "side": 1,
+      "message": "A common approach for functions like this is to return int and use -1 to indicate that the value wasn\u0027t found.",
+      "range": {
+        "startLine": 86,
+        "startChar": 4,
+        "endLine": 86,
+        "endChar": 14
+      },
+      "revId": "a7929a02c3876a7618e01244dd6391bf735d22da",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
