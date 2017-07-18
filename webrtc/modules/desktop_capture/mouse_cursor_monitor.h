@@ -11,6 +11,8 @@
 #ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_MOUSE_CURSOR_MONITOR_H_
 #define WEBRTC_MODULES_DESKTOP_CAPTURE_MOUSE_CURSOR_MONITOR_H_
 
+#include <memory>
+
 #include "webrtc/modules/desktop_capture/desktop_capture_types.h"
 #include "webrtc/modules/desktop_capture/desktop_geometry.h"
 #include "webrtc/typedefs.h"
@@ -60,17 +62,25 @@ class MouseCursorMonitor {
 
   // Creates a capturer that notifies of mouse cursor events while the cursor is
   // over the specified window.
+  //
+  // Deprecated: use Create() function.
   static MouseCursorMonitor* CreateForWindow(
       const DesktopCaptureOptions& options,
       WindowId window);
 
-  // Creates a capturer that monitors the mouse cursor shape and position across
-  // the entire desktop.
+  // Creates a capturer that monitors the mouse cursor shape and position over
+  // the specified screen.
   //
-  // TODO(sergeyu): Provide a way to select a specific screen.
+  // Deprecated: use Create() function.
   static MouseCursorMonitor* CreateForScreen(
       const DesktopCaptureOptions& options,
       ScreenId screen);
+
+  // Creates a capturer that monitors the mouse cursor shape and position across
+  // the entire desktop. The capturer ensures that the top-left monitor starts
+  // from (0, 0).
+  static std::unique_ptr<MouseCursorMonitor> Create(
+      const DesktopCaptureOptions& options);
 
   // Initializes the monitor with the |callback|, which must remain valid until
   // capturer is destroyed.
