@@ -718,7 +718,7 @@ struct PlayoutDelay {
 // Class to represent RtpStreamId which is a string.
 // Unlike std::string, it can be copied with memcpy and cleared with memset.
 // Empty value represent unset RtpStreamId.
-class StreamId {
+class RtpId {
  public:
   // Stream id is limited to 16 bytes because it is the maximum length
   // that can be encoded with one-byte header extensions.
@@ -726,12 +726,12 @@ class StreamId {
 
   static bool IsLegalName(rtc::ArrayView<const char> name);
 
-  StreamId() { value_[0] = 0; }
-  explicit StreamId(rtc::ArrayView<const char> value) {
+  RtpId() { value_[0] = 0; }
+  explicit RtpId(rtc::ArrayView<const char> value) {
     Set(value.data(), value.size());
   }
-  StreamId(const StreamId&) = default;
-  StreamId& operator=(const StreamId&) = default;
+  RtpId(const RtpId&) = default;
+  RtpId& operator=(const RtpId&) = default;
 
   bool empty() const { return value_[0] == 0; }
   const char* data() const { return value_; }
@@ -742,16 +742,22 @@ class StreamId {
   }
   void Set(const char* data, size_t size);
 
-  friend bool operator==(const StreamId& lhs, const StreamId& rhs) {
+  friend bool operator==(const RtpId& lhs, const RtpId& rhs) {
     return strncmp(lhs.value_, rhs.value_, kMaxSize) == 0;
   }
-  friend bool operator!=(const StreamId& lhs, const StreamId& rhs) {
+  friend bool operator!=(const RtpId& lhs, const RtpId& rhs) {
     return !(lhs == rhs);
   }
 
  private:
   char value_[kMaxSize];
 };
+
+// StreamId represents RtpStreamId which is a string
+typedef RtpId StreamId;
+
+// MediaId represents MediaIdExtension which is a string
+typedef RtpId MediaId;
 
 struct RTPHeaderExtension {
   RTPHeaderExtension();
@@ -790,6 +796,11 @@ struct RTPHeaderExtension {
   // TODO(danilchap): Update url from draft to release version.
   StreamId stream_id;
   StreamId repaired_stream_id;
+
+  // For identification of the media section for which an RTP packet
+  // corresponds.
+  // https://tools.ietf.org/html/draft-ietf-mmusic-sdp-bundle-negotiation-38#section-15
+  MediaId media_id;
 };
 
 struct RTPHeader {
