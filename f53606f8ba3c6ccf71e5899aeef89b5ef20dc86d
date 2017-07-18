@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "63591d88_04c826b2",
+        "filename": "webrtc/sdk/android/api/org/webrtc/MediaCodecVideoEncoder.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-07-18T14:54:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6836df69_a9ed3e18",
+      "range": {
+        "startLine": 623,
+        "startChar": 8,
+        "endLine": 623,
+        "endChar": 67
+      },
+      "revId": "f53606f8ba3c6ccf71e5899aeef89b5ef20dc86d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "459b8aa8_0bf53e03",
         "filename": "webrtc/sdk/android/api/org/webrtc/MediaCodecVideoEncoder.java",
         "patchSetId": 4
@@ -45,6 +69,30 @@
       "revId": "f53606f8ba3c6ccf71e5899aeef89b5ef20dc86d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81664cc0_f38c3c36",
+        "filename": "webrtc/sdk/android/api/org/webrtc/MediaCodecVideoEncoder.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-07-18T14:54:52Z",
+      "side": 1,
+      "message": "This matches the current code:\nhttps://cs.chromium.org/chromium/src/third_party/webrtc/sdk/android/src/jni/androidmediaencoder_jni.cc?l\u003d555",
+      "parentUuid": "459b8aa8_0bf53e03",
+      "range": {
+        "startLine": 629,
+        "startChar": 52,
+        "endLine": 629,
+        "endChar": 96
+      },
+      "revId": "f53606f8ba3c6ccf71e5899aeef89b5ef20dc86d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "e8c69179_e3344354",
+        "filename": "webrtc/sdk/android/api/org/webrtc/RendererCommon.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-07-18T14:54:52Z",
+      "side": 1,
+      "message": "Unfortunately we already import android.opengl.Matrix so this is not possible.",
+      "parentUuid": "5ea351ba_c26707dd",
+      "range": {
+        "startLine": 262,
+        "startChar": 16,
+        "endLine": 262,
+        "endChar": 39
+      },
+      "revId": "f53606f8ba3c6ccf71e5899aeef89b5ef20dc86d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6af69e01_a31cfb18",
         "filename": "webrtc/sdk/android/src/jni/native_handle_impl.h",
         "patchSetId": 4
@@ -91,6 +163,30 @@
       "revId": "f53606f8ba3c6ccf71e5899aeef89b5ef20dc86d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "546672c6_45e3052b",
+        "filename": "webrtc/sdk/android/src/jni/native_handle_impl.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-07-18T14:54:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6af69e01_a31cfb18",
+      "range": {
+        "startLine": 171,
+        "startChar": 10,
+        "endLine": 171,
+        "endChar": 33
+      },
+      "revId": "f53606f8ba3c6ccf71e5899aeef89b5ef20dc86d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
