@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d90ed36_d7d6e935",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-07-18T22:44:58Z",
+      "side": 1,
+      "message": "nit: \"SSL session\", for consistency (and to help people looking for \"ssl\" keyword in logs).",
+      "revId": "b7656b90bb1a2ad6cc3bc065c5ed050e36abd539",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aedfee9d_dafb96e3",
+        "filename": "webrtc/rtc_base/ssladapter.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-07-18T22:44:58Z",
+      "side": 1,
+      "message": "nit: I think this could go into a bit more detail. Also, wrap lines at 80 characters wide?",
+      "revId": "b7656b90bb1a2ad6cc3bc065c5ed050e36abd539",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b41758ef_a46a182a",
+        "filename": "webrtc/rtc_base/sslstreamadapter.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-07-18T22:44:58Z",
+      "side": 1,
+      "message": "Can this elaborate a bit more?",
+      "revId": "b7656b90bb1a2ad6cc3bc065c5ed050e36abd539",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f480d089_b6f545a4",
+        "filename": "webrtc/rtc_base/sslstreamadapter.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-07-18T22:44:58Z",
+      "side": 1,
+      "message": "nit: The \"shared state\" part makes this feel like less of \"factory\" and more \"controller\" or \"manager\". But I\u0027m admittedly not great at names (maybe ask Peter).",
+      "revId": "b7656b90bb1a2ad6cc3bc065c5ed050e36abd539",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe026da6_231aea62",
+        "filename": "webrtc/rtc_base/sslstreamadapter.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-07-18T22:44:58Z",
+      "side": 1,
+      "message": "I\u0027d add a comment that this can be created through SSLStreamAdapterFactory - in which case it will use a shared context - or on its own, in which case it will use its own context.",
+      "revId": "b7656b90bb1a2ad6cc3bc065c5ed050e36abd539",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
