@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "676203b2_41c3b746",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T17:01:28Z",
+      "side": 1,
+      "message": "I am sympathetic to the idea of the factory always doing the context creation, but I didn\u0027t quite understand what you had in mind.\n\nThe simplest approach would just be to move CreateContext to the factory instead of a method on the adapter.",
+      "parentUuid": "30e4db32_5c7dbabc",
+      "range": {
+        "startLine": 278,
+        "startChar": 62,
+        "endLine": 278,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7cef3458_5fe15d9d",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "a3bb0935_8a64d7fa",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T17:01:28Z",
+      "side": 1,
+      "message": "Cleanup() does this via SSL_CTX_free.\n\nUsing a bssl:: smart pointer to manage this refcount is an interesting idea, but it starts to make the change more substantial, so I opted not to do it in this rev.",
+      "parentUuid": "7cef3458_5fe15d9d",
+      "range": {
+        "startLine": 292,
+        "startChar": 29,
+        "endLine": 292,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4d9646ea_502b88ae",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -59,6 +107,30 @@
       "writtenOn": "2017-07-18T16:27:15Z",
       "side": 1,
       "message": "Why do we need to check for \"!factory_\"?  If ssl_ctx_ is null, then factory_ has to be null also, which means you don\u0027t need the check.",
+      "range": {
+        "startLine": 335,
+        "startChar": 29,
+        "endLine": 335,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ef8b8c3_6cff07c0",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T17:01:28Z",
+      "side": 1,
+      "message": "It was intended as a sanity check. I will change this to a RTC_DCHECK.",
+      "parentUuid": "4d9646ea_502b88ae",
       "range": {
         "startLine": 335,
         "startChar": 29,
@@ -128,6 +200,24 @@
     },
     {
       "key": {
+        "uuid": "b1f8b825_a2b95dba",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T17:01:28Z",
+      "side": 1,
+      "message": "yes, good catch",
+      "parentUuid": "f9fea6cc_08c48347",
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c8aeb51d_c9f28776",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -139,6 +229,30 @@
       "writtenOn": "2017-07-18T16:27:15Z",
       "side": 1,
       "message": "Why do we need to call LookupSession on the factory to get the session?  Why not just pass it into StartSSL/BeginSSL?  \n\nThe only place this whole thing is used is in BasicPacketSocketFactory::CreateClientTcpSocket, which could easily switch to calling a method like OpenSSLAdapterFactory::CreateAdapter, which knows how to both create the adapter and StartSSL with the cached session.",
+      "range": {
+        "startLine": 375,
+        "startChar": 66,
+        "endLine": 375,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "783d6d5e_2286fac2",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T17:01:28Z",
+      "side": 1,
+      "message": "Hmm. Can you explain more about what you have in mind?",
+      "parentUuid": "c8aeb51d_c9f28776",
       "range": {
         "startLine": 375,
         "startChar": 66,
@@ -197,6 +311,30 @@
     },
     {
       "key": {
+        "uuid": "970cec56_d99416fc",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T17:01:28Z",
+      "side": 1,
+      "message": "We don\u0027t want to transfer ownership of the bio until we have all the initial sanity checks done.",
+      "parentUuid": "f7d4b426_aff42bd4",
+      "range": {
+        "startLine": 388,
+        "startChar": 30,
+        "endLine": 388,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "90ffef33_336f4881",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -220,6 +358,30 @@
     },
     {
       "key": {
+        "uuid": "f1793320_d2f8c3ab",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 974,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T17:01:28Z",
+      "side": 1,
+      "message": "Not really, since it\u0027s per-SSL (which is 1:1 with adapter), not per-SSL_CTX (which is 1:1 with factory).",
+      "parentUuid": "90ffef33_336f4881",
+      "range": {
+        "startLine": 974,
+        "startChar": 75,
+        "endLine": 974,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6a9e8cb5_e12ee682",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -231,6 +393,30 @@
       "writtenOn": "2017-07-18T16:27:15Z",
       "side": 1,
       "message": "WARNING?  Seems like INFO is more appropriate.",
+      "range": {
+        "startLine": 978,
+        "startChar": 74,
+        "endLine": 978,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a98e0ad5_951f8fcc",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 978,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T17:01:28Z",
+      "side": 1,
+      "message": "Yeah, not sure what happened there.",
+      "parentUuid": "6a9e8cb5_e12ee682",
       "range": {
         "startLine": 978,
         "startChar": 74,
@@ -335,6 +521,30 @@
     },
     {
       "key": {
+        "uuid": "2a7eb6f2_a88e7d9d",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1048,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T17:01:28Z",
+      "side": 1,
+      "message": "Because this function returns a fully initialized context, so not sure how EnableCache would work in that case.",
+      "parentUuid": "125e9709_0b2c8acf",
+      "range": {
+        "startLine": 1048,
+        "startChar": 3,
+        "endLine": 1048,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6e632d70_1110dea1",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -358,6 +568,30 @@
     },
     {
       "key": {
+        "uuid": "83d6fdd9_af41e245",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1062,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T17:01:28Z",
+      "side": 1,
+      "message": "Yes.",
+      "parentUuid": "6e632d70_1110dea1",
+      "range": {
+        "startLine": 1062,
+        "startChar": 32,
+        "endLine": 1062,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "eb6e2853_a0af288e",
         "filename": "webrtc/rtc_base/openssladapter.h",
         "patchSetId": 3
@@ -369,6 +603,30 @@
       "writtenOn": "2017-07-18T16:27:15Z",
       "side": 1,
       "message": "This could use a comment about what it means.",
+      "range": {
+        "startLine": 53,
+        "startChar": 35,
+        "endLine": 53,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48b8db34_043a864d",
+        "filename": "webrtc/rtc_base/openssladapter.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T17:01:28Z",
+      "side": 1,
+      "message": "This is documented in the base class.",
+      "parentUuid": "eb6e2853_a0af288e",
       "range": {
         "startLine": 53,
         "startChar": 35,
@@ -467,6 +725,24 @@
     },
     {
       "key": {
+        "uuid": "3838e11d_07b9944e",
+        "filename": "webrtc/rtc_base/openssladapter.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T17:01:28Z",
+      "side": 1,
+      "message": "Yes - BasicPacketSocketFactory (and presumably the unit tests) would call this to enable DTLS resumption.",
+      "parentUuid": "9c44e121_7b75e81b",
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f3774f76_c4c0e078",
         "filename": "webrtc/rtc_base/openssladapter.h",
         "patchSetId": 3
@@ -484,6 +760,24 @@
     },
     {
       "key": {
+        "uuid": "dc5d0792_08ba714b",
+        "filename": "webrtc/rtc_base/openssladapter.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T17:01:28Z",
+      "side": 1,
+      "message": "Yes. Left for a separate CL to wire it into BPSF.",
+      "parentUuid": "f3774f76_c4c0e078",
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cd2dd6bc_7dfef23c",
         "filename": "webrtc/rtc_base/ssladapter.h",
         "patchSetId": 3
@@ -495,6 +789,24 @@
       "writtenOn": "2017-07-18T16:27:15Z",
       "side": 1,
       "message": "Since we only have on SSLAdapter (the OpenSSLAdapter) and since the factory is only going to be used in one place (BasicPacketSocketFactory::CreateClientTcpSocket), why don\u0027t we just have the OpenSSLAdapterFactory and skip having the SSLAdapterFactory?",
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3879b510_83d80935",
+        "filename": "webrtc/rtc_base/ssladapter.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-18T17:01:28Z",
+      "side": 1,
+      "message": "That seems like we\u0027re breaking the entire abstraction that SSLFoo provides. Not sure we want to do that, or that this would be the right time to do so.",
+      "parentUuid": "cd2dd6bc_7dfef23c",
       "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
