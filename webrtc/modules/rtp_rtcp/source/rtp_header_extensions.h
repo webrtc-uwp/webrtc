@@ -146,19 +146,47 @@ class VideoTimingExtension {
   static bool Write(uint8_t* data, uint16_t time_delta_ms, uint8_t idx);
 };
 
+// Common logic for Parsing/Writing RTP header extensions which are
+// variable-length strings.
+class StringRtpHeaderExtensionSerializer {
+ public:
+  static bool Parse(rtc::ArrayView<const uint8_t> data,
+                    StringRtpHeaderExtension* str);
+  static size_t ValueSize(const StringRtpHeaderExtension& str) {
+    return str.size();
+  }
+  static bool Write(uint8_t* data, const StringRtpHeaderExtension& str);
+
+  static bool Parse(rtc::ArrayView<const uint8_t> data, std::string* str);
+  static size_t ValueSize(const std::string& str) { return str.size(); }
+  static bool Write(uint8_t* data, const std::string& str);
+};
+
 class RtpStreamId {
  public:
   static constexpr RTPExtensionType kId = kRtpExtensionRtpStreamId;
   static constexpr const char* kUri =
       "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id";
 
-  static bool Parse(rtc::ArrayView<const uint8_t> data, StreamId* rsid);
-  static size_t ValueSize(const StreamId& rsid) { return rsid.size(); }
-  static bool Write(uint8_t* data, const StreamId& rsid);
+  static bool Parse(rtc::ArrayView<const uint8_t> data, StreamId* rsid) {
+    return StringRtpHeaderExtensionSerializer::Parse(data, rsid);
+  }
+  static size_t ValueSize(const StreamId& rsid) {
+    return StringRtpHeaderExtensionSerializer::ValueSize(rsid);
+  }
+  static bool Write(uint8_t* data, const StreamId& rsid) {
+    return StringRtpHeaderExtensionSerializer::Write(data, rsid);
+  }
 
-  static bool Parse(rtc::ArrayView<const uint8_t> data, std::string* rsid);
-  static size_t ValueSize(const std::string& rsid) { return rsid.size(); }
-  static bool Write(uint8_t* data, const std::string& rsid);
+  static bool Parse(rtc::ArrayView<const uint8_t> data, std::string* rsid) {
+    return StringRtpHeaderExtensionSerializer::Parse(data, rsid);
+  }
+  static size_t ValueSize(const std::string& rsid) {
+    return StringRtpHeaderExtensionSerializer::ValueSize(rsid);
+  }
+  static bool Write(uint8_t* data, const std::string& rsid) {
+    return StringRtpHeaderExtensionSerializer::Write(data, rsid);
+  }
 };
 
 class RepairedRtpStreamId {
@@ -167,13 +195,51 @@ class RepairedRtpStreamId {
   static constexpr const char* kUri =
       "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id";
 
-  static bool Parse(rtc::ArrayView<const uint8_t> data, StreamId* rsid);
-  static size_t ValueSize(const StreamId& rsid);
-  static bool Write(uint8_t* data, const StreamId& rsid);
+  static bool Parse(rtc::ArrayView<const uint8_t> data, StreamId* rsid) {
+    return StringRtpHeaderExtensionSerializer::Parse(data, rsid);
+  }
+  static size_t ValueSize(const StreamId& rsid) {
+    return StringRtpHeaderExtensionSerializer::ValueSize(rsid);
+  }
+  static bool Write(uint8_t* data, const StreamId& rsid) {
+    return StringRtpHeaderExtensionSerializer::Write(data, rsid);
+  }
 
-  static bool Parse(rtc::ArrayView<const uint8_t> data, std::string* rsid);
-  static size_t ValueSize(const std::string& rsid);
-  static bool Write(uint8_t* data, const std::string& rsid);
+  static bool Parse(rtc::ArrayView<const uint8_t> data, std::string* rsid) {
+    return StringRtpHeaderExtensionSerializer::Parse(data, rsid);
+  }
+  static size_t ValueSize(const std::string& rsid) {
+    return StringRtpHeaderExtensionSerializer::ValueSize(rsid);
+  }
+  static bool Write(uint8_t* data, const std::string& rsid) {
+    return StringRtpHeaderExtensionSerializer::Write(data, rsid);
+  }
+};
+
+class RtpMid {
+ public:
+  static constexpr RTPExtensionType kId = kRtpExtensionMid;
+  static constexpr const char* kUri = "urn:ietf:params:rtp-hdrext:sdes:mid";
+
+  static bool Parse(rtc::ArrayView<const uint8_t> data, Mid* mid) {
+    return StringRtpHeaderExtensionSerializer::Parse(data, mid);
+  }
+  static size_t ValueSize(const Mid& mid) {
+    return StringRtpHeaderExtensionSerializer::ValueSize(mid);
+  }
+  static bool Write(uint8_t* data, const Mid& mid) {
+    return StringRtpHeaderExtensionSerializer::Write(data, mid);
+  }
+
+  static bool Parse(rtc::ArrayView<const uint8_t> data, std::string* mid) {
+    return StringRtpHeaderExtensionSerializer::Parse(data, mid);
+  }
+  static size_t ValueSize(const std::string& mid) {
+    return StringRtpHeaderExtensionSerializer::ValueSize(mid);
+  }
+  static bool Write(uint8_t* data, const std::string& mid) {
+    return StringRtpHeaderExtensionSerializer::Write(data, mid);
+  }
 };
 
 }  // namespace webrtc
