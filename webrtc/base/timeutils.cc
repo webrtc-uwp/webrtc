@@ -45,12 +45,9 @@ ClockInterface* SetClockForTesting(ClockInterface* clock) {
 }
 #if defined(WEBRTC_WIN)
 static const uint64_t kFileTimeToUnixTimeEpochOffset = 116444736000000000ULL;
+static const uint64_t kNTPTimeToUnixTimeEpochOffset = 2208988800000L;
 #endif
 
-#if !defined(WEBRTC_WIN)
-static const uint64_t kFileTimeToUnixTimeEpochOffset = 116444736000000000ULL;
-#endif
-static const uint64_t kNTPTimeToUnixTimeEpochOffset = 2208988800000L;
 int64_t gAppStartTime = -1;  // Record app start time
 int64_t gTimeSinceOsStart = -1;  // when app start,
 int64_t gOsTicksPerSecond = -1;

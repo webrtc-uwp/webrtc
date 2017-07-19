@@ -485,8 +485,8 @@ void ReceiveStatisticsProxy::OnRenderedFrame(const VideoFrame& frame) {
   render_pixel_tracker_.AddSamples(sqrt(width * height));
 
   if (frame.ntp_time_ms() > 0) {
-    int64_t delay_ms = clock_->CurrentNtpInMilliseconds() - frame.ntp_time_ms();
 #ifdef WEBRTC_FEATURE_END_TO_END_DELAY
+    int64_t delay_ms = clock_->CurrentNtpInMilliseconds() - frame.ntp_time_ms();
     if (delay_ms >= 0)
       e2e_delay_counter_.Add(delay_ms);
 #endif // WEBRTC_FEATURE_END_TO_END_DELAY
