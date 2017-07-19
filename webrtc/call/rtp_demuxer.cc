@@ -10,6 +10,7 @@
 
 #include "webrtc/call/rtp_demuxer.h"
 
+#include "webrtc/call/mid_resolution_observer.h"
 #include "webrtc/call/rsid_resolution_observer.h"
 #include "webrtc/call/rtp_packet_sink_interface.h"
 #include "webrtc/call/rtp_rtcp_demuxer_helper.h"
@@ -41,10 +42,20 @@ void RtpDemuxer::AddSink(const std::string& rsid,
   rsid_sinks_.emplace(rsid, sink);
 }
 
+void RtpDemuxer::AddMidSink(const std::string& mid,
+                            RtpPacketSinkInterface* sink) {
+  RTC_DCHECK(Mid::IsLegalName(mid));
+  RTC_DCHECK(sink);
+  RTC_DCHECK(!MultimapAssociationExists(mid_sinks_, mid, sink));
+
+  mid_sinks_.emplace(mid, sink);
+}
+
 bool RtpDemuxer::RemoveSink(const RtpPacketSinkInterface* sink) {
   RTC_DCHECK(sink);
   return (RemoveFromMultimapByValue(&ssrc_sinks_, sink) +
-          RemoveFromMultimapByValue(&rsid_sinks_, sink)) > 0;
+          RemoveFromMultimapByValue(&rsid_sinks_, sink) +
+          RemoveFromMultimapByValue(&mid_sinks_, sink)) > 0;
 }
 
 void RtpDemuxer::RecordSsrcToSinkAssociation(uint32_t ssrc,
@@ -63,6 +74,7 @@ bool RtpDemuxer::OnRtpPacket(const RtpPacketReceived& packet) {
   // to a many-to-one, meaning each packet will be associated with one sink
   // at most. Then, only packets with an unknown SSRC will be checked for RSID.
   ResolveRsidToSsrcAssociations(packet);
+  ResolveMidToSsrcAssociations(packet);
 
   auto it_range = ssrc_sinks_.equal_range(packet.Ssrc());
   for (auto it = it_range.first; it != it_range.second; ++it) {
@@ -88,6 +100,23 @@ void RtpDemuxer::DeregisterRsidResolutionObserver(
   rsid_resolution_observers_.erase(it);
 }
 
+void RtpDemuxer::RegisterMidResolutionObserver(
+    MidResolutionObserver* observer) {
+  RTC_DCHECK(observer);
+  RTC_DCHECK(!ContainerHasKey(mid_resolution_observers_, observer));
+
+  mid_resolution_observers_.push_back(observer);
+}
+
+void RtpDemuxer::DeregisterMidResolutionObserver(
+    const MidResolutionObserver* observer) {
+  RTC_DCHECK(observer);
+  auto it = std::find(mid_resolution_observers_.begin(),
+                      mid_resolution_observers_.end(), observer);
+  RTC_DCHECK(it != mid_resolution_observers_.end());
+  mid_resolution_observers_.erase(it);
+}
+
 void RtpDemuxer::ResolveRsidToSsrcAssociations(
     const RtpPacketReceived& packet) {
   std::string rsid;
@@ -107,10 +136,29 @@ void RtpDemuxer::ResolveRsidToSsrcAssociations(
   }
 }
 
+void RtpDemuxer::ResolveMidToSsrcAssociations(const RtpPacketReceived& packet) {
+  std::string mid;
+  if (packet.GetExtension<RtpMid>(&mid)) {
+    auto it_range = mid_sinks_.equal_range(mid);
+    for (auto it = it_range.first; it != it_range.second; ++it) {
+      RecordSsrcToSinkAssociation(packet.Ssrc(), it->second);
+    }
+
+    NotifyObserversOfMidResolution(mid, packet.Ssrc());
+  }
+}
+
 void RtpDemuxer::NotifyObserversOfRsidResolution(const std::string& rsid,
                                                  uint32_t ssrc) {
   for (auto* observer : rsid_resolution_observers_) {
     observer->OnRsidResolved(rsid, ssrc);
+  }
+}
+
+void RtpDemuxer::NotifyObserversOfMidResolution(const std::string& mid,
+                                                uint32_t ssrc) {
+  for (auto* observer : mid_resolution_observers_) {
+    observer->OnMidResolved(mid, ssrc);
   }
 }
 

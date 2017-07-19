@@ -17,6 +17,7 @@
 
 namespace webrtc {
 
+class MidResolutionObserver;
 class RsidResolutionObserver;
 class RtpPacketReceived;
 class RtpPacketSinkInterface;
@@ -24,8 +25,7 @@ class RtpPacketSinkInterface;
 // This class represents the RTP demuxing, for a single RTP session (i.e., one
 // ssrc space, see RFC 7656). It isn't thread aware, leaving responsibility of
 // multithreading issues to the user of this class.
-// TODO(nisse): Should be extended to also do MID-based demux and payload-type
-// demux.
+// TODO(nisse): Should be extended to also do payload-type demux.
 class RtpDemuxer {
  public:
   RtpDemuxer();
@@ -37,6 +37,9 @@ class RtpDemuxer {
 
   // Registers a sink's association to an RSID. Null pointer is not allowed.
   void AddSink(const std::string& rsid, RtpPacketSinkInterface* sink);
+
+  // Registers a sink's association to an MID. Null pointer is not allowed.
+  void AddMidSink(const std::string& mid, RtpPacketSinkInterface* sink);
 
   // Removes a sink. Return value reports if anything was actually removed.
   // Null pointer is not allowed.
@@ -52,18 +55,32 @@ class RtpDemuxer {
   // Undo a previous RegisterRsidResolutionObserver().
   void DeregisterRsidResolutionObserver(const RsidResolutionObserver* observer);
 
+  // Allows other objects to be notified when MID-SSRC associations are
+  // resolved by this object.
+  void RegisterMidResolutionObserver(MidResolutionObserver* observer);
+
+  // Undo a previous RegisterMidResolutionObserver().
+  void DeregisterMidResolutionObserver(const MidResolutionObserver* observer);
+
  private:
   // Records a sink<->SSRC association. This can happen by explicit
   // configuration by AddSink(ssrc...), or by inferred configuration from an
-  // RSID-based configuration which is resolved to an SSRC upon
+  // RSID-based or MID-based configuration which is resolved to an SSRC upon
   // packet reception.
   void RecordSsrcToSinkAssociation(uint32_t ssrc, RtpPacketSinkInterface* sink);
 
   // Find the associations of RSID to SSRCs.
   void ResolveRsidToSsrcAssociations(const RtpPacketReceived& packet);
 
+  // Find the associations of MID to SSRCs.
+  void ResolveMidToSsrcAssociations(const RtpPacketReceived& packet);
+
   // Notify observers of the resolution of an RSID to an SSRC.
   void NotifyObserversOfRsidResolution(const std::string& rsid, uint32_t ssrc);
+
+  // Notify observers of the resolution of an MID to an SSRC. May be called
+  // multiple times if the sender changes the SSRC for a given media section.
+  void NotifyObserversOfMidResolution(const std::string& mid, uint32_t ssrc);
 
   // This records the association SSRCs to sinks. Other associations, such
   // as by RSID, also end up here once the RSID, etc., is resolved to an SSRC.
@@ -75,9 +92,19 @@ class RtpDemuxer {
   // from this container, and moved into |ssrc_sinks_|.
   std::multimap<std::string, RtpPacketSinkInterface*> rsid_sinks_;
 
+  // A sink may be associated with an MID - Media ID. With unified plan SDP,
+  // only one track is allowed per media section, so MID is sufficient to
+  // establish an SSRC mapping to route RTP packets. Unlike RSID, these
+  // associations cannot be deleted once an SSRC is resolved because the sender
+  // can change SSRC at any time.
+  std::map<std::string, RtpPacketSinkInterface*> mid_sinks_;
+
   // Observers which will be notified when an RSID association to an SSRC is
   // resolved by this object.
   std::vector<RsidResolutionObserver*> rsid_resolution_observers_;
+
+  // Observers notified when an MID is associated to an SSRC by this object.
+  std::vector<MidResolutionObserver*> mid_resolution_observers_;
 };
 
 }  // namespace webrtc
