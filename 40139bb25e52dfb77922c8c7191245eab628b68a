@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ce33bde3_119826fe",
+        "filename": "webrtc/modules/audio_coding/neteq/packet_buffer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-07-19T10:55:12Z",
+      "side": 1,
+      "message": "Added CHECK, everywhere that is needed.",
+      "parentUuid": "dc66a673_7bd4ebd2",
+      "revId": "40139bb25e52dfb77922c8c7191245eab628b68a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c49ac0aa_042a5bfb",
         "filename": "webrtc/modules/audio_coding/neteq/packet_buffer.h",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2017-07-18T16:10:19Z",
       "side": 1,
       "message": "It seems strange to me that StatisticsCalculator is sent along to each call, but I checked the previous CL and it looks like that was the best way forward.",
+      "revId": "40139bb25e52dfb77922c8c7191245eab628b68a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a10ea4f_b9d73ae9",
+        "filename": "webrtc/modules/audio_coding/neteq/packet_buffer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-07-19T10:55:12Z",
+      "side": 1,
+      "message": "Thanks for checking it! Yes, it might be the most convenient solution so far.",
+      "parentUuid": "c49ac0aa_042a5bfb",
       "revId": "40139bb25e52dfb77922c8c7191245eab628b68a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
