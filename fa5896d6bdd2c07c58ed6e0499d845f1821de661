@@ -2048,6 +2048,24 @@
     },
     {
       "key": {
+        "uuid": "a9b92b28_f2975cf3",
+        "filename": "webrtc/rtc_base/openssladapter.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:49:05Z",
+      "side": 1,
+      "message": "Yes, it is not currently called. I suppose it could be removed if we decided that we never want to support c2s DTLS.",
+      "parentUuid": "0fcd3012_5f6d09e4",
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f3774f76_c4c0e078",
         "filename": "webrtc/rtc_base/openssladapter.h",
         "patchSetId": 3
