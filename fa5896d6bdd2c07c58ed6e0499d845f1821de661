@@ -121,6 +121,54 @@
     },
     {
       "key": {
+        "uuid": "877277b9_32f218f8",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "28152ff3_5135233a",
+      "range": {
+        "startLine": 278,
+        "startChar": 62,
+        "endLine": 278,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d693a2e_844f6224",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "SetSslMode would fall into this category.",
+      "parentUuid": "11c4720e_f61042d7",
+      "range": {
+        "startLine": 278,
+        "startChar": 62,
+        "endLine": 278,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7cef3458_5fe15d9d",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -288,6 +336,54 @@
     },
     {
       "key": {
+        "uuid": "362df5ac_52c9cf49",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e7591a6b_c5e03bf4",
+      "range": {
+        "startLine": 292,
+        "startChar": 29,
+        "endLine": 292,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "900f11ac_1b8ef8a6",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "75bf7a1a_5e11718b",
+      "range": {
+        "startLine": 292,
+        "startChar": 29,
+        "endLine": 292,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4d9646ea_502b88ae",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -335,6 +431,30 @@
     },
     {
       "key": {
+        "uuid": "86eb1a94_79b3bcd8",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6ef8b8c3_6cff07c0",
+      "range": {
+        "startLine": 335,
+        "startChar": 29,
+        "endLine": 335,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "544c8904_1d4f36b5",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -358,6 +478,30 @@
     },
     {
       "key": {
+        "uuid": "e7a0582a_a814a332",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "544c8904_1d4f36b5",
+      "range": {
+        "startLine": 336,
+        "startChar": 47,
+        "endLine": 336,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "afa53e52_46e50ae7",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -372,6 +516,24 @@
       "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b6a5010a_35428669",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "afa53e52_46e50ae7",
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -407,6 +569,24 @@
       "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e68448b_17258d8c",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b1f8b825_a2b95dba",
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -505,6 +685,30 @@
     },
     {
       "key": {
+        "uuid": "8180308c_5addd950",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "This turned out to be more complicated than I thought. It\u0027s not always the case that we want to start SSL immediately at adapter creation, and passing in the session requires caching it in a member var since we can\u0027t call SSL_set_session until we create the SSL, which doesn\u0027t happen until we start the handshake, which doesn\u0027t happen until the underlying stream is connected.\n\nThe actual code savings was just a single line (client doesn\u0027t need to call StartSSL anymore), so it\u0027s not clear it\u0027s worth it at this time.",
+      "parentUuid": "91c5a10c_8e7dafad",
+      "range": {
+        "startLine": 375,
+        "startChar": 66,
+        "endLine": 375,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "380da72d_1c833b1e",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -552,6 +756,30 @@
     },
     {
       "key": {
+        "uuid": "664abce9_ee7784c7",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "I looked and currently this method never fails. I think that if it starts failing, we will want to know about it.",
+      "parentUuid": "fff44e29_d1455233",
+      "range": {
+        "startLine": 378,
+        "startChar": 0,
+        "endLine": 378,
+        "endChar": 68
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5e3addec_e6c87c9e",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -572,6 +800,30 @@
       "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7228756_af199669",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5e3addec_e6c87c9e",
+      "range": {
+        "startLine": 385,
+        "startChar": 3,
+        "endLine": 385,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -643,6 +895,30 @@
       "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "39a3dfa1_1e46d177",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "af2cb3d1_16fc323f",
+      "range": {
+        "startLine": 388,
+        "startChar": 30,
+        "endLine": 388,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -836,6 +1112,30 @@
     },
     {
       "key": {
+        "uuid": "69fed802_82426ff2",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 978,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a98e0ad5_951f8fcc",
+      "range": {
+        "startLine": 978,
+        "startChar": 74,
+        "endLine": 978,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6e2a9905_ac073c23",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -859,6 +1159,30 @@
     },
     {
       "key": {
+        "uuid": "fc1db0ae_b848b5c4",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 980,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6e2a9905_ac073c23",
+      "range": {
+        "startLine": 980,
+        "startChar": 68,
+        "endLine": 980,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5b99c64c_46d7d391",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -879,6 +1203,30 @@
       "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bdd36bbe_120f5238",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 981,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5b99c64c_46d7d391",
+      "range": {
+        "startLine": 981,
+        "startChar": 1,
+        "endLine": 981,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -926,6 +1274,30 @@
       "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "554609c5_a352fce1",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1004,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Ugh, this also turned out to be complicated since it references all the private callback methods in OpenSSLAdapter. We could make this work, but then the callbacks would either have to thunk from the factory to the adapter, or the factory would need to know that the app data contains the adapter pointer, all of which just to change which object the CreateContext method lives on.\n\nPerhaps this could be improved by switching from SSL_CTX callback methods to SSL_ callback methods (yes, there are both!), but I\u0027m not too excited about unwinding all that logic in this CL.",
+      "parentUuid": "228ebdd5_67ec6e1c",
+      "range": {
+        "startLine": 1004,
+        "startChar": 73,
+        "endLine": 1004,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -1143,6 +1515,30 @@
     },
     {
       "key": {
+        "uuid": "cba51244_950f5add",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1062,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "63f3e639_fcb061f6",
+      "range": {
+        "startLine": 1062,
+        "startChar": 32,
+        "endLine": 1062,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4cc54e84_39b3f658",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 3
@@ -1356,6 +1752,30 @@
     },
     {
       "key": {
+        "uuid": "2cf459d4_e718f6e1",
+        "filename": "webrtc/rtc_base/openssladapter.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f3078ee8_53f7f85e",
+      "range": {
+        "startLine": 55,
+        "startChar": 65,
+        "endLine": 55,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9d1e5e12_db366757",
         "filename": "webrtc/rtc_base/openssladapter.h",
         "patchSetId": 3
@@ -1376,6 +1796,30 @@
       "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b309d647_d72941a5",
+        "filename": "webrtc/rtc_base/openssladapter.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9d1e5e12_db366757",
+      "range": {
+        "startLine": 90,
+        "startChar": 67,
+        "endLine": 90,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -1446,6 +1890,54 @@
       "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0bf4b583_83766011",
+        "filename": "webrtc/rtc_base/openssladapter.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4b8070cf_f4594df0",
+      "range": {
+        "startLine": 117,
+        "startChar": 56,
+        "endLine": 117,
+        "endChar": 0
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a95c9f6b_91b2b3a9",
+        "filename": "webrtc/rtc_base/openssladapter.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d1511edc_a335ec4a",
+      "range": {
+        "startLine": 117,
+        "startChar": 0,
+        "endLine": 117,
+        "endChar": 56
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -1535,6 +2027,24 @@
       "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0fcd3012_5f6d09e4",
+        "filename": "webrtc/rtc_base/openssladapter.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "cdf23d7a_487b16bd",
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -1635,6 +2145,30 @@
       "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5876eb62_2de5e28a",
+        "filename": "webrtc/rtc_base/openssladapter.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T01:27:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "caf27dc4_f3698b62",
+      "range": {
+        "startLine": 135,
+        "startChar": 0,
+        "endLine": 135,
+        "endChar": 48
+      },
+      "revId": "fa5896d6bdd2c07c58ed6e0499d845f1821de661",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
