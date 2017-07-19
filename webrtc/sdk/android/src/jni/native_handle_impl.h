@@ -114,6 +114,8 @@ class AndroidVideoBuffer : public AndroidVideoFrameBuffer {
 
   jobject video_frame_buffer() const;
 
+  Matrix const& matrix() const { return matrix_; }
+
   // Returns an instance of VideoRenderer.I420Frame (deprecated)
   jobject ToJavaI420Frame(JNIEnv* jni, int width, int height, int rotation);
 
@@ -160,6 +162,17 @@ class AndroidVideoBufferFactory {
   ScopedGlobalRef<jclass> j_video_frame_buffer_class_;
   jmethodID j_retain_id_;
   jmethodID j_release_id_;
+};
+
+class JavaVideoFrameFactory {
+ public:
+  JavaVideoFrameFactory(JNIEnv* jni);
+
+  jobject ToJavaFrame(JNIEnv* jni, webrtc::VideoFrame const& frame) const;
+
+ private:
+  ScopedGlobalRef<jclass> j_video_frame_class_;
+  jmethodID j_video_frame_constructor_id_;
 };
 
 }  // namespace webrtc_jni

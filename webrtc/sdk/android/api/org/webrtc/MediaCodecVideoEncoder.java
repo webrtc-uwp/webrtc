@@ -11,6 +11,8 @@
 package org.webrtc;
 
 import android.annotation.TargetApi;
+import android.graphics.Matrix;
+import android.graphics.RectF;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecInfo.CodecCapabilities;
@@ -598,6 +600,62 @@ public class MediaCodecVideoEncoder {
     }
   }
 
+  /**
+   * Encodes a new style VideoFrame. Called by JNI. |inputBuffer| is -1 if we are not encoding in
+   * surface mode.
+   */
+  boolean encodeFrame(long nativeEncoder, boolean isKeyframe, VideoFrame frame, int inputBuffer) {
+    checkOnMediaCodecThread();
+    try {
+      long presentationTimestampUs = TimeUnit.NANOSECONDS.toMicros(frame.getTimestampNs());
+      checkKeyFrameRequired(isKeyframe, presentationTimestampUs);
+
+      VideoFrame.Buffer buffer = frame.getBuffer();
+      if (buffer instanceof VideoFrame.TextureBuffer) {
+        VideoFrame.TextureBuffer textureBuffer = (VideoFrame.TextureBuffer) buffer;
+        eglBase.makeCurrent();
+        // TODO(perkj): glClear() shouldn't be necessary since every pixel is covered anyway,
+        // but it's a workaround for bug webrtc:5147.
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+        drawer.drawOes(textureBuffer.getTextureId(),
+            RendererCommon.convertMatrixFromAndroidGraphicsMatrix(frame.getTransformMatrix()),
+            width, height, 0, 0, width, height);
+        eglBase.swapBuffers(frame.getTimestampNs());
+      } else {
+        Matrix matrix = frame.getTransformMatrix();
+        RectF areaToBeEncoded = new RectF(0, 0, 1, 1);
+        // TODO(sakal): Handle rotation in matrix.
+        if (!matrix.mapRect(areaToBeEncoded)) {
+          Logging.w(TAG, "Unsupported transformation matrix for an I420 frame.");
+        }
+
+        VideoFrame.I420Buffer i420Buffer = buffer.toI420();
+        int cropX = (int) (areaToBeEncoded.left * i420Buffer.getWidth());
+        int cropY = (int) (areaToBeEncoded.top * i420Buffer.getHeight());
+        int cropWidth = (int) (areaToBeEncoded.width() * i420Buffer.getWidth());
+        int cropHeight = (int) (areaToBeEncoded.height() * i420Buffer.getHeight());
+
+        // Position is ignored by the JNI code so we need to apply it as an offset.
+        ByteBuffer bufferY = i420Buffer.getDataY();
+        int offsetY = bufferY.position();
+        ByteBuffer bufferU = i420Buffer.getDataU();
+        int offsetU = bufferU.position();
+        ByteBuffer bufferV = i420Buffer.getDataV();
+        int offsetV = bufferV.position();
+        nativeFillBuffer(nativeEncoder, inputBuffer, bufferY, offsetY, i420Buffer.getStrideY(),
+            bufferU, offsetU, i420Buffer.getStrideU(), bufferV, offsetV, i420Buffer.getStrideV(),
+            cropX, cropY, cropWidth, cropHeight);
+        i420Buffer.release();
+        mediaCodec.queueInputBuffer(
+            inputBuffer, 0, cropWidth * cropHeight * 3 / 2, presentationTimestampUs, 0);
+      }
+      return true;
+    } catch (RuntimeException e) {
+      Logging.e(TAG, "encodeFrame failed", e);
+      return false;
+    }
+  }
+
   void release() {
     Logging.d(TAG, "Java releaseEncoder");
     checkOnMediaCodecThread();
@@ -881,4 +939,9 @@ public class MediaCodecVideoEncoder {
       return false;
     }
   }
+
+  /** Fills an inputBuffer with the given index with data from the byte buffers. */
+  private static native void nativeFillBuffer(long nativeEncoder, int inputBuffer, ByteBuffer dataY,
+      int offsetY, int strideY, ByteBuffer dataU, int offsetU, int strideU, ByteBuffer dataV,
+      int offsetV, int strideV, int cropX, int cropY, int cropWidth, int cropHeight);
 }

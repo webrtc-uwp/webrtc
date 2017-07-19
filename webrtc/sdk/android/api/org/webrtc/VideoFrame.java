@@ -11,6 +11,7 @@
 package org.webrtc;
 
 import android.graphics.Matrix;
+import android.graphics.RectF;
 import java.nio.ByteBuffer;
 
 /**
@@ -87,6 +88,12 @@ public class VideoFrame {
     this.transformMatrix = transformMatrix;
   }
 
+  // Called from native code.
+  VideoFrame(Buffer buffer, int rotation, long timestampNs, float[] transformMatrix) {
+    this(buffer, rotation, timestampNs,
+        RendererCommon.convertMatrixToAndroidGraphicsMatrix(transformMatrix));
+  }
+
   public Buffer getBuffer() {
     return buffer;
   }
@@ -114,15 +121,26 @@ public class VideoFrame {
     return transformMatrix;
   }
 
-  /**
-   * Resolution of the frame in pixels.
-   */
+  /** Returns the width of the frame in pixels after the transformation matrix has been applied. */
   public int getWidth() {
-    return buffer.getWidth();
+    Matrix matrix = getTransformMatrix();
+    RectF area = new RectF(0, 0, 1, 1);
+    if (!matrix.mapRect(area)) {
+      return 0; // Not supported.
+    }
+    // TODO(sakal): Handle rotation in matrix by 90 or 270 degrees.
+    return (int) (area.width() * buffer.getWidth());
   }
 
+  /** Returns the height of the frame in pixels after the transformation matrix has been applied. */
   public int getHeight() {
-    return buffer.getHeight();
+    Matrix matrix = getTransformMatrix();
+    RectF area = new RectF(0, 0, 1, 1);
+    if (!matrix.mapRect(area)) {
+      return 0; // Not supported.
+    }
+    // TODO(sakal): Handle rotation in matrix by 90 or 270 degrees.
+    return (int) (area.height() * buffer.getHeight());
   }
 
   /**
