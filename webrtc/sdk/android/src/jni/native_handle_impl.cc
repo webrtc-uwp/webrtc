@@ -52,15 +52,20 @@ Matrix Matrix::fromAndroidGraphicsMatrix(JNIEnv* jni, jobject j_matrix) {
   // [x2 y2  0 w2]
   // [ 0  0  1  0]
   // [x3 y3  0 w3]
+  // Since it is stored in column-major order, it looks like this:
+  // [x1 x2 0 x3
+  //  y1 y2 0 y3
+  //   0  0 1  0
+  //  w1 w2 0 w3]
   matrix.elem_[0 * 4 + 0] = array_3x3_ptr[0 * 3 + 0];
-  matrix.elem_[0 * 4 + 1] = array_3x3_ptr[0 * 3 + 1];
-  matrix.elem_[0 * 4 + 3] = array_3x3_ptr[0 * 3 + 2];
-  matrix.elem_[1 * 4 + 0] = array_3x3_ptr[1 * 3 + 0];
+  matrix.elem_[0 * 4 + 1] = array_3x3_ptr[1 * 3 + 0];
+  matrix.elem_[0 * 4 + 3] = array_3x3_ptr[2 * 3 + 0];
+  matrix.elem_[1 * 4 + 0] = array_3x3_ptr[0 * 3 + 1];
   matrix.elem_[1 * 4 + 1] = array_3x3_ptr[1 * 3 + 1];
-  matrix.elem_[1 * 4 + 3] = array_3x3_ptr[1 * 3 + 2];
+  matrix.elem_[1 * 4 + 3] = array_3x3_ptr[2 * 3 + 1];
   matrix.elem_[2 * 4 + 2] = 1;  // Z-scale should be 1.
-  matrix.elem_[3 * 4 + 0] = array_3x3_ptr[2 * 3 + 0];
-  matrix.elem_[3 * 4 + 1] = array_3x3_ptr[2 * 3 + 1];
+  matrix.elem_[3 * 4 + 0] = array_3x3_ptr[0 * 3 + 2];
+  matrix.elem_[3 * 4 + 1] = array_3x3_ptr[1 * 3 + 2];
   matrix.elem_[3 * 4 + 3] = array_3x3_ptr[2 * 3 + 2];
   return matrix;
 }
@@ -344,6 +349,32 @@ rtc::scoped_refptr<AndroidVideoBuffer> AndroidVideoBufferFactory::CreateBuffer(
   return new rtc::RefCountedObject<AndroidVideoBuffer>(
       jni, j_retain_id_, j_release_id_, width, height, matrix,
       j_video_frame_buffer);
+}
+
+JavaVideoFrameFactory::JavaVideoFrameFactory(JNIEnv* jni)
+    : j_video_frame_class_(jni, FindClass(jni, "org/webrtc/VideoFrame")) {
+  j_video_frame_constructor_id_ =
+      GetMethodID(jni, *j_video_frame_class_, "<init>",
+                  "(Lorg/webrtc/VideoFrame$Buffer;IJ[F)V");
+}
+
+jobject JavaVideoFrameFactory::ToJavaFrame(
+    JNIEnv* jni,
+    webrtc::VideoFrame const& frame) const {
+  RTC_DCHECK(frame.video_frame_buffer()->type() ==
+             webrtc::VideoFrameBuffer::Type::kNative);
+  AndroidVideoFrameBuffer* android_buffer =
+      static_cast<AndroidVideoFrameBuffer*>(frame.video_frame_buffer().get());
+  RTC_DCHECK(android_buffer->android_type() ==
+             AndroidVideoFrameBuffer::AndroidType::kJavaBuffer);
+  AndroidVideoBuffer* android_video_buffer =
+      static_cast<AndroidVideoBuffer*>(android_buffer);
+  jobject buffer = android_video_buffer->video_frame_buffer();
+  return jni->NewObject(
+      *j_video_frame_class_, j_video_frame_constructor_id_, buffer,
+      static_cast<jint>(frame.rotation()),
+      static_cast<jlong>(frame.timestamp_us() * rtc::kNumNanosecsPerMicrosec),
+      android_video_buffer->matrix().ToJava(jni));
 }
 
 }  // namespace webrtc_jni
