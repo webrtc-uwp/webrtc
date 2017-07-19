@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e84d8662_343ecb03",
+        "filename": "webrtc/common_types.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 720,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-19T02:51:34Z",
+      "side": 1,
+      "message": "This comment is no longer accurate.",
+      "range": {
+        "startLine": 720,
+        "startChar": 43,
+        "endLine": 720,
+        "endChar": 0
+      },
+      "revId": "e33deb8d3038191982a06548beb285ea14f3dc91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29578e16_847ec45c",
+        "filename": "webrtc/common_types.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 721,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-19T02:51:34Z",
+      "side": 1,
+      "message": "Why not call it StringRtpHeaderExtension, since that\u0027s what it is?",
+      "range": {
+        "startLine": 721,
+        "startChar": 13,
+        "endLine": 721,
+        "endChar": 0
+      },
+      "revId": "e33deb8d3038191982a06548beb285ea14f3dc91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b7b53c3_e82387a2",
+        "filename": "webrtc/common_types.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-19T02:51:34Z",
+      "side": 1,
+      "message": "I\u0027d rather call this \"Mid\" or \"MId\", since that\u0027s where it\u0027s called by everyone all the time.",
+      "range": {
+        "startLine": 760,
+        "startChar": 22,
+        "endLine": 760,
+        "endChar": 0
+      },
+      "revId": "e33deb8d3038191982a06548beb285ea14f3dc91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "550c56f7_b0263669",
+        "filename": "webrtc/common_types.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 803,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-19T02:51:34Z",
+      "side": 1,
+      "message": "Please call this mid, even if you don\u0027t change the type name.",
+      "range": {
+        "startLine": 803,
+        "startChar": 0,
+        "endLine": 803,
+        "endChar": 19
+      },
+      "revId": "e33deb8d3038191982a06548beb285ea14f3dc91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f6b8056_39981f6b",
+        "filename": "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-19T02:51:34Z",
+      "side": 1,
+      "message": "RtpExtensionMid",
+      "range": {
+        "startLine": 83,
+        "startChar": 23,
+        "endLine": 83,
+        "endChar": 0
+      },
+      "revId": "e33deb8d3038191982a06548beb285ea14f3dc91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d5eb127_10cea151",
+        "filename": "webrtc/modules/rtp_rtcp/source/rtp_header_extensions.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-19T02:51:34Z",
+      "side": 1,
+      "message": "\"rid\" doesn\u0027t make sense, and is confusing with the other thing called \"rid\".  Might as well just be \"str\"",
+      "range": {
+        "startLine": 151,
+        "startChar": 68,
+        "endLine": 151,
+        "endChar": 0
+      },
+      "revId": "e33deb8d3038191982a06548beb285ea14f3dc91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "867c86b7_9940df8f",
+        "filename": "webrtc/modules/rtp_rtcp/source/rtp_header_extensions.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-19T02:51:34Z",
+      "side": 1,
+      "message": "And especially here.",
+      "range": {
+        "startLine": 155,
+        "startChar": 74,
+        "endLine": 155,
+        "endChar": 0
+      },
+      "revId": "e33deb8d3038191982a06548beb285ea14f3dc91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6faa780_7b95c6f1",
+        "filename": "webrtc/modules/rtp_rtcp/source/rtp_header_extensions.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-19T02:51:34Z",
+      "side": 1,
+      "message": "Yay, mid :)",
+      "range": {
+        "startLine": 219,
+        "startChar": 71,
+        "endLine": 219,
+        "endChar": 0
+      },
+      "revId": "e33deb8d3038191982a06548beb285ea14f3dc91",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
