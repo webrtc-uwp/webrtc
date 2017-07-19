@@ -22,6 +22,30 @@
       "revId": "6d3e2f26c29c29a55f646d8778b64be3226d67d8",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72d2f68b_3a8d71ec",
+        "filename": "webrtc/rtc_base/ssladapter.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-19T02:42:03Z",
+      "side": 1,
+      "message": "True, although we will be removing kTlsCertPolicyInsecureNoCheck as soon as Emad or I can write a CL for it.",
+      "parentUuid": "3a300146_92be3ad3",
+      "range": {
+        "startLine": 47,
+        "startChar": 50,
+        "endLine": 47,
+        "endChar": 0
+      },
+      "revId": "6d3e2f26c29c29a55f646d8778b64be3226d67d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
