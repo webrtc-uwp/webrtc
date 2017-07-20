@@ -50,8 +50,8 @@ int SrtpCryptoSuiteFromName(const std::string& crypto_suite) {
   return SRTP_INVALID_CRYPTO_SUITE;
 }
 
-bool GetSrtpKeyAndSaltLengths(int crypto_suite, int *key_length,
-    int *salt_length) {
+bool GetSrtpKeyAndSaltLengths(int crypto_suite, int* key_length,
+    int* salt_length) {
   switch (crypto_suite) {
   case SRTP_AES128_CM_SHA1_32:
   case SRTP_AES128_CM_SHA1_80:
@@ -110,14 +110,16 @@ std::vector<int> GetSupportedDtlsSrtpCryptoSuites(
   return crypto_suites;
 }
 
+SSLStreamAdapterFactory* SSLStreamAdapterFactory::Create() {
+  return new OpenSSLStreamAdapterFactory();
+}
+
 SSLStreamAdapter* SSLStreamAdapter::Create(StreamInterface* stream) {
   return new OpenSSLStreamAdapter(stream);
 }
 
 SSLStreamAdapter::SSLStreamAdapter(StreamInterface* stream)
-    : StreamAdapterInterface(stream),
-      ignore_bad_cert_(false),
-      client_auth_enabled_(true) {}
+    : StreamAdapterInterface(stream), ignore_bad_cert_(false) {}
 
 SSLStreamAdapter::~SSLStreamAdapter() {}
 

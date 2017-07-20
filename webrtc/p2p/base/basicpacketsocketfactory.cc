@@ -27,19 +27,20 @@
 namespace rtc {
 
 BasicPacketSocketFactory::BasicPacketSocketFactory()
-    : thread_(Thread::Current()),
-      socket_factory_(NULL) {
+    : BasicPacketSocketFactory(Thread::Current()) {
 }
 
 BasicPacketSocketFactory::BasicPacketSocketFactory(Thread* thread)
     : thread_(thread),
-      socket_factory_(NULL) {
+      socket_factory_(NULL),
+      ssl_factory_(SSLAdapterFactory::Create()) {
 }
 
 BasicPacketSocketFactory::BasicPacketSocketFactory(
     SocketFactory* socket_factory)
     : thread_(NULL),
-      socket_factory_(socket_factory) {
+      socket_factory_(socket_factory),
+      ssl_factory_(SSLAdapterFactory::Create()) {
 }
 
 BasicPacketSocketFactory::~BasicPacketSocketFactory() {
@@ -138,31 +139,31 @@ AsyncPacketSocket* BasicPacketSocketFactory::CreateClientTcpSocket(
   }
 
   // Assert that at most one TLS option is used.
-  int tlsOpts =
+  int tls_opts =
       opts & (PacketSocketFactory::OPT_TLS | PacketSocketFactory::OPT_TLS_FAKE |
               PacketSocketFactory::OPT_TLS_INSECURE);
-  RTC_DCHECK((tlsOpts & (tlsOpts - 1)) == 0);
+  RTC_DCHECK((tls_opts & (tls_opts - 1)) == 0);
 
-  if ((tlsOpts & PacketSocketFactory::OPT_TLS) ||
-      (tlsOpts & PacketSocketFactory::OPT_TLS_INSECURE)) {
+  if ((tls_opts & PacketSocketFactory::OPT_TLS) ||
+      (tls_opts & PacketSocketFactory::OPT_TLS_INSECURE)) {
     // Using TLS, wrap the socket in an SSL adapter.
-    SSLAdapter* ssl_adapter = SSLAdapter::Create(socket);
+    SSLAdapter* ssl_adapter = ssl_factory_->CreateAdapter(socket);
     if (!ssl_adapter) {
       return NULL;
     }
 
-    if (tlsOpts & PacketSocketFactory::OPT_TLS_INSECURE) {
-      ssl_adapter->set_ignore_bad_cert(true);
+    if (tls_opts & PacketSocketFactory::OPT_TLS_INSECURE) {
+      //ssl_adapter->set_ignore_bad_cert(true);
     }
 
     socket = ssl_adapter;
 
-    if (ssl_adapter->StartSSL(remote_address.hostname().c_str(), false) != 0) {
+    if (ssl_adapter->StartSSL(remote_address.hostname().c_str()) != 0) {
       delete ssl_adapter;
       return NULL;
     }
 
-  } else if (tlsOpts & PacketSocketFactory::OPT_TLS_FAKE) {
+  } else if (tls_opts & PacketSocketFactory::OPT_TLS_FAKE) {
     // Using fake TLS, wrap the TCP socket in a pseudo-SSL socket.
     socket = new AsyncSSLSocket(socket);
   }

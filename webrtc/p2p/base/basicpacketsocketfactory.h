@@ -11,12 +11,15 @@
 #ifndef WEBRTC_P2P_BASE_BASICPACKETSOCKETFACTORY_H_
 #define WEBRTC_P2P_BASE_BASICPACKETSOCKETFACTORY_H_
 
+#include <memory>
+#include <string>
 #include "webrtc/p2p/base/packetsocketfactory.h"
 
 namespace rtc {
 
 class AsyncSocket;
 class SocketFactory;
+class SSLAdapterFactory;
 class Thread;
 
 class BasicPacketSocketFactory : public PacketSocketFactory {
@@ -51,6 +54,7 @@ class BasicPacketSocketFactory : public PacketSocketFactory {
 
   Thread* thread_;
   SocketFactory* socket_factory_;
+  std::unique_ptr<SSLAdapterFactory> ssl_factory_;
 };
 
 }  // namespace rtc

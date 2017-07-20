@@ -161,7 +161,7 @@ static const SslCipherMapEntry kSslCipherMap[] = {
 static int stream_write(BIO* h, const char* buf, int num);
 static int stream_read(BIO* h, char* buf, int size);
 static int stream_puts(BIO* h, const char* str);
-static long stream_ctrl(BIO* h, int cmd, long arg1, void* arg2);
+static long stream_ctrl(BIO* h, int cmd, long arg1, void* arg2);  // NOLINT
 static int stream_new(BIO* h);
 static int stream_free(BIO* data);
 
@@ -235,7 +235,7 @@ static int stream_puts(BIO* b, const char* str) {
   return stream_write(b, str, checked_cast<int>(strlen(str)));
 }
 
-static long stream_ctrl(BIO* b, int cmd, long num, void* ptr) {
+static long stream_ctrl(BIO* b, int cmd, long num, void* ptr) {  // NOLINT
   switch (cmd) {
     case BIO_CTRL_RESET:
       return 0;
@@ -261,28 +261,57 @@ static long stream_ctrl(BIO* b, int cmd, long num, void* ptr) {
 // OpenSSLStreamAdapter
 /////////////////////////////////////////////////////////////////////////////
 
-OpenSSLStreamAdapter::OpenSSLStreamAdapter(StreamInterface* stream)
+OpenSSLStreamAdapter::OpenSSLStreamAdapter(StreamInterface* stream,
+                                           OpenSSLStreamAdapterFactory* factory)
     : SSLStreamAdapter(stream),
+      factory_(factory),
       state_(SSL_NONE),
       role_(SSL_CLIENT),
       ssl_read_needs_write_(false),
       ssl_write_needs_read_(false),
       ssl_(nullptr),
       ssl_ctx_(nullptr),
+      client_auth_enabled_(true),
       ssl_mode_(SSL_MODE_TLS),
-      ssl_max_version_(SSL_PROTOCOL_TLS_12) {}
+      ssl_max_version_(SSL_PROTOCOL_TLS_12) {
+  if (factory_) {
+    // role_ needs to be initialized properly even with an injected context.
+    role_ = factory_->role();
+    client_auth_enabled_ = factory_->client_auth_enabled();
+    ssl_ctx_ = factory_->ssl_ctx();
+    RTC_DCHECK(ssl_ctx_);
+    SSL_CTX_up_ref(ssl_ctx_);
+  }
+}
 
 OpenSSLStreamAdapter::~OpenSSLStreamAdapter() {
   Cleanup(0);
 }
 
 void OpenSSLStreamAdapter::SetIdentity(SSLIdentity* identity) {
+  RTC_DCHECK(ssl_ctx_ == nullptr);
   RTC_DCHECK(!identity_);
   identity_.reset(static_cast<OpenSSLIdentity*>(identity));
 }
 
 void OpenSSLStreamAdapter::SetServerRole(SSLRole role) {
+  RTC_DCHECK(ssl_ctx_ == nullptr);
   role_ = role;
+}
+
+void OpenSSLStreamAdapter::SetMode(SSLMode mode) {
+  RTC_DCHECK(ssl_ctx_ == nullptr);
+  ssl_mode_ = mode;
+}
+
+void OpenSSLStreamAdapter::SetMaxProtocolVersion(SSLProtocolVersion version) {
+  RTC_DCHECK(ssl_ctx_ == nullptr);
+  ssl_max_version_ = version;
+}
+
+void OpenSSLStreamAdapter::SetInitialRetransmissionTimeout(int timeout_ms) {
+  RTC_DCHECK(state_ == SSL_NONE);
+  dtls_handshake_timeout_ms_ = timeout_ms;
 }
 
 std::unique_ptr<SSLCertificate> OpenSSLStreamAdapter::GetPeerCertificate()
@@ -494,22 +523,6 @@ int OpenSSLStreamAdapter::StartSSL() {
   return 0;
 }
 
-void OpenSSLStreamAdapter::SetMode(SSLMode mode) {
-  RTC_DCHECK(state_ == SSL_NONE);
-  ssl_mode_ = mode;
-}
-
-void OpenSSLStreamAdapter::SetMaxProtocolVersion(SSLProtocolVersion version) {
-  RTC_DCHECK(ssl_ctx_ == nullptr);
-  ssl_max_version_ = version;
-}
-
-void OpenSSLStreamAdapter::SetInitialRetransmissionTimeout(
-    int timeout_ms) {
-  RTC_DCHECK(ssl_ctx_ == nullptr);
-  dtls_handshake_timeout_ms_ = timeout_ms;
-}
-
 //
 // StreamInterface Implementation
 //
@@ -701,7 +714,7 @@ StreamState OpenSSLStreamAdapter::GetState() const {
       return SS_OPEN;
     default:
       return SS_CLOSED;
-  };
+  }
   // not reached
 }
 
@@ -767,8 +780,11 @@ int OpenSSLStreamAdapter::BeginSSL() {
   BIO* bio = nullptr;
 
   // First set up the context.
-  RTC_DCHECK(ssl_ctx_ == nullptr);
-  ssl_ctx_ = SetupSSLContext();
+  if (!factory_) {
+    RTC_DCHECK(ssl_ctx_ == nullptr);
+    ssl_ctx_ = CreateContext(identity_.get(), ssl_mode_, role_,
+                             ssl_max_version_, srtp_ciphers_, true);
+  }
   if (!ssl_ctx_)
     return -1;
 
@@ -829,7 +845,7 @@ int OpenSSLStreamAdapter::ContinueSSL() {
       LOG(LS_VERBOSE) << " -- success";
       // By this point, OpenSSL should have given us a certificate, or errored
       // out if one was missing.
-      RTC_DCHECK(peer_certificate_ || !client_auth_enabled());
+      RTC_DCHECK(peer_certificate_ || !client_auth_enabled_);
 
       state_ = SSL_CONNECTED;
       if (!waiting_to_verify_peer_certificate()) {
@@ -942,134 +958,6 @@ void OpenSSLStreamAdapter::OnMessage(Message* msg) {
   } else {
     StreamInterface::OnMessage(msg);
   }
-}
-
-SSL_CTX* OpenSSLStreamAdapter::SetupSSLContext() {
-  SSL_CTX* ctx = nullptr;
-
-#ifdef OPENSSL_IS_BORINGSSL
-    ctx = SSL_CTX_new(ssl_mode_ == SSL_MODE_DTLS ?
-        DTLS_method() : TLS_method());
-    // Version limiting for BoringSSL will be done below.
-#else
-  const SSL_METHOD* method;
-  switch (ssl_max_version_) {
-    case SSL_PROTOCOL_TLS_10:
-    case SSL_PROTOCOL_TLS_11:
-      // OpenSSL doesn't support setting min/max versions, so we always use
-      // (D)TLS 1.0 if a max. version below the max. available is requested.
-      if (ssl_mode_ == SSL_MODE_DTLS) {
-        if (role_ == SSL_CLIENT) {
-          method = DTLSv1_client_method();
-        } else {
-          method = DTLSv1_server_method();
-        }
-      } else {
-        if (role_ == SSL_CLIENT) {
-          method = TLSv1_client_method();
-        } else {
-          method = TLSv1_server_method();
-        }
-      }
-      break;
-    case SSL_PROTOCOL_TLS_12:
-    default:
-      if (ssl_mode_ == SSL_MODE_DTLS) {
-#if (OPENSSL_VERSION_NUMBER >= 0x10002000L)
-        // DTLS 1.2 only available starting from OpenSSL 1.0.2
-        if (role_ == SSL_CLIENT) {
-          method = DTLS_client_method();
-        } else {
-          method = DTLS_server_method();
-        }
-#else
-        if (role_ == SSL_CLIENT) {
-          method = DTLSv1_client_method();
-        } else {
-          method = DTLSv1_server_method();
-        }
-#endif
-      } else {
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-        // New API only available starting from OpenSSL 1.1.0
-        if (role_ == SSL_CLIENT) {
-          method = TLS_client_method();
-        } else {
-          method = TLS_server_method();
-        }
-#else
-        if (role_ == SSL_CLIENT) {
-          method = SSLv23_client_method();
-        } else {
-          method = SSLv23_server_method();
-        }
-#endif
-      }
-      break;
-  }
-  ctx = SSL_CTX_new(method);
-#endif  // OPENSSL_IS_BORINGSSL
-
-  if (ctx == nullptr)
-    return nullptr;
-
-#ifdef OPENSSL_IS_BORINGSSL
-  SSL_CTX_set_min_proto_version(ctx, ssl_mode_ == SSL_MODE_DTLS ?
-      DTLS1_VERSION : TLS1_VERSION);
-  switch (ssl_max_version_) {
-    case SSL_PROTOCOL_TLS_10:
-      SSL_CTX_set_max_proto_version(ctx, ssl_mode_ == SSL_MODE_DTLS ?
-          DTLS1_VERSION : TLS1_VERSION);
-      break;
-    case SSL_PROTOCOL_TLS_11:
-      SSL_CTX_set_max_proto_version(ctx, ssl_mode_ == SSL_MODE_DTLS ?
-          DTLS1_VERSION : TLS1_1_VERSION);
-      break;
-    case SSL_PROTOCOL_TLS_12:
-    default:
-      SSL_CTX_set_max_proto_version(ctx, ssl_mode_ == SSL_MODE_DTLS ?
-          DTLS1_2_VERSION : TLS1_2_VERSION);
-      break;
-  }
-  if (g_use_time_callback_for_testing) {
-    SSL_CTX_set_current_time_cb(ctx, &TimeCallbackForTesting);
-  }
-#endif
-
-  if (identity_ && !identity_->ConfigureIdentity(ctx)) {
-    SSL_CTX_free(ctx);
-    return nullptr;
-  }
-
-#if !defined(NDEBUG)
-  SSL_CTX_set_info_callback(ctx, OpenSSLAdapter::SSLInfoCallback);
-#endif
-
-  int mode = SSL_VERIFY_PEER;
-  if (client_auth_enabled()) {
-    // Require a certificate from the client.
-    // Note: Normally this is always true in production, but it may be disabled
-    // for testing purposes (e.g. SSLAdapter unit tests).
-    mode |= SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
-  }
-
-  SSL_CTX_set_verify(ctx, mode, SSLVerifyCallback);
-  SSL_CTX_set_verify_depth(ctx, 4);
-  // Select list of available ciphers. Note that !SHA256 and !SHA384 only
-  // remove HMAC-SHA256 and HMAC-SHA384 cipher suites, not GCM cipher suites
-  // with SHA256 or SHA384 as the handshake hash.
-  // This matches the list of SSLClientSocketOpenSSL in Chromium.
-  SSL_CTX_set_cipher_list(
-      ctx, "DEFAULT:!NULL:!aNULL:!SHA256:!SHA384:!aECDH:!AESGCM+AES256:!aPSK");
-
-  if (!srtp_ciphers_.empty()) {
-    if (SSL_CTX_set_tlsext_use_srtp(ctx, srtp_ciphers_.c_str())) {
-      SSL_CTX_free(ctx);
-      return nullptr;
-    }
-  }
-
-  return ctx;
 }
 
 bool OpenSSLStreamAdapter::VerifyPeerCertificate() {
@@ -1214,6 +1102,195 @@ bool OpenSSLStreamAdapter::IsAcceptableCipher(const std::string& cipher,
 
 void OpenSSLStreamAdapter::enable_time_callback_for_testing() {
   g_use_time_callback_for_testing = true;
+}
+
+SSL_CTX* OpenSSLStreamAdapter::CreateContext(OpenSSLIdentity* identity,
+                                             SSLMode mode,
+                                             SSLRole role,
+                                             int max_version,
+                                             const std::string& srtp_config,
+                                             bool client_auth_enabled) {
+  SSL_CTX* ctx = nullptr;
+
+#ifdef OPENSSL_IS_BORINGSSL
+  ctx = SSL_CTX_new(mode == SSL_MODE_DTLS ? DTLS_method() : TLS_method());
+// Version limiting for BoringSSL will be done below.
+#else
+  const SSL_METHOD* method;
+  switch (max_version) {
+    case SSL_PROTOCOL_TLS_10:
+    case SSL_PROTOCOL_TLS_11:
+      // OpenSSL doesn't support setting min/max versions, so we always use
+      // (D)TLS 1.0 if a max. version below the max. available is requested.
+      if (mode == SSL_MODE_DTLS) {
+        if (role == SSL_CLIENT) {
+          method = DTLSv1_client_method();
+        } else {
+          method = DTLSv1_server_method();
+        }
+      } else {
+        if (role == SSL_CLIENT) {
+          method = TLSv1_client_method();
+        } else {
+          method = TLSv1_server_method();
+        }
+      }
+      break;
+    case SSL_PROTOCOL_TLS_12:
+    default:
+      if (mode == SSL_MODE_DTLS) {
+#if (OPENSSL_VERSION_NUMBER >= 0x10002000L)
+        // DTLS 1.2 only available starting from OpenSSL 1.0.2
+        if (role == SSL_CLIENT) {
+          method = DTLS_client_method();
+        } else {
+          method = DTLS_server_method();
+        }
+#else
+        if (role == SSL_CLIENT) {
+          method = DTLSv1_client_method();
+        } else {
+          method = DTLSv1_server_method();
+        }
+#endif
+      } else {
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+        // New API only available starting from OpenSSL 1.1.0
+        if (role == SSL_CLIENT) {
+          method = TLS_client_method();
+        } else {
+          method = TLS_server_method();
+        }
+#else
+        if (role == SSL_CLIENT) {
+          method = SSLv23_client_method();
+        } else {
+          method = SSLv23_server_method();
+        }
+#endif
+      }
+      break;
+  }
+  ctx = SSL_CTX_new(method);
+#endif  // OPENSSL_IS_BORINGSSL
+
+  if (ctx == nullptr)
+    return nullptr;
+
+#ifdef OPENSSL_IS_BORINGSSL
+  SSL_CTX_set_min_proto_version(
+      ctx, mode == SSL_MODE_DTLS ? DTLS1_VERSION : TLS1_VERSION);
+  switch (max_version) {
+    case SSL_PROTOCOL_TLS_10:
+      SSL_CTX_set_max_proto_version(
+          ctx, mode == SSL_MODE_DTLS ? DTLS1_VERSION : TLS1_VERSION);
+      break;
+    case SSL_PROTOCOL_TLS_11:
+      SSL_CTX_set_max_proto_version(
+          ctx, mode == SSL_MODE_DTLS ? DTLS1_VERSION : TLS1_1_VERSION);
+      break;
+    case SSL_PROTOCOL_TLS_12:
+    default:
+      SSL_CTX_set_max_proto_version(
+          ctx, mode == SSL_MODE_DTLS ? DTLS1_2_VERSION : TLS1_2_VERSION);
+      break;
+  }
+  if (g_use_time_callback_for_testing) {
+    SSL_CTX_set_current_time_cb(ctx, &TimeCallbackForTesting);
+  }
+#endif
+
+  if (identity && !identity->ConfigureIdentity(ctx)) {
+    SSL_CTX_free(ctx);
+    return nullptr;
+  }
+
+#if !defined(NDEBUG)
+  SSL_CTX_set_info_callback(ctx, OpenSSLAdapter::SSLInfoCallback);
+#endif
+
+  int verify_mode = SSL_VERIFY_PEER;
+  if (client_auth_enabled) {
+    // Require a certificate from the client.
+    // Note: Normally this is always true in production, but it may be disabled
+    // for testing purposes (e.g. SSLAdapter unit tests).
+    verify_mode |= SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+  }
+
+  SSL_CTX_set_verify(ctx, verify_mode, SSLVerifyCallback);
+  SSL_CTX_set_verify_depth(ctx, 4);
+  // Select list of available ciphers. Note that !SHA256 and !SHA384 only
+  // remove HMAC-SHA256 and HMAC-SHA384 cipher suites, not GCM cipher suites
+  // with SHA256 or SHA384 as the handshake hash.
+  // This matches the list of SSLClientSocketOpenSSL in Chromium.
+  SSL_CTX_set_cipher_list(
+      ctx, "DEFAULT:!NULL:!aNULL:!SHA256:!SHA384:!aECDH:!AESGCM+AES256:!aPSK");
+
+  if (!srtp_config.empty()) {
+    if (SSL_CTX_set_tlsext_use_srtp(ctx, srtp_config.c_str())) {
+      SSL_CTX_free(ctx);
+      return nullptr;
+    }
+  }
+
+  return ctx;
+}
+
+//////////////////////////////////////////////////////////////////////
+// OpenSSLStreamAdapterFactory
+//////////////////////////////////////////////////////////////////////
+
+OpenSSLStreamAdapterFactory::OpenSSLStreamAdapterFactory()
+    : ssl_mode_(SSL_MODE_TLS),
+      ssl_role_(SSL_CLIENT),
+      ssl_max_version_(SSL_PROTOCOL_TLS_12),
+      client_auth_enabled_(true),
+      ssl_ctx_(nullptr) {}
+
+OpenSSLStreamAdapterFactory::~OpenSSLStreamAdapterFactory() {
+  if (ssl_ctx_) {
+    SSL_CTX_free(ssl_ctx_);
+  }
+}
+
+void OpenSSLStreamAdapterFactory::SetIdentity(SSLIdentity* identity) {
+  RTC_DCHECK(!ssl_ctx_);
+  identity_.reset(static_cast<OpenSSLIdentity*>(identity));
+}
+
+void OpenSSLStreamAdapterFactory::SetMode(SSLMode mode) {
+  RTC_DCHECK(!ssl_ctx_);
+  ssl_mode_ = mode;
+}
+
+void OpenSSLStreamAdapterFactory::SetRole(SSLRole role) {
+  RTC_DCHECK(!ssl_ctx_);
+  ssl_role_ = role;
+}
+
+void OpenSSLStreamAdapterFactory::SetMaxProtocolVersion(
+    SSLProtocolVersion max_version) {
+  RTC_DCHECK(!ssl_ctx_);
+  ssl_max_version_ = max_version;
+}
+
+void OpenSSLStreamAdapterFactory::SetClientAuthEnabled(bool enabled) {
+  RTC_DCHECK(!ssl_ctx_);
+  client_auth_enabled_ = enabled;
+}
+
+OpenSSLStreamAdapter* OpenSSLStreamAdapterFactory::CreateAdapter(
+    StreamInterface* stream) {
+  if (!ssl_ctx_) {
+    ssl_ctx_ = OpenSSLStreamAdapter::CreateContext(identity_.get(), ssl_mode_,
+                                                   ssl_role_, ssl_max_version_,
+                                                   "", client_auth_enabled_);
+    if (!ssl_ctx_) {
+      return nullptr;
+    }
+  }
+
+  return new OpenSSLStreamAdapter(stream, this);
 }
 
 }  // namespace rtc
