@@ -2,6 +2,69 @@
   "comments": [
     {
       "key": {
+        "uuid": "005e26a1_c238e84c",
+        "filename": "webrtc/call/mid_resolution_observer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-20T01:33:08Z",
+      "side": 1,
+      "message": "What does this mean?  That this SSRC should be routed to the sink associated with the mid?  It could use a comment.\n\nAnd I don\u0027t know why that\u0027s called \"MID resolution\".  It\u0027s more like \"SSRC bound\" or \"SSRC binding learned\" or something like that.  If anything, it\u0027s an SSRC resolution, not a MID resolution.",
+      "range": {
+        "startLine": 25,
+        "startChar": 72,
+        "endLine": 25,
+        "endChar": 0
+      },
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a6f7e02c_ccb01741",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-20T01:33:08Z",
+      "side": 1,
+      "message": "By the way, this is not correct and we should probably leave a TODO to fix it.  It will break if multiple m-sections use the same RSIDs.",
+      "range": {
+        "startLine": 76,
+        "startChar": 40,
+        "endLine": 76,
+        "endChar": 0
+      },
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb29bd7f_4694650c",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-20T01:33:08Z",
+      "side": 1,
+      "message": "This should only happen if the SSRC is not found in the ssrc_sinks_.  Otherwise, an SSRC could move to a different MID, which is contrary to the standardized algorithm.",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "340c0cd7_b07f8928",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 1
@@ -13,6 +76,23 @@
       "writtenOn": "2017-07-20T00:29:17Z",
       "side": 1,
       "message": "Is this supposed to be called for every packet that contains a MID? Or just when a new association is added? More a question for Elad I guess. But either way, there should be a test that verifies the behavior.",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a906c4b3_892f4da7",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-20T01:33:08Z",
+      "side": 1,
+      "message": "We should probably go back and change these to AddSsrcSink and AddRsidSink",
       "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -36,6 +116,29 @@
     },
     {
       "key": {
+        "uuid": "01e8c5aa_92bf10be",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-20T01:33:08Z",
+      "side": 1,
+      "message": "We can have many MIDs go to a single sink.  But a given MID can only go to one sink.",
+      "range": {
+        "startLine": 95,
+        "startChar": 76,
+        "endLine": 95,
+        "endChar": 0
+      },
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "276f5b32_75f4e60c",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 1
@@ -47,6 +150,41 @@
       "writtenOn": "2017-07-20T00:29:17Z",
       "side": 1,
       "message": "I\u0027d add that it\u0027s only sufficient if the track only has one encoding. In other words, it doesn\u0027t work if there are multiple RSIDs for a single MID.",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dfc77e66_168ed39d",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-20T01:33:08Z",
+      "side": 1,
+      "message": "That\u0027s not why RSIDs are insufficient.  They are insufficient because they are not unique to an m-section.  The same RSID can be used in multiple m-sections.  If they were guaranteed to be unique, they would be sufficient, regardless of the number of encodings.",
+      "parentUuid": "276f5b32_75f4e60c",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52bd138e_c467401e",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-20T01:33:08Z",
+      "side": 1,
+      "message": "MIDs can be removed, but SSRCs can never be associated with a different MID once associated.  They can\u0027t \u0027move\u0027 or be \"resolved\" again.",
       "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -92,6 +230,29 @@
         "startChar": 0,
         "endLine": 589,
         "endChar": 68
+      },
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7aa983b7_6beefca5",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-20T01:33:08Z",
+      "side": 1,
+      "message": "We should also have a test when we get the same SSRC with a different MID: it should be ignored and routed to the old MID.",
+      "range": {
+        "startLine": 600,
+        "startChar": 48,
+        "endLine": 600,
+        "endChar": 0
       },
       "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
