@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0afa207b_d69026b3",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1224374
+      },
+      "writtenOn": "2017-07-20T23:29:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5c22a2eb_0846c16a",
+      "revId": "0a2f1b3c0bd0b5e32ebb2c49929f7735b067a925",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a9b2c095_adfe881f",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "d532c26c_23e91001",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1224374
+      },
+      "writtenOn": "2017-07-20T23:29:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a9b2c095_adfe881f",
+      "revId": "0a2f1b3c0bd0b5e32ebb2c49929f7735b067a925",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "69bec784_0eccc965",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2017-07-20T22:30:38Z",
       "side": 1,
       "message": "Add ALPN. For now we can hardcode, but we should probably have a TODO to allow it to be passed in (e.g. by an experiment).",
+      "revId": "0a2f1b3c0bd0b5e32ebb2c49929f7735b067a925",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72c8021c_b546bc0b",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1224374
+      },
+      "writtenOn": "2017-07-20T23:29:43Z",
+      "side": 1,
+      "message": "Added a TODO for this",
+      "parentUuid": "69bec784_0eccc965",
       "revId": "0a2f1b3c0bd0b5e32ebb2c49929f7735b067a925",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
