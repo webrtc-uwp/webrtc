@@ -365,6 +365,10 @@ OpenSSLAdapter::BeginSSL() {
     SSL_set_tlsext_host_name(ssl_, ssl_host_name_.c_str());
   }
 
+  // Set common TLS extensions
+  SSL_enable_ocsp_stapling(ssl_);
+  SSL_enable_signed_cert_timestamps(ssl_);
+
   // the SSL object owns the bio now
   bio = nullptr;
 
