@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eca873a6_69361190",
+        "filename": "webrtc/modules/rtp_rtcp/source/rtp_header_extensions.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1126945
+      },
+      "writtenOn": "2017-07-20T20:41:43Z",
+      "side": 1,
+      "message": "nit: Declaring these types of constants is usually done by using the array declaration. I don\u0027t know why this header user pointer + array. The difference is:\n\n// Size of string: 6\n// sizeof(kMyString) \u003d 6\n// total size: 6 bytes\nconst char kMyString[] \u003d \"hello\";\n\n// Size of string: 6\n// Size of pointer, 8\n// sizeof(kMyString) \u003d 8 (not 6)\n// total size: 14 bytes\nconst char* kMyString \u003d \"hello\";",
+      "revId": "f34c4f3752ecc51ca2a912de9dc9c4088b77ef18",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
