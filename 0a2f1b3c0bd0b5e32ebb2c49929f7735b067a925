@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5c22a2eb_0846c16a",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-20T22:30:38Z",
+      "side": 1,
+      "message": "End comments with a period. Also, can you add some prose about what behavior will change?",
+      "revId": "0a2f1b3c0bd0b5e32ebb2c49929f7735b067a925",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9b2c095_adfe881f",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-20T22:30:38Z",
+      "side": 1,
+      "message": "Remove this, per David.",
+      "revId": "0a2f1b3c0bd0b5e32ebb2c49929f7735b067a925",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "69bec784_0eccc965",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-07-20T22:30:38Z",
+      "side": 1,
+      "message": "Add ALPN. For now we can hardcode, but we should probably have a TODO to allow it to be passed in (e.g. by an experiment).",
+      "revId": "0a2f1b3c0bd0b5e32ebb2c49929f7735b067a925",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
