@@ -41,13 +41,18 @@ static std::string GetSSLProtocolName(const rtc::SSLMode& ssl_mode) {
 
 class SSLAdapterTestDummyClient : public sigslot::has_slots<> {
  public:
-  explicit SSLAdapterTestDummyClient(const rtc::SSLMode& ssl_mode)
-      : ssl_mode_(ssl_mode) {
+  explicit SSLAdapterTestDummyClient(const rtc::SSLMode& ssl_mode,
+                                     rtc::SSLAdapterFactory* factory)
+      : ssl_mode_(ssl_mode), ssl_factory_(factory) {
     rtc::AsyncSocket* socket = CreateSocket(ssl_mode_);
 
-    ssl_adapter_.reset(rtc::SSLAdapter::Create(socket));
-
-    ssl_adapter_->SetMode(ssl_mode_);
+    // Use the factory if supplied.
+    if (factory) {
+      ssl_adapter_.reset(ssl_factory_->CreateAdapter(socket));
+    } else {
+      ssl_adapter_.reset(rtc::SSLAdapter::Create(socket));
+      ssl_adapter_->SetMode(ssl_mode_);
+    }
 
     // Ignore any certificate errors for the purpose of testing.
     // Note: We do this only because we don't have a real certificate.
@@ -67,6 +72,7 @@ class SSLAdapterTestDummyClient : public sigslot::has_slots<> {
   rtc::AsyncSocket::ConnState GetState() const {
     return ssl_adapter_->GetState();
   }
+  bool IsResumedSession() const { return ssl_adapter_->IsResumedSession(); }
 
   const std::string& GetReceivedData() const {
     return data_;
@@ -124,7 +130,7 @@ class SSLAdapterTestDummyClient : public sigslot::has_slots<> {
 
  private:
   const rtc::SSLMode ssl_mode_;
-
+  rtc::SSLAdapterFactory* ssl_factory_;
   std::unique_ptr<rtc::SSLAdapter> ssl_adapter_;
 
   std::string data_;
@@ -132,12 +138,27 @@ class SSLAdapterTestDummyClient : public sigslot::has_slots<> {
 
 class SSLAdapterTestDummyServer : public sigslot::has_slots<> {
  public:
-  explicit SSLAdapterTestDummyServer(const rtc::SSLMode& ssl_mode,
-                                     const rtc::KeyParams& key_params)
+  struct Connection {
+    Connection(rtc::SSLStreamAdapter* adapter) : ssl_adapter(adapter) {}
+    std::unique_ptr<rtc::SSLStreamAdapter> ssl_adapter;
+    std::string data;
+  };
+
+  SSLAdapterTestDummyServer(const rtc::SSLMode& ssl_mode,
+                            const rtc::KeyParams& key_params)
       : ssl_mode_(ssl_mode) {
     // Generate a key pair and a certificate for this host.
-    ssl_identity_.reset(rtc::SSLIdentity::Generate(GetHostname(), key_params));
-
+    auto ssl_identity = rtc::SSLIdentity::Generate(GetHostname(), key_params);
+    ssl_factory_.reset(rtc::SSLStreamAdapterFactory::Create());
+    ssl_factory_->SetIdentity(ssl_identity);
+    ssl_factory_->SetMode(ssl_mode_);
+    ssl_factory_->SetRole(rtc::SSL_SERVER);
+    // SSLStreamAdapter is normally used for peer-to-peer communication, but
+    // here we're testing communication between a client and a server
+    // (e.g. a WebRTC-based application and an RFC 5766 TURN server), where
+    // clients are not required to provide a certificate during handshake.
+    // Accordingly, we must disable client authentication here.
+    ssl_factory_->SetClientAuthEnabled(false);
     server_socket_.reset(CreateSocket(ssl_mode_));
 
     if (ssl_mode_ == rtc::SSL_MODE_TLS) {
@@ -150,6 +171,11 @@ class SSLAdapterTestDummyServer : public sigslot::has_slots<> {
     LOG(LS_INFO) << ((ssl_mode_ == rtc::SSL_MODE_DTLS) ? "UDP" : "TCP")
         << " server listening on " << server_socket_->GetLocalAddress();
   }
+  ~SSLAdapterTestDummyServer() {
+    while (!ssl_connections_.empty()) {
+      RemoveConnection(ssl_connections_.front());
+    }
+  }
 
   rtc::SocketAddress GetAddress() const {
     return server_socket_->GetLocalAddress();
@@ -161,13 +187,21 @@ class SSLAdapterTestDummyServer : public sigslot::has_slots<> {
     return "example.com";
   }
 
-  const std::string& GetReceivedData() const {
-    return data_;
+  Connection* GetLastConnection() {
+    if (ssl_connections_.empty()) {
+      return nullptr;
+    }
+
+    return ssl_connections_.back();
   }
 
-  int Send(const std::string& message) {
-    if (ssl_stream_adapter_ == nullptr ||
-        ssl_stream_adapter_->GetState() != rtc::SS_OPEN) {
+  const std::string& GetReceivedData(Connection* connection) const {
+    return connection->data;
+  }
+
+  int Send(Connection* connection, const std::string& message) {
+    rtc::SSLStreamAdapter* adapter = connection->ssl_adapter.get();
+    if (!adapter || adapter->GetState() != rtc::SS_OPEN) {
       // No connection yet.
       return -1;
     }
@@ -177,8 +211,8 @@ class SSLAdapterTestDummyServer : public sigslot::has_slots<> {
     size_t written;
     int error;
 
-    rtc::StreamResult r = ssl_stream_adapter_->Write(message.data(),
-        message.length(), &written, &error);
+    rtc::StreamResult r =
+        adapter->Write(message.data(), message.length(), &written, &error);
     if (r == rtc::SR_SUCCESS) {
       return written;
     } else {
@@ -187,28 +221,24 @@ class SSLAdapterTestDummyServer : public sigslot::has_slots<> {
   }
 
   void AcceptConnection(const rtc::SocketAddress& address) {
-    // Only a single connection is supported.
-    ASSERT_TRUE(ssl_stream_adapter_ == nullptr);
-
+    // Note that multiple connections aren't currently supported for DTLS.
+    RTC_DCHECK(server_socket_);
     // This is only for DTLS.
     ASSERT_EQ(rtc::SSL_MODE_DTLS, ssl_mode_);
-
     // Transfer ownership of the socket to the SSLStreamAdapter object.
     rtc::AsyncSocket* socket = server_socket_.release();
-
     socket->Connect(address);
-
-    DoHandshake(socket);
+    CreateConnection(socket);
   }
 
   void OnServerSocketReadEvent(rtc::AsyncSocket* socket) {
-    // Only a single connection is supported.
-    ASSERT_TRUE(ssl_stream_adapter_ == nullptr);
-
-    DoHandshake(server_socket_->Accept(nullptr));
+    // This is only for TLS.
+    ASSERT_EQ(rtc::SSL_MODE_TLS, ssl_mode_);
+    CreateConnection(server_socket_->Accept(nullptr));
   }
 
   void OnSSLStreamAdapterEvent(rtc::StreamInterface* stream, int sig, int err) {
+    Connection* connection = FindConnection(stream);
     if (sig & rtc::SE_READ) {
       char buffer[4096] = "";
       size_t read;
@@ -221,49 +251,44 @@ class SSLAdapterTestDummyServer : public sigslot::has_slots<> {
       if (r == rtc::SR_SUCCESS) {
         buffer[read] = '\0';
         LOG(LS_INFO) << "Server received '" << buffer << "'";
-        data_ += buffer;
+        connection->data += buffer;
       }
+    } else if (sig & rtc::SE_CLOSE) {
+      RemoveConnection(connection);
     }
   }
 
  private:
-  void DoHandshake(rtc::AsyncSocket* socket) {
+  Connection* FindConnection(rtc::StreamInterface* stream) {
+    for (auto connection : ssl_connections_) {
+      if (stream == connection->ssl_adapter.get()) {
+        return connection;
+      }
+    }
+    return nullptr;
+  }
+  // Creates a new s2c SSL connection and starts the SSL handshake.
+  Connection* CreateConnection(rtc::AsyncSocket* socket) {
     rtc::SocketStream* stream = new rtc::SocketStream(socket);
+    rtc::SSLStreamAdapter* adapter = ssl_factory_->CreateAdapter(stream);
+    adapter->StartSSL();
+    adapter->SignalEvent.connect(
+        this, &SSLAdapterTestDummyServer::OnSSLStreamAdapterEvent);
 
-    ssl_stream_adapter_.reset(rtc::SSLStreamAdapter::Create(stream));
-
-    ssl_stream_adapter_->SetMode(ssl_mode_);
-    ssl_stream_adapter_->SetServerRole();
-
-    // SSLStreamAdapter is normally used for peer-to-peer communication, but
-    // here we're testing communication between a client and a server
-    // (e.g. a WebRTC-based application and an RFC 5766 TURN server), where
-    // clients are not required to provide a certificate during handshake.
-    // Accordingly, we must disable client authentication here.
-    ssl_stream_adapter_->set_client_auth_enabled(false);
-
-    ssl_stream_adapter_->SetIdentity(ssl_identity_->GetReference());
-
-    // Set a bogus peer certificate digest.
-    unsigned char digest[20];
-    size_t digest_len = sizeof(digest);
-    ssl_stream_adapter_->SetPeerCertificateDigest(rtc::DIGEST_SHA_1, digest,
-        digest_len);
-
-    ssl_stream_adapter_->StartSSL();
-
-    ssl_stream_adapter_->SignalEvent.connect(this,
-        &SSLAdapterTestDummyServer::OnSSLStreamAdapterEvent);
+    Connection* connection = new Connection(adapter);
+    ssl_connections_.push_back(connection);
+    return connection;
+  }
+  // Destroys a SSL connection.
+  void RemoveConnection(Connection* connection) {
+    ssl_connections_.remove(connection);
+    delete connection;
   }
 
   const rtc::SSLMode ssl_mode_;
-
   std::unique_ptr<rtc::AsyncSocket> server_socket_;
-  std::unique_ptr<rtc::SSLStreamAdapter> ssl_stream_adapter_;
-
-  std::unique_ptr<rtc::SSLIdentity> ssl_identity_;
-
-  std::string data_;
+  std::unique_ptr<rtc::SSLStreamAdapterFactory> ssl_factory_;
+  std::list<Connection*> ssl_connections_;
 };
 
 class SSLAdapterTestBase : public testing::Test,
@@ -274,9 +299,10 @@ class SSLAdapterTestBase : public testing::Test,
       : ssl_mode_(ssl_mode),
         vss_(new rtc::VirtualSocketServer()),
         thread_(vss_.get()),
-        server_(new SSLAdapterTestDummyServer(ssl_mode_, key_params)),
-        client_(new SSLAdapterTestDummyClient(ssl_mode_)),
-        handshake_wait_(kTimeout) {}
+        handshake_wait_(kTimeout) {
+    CreateServer(key_params);
+    client_.reset(CreateClient(nullptr));
+  }
 
   void SetHandshakeWait(int wait) {
     handshake_wait_ = wait;
@@ -316,22 +342,80 @@ class SSLAdapterTestBase : public testing::Test,
     }
   }
 
+  void TestResume() {
+    std::unique_ptr<SSLAdapterTestDummyClient> client1;
+    std::unique_ptr<SSLAdapterTestDummyClient> client2;
+    std::unique_ptr<rtc::SSLAdapterFactory> factory(
+        rtc::SSLAdapterFactory::Create());
+    factory->SetMode(ssl_mode_);
+
+    // Connect two clients in parallel. Neither one should end up resuming,
+    // since we can only resume a session once it has successfuly been
+    // established (which requires 2 RTT).
+    client1.reset(CreateClient(factory.get()));
+    client2.reset(CreateClient(factory.get()));
+    ASSERT_EQ(0,
+              client1->Connect(server_->GetHostname(), server_->GetAddress()));
+    ASSERT_EQ(0,
+              client2->Connect(server_->GetHostname(), server_->GetAddress()));
+    EXPECT_EQ_WAIT(rtc::AsyncSocket::CS_CONNECTED, client1->GetState(),
+                   handshake_wait_);
+    EXPECT_EQ_WAIT(rtc::AsyncSocket::CS_CONNECTED, client2->GetState(),
+                   handshake_wait_);
+    EXPECT_FALSE(client1->IsResumedSession());
+    EXPECT_FALSE(client2->IsResumedSession());
+
+    // Again, connect two clients in parallel. Both should end up resuming,
+    // since we successfully established a SSL session to the same hostname
+    // above.
+    client1.reset(CreateClient(factory.get()));
+    client2.reset(CreateClient(factory.get()));
+    ASSERT_EQ(0,
+              client1->Connect(server_->GetHostname(), server_->GetAddress()));
+    ASSERT_EQ(0,
+              client2->Connect(server_->GetHostname(), server_->GetAddress()));
+    EXPECT_EQ_WAIT(rtc::AsyncSocket::CS_CONNECTED, client1->GetState(),
+                   handshake_wait_);
+    EXPECT_EQ_WAIT(rtc::AsyncSocket::CS_CONNECTED, client2->GetState(),
+                   handshake_wait_);
+    EXPECT_TRUE(client1->IsResumedSession());
+    EXPECT_TRUE(client2->IsResumedSession());
+
+    // Try one more session, but to a new hostname. This should succeed but
+    // not resume.
+    client1.reset(CreateClient(factory.get()));
+    ASSERT_EQ(0, client1->Connect("notexample.com", server_->GetAddress()));
+    EXPECT_EQ_WAIT(rtc::AsyncSocket::CS_CONNECTED, client1->GetState(),
+                   handshake_wait_);
+    EXPECT_FALSE(client1->IsResumedSession());
+  }
+
   void TestTransfer(const std::string& message) {
+    auto connection = server_->GetLastConnection();
     int rv;
 
     rv = client_->Send(message);
     ASSERT_EQ(static_cast<int>(message.length()), rv);
 
     // The server should have received the client's message.
-    EXPECT_EQ_WAIT(message, server_->GetReceivedData(), kTimeout);
+    EXPECT_EQ_WAIT(message, server_->GetReceivedData(connection), kTimeout);
 
-    rv = server_->Send(message);
+    rv = server_->Send(connection, message);
     ASSERT_EQ(static_cast<int>(message.length()), rv);
 
     // The client should have received the server's message.
     EXPECT_EQ_WAIT(message, client_->GetReceivedData(), kTimeout);
 
     LOG(LS_INFO) << "Transfer complete.";
+  }
+
+ protected:
+  void CreateServer(const rtc::KeyParams& key_params) {
+    server_.reset(new SSLAdapterTestDummyServer(ssl_mode_, key_params));
+  }
+
+  SSLAdapterTestDummyClient* CreateClient(rtc::SSLAdapterFactory* factory) {
+    return new SSLAdapterTestDummyClient(ssl_mode_, factory);
   }
 
  protected:
@@ -381,6 +465,16 @@ TEST_F(SSLAdapterTestTLS_ECDSA, TestTLSConnect) {
   TestHandshake(true);
 }
 
+// Test that a second handshake resumes, using RSA
+TEST_F(SSLAdapterTestTLS_RSA, TestTLSResume) {
+  TestResume();
+}
+
+// Test that a second handshake resumes, using ECDSA
+TEST_F(SSLAdapterTestTLS_ECDSA, TestTLSResume) {
+  TestResume();
+}
+
 // Test transfer between client and server, using RSA
 TEST_F(SSLAdapterTestTLS_RSA, TestTLSTransfer) {
   TestHandshake(true);
@@ -389,6 +483,7 @@ TEST_F(SSLAdapterTestTLS_RSA, TestTLSTransfer) {
 
 TEST_F(SSLAdapterTestTLS_RSA, TestTLSTransferWithBlockedSocket) {
   TestHandshake(true);
+  auto connection = server_->GetLastConnection();
 
   // Tell the underlying socket to simulate being blocked.
   vss_->SetSendingBlocked(true);
@@ -418,14 +513,14 @@ TEST_F(SSLAdapterTestTLS_RSA, TestTLSTransferWithBlockedSocket) {
   // Unblock the underlying socket. All of the buffered messages should be sent
   // without any further action.
   vss_->SetSendingBlocked(false);
-  EXPECT_EQ_WAIT(expected, server_->GetReceivedData(), kTimeout);
+  EXPECT_EQ_WAIT(expected, server_->GetReceivedData(connection), kTimeout);
 
   // Send another message. This previously wasn't working
   std::string final_message = "Fin.";
   expected += final_message;
   EXPECT_EQ(static_cast<int>(final_message.size()),
             client_->Send(final_message));
-  EXPECT_EQ_WAIT(expected, server_->GetReceivedData(), kTimeout);
+  EXPECT_EQ_WAIT(expected, server_->GetReceivedData(connection), kTimeout);
 }
 
 // Test transfer between client and server, using ECDSA

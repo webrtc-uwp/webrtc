@@ -17,6 +17,7 @@ namespace rtc {
 
 class AsyncSocket;
 class SocketFactory;
+class SSLAdapterFactory;
 class Thread;
 
 class BasicPacketSocketFactory : public PacketSocketFactory {
@@ -51,6 +52,7 @@ class BasicPacketSocketFactory : public PacketSocketFactory {
 
   Thread* thread_;
   SocketFactory* socket_factory_;
+  std::unique_ptr<SSLAdapterFactory> ssl_factory_;
 };
 
 }  // namespace rtc

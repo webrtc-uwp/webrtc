@@ -51,18 +51,24 @@ namespace rtc {
 // Look in sslstreamadapter.h for documentation of the methods.
 
 class OpenSSLIdentity;
+class OpenSSLStreamAdapterFactory;
 
 ///////////////////////////////////////////////////////////////////////////////
 
 class OpenSSLStreamAdapter : public SSLStreamAdapter {
  public:
-  explicit OpenSSLStreamAdapter(StreamInterface* stream);
+  explicit OpenSSLStreamAdapter(StreamInterface* stream,
+                                OpenSSLStreamAdapterFactory* factory = nullptr);
   ~OpenSSLStreamAdapter() override;
 
   void SetIdentity(SSLIdentity* identity) override;
-
+  void SetMode(SSLMode mode) override;
   // Default argument is for compatibility
   void SetServerRole(SSLRole role = SSL_SERVER) override;
+  void SetMaxProtocolVersion(SSLProtocolVersion version) override;
+
+  void SetInitialRetransmissionTimeout(int timeout_ms) override;
+
   bool SetPeerCertificateDigest(
       const std::string& digest_alg,
       const unsigned char* digest_val,
@@ -74,9 +80,6 @@ class OpenSSLStreamAdapter : public SSLStreamAdapter {
   // Goes from state SSL_NONE to either SSL_CONNECTING or SSL_WAIT, depending
   // on whether the underlying stream is already open or not.
   int StartSSL() override;
-  void SetMode(SSLMode mode) override;
-  void SetMaxProtocolVersion(SSLProtocolVersion version) override;
-  void SetInitialRetransmissionTimeout(int timeout_ms) override;
 
   StreamResult Read(void* data,
                     size_t data_len,
@@ -119,6 +122,14 @@ class OpenSSLStreamAdapter : public SSLStreamAdapter {
   // Use our timeutils.h source of timing in BoringSSL, allowing us to test
   // using a fake clock.
   static void enable_time_callback_for_testing();
+
+  // SSL library configuration
+  static SSL_CTX* CreateContext(OpenSSLIdentity* identity,
+                                SSLMode mode,
+                                SSLRole role,
+                                int max_version,
+                                const std::string& srtp_config,
+                                bool client_auth_enabled);
 
  protected:
   void OnEvent(StreamInterface* stream, int events, int err) override;
@@ -165,8 +176,6 @@ class OpenSSLStreamAdapter : public SSLStreamAdapter {
   // Flush the input buffers by reading left bytes (for DTLS)
   void FlushInput(unsigned int left);
 
-  // SSL library configuration
-  SSL_CTX* SetupSSLContext();
   // Verify the peer certificate matches the signaled digest.
   bool VerifyPeerCertificate();
   // SSL certification verification error handler, called back from
@@ -176,13 +185,15 @@ class OpenSSLStreamAdapter : public SSLStreamAdapter {
   static int SSLVerifyCallback(int ok, X509_STORE_CTX* store);
 
   bool waiting_to_verify_peer_certificate() const {
-    return client_auth_enabled() && !peer_certificate_verified_;
+    return client_auth_enabled_ && !peer_certificate_verified_;
   }
 
   bool has_peer_certificate_digest() const {
     return !peer_certificate_digest_algorithm_.empty() &&
            !peer_certificate_digest_value_.empty();
   }
+
+  OpenSSLStreamAdapterFactory* factory_;
 
   SSLState state_;
   SSLRole role_;
@@ -197,6 +208,8 @@ class OpenSSLStreamAdapter : public SSLStreamAdapter {
 
   // Our key and certificate.
   std::unique_ptr<OpenSSLIdentity> identity_;
+
+  bool client_auth_enabled_;
   // The certificate that the peer presented. Initially null, until the
   // connection is established.
   std::unique_ptr<OpenSSLCertificate> peer_certificate_;
@@ -219,7 +232,33 @@ class OpenSSLStreamAdapter : public SSLStreamAdapter {
   int dtls_handshake_timeout_ms_ = 50;
 };
 
-/////////////////////////////////////////////////////////////////////////////
+class OpenSSLStreamAdapterFactory : public SSLStreamAdapterFactory {
+ public:
+  OpenSSLStreamAdapterFactory();
+  ~OpenSSLStreamAdapterFactory() override;
+
+  SSLRole role() const { return ssl_role_; }
+  bool client_auth_enabled() const { return client_auth_enabled_; }
+  SSL_CTX* ssl_ctx() { return ssl_ctx_; }
+
+  void SetIdentity(SSLIdentity* identity) override;
+  void SetMode(SSLMode mode) override;
+  void SetRole(SSLRole role) override;
+  void SetMaxProtocolVersion(SSLProtocolVersion version) override;
+  void SetClientAuthEnabled(bool enabled) override;
+
+  OpenSSLStreamAdapter* CreateAdapter(StreamInterface* stream) override;
+
+  static OpenSSLStreamAdapterFactory* Create();
+
+ private:
+  std::unique_ptr<OpenSSLIdentity> identity_;
+  SSLMode ssl_mode_;
+  SSLRole ssl_role_;
+  SSLProtocolVersion ssl_max_version_;
+  bool client_auth_enabled_;
+  SSL_CTX* ssl_ctx_;
+};
 
 }  // namespace rtc
 
