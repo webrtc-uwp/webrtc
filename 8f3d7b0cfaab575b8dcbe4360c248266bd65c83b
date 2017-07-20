@@ -19,6 +19,29 @@
     },
     {
       "key": {
+        "uuid": "e9632c6b_fd2ec0f6",
+        "filename": "webrtc/modules/rtp_rtcp/source/rtp_header_extensions.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1138974
+      },
+      "writtenOn": "2017-07-20T08:02:35Z",
+      "side": 1,
+      "message": "Probably instead of this template it is simpler to have one class with Pasre/Write function, like RtpIdSerializer in patchset#3\nand then individual RtpStreamId/RepairedRtpStreamId/RtpMid with own kId/kUri constants and derive it from the RtpIdSerializer (to get Parse/Write function without redefining them, unlike in patchset#3).",
+      "range": {
+        "startLine": 152,
+        "startChar": 30,
+        "endLine": 152,
+        "endChar": 0
+      },
+      "revId": "8f3d7b0cfaab575b8dcbe4360c248266bd65c83b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "34e68121_5b93304e",
         "filename": "webrtc/modules/rtp_rtcp/source/rtp_header_extensions.h",
         "patchSetId": 6
