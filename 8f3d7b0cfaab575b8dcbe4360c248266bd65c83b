@@ -33,6 +33,24 @@
       "revId": "8f3d7b0cfaab575b8dcbe4360c248266bd65c83b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1175184_2b26d9ce",
+        "filename": "webrtc/modules/rtp_rtcp/source/rtp_header_extensions.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-20T06:34:20Z",
+      "side": 1,
+      "message": "Admittedly I\u0027m no expert on C++ templates, but according to some internet searching it seems that C++ has special logic for handling templates in particular to ensure that only one instance of the class ends up in the final linked binary (I think the terminology is \"weak symbol\").\n\nHere\u0027s a question about it on Stack Overflow with some quotes from the standard: https://stackoverflow.com/questions/20484885/does-the-one-definition-rule-force-a-single-static-function-variable-to-be-creat",
+      "parentUuid": "34e68121_5b93304e",
+      "revId": "8f3d7b0cfaab575b8dcbe4360c248266bd65c83b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
