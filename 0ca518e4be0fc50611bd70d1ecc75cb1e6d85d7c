@@ -1,0 +1,101 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "340c0cd7_b07f8928",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-20T00:29:17Z",
+      "side": 1,
+      "message": "Is this supposed to be called for every packet that contains a MID? Or just when a new association is added? More a question for Elad I guess. But either way, there should be a test that verifies the behavior.",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5cf55a5e_05baee66",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-20T00:29:17Z",
+      "side": 1,
+      "message": "nit: \"a MID\"",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "276f5b32_75f4e60c",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-20T00:29:17Z",
+      "side": 1,
+      "message": "I\u0027d add that it\u0027s only sufficient if the track only has one encoding. In other words, it doesn\u0027t work if there are multiple RSIDs for a single MID.",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52fcabf5_75bdbbb8",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-20T00:29:17Z",
+      "side": 1,
+      "message": "nit: Periods at end of comments (sorry).",
+      "range": {
+        "startLine": 160,
+        "startChar": 19,
+        "endLine": 160,
+        "endChar": 0
+      },
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8739e42e_2940477e",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 589,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-20T00:29:17Z",
+      "side": 1,
+      "message": "There should be another test that calls \"OnRtpPacket\" twice (two packets received the same RSID/SSRC), and asserts that OnRsidResolved is called either once or twice, depending on what the intended behavior is. This is what I was meant by my other comment (in rtp_demuxer.cc).",
+      "range": {
+        "startLine": 584,
+        "startChar": 0,
+        "endLine": 589,
+        "endChar": 68
+      },
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
