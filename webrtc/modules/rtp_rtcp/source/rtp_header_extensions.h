@@ -146,35 +146,85 @@ class VideoTimingExtension {
   static bool Write(uint8_t* data, uint16_t time_delta_ms, uint8_t idx);
 };
 
-class RtpStreamId {
- public:
-  static constexpr RTPExtensionType kId = kRtpExtensionRtpStreamId;
+// Extension types which use RtpStringExtension (below) must specify a
+// specialization here which includes the extension Uri so that it can be
+// instantiated in the RtpStringExtension template.
+template <RTPExtensionType ID>
+struct RtpStringExtensionUri {
+  static constexpr const char* kUri = nullptr;
+};
+
+template <>
+struct RtpStringExtensionUri<kRtpExtensionRtpStreamId> {
   static constexpr const char* kUri =
       "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id";
-
-  static bool Parse(rtc::ArrayView<const uint8_t> data, StreamId* rsid);
-  static size_t ValueSize(const StreamId& rsid) { return rsid.size(); }
-  static bool Write(uint8_t* data, const StreamId& rsid);
-
-  static bool Parse(rtc::ArrayView<const uint8_t> data, std::string* rsid);
-  static size_t ValueSize(const std::string& rsid) { return rsid.size(); }
-  static bool Write(uint8_t* data, const std::string& rsid);
 };
 
-class RepairedRtpStreamId {
- public:
-  static constexpr RTPExtensionType kId = kRtpExtensionRepairedRtpStreamId;
+template <>
+struct RtpStringExtensionUri<kRtpExtensionRepairedRtpStreamId> {
   static constexpr const char* kUri =
       "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id";
-
-  static bool Parse(rtc::ArrayView<const uint8_t> data, StreamId* rsid);
-  static size_t ValueSize(const StreamId& rsid);
-  static bool Write(uint8_t* data, const StreamId& rsid);
-
-  static bool Parse(rtc::ArrayView<const uint8_t> data, std::string* rsid);
-  static size_t ValueSize(const std::string& rsid);
-  static bool Write(uint8_t* data, const std::string& rsid);
 };
+
+template <>
+struct RtpStringExtensionUri<kRtpExtensionMid> {
+  static constexpr const char* kUri = "urn:ietf:params:rtp-hdrext:sdes:mid";
+};
+
+// Valid RTP Extension class which can be instantiated for any RTP string
+// header extensions. Specify a specialization above for kUri and a typedef
+// below to give a readable name for the extension type.
+template <RTPExtensionType ID>
+class RtpStringExtension {
+ public:
+  static constexpr RTPExtensionType kId = ID;
+  static constexpr const char* kUri = RtpStringExtensionUri<ID>::kUri;
+
+  static bool Parse(rtc::ArrayView<const uint8_t> data,
+                    StringRtpHeaderExtension* str) {
+    if (data.empty() || data[0] == 0)  // Valid string extension can't be empty.
+      return false;
+    str->Set(data);
+    RTC_DCHECK(!str->empty());
+    return true;
+  }
+
+  static size_t ValueSize(const StringRtpHeaderExtension& str) {
+    return str.size();
+  }
+
+  static bool Write(uint8_t* data, const StringRtpHeaderExtension& str) {
+    RTC_DCHECK_GE(str.size(), 1);
+    RTC_DCHECK_LE(str.size(), StringRtpHeaderExtension::kMaxSize);
+    memcpy(data, str.data(), str.size());
+    return true;
+  }
+
+  static bool Parse(rtc::ArrayView<const uint8_t> data, std::string* str) {
+    if (data.empty() || data[0] == 0)  // Valid string extension can't be empty.
+      return false;
+    const char* cstr = reinterpret_cast<const char*>(data.data());
+    // If there is a \0 character in the middle of the |data|, treat it as end
+    // of the string. Well-formed string extensions shouldn't contain it.
+    str->assign(cstr, strnlen(cstr, data.size()));
+    RTC_DCHECK(!str->empty());
+    return true;
+  }
+
+  static size_t ValueSize(const std::string& str) { return str.size(); }
+
+  static bool Write(uint8_t* data, const std::string& str) {
+    RTC_DCHECK_GE(str.size(), 1);
+    RTC_DCHECK_LE(str.size(), StringRtpHeaderExtension::kMaxSize);
+    memcpy(data, str.data(), str.size());
+    return true;
+  }
+};
+
+typedef RtpStringExtension<kRtpExtensionRtpStreamId> RtpStreamId;
+typedef RtpStringExtension<kRtpExtensionRepairedRtpStreamId>
+    RepairedRtpStreamId;
+typedef RtpStringExtension<kRtpExtensionMid> RtpMid;
 
 }  // namespace webrtc
 #endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_HEADER_EXTENSIONS_H_
