@@ -110,7 +110,7 @@ deps_os = {
     'src/third_party/ub-uiautomator/lib':
       Var('chromium_git') + '/chromium/third_party/ub-uiautomator.git' + '@' + '00270549ce3161ae72ceb24712618ea28b4f9434',
     # Gradle 3.5.0. Used for testing Android Studio project generation for WebRTC.
-    'src/webrtc/examples/androidtests/third_party/gradle':
+    'src/examples/androidtests/third_party/gradle':
       Var('chromium_git') + '/external/github.com/gradle/gradle.git' + '@' +
       'b762622a185d59ce0cfc9cbc6ab5dd22469e18a6',
   },
@@ -523,3 +523,42 @@ recursedeps = [
   # android_tools manages the NDK.
   'src/third_party/android_tools',
 ]
+# Define rules for which include paths are allowed in our source.
+include_rules = [
+  # Base is only used to build Android APK tests and may not be referenced by
+  # WebRTC production code.
+  "-base",
+  "-chromium",
+  "+external/webrtc/webrtc",  # Android platform build.
+  "+gflags",
+  "+libyuv",
+  "-webrtc",  # Has to be disabled; otherwise all dirs below will be allowed.
+  # Individual headers that will be moved out of here, see webrtc:4243.
+  "+webrtc/common_types.h",
+  "+webrtc/config.h",
+  "+webrtc/transport.h",
+  "+webrtc/typedefs.h",
+  "+webrtc/video_receive_stream.h",
+  "+webrtc/video_send_stream.h",
+  "+webrtc/voice_engine_configurations.h",
+
+  "+WebRTC",
+  "+webrtc/api",
+  "+webrtc/base",
+  "+webrtc/modules/include",
+  "+webrtc/rtc_base",
+  "+webrtc/test",
+  "+webrtc/rtc_tools",
+]
+
+# The below rules will be removed when webrtc:4243 is fixed.
+specific_include_rules = {
+  "video_receive_stream\.h": [
+    "+webrtc/common_video/include",
+    "+webrtc/media/base",
+  ],
+  "video_send_stream\.h": [
+    "+webrtc/common_video/include",
+    "+webrtc/media/base",
+  ],
+}
