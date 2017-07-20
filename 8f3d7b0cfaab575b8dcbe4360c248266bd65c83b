@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "ea78a926_630202ba",
+        "filename": "webrtc/modules/rtp_rtcp/source/rtp_header_extensions.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-20T17:41:42Z",
+      "side": 1,
+      "message": "Thanks for the suggestion. That looks to be the cleanest solution. I\u0027ve gone ahead and changed the code to work in that way.",
+      "parentUuid": "e9632c6b_fd2ec0f6",
+      "range": {
+        "startLine": 152,
+        "startChar": 30,
+        "endLine": 152,
+        "endChar": 0
+      },
+      "revId": "8f3d7b0cfaab575b8dcbe4360c248266bd65c83b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34e68121_5b93304e",
         "filename": "webrtc/modules/rtp_rtcp/source/rtp_header_extensions.h",
         "patchSetId": 6
