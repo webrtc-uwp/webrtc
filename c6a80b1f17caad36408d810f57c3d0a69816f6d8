@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6a8c5df7_7437884e",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-21T11:38:01Z",
+      "side": 1,
+      "message": "I wonder if we want to RTC_DCHECK on the emptiness of the observer lists. I think we should; otherwise, we might even get a call to Deregister*() after the object has been destroyed.",
+      "revId": "c6a80b1f17caad36408d810f57c3d0a69816f6d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ca1e0380_1ea978c2",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-21T11:38:01Z",
+      "side": 1,
+      "message": "I think it would be good to rebase this CL on top of https://codereview.webrtc.org/2968693002/. Wdyt?\nNote: danilchap@ has mentioned that he\u0027s generally OK with that CL, though he could see its landing being held up a bit by an underlying CL that deals with FEC.",
+      "revId": "c6a80b1f17caad36408d810f57c3d0a69816f6d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "589023fa_47d880c1",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-21T11:38:01Z",
+      "side": 1,
+      "message": "Looking here - https://tools.ietf.org/html/draft-ietf-mmusic-sdp-bundle-negotiation-38#section-10.2 - I saw this line:\n      If the packet has a MID, and that MID is not in the table mapping\n      MID to \"m\u003d\" line, drop the packet and stop.\nSo it seems to me that off-loading the lines below, that deal with demuxing by MID, into their own method, that also returns true/false for wether we should exit OnRtpPacket() or keep going, might be a good idea. Assuming I\u0027ve not misunderstood that line, of course.",
+      "revId": "c6a80b1f17caad36408d810f57c3d0a69816f6d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72f608f8_a8cb0eec",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-21T11:38:01Z",
+      "side": 1,
+      "message": "1. https://codereview.webrtc.org/2968693002/diff/140001/webrtc/call/rtp_demuxer.cc actually ends up reversing this.\n2. I don\u0027t think we want to guarantee this behavior. It seems to me like an incidental. I think the preferable behavior would be to only have the resolution trigger one callback per given observer, but still trigger for observers added after the first resolutions. (Testing *that* might be overkill; IIRC, discussing this with @danilchap, we could not think of a case where observers would be added after a resolution.)",
+      "revId": "c6a80b1f17caad36408d810f57c3d0a69816f6d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}

@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0b71e9dc_23c4c597",
+        "filename": "webrtc/call/mid_resolution_observer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-21T11:38:01Z",
+      "side": 1,
+      "message": "I think he\u0027s following in the footsteps of RsidResolutionObserver. I think it would probably be good to have the same naming scheme for both. My 2 SEK would be to keep the name as is for this CL, to keep it manageable, then maybe rename both later, in a separate CL.",
+      "parentUuid": "005e26a1_c238e84c",
+      "range": {
+        "startLine": 25,
+        "startChar": 72,
+        "endLine": 25,
+        "endChar": 0
+      },
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a6f7e02c_ccb01741",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 1
@@ -72,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "c2fbe08d_b59dfce4",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-21T11:38:01Z",
+      "side": 1,
+      "message": "Sorry, but it\u0027s not clear to me what was before the comment and what after. Is the problem Peter mentions with the existing code, or with the code added by this CL?",
+      "parentUuid": "d7e066f3_667a39a5",
+      "range": {
+        "startLine": 76,
+        "startChar": 40,
+        "endLine": 76,
+        "endChar": 0
+      },
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bb29bd7f_4694650c",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 1
@@ -101,6 +149,24 @@
       "side": 1,
       "message": "Done",
       "parentUuid": "bb29bd7f_4694650c",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8d7ae0a_050f93da",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-21T11:38:01Z",
+      "side": 1,
+      "message": "This should be able to trigger an early exit from OnRtpPacket() for unrecognized MIDs, IIUC.",
+      "parentUuid": "5526e4f5_afc58c3a",
       "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
@@ -142,6 +208,24 @@
     },
     {
       "key": {
+        "uuid": "a7eeb1c1_783bfcb3",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-21T11:38:01Z",
+      "side": 1,
+      "message": "1. It\u0027s enough (and better) to call only once, IMHO. Please also see my comment to that effect in the unit-tests file.\n2. Please see https://codereview.webrtc.org/2968693002/diff/140001/webrtc/call/rtp_demuxer.cc - RSIDs are now only resolved once, and observers only notified once.",
+      "parentUuid": "1ec81953_96ae7106",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a906c4b3_892f4da7",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 1
@@ -153,6 +237,24 @@
       "writtenOn": "2017-07-20T01:33:08Z",
       "side": 1,
       "message": "We should probably go back and change these to AddSsrcSink and AddRsidSink",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35e2c509_bf3a9190",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-21T11:38:01Z",
+      "side": 1,
+      "message": "Agreed, given that MID and RSID have the same type.",
+      "parentUuid": "a906c4b3_892f4da7",
       "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -394,6 +496,30 @@
     },
     {
       "key": {
+        "uuid": "38cdd121_87af30e8",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-21T11:38:01Z",
+      "side": 1,
+      "message": "I\u0027d like to publicly register that I think that comments that are title-styled (\"War and Peace\") should not have a period at the end of them, but that I am now throwing in the towel, and will also terminating everything with a period, since I\u0027d be taking on all of Google single-handed otherwise. :-)",
+      "parentUuid": "5e4f0b34_c0a28ae3",
+      "range": {
+        "startLine": 160,
+        "startChar": 19,
+        "endLine": 160,
+        "endChar": 0
+      },
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8739e42e_2940477e",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 1
@@ -405,6 +531,30 @@
       "writtenOn": "2017-07-20T00:29:17Z",
       "side": 1,
       "message": "There should be another test that calls \"OnRtpPacket\" twice (two packets received the same RSID/SSRC), and asserts that OnRsidResolved is called either once or twice, depending on what the intended behavior is. This is what I was meant by my other comment (in rtp_demuxer.cc).",
+      "range": {
+        "startLine": 584,
+        "startChar": 0,
+        "endLine": 589,
+        "endChar": 68
+      },
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86d8d734_47ebfffc",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 589,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-21T11:38:01Z",
+      "side": 1,
+      "message": "I\u0027ve commented on the code that does this; would love to hear your thoughts there.",
+      "parentUuid": "8739e42e_2940477e",
       "range": {
         "startLine": 584,
         "startChar": 0,
@@ -485,6 +635,40 @@
       "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6535a839_4372e0fd",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 601,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-21T11:38:01Z",
+      "side": 1,
+      "message": "nit: s/Changes/Added, given that both SSRCs are still considered valid and are routed to the sink?",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "993aa802_72d7dc07",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-21T11:38:01Z",
+      "side": 1,
+      "message": "nit (very optional): // Test tear-down\nIMHO, if most tests in the file already have that, might as well do it for all, to avoid someone thinking this is *not* the tear-down, because it didn\u0027t mention it.",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
