@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "cdeaa260_c74b9e15",
+        "filename": "webrtc/call/mid_resolution_observer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-21T21:38:33Z",
+      "side": 1,
+      "message": "Currently it looks like RsidResolutionObserver is only used for adding SSRC bindings to the RtcpDemuxer. I think it might be best to rename RsidResolutionObserver to e.g. SsrcBoundObserver since the notification is really for when an SSRC gains more meaning (i.e., bound to an RID or MID). Then a callback like OnMidBound could be added alongside the callback for RID.",
+      "parentUuid": "0b71e9dc_23c4c597",
+      "range": {
+        "startLine": 25,
+        "startChar": 72,
+        "endLine": 25,
+        "endChar": 0
+      },
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a6f7e02c_ccb01741",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 1
@@ -108,6 +132,30 @@
       "side": 1,
       "message": "Sorry, but it\u0027s not clear to me what was before the comment and what after. Is the problem Peter mentions with the existing code, or with the code added by this CL?",
       "parentUuid": "d7e066f3_667a39a5",
+      "range": {
+        "startLine": 76,
+        "startChar": 40,
+        "endLine": 76,
+        "endChar": 0
+      },
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59345f7e_aab7fcfc",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-21T21:38:33Z",
+      "side": 1,
+      "message": "The handling of RSIDs needs to be modified to also take into account MIDs because it\u0027s possible to have two different streams share RSID as long as the MIDs are different.",
+      "parentUuid": "c2fbe08d_b59dfce4",
       "range": {
         "startLine": 76,
         "startChar": 40,
@@ -655,6 +703,24 @@
     },
     {
       "key": {
+        "uuid": "bc081931_b58fe74b",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 601,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-21T21:38:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6535a839_4372e0fd",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "993aa802_72d7dc07",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 1
@@ -669,6 +735,24 @@
       "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf29ca9f_94650397",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-21T21:38:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "993aa802_72d7dc07",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }

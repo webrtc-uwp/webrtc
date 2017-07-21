@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "b623df76_57c23d95",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-21T21:38:33Z",
+      "side": 1,
+      "message": "I\u0027m OK rebasing this on your CL. When you have a chance next, could you please rebase that on master so it can be applied cleanly and picks up the MID parsing change that landed this morning?",
+      "parentUuid": "ca1e0380_1ea978c2",
+      "revId": "c6a80b1f17caad36408d810f57c3d0a69816f6d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "589023fa_47d880c1",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 2
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "075afac4_dc378915",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-21T21:38:33Z",
+      "side": 1,
+      "message": "Sounds good.",
+      "parentUuid": "589023fa_47d880c1",
+      "revId": "c6a80b1f17caad36408d810f57c3d0a69816f6d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "72f608f8_a8cb0eec",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 2
@@ -64,6 +100,24 @@
       "writtenOn": "2017-07-21T11:38:01Z",
       "side": 1,
       "message": "1. https://codereview.webrtc.org/2968693002/diff/140001/webrtc/call/rtp_demuxer.cc actually ends up reversing this.\n2. I don\u0027t think we want to guarantee this behavior. It seems to me like an incidental. I think the preferable behavior would be to only have the resolution trigger one callback per given observer, but still trigger for observers added after the first resolutions. (Testing *that* might be overkill; IIRC, discussing this with @danilchap, we could not think of a case where observers would be added after a resolution.)",
+      "revId": "c6a80b1f17caad36408d810f57c3d0a69816f6d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f326e96_57c1f8af",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-21T21:38:33Z",
+      "side": 1,
+      "message": "OK, I\u0027ll remove the test and defer to your CL for handling that.\n\nIt would add extra complexity to handle the case where observers are added after some RSID has been resolved. I propose we only implement that if it is actually needed.",
+      "parentUuid": "72f608f8_a8cb0eec",
       "revId": "c6a80b1f17caad36408d810f57c3d0a69816f6d8",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
