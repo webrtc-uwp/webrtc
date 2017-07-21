@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0fdd1ea4_cfb3c438",
+        "filename": "webrtc/modules/desktop_capture/desktop_capturer.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-21T22:09:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9fe21fab_951faa75",
+      "range": {
+        "startLine": 32,
+        "startChar": 2,
+        "endLine": 33,
+        "endChar": 47
+      },
+      "revId": "7d251d73eee7d6f2bb78cb46757e4f9c2e16ae07",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8c5ba132_572095f4",
         "filename": "webrtc/modules/desktop_capture/desktop_capturer.h",
         "patchSetId": 3
@@ -45,6 +69,30 @@
       "revId": "7d251d73eee7d6f2bb78cb46757e4f9c2e16ae07",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7ea84a0_dda835c5",
+        "filename": "webrtc/modules/desktop_capture/desktop_capturer.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-21T22:09:20Z",
+      "side": 1,
+      "message": "I have removed the change to this file: the comment has been added to DesktopFrame.",
+      "parentUuid": "8c5ba132_572095f4",
+      "range": {
+        "startLine": 34,
+        "startChar": 3,
+        "endLine": 34,
+        "endChar": 37
+      },
+      "revId": "7d251d73eee7d6f2bb78cb46757e4f9c2e16ae07",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "2946baec_1dba381e",
+        "filename": "webrtc/modules/desktop_capture/desktop_frame.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-21T22:09:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "56970e6d_5eeea496",
+      "range": {
+        "startLine": 36,
+        "startChar": 3,
+        "endLine": 36,
+        "endChar": 31
+      },
+      "revId": "7d251d73eee7d6f2bb78cb46757e4f9c2e16ae07",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "349c5cd3_221e0d26",
         "filename": "webrtc/modules/desktop_capture/mouse_cursor_monitor.h",
         "patchSetId": 3
@@ -91,6 +163,30 @@
       "revId": "7d251d73eee7d6f2bb78cb46757e4f9c2e16ae07",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72eeff89_a212a99d",
+        "filename": "webrtc/modules/desktop_capture/mouse_cursor_monitor.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-21T22:09:20Z",
+      "side": 1,
+      "message": "I think this is still useful to create a platform-independent MouseCursorMonitor.",
+      "parentUuid": "349c5cd3_221e0d26",
+      "range": {
+        "startLine": 92,
+        "startChar": 44,
+        "endLine": 92,
+        "endChar": 51
+      },
+      "revId": "7d251d73eee7d6f2bb78cb46757e4f9c2e16ae07",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
