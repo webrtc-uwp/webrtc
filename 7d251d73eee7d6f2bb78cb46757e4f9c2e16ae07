@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9fe21fab_951faa75",
+        "filename": "webrtc/modules/desktop_capture/desktop_capturer.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1116023
+      },
+      "writtenOn": "2017-07-21T19:16:55Z",
+      "side": 1,
+      "message": "This is already clear from other comments. It is necessary to mention it here?\nIt may be useful to add an overview of the interface here, but then it should mention that the clients are expected to call Capture(), etc.",
+      "range": {
+        "startLine": 32,
+        "startChar": 2,
+        "endLine": 33,
+        "endChar": 47
+      },
+      "revId": "7d251d73eee7d6f2bb78cb46757e4f9c2e16ae07",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c5ba132_572095f4",
+        "filename": "webrtc/modules/desktop_capture/desktop_capturer.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1116023
+      },
+      "writtenOn": "2017-07-21T19:16:55Z",
+      "side": 1,
+      "message": "It\u0027s not clear at this level why we need to care about absolute coordinates. I think it\u0027s enough to mention it in the DesktopFrame documentation",
+      "range": {
+        "startLine": 34,
+        "startChar": 3,
+        "endLine": 34,
+        "endChar": 37
+      },
+      "revId": "7d251d73eee7d6f2bb78cb46757e4f9c2e16ae07",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "56970e6d_5eeea496",
+        "filename": "webrtc/modules/desktop_capture/desktop_frame.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1116023
+      },
+      "writtenOn": "2017-07-21T19:16:55Z",
+      "side": 1,
+      "message": "mention that it\u0027s relative to the full desktop coordinates",
+      "range": {
+        "startLine": 36,
+        "startChar": 3,
+        "endLine": 36,
+        "endChar": 31
+      },
+      "revId": "7d251d73eee7d6f2bb78cb46757e4f9c2e16ae07",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "349c5cd3_221e0d26",
+        "filename": "webrtc/modules/desktop_capture/mouse_cursor_monitor.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1116023
+      },
+      "writtenOn": "2017-07-21T19:16:55Z",
+      "side": 1,
+      "message": "Create* functions were useful when we had more than once. Maybe just add a public constructor instead of this function?",
+      "range": {
+        "startLine": 92,
+        "startChar": 44,
+        "endLine": 92,
+        "endChar": 51
+      },
+      "revId": "7d251d73eee7d6f2bb78cb46757e4f9c2e16ae07",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
