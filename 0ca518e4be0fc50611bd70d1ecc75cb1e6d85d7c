@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "d7e066f3_667a39a5",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-21T01:04:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a6f7e02c_ccb01741",
+      "range": {
+        "startLine": 76,
+        "startChar": 40,
+        "endLine": 76,
+        "endChar": 0
+      },
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bb29bd7f_4694650c",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 1
@@ -65,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "5526e4f5_afc58c3a",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-21T01:04:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bb29bd7f_4694650c",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "340c0cd7_b07f8928",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 1
@@ -76,6 +118,24 @@
       "writtenOn": "2017-07-20T00:29:17Z",
       "side": 1,
       "message": "Is this supposed to be called for every packet that contains a MID? Or just when a new association is added? More a question for Elad I guess. But either way, there should be a test that verifies the behavior.",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ec81953_96ae7106",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-21T01:04:01Z",
+      "side": 1,
+      "message": "I\u0027ve written it such that observers will only be notified once. The RSID notification happens every time a packet is received with an RSID extension, but that seems excessive. Right now observers are only used for adding mappings to RtcpDemuxer.",
+      "parentUuid": "340c0cd7_b07f8928",
       "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -163,6 +223,24 @@
     },
     {
       "key": {
+        "uuid": "48fc5bb7_44a12ee3",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-21T01:04:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5cf55a5e_05baee66",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "276f5b32_75f4e60c",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 1
@@ -210,6 +288,24 @@
       "side": 1,
       "message": "I\u0027m not talking about RSIDs being insufficient, I\u0027m talking about MIDs being insufficient. But you bring up a good point. There are some times where you need the *combination* of MID+RSID to identify an encoding. So we may need an API that takes both. The current RSID-based demuxing is actually not sufficient for unified plan SDP.",
       "parentUuid": "dfc77e66_168ed39d",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0501684_52dce56c",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-21T01:04:01Z",
+      "side": 1,
+      "message": "What would this API look like? `AddMidRsidSink()`? Seems a bit ugly.",
+      "parentUuid": "df812b00_d8b7e1c3",
       "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -271,6 +367,30 @@
       "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e4f0b34_c0a28ae3",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-21T01:04:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "52fcabf5_75bdbbb8",
+      "range": {
+        "startLine": 160,
+        "startChar": 19,
+        "endLine": 160,
+        "endChar": 0
+      },
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -341,6 +461,30 @@
       "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4dc481c8_897b1a91",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-21T01:04:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "141b0f71_479006a7",
+      "range": {
+        "startLine": 600,
+        "startChar": 48,
+        "endLine": 600,
+        "endChar": 0
+      },
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
