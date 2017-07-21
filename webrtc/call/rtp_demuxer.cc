@@ -10,6 +10,7 @@
 
 #include "webrtc/call/rtp_demuxer.h"
 
+#include "webrtc/call/mid_resolution_observer.h"
 #include "webrtc/call/rsid_resolution_observer.h"
 #include "webrtc/call/rtp_packet_sink_interface.h"
 #include "webrtc/call/rtp_rtcp_demuxer_helper.h"
@@ -41,10 +42,20 @@ void RtpDemuxer::AddSink(const std::string& rsid,
   rsid_sinks_.emplace(rsid, sink);
 }
 
+void RtpDemuxer::AddMidSink(const std::string& mid,
+                            RtpPacketSinkInterface* sink) {
+  RTC_DCHECK(Mid::IsLegalName(mid));
+  RTC_DCHECK(sink);
+  RTC_DCHECK(!MultimapAssociationExists(mid_sinks_, mid, sink));
+
+  mid_sinks_.emplace(mid, sink);
+}
+
 bool RtpDemuxer::RemoveSink(const RtpPacketSinkInterface* sink) {
   RTC_DCHECK(sink);
   return (RemoveFromMultimapByValue(&ssrc_sinks_, sink) +
-          RemoveFromMultimapByValue(&rsid_sinks_, sink)) > 0;
+          RemoveFromMultimapByValue(&rsid_sinks_, sink) +
+          RemoveFromMultimapByValue(&mid_sinks_, sink)) > 0;
 }
 
 void RtpDemuxer::RecordSsrcToSinkAssociation(uint32_t ssrc,
@@ -62,13 +73,38 @@ bool RtpDemuxer::OnRtpPacket(const RtpPacketReceived& packet) {
   // be added which will change the many-to-many association of packets to sinks
   // to a many-to-one, meaning each packet will be associated with one sink
   // at most. Then, only packets with an unknown SSRC will be checked for RSID.
+  // TODO(steveanton): This is insufficient for identifying RTP packets with
+  // bundled media as RSIDs are scoped within a m= section so two different
+  // streams can have the same RSID.
   ResolveRsidToSsrcAssociations(packet);
 
+  // First, if there is already a mapping for SSRC use it.
   auto it_range = ssrc_sinks_.equal_range(packet.Ssrc());
-  for (auto it = it_range.first; it != it_range.second; ++it) {
-    it->second->OnRtpPacket(packet);
+  if (it_range.first != it_range.second) {
+    // Found an SSRC mapping: use it and return.
+    for (auto it = it_range.first; it != it_range.second; ++it) {
+      it->second->OnRtpPacket(packet);
+    }
+    return true;
   }
-  return it_range.first != it_range.second;
+
+  // Otherwise, try to find a valid sink by inspecting MID.
+  std::string mid;
+  if (packet.GetExtension<RtpMid>(&mid)) {
+    // Packet has a MID, see if there's any sink registered for it.
+    auto it = mid_sinks_.find(mid);
+    if (it != mid_sinks_.end()) {
+      // MID sink found: Update SSRC sink table to route all future packets with
+      // this SSRC to that sink.
+      ssrc_sinks_.emplace(packet.Ssrc(), it->second);
+      NotifyObserversOfMidResolution(mid, packet.Ssrc());
+      it->second->OnRtpPacket(packet);
+    }
+    return true;
+  }
+
+  // Can't find a sink to route this packet to, drop it.
+  return false;
 }
 
 void RtpDemuxer::RegisterRsidResolutionObserver(
@@ -86,6 +122,23 @@ void RtpDemuxer::DeregisterRsidResolutionObserver(
                       rsid_resolution_observers_.end(), observer);
   RTC_DCHECK(it != rsid_resolution_observers_.end());
   rsid_resolution_observers_.erase(it);
+}
+
+void RtpDemuxer::RegisterMidResolutionObserver(
+    MidResolutionObserver* observer) {
+  RTC_DCHECK(observer);
+  RTC_DCHECK(!ContainerHasKey(mid_resolution_observers_, observer));
+
+  mid_resolution_observers_.push_back(observer);
+}
+
+void RtpDemuxer::DeregisterMidResolutionObserver(
+    const MidResolutionObserver* observer) {
+  RTC_DCHECK(observer);
+  auto it = std::find(mid_resolution_observers_.begin(),
+                      mid_resolution_observers_.end(), observer);
+  RTC_DCHECK(it != mid_resolution_observers_.end());
+  mid_resolution_observers_.erase(it);
 }
 
 void RtpDemuxer::ResolveRsidToSsrcAssociations(
@@ -111,6 +164,13 @@ void RtpDemuxer::NotifyObserversOfRsidResolution(const std::string& rsid,
                                                  uint32_t ssrc) {
   for (auto* observer : rsid_resolution_observers_) {
     observer->OnRsidResolved(rsid, ssrc);
+  }
+}
+
+void RtpDemuxer::NotifyObserversOfMidResolution(const std::string& mid,
+                                                uint32_t ssrc) {
+  for (auto* observer : mid_resolution_observers_) {
+    observer->OnMidResolved(mid, ssrc);
   }
 }
 
