@@ -16,6 +16,24 @@
       "revId": "f34c4f3752ecc51ca2a912de9dc9c4088b77ef18",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33707bc1_480eca2f",
+        "filename": "webrtc/modules/rtp_rtcp/source/rtp_header_extensions.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1138974
+      },
+      "writtenOn": "2017-07-21T07:49:22Z",
+      "side": 1,
+      "message": "Last time I tried array, I failed to make it compile (and link) on all platforms, specially windows. In particlar, to make it link there should be something like \u0027constexpr char RtpMid::kId[]; in the .cc file.\nBut may be I didn\u0027t try hard enough or compilers are better now. \n\nIt would be good to switch these constants to string with compile-time known size and less used space eventually.",
+      "parentUuid": "eca873a6_69361190",
+      "revId": "f34c4f3752ecc51ca2a912de9dc9c4088b77ef18",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }

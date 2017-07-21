@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7235ec22_467159ac",
+        "filename": "webrtc/modules/rtp_rtcp/source/rtp_header_extensions.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1138974
+      },
+      "writtenOn": "2017-07-21T07:49:22Z",
+      "side": 0,
+      "message": "please do not remove these constants - they need to be present when some code take the kId by const\u0026 (e.g. EXPECT_EQ)\nsee\nhttps://github.com/google/googletest/blob/master/googletest/docs/FAQ.md#the-compiler-complains-about-undefined-references-to-some-static-const-member-variables-but-i-did-define-them-in-the-class-body-whats-wrong",
+      "range": {
+        "startLine": 353,
+        "startChar": 52,
+        "endLine": 353,
+        "endChar": 0
+      },
+      "revId": "8fb23618d8e3c2a20832006d361f99161b4980bd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
