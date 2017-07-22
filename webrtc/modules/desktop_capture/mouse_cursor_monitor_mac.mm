@@ -241,14 +241,18 @@ void MouseCursorMonitorMac::Capture() {
         state = OUTSIDE;
         position.set(-1, -1);
       }
-    } else {
-      position.subtract(configuration.bounds.top_left());
     }
   }
   // Convert Density Independent Pixel to physical pixel.
   position = DesktopVector(round(position.x() * scale),
                            round(position.y() * scale));
   callback_->OnMouseCursorPosition(state, position);
+  // MacOSX has a different coordinate system,
+  // https://developer.apple.com/library/content/documentation/General/Conceptual/Devpedia-CocoaApp/CoordinateSystem.html
+  // Instead of top-left, it uses a bottom-left coordinate system. Meeting the
+  // requirements of top-left coordinate systems does not make too much sense.
+  // As long as all Mac implementation uses the same system coordinate, it's
+  // safe to return the position without translation.
   callback_->OnMouseCursorPosition(position);
 }
 
