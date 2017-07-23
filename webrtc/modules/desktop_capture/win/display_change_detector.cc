@@ -8,26 +8,29 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/desktop_capture/resolution_change_detector.h"
+#include "webrtc/modules/desktop_capture/win/display_change_detector.h"
+
+#include "webrtc/modules/desktop_capture/win/screen_capture_utils.h"
 
 namespace webrtc {
 
-bool ResolutionChangeDetector::IsChanged(DesktopSize size) {
+bool DisplayChangeDetector::IsChanged() {
+  DesktopRect rect = GetFullscreenRect();
   if (!initialized_) {
     initialized_ = true;
-    last_size_ = size;
+    rect_ = rect;
     return false;
   }
 
-  if (last_size_.equals(size)) {
+  if (rect.equals(rect_)) {
     return false;
   }
 
-  last_size_ = size;
+  rect_ = rect;
   return true;
 }
 
-void ResolutionChangeDetector::Reset() {
+void DisplayChangeDetector::Reset() {
   initialized_ = false;
 }
 
