@@ -163,7 +163,8 @@ void MouseCursorMonitorWin::Capture() {
   }
 
   callback_->OnMouseCursorPosition(inside ? INSIDE : OUTSIDE, position);
-  callback_->OnMouseCursorPosition(position);
+  callback_->OnMouseCursorPosition(
+      position.subtract(GetFullscreenTopLeft()));
 }
 
 DesktopRect MouseCursorMonitorWin::GetScreenRect() {
