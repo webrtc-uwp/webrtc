@@ -150,11 +150,7 @@ void ScreenCapturerWinGdi::PrepareCaptureResources() {
 
   // If the display bounds have changed then recreate GDI resources.
   // TODO(wez): Also check for pixel format changes.
-  DesktopRect screen_rect(DesktopRect::MakeXYWH(
-      GetSystemMetrics(SM_XVIRTUALSCREEN),
-      GetSystemMetrics(SM_YVIRTUALSCREEN),
-      GetSystemMetrics(SM_CXVIRTUALSCREEN),
-      GetSystemMetrics(SM_CYVIRTUALSCREEN)));
+  DesktopRect screen_rect(GetFullscreenRect());
   if (!screen_rect.equals(desktop_dc_rect_)) {
     if (desktop_dc_) {
       ReleaseDC(NULL, desktop_dc_);
