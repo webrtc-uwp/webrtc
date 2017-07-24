@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "e9da0aa3_470f02fe",
+        "filename": "webrtc/rtc_base/openssladapter.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-24T20:25:14Z",
+      "side": 1,
+      "message": "I\u0027d add that this can be null if the object is being used standalone, without sharing state with others.",
+      "revId": "6d3e2f26c29c29a55f646d8778b64be3226d67d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3a300146_92be3ad3",
         "filename": "webrtc/rtc_base/ssladapter.h",
         "patchSetId": 4
@@ -42,6 +59,53 @@
         "startChar": 50,
         "endLine": 47,
         "endChar": 0
+      },
+      "revId": "6d3e2f26c29c29a55f646d8778b64be3226d67d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84f85755_714d966b",
+        "filename": "webrtc/rtc_base/ssladapter.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-24T20:25:14Z",
+      "side": 1,
+      "message": "Then there should be TODO comment, in case \"as soon as possible\" isn\u0027t as soon as planned.",
+      "parentUuid": "72d2f68b_3a8d71ec",
+      "range": {
+        "startLine": 47,
+        "startChar": 50,
+        "endLine": 47,
+        "endChar": 0
+      },
+      "revId": "6d3e2f26c29c29a55f646d8778b64be3226d67d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63a86d70_910e8495",
+        "filename": "webrtc/rtc_base/ssladapter.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-24T20:25:14Z",
+      "side": 1,
+      "message": "IsResumedSession appears twice; merge issue?",
+      "range": {
+        "startLine": 67,
+        "startChar": 2,
+        "endLine": 69,
+        "endChar": 38
       },
       "revId": "6d3e2f26c29c29a55f646d8778b64be3226d67d8",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
