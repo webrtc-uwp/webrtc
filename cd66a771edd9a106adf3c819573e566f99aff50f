@@ -22,6 +22,30 @@
       "revId": "cd66a771edd9a106adf3c819573e566f99aff50f",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bfbd2517_67682661",
+        "filename": "webrtc/modules/desktop_capture/mouse_cursor_monitor_mac.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-24T19:16:12Z",
+      "side": 0,
+      "message": "The code search seems a little bit laggy. I think the chromium won\u0027t be able to import webrtc due to the build break (E.g. https://build.chromium.org/p/client.webrtc/builders/Linux64%20Debug%20%28ARM%29/builds/1591/steps/compile/logs/stdio).\n\nThe overload is a temporary solution to avoid breaking Chromium, as they are in different code base. The one with state will be removed soon.",
+      "parentUuid": "38fda0d6_939292f4",
+      "range": {
+        "startLine": 252,
+        "startChar": 45,
+        "endLine": 252,
+        "endChar": 0
+      },
+      "revId": "cd66a771edd9a106adf3c819573e566f99aff50f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }

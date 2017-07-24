@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "37adeb53_87a22234",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-24T19:16:12Z",
+      "side": 1,
+      "message": ":(\nI do know this word.",
+      "parentUuid": "c6cd9dd3_38daea4a",
+      "range": {
+        "startLine": 7,
+        "startChar": 7,
+        "endLine": 7,
+        "endChar": 16
+      },
+      "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2ad7b6b2_5112ae71",
         "filename": "webrtc/modules/desktop_capture/mouse_cursor_monitor_mac.mm",
         "patchSetId": 7
@@ -36,6 +60,30 @@
       "writtenOn": "2017-07-24T17:30:38Z",
       "side": 1,
       "message": "This looks like a significant behaviour change, but I can\u0027t work out from the CL description why it\u0027s needed.",
+      "range": {
+        "startLine": 251,
+        "startChar": 58,
+        "endLine": 251,
+        "endChar": 0
+      },
+      "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4634bc94_c58aad48",
+        "filename": "webrtc/modules/desktop_capture/mouse_cursor_monitor_mac.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-24T19:16:12Z",
+      "side": 1,
+      "message": "Not really, the newly added overload OnMouseCursorPosition() without CursorState is not used any where.",
+      "parentUuid": "2ad7b6b2_5112ae71",
       "range": {
         "startLine": 251,
         "startChar": 58,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "c019651b_34155935",
+        "filename": "webrtc/modules/desktop_capture/resolution_change_detector.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-24T19:16:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "89c906a5_e4820510",
+      "range": {
+        "startLine": 24,
+        "startChar": 3,
+        "endLine": 24,
+        "endChar": 0
+      },
+      "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0d3c0d0d_ba61a425",
         "filename": "webrtc/modules/desktop_capture/resolution_change_detector.h",
         "patchSetId": 7
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "649d113f_240d6973",
+        "filename": "webrtc/modules/desktop_capture/resolution_change_detector.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-24T19:16:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0d3c0d0d_ba61a425",
+      "range": {
+        "startLine": 18,
+        "startChar": 36,
+        "endLine": 18,
+        "endChar": 0
+      },
+      "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4e32384_29445934",
         "filename": "webrtc/modules/desktop_capture/win/display_change_detector.h",
         "patchSetId": 7
@@ -105,6 +201,30 @@
       "writtenOn": "2017-07-24T17:30:38Z",
       "side": 1,
       "message": "Why do you need this class? It looks virtually identical to ResolutionChangeDetector. Could you refactor your code to use that instead?",
+      "range": {
+        "startLine": 20,
+        "startChar": 29,
+        "endLine": 20,
+        "endChar": 0
+      },
+      "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b590202a_6713fdc3",
+        "filename": "webrtc/modules/desktop_capture/win/display_change_detector.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-24T19:16:12Z",
+      "side": 1,
+      "message": "I think they have different functionalities, though they have similar public APIs.\n\nResolutionChangeDetector checks the input DesktopSize, but DisplayChangeDetector checks the system DesktopRect. Meanwhile, DisplayChangeDetector is expected to also check the pixel format changes later.",
+      "parentUuid": "e4e32384_29445934",
       "range": {
         "startLine": 20,
         "startChar": 29,
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "b8d59c59_f055abc8",
+        "filename": "webrtc/modules/desktop_capture/win/screen_capture_utils.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-24T19:16:12Z",
+      "side": 1,
+      "message": "Both GetFullscreenRect() and GetFullscreenTopLeft() may return different values if display configuration changes happened.\nBut, yes, I am a little bit over-considered this issue. This version has been removed.",
+      "parentUuid": "ba36d4aa_450822e8",
+      "range": {
+        "startLine": 40,
+        "startChar": 15,
+        "endLine": 40,
+        "endChar": 0
+      },
+      "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1ff1a206_455cdbaf",
         "filename": "webrtc/modules/desktop_capture/win/screen_capturer_win_gdi.h",
         "patchSetId": 7
@@ -160,6 +304,30 @@
       "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f36710e_4ee7f623",
+        "filename": "webrtc/modules/desktop_capture/win/screen_capturer_win_gdi.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-24T19:16:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1ff1a206_455cdbaf",
+      "range": {
+        "startLine": 73,
+        "startChar": 63,
+        "endLine": 73,
+        "endChar": 0
+      },
+      "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
