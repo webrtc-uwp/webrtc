@@ -58,8 +58,16 @@ class LowCutFilter::BiquadFilter {
       y[2] = y[0];
       y[3] = y[1];
       y[0] = static_cast<int16_t>(tmp_int32 >> 13);
+
+      // TODO(aleloi): remove before landing! The bitexactness tests
+      // pass, the fuzzer has been runnig for a while without
+      // failing. Now testing on the bots to be sure.
+      int16_t y1_new = static_cast<int16_t>((tmp_int32 & 0x00001FFF) * 4);
       y[1] = static_cast<int16_t>(
-          (tmp_int32 - (static_cast<int32_t>(y[0]) * ( 1 << 13))) * 4);
+          static_cast<int64_t>(tmp_int32 -
+                               (static_cast<int32_t>(y[0]) * (1 << 13))) *
+          4);
+      RTC_CHECK_EQ(y1_new, y[1]);
 
       // Rounding in Q12, i.e. add 2^11.
       tmp_int32 += 2048;
