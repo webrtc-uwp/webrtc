@@ -357,6 +357,24 @@
     },
     {
       "key": {
+        "uuid": "ead14d98_9560c53e",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-24T23:28:46Z",
+      "side": 1,
+      "message": "FYI, talking to Taylor today, we both think we should change this to be:\n\nAddSink(SomeStruct, sink), where SomeStruct has an mid, a vector of SSRCs, a vector of PTs, and (maybe :), a vector of RSIDs. \n\nBut that can be in another CL.",
+      "parentUuid": "35e2c509_bf3a9190",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5cf55a5e_05baee66",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 1
@@ -504,6 +522,24 @@
       "side": 1,
       "message": "What would this API look like? `AddMidRsidSink()`? Seems a bit ugly.",
       "parentUuid": "df812b00_d8b7e1c3",
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "278c88ba_ac5053ad",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-24T23:28:46Z",
+      "side": 1,
+      "message": "The fundamental question is whether we or doing track-based demux or encoding-based demux.  I think for now we should stick to track-based.  But having talked to Taylor at length about this today, I think we should make it AddSink(SomeStruct, sink), which would give the flexibility of doing either.",
+      "parentUuid": "e0501684_52dce56c",
       "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
