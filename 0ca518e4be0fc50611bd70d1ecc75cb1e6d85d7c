@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "fcf62333_0ba37c21",
+        "filename": "webrtc/call/mid_resolution_observer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-24T09:37:46Z",
+      "side": 1,
+      "message": "Do we envision any sinks that would support, say, RSID but not MID? If not, sounds good. If we do, I think it might be clearer to keep separate observers, though I don\u0027t oppose renaming to SsrcMidBindingObserver, or anything similar.\n\nEither way, I would just advise to do it in a separate CL, since a lot of comments and names would have to be modified in ways that are unrelated to this CL.",
+      "parentUuid": "cdeaa260_c74b9e15",
+      "range": {
+        "startLine": 25,
+        "startChar": 72,
+        "endLine": 25,
+        "endChar": 0
+      },
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a6f7e02c_ccb01741",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 1
@@ -156,6 +180,30 @@
       "side": 1,
       "message": "The handling of RSIDs needs to be modified to also take into account MIDs because it\u0027s possible to have two different streams share RSID as long as the MIDs are different.",
       "parentUuid": "c2fbe08d_b59dfce4",
+      "range": {
+        "startLine": 76,
+        "startChar": 40,
+        "endLine": 76,
+        "endChar": 0
+      },
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6db580be_91159304",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-24T09:37:46Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "59345f7e_aab7fcfc",
       "range": {
         "startLine": 76,
         "startChar": 40,

@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "0002b54e_f787aba8",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-24T09:37:46Z",
+      "side": 1,
+      "message": "I\u0027ll rebase later today. The above mentioned CL might end up still on top of other CLs, so I\u0027ll comment on your CL with a description of the chain, starting with the SHA-1 of the master\u0027s commit when I do so, so that you may be guaranteed a clean application of my patches.",
+      "parentUuid": "b623df76_57c23d95",
+      "revId": "c6a80b1f17caad36408d810f57c3d0a69816f6d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "589023fa_47d880c1",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 2
@@ -118,6 +136,24 @@
       "side": 1,
       "message": "OK, I\u0027ll remove the test and defer to your CL for handling that.\n\nIt would add extra complexity to handle the case where observers are added after some RSID has been resolved. I propose we only implement that if it is actually needed.",
       "parentUuid": "72f608f8_a8cb0eec",
+      "revId": "c6a80b1f17caad36408d810f57c3d0a69816f6d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "009178ac_d41102dd",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-24T09:37:46Z",
+      "side": 1,
+      "message": "I think we don\u0027t expect this to ever happen, so the above-mentioned CL does not deal with it:\n 114   // This RSID cannot later be associated with another SSRC.\n 115   rsid_sinks_.erase(it);\nThe RSID is \"forgotten\", and only the SSRC\u0027s binding remains.",
+      "parentUuid": "6f326e96_57c1f8af",
       "revId": "c6a80b1f17caad36408d810f57c3d0a69816f6d8",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
