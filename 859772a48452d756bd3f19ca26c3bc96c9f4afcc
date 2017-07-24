@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f7a1e756_105a8b6d",
+        "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/encoder.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 580,
+      "author": {
+        "id": 1211784
+      },
+      "writtenOn": "2017-07-24T14:29:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "02c19c74_f1111b5f",
+      "range": {
+        "startLine": 580,
+        "startChar": 5,
+        "endLine": 580,
+        "endChar": 14
+      },
+      "revId": "859772a48452d756bd3f19ca26c3bc96c9f4afcc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "182baa11_1310363e",
         "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/encoder.mm",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2017-07-24T14:17:15Z",
       "side": 1,
       "message": "Formatting here is wrong, try running \u0027git cl format\u0027.",
+      "range": {
+        "startLine": 620,
+        "startChar": 0,
+        "endLine": 625,
+        "endChar": 3
+      },
+      "revId": "859772a48452d756bd3f19ca26c3bc96c9f4afcc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "315a8a50_428d39fb",
+        "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/encoder.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1211784
+      },
+      "writtenOn": "2017-07-24T14:29:15Z",
+      "side": 1,
+      "message": "I think it is correct, this is the result after git cl format only. Let me know if I am missing something here.",
+      "parentUuid": "182baa11_1310363e",
       "range": {
         "startLine": 620,
         "startChar": 0,
