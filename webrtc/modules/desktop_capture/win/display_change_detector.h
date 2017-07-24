@@ -8,28 +8,30 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_RESOLUTION_CHANGE_DETECTOR_H_
-#define WEBRTC_MODULES_DESKTOP_CAPTURE_RESOLUTION_CHANGE_DETECTOR_H_
+#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_DISPLAY_CHANGE_DETECTOR_H_
+#define WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_DISPLAY_CHANGE_DETECTOR_H_
 
 #include "webrtc/modules/desktop_capture/desktop_geometry.h"
 
 namespace webrtc {
 
-class ResolutionChangeDetector {
+// Detects the change of display configuration on a Windows system.
+// TODO(zijiehe): Also check for pixel format changes.
+class DisplayChangeDetector {
  public:
-  // Checks whether the |size| has been changed comparing to the |size| passed
-  // in during last IsChanged() call. This function won't return false for the
-  // first time after construction or Reset() call.
-  bool IsChanged(DesktopSize size);
+  // Checks whether the change of display configuration has happened after last
+  // IsChanged() call. This function won't return false for the first time after
+  // constructor or Reset() call.
+  bool IsChanged();
 
   // Resets to the initial state.
   void Reset();
 
  private:
-  DesktopSize last_size_;
+  DesktopRect rect_;
   bool initialized_ = false;
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_RESOLUTION_CHANGE_DETECTOR_H_
+#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_DISPLAY_CHANGE_DETECTOR_H_
