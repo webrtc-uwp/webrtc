@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e5a33407_52617be3",
+        "filename": "webrtc/modules/audio_processing/low_cut_filter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-07-24T08:05:29Z",
+      "side": 1,
+      "message": "the outer int16_t cast will truncate the value, won\u0027t it?",
+      "range": {
+        "startLine": 61,
+        "startChar": 13,
+        "endLine": 61,
+        "endChar": 33
+      },
+      "revId": "c3f47ebef2d1ebb13669e6d83166be809d9c715f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
