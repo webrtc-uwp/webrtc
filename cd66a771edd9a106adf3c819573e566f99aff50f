@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "38fda0d6_939292f4",
+        "filename": "webrtc/modules/desktop_capture/mouse_cursor_monitor_mac.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-07-24T17:30:38Z",
+      "side": 0,
+      "message": "Where is the code for this overload? I don\u0027t see it in code search for MouseCursorMonitor::Callback. I believe overloaded methods are discouraged by the style guide, and having the same method name take a position that has different meanings is very confusing. Could you instead have a single callback that takes state, position and top-left coordinates?",
+      "range": {
+        "startLine": 252,
+        "startChar": 45,
+        "endLine": 252,
+        "endChar": 0
+      },
+      "revId": "cd66a771edd9a106adf3c819573e566f99aff50f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}

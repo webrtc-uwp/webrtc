@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6cd9dd3_38daea4a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-07-24T17:30:38Z",
+      "side": 1,
+      "message": "translated [also below]",
+      "range": {
+        "startLine": 7,
+        "startChar": 7,
+        "endLine": 7,
+        "endChar": 16
+      },
+      "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2ad7b6b2_5112ae71",
+        "filename": "webrtc/modules/desktop_capture/mouse_cursor_monitor_mac.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-07-24T17:30:38Z",
+      "side": 1,
+      "message": "This looks like a significant behaviour change, but I can\u0027t work out from the CL description why it\u0027s needed.",
+      "range": {
+        "startLine": 251,
+        "startChar": 58,
+        "endLine": 251,
+        "endChar": 0
+      },
+      "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89c906a5_e4820510",
+        "filename": "webrtc/modules/desktop_capture/resolution_change_detector.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-07-24T17:30:38Z",
+      "side": 1,
+      "message": "This change is not mentioned in the CL description and doesn\u0027t appear to be related. Can you split it into a separate CL?",
+      "range": {
+        "startLine": 24,
+        "startChar": 3,
+        "endLine": 24,
+        "endChar": 0
+      },
+      "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d3c0d0d_ba61a425",
+        "filename": "webrtc/modules/desktop_capture/resolution_change_detector.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-07-24T17:30:38Z",
+      "side": 1,
+      "message": "This comment pretty much just reorders the words in the class name. I don\u0027t think it adds anything to readability. I recommend just deleting it.",
+      "range": {
+        "startLine": 18,
+        "startChar": 36,
+        "endLine": 18,
+        "endChar": 0
+      },
+      "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4e32384_29445934",
+        "filename": "webrtc/modules/desktop_capture/win/display_change_detector.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-07-24T17:30:38Z",
+      "side": 1,
+      "message": "Why do you need this class? It looks virtually identical to ResolutionChangeDetector. Could you refactor your code to use that instead?",
+      "range": {
+        "startLine": 20,
+        "startChar": 29,
+        "endLine": 20,
+        "endChar": 0
+      },
+      "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba36d4aa_450822e8",
+        "filename": "webrtc/modules/desktop_capture/win/screen_capture_utils.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-07-24T17:30:38Z",
+      "side": 1,
+      "message": "What do you mean by \"if no display configuration changes happened\"? Does that mean that GetFullscreenRect().top_left() may return the wrong thing? If so, then don\u0027t even mention the performance, since it\u0027s not relevant. TBH, unless you have reason to believe that this is called from performance-critical code, the performance is probably not relevant anyway, and so if the two versions will always return the same value, I think you should get rid of this version rather than provide two ways of accessing the same thing.",
+      "range": {
+        "startLine": 40,
+        "startChar": 15,
+        "endLine": 40,
+        "endChar": 0
+      },
+      "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ff1a206_455cdbaf",
+        "filename": "webrtc/modules/desktop_capture/win/screen_capturer_win_gdi.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-07-24T17:30:38Z",
+      "side": 1,
+      "message": "I don\u0027t think this comment adds anything.",
+      "range": {
+        "startLine": 73,
+        "startChar": 63,
+        "endLine": 73,
+        "endChar": 0
+      },
+      "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
