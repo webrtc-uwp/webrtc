@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "a936979a_09f0e4d4",
+        "filename": "webrtc/modules/desktop_capture/mouse_cursor_monitor_mac.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-07-24T19:49:45Z",
+      "side": 1,
+      "message": "Why not delete it then? It seems strange to be calling the same method with different parameters, and I don\u0027t see how it helps with transition (if the first second method doesn\u0027t exit, then this won\u0027t compile; if it does then the first call isn\u0027t needed).\n\nIf I\u0027m missing something, then I think a TODO would be appropriate here to make it clear that this code is in a transitional state.",
+      "parentUuid": "4634bc94_c58aad48",
+      "range": {
+        "startLine": 251,
+        "startChar": 58,
+        "endLine": 251,
+        "endChar": 0
+      },
+      "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "89c906a5_e4820510",
         "filename": "webrtc/modules/desktop_capture/resolution_change_detector.cc",
         "patchSetId": 7
@@ -234,6 +258,30 @@
       "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db3c5c97_4a2e18eb",
+        "filename": "webrtc/modules/desktop_capture/win/display_change_detector.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-07-24T19:49:45Z",
+      "side": 1,
+      "message": "Could they be combined into a single class? The functionality seems so similar that someone unfamiliar with the area would have difficulty knowing which class to use. Appropriately-named methods on a single change-detector class might make it much clearer.\n\nProbably not in this CL though.",
+      "parentUuid": "b590202a_6713fdc3",
+      "range": {
+        "startLine": 20,
+        "startChar": 29,
+        "endLine": 20,
+        "endChar": 0
+      },
+      "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
