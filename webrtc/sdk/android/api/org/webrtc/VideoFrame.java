@@ -11,6 +11,7 @@
 package org.webrtc;
 
 import android.graphics.Matrix;
+import android.graphics.RectF;
 import java.nio.ByteBuffer;
 
 /**
@@ -81,10 +82,30 @@ public class VideoFrame {
     if (transformMatrix == null) {
       throw new IllegalArgumentException("transformMatrix not allowed to be null");
     }
+
+    // Matrix must be of form (it can only scale and crop):
+    // [ s_x 0   t_x ]
+    // [ 0   s_y t_y ]
+    // [ 0   0   1   ]
+    if (!transformMatrix.rectStaysRect()) {
+      throw new IllegalArgumentException("transformMatrix must keep texture coordinates as a rect");
+    }
+    float[] matrixValues = new float[9];
+    transformMatrix.getValues(matrixValues);
+    if (matrixValues[0 * 3 + 1] != 0f || matrixValues[1 * 3 + 0] != 0f) {
+      throw new IllegalArgumentException("rotation in transformMatrix is not allowed");
+    }
+
     this.buffer = buffer;
     this.rotation = rotation;
     this.timestampNs = timestampNs;
     this.transformMatrix = transformMatrix;
+  }
+
+  // Called from native code.
+  VideoFrame(Buffer buffer, int rotation, long timestampNs, float[] transformMatrix) {
+    this(buffer, rotation, timestampNs,
+        RendererCommon.convertMatrixToAndroidGraphicsMatrix(transformMatrix));
   }
 
   public Buffer getBuffer() {
@@ -114,15 +135,24 @@ public class VideoFrame {
     return transformMatrix;
   }
 
-  /**
-   * Resolution of the frame in pixels.
-   */
+  /** Returns the width of the frame in pixels after the transformation matrix has been applied. */
   public int getWidth() {
-    return buffer.getWidth();
+    Matrix matrix = getTransformMatrix();
+    RectF area = new RectF(0, 0, 1, 1);
+    if (!matrix.mapRect(area)) {
+      throw new RuntimeException("mapRect failed in getWidth");
+    }
+    return (int) (area.width() * buffer.getWidth());
   }
 
+  /** Returns the height of the frame in pixels after the transformation matrix has been applied. */
   public int getHeight() {
-    return buffer.getHeight();
+    Matrix matrix = getTransformMatrix();
+    RectF area = new RectF(0, 0, 1, 1);
+    if (!matrix.mapRect(area)) {
+      throw new RuntimeException("mapRect failed in getHeight");
+    }
+    return (int) (area.height() * buffer.getHeight());
   }
 
   /**
