@@ -46,6 +46,30 @@
       "revId": "c3f47ebef2d1ebb13669e6d83166be809d9c715f",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f6bbe16_117b4461",
+        "filename": "webrtc/modules/audio_processing/low_cut_filter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-07-24T08:31:12Z",
+      "side": 1,
+      "message": "I think it may not need 64 bit integer. The following should do the same job. \n\ny[1] \u003d static_cast\u003cint16_t\u003e((tmp_int32 \u0026 0x00001FFF) * 4)\n\n\nBut please test it. Would you run something like\n\nRTC_DCHECK_EQ(y[1], /* old one with your correction */)",
+      "parentUuid": "698f67f1_21e00cd4",
+      "range": {
+        "startLine": 61,
+        "startChar": 13,
+        "endLine": 61,
+        "endChar": 33
+      },
+      "revId": "c3f47ebef2d1ebb13669e6d83166be809d9c715f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
