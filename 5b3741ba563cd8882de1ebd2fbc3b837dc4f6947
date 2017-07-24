@@ -120,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "275fe4c0_8fe9b0b8",
+        "filename": "webrtc/modules/desktop_capture/mouse_cursor_monitor_mac.mm",
+        "patchSetId": 7
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-24T20:40:19Z",
+      "side": 1,
+      "message": "The long term goal is to remove the first overload, but now it\u0027s still used in, say, DesktopAndCursorComposer. Before let DesktopAndCursorComposer use the new API, we need to correctly set DesktopFrame::top_left() in various derived classes of DesktopFrame, and DesktopCapturer implementations.\nTODOs have been added to MouseCursorMonitor, though we cannot see it in code search.\nI am happy to add TODOs here and in other MouseCursorMonitor implementations.",
+      "parentUuid": "a936979a_09f0e4d4",
+      "range": {
+        "startLine": 251,
+        "startChar": 58,
+        "endLine": 251,
+        "endChar": 0
+      },
+      "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "89c906a5_e4820510",
         "filename": "webrtc/modules/desktop_capture/resolution_change_detector.cc",
         "patchSetId": 7
