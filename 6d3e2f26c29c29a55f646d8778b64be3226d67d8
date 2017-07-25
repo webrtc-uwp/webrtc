@@ -105,6 +105,23 @@
     },
     {
       "key": {
+        "uuid": "38cd6a00_cefb05bd",
+        "filename": "webrtc/rtc_base/openssladapter.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1129921
+      },
+      "writtenOn": "2017-07-25T19:15:26Z",
+      "side": 1,
+      "message": "One last comment: this isn\u0027t going to be used in Chrome yet, right? In a browser you probably cannot rely on only talking to a small handful of servers.",
+      "revId": "6d3e2f26c29c29a55f646d8778b64be3226d67d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3a300146_92be3ad3",
         "filename": "webrtc/rtc_base/ssladapter.h",
         "patchSetId": 4
