@@ -131,8 +131,10 @@ public class MediaCodecVideoEncoder {
       "OMX.qcom.", Build.VERSION_CODES.M, BitrateAdjustmentType.NO_ADJUSTMENT);
   private static final MediaCodecProperties exynosVp9HwProperties = new MediaCodecProperties(
       "OMX.Exynos.", Build.VERSION_CODES.M, BitrateAdjustmentType.NO_ADJUSTMENT);
+  private static final MediaCodecProperties mtkVp9HwProperties = new MediaCodecProperties(
+      "OMX.MTK.", Build.VERSION_CODES.M, BitrateAdjustmentType.NO_ADJUSTMENT);
   private static final MediaCodecProperties[] vp9HwList =
-      new MediaCodecProperties[] {qcomVp9HwProperties, exynosVp9HwProperties};
+      new MediaCodecProperties[] {qcomVp9HwProperties, exynosVp9HwProperties, mtkVp9HwProperties};
 
   // List of supported HW H.264 encoders.
   private static final MediaCodecProperties qcomH264HwProperties = new MediaCodecProperties(

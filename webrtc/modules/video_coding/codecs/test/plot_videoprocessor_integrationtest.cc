@@ -15,26 +15,27 @@ namespace test {
 
 namespace {
 // Codec settings.
-const int kBitrates[] = {30, 50, 100, 200, 300, 500, 1000};
-const int kFps[] = {30};
+const int kNumFrames = 800;
+const int kBitrates[] = {400};
 const bool kErrorConcealmentOn = false;
 const bool kDenoisingOn = false;
 const bool kFrameDropperOn = true;
 const bool kSpatialResizeOn = false;
-const VideoCodecType kVideoCodecType[] = {kVideoCodecVP8};
-const bool kHwCodec = false;
-const bool kUseSingleCore = true;
+const VideoCodecType kVideoCodecType[] = {kVideoCodecVP9};
+const bool kHwCodec[] = {true};
+const bool kUseSingleCore = false;
 
 // Test settings.
 const bool kBatchMode = true;
+const bool kCalculatePsnrAndSsim = true;
 
 // Packet loss probability [0.0, 1.0].
 const float kPacketLoss = 0.0f;
 
 const VisualizationParams kVisualizationParams = {
     false,  // save_source_y4m
-    false,  // save_encoded_ivf
-    false,  // save_decoded_y4m
+    true,  // save_encoded_ivf
+    false,   // save_decoded_y4m
 };
 
 const bool kVerboseLogging = true;
@@ -44,33 +45,38 @@ const bool kVerboseLogging = true;
 class PlotVideoProcessorIntegrationTest
     : public VideoProcessorIntegrationTest,
       public ::testing::WithParamInterface<
-          ::testing::tuple<int, int, VideoCodecType>> {
+          ::testing::tuple<int, VideoCodecType, bool>> {
  protected:
   PlotVideoProcessorIntegrationTest()
       : bitrate_(::testing::get<0>(GetParam())),
-        framerate_(::testing::get<1>(GetParam())),
-        codec_type_(::testing::get<2>(GetParam())) {}
+        codec_type_(::testing::get<1>(GetParam())),
+        hw_codec_(::testing::get<2>(GetParam())) {}
 
   virtual ~PlotVideoProcessorIntegrationTest() {}
 
-  void RunTest(int width, int height, const std::string& filename) {
+  void RunTest(int width,
+               int height,
+               int frame_rate,
+               const std::string& filename,
+               int num_frames) {
     // Bitrate and frame rate profile.
     RateProfile rate_profile;
     SetRateProfile(&rate_profile,
                    0,  // update_index
-                   bitrate_, framerate_,
+                   bitrate_, frame_rate,
                    0);  // frame_index_rate_update
-    rate_profile.frame_index_rate_update[1] = kNumFramesLong + 1;
-    rate_profile.num_frames = kNumFramesLong;
+    rate_profile.frame_index_rate_update[1] = num_frames + 1;
+    rate_profile.num_frames = num_frames;
 
     // Codec/network settings.
     CodecParams process_settings;
-    SetCodecParams(
-        &process_settings, codec_type_, kHwCodec, kUseSingleCore, kPacketLoss,
-        -1,  // key_frame_interval
-        1,   // num_temporal_layers
-        kErrorConcealmentOn, kDenoisingOn, kFrameDropperOn, kSpatialResizeOn,
-        width, height, filename, kVerboseLogging, kBatchMode);
+    SetCodecParams(&process_settings, codec_type_, hw_codec_, kUseSingleCore,
+                   kPacketLoss,
+                   -1,  // key_frame_interval
+                   1,   // num_temporal_layers
+                   kErrorConcealmentOn, kDenoisingOn, kFrameDropperOn,
+                   kSpatialResizeOn, width, height, filename, kVerboseLogging,
+                   kBatchMode, kCalculatePsnrAndSsim);
 
     // Use default thresholds for quality (PSNR and SSIM).
     QualityThresholds quality_thresholds;
@@ -81,14 +87,14 @@ class PlotVideoProcessorIntegrationTest
     // clang-format off
     SetRateControlThresholds(
       rc_thresholds,
-      0,                   // update_index
-      kNumFramesLong + 1,  // max_num_dropped_frames
-      10000,               // max_key_frame_size_mismatch
-      10000,               // max_delta_frame_size_mismatch
-      10000,               // max_encoding_rate_mismatch
-      kNumFramesLong + 1,  // max_time_hit_target
-      0,                   // num_spatial_resizes
-      1);                  // num_key_frames
+      0,               // update_index
+      num_frames + 1,  // max_num_dropped_frames
+      10000000,           // max_key_frame_size_mismatch
+      10000000,           // max_delta_frame_size_mismatch
+      10000000,           // max_encoding_rate_mismatch
+      num_frames + 1,  // max_time_hit_target
+      -1,              // num_spatial_resizes
+      -1);             // num_key_frames
     // clang-format on
 
     ProcessFramesAndVerify(quality_thresholds, rate_profile, process_settings,
@@ -96,35 +102,42 @@ class PlotVideoProcessorIntegrationTest
   }
 
   const int bitrate_;
-  const int framerate_;
   const VideoCodecType codec_type_;
+  const bool hw_codec_;
 };
 
-INSTANTIATE_TEST_CASE_P(
-    CodecSettings,
-    PlotVideoProcessorIntegrationTest,
-    ::testing::Combine(::testing::ValuesIn(kBitrates),
-                       ::testing::ValuesIn(kFps),
-                       ::testing::ValuesIn(kVideoCodecType)));
+INSTANTIATE_TEST_CASE_P(CodecSettings,
+                        PlotVideoProcessorIntegrationTest,
+                        ::testing::Combine(::testing::ValuesIn(kBitrates),
+                                           ::testing::ValuesIn(kVideoCodecType),
+                                           ::testing::ValuesIn(kHwCodec)));
 
-TEST_P(PlotVideoProcessorIntegrationTest, Process128x96) {
-  RunTest(128, 96, "foreman_128x96");
+TEST_P(PlotVideoProcessorIntegrationTest, Still_Bright_r360_fr30) {
+  RunTest(360, 640, 30, "Still_Bright_r360_fr30", kNumFrames);
 }
 
-TEST_P(PlotVideoProcessorIntegrationTest, Process160x120) {
-  RunTest(160, 120, "foreman_160x120");
+TEST_P(PlotVideoProcessorIntegrationTest, Still_Bright_r360_fr15) {
+  RunTest(360, 640, 15, "Still_Bright_r360_fr15", kNumFrames / 2);
 }
 
-TEST_P(PlotVideoProcessorIntegrationTest, Process176x144) {
-  RunTest(176, 144, "foreman_176x144");
+TEST_P(PlotVideoProcessorIntegrationTest, Still_Bright_r268_fr30) {
+  RunTest(268, 476, 30, "Still_Bright_r268_fr30", kNumFrames);
 }
 
-TEST_P(PlotVideoProcessorIntegrationTest, Process320x240) {
-  RunTest(320, 240, "foreman_320x240");
+TEST_P(PlotVideoProcessorIntegrationTest, Still_Bright_r268_fr15) {
+  RunTest(268, 476, 15, "Still_Bright_r268_fr15", kNumFrames / 2);
 }
 
-TEST_P(PlotVideoProcessorIntegrationTest, Process352x288) {
-  RunTest(352, 288, "foreman_cif");
+TEST_P(PlotVideoProcessorIntegrationTest, Still_Bright_r180_fr30) {
+  RunTest(180, 320, 30, "Still_Bright_r180_fr30", kNumFrames);
+}
+
+TEST_P(PlotVideoProcessorIntegrationTest, Still_Bright_r180_fr15) {
+  RunTest(180, 320, 15, "Still_Bright_r180_fr15", kNumFrames / 2);
+}
+
+TEST_P(PlotVideoProcessorIntegrationTest, gipsrec_motion1) {
+  RunTest(1280, 720, 30, "gipsrec_motion1.1280_720", kNumFrames);
 }
 
 }  // namespace test

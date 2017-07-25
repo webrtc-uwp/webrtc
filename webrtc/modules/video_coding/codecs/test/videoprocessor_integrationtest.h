@@ -28,8 +28,11 @@
 #endif
 
 #include "webrtc/base/checks.h"
+#include "webrtc/base/event.h"
 #include "webrtc/base/file.h"
 #include "webrtc/base/logging.h"
+#include "webrtc/base/task_queue.h"
+#include "webrtc/base/timeutils.h"
 #include "webrtc/media/engine/webrtcvideodecoderfactory.h"
 #include "webrtc/media/engine/webrtcvideoencoderfactory.h"
 #include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
@@ -41,6 +44,7 @@
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 #include "webrtc/modules/video_coding/include/video_coding.h"
 #include "webrtc/modules/video_coding/utility/ivf_file_writer.h"
+#include "webrtc/system_wrappers/include/sleep.h"
 #include "webrtc/test/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/test/testsupport/frame_reader.h"
@@ -92,6 +96,8 @@ struct CodecParams {
   // for which some calculated metrics otherwise would be incorrect. The
   // downside with batch mode is that mid-test rate allocation is not supported.
   bool batch_mode;
+
+  bool calculate_psnr_and_ssim;
 };
 
 // Thresholds for the quality metrics. Defaults are maximally minimal.
@@ -236,6 +242,7 @@ class VideoProcessorIntegrationTest : public testing::Test {
   }
 
   void SetUpCodecConfig(const CodecParams& process,
+                        const RateProfile& rate_profile,
                         const VisualizationParams* visualization_params) {
     CreateEncoderAndDecoder(process.hw_codec, process.codec_type);
 
@@ -254,12 +261,14 @@ class VideoProcessorIntegrationTest : public testing::Test {
     // Key frame interval and packet loss are set for each test.
     config_.keyframe_interval = process.key_frame_interval;
     config_.networking_config.packet_loss_probability =
-        packet_loss_probability_;
+        process.packet_loss_probability;
 
     // Configure codec settings.
     VideoCodingModule::Codec(process.codec_type, &codec_settings_);
     config_.codec_settings = &codec_settings_;
-    config_.codec_settings->startBitrate = start_bitrate_;
+    float start_bitrate = rate_profile.target_bit_rate[0];
+    config_.codec_settings->minBitrate = 1;
+    config_.codec_settings->startBitrate = start_bitrate;
     config_.codec_settings->width = process.width;
     config_.codec_settings->height = process.height;
 
@@ -309,18 +318,19 @@ class VideoProcessorIntegrationTest : public testing::Test {
     RTC_CHECK(analysis_frame_writer_->Init());
 
     if (visualization_params) {
+      int start_frame_rate = rate_profile.input_frame_rate[0];
       // clang-format off
       const std::string output_filename_base =
           test::OutputPath() + process.filename +
           "_cd-" + CodecTypeToPayloadName(process.codec_type).value_or("") +
           "_hw-" + std::to_string(process.hw_codec) +
-          "_fr-" + std::to_string(start_frame_rate_) +
-          "_br-" + std::to_string(static_cast<int>(start_bitrate_));
+          // "_fr-" + std::to_string(start_frame_rate) +
+          "_br-" + std::to_string(static_cast<int>(start_bitrate));
       // clang-format on
       if (visualization_params->save_source_y4m) {
         source_frame_writer_.reset(new test::Y4mFrameWriterImpl(
             output_filename_base + "_source.y4m", config_.codec_settings->width,
-            config_.codec_settings->height, start_frame_rate_));
+            config_.codec_settings->height, start_frame_rate));
         RTC_CHECK(source_frame_writer_->Init());
       }
       if (visualization_params->save_encoded_ivf) {
@@ -333,7 +343,7 @@ class VideoProcessorIntegrationTest : public testing::Test {
         decoded_frame_writer_.reset(new test::Y4mFrameWriterImpl(
             output_filename_base + "_decoded.y4m",
             config_.codec_settings->width, config_.codec_settings->height,
-            start_frame_rate_));
+            start_frame_rate));
         RTC_CHECK(decoded_frame_writer_->Init());
       }
     }
@@ -345,7 +355,6 @@ class VideoProcessorIntegrationTest : public testing::Test {
         analysis_frame_writer_.get(), packet_manipulator_.get(), config_,
         &stats_, source_frame_writer_.get(), encoded_frame_writer_.get(),
         decoded_frame_writer_.get()));
-    RTC_CHECK(processor_->Init());
   }
 
   // Reset quantities after each encoder update, update the target
@@ -379,12 +388,12 @@ class VideoProcessorIntegrationTest : public testing::Test {
   }
 
   // For every encoded frame, update the rate control metrics.
-  void UpdateRateControlMetrics(int frame_number) {
+  void UpdateRateControlMetrics(int frame_number,
+                                FrameType frame_type,
+                                size_t encoded_frame_size) {
     RTC_CHECK_GE(frame_number, 0);
     int tl_idx = TemporalLayerIndexForFrame(frame_number);
-    FrameType frame_type = processor_->EncodedFrameType(frame_number);
-    float encoded_size_kbits =
-        processor_->EncodedFrameSize(frame_number) * 8.0f / 1000.0f;
+    float encoded_size_kbits = encoded_frame_size * 8.0f / 1000.0f;
 
     // Update layer data.
     // Update rate mismatch relative to per-frame bandwidth for delta frames.
@@ -419,11 +428,36 @@ class VideoProcessorIntegrationTest : public testing::Test {
     }
   }
 
+  void UpdateRateControlMetrics(int frame_number, rtc::TaskQueue* task_queue) {
+    FrameType frame_type;
+    size_t encoded_frame_size;
+
+    if (task_queue) {
+      rtc::Event sync_event(false, false);
+      task_queue->PostTask([this, &frame_type, &encoded_frame_size,
+                            frame_number, &sync_event]() {
+        frame_type = processor_->EncodedFrameType(frame_number);
+        encoded_frame_size = processor_->EncodedFrameSize(frame_number);
+        sync_event.Set();
+      });
+      ASSERT_TRUE(sync_event.Wait(rtc::Event::kForever));
+    } else {
+      frame_type = processor_->EncodedFrameType(frame_number);
+      encoded_frame_size = processor_->EncodedFrameSize(frame_number);
+    }
+
+    UpdateRateControlMetrics(frame_number, frame_type, encoded_frame_size);
+  }
+
+  void UpdateRateControlMetrics(int frame_number) {
+    UpdateRateControlMetrics(frame_number, nullptr);
+  }
+
   // Verify expected behavior of rate control and print out data.
   void VerifyRateControlMetrics(int update_index,
-                                const RateControlThresholds& rc_expected) {
-    int num_dropped_frames = processor_->NumberDroppedFrames();
-    int num_resize_actions = processor_->NumberSpatialResizes();
+                                const RateControlThresholds& rc_expected,
+                                int num_dropped_frames,
+                                int num_resize_actions) {
     printf(
         "For update #: %d,\n"
         " Target Bitrate: %d,\n"
@@ -481,6 +515,35 @@ class VideoProcessorIntegrationTest : public testing::Test {
     if (rc_expected.num_key_frames >= 0) {
       EXPECT_EQ(rc_expected.num_key_frames, num_key_frames_);
     }
+  }
+
+  void VerifyRateControlMetrics(int update_index,
+                                const RateControlThresholds& rc_expected,
+                                rtc::TaskQueue* task_queue) {
+    int num_dropped_frames;
+    int num_resize_actions;
+
+    if (task_queue) {
+      rtc::Event sync_event(false, false);
+      task_queue->PostTask(
+          [this, &num_dropped_frames, &num_resize_actions, &sync_event]() {
+            num_dropped_frames = processor_->NumberDroppedFrames();
+            num_resize_actions = processor_->NumberSpatialResizes();
+            sync_event.Set();
+          });
+      ASSERT_TRUE(sync_event.Wait(rtc::Event::kForever));
+    } else {
+      num_dropped_frames = processor_->NumberDroppedFrames();
+      num_resize_actions = processor_->NumberSpatialResizes();
+    }
+
+    VerifyRateControlMetrics(update_index, rc_expected, num_dropped_frames,
+                             num_resize_actions);
+  }
+
+  void VerifyRateControlMetrics(int update_index,
+                                const RateControlThresholds& rc_expected) {
+    VerifyRateControlMetrics(update_index, rc_expected, nullptr);
   }
 
   void VerifyQuality(const test::QualityMetricsResult& psnr_result,
@@ -556,11 +619,9 @@ class VideoProcessorIntegrationTest : public testing::Test {
                               RateControlThresholds* rc_thresholds,
                               const VisualizationParams* visualization_params) {
     // Codec/config settings.
-    start_bitrate_ = rate_profile.target_bit_rate[0];
-    start_frame_rate_ = rate_profile.input_frame_rate[0];
-    packet_loss_probability_ = process.packet_loss_probability;
     num_temporal_layers_ = process.num_temporal_layers;
-    SetUpCodecConfig(process, visualization_params);
+    SetUpCodecConfig(process, rate_profile, visualization_params);
+
     // Update the temporal layers and the codec with the initial rates.
     bit_rate_ = rate_profile.target_bit_rate[0];
     frame_rate_ = rate_profile.input_frame_rate[0];
@@ -568,7 +629,6 @@ class VideoProcessorIntegrationTest : public testing::Test {
     // Set the initial target size for key frame.
     target_size_key_frame_initial_ =
         0.5 * kInitialBufferSize * bit_rate_layer_[0];
-    processor_->SetRates(bit_rate_, frame_rate_);
 
     // Process each frame, up to |num_frames|.
     int frame_number = 0;
@@ -581,17 +641,57 @@ class VideoProcessorIntegrationTest : public testing::Test {
       // In batch mode, we calculate the metrics for all frames after all frames
       // have been sent for encoding.
 
+      // AndroidMediaEncoder must be called on a task queue, so during the batch
+      // run we will call |processor_| on a task queue.
+      rtc::TaskQueue task_queue("VidProc TQ");
+
+      // Initialize |processor_|, which initializes the encoder and decoder.
+      rtc::Event sync_event(false, false);
+      task_queue.PostTask([this, &sync_event]() {
+        RTC_CHECK(processor_->Init());
+        processor_->SetRates(bit_rate_, frame_rate_);
+        sync_event.Set();
+      });
+      ASSERT_TRUE(sync_event.Wait(rtc::Event::kForever));
+
+      // Post all frames (in order) to encoder.
+      int start_frame_rate = rate_profile.input_frame_rate[0];
       // TODO(brandtr): Refactor "frame number accounting" so we don't have to
       // call ProcessFrame num_frames+1 times here.
       for (frame_number = 0; frame_number <= num_frames; ++frame_number) {
-        EXPECT_TRUE(processor_->ProcessFrame(frame_number));
+        task_queue.PostTask([this, frame_number]() {
+          EXPECT_TRUE(processor_->ProcessFrame(frame_number));
+        });
+
+        // Some HW codecs seem to only look at the inter-arrival times between
+        // frames and not the timestamp information when doing the rate control.
+        // We therefore roughly pace the frames here, in order to not cause
+        // unwanted frame dropping.
+        if (process.hw_codec) {
+          SleepMs(rtc::kNumMillisecsPerSec / start_frame_rate);
+        }
       }
 
+      // Give the task queue some time to finish processing the posted frames,
+      // then shut down processing and synchronize with main thread.
+      SleepMs(rtc::kNumMillisecsPerSec);
+      sync_event.Reset();
+      task_queue.PostTask([this, &sync_event]() {
+        EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Release());
+        EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, decoder_->Release());
+        processor_->DeregisterCallbacks();
+        sync_event.Set();
+      });
+      ASSERT_TRUE(sync_event.Wait(rtc::Event::kForever));
+
+      // Calculate and print rate control metrics.
       for (frame_number = 0; frame_number < num_frames; ++frame_number) {
         ++num_frames_per_update_[TemporalLayerIndexForFrame(frame_number)];
         ++num_frames_total_;
-        UpdateRateControlMetrics(frame_number);
+        UpdateRateControlMetrics(frame_number, &task_queue);
       }
+
+      VerifyRateControlMetrics(update_index, rc_thresholds[0], &task_queue);
     } else {
       // In online mode, we calculate the metrics for a given frame right after
       // it has been sent for encoding.
@@ -600,6 +700,10 @@ class VideoProcessorIntegrationTest : public testing::Test {
         LOG(LS_WARNING) << "HW codecs should mostly be run in batch mode, "
                            "since they may be pipelining.";
       }
+
+      // Initialize |processor_| on main thread.
+      RTC_CHECK(processor_->Init());
+      processor_->SetRates(bit_rate_, frame_rate_);
 
       while (frame_number < num_frames) {
         EXPECT_TRUE(processor_->ProcessFrame(frame_number));
@@ -629,17 +733,17 @@ class VideoProcessorIntegrationTest : public testing::Test {
       // TODO(brandtr): Refactor "frame number accounting" so we don't have to
       // call ProcessFrame one extra time here.
       EXPECT_TRUE(processor_->ProcessFrame(frame_number));
-    }
 
-    // Verify rate control metrics for all frames (if in batch mode), or for all
-    // frames since the last rate update (if not in batch mode).
-    VerifyRateControlMetrics(update_index, rc_thresholds[update_index]);
+      // Release codecs to make sure they have finished processing.
+      EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Release());
+      EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, decoder_->Release());
+      processor_->DeregisterCallbacks();
+
+      // Verify for final rate update.
+      VerifyRateControlMetrics(update_index, rc_thresholds[update_index]);
+    }
     EXPECT_EQ(num_frames, frame_number);
     EXPECT_EQ(num_frames + 1, static_cast<int>(stats_.stats_.size()));
-
-    // Release encoder and decoder to make sure they have finished processing.
-    EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Release());
-    EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, decoder_->Release());
 
     // Close the analysis files before we use them for SSIM/PSNR calculations.
     analysis_frame_reader_->Close();
@@ -657,16 +761,19 @@ class VideoProcessorIntegrationTest : public testing::Test {
     }
 
     // TODO(marpan): Should compute these quality metrics per SetRates update.
-    test::QualityMetricsResult psnr_result, ssim_result;
-    EXPECT_EQ(0, test::I420MetricsFromFiles(config_.input_filename.c_str(),
-                                            config_.output_filename.c_str(),
-                                            config_.codec_settings->width,
-                                            config_.codec_settings->height,
-                                            &psnr_result, &ssim_result));
-    printf("PSNR avg: %f, min: %f\nSSIM avg: %f, min: %f\n",
-           psnr_result.average, psnr_result.min, ssim_result.average,
-           ssim_result.min);
-    VerifyQuality(psnr_result, ssim_result, quality_thresholds);
+    if (process.calculate_psnr_and_ssim) {
+      test::QualityMetricsResult psnr_result, ssim_result;
+      EXPECT_EQ(0,
+                test::I420MetricsFromFiles(config_.input_filename.c_str(),
+                                           config_.output_filename.c_str(),
+                                           config_.codec_settings->width,
+                                           config_.codec_settings->height,
+                                           &psnr_result, &ssim_result));
+      printf("PSNR avg: %f, min: %f\nSSIM avg: %f, min: %f\n",
+             psnr_result.average, psnr_result.min, ssim_result.average,
+             ssim_result.min);
+      VerifyQuality(psnr_result, ssim_result, quality_thresholds);
+    }
     stats_.PrintSummary();
 
     // Remove analysis file.
@@ -690,7 +797,8 @@ class VideoProcessorIntegrationTest : public testing::Test {
                              int height,
                              const std::string& filename,
                              bool verbose_logging,
-                             bool batch_mode) {
+                             bool batch_mode,
+                             bool calculate_psnr_and_ssim) {
     process_settings->codec_type = codec_type;
     process_settings->hw_codec = hw_codec;
     process_settings->use_single_core = use_single_core;
@@ -706,6 +814,7 @@ class VideoProcessorIntegrationTest : public testing::Test {
     process_settings->filename = filename;
     process_settings->verbose_logging = verbose_logging;
     process_settings->batch_mode = batch_mode;
+    process_settings->calculate_psnr_and_ssim = calculate_psnr_and_ssim;
   }
 
   static void SetCodecParams(CodecParams* process_settings,
@@ -724,7 +833,7 @@ class VideoProcessorIntegrationTest : public testing::Test {
                    num_temporal_layers, error_concealment_on, denoising_on,
                    frame_dropper_on, spatial_resize_on, kCifWidth, kCifHeight,
                    kFilenameForemanCif, false /* verbose_logging */,
-                   false /* batch_mode */);
+                   false /* batch_mode */, true /* calculate_psnr_and_ssim */);
   }
 
   static void SetQualityThresholds(QualityThresholds* quality_thresholds,
@@ -812,11 +921,8 @@ class VideoProcessorIntegrationTest : public testing::Test {
   float target_size_key_frame_;
   float sum_key_frame_size_mismatch_;
   int num_key_frames_;
-  float start_bitrate_;
-  int start_frame_rate_;
 
   // Codec and network settings.
-  float packet_loss_probability_;
   int num_temporal_layers_;
 };
 

@@ -331,6 +331,7 @@ if (rtc_include_tests) {
       "../..:webrtc_common",
       "../../api/video_codecs:video_codecs_api",
       "../../base:rtc_base_approved",
+      "../../base:rtc_task_queue",
       "../../common_video:common_video",
       "../../system_wrappers:system_wrappers",
       "../../test:test_support",
@@ -355,7 +356,9 @@ if (rtc_include_tests) {
       ":webrtc_vp9",
       "../..:webrtc_common",
       "../../base:rtc_base_approved",
+      "../../base:rtc_task_queue",
       "../../media:rtc_media",
+      "../../system_wrappers:system_wrappers",
       "../../test:test_support",
       "../../test:video_test_support",
     ]
@@ -422,11 +425,12 @@ if (rtc_include_tests) {
   }
 
   plot_videoprocessor_integrationtest_resources = [
-    "//resources/foreman_128x96.yuv",
-    "//resources/foreman_160x120.yuv",
-    "//resources/foreman_176x144.yuv",
-    "//resources/foreman_320x240.yuv",
-    "//resources/foreman_cif.yuv",
+    "//resources/Still_Bright_r360_fr30.yuv",
+    "//resources/Still_Bright_r360_fr15.yuv",
+    "//resources/Still_Bright_r268_fr30.yuv",
+    "//resources/Still_Bright_r268_fr15.yuv",
+    "//resources/Still_Bright_r180_fr30.yuv",
+    "//resources/Still_Bright_r180_fr15.yuv",
   ]
 
   if (is_ios || is_mac) {
