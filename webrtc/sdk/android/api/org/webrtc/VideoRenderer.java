@@ -86,10 +86,10 @@ public class VideoRenderer {
     /**
      * Construct a frame of the given dimensions from VideoFrame.Buffer.
      */
-    public I420Frame(int width, int height, int rotationDegree, float[] samplingMatrix,
-        VideoFrame.Buffer buffer, long nativeFramePointer) {
-      this.width = width;
-      this.height = height;
+    public I420Frame(int rotationDegree, float[] samplingMatrix, VideoFrame.Buffer buffer,
+        long nativeFramePointer) {
+      this.width = buffer.getWidth();
+      this.height = buffer.getHeight();
       this.rotationDegree = rotationDegree;
       if (rotationDegree % 90 != 0) {
         throw new IllegalArgumentException("Rotation degree not multiple of 90: " + rotationDegree);

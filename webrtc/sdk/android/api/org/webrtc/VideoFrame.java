@@ -11,6 +11,7 @@
 package org.webrtc;
 
 import android.graphics.Matrix;
+import android.graphics.RectF;
 import java.nio.ByteBuffer;
 
 /**
@@ -70,10 +71,34 @@ public class VideoFrame {
   }
 
   private final Buffer buffer;
+  private final int scaledWidth;
+  private final int scaledHeight;
   private final int rotation;
   private final long timestampNs;
   private final Matrix transformMatrix;
 
+  /** Construct a scaled video frame. */
+  public VideoFrame(Buffer buffer, int scaledWidth, int scaledHeight, int rotation,
+      long timestampNs, Matrix transformMatrix) {
+    if (buffer == null) {
+      throw new IllegalArgumentException("buffer not allowed to be null");
+    }
+    if (transformMatrix == null) {
+      throw new IllegalArgumentException("transformMatrix not allowed to be null");
+    }
+    if (!isCropAndScaleMatrix(transformMatrix)) {
+      throw new IllegalArgumentException("transformMatrix is only allowed to crop and scale");
+    }
+
+    this.buffer = buffer;
+    this.scaledWidth = scaledWidth;
+    this.scaledHeight = scaledHeight;
+    this.rotation = rotation;
+    this.timestampNs = timestampNs;
+    this.transformMatrix = transformMatrix;
+  }
+
+  /** Construct an unscaled video frame. */
   public VideoFrame(Buffer buffer, int rotation, long timestampNs, Matrix transformMatrix) {
     if (buffer == null) {
       throw new IllegalArgumentException("buffer not allowed to be null");
@@ -81,10 +106,28 @@ public class VideoFrame {
     if (transformMatrix == null) {
       throw new IllegalArgumentException("transformMatrix not allowed to be null");
     }
+    if (!isCropAndScaleMatrix(transformMatrix)) {
+      throw new IllegalArgumentException("transformMatrix is only allowed to crop and scale");
+    }
+
+    RectF croppedRect = new RectF(0, 0, 1, 1);
+    if (!transformMatrix.mapRect(croppedRect)) {
+      throw new RuntimeException("mapRect failed in VideoFrame constructor");
+    }
+
     this.buffer = buffer;
+    this.scaledWidth = Math.round(buffer.getWidth() * croppedRect.width());
+    this.scaledHeight = Math.round(buffer.getHeight() * croppedRect.height());
     this.rotation = rotation;
     this.timestampNs = timestampNs;
     this.transformMatrix = transformMatrix;
+  }
+
+  // Called from native code.
+  VideoFrame(Buffer buffer, int scaledWidth, int scaledHeight, int rotation, long timestampNs,
+      float[] transformMatrix) {
+    this(buffer, scaledWidth, scaledHeight, rotation, timestampNs,
+        RendererCommon.convertMatrixToAndroidGraphicsMatrix(transformMatrix));
   }
 
   public Buffer getBuffer() {
@@ -114,15 +157,14 @@ public class VideoFrame {
     return transformMatrix;
   }
 
-  /**
-   * Resolution of the frame in pixels.
-   */
+  /** Returns the width of the frame in pixels after the transformation matrix has been applied. */
   public int getWidth() {
-    return buffer.getWidth();
+    return scaledWidth;
   }
 
+  /** Returns the height of the frame in pixels after the transformation matrix has been applied. */
   public int getHeight() {
-    return buffer.getHeight();
+    return scaledHeight;
   }
 
   /**
@@ -134,5 +176,17 @@ public class VideoFrame {
 
   public void release() {
     buffer.release();
+  }
+
+  private static boolean isCropAndScaleMatrix(Matrix matrix) {
+    // Matrix must be of form:
+    // [ s_x 0   t_x ]
+    // [ 0   s_y t_y ]
+    // [ 0   0   1   ]
+    float[] matrixValues = new float[9];
+    matrix.getValues(matrixValues);
+    return matrixValues[0 * 3 + 1] == 0f && matrixValues[1 * 3 + 0] == 0f
+        && matrixValues[2 * 3 + 0] == 0f && matrixValues[2 * 3 + 1] == 0f
+        && matrixValues[2 * 3 + 2] == 1f;
   }
 }
