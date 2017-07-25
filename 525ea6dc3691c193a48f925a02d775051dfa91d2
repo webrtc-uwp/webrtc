@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a7df1a8c_db1980e8",
+        "filename": "webrtc/audio/audio_send_stream.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-07-25T11:32:31Z",
+      "side": 1,
+      "message": "yes, of course. Fixed",
+      "parentUuid": "e695dd40_1693558b",
+      "range": {
+        "startLine": 492,
+        "startChar": 10,
+        "endLine": 492,
+        "endChar": 25
+      },
+      "revId": "525ea6dc3691c193a48f925a02d775051dfa91d2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6fd6e336_ddcac6da",
         "filename": "webrtc/audio/audio_send_stream_unittest.cc",
         "patchSetId": 1
@@ -36,6 +60,24 @@
       "writtenOn": "2017-07-25T11:07:27Z",
       "side": 1,
       "message": "Why is this called twice with the same parameter ?",
+      "revId": "525ea6dc3691c193a48f925a02d775051dfa91d2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f482da3_ec2c1eec",
+        "filename": "webrtc/audio/audio_send_stream_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-07-25T11:32:31Z",
+      "side": 1,
+      "message": "not the same, see \nkAnaConfigString\nkAnaReconfigString",
+      "parentUuid": "6fd6e336_ddcac6da",
       "revId": "525ea6dc3691c193a48f925a02d775051dfa91d2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
