@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30c9c95d_4e5952ef",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoFrame.java",
+        "patchSetId": 13
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-07-25T12:14:52Z",
+      "side": 1,
+      "message": "I don\u0027t like this variable name. I think simply \u0027rect\u0027 would be better, or maybe \u0027croppedRect\u0027.",
+      "range": {
+        "startLine": 116,
+        "startChar": 10,
+        "endLine": 116,
+        "endChar": 14
+      },
+      "revId": "571fef88f6abeeff0cf80ed446ce5e1212b2e69e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f0d4552_4de16b0e",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoFrame.java",
+        "patchSetId": 13
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-07-25T12:14:52Z",
+      "side": 1,
+      "message": "Remove the local scaledWidth/scaledHeight and assign directly, i.e.\nthis.scaledWidth \u003d buffer.getWidth() * area.width();",
+      "range": {
+        "startLine": 126,
+        "startChar": 23,
+        "endLine": 126,
+        "endChar": 34
+      },
+      "revId": "571fef88f6abeeff0cf80ed446ce5e1212b2e69e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba4c2e61_fd683d0c",
+        "filename": "webrtc/sdk/android/src/jni/androidmediaencoder_jni.cc",
+        "patchSetId": 13
+      },
+      "lineNbr": 919,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-07-25T12:14:52Z",
+      "side": 1,
+      "message": "Maybe a switch (android_buffer-\u003eandroid_type()) would be more appropriate.",
+      "range": {
+        "startLine": 906,
+        "startChar": 0,
+        "endLine": 919,
+        "endChar": 15
+      },
+      "revId": "571fef88f6abeeff0cf80ed446ce5e1212b2e69e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bf840703_0af03971",
+        "filename": "webrtc/sdk/android/src/jni/native_handle_impl.cc",
+        "patchSetId": 13
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1117641
+      },
+      "writtenOn": "2017-07-25T12:14:52Z",
+      "side": 1,
+      "message": "I would skip commenting one of these last matrices and just say \"We want to construct a matrix that looks like this:\".",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 17
+      },
+      "revId": "571fef88f6abeeff0cf80ed446ce5e1212b2e69e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
