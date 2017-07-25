@@ -208,6 +208,7 @@ class StatsReport {
     kStatsValueNameRetransmitBitrate,
     kStatsValueNameRtt,
     kStatsValueNameSecondaryDecodedRate,
+    kStatsValueNameSecondaryDiscardedRate,
     kStatsValueNameSendPacketsDiscarded,
     kStatsValueNameSpeechExpandRate,
     kStatsValueNameSrtpCipher,

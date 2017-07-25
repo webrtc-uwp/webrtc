@@ -778,10 +778,9 @@ void RTCStatsCollector::AddPartialResults_s(
     for (const RTCStats& stats : *cached_report_) {
       for (const RTCStatsMemberInterface* member : stats.Members()) {
         if (member->is_defined()) {
-          TRACE_EVENT_INSTANT2("webrtc_stats", "webrtc_stats",
-                               "value", member->ValueToString(),
-                               "type.name.id", GetStatTypeMemberNameAndId(
-                                   stats, member));
+          TRACE_EVENT_INSTANT2("webrtc_stats", "webrtc_stats", "value",
+                               member->ValueToString(), "type.name.id",
+                               GetStatTypeMemberNameAndId(stats, member));
         }
       }
     }
