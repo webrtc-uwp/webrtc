@@ -1,0 +1,259 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81cc25d9_c2bbd86e",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-25T11:02:18Z",
+      "side": 1,
+      "message": "Please add:\nRTC_DCHECK(mid_sinks_.empty());\n\nI would also add checks for the observer lists, but that\u0027s more optional.",
+      "revId": "edc8991cc9e7dc3aff5ae2d512d92351c448ef89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d35d0845_452b4b86",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-25T11:02:18Z",
+      "side": 1,
+      "message": "Would making the RSID map take pairs of (MID, RSID) as the key, where \"\" is the key for no-MID, work as a solution? In that case, do we want \"\" as no-MID, or as a wildcard (any MID as well as none)? Probably the former?\n(Just discussing; not an action item for this CL.)",
+      "revId": "edc8991cc9e7dc3aff5ae2d512d92351c448ef89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df0e4447_ceb4271e",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-25T11:02:18Z",
+      "side": 1,
+      "message": "The algorithm in the IETF document mentioned dropping packets with an unrecognized MID, so I think we should move this to a function and run this before the normal SSRC-based lookup.",
+      "revId": "edc8991cc9e7dc3aff5ae2d512d92351c448ef89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8bf5028b_9d149f3b",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-25T11:02:18Z",
+      "side": 1,
+      "message": "nit: Mark tear-down, as in other tests you\u0027ve added?",
+      "revId": "edc8991cc9e7dc3aff5ae2d512d92351c448ef89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e12f6df5_99caa792",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 595,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-25T11:02:18Z",
+      "side": 1,
+      "message": "Need to add a test making sure that a packet with an unrecognized MID gets dropped. So:\nAddSink(ssrc_a, sink_a);\nThen transmit a packet with ssrc_a and unknown_mid. Make sure sink_a does *not* get the packet.",
+      "revId": "edc8991cc9e7dc3aff5ae2d512d92351c448ef89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d371d1f1_95fa9b13",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-25T11:02:18Z",
+      "side": 1,
+      "message": "Beg pardon, but I found this a bit difficult to understand. How about the following phrasing? You could take all or just part of it:\n\"All packets carrying a MID get routed to the sink associated with the MID. The SSRC of those packets gets bound to the same sink. Future packets with that SSRC get routed to the sink, even if they do not have a MID attached.\"",
+      "revId": "edc8991cc9e7dc3aff5ae2d512d92351c448ef89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3397f5dd_76046660",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 610,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-25T11:02:18Z",
+      "side": 1,
+      "message": "You\u0027re actually doing to tests here:\n1. Routing by-MID works; the correct sink gets the packet.\n2. SSRCs bound to a MID stay bound to a MID.\nPlease break this down into two tests, thereby having each test be simpler.\nThe phrasing I had suggested earlier would then refer to the second of those tests.",
+      "revId": "edc8991cc9e7dc3aff5ae2d512d92351c448ef89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8856cbd4_8dc8f599",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-25T11:02:18Z",
+      "side": 1,
+      "message": "super-nit: Only the MID is optional, IIUC, but the phrasing seems to suggest both are optional.",
+      "revId": "edc8991cc9e7dc3aff5ae2d512d92351c448ef89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2d6f673_e9a5a72d",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-25T11:02:18Z",
+      "side": 1,
+      "message": "We probably also want a test for when the SSRC is just assigned to a sink, independent of a MID.",
+      "revId": "edc8991cc9e7dc3aff5ae2d512d92351c448ef89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5567531a_a27a3480",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-25T11:02:18Z",
+      "side": 1,
+      "message": "Please break this down into two separate tests:\n1. MidResolutionObserversNotifiedOfResolutions\n2. MidResolutionObserversNotNotifiedSecondTime\n\nBy the way, what behavior do we want when an observer is added at a later time? Or is this not likely? If not likely, I wonder if we want to sanity-test it, or just leave it be?",
+      "revId": "edc8991cc9e7dc3aff5ae2d512d92351c448ef89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c6b0464_4e682558",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 675,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-25T11:02:18Z",
+      "side": 1,
+      "message": "nit: Add TODO for later addition of RSID-MID-interoperation tests?",
+      "revId": "edc8991cc9e7dc3aff5ae2d512d92351c448ef89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a4e3cbeb_5ab23a0b",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 677,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-25T11:02:18Z",
+      "side": 1,
+      "message": "What are the rules for a well-formatted MID name, as per Mid::IsLegalName? Could you please check them, too?",
+      "revId": "edc8991cc9e7dc3aff5ae2d512d92351c448ef89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e73ac757_45bde8e0",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-25T11:02:18Z",
+      "side": 1,
+      "message": "I\u0027d suggest adding a test similar to this one. (1/3)",
+      "revId": "edc8991cc9e7dc3aff5ae2d512d92351c448ef89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "152beb70_6d89d1c1",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 705,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-25T11:02:18Z",
+      "side": 1,
+      "message": "I\u0027d suggest adding a test similar to this one. (2/3)",
+      "revId": "edc8991cc9e7dc3aff5ae2d512d92351c448ef89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "364a2f63_167c638b",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-25T11:02:18Z",
+      "side": 1,
+      "message": "I\u0027d suggest adding a test similar to this one. (3/3)",
+      "revId": "edc8991cc9e7dc3aff5ae2d512d92351c448ef89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
