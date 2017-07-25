@@ -122,6 +122,24 @@
     },
     {
       "key": {
+        "uuid": "3552aed9_b3721057",
+        "filename": "webrtc/rtc_base/openssladapter.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-25T19:56:23Z",
+      "side": 1,
+      "message": "This code isn\u0027t used in Chrome at all.  It uses a completely different \"socket factory\".",
+      "parentUuid": "38cd6a00_cefb05bd",
+      "revId": "6d3e2f26c29c29a55f646d8778b64be3226d67d8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3a300146_92be3ad3",
         "filename": "webrtc/rtc_base/ssladapter.h",
         "patchSetId": 4
