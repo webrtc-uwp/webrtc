@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a126bddb_8c1ff537",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoFrame.java",
+        "patchSetId": 13
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-07-25T12:36:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "30c9c95d_4e5952ef",
+      "range": {
+        "startLine": 116,
+        "startChar": 10,
+        "endLine": 116,
+        "endChar": 14
+      },
+      "revId": "571fef88f6abeeff0cf80ed446ce5e1212b2e69e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7f0d4552_4de16b0e",
         "filename": "webrtc/sdk/android/api/org/webrtc/VideoFrame.java",
         "patchSetId": 13
@@ -45,6 +69,30 @@
       "revId": "571fef88f6abeeff0cf80ed446ce5e1212b2e69e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f4d93d2_b43cc124",
+        "filename": "webrtc/sdk/android/api/org/webrtc/VideoFrame.java",
+        "patchSetId": 13
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-07-25T12:36:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7f0d4552_4de16b0e",
+      "range": {
+        "startLine": 126,
+        "startChar": 23,
+        "endLine": 126,
+        "endChar": 34
+      },
+      "revId": "571fef88f6abeeff0cf80ed446ce5e1212b2e69e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "4c054373_930c18d3",
+        "filename": "webrtc/sdk/android/src/jni/androidmediaencoder_jni.cc",
+        "patchSetId": 13
+      },
+      "lineNbr": 919,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-07-25T12:36:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ba4c2e61_fd683d0c",
+      "range": {
+        "startLine": 906,
+        "startChar": 0,
+        "endLine": 919,
+        "endChar": 15
+      },
+      "revId": "571fef88f6abeeff0cf80ed446ce5e1212b2e69e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bf840703_0af03971",
         "filename": "webrtc/sdk/android/src/jni/native_handle_impl.cc",
         "patchSetId": 13
@@ -91,6 +163,30 @@
       "revId": "571fef88f6abeeff0cf80ed446ce5e1212b2e69e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f21157d_6233c36e",
+        "filename": "webrtc/sdk/android/src/jni/native_handle_impl.cc",
+        "patchSetId": 13
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-07-25T12:36:36Z",
+      "side": 1,
+      "message": "Actually, this should not be included in this CL.",
+      "parentUuid": "bf840703_0af03971",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 17
+      },
+      "revId": "571fef88f6abeeff0cf80ed446ce5e1212b2e69e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
