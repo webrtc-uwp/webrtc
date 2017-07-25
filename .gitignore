@@ -63,3 +63,11 @@
 /webrtc/tools/testing/golang/*/*.zip
 /x86-generic_out/
 /xcodebuild
+
+*.MOV
+*.mp4
+*.yuv
+*.y4m
+*.dat
+*.log
+videoprocessor_integrationtest*

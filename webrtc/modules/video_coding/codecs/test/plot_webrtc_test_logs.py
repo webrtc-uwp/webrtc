@@ -22,7 +22,8 @@ EVENT_START = 'RUN      ] CodecSettings/PlotVideoProcessorIntegrationTest.'
 EVENT_END = 'OK ] CodecSettings/PlotVideoProcessorIntegrationTest.'
 
 # Metrics to plot, tuple: (name to parse in file, label to use when plotting).
-BITRATE = ('Target Bitrate', 'bitrate (kbps)')
+BITRATE = ('Target Bitrate', 'Target bitrate (kbps)')
+# BITRATE = ('Encoding bitrate', 'Encoded bitrate (kbps)')
 WIDTH = ('Width', 'width')
 HEIGHT = ('Height', 'height')
 FILENAME = ('Filename', 'clip')
@@ -315,7 +316,7 @@ def PlotFigure(settings, y_metrics, x_metric, metrics, title):
   """
 
   plt.figure()
-  plt.suptitle(title, fontsize='small', fontweight='bold')
+  plt.suptitle(title, fontsize='large', fontweight='bold')
   rows = len(settings)
   cols = 1
   pos = 1
@@ -323,16 +324,16 @@ def PlotFigure(settings, y_metrics, x_metric, metrics, title):
     plt.rc('grid', color=GRID_COLOR)
     ax = plt.subplot(rows, cols, pos)
     plt.grid()
-    plt.setp(ax.get_xticklabels(), visible=(pos == rows), fontsize='small')
-    plt.setp(ax.get_yticklabels(), fontsize='small')
+    plt.setp(ax.get_xticklabels(), visible=(pos == rows), fontsize='large')
+    plt.setp(ax.get_yticklabels(), fontsize='large')
     setting = settings[pos - 1]
     Plot(y_metrics[pos - 1], x_metric, metrics[setting])
-    plt.title(setting, fontsize='x-small')
-    plt.legend(fontsize='xx-small')
+    plt.title(setting, fontsize='medium')
+    plt.legend(fontsize='large')
     pos += 1
 
-  plt.xlabel(x_metric, fontsize='small')
-  plt.subplots_adjust(left=0.04, right=0.98, bottom=0.04, top=0.96, hspace=0.1)
+  plt.xlabel(x_metric, fontsize='large')
+  # plt.subplots_adjust(left=0.04, right=0.98, bottom=0.04, top=0.96, hspace=0.1)
 
 
 def GetTitle(filename):
