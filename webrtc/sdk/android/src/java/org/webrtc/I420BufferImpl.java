@@ -71,26 +71,23 @@ class I420BufferImpl implements VideoFrame.I420Buffer {
 
   @Override
   public ByteBuffer getDataY() {
-    ByteBuffer data = buffer.slice();
-    data.position(yPos);
-    data.limit(yPos + getStrideY() * height);
-    return data;
+    buffer.position(yPos);
+    buffer.limit(yPos + getStrideY() * height);
+    return buffer.slice();
   }
 
   @Override
   public ByteBuffer getDataU() {
-    ByteBuffer data = buffer.slice();
-    data.position(uPos);
-    data.limit(uPos + strideU * chromaHeight);
-    return data;
+    buffer.position(uPos);
+    buffer.limit(uPos + strideU * chromaHeight);
+    return buffer.slice();
   }
 
   @Override
   public ByteBuffer getDataV() {
-    ByteBuffer data = buffer.slice();
-    data.position(vPos);
-    data.limit(vPos + strideV * chromaHeight);
-    return data;
+    buffer.position(vPos);
+    buffer.limit(vPos + strideV * chromaHeight);
+    return buffer.slice();
   }
 
   @Override
