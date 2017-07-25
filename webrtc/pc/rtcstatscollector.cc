@@ -36,8 +36,9 @@ const int kStatTypeMemberNameAndIdMaxLen = 1024;
 
 std::string GetStatTypeMemberNameAndId(const RTCStats& stats,
                                        const RTCStatsMemberInterface* member) {
-  RTC_DCHECK(strlen(stats.type()) + strlen(member->name())
-             + stats.id().size() + 3 < kStatTypeMemberNameAndIdMaxLen);
+  RTC_DCHECK(strlen(stats.type()) + strlen(member->name()) + stats.id().size() +
+                 3 <
+             kStatTypeMemberNameAndIdMaxLen);
   char buffer[kStatTypeMemberNameAndIdMaxLen];
   rtc::sprintfn(&buffer[0], sizeof(buffer), "%s.%s.%s", stats.type(),
                 member->name(), stats.id().c_str());
@@ -778,10 +779,9 @@ void RTCStatsCollector::AddPartialResults_s(
     for (const RTCStats& stats : *cached_report_) {
       for (const RTCStatsMemberInterface* member : stats.Members()) {
         if (member->is_defined()) {
-          TRACE_EVENT_INSTANT2("webrtc_stats", "webrtc_stats",
-                               "value", member->ValueToString(),
-                               "type.name.id", GetStatTypeMemberNameAndId(
-                                   stats, member));
+          TRACE_EVENT_INSTANT2("webrtc_stats", "webrtc_stats", "value",
+                               member->ValueToString(), "type.name.id",
+                               GetStatTypeMemberNameAndId(stats, member));
         }
       }
     }

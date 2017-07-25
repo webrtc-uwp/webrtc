@@ -139,17 +139,18 @@ void SetAudioProcessingStats(StatsReport* report,
 void ExtractStats(const cricket::VoiceReceiverInfo& info, StatsReport* report) {
   ExtractCommonReceiveProperties(info, report);
   const FloatForAdd floats[] = {
-    { StatsReport::kStatsValueNameExpandRate, info.expand_rate },
-    { StatsReport::kStatsValueNameSecondaryDecodedRate,
-      info.secondary_decoded_rate },
-    { StatsReport::kStatsValueNameSpeechExpandRate, info.speech_expand_rate },
-    { StatsReport::kStatsValueNameAccelerateRate, info.accelerate_rate },
-    { StatsReport::kStatsValueNamePreemptiveExpandRate,
-      info.preemptive_expand_rate },
-    { StatsReport::kStatsValueNameTotalAudioEnergy, info.total_output_energy },
-    { StatsReport::kStatsValueNameTotalSamplesDuration,
-      info.total_output_duration }
-  };
+      {StatsReport::kStatsValueNameExpandRate, info.expand_rate},
+      {StatsReport::kStatsValueNameSecondaryDecodedRate,
+       info.secondary_decoded_rate},
+      {StatsReport::kStatsValueNameSecondaryDiscardedRate,
+       info.secondary_discarded_rate},
+      {StatsReport::kStatsValueNameSpeechExpandRate, info.speech_expand_rate},
+      {StatsReport::kStatsValueNameAccelerateRate, info.accelerate_rate},
+      {StatsReport::kStatsValueNamePreemptiveExpandRate,
+       info.preemptive_expand_rate},
+      {StatsReport::kStatsValueNameTotalAudioEnergy, info.total_output_energy},
+      {StatsReport::kStatsValueNameTotalSamplesDuration,
+       info.total_output_duration}};
 
   const IntForAdd ints[] = {
     { StatsReport::kStatsValueNameCurrentDelayMs, info.delay_estimate_ms },
@@ -199,10 +200,9 @@ void ExtractStats(const cricket::VoiceSenderInfo& info, StatsReport* report) {
       info.residual_echo_likelihood, info.residual_echo_likelihood_recent_max);
 
   const FloatForAdd floats[] = {
-    { StatsReport::kStatsValueNameTotalAudioEnergy, info.total_input_energy },
-    { StatsReport::kStatsValueNameTotalSamplesDuration,
-      info.total_input_duration }
-  };
+      {StatsReport::kStatsValueNameTotalAudioEnergy, info.total_input_energy},
+      {StatsReport::kStatsValueNameTotalSamplesDuration,
+       info.total_input_duration}};
 
   RTC_DCHECK_GE(info.audio_level, 0);
   const IntForAdd ints[] = {
