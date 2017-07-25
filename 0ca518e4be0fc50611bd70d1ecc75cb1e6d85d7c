@@ -97,6 +97,30 @@
     },
     {
       "key": {
+        "uuid": "7364eb89_a77a1e39",
+        "filename": "webrtc/call/mid_resolution_observer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-25T01:01:12Z",
+      "side": 1,
+      "message": "I can\u0027t think of an observer which would only care about RSID and not MID. In particular, the only active observer right now is the RtcpDemuxer which definitely cares about both.",
+      "parentUuid": "fcf62333_0ba37c21",
+      "range": {
+        "startLine": 25,
+        "startChar": 72,
+        "endLine": 25,
+        "endChar": 0
+      },
+      "revId": "0ca518e4be0fc50611bd70d1ecc75cb1e6d85d7c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a6f7e02c_ccb01741",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 1
