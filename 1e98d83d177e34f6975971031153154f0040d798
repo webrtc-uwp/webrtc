@@ -69,6 +69,30 @@
       "revId": "1e98d83d177e34f6975971031153154f0040d798",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ec65db3_69da9ffe",
+        "filename": "webrtc/sdk/android/src/jni/androidmediaencoder_jni.cc",
+        "patchSetId": 12
+      },
+      "lineNbr": 908,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-07-25T12:37:44Z",
+      "side": 1,
+      "message": "Oops, I made this comment for myself to use else if but I used a switch as you suggested.",
+      "parentUuid": "ad549db7_404e7d68",
+      "range": {
+        "startLine": 908,
+        "startChar": 2,
+        "endLine": 908,
+        "endChar": 4
+      },
+      "revId": "1e98d83d177e34f6975971031153154f0040d798",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
