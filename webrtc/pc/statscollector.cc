@@ -142,6 +142,8 @@ void ExtractStats(const cricket::VoiceReceiverInfo& info, StatsReport* report) {
     { StatsReport::kStatsValueNameExpandRate, info.expand_rate },
     { StatsReport::kStatsValueNameSecondaryDecodedRate,
       info.secondary_decoded_rate },
+    { StatsReport::kStatsValueNameSecondaryDiscardedRate,
+      info.secondary_discarded_rate },
     { StatsReport::kStatsValueNameSpeechExpandRate, info.speech_expand_rate },
     { StatsReport::kStatsValueNameAccelerateRate, info.accelerate_rate },
     { StatsReport::kStatsValueNamePreemptiveExpandRate,
@@ -201,7 +203,7 @@ void ExtractStats(const cricket::VoiceSenderInfo& info, StatsReport* report) {
   const FloatForAdd floats[] = {
     { StatsReport::kStatsValueNameTotalAudioEnergy, info.total_input_energy },
     { StatsReport::kStatsValueNameTotalSamplesDuration,
-      info.total_input_duration }
+     info.total_input_duration }
   };
 
   RTC_DCHECK_GE(info.audio_level, 0);
