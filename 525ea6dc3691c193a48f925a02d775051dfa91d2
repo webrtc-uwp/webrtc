@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e695dd40_1693558b",
+        "filename": "webrtc/audio/audio_send_stream.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1167080
+      },
+      "writtenOn": "2017-07-25T11:07:27Z",
+      "side": 1,
+      "message": "why not old_config.audio_network_adaptor_config ?",
+      "range": {
+        "startLine": 492,
+        "startChar": 10,
+        "endLine": 492,
+        "endChar": 25
+      },
+      "revId": "525ea6dc3691c193a48f925a02d775051dfa91d2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6fd6e336_ddcac6da",
+        "filename": "webrtc/audio/audio_send_stream_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1167080
+      },
+      "writtenOn": "2017-07-25T11:07:27Z",
+      "side": 1,
+      "message": "Why is this called twice with the same parameter ?",
+      "revId": "525ea6dc3691c193a48f925a02d775051dfa91d2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
