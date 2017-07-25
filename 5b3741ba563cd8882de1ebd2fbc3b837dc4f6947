@@ -333,6 +333,30 @@
     },
     {
       "key": {
+        "uuid": "4d188daa_b112f204",
+        "filename": "webrtc/modules/desktop_capture/win/display_change_detector.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-25T00:11:15Z",
+      "side": 1,
+      "message": "I think renaming this class would be easier. :)",
+      "parentUuid": "db3c5c97_4a2e18eb",
+      "range": {
+        "startLine": 20,
+        "startChar": 29,
+        "endLine": 20,
+        "endChar": 0
+      },
+      "revId": "5b3741ba563cd8882de1ebd2fbc3b837dc4f6947",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ba36d4aa_450822e8",
         "filename": "webrtc/modules/desktop_capture/win/screen_capture_utils.h",
         "patchSetId": 7
