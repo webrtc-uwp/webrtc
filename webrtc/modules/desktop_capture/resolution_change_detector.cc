@@ -19,7 +19,12 @@ bool ResolutionChangeDetector::IsChanged(DesktopSize size) {
     return false;
   }
 
-  return !last_size_.equals(size);
+  if (last_size_.equals(size)) {
+    return true;
+  }
+
+  last_size_ = size;
+  return false;
 }
 
 void ResolutionChangeDetector::Reset() {
