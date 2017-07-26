@@ -854,12 +854,12 @@ std::vector<rtcp::ReportBlock> RTCPSender::CreateReportBlocks(
     rtcp::ReportBlock& block = result.back();
     block.SetMediaSsrc(statistician.first);
     block.SetFractionLost(stats.fraction_lost);
-    if (!block.SetCumulativeLost(stats.cumulative_lost)) {
+    if (!block.SetCumulativeLost(stats.packets_lost)) {
       LOG(LS_WARNING) << "Cumulative lost is oversized.";
       result.pop_back();
       continue;
     }
-    block.SetExtHighestSeqNum(stats.extended_max_sequence_number);
+    block.SetExtHighestSeqNum(stats.extended_highest_sequence_number);
     block.SetJitter(stats.jitter);
   }
 
