@@ -94,8 +94,8 @@ TEST(VoeConferenceTest, RttAndStartNtpTime) {
         stats_1.capture_start_ntp_time_ms_;
 
     // For the checks of RTT and start NTP time, We allow 10% accuracy.
-    if (IsNear(kRttMs, stats_1.rttMs, kRttMs / 10 + 1) &&
-        IsNear(kRttMs, stats_2.rttMs, kRttMs / 10 + 1) &&
+    if (IsNear(kRttMs, stats_1.round_trip_time_ms, kRttMs / 10 + 1) &&
+        IsNear(kRttMs, stats_2.round_trip_time_ms, kRttMs / 10 + 1) &&
         IsNear(kDelayMs, captured_start_ntp_delay, kDelayMs / 10 + 1)) {
       successive_pass++;
     } else {
@@ -104,7 +104,8 @@ TEST(VoeConferenceTest, RttAndStartNtpTime) {
     if (stats_buffer.size() >= kStatsBufferSize) {
       stats_buffer.pop();
     }
-    stats_buffer.push(Stats(stats_1.rttMs, stats_2.rttMs,
+    stats_buffer.push(Stats(stats_1.round_trip_time_ms,
+                            stats_2.round_trip_time_ms,
                             captured_start_ntp_delay));
   }
 
@@ -164,12 +165,12 @@ TEST(VoeConferenceTest, ReceivedPackets) {
     // We expect stream 0 to be filtered out totally, but since it may join the
     // call earlier than other streams and the beginning packets might have got
     // through. So we only expect |packetsReceived| to be close to zero.
-    EXPECT_NEAR(stats_0.packetsReceived, 0, 2);
+    EXPECT_NEAR(stats_0.packets_received, 0, 2);
     // We expect |packetsReceived| to match |kPackets|, but the actual value
     // depends on the sleep timer. So we allow a small off from |kPackets|.
-    EXPECT_NEAR(stats_1.packetsReceived, kPackets, 2);
-    EXPECT_NEAR(stats_2.packetsReceived, kPackets, 2);
-    EXPECT_NEAR(stats_3.packetsReceived, kPackets, 2);
+    EXPECT_NEAR(stats_1.packets_received, kPackets, 2);
+    EXPECT_NEAR(stats_2.packets_received, kPackets, 2);
+    EXPECT_NEAR(stats_3.packets_received, kPackets, 2);
   }
 
   remove(silence_file.c_str());

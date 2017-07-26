@@ -64,7 +64,7 @@ TEST(RtcpPacketSenderReportTest, ParseWithoutReportBlocks) {
 
 TEST(RtcpPacketSenderReportTest, CreateAndParseWithOneReportBlock) {
   ReportBlock rb;
-  rb.SetMediaSsrc(kRemoteSsrc);
+  rb.SetSourceSsrc(kRemoteSsrc);
 
   SenderReport sr;
   sr.SetSenderSsrc(kSenderSsrc);
@@ -81,9 +81,9 @@ TEST(RtcpPacketSenderReportTest, CreateAndParseWithOneReportBlock) {
 
 TEST(RtcpPacketSenderReportTest, CreateAndParseWithTwoReportBlocks) {
   ReportBlock rb1;
-  rb1.SetMediaSsrc(kRemoteSsrc);
+  rb1.SetSourceSsrc(kRemoteSsrc);
   ReportBlock rb2;
-  rb2.SetMediaSsrc(kRemoteSsrc + 1);
+  rb2.SetSourceSsrc(kRemoteSsrc + 1);
 
   SenderReport sr;
   sr.SetSenderSsrc(kSenderSsrc);
@@ -105,10 +105,10 @@ TEST(RtcpPacketSenderReportTest, CreateWithTooManyReportBlocks) {
   sr.SetSenderSsrc(kSenderSsrc);
   ReportBlock rb;
   for (size_t i = 0; i < SenderReport::kMaxNumberOfReportBlocks; ++i) {
-    rb.SetMediaSsrc(kRemoteSsrc + i);
+    rb.SetSourceSsrc(kRemoteSsrc + i);
     EXPECT_TRUE(sr.AddReportBlock(rb));
   }
-  rb.SetMediaSsrc(kRemoteSsrc + SenderReport::kMaxNumberOfReportBlocks);
+  rb.SetSourceSsrc(kRemoteSsrc + SenderReport::kMaxNumberOfReportBlocks);
   EXPECT_FALSE(sr.AddReportBlock(rb));
 }
 

@@ -172,18 +172,19 @@ webrtc::AudioReceiveStream::Stats AudioReceiveStream::GetStats() const {
     return stats;
   }
 
-  stats.bytes_rcvd = call_stats.bytesReceived;
-  stats.packets_rcvd = call_stats.packetsReceived;
-  stats.packets_lost = call_stats.cumulativeLost;
-  stats.fraction_lost = Q8ToFloat(call_stats.fractionLost);
+  stats.bytes_received = call_stats.bytes_received;
+  stats.packets_received = call_stats.packets_received;
+  stats.packets_lost = call_stats.packets_lost;
+  stats.fraction_lost = Q8ToFloat(call_stats.fraction_lost);
   stats.capture_start_ntp_time_ms = call_stats.capture_start_ntp_time_ms_;
   if (codec_inst.pltype != -1) {
     stats.codec_name = codec_inst.plname;
     stats.codec_payload_type = rtc::Optional<int>(codec_inst.pltype);
   }
-  stats.ext_seqnum = call_stats.extendedMax;
+  stats.extended_highest_sequence_number =
+      call_stats.extended_highest_sequence_number;
   if (codec_inst.plfreq / 1000 > 0) {
-    stats.jitter_ms = call_stats.jitterSamples / (codec_inst.plfreq / 1000);
+    stats.jitter_ms = call_stats.jitter / (codec_inst.plfreq / 1000);
   }
   stats.delay_estimate_ms = channel_proxy_->GetDelayEstimate();
   stats.audio_level = channel_proxy_->GetSpeechOutputLevelFullRange();

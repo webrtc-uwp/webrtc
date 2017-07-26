@@ -57,9 +57,10 @@ const float kResidualEchoLikelihood = -1.0f;
 const int32_t kSpeechInputLevel = 96;
 const double kTotalInputEnergy = 0.25;
 const double kTotalInputDuration = 0.5;
-const CallStatistics kCallStats = {
-    1345,  1678,  1901, 1234,  112, 13456, 17890, 1567, -1890, -1123};
-const ReportBlock kReportBlock = {456, 780, 123, 567, 890, 132, 143, 13354};
+const CallStatistics kCallStats = {{1345},  {1678},  {1901}, {1234},  {112},
+                                   {13456}, {17890}, {1567}, {-1890}, -1123};
+const ReportBlock kReportBlock = {{456}, {780}, 123,   {567},
+                                  890,   {132}, {143}, {13354}};
 const int kTelephoneEventPayloadType = 123;
 const int kTelephoneEventPayloadFrequency = 65432;
 const int kTelephoneEventCode = 45;
@@ -275,7 +276,7 @@ struct ConfigHelper {
     std::vector<ReportBlock> report_blocks;
     webrtc::ReportBlock block = kReportBlock;
     report_blocks.push_back(block);  // Has wrong SSRC.
-    block.source_SSRC = kSsrc;
+    block.source_ssrc = kSsrc;
     report_blocks.push_back(block);  // Correct block.
     block.fraction_lost = 0;
     report_blocks.push_back(block);  // Duplicate SSRC, bad fraction_lost.
@@ -415,18 +416,18 @@ TEST(AudioSendStreamTest, GetStats) {
   helper.SetupMockForGetStats();
   AudioSendStream::Stats stats = send_stream.GetStats();
   EXPECT_EQ(kSsrc, stats.local_ssrc);
-  EXPECT_EQ(static_cast<int64_t>(kCallStats.bytesSent), stats.bytes_sent);
-  EXPECT_EQ(kCallStats.packetsSent, stats.packets_sent);
-  EXPECT_EQ(static_cast<int32_t>(kReportBlock.cumulative_num_packets_lost),
+  EXPECT_EQ(static_cast<int64_t>(kCallStats.bytes_sent), stats.bytes_sent);
+  EXPECT_EQ(kCallStats.packets_sent, stats.packets_sent);
+  EXPECT_EQ(static_cast<int32_t>(kReportBlock.packets_lost),
             stats.packets_lost);
   EXPECT_EQ(Q8ToFloat(kReportBlock.fraction_lost), stats.fraction_lost);
   EXPECT_EQ(std::string(kIsacCodec.plname), stats.codec_name);
   EXPECT_EQ(static_cast<int32_t>(kReportBlock.extended_highest_sequence_number),
-            stats.ext_seqnum);
-  EXPECT_EQ(static_cast<int32_t>(kReportBlock.interarrival_jitter /
-                                 (kIsacCodec.plfreq / 1000)),
-            stats.jitter_ms);
-  EXPECT_EQ(kCallStats.rttMs, stats.rtt_ms);
+            stats.extended_highest_sequence_number);
+  EXPECT_EQ(
+      static_cast<int32_t>(kReportBlock.jitter / (kIsacCodec.plfreq / 1000)),
+      stats.jitter_ms);
+  EXPECT_EQ(kCallStats.round_trip_time_ms, stats.round_trip_time_ms);
   EXPECT_EQ(static_cast<int32_t>(kSpeechInputLevel), stats.audio_level);
   EXPECT_EQ(kTotalInputEnergy, stats.total_input_energy);
   EXPECT_EQ(kTotalInputDuration, stats.total_input_duration);

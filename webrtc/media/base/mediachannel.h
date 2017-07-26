@@ -522,8 +522,7 @@ struct MediaSenderInfo {
         packets_sent(0),
         packets_lost(0),
         fraction_lost(0.0),
-        rtt_ms(0) {
-  }
+        round_trip_time_ms(0) {}
   void add_ssrc(const SsrcSenderInfo& stat) {
     local_stats.push_back(stat);
   }
@@ -557,7 +556,10 @@ struct MediaSenderInfo {
   int packets_sent;
   int packets_lost;
   float fraction_lost;
-  int64_t rtt_ms;
+  union {
+    int64_t round_trip_time_ms;
+    RTC_DEPRECATED int64_t rtt_ms;
+  };
   std::string codec_name;
   rtc::Optional<int> codec_payload_type;
   std::vector<SsrcSenderInfo> local_stats;
@@ -566,11 +568,10 @@ struct MediaSenderInfo {
 
 struct MediaReceiverInfo {
   MediaReceiverInfo()
-      : bytes_rcvd(0),
-        packets_rcvd(0),
+      : bytes_received(0),
+        packets_received(0),
         packets_lost(0),
-        fraction_lost(0.0) {
-  }
+        fraction_lost(0.0) {}
   void add_ssrc(const SsrcReceiverInfo& stat) {
     local_stats.push_back(stat);
   }
@@ -600,8 +601,8 @@ struct MediaReceiverInfo {
     }
   }
 
-  int64_t bytes_rcvd;
-  int packets_rcvd;
+  int64_t bytes_received;
+  int packets_received;
   int packets_lost;
   float fraction_lost;
   std::string codec_name;
@@ -612,7 +613,7 @@ struct MediaReceiverInfo {
 
 struct VoiceSenderInfo : public MediaSenderInfo {
   VoiceSenderInfo()
-      : ext_seqnum(0),
+      : extended_highest_sequence_number(0),
         jitter_ms(0),
         audio_level(0),
         total_input_energy(0.0),
@@ -626,7 +627,10 @@ struct VoiceSenderInfo : public MediaSenderInfo {
         residual_echo_likelihood_recent_max(0.0f),
         typing_noise_detected(false) {}
 
-  int ext_seqnum;
+  union {
+    int extended_highest_sequence_number;
+    RTC_DEPRECATED int ext_seqnum;
+  };
   int jitter_ms;
   int audio_level;
   // See description of "totalAudioEnergy" in the WebRTC stats spec:
@@ -645,7 +649,7 @@ struct VoiceSenderInfo : public MediaSenderInfo {
 
 struct VoiceReceiverInfo : public MediaReceiverInfo {
   VoiceReceiverInfo()
-      : ext_seqnum(0),
+      : extended_highest_sequence_number(0),
         jitter_ms(0),
         jitter_buffer_ms(0),
         jitter_buffer_preferred_ms(0),
@@ -667,7 +671,10 @@ struct VoiceReceiverInfo : public MediaReceiverInfo {
         decoding_muted_output(0),
         capture_start_ntp_time_ms(-1) {}
 
-  int ext_seqnum;
+  union {
+    int extended_highest_sequence_number;
+    RTC_DEPRECATED int ext_seqnum;
+  };
   int jitter_ms;
   int jitter_buffer_ms;
   int jitter_buffer_preferred_ms;

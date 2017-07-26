@@ -39,11 +39,11 @@ namespace rtcp {
 ReportBlock::ReportBlock()
     : source_ssrc_(0),
       fraction_lost_(0),
-      cumulative_lost_(0),
-      extended_high_seq_num_(0),
+      packets_lost_(0),
+      extended_highest_sequence_number_(0),
       jitter_(0),
-      last_sr_(0),
-      delay_since_last_sr_(0) {}
+      last_sender_report_timestamp_(0),
+      delay_since_last_sender_report_(0) {}
 
 bool ReportBlock::Parse(const uint8_t* buffer, size_t length) {
   RTC_DCHECK(buffer != nullptr);
@@ -54,34 +54,40 @@ bool ReportBlock::Parse(const uint8_t* buffer, size_t length) {
 
   source_ssrc_ = ByteReader<uint32_t>::ReadBigEndian(&buffer[0]);
   fraction_lost_ = buffer[4];
-  cumulative_lost_ = ByteReader<uint32_t, 3>::ReadBigEndian(&buffer[5]);
-  extended_high_seq_num_ = ByteReader<uint32_t>::ReadBigEndian(&buffer[8]);
+  packets_lost_ = ByteReader<uint32_t, 3>::ReadBigEndian(&buffer[5]);
+  extended_highest_sequence_number_ =
+      ByteReader<uint32_t>::ReadBigEndian(&buffer[8]);
   jitter_ = ByteReader<uint32_t>::ReadBigEndian(&buffer[12]);
-  last_sr_ = ByteReader<uint32_t>::ReadBigEndian(&buffer[16]);
-  delay_since_last_sr_ = ByteReader<uint32_t>::ReadBigEndian(&buffer[20]);
+  last_sender_report_timestamp_ =
+      ByteReader<uint32_t>::ReadBigEndian(&buffer[16]);
+  delay_since_last_sender_report_ =
+      ByteReader<uint32_t>::ReadBigEndian(&buffer[20]);
 
   return true;
 }
 
 void ReportBlock::Create(uint8_t* buffer) const {
   // Runtime check should be done while setting cumulative_lost.
-  RTC_DCHECK_LT(cumulative_lost(), (1 << 24));  // Have only 3 bytes for it.
+  RTC_DCHECK_LT(packets_lost(), (1 << 24));  // Have only 3 bytes for it.
 
   ByteWriter<uint32_t>::WriteBigEndian(&buffer[0], source_ssrc());
   ByteWriter<uint8_t>::WriteBigEndian(&buffer[4], fraction_lost());
-  ByteWriter<uint32_t, 3>::WriteBigEndian(&buffer[5], cumulative_lost());
-  ByteWriter<uint32_t>::WriteBigEndian(&buffer[8], extended_high_seq_num());
+  ByteWriter<uint32_t, 3>::WriteBigEndian(&buffer[5], packets_lost());
+  ByteWriter<uint32_t>::WriteBigEndian(&buffer[8],
+                                       extended_highest_sequence_number());
   ByteWriter<uint32_t>::WriteBigEndian(&buffer[12], jitter());
-  ByteWriter<uint32_t>::WriteBigEndian(&buffer[16], last_sr());
-  ByteWriter<uint32_t>::WriteBigEndian(&buffer[20], delay_since_last_sr());
+  ByteWriter<uint32_t>::WriteBigEndian(&buffer[16],
+                                       last_sender_report_timestamp());
+  ByteWriter<uint32_t>::WriteBigEndian(&buffer[20],
+                                       delay_since_last_sender_report());
 }
 
-bool ReportBlock::SetCumulativeLost(uint32_t cumulative_lost) {
+bool ReportBlock::SetPacketsLost(uint32_t cumulative_lost) {
   if (cumulative_lost >= (1u << 24)) {  // Have only 3 bytes to store it.
     LOG(LS_WARNING) << "Cumulative lost is too big to fit into Report Block";
     return false;
   }
-  cumulative_lost_ = cumulative_lost;
+  packets_lost_ = cumulative_lost;
   return true;
 }
 

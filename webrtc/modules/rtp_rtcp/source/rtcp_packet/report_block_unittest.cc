@@ -52,13 +52,13 @@ TEST(RtcpPacketReportBlockTest, ParseAnyData) {
 
 TEST(RtcpPacketReportBlockTest, ParseMatchCreate) {
   ReportBlock rb;
-  rb.SetMediaSsrc(kRemoteSsrc);
+  rb.SetSourceSsrc(kRemoteSsrc);
   rb.SetFractionLost(kFractionLost);
-  rb.SetCumulativeLost(kCumulativeLost);
-  rb.SetExtHighestSeqNum(kExtHighestSeqNum);
+  rb.SetPacketsLost(kCumulativeLost);
+  rb.SetExtendedHighestSequenceNumber(kExtHighestSeqNum);
   rb.SetJitter(kJitter);
-  rb.SetLastSr(kLastSr);
-  rb.SetDelayLastSr(kDelayLastSr);
+  rb.SetLastSenderReportTimestamp(kLastSr);
+  rb.SetDelaySinceLastSenderReport(kDelayLastSr);
 
   uint8_t buffer[kBufferLength];
   rb.Create(buffer);
@@ -68,18 +68,18 @@ TEST(RtcpPacketReportBlockTest, ParseMatchCreate) {
 
   EXPECT_EQ(kRemoteSsrc, parsed.source_ssrc());
   EXPECT_EQ(kFractionLost, parsed.fraction_lost());
-  EXPECT_EQ(kCumulativeLost, parsed.cumulative_lost());
-  EXPECT_EQ(kExtHighestSeqNum, parsed.extended_high_seq_num());
+  EXPECT_EQ(kCumulativeLost, parsed.packets_lost());
+  EXPECT_EQ(kExtHighestSeqNum, parsed.extended_highest_sequence_number());
   EXPECT_EQ(kJitter, parsed.jitter());
-  EXPECT_EQ(kLastSr, parsed.last_sr());
-  EXPECT_EQ(kDelayLastSr, parsed.delay_since_last_sr());
+  EXPECT_EQ(kLastSr, parsed.last_sender_report_timestamp());
+  EXPECT_EQ(kDelayLastSr, parsed.delay_since_last_sender_report());
 }
 
 TEST(RtcpPacketReportBlockTest, ValidateCumulativeLost) {
   const uint32_t kMaxCumulativeLost = 0xffffff;
   ReportBlock rb;
-  EXPECT_FALSE(rb.SetCumulativeLost(kMaxCumulativeLost + 1));
-  EXPECT_TRUE(rb.SetCumulativeLost(kMaxCumulativeLost));
+  EXPECT_FALSE(rb.SetPacketsLost(kMaxCumulativeLost + 1));
+  EXPECT_TRUE(rb.SetPacketsLost(kMaxCumulativeLost));
 }
 
 }  // namespace

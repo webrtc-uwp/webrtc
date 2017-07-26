@@ -1818,8 +1818,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Audio) {
       cricket::SsrcReceiverInfo());
   voice_media_info.receivers[0].local_stats[0].ssrc = 1;
   voice_media_info.receivers[0].packets_lost = 42;
-  voice_media_info.receivers[0].packets_rcvd = 2;
-  voice_media_info.receivers[0].bytes_rcvd = 3;
+  voice_media_info.receivers[0].packets_received = 2;
+  voice_media_info.receivers[0].bytes_received = 3;
   voice_media_info.receivers[0].codec_payload_type = rtc::Optional<int>(42);
   voice_media_info.receivers[0].jitter_ms = 4500;
   voice_media_info.receivers[0].fraction_lost = 5.5f;
@@ -1896,9 +1896,9 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Video) {
   video_media_info.receivers[0].local_stats.push_back(
       cricket::SsrcReceiverInfo());
   video_media_info.receivers[0].local_stats[0].ssrc = 1;
-  video_media_info.receivers[0].packets_rcvd = 2;
+  video_media_info.receivers[0].packets_received = 2;
   video_media_info.receivers[0].packets_lost = 42;
-  video_media_info.receivers[0].bytes_rcvd = 3;
+  video_media_info.receivers[0].bytes_received = 3;
   video_media_info.receivers[0].fraction_lost = 4.5f;
   video_media_info.receivers[0].codec_payload_type = rtc::Optional<int>(42);
   video_media_info.receivers[0].firs_sent = 5;

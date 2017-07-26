@@ -43,9 +43,15 @@ class AudioSendStream {
     float fraction_lost = -1.0f;
     std::string codec_name;
     rtc::Optional<int> codec_payload_type;
-    int32_t ext_seqnum = -1;
+    union {
+      int32_t extended_highest_sequence_number = -1;
+      RTC_DEPRECATED uint32_t ext_seqnum;
+    };
     int32_t jitter_ms = -1;
-    int64_t rtt_ms = -1;
+    union {
+      int64_t round_trip_time_ms = -1;
+      RTC_DEPRECATED int64_t rtt_ms;
+    };
     int32_t audio_level = -1;
     // See description of "totalAudioEnergy" in the WebRTC stats spec:
     // https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamtrackstats-totalaudioenergy

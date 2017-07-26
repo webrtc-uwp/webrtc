@@ -61,15 +61,42 @@ class WEBRTC_DLLEXPORT VoERTPObserver {
 
 // CallStatistics
 struct CallStatistics {
-  unsigned short fractionLost;
-  unsigned int cumulativeLost;
-  unsigned int extendedMax;
-  unsigned int jitterSamples;
-  int64_t rttMs;
-  size_t bytesSent;
-  int packetsSent;
-  size_t bytesReceived;
-  int packetsReceived;
+  union {
+    uint16_t fraction_lost;
+    RTC_DEPRECATED uint16_t fractionLost;
+  };
+  union {
+    uint32_t packets_lost;
+    RTC_DEPRECATED uint32_t cumulativeLost;
+  };
+  union {
+    uint32_t extended_highest_sequence_number;
+    RTC_DEPRECATED uint32_t extendedMax;
+  };
+  union {
+    uint32_t jitter;
+    RTC_DEPRECATED uint32_t jitterSamples;
+  };
+  union {
+    int64_t round_trip_time_ms;
+    RTC_DEPRECATED int64_t rttMs;
+  };
+  union {
+    size_t bytes_sent;
+    RTC_DEPRECATED size_t bytesSent;
+  };
+  union {
+    int packets_sent;
+    RTC_DEPRECATED int packetsSent;
+  };
+  union {
+    size_t bytes_received;
+    RTC_DEPRECATED size_t bytesReceived;
+  };
+  union {
+    int packets_received;
+    RTC_DEPRECATED int packetsReceived;
+  };
   // The capture ntp time (in local timebase) of the first played out audio
   // frame.
   int64_t capture_start_ntp_time_ms_;
@@ -86,14 +113,32 @@ struct SenderInfo {
 
 // See section 6.4.2 in http://www.ietf.org/rfc/rfc3550.txt for details.
 struct ReportBlock {
-  uint32_t sender_SSRC;  // SSRC of sender
-  uint32_t source_SSRC;
+  union {
+    uint32_t sender_ssrc;                 // SSRC of sender
+    RTC_DEPRECATED uint32_t sender_SSRC;  // SSRC of sender
+  };
+  union {
+    uint32_t source_ssrc;
+    RTC_DEPRECATED uint32_t source_SSRC;
+  };
   uint8_t fraction_lost;
-  uint32_t cumulative_num_packets_lost;
+  union {
+    uint32_t packets_lost;
+    RTC_DEPRECATED uint32_t cumulative_num_packets_lost;
+  };
   uint32_t extended_highest_sequence_number;
-  uint32_t interarrival_jitter;
-  uint32_t last_SR_timestamp;
-  uint32_t delay_since_last_SR;
+  union {
+    uint32_t jitter;
+    RTC_DEPRECATED uint32_t interarrival_jitter;
+  };
+  union {
+    uint32_t last_sender_report_timestamp;
+    RTC_DEPRECATED uint32_t last_SR_timestamp;
+  };
+  union {
+    uint32_t delay_since_last_sender_report;
+    RTC_DEPRECATED uint32_t delay_since_last_SR;
+  };
 };
 
 // VoERTP_RTCP

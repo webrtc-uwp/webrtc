@@ -3177,8 +3177,8 @@ TEST_F(EndToEndTest, GetStats) {
         receive_stats_filled_["FrameRendered"] |= stats.render_frame_rate != 0;
 
         receive_stats_filled_["StatisticsUpdated"] |=
-            stats.rtcp_stats.cumulative_lost != 0 ||
-            stats.rtcp_stats.extended_max_sequence_number != 0 ||
+            stats.rtcp_stats.packets_lost != 0 ||
+            stats.rtcp_stats.extended_highest_sequence_number != 0 ||
             stats.rtcp_stats.fraction_lost != 0 || stats.rtcp_stats.jitter != 0;
 
         receive_stats_filled_["DataCountersUpdated"] |=
@@ -3244,8 +3244,8 @@ TEST_F(EndToEndTest, GetStats) {
         const VideoSendStream::StreamStats& stream_stats = it->second;
 
         send_stats_filled_[CompoundKey("StatisticsUpdated", it->first)] |=
-            stream_stats.rtcp_stats.cumulative_lost != 0 ||
-            stream_stats.rtcp_stats.extended_max_sequence_number != 0 ||
+            stream_stats.rtcp_stats.packets_lost != 0 ||
+            stream_stats.rtcp_stats.extended_highest_sequence_number != 0 ||
             stream_stats.rtcp_stats.fraction_lost != 0;
 
         send_stats_filled_[CompoundKey("DataCountersUpdated", it->first)] |=
@@ -4396,11 +4396,12 @@ TEST_F(EndToEndTest, CallReportsRttForSender) {
     ASSERT_GE(start_time_ms + kDefaultTimeoutMs,
               clock_->TimeInMilliseconds())
         << "No RTT stats before timeout!";
-    if (stats.rtt_ms != -1) {
+    if (stats.round_trip_time_ms != -1) {
       // To avoid failures caused by rounding or minor ntp clock adjustments,
       // relax expectation by 1ms.
       constexpr int kAllowedErrorMs = 1;
-      EXPECT_GE(stats.rtt_ms, kSendDelayMs + kReceiveDelayMs - kAllowedErrorMs);
+      EXPECT_GE(stats.round_trip_time_ms,
+                kSendDelayMs + kReceiveDelayMs - kAllowedErrorMs);
       break;
     }
     SleepMs(10);

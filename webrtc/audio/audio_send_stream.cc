@@ -276,12 +276,12 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats() const {
   stats.local_ssrc = config_.rtp.ssrc;
 
   webrtc::CallStatistics call_stats = channel_proxy_->GetRTCPStatistics();
-  stats.bytes_sent = call_stats.bytesSent;
-  stats.packets_sent = call_stats.packetsSent;
+  stats.bytes_sent = call_stats.bytes_sent;
+  stats.packets_sent = call_stats.packets_sent;
   // RTT isn't known until a RTCP report is received. Until then, VoiceEngine
   // returns 0 to indicate an error value.
-  if (call_stats.rttMs > 0) {
-    stats.rtt_ms = call_stats.rttMs;
+  if (call_stats.round_trip_time_ms > 0) {
+    stats.round_trip_time_ms = call_stats.round_trip_time_ms;
   }
   // TODO(solenberg): [was ajm]: Re-enable this metric once we have a reliable
   //                  implementation.
@@ -295,14 +295,14 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats() const {
     // Get data from the last remote RTCP report.
     for (const auto& block : channel_proxy_->GetRemoteRTCPReportBlocks()) {
       // Lookup report for send ssrc only.
-      if (block.source_SSRC == stats.local_ssrc) {
-        stats.packets_lost = block.cumulative_num_packets_lost;
+      if (block.source_ssrc == stats.local_ssrc) {
+        stats.packets_lost = block.packets_lost;
         stats.fraction_lost = Q8ToFloat(block.fraction_lost);
-        stats.ext_seqnum = block.extended_highest_sequence_number;
+        stats.extended_highest_sequence_number =
+            block.extended_highest_sequence_number;
         // Convert timestamps to milliseconds.
         if (spec.format.clockrate_hz / 1000 > 0) {
-          stats.jitter_ms =
-              block.interarrival_jitter / (spec.format.clockrate_hz / 1000);
+          stats.jitter_ms = block.jitter / (spec.format.clockrate_hz / 1000);
         }
         break;
       }

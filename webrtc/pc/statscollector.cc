@@ -87,8 +87,8 @@ void ExtractCommonSendProperties(const cricket::MediaSenderInfo& info,
                                  StatsReport* report) {
   report->AddString(StatsReport::kStatsValueNameCodecName, info.codec_name);
   report->AddInt64(StatsReport::kStatsValueNameBytesSent, info.bytes_sent);
-  if (info.rtt_ms >= 0) {
-    report->AddInt64(StatsReport::kStatsValueNameRtt, info.rtt_ms);
+  if (info.round_trip_time_ms >= 0) {
+    report->AddInt64(StatsReport::kStatsValueNameRtt, info.round_trip_time_ms);
   }
 }
 
@@ -152,22 +152,22 @@ void ExtractStats(const cricket::VoiceReceiverInfo& info, StatsReport* report) {
   };
 
   const IntForAdd ints[] = {
-    { StatsReport::kStatsValueNameCurrentDelayMs, info.delay_estimate_ms },
-    { StatsReport::kStatsValueNameDecodingCNG, info.decoding_cng },
-    { StatsReport::kStatsValueNameDecodingCTN, info.decoding_calls_to_neteq },
-    { StatsReport::kStatsValueNameDecodingCTSG,
-      info.decoding_calls_to_silence_generator },
-    { StatsReport::kStatsValueNameDecodingMutedOutput,
-      info.decoding_muted_output },
-    { StatsReport::kStatsValueNameDecodingNormal, info.decoding_normal },
-    { StatsReport::kStatsValueNameDecodingPLC, info.decoding_plc },
-    { StatsReport::kStatsValueNameDecodingPLCCNG, info.decoding_plc_cng },
-    { StatsReport::kStatsValueNameJitterBufferMs, info.jitter_buffer_ms },
-    { StatsReport::kStatsValueNameJitterReceived, info.jitter_ms },
-    { StatsReport::kStatsValueNamePacketsLost, info.packets_lost },
-    { StatsReport::kStatsValueNamePacketsReceived, info.packets_rcvd },
-    { StatsReport::kStatsValueNamePreferredJitterBufferMs,
-      info.jitter_buffer_preferred_ms },
+      {StatsReport::kStatsValueNameCurrentDelayMs, info.delay_estimate_ms},
+      {StatsReport::kStatsValueNameDecodingCNG, info.decoding_cng},
+      {StatsReport::kStatsValueNameDecodingCTN, info.decoding_calls_to_neteq},
+      {StatsReport::kStatsValueNameDecodingCTSG,
+       info.decoding_calls_to_silence_generator},
+      {StatsReport::kStatsValueNameDecodingMutedOutput,
+       info.decoding_muted_output},
+      {StatsReport::kStatsValueNameDecodingNormal, info.decoding_normal},
+      {StatsReport::kStatsValueNameDecodingPLC, info.decoding_plc},
+      {StatsReport::kStatsValueNameDecodingPLCCNG, info.decoding_plc_cng},
+      {StatsReport::kStatsValueNameJitterBufferMs, info.jitter_buffer_ms},
+      {StatsReport::kStatsValueNameJitterReceived, info.jitter_ms},
+      {StatsReport::kStatsValueNamePacketsLost, info.packets_lost},
+      {StatsReport::kStatsValueNamePacketsReceived, info.packets_received},
+      {StatsReport::kStatsValueNamePreferredJitterBufferMs,
+       info.jitter_buffer_preferred_ms},
   };
 
   for (const auto& f : floats)
@@ -181,7 +181,7 @@ void ExtractStats(const cricket::VoiceReceiverInfo& info, StatsReport* report) {
   }
 
   report->AddInt64(StatsReport::kStatsValueNameBytesReceived,
-                   info.bytes_rcvd);
+                   info.bytes_received);
   if (info.capture_start_ntp_time_ms >= 0) {
     report->AddInt64(StatsReport::kStatsValueNameCaptureStartNtpTimeMs,
                      info.capture_start_ntp_time_ms);
@@ -229,7 +229,7 @@ void ExtractStats(const cricket::VideoReceiverInfo& info, StatsReport* report) {
   report->AddString(StatsReport::kStatsValueNameCodecImplementationName,
                     info.decoder_implementation_name);
   report->AddInt64(StatsReport::kStatsValueNameBytesReceived,
-                   info.bytes_rcvd);
+                   info.bytes_received);
   if (info.capture_start_ntp_time_ms >= 0) {
     report->AddInt64(StatsReport::kStatsValueNameCaptureStartNtpTimeMs,
                      info.capture_start_ntp_time_ms);
@@ -238,25 +238,25 @@ void ExtractStats(const cricket::VideoReceiverInfo& info, StatsReport* report) {
     report->AddInt64(StatsReport::kStatsValueNameQpSum, *info.qp_sum);
 
   const IntForAdd ints[] = {
-    { StatsReport::kStatsValueNameCurrentDelayMs, info.current_delay_ms },
-    { StatsReport::kStatsValueNameDecodeMs, info.decode_ms },
-    { StatsReport::kStatsValueNameFirsSent, info.firs_sent },
-    { StatsReport::kStatsValueNameFrameHeightReceived, info.frame_height },
-    { StatsReport::kStatsValueNameFrameRateDecoded, info.framerate_decoded },
-    { StatsReport::kStatsValueNameFrameRateOutput, info.framerate_output },
-    { StatsReport::kStatsValueNameFrameRateReceived, info.framerate_rcvd },
-    { StatsReport::kStatsValueNameFrameWidthReceived, info.frame_width },
-    { StatsReport::kStatsValueNameJitterBufferMs, info.jitter_buffer_ms },
-    { StatsReport::kStatsValueNameMaxDecodeMs, info.max_decode_ms },
-    { StatsReport::kStatsValueNameMinPlayoutDelayMs,
-      info.min_playout_delay_ms },
-    { StatsReport::kStatsValueNameNacksSent, info.nacks_sent },
-    { StatsReport::kStatsValueNamePacketsLost, info.packets_lost },
-    { StatsReport::kStatsValueNamePacketsReceived, info.packets_rcvd },
-    { StatsReport::kStatsValueNamePlisSent, info.plis_sent },
-    { StatsReport::kStatsValueNameRenderDelayMs, info.render_delay_ms },
-    { StatsReport::kStatsValueNameTargetDelayMs, info.target_delay_ms },
-    { StatsReport::kStatsValueNameFramesDecoded, info.frames_decoded },
+      {StatsReport::kStatsValueNameCurrentDelayMs, info.current_delay_ms},
+      {StatsReport::kStatsValueNameDecodeMs, info.decode_ms},
+      {StatsReport::kStatsValueNameFirsSent, info.firs_sent},
+      {StatsReport::kStatsValueNameFrameHeightReceived, info.frame_height},
+      {StatsReport::kStatsValueNameFrameRateDecoded, info.framerate_decoded},
+      {StatsReport::kStatsValueNameFrameRateOutput, info.framerate_output},
+      {StatsReport::kStatsValueNameFrameRateReceived, info.framerate_rcvd},
+      {StatsReport::kStatsValueNameFrameWidthReceived, info.frame_width},
+      {StatsReport::kStatsValueNameJitterBufferMs, info.jitter_buffer_ms},
+      {StatsReport::kStatsValueNameMaxDecodeMs, info.max_decode_ms},
+      {StatsReport::kStatsValueNameMinPlayoutDelayMs,
+       info.min_playout_delay_ms},
+      {StatsReport::kStatsValueNameNacksSent, info.nacks_sent},
+      {StatsReport::kStatsValueNamePacketsLost, info.packets_lost},
+      {StatsReport::kStatsValueNamePacketsReceived, info.packets_received},
+      {StatsReport::kStatsValueNamePlisSent, info.plis_sent},
+      {StatsReport::kStatsValueNameRenderDelayMs, info.render_delay_ms},
+      {StatsReport::kStatsValueNameTargetDelayMs, info.target_delay_ms},
+      {StatsReport::kStatsValueNameFramesDecoded, info.frames_decoded},
   };
 
   for (const auto& i : ints)

@@ -214,9 +214,9 @@ void SetInboundRTPStreamStatsFromMediaReceiverInfo(
   // TODO(hbos): Support the remote case. crbug.com/657855
   inbound_stats->is_remote = false;
   inbound_stats->packets_received =
-      static_cast<uint32_t>(media_receiver_info.packets_rcvd);
+      static_cast<uint32_t>(media_receiver_info.packets_received);
   inbound_stats->bytes_received =
-      static_cast<uint64_t>(media_receiver_info.bytes_rcvd);
+      static_cast<uint64_t>(media_receiver_info.bytes_received);
   inbound_stats->packets_lost =
       static_cast<uint32_t>(media_receiver_info.packets_lost);
   inbound_stats->fraction_lost =

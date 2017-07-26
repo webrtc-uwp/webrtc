@@ -219,9 +219,9 @@ TEST_F(RtcpReceiverTest, InjectSrPacketCalculatesRTT) {
   rtcp::SenderReport sr;
   sr.SetSenderSsrc(kSenderSsrc);
   rtcp::ReportBlock block;
-  block.SetMediaSsrc(kReceiverMainSsrc);
-  block.SetLastSr(sent_ntp);
-  block.SetDelayLastSr(kDelayNtp);
+  block.SetSourceSsrc(kReceiverMainSsrc);
+  block.SetLastSenderReportTimestamp(sent_ntp);
+  block.SetDelaySinceLastSenderReport(kDelayNtp);
   sr.AddReportBlock(block);
 
   EXPECT_CALL(rtp_rtcp_impl_, OnReceivedRtcpReportBlocks(_));
@@ -249,9 +249,9 @@ TEST_F(RtcpReceiverTest, InjectSrPacketCalculatesNegativeRTTAsOne) {
   rtcp::SenderReport sr;
   sr.SetSenderSsrc(kSenderSsrc);
   rtcp::ReportBlock block;
-  block.SetMediaSsrc(kReceiverMainSsrc);
-  block.SetLastSr(sent_ntp);
-  block.SetDelayLastSr(kDelayNtp);
+  block.SetSourceSsrc(kReceiverMainSsrc);
+  block.SetLastSenderReportTimestamp(sent_ntp);
+  block.SetDelaySinceLastSenderReport(kDelayNtp);
   sr.AddReportBlock(block);
 
   EXPECT_CALL(rtp_rtcp_impl_, OnReceivedRtcpReportBlocks(SizeIs(1)));
@@ -283,7 +283,7 @@ TEST_F(RtcpReceiverTest, InjectRrPacket) {
 TEST_F(RtcpReceiverTest, InjectRrPacketWithReportBlockNotToUsIgnored) {
   int64_t now = system_clock_.TimeInMilliseconds();
   rtcp::ReportBlock rb;
-  rb.SetMediaSsrc(kNotToUsSsrc);
+  rb.SetSourceSsrc(kNotToUsSsrc);
   rtcp::ReceiverReport rr;
   rr.SetSenderSsrc(kSenderSsrc);
   rr.AddReportBlock(rb);
@@ -303,7 +303,7 @@ TEST_F(RtcpReceiverTest, InjectRrPacketWithOneReportBlock) {
   int64_t now = system_clock_.TimeInMilliseconds();
 
   rtcp::ReportBlock rb;
-  rb.SetMediaSsrc(kReceiverMainSsrc);
+  rb.SetSourceSsrc(kReceiverMainSsrc);
   rtcp::ReceiverReport rr;
   rr.SetSenderSsrc(kSenderSsrc);
   rr.AddReportBlock(rb);
@@ -326,13 +326,13 @@ TEST_F(RtcpReceiverTest, InjectRrPacketWithTwoReportBlocks) {
   int64_t now = system_clock_.TimeInMilliseconds();
 
   rtcp::ReportBlock rb1;
-  rb1.SetMediaSsrc(kReceiverMainSsrc);
-  rb1.SetExtHighestSeqNum(kSequenceNumbers[0]);
+  rb1.SetSourceSsrc(kReceiverMainSsrc);
+  rb1.SetExtendedHighestSequenceNumber(kSequenceNumbers[0]);
   rb1.SetFractionLost(10);
 
   rtcp::ReportBlock rb2;
-  rb2.SetMediaSsrc(kReceiverExtraSsrc);
-  rb2.SetExtHighestSeqNum(kSequenceNumbers[1]);
+  rb2.SetSourceSsrc(kReceiverExtraSsrc);
+  rb2.SetExtendedHighestSequenceNumber(kSequenceNumbers[1]);
   rb2.SetFractionLost(0);
 
   rtcp::ReceiverReport rr1;
@@ -349,21 +349,21 @@ TEST_F(RtcpReceiverTest, InjectRrPacketWithTwoReportBlocks) {
   std::vector<RTCPReportBlock> received_blocks;
   rtcp_receiver_.StatisticsReceived(&received_blocks);
   EXPECT_THAT(received_blocks,
-              UnorderedElementsAre(Field(&RTCPReportBlock::fractionLost, 0),
-                                   Field(&RTCPReportBlock::fractionLost, 10)));
+              UnorderedElementsAre(Field(&RTCPReportBlock::fraction_lost, 0),
+                                   Field(&RTCPReportBlock::fraction_lost, 10)));
 
   // Insert next receiver report with same ssrc but new values.
   rtcp::ReportBlock rb3;
-  rb3.SetMediaSsrc(kReceiverMainSsrc);
-  rb3.SetExtHighestSeqNum(kSequenceNumbers[0]);
+  rb3.SetSourceSsrc(kReceiverMainSsrc);
+  rb3.SetExtendedHighestSequenceNumber(kSequenceNumbers[0]);
   rb3.SetFractionLost(kFracLost[0]);
-  rb3.SetCumulativeLost(kCumLost[0]);
+  rb3.SetPacketsLost(kCumLost[0]);
 
   rtcp::ReportBlock rb4;
-  rb4.SetMediaSsrc(kReceiverExtraSsrc);
-  rb4.SetExtHighestSeqNum(kSequenceNumbers[1]);
+  rb4.SetSourceSsrc(kReceiverExtraSsrc);
+  rb4.SetExtendedHighestSequenceNumber(kSequenceNumbers[1]);
   rb4.SetFractionLost(kFracLost[1]);
-  rb4.SetCumulativeLost(kCumLost[1]);
+  rb4.SetPacketsLost(kCumLost[1]);
 
   rtcp::ReceiverReport rr2;
   rr2.SetSenderSsrc(kSenderSsrc);
@@ -382,18 +382,19 @@ TEST_F(RtcpReceiverTest, InjectRrPacketWithTwoReportBlocks) {
   received_blocks.clear();
   rtcp_receiver_.StatisticsReceived(&received_blocks);
   EXPECT_EQ(2u, received_blocks.size());
-  EXPECT_THAT(received_blocks,
-              UnorderedElementsAre(
-                  AllOf(Field(&RTCPReportBlock::sourceSSRC, kReceiverMainSsrc),
-                        Field(&RTCPReportBlock::fractionLost, kFracLost[0]),
-                        Field(&RTCPReportBlock::cumulativeLost, kCumLost[0]),
-                        Field(&RTCPReportBlock::extendedHighSeqNum,
-                              kSequenceNumbers[0])),
-                  AllOf(Field(&RTCPReportBlock::sourceSSRC, kReceiverExtraSsrc),
-                        Field(&RTCPReportBlock::fractionLost, kFracLost[1]),
-                        Field(&RTCPReportBlock::cumulativeLost, kCumLost[1]),
-                        Field(&RTCPReportBlock::extendedHighSeqNum,
-                              kSequenceNumbers[1]))));
+  EXPECT_THAT(
+      received_blocks,
+      UnorderedElementsAre(
+          AllOf(Field(&RTCPReportBlock::source_ssrc, kReceiverMainSsrc),
+                Field(&RTCPReportBlock::fraction_lost, kFracLost[0]),
+                Field(&RTCPReportBlock::packets_lost, kCumLost[0]),
+                Field(&RTCPReportBlock::extended_highest_sequence_number,
+                      kSequenceNumbers[0])),
+          AllOf(Field(&RTCPReportBlock::source_ssrc, kReceiverExtraSsrc),
+                Field(&RTCPReportBlock::fraction_lost, kFracLost[1]),
+                Field(&RTCPReportBlock::packets_lost, kCumLost[1]),
+                Field(&RTCPReportBlock::extended_highest_sequence_number,
+                      kSequenceNumbers[1]))));
 }
 
 TEST_F(RtcpReceiverTest, InjectRrPacketsFromTwoRemoteSsrcs) {
@@ -403,10 +404,10 @@ TEST_F(RtcpReceiverTest, InjectRrPacketsFromTwoRemoteSsrcs) {
   const uint8_t kFracLost[] = {20, 11};
 
   rtcp::ReportBlock rb1;
-  rb1.SetMediaSsrc(kReceiverMainSsrc);
-  rb1.SetExtHighestSeqNum(kSequenceNumbers[0]);
+  rb1.SetSourceSsrc(kReceiverMainSsrc);
+  rb1.SetExtendedHighestSequenceNumber(kSequenceNumbers[0]);
   rb1.SetFractionLost(kFracLost[0]);
-  rb1.SetCumulativeLost(kCumLost[0]);
+  rb1.SetPacketsLost(kCumLost[0]);
   rtcp::ReceiverReport rr1;
   rr1.SetSenderSsrc(kSenderSsrc);
   rr1.AddReportBlock(rb1);
@@ -423,17 +424,18 @@ TEST_F(RtcpReceiverTest, InjectRrPacketsFromTwoRemoteSsrcs) {
   std::vector<RTCPReportBlock> received_blocks;
   rtcp_receiver_.StatisticsReceived(&received_blocks);
   EXPECT_EQ(1u, received_blocks.size());
-  EXPECT_EQ(kSenderSsrc, received_blocks[0].remoteSSRC);
-  EXPECT_EQ(kReceiverMainSsrc, received_blocks[0].sourceSSRC);
-  EXPECT_EQ(kFracLost[0], received_blocks[0].fractionLost);
-  EXPECT_EQ(kCumLost[0], received_blocks[0].cumulativeLost);
-  EXPECT_EQ(kSequenceNumbers[0], received_blocks[0].extendedHighSeqNum);
+  EXPECT_EQ(kSenderSsrc, received_blocks[0].sender_ssrc);
+  EXPECT_EQ(kReceiverMainSsrc, received_blocks[0].source_ssrc);
+  EXPECT_EQ(kFracLost[0], received_blocks[0].fraction_lost);
+  EXPECT_EQ(kCumLost[0], received_blocks[0].packets_lost);
+  EXPECT_EQ(kSequenceNumbers[0],
+            received_blocks[0].extended_highest_sequence_number);
 
   rtcp::ReportBlock rb2;
-  rb2.SetMediaSsrc(kReceiverMainSsrc);
-  rb2.SetExtHighestSeqNum(kSequenceNumbers[1]);
+  rb2.SetSourceSsrc(kReceiverMainSsrc);
+  rb2.SetExtendedHighestSequenceNumber(kSequenceNumbers[1]);
   rb2.SetFractionLost(kFracLost[1]);
-  rb2.SetCumulativeLost(kCumLost[1]);
+  rb2.SetPacketsLost(kCumLost[1]);
   rtcp::ReceiverReport rr2;
   rr2.SetSenderSsrc(kSenderSsrc2);
   rr2.AddReportBlock(rb2);
@@ -446,20 +448,21 @@ TEST_F(RtcpReceiverTest, InjectRrPacketsFromTwoRemoteSsrcs) {
   received_blocks.clear();
   rtcp_receiver_.StatisticsReceived(&received_blocks);
   ASSERT_EQ(2u, received_blocks.size());
-  EXPECT_THAT(received_blocks,
-              UnorderedElementsAre(
-                  AllOf(Field(&RTCPReportBlock::sourceSSRC, kReceiverMainSsrc),
-                        Field(&RTCPReportBlock::remoteSSRC, kSenderSsrc),
-                        Field(&RTCPReportBlock::fractionLost, kFracLost[0]),
-                        Field(&RTCPReportBlock::cumulativeLost, kCumLost[0]),
-                        Field(&RTCPReportBlock::extendedHighSeqNum,
-                              kSequenceNumbers[0])),
-                  AllOf(Field(&RTCPReportBlock::sourceSSRC, kReceiverMainSsrc),
-                        Field(&RTCPReportBlock::remoteSSRC, kSenderSsrc2),
-                        Field(&RTCPReportBlock::fractionLost, kFracLost[1]),
-                        Field(&RTCPReportBlock::cumulativeLost, kCumLost[1]),
-                        Field(&RTCPReportBlock::extendedHighSeqNum,
-                              kSequenceNumbers[1]))));
+  EXPECT_THAT(
+      received_blocks,
+      UnorderedElementsAre(
+          AllOf(Field(&RTCPReportBlock::source_ssrc, kReceiverMainSsrc),
+                Field(&RTCPReportBlock::sender_ssrc, kSenderSsrc),
+                Field(&RTCPReportBlock::fraction_lost, kFracLost[0]),
+                Field(&RTCPReportBlock::packets_lost, kCumLost[0]),
+                Field(&RTCPReportBlock::extended_highest_sequence_number,
+                      kSequenceNumbers[0])),
+          AllOf(Field(&RTCPReportBlock::source_ssrc, kReceiverMainSsrc),
+                Field(&RTCPReportBlock::sender_ssrc, kSenderSsrc2),
+                Field(&RTCPReportBlock::fraction_lost, kFracLost[1]),
+                Field(&RTCPReportBlock::packets_lost, kCumLost[1]),
+                Field(&RTCPReportBlock::extended_highest_sequence_number,
+                      kSequenceNumbers[1]))));
 }
 
 TEST_F(RtcpReceiverTest, GetRtt) {
@@ -470,9 +473,9 @@ TEST_F(RtcpReceiverTest, GetRtt) {
       -1, rtcp_receiver_.RTT(kSenderSsrc, nullptr, nullptr, nullptr, nullptr));
 
   rtcp::ReportBlock rb;
-  rb.SetMediaSsrc(kReceiverMainSsrc);
-  rb.SetLastSr(kSentCompactNtp);
-  rb.SetDelayLastSr(kDelayCompactNtp);
+  rb.SetSourceSsrc(kReceiverMainSsrc);
+  rb.SetLastSenderReportTimestamp(kSentCompactNtp);
+  rb.SetDelaySinceLastSenderReport(kDelayCompactNtp);
 
   rtcp::ReceiverReport rr;
   rr.SetSenderSsrc(kSenderSsrc);
@@ -541,9 +544,9 @@ TEST_F(RtcpReceiverTest, InjectByePacket_RemovesCname) {
 
 TEST_F(RtcpReceiverTest, InjectByePacket_RemovesReportBlocks) {
   rtcp::ReportBlock rb1;
-  rb1.SetMediaSsrc(kReceiverMainSsrc);
+  rb1.SetSourceSsrc(kReceiverMainSsrc);
   rtcp::ReportBlock rb2;
-  rb2.SetMediaSsrc(kReceiverExtraSsrc);
+  rb2.SetSourceSsrc(kReceiverExtraSsrc);
   rtcp::ReceiverReport rr;
   rr.SetSenderSsrc(kSenderSsrc);
   rr.AddReportBlock(rb1);
@@ -865,8 +868,8 @@ TEST_F(RtcpReceiverTest, ReceiveReportTimeout) {
 
   // Add a RR and advance the clock just enough to not trigger a timeout.
   rtcp::ReportBlock rb1;
-  rb1.SetMediaSsrc(kReceiverMainSsrc);
-  rb1.SetExtHighestSeqNum(kSequenceNumber);
+  rb1.SetSourceSsrc(kReceiverMainSsrc);
+  rb1.SetExtendedHighestSequenceNumber(kSequenceNumber);
   rtcp::ReceiverReport rr1;
   rr1.SetSenderSsrc(kSenderSsrc);
   rr1.AddReportBlock(rb1);
@@ -900,8 +903,8 @@ TEST_F(RtcpReceiverTest, ReceiveReportTimeout) {
 
   // Add a new RR with increase sequence number to reset timers.
   rtcp::ReportBlock rb2;
-  rb2.SetMediaSsrc(kReceiverMainSsrc);
-  rb2.SetExtHighestSeqNum(kSequenceNumber + 1);
+  rb2.SetSourceSsrc(kReceiverMainSsrc);
+  rb2.SetExtendedHighestSequenceNumber(kSequenceNumber + 1);
   rtcp::ReceiverReport rr2;
   rr2.SetSenderSsrc(kSenderSsrc);
   rr2.AddReportBlock(rb2);
@@ -1038,24 +1041,23 @@ TEST_F(RtcpReceiverTest, Callbacks) {
 
   // First packet, all numbers should just propagate.
   rtcp::ReportBlock rb1;
-  rb1.SetMediaSsrc(kReceiverMainSsrc);
-  rb1.SetExtHighestSeqNum(kSequenceNumber);
+  rb1.SetSourceSsrc(kReceiverMainSsrc);
+  rb1.SetExtendedHighestSequenceNumber(kSequenceNumber);
   rb1.SetFractionLost(kFractionLoss);
-  rb1.SetCumulativeLost(kCumulativeLoss);
+  rb1.SetPacketsLost(kCumulativeLoss);
   rb1.SetJitter(kJitter);
 
   rtcp::ReceiverReport rr1;
   rr1.SetSenderSsrc(kSenderSsrc);
   rr1.AddReportBlock(rb1);
-  EXPECT_CALL(
-      callback,
-      StatisticsUpdated(
-          AllOf(Field(&RtcpStatistics::fraction_lost, kFractionLoss),
-                Field(&RtcpStatistics::cumulative_lost, kCumulativeLoss),
-                Field(&RtcpStatistics::extended_max_sequence_number,
-                      kSequenceNumber),
-                Field(&RtcpStatistics::jitter, kJitter)),
-          kReceiverMainSsrc));
+  EXPECT_CALL(callback,
+              StatisticsUpdated(
+                  AllOf(Field(&RtcpStatistics::fraction_lost, kFractionLoss),
+                        Field(&RtcpStatistics::packets_lost, kCumulativeLoss),
+                        Field(&RtcpStatistics::extended_highest_sequence_number,
+                              kSequenceNumber),
+                        Field(&RtcpStatistics::jitter, kJitter)),
+                  kReceiverMainSsrc));
   EXPECT_CALL(rtp_rtcp_impl_, OnReceivedRtcpReportBlocks(_));
   EXPECT_CALL(bandwidth_observer_, OnReceivedRtcpReceiverReport(_, _, _));
   InjectRtcpPacket(rr1);
@@ -1064,10 +1066,10 @@ TEST_F(RtcpReceiverTest, Callbacks) {
 
   // Add arbitrary numbers, callback should not be called.
   rtcp::ReportBlock rb2;
-  rb2.SetMediaSsrc(kReceiverMainSsrc);
-  rb2.SetExtHighestSeqNum(kSequenceNumber + 1);
+  rb2.SetSourceSsrc(kReceiverMainSsrc);
+  rb2.SetExtendedHighestSequenceNumber(kSequenceNumber + 1);
   rb2.SetFractionLost(42);
-  rb2.SetCumulativeLost(137);
+  rb2.SetPacketsLost(137);
   rb2.SetJitter(4711);
 
   rtcp::ReceiverReport rr2;

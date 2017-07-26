@@ -371,7 +371,7 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
   ss << "recv_bw_bps: " << recv_bandwidth_bps << ", ";
   ss << "max_pad_bps: " << max_padding_bitrate_bps << ", ";
   ss << "pacer_delay_ms: " << pacer_delay_ms << ", ";
-  ss << "rtt_ms: " << rtt_ms;
+  ss << "rtt_ms: " << round_trip_time_ms;
   ss << '}';
   return ss.str();
 }
@@ -918,7 +918,7 @@ Call::Stats Call::GetStats() const {
   stats.recv_bandwidth_bps = recv_bandwidth;
   stats.pacer_delay_ms =
       transport_send_->send_side_cc()->GetPacerQueuingDelayMs();
-  stats.rtt_ms = call_stats_->rtcp_rtt_stats()->LastProcessedRtt();
+  stats.round_trip_time_ms = call_stats_->rtcp_rtt_stats()->LastProcessedRtt();
   {
     rtc::CritScope cs(&bitrate_crit_);
     stats.max_padding_bitrate_bps = configured_max_padding_bitrate_bps_;

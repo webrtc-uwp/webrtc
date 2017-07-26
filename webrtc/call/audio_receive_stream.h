@@ -37,13 +37,22 @@ class AudioReceiveStream {
  public:
   struct Stats {
     uint32_t remote_ssrc = 0;
-    int64_t bytes_rcvd = 0;
-    uint32_t packets_rcvd = 0;
+    union {
+      int64_t bytes_received = 0;
+      RTC_DEPRECATED int64_t bytes_rcvd;
+    };
+    union {
+      uint32_t packets_received = 0;
+      RTC_DEPRECATED uint32_t packets_rcvd;
+    };
     uint32_t packets_lost = 0;
     float fraction_lost = 0.0f;
     std::string codec_name;
     rtc::Optional<int> codec_payload_type;
-    uint32_t ext_seqnum = 0;
+    union {
+      uint32_t extended_highest_sequence_number = 0;
+      RTC_DEPRECATED uint32_t ext_seqnum;
+    };
     uint32_t jitter_ms = 0;
     uint32_t jitter_buffer_ms = 0;
     uint32_t jitter_buffer_preferred_ms = 0;

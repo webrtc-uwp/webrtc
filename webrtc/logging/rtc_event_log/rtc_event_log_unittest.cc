@@ -140,7 +140,7 @@ RtpPacketToSend GenerateRtpPacket(const RtpHeaderExtensionMap* extensions,
 
 rtc::Buffer GenerateRtcpPacket(Random* prng) {
   rtcp::ReportBlock report_block;
-  report_block.SetMediaSsrc(prng->Rand<uint32_t>());  // Remote SSRC.
+  report_block.SetSourceSsrc(prng->Rand<uint32_t>());  // Remote SSRC.
   report_block.SetFractionLost(prng->Rand(50));
 
   rtcp::SenderReport sender_report;

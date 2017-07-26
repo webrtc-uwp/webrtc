@@ -417,8 +417,8 @@ class VideoMediaChannelTest : public testing::Test,
     EXPECT_TRUE(channel_->GetStats(&info));
 
     ASSERT_EQ(1U, info.senders.size());
-    // TODO(whyuan): bytes_sent and bytes_rcvd are different. Are both payload?
-    // For webrtc, bytes_sent does not include the RTP header length.
+    // TODO(whyuan): bytes_sent and bytes_received are different. Are both
+    // payload? For webrtc, bytes_sent does not include the RTP header length.
     EXPECT_GT(info.senders[0].bytes_sent, 0);
     EXPECT_EQ(NumRtpPackets(), info.senders[0].packets_sent);
     EXPECT_EQ(0.0, info.senders[0].fraction_lost);
@@ -442,8 +442,8 @@ class VideoMediaChannelTest : public testing::Test,
     EXPECT_EQ(info.senders[0].ssrcs()[0], info.receivers[0].ssrcs()[0]);
     ASSERT_TRUE(info.receivers[0].codec_payload_type);
     EXPECT_EQ(DefaultCodec().id, *info.receivers[0].codec_payload_type);
-    EXPECT_EQ(NumRtpBytes(), info.receivers[0].bytes_rcvd);
-    EXPECT_EQ(NumRtpPackets(), info.receivers[0].packets_rcvd);
+    EXPECT_EQ(NumRtpBytes(), info.receivers[0].bytes_received);
+    EXPECT_EQ(NumRtpPackets(), info.receivers[0].packets_received);
     EXPECT_EQ(0.0, info.receivers[0].fraction_lost);
     EXPECT_EQ(0, info.receivers[0].packets_lost);
     // TODO(asapersson): Not set for webrtc. Handle missing stats.
@@ -506,8 +506,8 @@ class VideoMediaChannelTest : public testing::Test,
     cricket::VideoMediaInfo info;
     EXPECT_TRUE(channel_->GetStats(&info));
     ASSERT_EQ(1U, info.senders.size());
-    // TODO(whyuan): bytes_sent and bytes_rcvd are different. Are both payload?
-    // For webrtc, bytes_sent does not include the RTP header length.
+    // TODO(whyuan): bytes_sent and bytes_received are different. Are both
+    // payload? For webrtc, bytes_sent does not include the RTP header length.
     EXPECT_GT(GetSenderStats(0).bytes_sent, 0);
     EXPECT_EQ_WAIT(NumRtpPackets(), GetSenderStats(0).packets_sent, kTimeout);
     EXPECT_EQ(kVideoWidth, GetSenderStats(0).send_frame_width);
@@ -517,8 +517,9 @@ class VideoMediaChannelTest : public testing::Test,
     for (size_t i = 0; i < info.receivers.size(); ++i) {
       EXPECT_EQ(1U, GetReceiverStats(i).ssrcs().size());
       EXPECT_EQ(i + 1, GetReceiverStats(i).ssrcs()[0]);
-      EXPECT_EQ_WAIT(NumRtpBytes(), GetReceiverStats(i).bytes_rcvd, kTimeout);
-      EXPECT_EQ_WAIT(NumRtpPackets(), GetReceiverStats(i).packets_rcvd,
+      EXPECT_EQ_WAIT(NumRtpBytes(), GetReceiverStats(i).bytes_received,
+                     kTimeout);
+      EXPECT_EQ_WAIT(NumRtpPackets(), GetReceiverStats(i).packets_received,
                      kTimeout);
       EXPECT_EQ_WAIT(kVideoWidth, GetReceiverStats(i).frame_width, kTimeout);
       EXPECT_EQ_WAIT(kVideoHeight, GetReceiverStats(i).frame_height, kTimeout);

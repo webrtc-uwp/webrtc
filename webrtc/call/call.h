@@ -127,7 +127,10 @@ class Call {
     int max_padding_bitrate_bps = 0;  // Cumulative configured max padding.
     int recv_bandwidth_bps = 0;       // Estimated available receive bandwidth.
     int64_t pacer_delay_ms = 0;
-    int64_t rtt_ms = -1;
+    union {
+      int64_t round_trip_time_ms = -1;
+      RTC_DEPRECATED int64_t rtt_ms;
+    };
   };
 
   static Call* Create(const Call::Config& config);

@@ -115,7 +115,7 @@ void ChannelProxy::ResetReceiverCongestionControlObjects() {
 
 CallStatistics ChannelProxy::GetRTCPStatistics() const {
   RTC_DCHECK(worker_thread_checker_.CalledOnValidThread());
-  CallStatistics stats = {0};
+  CallStatistics stats = {};
   int error = channel()->GetRTPStatistics(stats);
   RTC_DCHECK_EQ(0, error);
   return stats;

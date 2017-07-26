@@ -51,11 +51,11 @@ TEST(RtcpPacketReceiverReportTest, ParseWithOneReportBlock) {
   const ReportBlock& rb = parsed.report_blocks().front();
   EXPECT_EQ(kRemoteSsrc, rb.source_ssrc());
   EXPECT_EQ(kFractionLost, rb.fraction_lost());
-  EXPECT_EQ(kCumulativeLost, rb.cumulative_lost());
-  EXPECT_EQ(kExtHighestSeqNum, rb.extended_high_seq_num());
+  EXPECT_EQ(kCumulativeLost, rb.packets_lost());
+  EXPECT_EQ(kExtHighestSeqNum, rb.extended_highest_sequence_number());
   EXPECT_EQ(kJitter, rb.jitter());
-  EXPECT_EQ(kLastSr, rb.last_sr());
-  EXPECT_EQ(kDelayLastSr, rb.delay_since_last_sr());
+  EXPECT_EQ(kLastSr, rb.last_sender_report_timestamp());
+  EXPECT_EQ(kDelayLastSr, rb.delay_since_last_sender_report());
 }
 
 TEST(RtcpPacketReceiverReportTest, ParseFailsOnIncorrectSize) {
@@ -69,13 +69,13 @@ TEST(RtcpPacketReceiverReportTest, CreateWithOneReportBlock) {
   ReceiverReport rr;
   rr.SetSenderSsrc(kSenderSsrc);
   ReportBlock rb;
-  rb.SetMediaSsrc(kRemoteSsrc);
+  rb.SetSourceSsrc(kRemoteSsrc);
   rb.SetFractionLost(kFractionLost);
-  rb.SetCumulativeLost(kCumulativeLost);
-  rb.SetExtHighestSeqNum(kExtHighestSeqNum);
+  rb.SetPacketsLost(kCumulativeLost);
+  rb.SetExtendedHighestSequenceNumber(kExtHighestSeqNum);
   rb.SetJitter(kJitter);
-  rb.SetLastSr(kLastSr);
-  rb.SetDelayLastSr(kDelayLastSr);
+  rb.SetLastSenderReportTimestamp(kLastSr);
+  rb.SetDelaySinceLastSenderReport(kDelayLastSr);
   rr.AddReportBlock(rb);
 
   rtc::Buffer raw = rr.Build();
@@ -98,9 +98,9 @@ TEST(RtcpPacketReceiverReportTest, CreateAndParseWithoutReportBlocks) {
 TEST(RtcpPacketReceiverReportTest, CreateAndParseWithTwoReportBlocks) {
   ReceiverReport rr;
   ReportBlock rb1;
-  rb1.SetMediaSsrc(kRemoteSsrc);
+  rb1.SetSourceSsrc(kRemoteSsrc);
   ReportBlock rb2;
-  rb2.SetMediaSsrc(kRemoteSsrc + 1);
+  rb2.SetSourceSsrc(kRemoteSsrc + 1);
 
   rr.SetSenderSsrc(kSenderSsrc);
   EXPECT_TRUE(rr.AddReportBlock(rb1));
@@ -121,10 +121,10 @@ TEST(RtcpPacketReceiverReportTest, CreateWithTooManyReportBlocks) {
   rr.SetSenderSsrc(kSenderSsrc);
   ReportBlock rb;
   for (size_t i = 0; i < ReceiverReport::kMaxNumberOfReportBlocks; ++i) {
-    rb.SetMediaSsrc(kRemoteSsrc + i);
+    rb.SetSourceSsrc(kRemoteSsrc + i);
     EXPECT_TRUE(rr.AddReportBlock(rb));
   }
-  rb.SetMediaSsrc(kRemoteSsrc + ReceiverReport::kMaxNumberOfReportBlocks);
+  rb.SetSourceSsrc(kRemoteSsrc + ReceiverReport::kMaxNumberOfReportBlocks);
   EXPECT_FALSE(rr.AddReportBlock(rb));
 }
 

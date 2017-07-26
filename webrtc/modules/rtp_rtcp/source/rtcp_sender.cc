@@ -852,14 +852,15 @@ std::vector<rtcp::ReportBlock> RTCPSender::CreateReportBlocks(
     }
     result.emplace_back();
     rtcp::ReportBlock& block = result.back();
-    block.SetMediaSsrc(statistician.first);
+    block.SetSourceSsrc(statistician.first);
     block.SetFractionLost(stats.fraction_lost);
-    if (!block.SetCumulativeLost(stats.cumulative_lost)) {
+    if (!block.SetPacketsLost(stats.packets_lost)) {
       LOG(LS_WARNING) << "Cumulative lost is oversized.";
       result.pop_back();
       continue;
     }
-    block.SetExtHighestSeqNum(stats.extended_max_sequence_number);
+    block.SetExtendedHighestSequenceNumber(
+        stats.extended_highest_sequence_number);
     block.SetJitter(stats.jitter);
   }
 
@@ -877,8 +878,8 @@ std::vector<rtcp::ReportBlock> RTCPSender::CreateReportBlocks(
     // set only when media_ssrc match sender ssrc of the sender report
     // remote times were taken from.
     for (auto& report_block : result) {
-      report_block.SetLastSr(feedback_state.remote_sr);
-      report_block.SetDelayLastSr(delay_since_last_sr);
+      report_block.SetLastSenderReportTimestamp(feedback_state.remote_sr);
+      report_block.SetDelaySinceLastSenderReport(delay_since_last_sr);
     }
   }
   return result;

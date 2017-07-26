@@ -458,32 +458,32 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
 
   ReportBlockWithRtt* report_block_info =
       &received_report_blocks_[report_block.source_ssrc()][remote_ssrc];
-  report_block_info->report_block.remoteSSRC = remote_ssrc;
-  report_block_info->report_block.sourceSSRC = report_block.source_ssrc();
-  report_block_info->report_block.fractionLost = report_block.fraction_lost();
-  report_block_info->report_block.cumulativeLost =
-      report_block.cumulative_lost();
-  if (report_block.extended_high_seq_num() >
-      report_block_info->report_block.extendedHighSeqNum) {
+  report_block_info->report_block.sender_ssrc = remote_ssrc;
+  report_block_info->report_block.source_ssrc = report_block.source_ssrc();
+  report_block_info->report_block.fraction_lost = report_block.fraction_lost();
+  report_block_info->report_block.packets_lost = report_block.packets_lost();
+  if (report_block.extended_highest_sequence_number() >
+      report_block_info->report_block.extended_highest_sequence_number) {
     // We have successfully delivered new RTP packets to the remote side after
     // the last RR was sent from the remote side.
     last_increased_sequence_number_ms_ = clock_->TimeInMilliseconds();
   }
-  report_block_info->report_block.extendedHighSeqNum =
-      report_block.extended_high_seq_num();
+  report_block_info->report_block.extended_highest_sequence_number =
+      report_block.extended_highest_sequence_number();
   report_block_info->report_block.jitter = report_block.jitter();
-  report_block_info->report_block.delaySinceLastSR =
-      report_block.delay_since_last_sr();
-  report_block_info->report_block.lastSR = report_block.last_sr();
+  report_block_info->report_block.delay_since_last_sender_report =
+      report_block.delay_since_last_sender_report();
+  report_block_info->report_block.last_sender_report_timestamp =
+      report_block.last_sender_report_timestamp();
 
   int64_t rtt_ms = 0;
-  uint32_t send_time_ntp = report_block.last_sr();
+  uint32_t send_time_ntp = report_block.last_sender_report_timestamp();
   // RFC3550, section 6.4.1, LSR field discription states:
   // If no SR has been received yet, the field is set to zero.
   // Receiver rtp_rtcp module is not expected to calculate rtt using
   // Sender Reports even if it accidentally can.
   if (!receiver_only_ && send_time_ntp != 0) {
-    uint32_t delay_ntp = report_block.delay_since_last_sr();
+    uint32_t delay_ntp = report_block.delay_since_last_sender_report();
     // Local NTP time.
     uint32_t receive_time_ntp = CompactNtp(clock_->CurrentNtpTime());
 
@@ -992,12 +992,13 @@ void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
     if (stats_callback_) {
       for (const auto& report_block : packet_information.report_blocks) {
         RtcpStatistics stats;
-        stats.cumulative_lost = report_block.cumulativeLost;
-        stats.extended_max_sequence_number = report_block.extendedHighSeqNum;
-        stats.fraction_lost = report_block.fractionLost;
+        stats.packets_lost = report_block.packets_lost;
+        stats.extended_highest_sequence_number =
+            report_block.extended_highest_sequence_number;
+        stats.fraction_lost = report_block.fraction_lost;
         stats.jitter = report_block.jitter;
 
-        stats_callback_->StatisticsUpdated(stats, report_block.sourceSSRC);
+        stats_callback_->StatisticsUpdated(stats, report_block.source_ssrc);
       }
     }
   }

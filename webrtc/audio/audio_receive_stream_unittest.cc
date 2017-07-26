@@ -60,8 +60,8 @@ const unsigned int kSpeechOutputLevel = 99;
 const double kTotalOutputEnergy = 0.25;
 const double kTotalOutputDuration = 0.5;
 
-const CallStatistics kCallStats = {
-    345,  678,  901, 234, -12, 3456, 7890, 567, 890, 123};
+const CallStatistics kCallStats = {{345},  {678},  {901}, {234}, {-12},
+                                   {3456}, {7890}, {567}, {890}, 123};
 const CodecInst kCodecInst = {
     123, "codec_name_recv", 96000, -187, 0, -103};
 const NetworkStatistics kNetworkStats = {
@@ -302,15 +302,16 @@ TEST(AudioReceiveStreamTest, GetStats) {
   helper.SetupMockForGetStats();
   AudioReceiveStream::Stats stats = recv_stream.GetStats();
   EXPECT_EQ(kRemoteSsrc, stats.remote_ssrc);
-  EXPECT_EQ(static_cast<int64_t>(kCallStats.bytesReceived), stats.bytes_rcvd);
-  EXPECT_EQ(static_cast<uint32_t>(kCallStats.packetsReceived),
-            stats.packets_rcvd);
-  EXPECT_EQ(kCallStats.cumulativeLost, stats.packets_lost);
-  EXPECT_EQ(Q8ToFloat(kCallStats.fractionLost), stats.fraction_lost);
+  EXPECT_EQ(static_cast<int64_t>(kCallStats.bytes_received),
+            stats.bytes_received);
+  EXPECT_EQ(static_cast<uint32_t>(kCallStats.packets_received),
+            stats.packets_received);
+  EXPECT_EQ(kCallStats.packets_lost, stats.packets_lost);
+  EXPECT_EQ(Q8ToFloat(kCallStats.fraction_lost), stats.fraction_lost);
   EXPECT_EQ(std::string(kCodecInst.plname), stats.codec_name);
-  EXPECT_EQ(kCallStats.extendedMax, stats.ext_seqnum);
-  EXPECT_EQ(kCallStats.jitterSamples / (kCodecInst.plfreq / 1000),
-            stats.jitter_ms);
+  EXPECT_EQ(kCallStats.extended_highest_sequence_number,
+            stats.extended_highest_sequence_number);
+  EXPECT_EQ(kCallStats.jitter / (kCodecInst.plfreq / 1000), stats.jitter_ms);
   EXPECT_EQ(kNetworkStats.currentBufferSize, stats.jitter_buffer_ms);
   EXPECT_EQ(kNetworkStats.preferredBufferSize,
             stats.jitter_buffer_preferred_ms);
