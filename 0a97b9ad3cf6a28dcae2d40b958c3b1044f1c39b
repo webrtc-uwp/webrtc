@@ -120,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "b5f05cb0_e788e9db",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-26T17:45:31Z",
+      "side": 1,
+      "message": "I\u0027d suggest you ask someone with more seniority than me, then, because I\u0027ve been led to believe that my suggestion is more in-line with the coding style.",
+      "parentUuid": "550a9859_81fde117",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 21
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "bcb5bec3_0ca28322",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 4
@@ -248,6 +272,24 @@
       "side": 1,
       "message": "Sorry about that. I\u0027ll finish these AddSink methods today.",
       "parentUuid": "43e2002a_eb079a50",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "617a7a59_55a6a021",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-26T17:45:31Z",
+      "side": 1,
+      "message": "No worries! Just ping me when you\u0027d like me to have a look again.",
+      "parentUuid": "fe540e24_e6146cfe",
       "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -613,6 +655,30 @@
     },
     {
       "key": {
+        "uuid": "8dc214a0_e1f10ce4",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-26T17:45:31Z",
+      "side": 1,
+      "message": "Peter, I think we\u0027re in agreement. The IETF draft says something different than what the comment and code say, and that\u0027s what I was pointing out, unless I\u0027m misunderstanding the comment/code.",
+      "parentUuid": "760ce821_883a3c32",
+      "range": {
+        "startLine": 50,
+        "startChar": 46,
+        "endLine": 52,
+        "endChar": 47
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "995657ad_1b12d112",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 4
@@ -684,6 +750,30 @@
     },
     {
       "key": {
+        "uuid": "41349720_9cf7b0cd",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-26T17:45:31Z",
+      "side": 1,
+      "message": "Peter, about:\n\"But the SSRCs that are latched or not the SSRCs that are passed into AddSink.\"\nI assume the \"or\" should be an \"are\"? Not trying to nitpick, just trying to make sure I don\u0027t end up misunderstanding.\nAssuming I understood correctly - the way I see it, the RtpDemuxer should handle according to the IETF draft the case that an SSRC that was configured with AddSink (from the SDP) was later latched from a MID, even if this is never supposed to happen.\n\nSteve, about the trade-off: I\u0027m assuming we won\u0027t have so many sinks, that traversing any of the containers would incur a cost significant enough to justify sacrificing correctness for efficiency. (Sacrificing correctness to lower complexity is a different story.)",
+      "parentUuid": "c0fcca22_63837f4b",
+      "range": {
+        "startLine": 53,
+        "startChar": 5,
+        "endLine": 54,
+        "endChar": 18
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "13e2eeea_9c70de3d",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 4
@@ -713,6 +803,24 @@
       "side": 1,
       "message": "OK, I\u0027ll look into replacing it with an std::function and moving it to the .cc file.",
       "parentUuid": "13e2eeea_9c70de3d",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9eb0dc86_bde758c5",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-26T17:45:31Z",
+      "side": 1,
+      "message": "By the way, I am not sure if the word \"predicate\" is appropriate for functions that have side-effects?",
+      "parentUuid": "dc0d3a7c_b23642c6",
       "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -859,6 +967,24 @@
       "side": 1,
       "message": "Ack",
       "parentUuid": "d8709fb4_81c89fe3",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "105be9f8_faebf270",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 801,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-26T17:45:31Z",
+      "side": 1,
+      "message": "Peter:\nhttps://chromium-review.googlesource.com/c/578628/3/webrtc%252Fcall%252Frtp_demuxer_unittest.cc#595",
+      "parentUuid": "045ad3e2_f8363d50",
       "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
