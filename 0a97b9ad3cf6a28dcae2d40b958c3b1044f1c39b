@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bfa58ba5_b87b5cb9",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-26T16:45:22Z",
+      "side": 1,
+      "message": "Why do we not allow them both to be empty?  Setting a MID should be sufficient.\n\nBasically you want to check that it\u0027s not the case that the whole thing is empty, but that means checking MID and RSIDs as well.",
+      "parentUuid": "ca906b42_c4d73e71",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f8f7325c_a977d90b",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 4
@@ -65,6 +83,46 @@
     },
     {
       "key": {
+        "uuid": "696c8666_4ff5e6ba",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-26T16:45:22Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we check the return value and fail the whole operation if it fails?\n\nAnd if we fail half way, we need to unwind it so it\u0027s back in the original state.",
+      "range": {
+        "startLine": 48,
+        "startChar": 35,
+        "endLine": 48,
+        "endChar": 0
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b128b230_432a9571",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-26T16:45:22Z",
+      "side": 1,
+      "message": "If we use the algorithm I wrote below, this would end up being something like:\n\nif (criteria.mid) {\n  sink_by_mid[criteria.mid] \u003d sink;\n}\nfor (auto ssrc : criteria.ssrcs) {\n  sink_by_ssrc[ssrc] \u003d sink;\n}\nfor (auto pt : criteria.pts) {\n  sinks_by_pt[pt].add(sink);  // Needs to be a multimap.\n}\n\n\nExcept that it also needs the \"check to see if there\u0027s already a mapping, and return false if there is\".  \n\nOh, and there is one bit of funny business: if MID latching adds an ssrc to the ssrc table and then a rule also adds the ssrc to a different sink, we have to decide whether to reject that rule over overwrite the latching.  Rejecting the rule is easier, but if it\u0027s easy to implement, we could consider overwriting.  The problem with overwriting is that you then need to remember if the SSRC came from a rule or from latching.  I\u0027m inclined to say just reject the rule and if anyone ever hits this edge case then do something about it (really, no one should ever do that).",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "43e2002a_eb079a50",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 4
@@ -93,6 +151,29 @@
       "writtenOn": "2017-07-26T11:01:15Z",
       "side": 1,
       "message": "?",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c07926a4_e195a978",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-26T16:45:22Z",
+      "side": 1,
+      "message": "This doesn\u0027t follow the algorithm in the spec.  It should be something more like (written in a \"return sink\" model, which I think would be cleaner, and then OnRtpPacket is basically \"sink \u003d GetSink(...); if (sink) { sink-\u003eOnRtpPacket(packet); }\").\n\nif (packet.mid) {\n  auto sink \u003d sink_by_mid_[packet.mid];\n  if (!sink) {\n    return null;\n  }\n  sink_by_ssrc[packet.ssrc] \u003d packet.ssrc; \n  return *sink;\n}\n\nauto sink \u003d sink_by_ssrc_[packet.ssrc];\nif (sink) {\n  return sink;\n}\n\nauto sinks \u003d sinks_by_pt_[packet.pt];\nif (sinks.size() \u003d\u003d 1) {\n  sink_by_ssrc[packet.ssrc] \u003d packet.ssrc;\n  return sinks[0];\n}\n\nreturn null;",
+      "range": {
+        "startLine": 99,
+        "startChar": 26,
+        "endLine": 99,
+        "endChar": 0
+      },
       "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -139,6 +220,53 @@
     },
     {
       "key": {
+        "uuid": "26476610_3683db3e",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-26T16:45:22Z",
+      "side": 1,
+      "message": "While I thought we could have added MID demux without the struct, I think it\u0027s OK if we add the struct and implement the whole demux algorithm in one CL.\n\nAs for ssrcs and payload types: I don\u0027t think there is any difference between an optional unset vector and an empty vector.\n\nRSIDs should be a vector.  It\u0027s only the MID that should not be a vector.",
+      "parentUuid": "e575f1df_0bdfd7fa",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 34
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97e537e5_e62da9c9",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-26T16:45:22Z",
+      "side": 1,
+      "message": "I would reorder these in order of how they should be used and how the algorithm uses them:\n\nmid\nssrcs\npayload_types\nrsids",
+      "range": {
+        "startLine": 37,
+        "startChar": 2,
+        "endLine": 37,
+        "endChar": 0
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f8328216_57bdd670",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 4
@@ -150,6 +278,30 @@
       "writtenOn": "2017-07-26T11:01:15Z",
       "side": 1,
       "message": "This implies to me a type of score, but I am not sure how the score would be calculated. Possibly a non-weighted one, where any criterion is given a score of 1, and the sums are compared? But that doesn\u0027t seem to correspond to the algorithm in https://tools.ietf.org/html/draft-ietf-mmusic-sdp-bundle-negotiation-38#section-10.2 (pages 21 bottom to 22 top).",
+      "range": {
+        "startLine": 48,
+        "startChar": 41,
+        "endLine": 49,
+        "endChar": 34
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d91724e1_e12fa315",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-26T16:45:22Z",
+      "side": 1,
+      "message": "A \"score\" or \"weight\" is not the right way to think about this.  It\u0027s more like it routes on MID, then SSRC, then PT, then RSID.  If you give conflicting routes (which you shouldn\u0027t modulo the whole overlapping PT thing), then MID will take precedent over SSRC over PT over RSID.",
+      "parentUuid": "f8328216_57bdd670",
       "range": {
         "startLine": 48,
         "startChar": 41,
@@ -185,6 +337,30 @@
     },
     {
       "key": {
+        "uuid": "54bdd495_e176280a",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-26T16:45:22Z",
+      "side": 1,
+      "message": "There is no such thing as a tie.  Unknown MIDs lead to dropped packets.  no MID + unknown SSRC + unknown or overlapping PTs + unknown RSID leads to a dropped packet.  I think that everything else is not dropped.",
+      "parentUuid": "f28a0af6_8657b3b1",
+      "range": {
+        "startLine": 50,
+        "startChar": 46,
+        "endLine": 52,
+        "endChar": 47
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "995657ad_1b12d112",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 4
@@ -208,6 +384,30 @@
     },
     {
       "key": {
+        "uuid": "312dd8b3_bae148e2",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-26T16:45:22Z",
+      "side": 1,
+      "message": "Right.  It\u0027s conceptually MID, SSRC, PT, RSID.  It\u0027s just that there\u0027s also SSRC \"latching\" on top of that.  But the SSRCs that are latched or not the SSRCs that are passed into AddSink.",
+      "parentUuid": "995657ad_1b12d112",
+      "range": {
+        "startLine": 53,
+        "startChar": 5,
+        "endLine": 54,
+        "endChar": 18
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "13e2eeea_9c70de3d",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 4
@@ -219,6 +419,80 @@
       "writtenOn": "2017-07-26T11:01:15Z",
       "side": 1,
       "message": "All of the predicates seem to be of the same type, so I wonder if we could get rid of the template and move the implementation to the .cc file?\n(Assuming this is still useful after other comments, that is.)",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5969729_502d52ef",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-26T16:45:22Z",
+      "side": 1,
+      "message": "I think this would be more simple with 3 maps: sink_by_ssrc (same as below), sink_by_mid, and sinks_by_pt (needs to be a multimap).  Then you don\u0027t need this.",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73a962de_40b42fad",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-26T16:45:22Z",
+      "side": 1,
+      "message": "As mentioned above, I think this should be sink_by_ssrc along with sink_by_mid and sinks_by_pt.",
+      "range": {
+        "startLine": 119,
+        "startChar": 65,
+        "endLine": 119,
+        "endChar": 0
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b1c48d2_066d8088",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 799,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-26T16:45:22Z",
+      "side": 1,
+      "message": "We need some tests around PTs, especially these tricky cases:\n\nAddSink(pt\u003d100, sink_a);  // 100 goes to sink_a\nAddSink(pt\u003d100, sink_b);  // 100 gets dropped\nRemoveSink(sink_b);  // 100 goes to sink_a\nAddSink(pt\u003d100, sink_b);  // 100 gets dropped\nRemoveSink(sink_a);  // 100 goes to sink_b",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8709fb4_81c89fe3",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 801,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-26T16:45:22Z",
+      "side": 1,
+      "message": "We also need a test for when the MID isn\u0027t known.  It should always drop.",
       "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
