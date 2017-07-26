@@ -37,6 +37,42 @@
     },
     {
       "key": {
+        "uuid": "65b1c028_fc9450ff",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-26T17:07:35Z",
+      "side": 1,
+      "message": "Yes, that\u0027s what the check does (see the line below this).",
+      "parentUuid": "bfa58ba5_b87b5cb9",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "22dcc82d_b1133d21",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-26T17:07:35Z",
+      "side": 1,
+      "message": "Good catch, I\u0027ll fix that.",
+      "parentUuid": "ca906b42_c4d73e71",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f8f7325c_a977d90b",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 4
@@ -48,6 +84,30 @@
       "writtenOn": "2017-07-26T11:01:15Z",
       "side": 1,
       "message": "I\u0027d prefer:\nRTC_DCHECK(!criteria.mid || Mid::IsLegalName(*criteria.mid));",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 21
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "550a9859_81fde117",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-26T17:07:35Z",
+      "side": 1,
+      "message": "I think it\u0027s a bit more clear with the explicit if statement.",
+      "parentUuid": "f8f7325c_a977d90b",
       "range": {
         "startLine": 39,
         "startChar": 0,
@@ -123,6 +183,24 @@
     },
     {
       "key": {
+        "uuid": "c6774fe3_be163286",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-26T17:07:35Z",
+      "side": 1,
+      "message": "Why would the class need to know whether the SSRC came from a rule or latching? If latching, it will already have the correct sink bound to the SSRC explicitly (i.e., there won\u0027t be a need to check MID except for the first time the SSRC is used).",
+      "parentUuid": "b128b230_432a9571",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "43e2002a_eb079a50",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 4
@@ -134,6 +212,24 @@
       "writtenOn": "2017-07-26T11:01:15Z",
       "side": 1,
       "message": "I don\u0027t see where this local variable is used. I conclude that the CL is still WIP. I\u0027ll stop reviewing here, so as to not bother you with unnecessary comments, but I\u0027ll still send in what I\u0027ve drafted so far, because I think it might be useful. Please ping me when you want me to resume the review.",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe540e24_e6146cfe",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-26T17:07:35Z",
+      "side": 1,
+      "message": "Sorry about that. I\u0027ll finish these AddSink methods today.",
+      "parentUuid": "43e2002a_eb079a50",
       "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -180,6 +276,30 @@
     },
     {
       "key": {
+        "uuid": "6e3d722c_00a3e724",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-26T17:07:35Z",
+      "side": 1,
+      "message": "How would RSIDs be supported by this algorithm? Wouldn\u0027t they need to be scoped by MID as well (i.e., the mapping would be from std::pair\u003cmid, rsid\u003e to sinks)?",
+      "parentUuid": "c07926a4_e195a978",
+      "range": {
+        "startLine": 99,
+        "startChar": 26,
+        "endLine": 99,
+        "endChar": 0
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8b61b6cd_75fa4734",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 4
@@ -191,6 +311,24 @@
       "writtenOn": "2017-07-26T11:01:15Z",
       "side": 1,
       "message": "?",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01a2062e_007f2b44",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-26T17:07:35Z",
+      "side": 1,
+      "message": "Was going to use it for RtpDemuxerCriteria, but went with a different solution. I\u0027ll remove it.",
+      "parentUuid": "8b61b6cd_75fa4734",
       "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -231,6 +369,30 @@
       "writtenOn": "2017-07-26T16:45:22Z",
       "side": 1,
       "message": "While I thought we could have added MID demux without the struct, I think it\u0027s OK if we add the struct and implement the whole demux algorithm in one CL.\n\nAs for ssrcs and payload types: I don\u0027t think there is any difference between an optional unset vector and an empty vector.\n\nRSIDs should be a vector.  It\u0027s only the MID that should not be a vector.",
+      "parentUuid": "e575f1df_0bdfd7fa",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 34
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6becd3e_fb671e16",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-26T17:07:35Z",
+      "side": 1,
+      "message": "1. I think this is the appropriate CL to do this in? There isn\u0027t much to change without the new interface.\n2. Yes, they are optional. Empty vector means that it won\u0027t match according to SSRC/payload types and will defer to mid/rsid.\n3. OK, I\u0027ll change rsid to a vector instead of an optional.\n\nI\u0027ll add comments to this struct to decide how it should be used.",
       "parentUuid": "e575f1df_0bdfd7fa",
       "range": {
         "startLine": 33,
@@ -314,6 +476,30 @@
     },
     {
       "key": {
+        "uuid": "95a9afcf_4f7edac3",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-26T17:07:35Z",
+      "side": 1,
+      "message": "Yeah, I\u0027ll rewrite this comment so it makes more sense.",
+      "parentUuid": "f8328216_57bdd670",
+      "range": {
+        "startLine": 48,
+        "startChar": 41,
+        "endLine": 49,
+        "endChar": 34
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f28a0af6_8657b3b1",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 4
@@ -348,6 +534,30 @@
       "writtenOn": "2017-07-26T16:45:22Z",
       "side": 1,
       "message": "There is no such thing as a tie.  Unknown MIDs lead to dropped packets.  no MID + unknown SSRC + unknown or overlapping PTs + unknown RSID leads to a dropped packet.  I think that everything else is not dropped.",
+      "parentUuid": "f28a0af6_8657b3b1",
+      "range": {
+        "startLine": 50,
+        "startChar": 46,
+        "endLine": 52,
+        "endChar": 47
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "760ce821_883a3c32",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-26T17:07:35Z",
+      "side": 1,
+      "message": "Yes, because there is no way to figure out which sink should get the packet (and each packet should only be routed to at most one sink).",
       "parentUuid": "f28a0af6_8657b3b1",
       "range": {
         "startLine": 50,
@@ -408,6 +618,30 @@
     },
     {
       "key": {
+        "uuid": "c0fcca22_63837f4b",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-26T17:07:35Z",
+      "side": 1,
+      "message": "Right now this case isn\u0027t handled explicitly because it would require either an expensive vector traversal on each packet receive or the need to maintain a mapping of MID to sinks which would add more complexity to the class. With the current algorithm if the packet has an unknown MID and unknown SSRC it will get dropped because it won\u0027t match any sink. Maybe a question more for Peter if this is an acceptable tradeoff.",
+      "parentUuid": "995657ad_1b12d112",
+      "range": {
+        "startLine": 53,
+        "startChar": 5,
+        "endLine": 54,
+        "endChar": 18
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "13e2eeea_9c70de3d",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 4
@@ -425,6 +659,24 @@
     },
     {
       "key": {
+        "uuid": "dc0d3a7c_b23642c6",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-26T17:07:35Z",
+      "side": 1,
+      "message": "OK, I\u0027ll look into replacing it with an std::function and moving it to the .cc file.",
+      "parentUuid": "13e2eeea_9c70de3d",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b5969729_502d52ef",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 4
@@ -436,6 +688,24 @@
       "writtenOn": "2017-07-26T16:45:22Z",
       "side": 1,
       "message": "I think this would be more simple with 3 maps: sink_by_ssrc (same as below), sink_by_mid, and sinks_by_pt (needs to be a multimap).  Then you don\u0027t need this.",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92f0e363_53b99216",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-26T17:07:35Z",
+      "side": 1,
+      "message": "I looked at doing it that way originally, but it looked like it was going to be more complicated because there are many more states that need to be tracked explicitly.\n\nFor example, if two sinks share payload_type but have different MIDs, then the map either needs to store nullptr to signal that there is a conflict or change it to a multimap and identify that there are multiple sinks when trying to match the packet. If storing nullptr, then if a sink is ever removed it needs to look through all the sinks again to see if now one of the payload_types is unique and update the table accordingly.\n\nI\u0027ll see if there\u0027s a way to simplify that implementation because it would allow doing MID checking (as required by the spec, discussed above) cheaper.",
+      "parentUuid": "b5969729_502d52ef",
       "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -482,6 +752,24 @@
     },
     {
       "key": {
+        "uuid": "7e63e699_7c0bdc6e",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 799,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-26T17:07:35Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9b1c48d2_066d8088",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d8709fb4_81c89fe3",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 4
@@ -496,6 +784,24 @@
       "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "045ad3e2_f8363d50",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 801,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-07-26T17:07:35Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d8709fb4_81c89fe3",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
