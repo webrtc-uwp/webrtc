@@ -1488,14 +1488,14 @@ TEST_F(AcmSenderBitExactnessOldApi, MAYBE_Opus_stereo_20ms) {
           "3e285b74510e62062fbd8142dacd16e9",
           "3e285b74510e62062fbd8142dacd16e9",
           "439e97ad1932c49923b5da029c17dd5e",
-          "86d3552bb3492247f965cdd0e88a1c82",
-          "86d3552bb3492247f965cdd0e88a1c82"),
+          "038ec90f5f3fc2320f3090f8ecef6bb7",
+          "038ec90f5f3fc2320f3090f8ecef6bb7"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
           "78cf8f03157358acdc69f6835caa0d9b",
           "78cf8f03157358acdc69f6835caa0d9b",
           "ab88b1a049c36bdfeb7e8b057ef6982a",
-          "798347a685fac7d0c2d8f748ffe66881",
-          "798347a685fac7d0c2d8f748ffe66881"),
+          "27fef7b799393347ec3b5694369a1c36",
+          "27fef7b799393347ec3b5694369a1c36"),
       50, test::AcmReceiveTestOldApi::kStereoOutput);
 }
 
@@ -1507,14 +1507,14 @@ TEST_F(AcmSenderBitExactnessNewApi, MAYBE_OpusFromFormat_stereo_20ms) {
           "3e285b74510e62062fbd8142dacd16e9",
           "3e285b74510e62062fbd8142dacd16e9",
           "439e97ad1932c49923b5da029c17dd5e",
-          "86d3552bb3492247f965cdd0e88a1c82",
-          "86d3552bb3492247f965cdd0e88a1c82"),
+          "038ec90f5f3fc2320f3090f8ecef6bb7",
+          "038ec90f5f3fc2320f3090f8ecef6bb7"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
           "78cf8f03157358acdc69f6835caa0d9b",
           "78cf8f03157358acdc69f6835caa0d9b",
           "ab88b1a049c36bdfeb7e8b057ef6982a",
-          "798347a685fac7d0c2d8f748ffe66881",
-          "798347a685fac7d0c2d8f748ffe66881"),
+          "27fef7b799393347ec3b5694369a1c36",
+          "27fef7b799393347ec3b5694369a1c36"),
       50, test::AcmReceiveTestOldApi::kStereoOutput);
 }
 
@@ -1534,14 +1534,14 @@ TEST_F(AcmSenderBitExactnessOldApi, MAYBE_Opus_stereo_20ms_voip) {
           "b0325df4e8104f04e03af23c0b75800e",
           "b0325df4e8104f04e03af23c0b75800e",
           "1c81121f5d9286a5a865d01dbab22ce8",
-          "9c4cb69db77b85841a5f8225bb8f508b",
-          "9c4cb69db77b85841a5f8225bb8f508b"),
+          "11d547f89142e9ef03f37d7ca7f32379",
+          "11d547f89142e9ef03f37d7ca7f32379"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
           "4eab2259b6fe24c22dd242a113e0b3d9",
           "4eab2259b6fe24c22dd242a113e0b3d9",
           "839ea60399447268ee0f0262a50b75fd",
-          "ae33ea2e43407cf9ebdabbbd6ca912a3",
-          "ae33ea2e43407cf9ebdabbbd6ca912a3"),
+          "1815fd5589cad0c6f6cf946c76b81aeb",
+          "1815fd5589cad0c6f6cf946c76b81aeb"),
       50, test::AcmReceiveTestOldApi::kStereoOutput);
 }
 
@@ -1555,14 +1555,14 @@ TEST_F(AcmSenderBitExactnessNewApi, MAYBE_OpusFromFormat_stereo_20ms_voip) {
           "b0325df4e8104f04e03af23c0b75800e",
           "b0325df4e8104f04e03af23c0b75800e",
           "1c81121f5d9286a5a865d01dbab22ce8",
-          "9c4cb69db77b85841a5f8225bb8f508b",
-          "9c4cb69db77b85841a5f8225bb8f508b"),
+          "11d547f89142e9ef03f37d7ca7f32379",
+          "11d547f89142e9ef03f37d7ca7f32379"),
       AcmReceiverBitExactnessOldApi::PlatformChecksum(
           "4eab2259b6fe24c22dd242a113e0b3d9",
           "4eab2259b6fe24c22dd242a113e0b3d9",
           "839ea60399447268ee0f0262a50b75fd",
-          "ae33ea2e43407cf9ebdabbbd6ca912a3",
-          "ae33ea2e43407cf9ebdabbbd6ca912a3"),
+          "1815fd5589cad0c6f6cf946c76b81aeb",
+          "1815fd5589cad0c6f6cf946c76b81aeb"),
       50, test::AcmReceiveTestOldApi::kStereoOutput);
 }
 
@@ -1827,7 +1827,7 @@ TEST_F(AcmChangeBitRateOldApi, MAYBE_Opus_48khz_20ms_100kbps_2) {
   ASSERT_NO_FATAL_FAILURE(SetUpTest("opus", 48000, 1, 107, 960, 960));
 #if defined(WEBRTC_ANDROID)
   #if defined(WEBRTC_ARCH_ARM64)
-    Run(100000, 29512, 51152);
+    Run(100000, 29512, 50440);
   #else
     Run(100000, 29512, 50496);
   #endif  // WEBRTC_ARCH_ARM64
