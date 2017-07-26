@@ -52,7 +52,7 @@ TEST(RtcpPacketReceiverReportTest, ParseWithOneReportBlock) {
   EXPECT_EQ(kRemoteSsrc, rb.source_ssrc());
   EXPECT_EQ(kFractionLost, rb.fraction_lost());
   EXPECT_EQ(kCumulativeLost, rb.cumulative_lost());
-  EXPECT_EQ(kExtHighestSeqNum, rb.extended_high_seq_num());
+  EXPECT_EQ(kExtHighestSeqNum, rb.extended_highest_sequence_number());
   EXPECT_EQ(kJitter, rb.jitter());
   EXPECT_EQ(kLastSr, rb.last_sr());
   EXPECT_EQ(kDelayLastSr, rb.delay_since_last_sr());

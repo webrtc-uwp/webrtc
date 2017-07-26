@@ -214,11 +214,11 @@ void SetInboundRTPStreamStatsFromMediaReceiverInfo(
   // TODO(hbos): Support the remote case. crbug.com/657855
   inbound_stats->is_remote = false;
   inbound_stats->packets_received =
-      static_cast<uint32_t>(media_receiver_info.packets_rcvd);
+      static_cast<uint32_t>(media_receiver_info.packets_received);
   inbound_stats->bytes_received =
-      static_cast<uint64_t>(media_receiver_info.bytes_rcvd);
-  inbound_stats->packets_lost =
-      static_cast<uint32_t>(media_receiver_info.packets_lost);
+      static_cast<uint64_t>(media_receiver_info.bytes_received);
+  inbound_stats->cumulative_packets_lost =
+      static_cast<uint32_t>(media_receiver_info.cumulative_packets_lost);
   inbound_stats->fraction_lost =
       static_cast<double>(media_receiver_info.fraction_lost);
 }
@@ -235,8 +235,8 @@ void SetInboundRTPStreamStatsFromVoiceReceiverInfo(
             true, true, *voice_receiver_info.codec_payload_type);
   }
   inbound_audio->jitter =
-      static_cast<double>(voice_receiver_info.jitter_ms) /
-          rtc::kNumMillisecsPerSec;
+      static_cast<double>(voice_receiver_info.interarrival_jitter_ms) /
+      rtc::kNumMillisecsPerSec;
   // |fir_count|, |pli_count| and |sli_count| are only valid for video and are
   // purposefully left undefined for audio.
 }
@@ -272,9 +272,9 @@ void SetOutboundRTPStreamStatsFromMediaSenderInfo(
   // TODO(hbos): Support the remote case. crbug.com/657856
   outbound_stats->is_remote = false;
   outbound_stats->packets_sent =
-      static_cast<uint32_t>(media_sender_info.packets_sent);
+      static_cast<uint32_t>(media_sender_info.cumulative_packets_sent);
   outbound_stats->bytes_sent =
-      static_cast<uint64_t>(media_sender_info.bytes_sent);
+      static_cast<uint64_t>(media_sender_info.cumulative_bytes_sent);
 }
 
 void SetOutboundRTPStreamStatsFromVoiceSenderInfo(
@@ -304,11 +304,11 @@ void SetOutboundRTPStreamStatsFromVideoSenderInfo(
             false, false, *video_sender_info.codec_payload_type);
   }
   outbound_video->fir_count =
-      static_cast<uint32_t>(video_sender_info.firs_rcvd);
+      static_cast<uint32_t>(video_sender_info.firs_received);
   outbound_video->pli_count =
-      static_cast<uint32_t>(video_sender_info.plis_rcvd);
+      static_cast<uint32_t>(video_sender_info.plis_received);
   outbound_video->nack_count =
-      static_cast<uint32_t>(video_sender_info.nacks_rcvd);
+      static_cast<uint32_t>(video_sender_info.nacks_received);
   if (video_sender_info.qp_sum)
     outbound_video->qp_sum = *video_sender_info.qp_sum;
   outbound_video->frames_encoded = video_sender_info.frames_encoded;

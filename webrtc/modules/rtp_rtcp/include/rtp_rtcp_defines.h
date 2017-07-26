@@ -132,36 +132,42 @@ const size_t kRtxHeaderSize = 2;
 
 struct RTCPReportBlock {
   RTCPReportBlock()
-      : remoteSSRC(0), sourceSSRC(0), fractionLost(0), cumulativeLost(0),
-        extendedHighSeqNum(0), jitter(0), lastSR(0),
-        delaySinceLastSR(0) {}
+      : sender_ssrc(0),
+        source_ssrc(0),
+        fraction_lost(0),
+        cumulative_packets_lost(0),
+        extended_highest_sequence_number(0),
+        interarrival_jitter(0),
+        last_sender_report_timestamp(0),
+        delay_since_last_sender_report(0) {}
 
-  RTCPReportBlock(uint32_t remote_ssrc,
+  RTCPReportBlock(uint32_t sender_ssrc,
                   uint32_t source_ssrc,
                   uint8_t fraction_lost,
-                  uint32_t cumulative_lost,
+                  uint32_t cumulative_packets_lost,
                   uint32_t extended_high_sequence_number,
-                  uint32_t jitter,
-                  uint32_t last_sender_report,
+                  uint32_t interarrival_jitter,
+                  uint32_t last_sender_report_timestamp,
                   uint32_t delay_since_last_sender_report)
-      : remoteSSRC(remote_ssrc),
-        sourceSSRC(source_ssrc),
-        fractionLost(fraction_lost),
-        cumulativeLost(cumulative_lost),
-        extendedHighSeqNum(extended_high_sequence_number),
-        jitter(jitter),
-        lastSR(last_sender_report),
-        delaySinceLastSR(delay_since_last_sender_report) {}
+      : sender_ssrc(sender_ssrc),
+        source_ssrc(source_ssrc),
+        fraction_lost(fraction_lost),
+        cumulative_packets_lost(cumulative_packets_lost),
+        extended_highest_sequence_number(extended_high_sequence_number),
+        interarrival_jitter(interarrival_jitter),
+        last_sender_report_timestamp(last_sender_report_timestamp),
+        delay_since_last_sender_report(delay_since_last_sender_report) {}
 
   // Fields as described by RFC 3550 6.4.2.
-  uint32_t remoteSSRC;  // SSRC of sender of this report.
-  uint32_t sourceSSRC;  // SSRC of the RTP packet sender.
-  uint8_t fractionLost;
-  uint32_t cumulativeLost;  // 24 bits valid.
-  uint32_t extendedHighSeqNum;
-  uint32_t jitter;
-  uint32_t lastSR;
-  uint32_t delaySinceLastSR;
+  uint32_t sender_ssrc;  // SSRC of sender of this report.
+  uint32_t source_ssrc;  // SSRC of the RTP packet sender.
+  uint8_t fraction_lost;
+  uint32_t cumulative_packets_lost;  // 24 bits valid.
+  uint32_t extended_highest_sequence_number;
+  uint32_t interarrival_jitter;  // Interarrival jitter measured in RTP
+                                 // timestamp units.
+  uint32_t last_sender_report_timestamp;
+  uint32_t delay_since_last_sender_report;
 };
 
 typedef std::list<RTCPReportBlock> ReportBlockList;

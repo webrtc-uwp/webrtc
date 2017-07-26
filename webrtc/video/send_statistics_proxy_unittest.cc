@@ -133,10 +133,12 @@ class SendStatisticsProxyTest : public ::testing::Test {
       EXPECT_EQ(a.rtp_stats.fec.packets, b.rtp_stats.fec.packets);
 
       EXPECT_EQ(a.rtcp_stats.fraction_lost, b.rtcp_stats.fraction_lost);
-      EXPECT_EQ(a.rtcp_stats.cumulative_lost, b.rtcp_stats.cumulative_lost);
-      EXPECT_EQ(a.rtcp_stats.extended_max_sequence_number,
-                b.rtcp_stats.extended_max_sequence_number);
-      EXPECT_EQ(a.rtcp_stats.jitter, b.rtcp_stats.jitter);
+      EXPECT_EQ(a.rtcp_stats.cumulative_packets_lost,
+                b.rtcp_stats.cumulative_packets_lost);
+      EXPECT_EQ(a.rtcp_stats.extended_highest_sequence_number,
+                b.rtcp_stats.extended_highest_sequence_number);
+      EXPECT_EQ(a.rtcp_stats.interarrival_jitter,
+                b.rtcp_stats.interarrival_jitter);
     }
   }
 
@@ -157,10 +159,10 @@ TEST_F(SendStatisticsProxyTest, RtcpStatistics) {
 
     // Add statistics with some arbitrary, but unique, numbers.
     uint32_t offset = ssrc * sizeof(RtcpStatistics);
-    ssrc_stats.rtcp_stats.cumulative_lost = offset;
-    ssrc_stats.rtcp_stats.extended_max_sequence_number = offset + 1;
+    ssrc_stats.rtcp_stats.cumulative_packets_lost = offset;
+    ssrc_stats.rtcp_stats.extended_highest_sequence_number = offset + 1;
     ssrc_stats.rtcp_stats.fraction_lost = offset + 2;
-    ssrc_stats.rtcp_stats.jitter = offset + 3;
+    ssrc_stats.rtcp_stats.interarrival_jitter = offset + 3;
     callback->StatisticsUpdated(ssrc_stats.rtcp_stats, ssrc);
   }
   for (const auto& ssrc : config_.rtp.rtx.ssrcs) {
@@ -168,10 +170,10 @@ TEST_F(SendStatisticsProxyTest, RtcpStatistics) {
 
     // Add statistics with some arbitrary, but unique, numbers.
     uint32_t offset = ssrc * sizeof(RtcpStatistics);
-    ssrc_stats.rtcp_stats.cumulative_lost = offset;
-    ssrc_stats.rtcp_stats.extended_max_sequence_number = offset + 1;
+    ssrc_stats.rtcp_stats.cumulative_packets_lost = offset;
+    ssrc_stats.rtcp_stats.extended_highest_sequence_number = offset + 1;
     ssrc_stats.rtcp_stats.fraction_lost = offset + 2;
-    ssrc_stats.rtcp_stats.jitter = offset + 3;
+    ssrc_stats.rtcp_stats.interarrival_jitter = offset + 3;
     callback->StatisticsUpdated(ssrc_stats.rtcp_stats, ssrc);
   }
   VideoSendStream::Stats stats = statistics_proxy_->GetStats();

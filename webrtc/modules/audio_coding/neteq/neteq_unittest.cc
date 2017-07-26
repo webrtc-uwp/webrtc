@@ -92,10 +92,10 @@ void Convert(const webrtc::NetEqNetworkStatistics& stats_raw,
 void Convert(const webrtc::RtcpStatistics& stats_raw,
              webrtc::neteq_unittest::RtcpStatistics* stats) {
   stats->set_fraction_lost(stats_raw.fraction_lost);
-  stats->set_cumulative_lost(stats_raw.cumulative_lost);
+  stats->set_cumulative_lost(stats_raw.cumulative_packets_lost);
   stats->set_extended_max_sequence_number(
-      stats_raw.extended_max_sequence_number);
-  stats->set_jitter(stats_raw.jitter);
+      stats_raw.extended_highest_sequence_number);
+  stats->set_jitter(stats_raw.interarrival_jitter);
 }
 
 void AddMessage(FILE* file, rtc::MessageDigest* digest,

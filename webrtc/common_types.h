@@ -156,14 +156,14 @@ enum FrameType {
 struct RtcpStatistics {
   RtcpStatistics()
       : fraction_lost(0),
-        cumulative_lost(0),
-        extended_max_sequence_number(0),
-        jitter(0) {}
+        cumulative_packets_lost(0),
+        extended_highest_sequence_number(0),
+        interarrival_jitter(0) {}
 
   uint8_t fraction_lost;
-  uint32_t cumulative_lost;
-  uint32_t extended_max_sequence_number;
-  uint32_t jitter;
+  uint32_t cumulative_packets_lost;
+  uint32_t extended_highest_sequence_number;
+  uint32_t interarrival_jitter;
 };
 
 class RtcpStatisticsCallback {

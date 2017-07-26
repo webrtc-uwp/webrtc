@@ -2238,15 +2238,16 @@ bool WebRtcVoiceMediaChannel::GetStats(VoiceMediaInfo* info) {
     webrtc::AudioSendStream::Stats stats = stream.second->GetStats();
     VoiceSenderInfo sinfo;
     sinfo.add_ssrc(stats.local_ssrc);
-    sinfo.bytes_sent = stats.bytes_sent;
-    sinfo.packets_sent = stats.packets_sent;
-    sinfo.packets_lost = stats.packets_lost;
+    sinfo.cumulative_bytes_sent = stats.cumulative_bytes_sent;
+    sinfo.cumulative_packets_sent = stats.cumulative_packets_sent;
+    sinfo.cumulative_packets_lost = stats.cumulative_packets_lost;
     sinfo.fraction_lost = stats.fraction_lost;
     sinfo.codec_name = stats.codec_name;
     sinfo.codec_payload_type = stats.codec_payload_type;
-    sinfo.ext_seqnum = stats.ext_seqnum;
-    sinfo.jitter_ms = stats.jitter_ms;
-    sinfo.rtt_ms = stats.rtt_ms;
+    sinfo.extended_highest_sequence_number =
+        stats.extended_highest_sequence_number;
+    sinfo.interarrival_jitter_ms = stats.interarrival_jitter_ms;
+    sinfo.rtt_ms = stats.roundtrip_time_ms;
     sinfo.audio_level = stats.audio_level;
     sinfo.total_input_energy = stats.total_input_energy;
     sinfo.total_input_duration = stats.total_input_duration;
@@ -2268,14 +2269,15 @@ bool WebRtcVoiceMediaChannel::GetStats(VoiceMediaInfo* info) {
     webrtc::AudioReceiveStream::Stats stats = stream.second->GetStats();
     VoiceReceiverInfo rinfo;
     rinfo.add_ssrc(stats.remote_ssrc);
-    rinfo.bytes_rcvd = stats.bytes_rcvd;
-    rinfo.packets_rcvd = stats.packets_rcvd;
-    rinfo.packets_lost = stats.packets_lost;
+    rinfo.bytes_received = stats.bytes_received;
+    rinfo.packets_received = stats.packets_received;
+    rinfo.cumulative_packets_lost = stats.cumulative_packets_lost;
     rinfo.fraction_lost = stats.fraction_lost;
     rinfo.codec_name = stats.codec_name;
     rinfo.codec_payload_type = stats.codec_payload_type;
-    rinfo.ext_seqnum = stats.ext_seqnum;
-    rinfo.jitter_ms = stats.jitter_ms;
+    rinfo.extended_highest_sequence_number =
+        stats.extended_highest_sequence_number;
+    rinfo.interarrival_jitter_ms = stats.jitter_ms;
     rinfo.jitter_buffer_ms = stats.jitter_buffer_ms;
     rinfo.jitter_buffer_preferred_ms = stats.jitter_buffer_preferred_ms;
     rinfo.delay_estimate_ms = stats.delay_estimate_ms;

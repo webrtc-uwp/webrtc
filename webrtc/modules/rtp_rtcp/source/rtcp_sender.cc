@@ -857,13 +857,13 @@ bool RTCPSender::AddReportBlock(const FeedbackState& feedback_state,
   rtcp::ReportBlock* block = &report_blocks_[ssrc];
   block->SetMediaSsrc(ssrc);
   block->SetFractionLost(stats.fraction_lost);
-  if (!block->SetCumulativeLost(stats.cumulative_lost)) {
+  if (!block->SetCumulativeLost(stats.cumulative_packets_lost)) {
     report_blocks_.erase(ssrc);
     LOG(LS_WARNING) << "Cumulative lost is oversized.";
     return false;
   }
-  block->SetExtHighestSeqNum(stats.extended_max_sequence_number);
-  block->SetJitter(stats.jitter);
+  block->SetExtHighestSeqNum(stats.extended_highest_sequence_number);
+  block->SetJitter(stats.interarrival_jitter);
   block->SetLastSr(feedback_state.remote_sr);
 
   // TODO(sprang): Do we really need separate time stamps for each report?

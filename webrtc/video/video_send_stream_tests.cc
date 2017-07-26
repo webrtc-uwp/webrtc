@@ -395,12 +395,13 @@ class FakeReceiveStatistics : public NullReceiveStatistics {
  private:
   class LossyStatistician : public StreamStatistician {
    public:
-    LossyStatistician(uint32_t extended_max_sequence_number,
+    LossyStatistician(uint32_t extended_highest_sequence_number,
                       uint32_t cumulative_lost,
                       uint8_t fraction_lost) {
       stats_.fraction_lost = fraction_lost;
-      stats_.cumulative_lost = cumulative_lost;
-      stats_.extended_max_sequence_number = extended_max_sequence_number;
+      stats_.cumulative_packets_lost = cumulative_lost;
+      stats_.extended_highest_sequence_number =
+          extended_highest_sequence_number;
     }
     bool GetStatistics(RtcpStatistics* statistics, bool reset) override {
       *statistics = stats_;

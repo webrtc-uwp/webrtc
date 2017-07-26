@@ -3521,7 +3521,7 @@ TEST_F(WebRtcVideoChannelTest, GetStatsReportsCpuOveruseMetrics) {
 
   cricket::VideoMediaInfo info;
   ASSERT_TRUE(channel_->GetStats(&info));
-  EXPECT_EQ(stats.avg_encode_time_ms, info.senders[0].avg_encode_ms);
+  EXPECT_EQ(stats.avg_encode_time_ms, info.senders[0].avg_encode_time_ms);
   EXPECT_EQ(stats.encode_usage_percent, info.senders[0].encode_usage_percent);
 }
 
@@ -3638,9 +3638,9 @@ TEST_F(WebRtcVideoChannelTest,
 
   cricket::VideoMediaInfo info;
   ASSERT_TRUE(channel_->GetStats(&info));
-  EXPECT_EQ(7, info.senders[0].firs_rcvd);
-  EXPECT_EQ(10, info.senders[0].nacks_rcvd);
-  EXPECT_EQ(13, info.senders[0].plis_rcvd);
+  EXPECT_EQ(7, info.senders[0].firs_received);
+  EXPECT_EQ(10, info.senders[0].nacks_received);
+  EXPECT_EQ(13, info.senders[0].plis_received);
 }
 
 TEST_F(WebRtcVideoChannelTest,
@@ -3709,7 +3709,7 @@ TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesReceivePacketStatsCorrectly) {
   stats.rtp_stats.transmitted.header_bytes = 3;
   stats.rtp_stats.transmitted.padding_bytes = 4;
   stats.rtp_stats.transmitted.packets = 5;
-  stats.rtcp_stats.cumulative_lost = 6;
+  stats.rtcp_stats.cumulative_packets_lost = 6;
   stats.rtcp_stats.fraction_lost = 7;
   stream->SetStats(stats);
 
@@ -3718,10 +3718,11 @@ TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesReceivePacketStatsCorrectly) {
   EXPECT_EQ(stats.rtp_stats.transmitted.payload_bytes +
                 stats.rtp_stats.transmitted.header_bytes +
                 stats.rtp_stats.transmitted.padding_bytes,
-            info.receivers[0].bytes_rcvd);
+            info.receivers[0].bytes_received);
   EXPECT_EQ(stats.rtp_stats.transmitted.packets,
-            info.receivers[0].packets_rcvd);
-  EXPECT_EQ(stats.rtcp_stats.cumulative_lost, info.receivers[0].packets_lost);
+            info.receivers[0].packets_received);
+  EXPECT_EQ(stats.rtcp_stats.cumulative_packets_lost,
+            info.receivers[0].cumulative_packets_lost);
   EXPECT_EQ(static_cast<float>(stats.rtcp_stats.fraction_lost) / (1 << 8),
             info.receivers[0].fraction_lost);
 }

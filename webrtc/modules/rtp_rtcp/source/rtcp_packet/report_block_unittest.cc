@@ -69,7 +69,7 @@ TEST(RtcpPacketReportBlockTest, ParseMatchCreate) {
   EXPECT_EQ(kRemoteSsrc, parsed.source_ssrc());
   EXPECT_EQ(kFractionLost, parsed.fraction_lost());
   EXPECT_EQ(kCumulativeLost, parsed.cumulative_lost());
-  EXPECT_EQ(kExtHighestSeqNum, parsed.extended_high_seq_num());
+  EXPECT_EQ(kExtHighestSeqNum, parsed.extended_highest_sequence_number());
   EXPECT_EQ(kJitter, parsed.jitter());
   EXPECT_EQ(kLastSr, parsed.last_sr());
   EXPECT_EQ(kDelayLastSr, parsed.delay_since_last_sr());

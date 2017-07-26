@@ -573,7 +573,8 @@ class RTCStatsReportVerifier {
     }
     verifier.TestMemberIsNonNegative<uint32_t>(inbound_stream.packets_received);
     verifier.TestMemberIsNonNegative<uint64_t>(inbound_stream.bytes_received);
-    verifier.TestMemberIsNonNegative<uint32_t>(inbound_stream.packets_lost);
+    verifier.TestMemberIsNonNegative<uint32_t>(
+        inbound_stream.cumulative_packets_lost);
     if (inbound_stream.media_type.is_defined() &&
         *inbound_stream.media_type == "video") {
       verifier.TestMemberIsUndefined(inbound_stream.jitter);

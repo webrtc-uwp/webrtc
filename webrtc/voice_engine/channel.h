@@ -445,7 +445,7 @@ class Channel
       EXCLUSIVE_LOCKS_REQUIRED(overhead_per_packet_lock_);
 
   int GetRtpTimestampRateHz() const;
-  int64_t GetRTT(bool allow_associate_channel) const;
+  int64_t GetRoundtripTime(bool allow_associate_channel) const;
 
   // Called on the encoder task queue when a new input audio frame is ready
   // for encoding.

@@ -302,14 +302,16 @@ TEST(AudioReceiveStreamTest, GetStats) {
   helper.SetupMockForGetStats();
   AudioReceiveStream::Stats stats = recv_stream.GetStats();
   EXPECT_EQ(kRemoteSsrc, stats.remote_ssrc);
-  EXPECT_EQ(static_cast<int64_t>(kCallStats.bytesReceived), stats.bytes_rcvd);
-  EXPECT_EQ(static_cast<uint32_t>(kCallStats.packetsReceived),
-            stats.packets_rcvd);
-  EXPECT_EQ(kCallStats.cumulativeLost, stats.packets_lost);
-  EXPECT_EQ(Q8ToFloat(kCallStats.fractionLost), stats.fraction_lost);
+  EXPECT_EQ(static_cast<int64_t>(kCallStats.bytes_received),
+            stats.bytes_received);
+  EXPECT_EQ(static_cast<uint32_t>(kCallStats.packets_received),
+            stats.packets_received);
+  EXPECT_EQ(kCallStats.cumulative_packets_lost, stats.cumulative_packets_lost);
+  EXPECT_EQ(Q8ToFloat(kCallStats.fraction_lost), stats.fraction_lost);
   EXPECT_EQ(std::string(kCodecInst.plname), stats.codec_name);
-  EXPECT_EQ(kCallStats.extendedMax, stats.ext_seqnum);
-  EXPECT_EQ(kCallStats.jitterSamples / (kCodecInst.plfreq / 1000),
+  EXPECT_EQ(kCallStats.extended_highest_sequence_number,
+            stats.extended_highest_sequence_number);
+  EXPECT_EQ(kCallStats.interarrival_jitter / (kCodecInst.plfreq / 1000),
             stats.jitter_ms);
   EXPECT_EQ(kNetworkStats.currentBufferSize, stats.jitter_buffer_ms);
   EXPECT_EQ(kNetworkStats.preferredBufferSize,

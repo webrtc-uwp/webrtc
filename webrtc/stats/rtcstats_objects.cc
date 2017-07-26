@@ -512,37 +512,38 @@ RTCRTPStreamStats::RTCRTPStreamStats(
 RTCRTPStreamStats::~RTCRTPStreamStats() {
 }
 
-WEBRTC_RTCSTATS_IMPL(
-    RTCInboundRTPStreamStats, RTCRTPStreamStats, "inbound-rtp",
-    &packets_received,
-    &bytes_received,
-    &packets_lost,
-    &jitter,
-    &fraction_lost,
-    &round_trip_time,
-    &packets_discarded,
-    &packets_repaired,
-    &burst_packets_lost,
-    &burst_packets_discarded,
-    &burst_loss_count,
-    &burst_discard_count,
-    &burst_loss_rate,
-    &burst_discard_rate,
-    &gap_loss_rate,
-    &gap_discard_rate,
-    &frames_decoded);
+WEBRTC_RTCSTATS_IMPL(RTCInboundRTPStreamStats,
+                     RTCRTPStreamStats,
+                     "inbound-rtp",
+                     &packets_received,
+                     &bytes_received,
+                     &cumulative_packets_lost,
+                     &jitter,
+                     &fraction_lost,
+                     &round_trip_time,
+                     &packets_discarded,
+                     &packets_repaired,
+                     &burst_packets_lost,
+                     &burst_packets_discarded,
+                     &burst_loss_count,
+                     &burst_discard_count,
+                     &burst_loss_rate,
+                     &burst_discard_rate,
+                     &gap_loss_rate,
+                     &gap_discard_rate,
+                     &frames_decoded);
 
 RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(
     const std::string& id, int64_t timestamp_us)
     : RTCInboundRTPStreamStats(std::string(id), timestamp_us) {
 }
 
-RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(
-    std::string&& id, int64_t timestamp_us)
+RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(std::string&& id,
+                                                   int64_t timestamp_us)
     : RTCRTPStreamStats(std::move(id), timestamp_us),
       packets_received("packetsReceived"),
       bytes_received("bytesReceived"),
-      packets_lost("packetsLost"),
+      cumulative_packets_lost("packetsLost"),
       jitter("jitter"),
       fraction_lost("fractionLost"),
       round_trip_time("roundTripTime"),
@@ -556,15 +557,14 @@ RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(
       burst_discard_rate("burstDiscardRate"),
       gap_loss_rate("gapLossRate"),
       gap_discard_rate("gapDiscardRate"),
-      frames_decoded("framesDecoded") {
-}
+      frames_decoded("framesDecoded") {}
 
 RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(
     const RTCInboundRTPStreamStats& other)
     : RTCRTPStreamStats(other),
       packets_received(other.packets_received),
       bytes_received(other.bytes_received),
-      packets_lost(other.packets_lost),
+      cumulative_packets_lost(other.cumulative_packets_lost),
       jitter(other.jitter),
       fraction_lost(other.fraction_lost),
       round_trip_time(other.round_trip_time),
@@ -578,8 +578,7 @@ RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(
       burst_discard_rate(other.burst_discard_rate),
       gap_loss_rate(other.gap_loss_rate),
       gap_discard_rate(other.gap_discard_rate),
-      frames_decoded(other.frames_decoded) {
-}
+      frames_decoded(other.frames_decoded) {}
 
 RTCInboundRTPStreamStats::~RTCInboundRTPStreamStats() {
 }

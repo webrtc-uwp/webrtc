@@ -302,10 +302,10 @@ void VerifyVoiceReceiverInfoReport(
   EXPECT_EQ(rtc::ToString<int>(info.audio_level), value_in_report);
   EXPECT_TRUE(GetValue(
       report, StatsReport::kStatsValueNameBytesReceived, &value_in_report));
-  EXPECT_EQ(rtc::ToString<int64_t>(info.bytes_rcvd), value_in_report);
+  EXPECT_EQ(rtc::ToString<int64_t>(info.bytes_received), value_in_report);
   EXPECT_TRUE(GetValue(
       report, StatsReport::kStatsValueNameJitterReceived, &value_in_report));
-  EXPECT_EQ(rtc::ToString<int>(info.jitter_ms), value_in_report);
+  EXPECT_EQ(rtc::ToString<int>(info.interarrival_jitter_ms), value_in_report);
   EXPECT_TRUE(GetValue(
       report, StatsReport::kStatsValueNameJitterBufferMs, &value_in_report));
   EXPECT_EQ(rtc::ToString<int>(info.jitter_buffer_ms), value_in_report);
@@ -334,7 +334,7 @@ void VerifyVoiceReceiverInfoReport(
   EXPECT_EQ(rtc::ToString<float>(info.secondary_decoded_rate), value_in_report);
   EXPECT_TRUE(GetValue(
       report, StatsReport::kStatsValueNamePacketsReceived, &value_in_report));
-  EXPECT_EQ(rtc::ToString<int>(info.packets_rcvd), value_in_report);
+  EXPECT_EQ(rtc::ToString<int>(info.packets_received), value_in_report);
   EXPECT_TRUE(GetValue(
       report, StatsReport::kStatsValueNameDecodingCTSG, &value_in_report));
   EXPECT_EQ(rtc::ToString<int>(info.decoding_calls_to_silence_generator),
@@ -371,13 +371,14 @@ void VerifyVoiceSenderInfoReport(const StatsReport* report,
   EXPECT_EQ(sinfo.codec_name, value_in_report);
   EXPECT_TRUE(GetValue(
       report, StatsReport::kStatsValueNameBytesSent, &value_in_report));
-  EXPECT_EQ(rtc::ToString<int64_t>(sinfo.bytes_sent), value_in_report);
+  EXPECT_EQ(rtc::ToString<int64_t>(sinfo.cumulative_bytes_sent),
+            value_in_report);
   EXPECT_TRUE(GetValue(
       report, StatsReport::kStatsValueNamePacketsSent, &value_in_report));
-  EXPECT_EQ(rtc::ToString<int>(sinfo.packets_sent), value_in_report);
+  EXPECT_EQ(rtc::ToString<int>(sinfo.cumulative_packets_sent), value_in_report);
   EXPECT_TRUE(GetValue(
       report, StatsReport::kStatsValueNamePacketsLost, &value_in_report));
-  EXPECT_EQ(rtc::ToString<int>(sinfo.packets_lost), value_in_report);
+  EXPECT_EQ(rtc::ToString<int>(sinfo.cumulative_packets_lost), value_in_report);
   EXPECT_TRUE(GetValue(
       report, StatsReport::kStatsValueNameRtt, &value_in_report));
   EXPECT_EQ(rtc::ToString<int>(sinfo.rtt_ms), value_in_report);
@@ -386,7 +387,7 @@ void VerifyVoiceSenderInfoReport(const StatsReport* report,
   EXPECT_EQ(rtc::ToString<int>(sinfo.rtt_ms), value_in_report);
   EXPECT_TRUE(GetValue(
       report, StatsReport::kStatsValueNameJitterReceived, &value_in_report));
-  EXPECT_EQ(rtc::ToString<int>(sinfo.jitter_ms), value_in_report);
+  EXPECT_EQ(rtc::ToString<int>(sinfo.interarrival_jitter_ms), value_in_report);
   EXPECT_TRUE(GetValue(
       report, StatsReport::kStatsValueNameEchoCancellationQualityMin,
       &value_in_report));
@@ -431,13 +432,13 @@ void VerifyVoiceSenderInfoReport(const StatsReport* report,
 void InitVoiceSenderInfo(cricket::VoiceSenderInfo* voice_sender_info) {
   voice_sender_info->add_ssrc(kSsrcOfTrack);
   voice_sender_info->codec_name = "fake_codec";
-  voice_sender_info->bytes_sent = 100;
-  voice_sender_info->packets_sent = 101;
+  voice_sender_info->cumulative_bytes_sent = 100;
+  voice_sender_info->cumulative_packets_sent = 101;
   voice_sender_info->rtt_ms = 102;
   voice_sender_info->fraction_lost = 103;
-  voice_sender_info->jitter_ms = 104;
-  voice_sender_info->packets_lost = 105;
-  voice_sender_info->ext_seqnum = 106;
+  voice_sender_info->interarrival_jitter_ms = 104;
+  voice_sender_info->cumulative_packets_lost = 105;
+  voice_sender_info->extended_highest_sequence_number = 106;
   voice_sender_info->audio_level = 107;
   voice_sender_info->echo_return_loss = 108;
   voice_sender_info->echo_return_loss_enhancement = 109;
@@ -467,13 +468,13 @@ void UpdateVoiceSenderInfoFromAudioTrack(
 
 void InitVoiceReceiverInfo(cricket::VoiceReceiverInfo* voice_receiver_info) {
   voice_receiver_info->add_ssrc(kSsrcOfTrack);
-  voice_receiver_info->bytes_rcvd = 110;
-  voice_receiver_info->packets_rcvd = 111;
-  voice_receiver_info->packets_lost = 112;
+  voice_receiver_info->bytes_received = 110;
+  voice_receiver_info->packets_received = 111;
+  voice_receiver_info->cumulative_packets_lost = 112;
   voice_receiver_info->fraction_lost = 113;
-  voice_receiver_info->packets_lost = 114;
-  voice_receiver_info->ext_seqnum = 115;
-  voice_receiver_info->jitter_ms = 116;
+  voice_receiver_info->cumulative_packets_lost = 114;
+  voice_receiver_info->extended_highest_sequence_number = 115;
+  voice_receiver_info->interarrival_jitter_ms = 116;
   voice_receiver_info->jitter_buffer_ms = 117;
   voice_receiver_info->jitter_buffer_preferred_ms = 118;
   voice_receiver_info->delay_estimate_ms = 119;
@@ -885,7 +886,7 @@ TEST_F(StatsCollectorTest, BytesCounterHandles64Bits) {
 
   // Construct a stats value to read.
   video_sender_info.add_ssrc(1234);
-  video_sender_info.bytes_sent = kBytesSent;
+  video_sender_info.cumulative_bytes_sent = kBytesSent;
   stats_read.senders.push_back(video_sender_info);
 
   EXPECT_CALL(session_, video_channel()).WillRepeatedly(Return(&video_channel));
@@ -935,7 +936,7 @@ TEST_F(StatsCollectorTest, AudioBandwidthEstimationInfoIsReported) {
 
   // Construct a stats value to read.
   voice_sender_info.add_ssrc(1234);
-  voice_sender_info.bytes_sent = kBytesSent;
+  voice_sender_info.cumulative_bytes_sent = kBytesSent;
   stats_read.senders.push_back(voice_sender_info);
 
   webrtc::Call::Stats call_stats;
@@ -1003,7 +1004,7 @@ TEST_F(StatsCollectorTest, VideoBandwidthEstimationInfoIsReported) {
 
   // Construct a stats value to read.
   video_sender_info.add_ssrc(1234);
-  video_sender_info.bytes_sent = kBytesSent;
+  video_sender_info.cumulative_bytes_sent = kBytesSent;
   stats_read.senders.push_back(video_sender_info);
 
   webrtc::Call::Stats call_stats;
@@ -1123,7 +1124,7 @@ TEST_F(StatsCollectorTest, TrackAndSsrcObjectExistAfterUpdateSsrcStats) {
 
   // Construct a stats value to read.
   video_sender_info.add_ssrc(1234);
-  video_sender_info.bytes_sent = kBytesSent;
+  video_sender_info.cumulative_bytes_sent = kBytesSent;
   stats_read.senders.push_back(video_sender_info);
 
   EXPECT_CALL(session_, video_channel()).WillRepeatedly(Return(&video_channel));
@@ -1192,7 +1193,7 @@ TEST_F(StatsCollectorTest, TransportObjectLinkedFromSsrcObject) {
 
   // Construct a stats value to read.
   video_sender_info.add_ssrc(1234);
-  video_sender_info.bytes_sent = kBytesSent;
+  video_sender_info.cumulative_bytes_sent = kBytesSent;
   stats_read.senders.push_back(video_sender_info);
 
   EXPECT_CALL(session_, video_channel()).WillRepeatedly(Return(&video_channel));
@@ -1679,8 +1680,8 @@ TEST_F(StatsCollectorTest, FilterOutNegativeInitialValues) {
   // These values are set to -1 initially in audio_send_stream.
   // The voice_sender_info will read the values from audio_send_stream.
   voice_sender_info.rtt_ms = -1;
-  voice_sender_info.packets_lost = -1;
-  voice_sender_info.jitter_ms = -1;
+  voice_sender_info.cumulative_packets_lost = -1;
+  voice_sender_info.interarrival_jitter_ms = -1;
 
   // Some of the contents in |voice_sender_info| needs to be updated from the
   // |audio_track_|.

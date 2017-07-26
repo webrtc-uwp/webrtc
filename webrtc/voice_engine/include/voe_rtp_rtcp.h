@@ -61,15 +61,15 @@ class WEBRTC_DLLEXPORT VoERTPObserver {
 
 // CallStatistics
 struct CallStatistics {
-  unsigned short fractionLost;
-  unsigned int cumulativeLost;
-  unsigned int extendedMax;
-  unsigned int jitterSamples;
-  int64_t rttMs;
-  size_t bytesSent;
-  int packetsSent;
-  size_t bytesReceived;
-  int packetsReceived;
+  unsigned short fraction_lost;
+  unsigned int cumulative_packets_lost;
+  unsigned int extended_highest_sequence_number;
+  unsigned int interarrival_jitter;
+  int64_t roundtrip_time_ms;
+  size_t bytes_sent;
+  int packets_sent;
+  size_t bytes_received;
+  int packets_received;
   // The capture ntp time (in local timebase) of the first played out audio
   // frame.
   int64_t capture_start_ntp_time_ms_;
@@ -86,14 +86,14 @@ struct SenderInfo {
 
 // See section 6.4.2 in http://www.ietf.org/rfc/rfc3550.txt for details.
 struct ReportBlock {
-  uint32_t sender_SSRC;  // SSRC of sender
-  uint32_t source_SSRC;
+  uint32_t sender_ssrc;  // SSRC of sender
+  uint32_t source_ssrc;
   uint8_t fraction_lost;
-  uint32_t cumulative_num_packets_lost;
+  uint32_t cumulative_packets_lost;
   uint32_t extended_highest_sequence_number;
   uint32_t interarrival_jitter;
-  uint32_t last_SR_timestamp;
-  uint32_t delay_since_last_SR;
+  uint32_t last_sender_report_timestamp;
+  uint32_t delay_since_last_sender_report;
 };
 
 // VoERTP_RTCP

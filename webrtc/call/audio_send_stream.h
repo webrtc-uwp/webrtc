@@ -37,15 +37,15 @@ class AudioSendStream {
 
     // TODO(solenberg): Harmonize naming and defaults with receive stream stats.
     uint32_t local_ssrc = 0;
-    int64_t bytes_sent = 0;
-    int32_t packets_sent = 0;
-    int32_t packets_lost = -1;
+    int64_t cumulative_bytes_sent = 0;
+    int32_t cumulative_packets_sent = 0;
+    int32_t cumulative_packets_lost = -1;
     float fraction_lost = -1.0f;
     std::string codec_name;
     rtc::Optional<int> codec_payload_type;
-    int32_t ext_seqnum = -1;
-    int32_t jitter_ms = -1;
-    int64_t rtt_ms = -1;
+    int32_t extended_highest_sequence_number = -1;
+    int32_t interarrival_jitter_ms = -1;
+    int64_t roundtrip_time_ms = -1;
     int32_t audio_level = -1;
     // See description of "totalAudioEnergy" in the WebRTC stats spec:
     // https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamtrackstats-totalaudioenergy

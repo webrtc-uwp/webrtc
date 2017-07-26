@@ -2018,7 +2018,7 @@ VideoSenderInfo WebRtcVideoChannel::WebRtcVideoSendStream::GetVideoSenderInfo(
   info.ssrc_groups = ssrc_groups_;
   info.framerate_input = stats.input_frame_rate;
   info.framerate_sent = stats.encode_frame_rate;
-  info.avg_encode_ms = stats.avg_encode_time_ms;
+  info.avg_encode_time_ms = stats.avg_encode_time_ms;
   info.encode_usage_percent = stats.encode_usage_percent;
   info.frames_encoded = stats.frames_encoded;
   info.qp_sum = stats.qp_sum;
@@ -2033,18 +2033,20 @@ VideoSenderInfo WebRtcVideoChannel::WebRtcVideoSendStream::GetVideoSenderInfo(
        it != stats.substreams.end(); ++it) {
     // TODO(pbos): Wire up additional stats, such as padding bytes.
     webrtc::VideoSendStream::StreamStats stream_stats = it->second;
-    info.bytes_sent += stream_stats.rtp_stats.transmitted.payload_bytes +
-                       stream_stats.rtp_stats.transmitted.header_bytes +
-                       stream_stats.rtp_stats.transmitted.padding_bytes;
-    info.packets_sent += stream_stats.rtp_stats.transmitted.packets;
-    info.packets_lost += stream_stats.rtcp_stats.cumulative_lost;
+    info.cumulative_bytes_sent +=
+        stream_stats.rtp_stats.transmitted.payload_bytes +
+        stream_stats.rtp_stats.transmitted.header_bytes +
+        stream_stats.rtp_stats.transmitted.padding_bytes;
+    info.cumulative_packets_sent += stream_stats.rtp_stats.transmitted.packets;
+    info.cumulative_packets_lost +=
+        stream_stats.rtcp_stats.cumulative_packets_lost;
     if (stream_stats.width > info.send_frame_width)
       info.send_frame_width = stream_stats.width;
     if (stream_stats.height > info.send_frame_height)
       info.send_frame_height = stream_stats.height;
-    info.firs_rcvd += stream_stats.rtcp_packet_type_counts.fir_packets;
-    info.nacks_rcvd += stream_stats.rtcp_packet_type_counts.nack_packets;
-    info.plis_rcvd += stream_stats.rtcp_packet_type_counts.pli_packets;
+    info.firs_received += stream_stats.rtcp_packet_type_counts.fir_packets;
+    info.nacks_received += stream_stats.rtcp_packet_type_counts.nack_packets;
+    info.plis_received += stream_stats.rtcp_packet_type_counts.pli_packets;
   }
 
   if (!stats.substreams.empty()) {
@@ -2422,11 +2424,11 @@ WebRtcVideoChannel::WebRtcVideoReceiveStream::GetVideoReceiverInfo(
     info.codec_payload_type = rtc::Optional<int>(
         stats.current_payload_type);
   }
-  info.bytes_rcvd = stats.rtp_stats.transmitted.payload_bytes +
-                    stats.rtp_stats.transmitted.header_bytes +
-                    stats.rtp_stats.transmitted.padding_bytes;
-  info.packets_rcvd = stats.rtp_stats.transmitted.packets;
-  info.packets_lost = stats.rtcp_stats.cumulative_lost;
+  info.bytes_received = stats.rtp_stats.transmitted.payload_bytes +
+                        stats.rtp_stats.transmitted.header_bytes +
+                        stats.rtp_stats.transmitted.padding_bytes;
+  info.packets_received = stats.rtp_stats.transmitted.packets;
+  info.cumulative_packets_lost = stats.rtcp_stats.cumulative_packets_lost;
   info.fraction_lost =
       static_cast<float>(stats.rtcp_stats.fraction_lost) / (1 << 8);
 

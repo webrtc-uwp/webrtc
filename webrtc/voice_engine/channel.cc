@@ -373,16 +373,17 @@ class VoERtcpObserver : public RtcpBandwidthObserver {
       // to calculate the number of RTP packets this report refers to. Ignore if
       // we haven't seen this SSRC before.
       std::map<uint32_t, uint32_t>::iterator seq_num_it =
-          extended_max_sequence_number_.find(block_it->sourceSSRC);
+          extended_max_sequence_number_.find(block_it->source_ssrc);
       int number_of_packets = 0;
       if (seq_num_it != extended_max_sequence_number_.end()) {
-        number_of_packets = block_it->extendedHighSeqNum - seq_num_it->second;
+        number_of_packets =
+            block_it->extended_highest_sequence_number - seq_num_it->second;
       }
-      fraction_lost_aggregate += number_of_packets * block_it->fractionLost;
+      fraction_lost_aggregate += number_of_packets * block_it->fraction_lost;
       total_number_of_packets += number_of_packets;
 
-      extended_max_sequence_number_[block_it->sourceSSRC] =
-          block_it->extendedHighSeqNum;
+      extended_max_sequence_number_[block_it->source_ssrc] =
+          block_it->extended_highest_sequence_number;
     }
     int weighted_fraction_lost = 0;
     if (total_number_of_packets > 0) {
@@ -1826,7 +1827,7 @@ int32_t Channel::ReceivedRTCPPacket(const uint8_t* data, size_t length) {
         "Channel::IncomingRTPPacket() RTCP packet is invalid");
   }
 
-  int64_t rtt = GetRTT(true);
+  int64_t rtt = GetRoundtripTime(true);
   if (rtt == 0) {
     // Waiting for valid RTT.
     return 0;
@@ -2568,8 +2569,8 @@ int Channel::GetRemoteRTCP_CNAME(char cName[256]) {
     return -1;
   }
   char cname[RTCP_CNAME_SIZE];
-  const uint32_t remoteSSRC = rtp_receiver_->SSRC();
-  if (_rtpRtcpModule->RemoteCNAME(remoteSSRC, cname) != 0) {
+  const uint32_t remote_ssrc = rtp_receiver_->SSRC();
+  if (_rtpRtcpModule->RemoteCNAME(remote_ssrc, cname) != 0) {
     _engineStatisticsPtr->SetLastError(
         VE_CANNOT_RETRIEVE_CNAME, kTraceError,
         "GetRemoteRTCP_CNAME() failed to retrieve remote RTCP CNAME");
@@ -2646,14 +2647,17 @@ int Channel::GetRemoteRTCPReportBlocks(
   std::vector<RTCPReportBlock>::const_iterator it = rtcp_report_blocks.begin();
   for (; it != rtcp_report_blocks.end(); ++it) {
     ReportBlock report_block;
-    report_block.sender_SSRC = it->remoteSSRC;
-    report_block.source_SSRC = it->sourceSSRC;
-    report_block.fraction_lost = it->fractionLost;
-    report_block.cumulative_num_packets_lost = it->cumulativeLost;
-    report_block.extended_highest_sequence_number = it->extendedHighSeqNum;
-    report_block.interarrival_jitter = it->jitter;
-    report_block.last_SR_timestamp = it->lastSR;
-    report_block.delay_since_last_SR = it->delaySinceLastSR;
+    report_block.sender_ssrc = it->sender_ssrc;
+    report_block.source_ssrc = it->source_ssrc;
+    report_block.fraction_lost = it->fraction_lost;
+    report_block.cumulative_packets_lost = it->cumulative_packets_lost;
+    report_block.extended_highest_sequence_number =
+        it->extended_highest_sequence_number;
+    report_block.interarrival_jitter = it->interarrival_jitter;
+    report_block.last_sender_report_timestamp =
+        it->last_sender_report_timestamp;
+    report_block.delay_since_last_sender_report =
+        it->delay_since_last_sender_report;
     report_blocks->push_back(report_block);
   }
   return 0;
@@ -2672,13 +2676,14 @@ int Channel::GetRTPStatistics(CallStatistics& stats) {
                                 _rtpRtcpModule->RTCP() == RtcpMode::kOff);
   }
 
-  stats.fractionLost = statistics.fraction_lost;
-  stats.cumulativeLost = statistics.cumulative_lost;
-  stats.extendedMax = statistics.extended_max_sequence_number;
-  stats.jitterSamples = statistics.jitter;
+  stats.fraction_lost = statistics.fraction_lost;
+  stats.cumulative_packets_lost = statistics.cumulative_packets_lost;
+  stats.extended_highest_sequence_number =
+      statistics.extended_highest_sequence_number;
+  stats.interarrival_jitter = statistics.interarrival_jitter;
 
   // --- RTT
-  stats.rttMs = GetRTT(true);
+  stats.roundtrip_time_ms = GetRoundtripTime(true);
 
   // --- Data counters
 
@@ -2697,10 +2702,10 @@ int Channel::GetRTPStatistics(CallStatistics& stats) {
                  " output will not be complete");
   }
 
-  stats.bytesSent = bytesSent;
-  stats.packetsSent = packetsSent;
-  stats.bytesReceived = bytesReceived;
-  stats.packetsReceived = packetsReceived;
+  stats.bytes_sent = bytesSent;
+  stats.packets_sent = packetsSent;
+  stats.bytes_received = bytesReceived;
+  stats.packets_received = packetsReceived;
 
   // --- Timestamps
   {
@@ -3115,7 +3120,7 @@ int Channel::GetRtpTimestampRateHz() const {
              : audio_coding_->PlayoutFrequency();
 }
 
-int64_t Channel::GetRTT(bool allow_associate_channel) const {
+int64_t Channel::GetRoundtripTime(bool allow_associate_channel) const {
   RtcpMode method = _rtpRtcpModule->RTCP();
   if (method == RtcpMode::kOff) {
     return 0;
@@ -3134,16 +3139,16 @@ int64_t Channel::GetRTT(bool allow_associate_channel) const {
         // To prevent infinite recursion and deadlock, calling GetRTT of
         // associate channel should always use "false" for argument:
         // |allow_associate_channel|.
-        rtt = channel->GetRTT(false);
+        rtt = channel->GetRoundtripTime(false);
       }
     }
     return rtt;
   }
 
-  uint32_t remoteSSRC = rtp_receiver_->SSRC();
+  uint32_t remote_ssrc = rtp_receiver_->SSRC();
   std::vector<RTCPReportBlock>::const_iterator it = report_blocks.begin();
   for (; it != report_blocks.end(); ++it) {
-    if (it->remoteSSRC == remoteSSRC)
+    if (it->sender_ssrc == remote_ssrc)
       break;
   }
   if (it == report_blocks.end()) {
@@ -3151,13 +3156,13 @@ int64_t Channel::GetRTT(bool allow_associate_channel) const {
     // To calculate RTT we try with the SSRC of the first report block.
     // This is very important for send-only channels where we don't know
     // the SSRC of the other end.
-    remoteSSRC = report_blocks[0].remoteSSRC;
+    remote_ssrc = report_blocks[0].sender_ssrc;
   }
 
   int64_t avg_rtt = 0;
   int64_t max_rtt = 0;
   int64_t min_rtt = 0;
-  if (_rtpRtcpModule->RTT(remoteSSRC, &rtt, &avg_rtt, &min_rtt, &max_rtt) !=
+  if (_rtpRtcpModule->RTT(remote_ssrc, &rtt, &avg_rtt, &min_rtt, &max_rtt) !=
       0) {
     return 0;
   }

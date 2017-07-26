@@ -263,11 +263,11 @@ RtcpStatistics StreamStatisticianImpl::CalculateRtcpStatistics() {
   // We need a counter for cumulative loss too.
   // TODO(danilchap): Ensure cumulative loss is below maximum value of 2^24.
   cumulative_loss_ += missing;
-  stats.cumulative_lost = cumulative_loss_;
-  stats.extended_max_sequence_number =
+  stats.cumulative_packets_lost = cumulative_loss_;
+  stats.extended_highest_sequence_number =
       (received_seq_wraps_ << 16) + received_seq_max_;
   // Note: internal jitter value is in Q4 and needs to be scaled by 1/16.
-  stats.jitter = jitter_q4_ >> 4;
+  stats.interarrival_jitter = jitter_q4_ >> 4;
 
   // Store this report.
   last_reported_statistics_ = stats;

@@ -40,7 +40,7 @@ ReportBlock::ReportBlock()
     : source_ssrc_(0),
       fraction_lost_(0),
       cumulative_lost_(0),
-      extended_high_seq_num_(0),
+      extended_highest_sequence_number_(0),
       jitter_(0),
       last_sr_(0),
       delay_since_last_sr_(0) {}
@@ -55,7 +55,8 @@ bool ReportBlock::Parse(const uint8_t* buffer, size_t length) {
   source_ssrc_ = ByteReader<uint32_t>::ReadBigEndian(&buffer[0]);
   fraction_lost_ = buffer[4];
   cumulative_lost_ = ByteReader<uint32_t, 3>::ReadBigEndian(&buffer[5]);
-  extended_high_seq_num_ = ByteReader<uint32_t>::ReadBigEndian(&buffer[8]);
+  extended_highest_sequence_number_ =
+      ByteReader<uint32_t>::ReadBigEndian(&buffer[8]);
   jitter_ = ByteReader<uint32_t>::ReadBigEndian(&buffer[12]);
   last_sr_ = ByteReader<uint32_t>::ReadBigEndian(&buffer[16]);
   delay_since_last_sr_ = ByteReader<uint32_t>::ReadBigEndian(&buffer[20]);
@@ -70,7 +71,8 @@ void ReportBlock::Create(uint8_t* buffer) const {
   ByteWriter<uint32_t>::WriteBigEndian(&buffer[0], source_ssrc());
   ByteWriter<uint8_t>::WriteBigEndian(&buffer[4], fraction_lost());
   ByteWriter<uint32_t, 3>::WriteBigEndian(&buffer[5], cumulative_lost());
-  ByteWriter<uint32_t>::WriteBigEndian(&buffer[8], extended_high_seq_num());
+  ByteWriter<uint32_t>::WriteBigEndian(&buffer[8],
+                                       extended_highest_sequence_number());
   ByteWriter<uint32_t>::WriteBigEndian(&buffer[12], jitter());
   ByteWriter<uint32_t>::WriteBigEndian(&buffer[16], last_sr());
   ByteWriter<uint32_t>::WriteBigEndian(&buffer[20], delay_since_last_sr());

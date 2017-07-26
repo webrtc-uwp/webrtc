@@ -18,7 +18,7 @@
 namespace webrtc {
 
 PlayoutDelayOracle::PlayoutDelayOracle()
-    : high_sequence_number_(0),
+    : extended_highest_sequence_number_(0),
       send_playout_delay_(false),
       ssrc_(0),
       playout_delay_{-1, -1} {}
@@ -37,14 +37,14 @@ void PlayoutDelayOracle::UpdateRequest(uint32_t ssrc,
       playout_delay.min_ms != playout_delay_.min_ms) {
     send_playout_delay_ = true;
     playout_delay_.min_ms = playout_delay.min_ms;
-    high_sequence_number_ = unwrapped_seq_num;
+    extended_highest_sequence_number_ = unwrapped_seq_num;
   }
 
   if (playout_delay.max_ms >= 0 &&
       playout_delay.max_ms != playout_delay_.max_ms) {
     send_playout_delay_ = true;
     playout_delay_.max_ms = playout_delay.max_ms;
-    high_sequence_number_ = unwrapped_seq_num;
+    extended_highest_sequence_number_ = unwrapped_seq_num;
   }
   ssrc_ = ssrc;
 }
@@ -55,8 +55,9 @@ void PlayoutDelayOracle::OnReceivedRtcpReportBlocks(
     const ReportBlockList& report_blocks) {
   rtc::CritScope lock(&crit_sect_);
   for (const RTCPReportBlock& report_block : report_blocks) {
-    if ((ssrc_ == report_block.sourceSSRC) && send_playout_delay_ &&
-        (report_block.extendedHighSeqNum > high_sequence_number_)) {
+    if ((ssrc_ == report_block.source_ssrc) && send_playout_delay_ &&
+        (report_block.extended_highest_sequence_number >
+         extended_highest_sequence_number_)) {
       send_playout_delay_ = false;
     }
   }

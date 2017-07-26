@@ -518,12 +518,11 @@ struct SsrcReceiverInfo {
 
 struct MediaSenderInfo {
   MediaSenderInfo()
-      : bytes_sent(0),
-        packets_sent(0),
-        packets_lost(0),
+      : cumulative_bytes_sent(0),
+        cumulative_packets_sent(0),
+        cumulative_packets_lost(0),
         fraction_lost(0.0),
-        rtt_ms(0) {
-  }
+        rtt_ms(0) {}
   void add_ssrc(const SsrcSenderInfo& stat) {
     local_stats.push_back(stat);
   }
@@ -553,9 +552,9 @@ struct MediaSenderInfo {
       return 0;
     }
   }
-  int64_t bytes_sent;
-  int packets_sent;
-  int packets_lost;
+  int64_t cumulative_bytes_sent;
+  int cumulative_packets_sent;
+  int cumulative_packets_lost;
   float fraction_lost;
   int64_t rtt_ms;
   std::string codec_name;
@@ -566,11 +565,10 @@ struct MediaSenderInfo {
 
 struct MediaReceiverInfo {
   MediaReceiverInfo()
-      : bytes_rcvd(0),
-        packets_rcvd(0),
-        packets_lost(0),
-        fraction_lost(0.0) {
-  }
+      : bytes_received(0),
+        packets_received(0),
+        cumulative_packets_lost(0),
+        fraction_lost(0.0) {}
   void add_ssrc(const SsrcReceiverInfo& stat) {
     local_stats.push_back(stat);
   }
@@ -600,9 +598,9 @@ struct MediaReceiverInfo {
     }
   }
 
-  int64_t bytes_rcvd;
-  int packets_rcvd;
-  int packets_lost;
+  int64_t bytes_received;
+  int packets_received;
+  int cumulative_packets_lost;
   float fraction_lost;
   std::string codec_name;
   rtc::Optional<int> codec_payload_type;
@@ -612,8 +610,8 @@ struct MediaReceiverInfo {
 
 struct VoiceSenderInfo : public MediaSenderInfo {
   VoiceSenderInfo()
-      : ext_seqnum(0),
-        jitter_ms(0),
+      : extended_highest_sequence_number(0),
+        interarrival_jitter_ms(0),
         audio_level(0),
         total_input_energy(0.0),
         total_input_duration(0.0),
@@ -626,8 +624,8 @@ struct VoiceSenderInfo : public MediaSenderInfo {
         residual_echo_likelihood_recent_max(0.0f),
         typing_noise_detected(false) {}
 
-  int ext_seqnum;
-  int jitter_ms;
+  int extended_highest_sequence_number;
+  int interarrival_jitter_ms;
   int audio_level;
   // See description of "totalAudioEnergy" in the WebRTC stats spec:
   // https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamtrackstats-totalaudioenergy
@@ -645,8 +643,8 @@ struct VoiceSenderInfo : public MediaSenderInfo {
 
 struct VoiceReceiverInfo : public MediaReceiverInfo {
   VoiceReceiverInfo()
-      : ext_seqnum(0),
-        jitter_ms(0),
+      : extended_highest_sequence_number(0),
+        interarrival_jitter_ms(0),
         jitter_buffer_ms(0),
         jitter_buffer_preferred_ms(0),
         delay_estimate_ms(0),
@@ -667,8 +665,8 @@ struct VoiceReceiverInfo : public MediaReceiverInfo {
         decoding_muted_output(0),
         capture_start_ntp_time_ms(-1) {}
 
-  int ext_seqnum;
-  int jitter_ms;
+  int extended_highest_sequence_number;
+  int interarrival_jitter_ms;
   int jitter_buffer_ms;
   int jitter_buffer_preferred_ms;
   int delay_estimate_ms;
@@ -701,9 +699,9 @@ struct VoiceReceiverInfo : public MediaReceiverInfo {
 struct VideoSenderInfo : public MediaSenderInfo {
   VideoSenderInfo()
       : packets_cached(0),
-        firs_rcvd(0),
-        plis_rcvd(0),
-        nacks_rcvd(0),
+        firs_received(0),
+        plis_received(0),
+        nacks_received(0),
         send_frame_width(0),
         send_frame_height(0),
         framerate_input(0),
@@ -712,7 +710,7 @@ struct VideoSenderInfo : public MediaSenderInfo {
         preferred_bitrate(0),
         adapt_reason(0),
         adapt_changes(0),
-        avg_encode_ms(0),
+        avg_encode_time_ms(0),
         encode_usage_percent(0),
         frames_encoded(0) {}
 
@@ -720,9 +718,9 @@ struct VideoSenderInfo : public MediaSenderInfo {
   // TODO(hbos): Move this to |VideoMediaInfo::send_codecs|?
   std::string encoder_implementation_name;
   int packets_cached;
-  int firs_rcvd;
-  int plis_rcvd;
-  int nacks_rcvd;
+  int firs_received;
+  int plis_received;
+  int nacks_received;
   int send_frame_width;
   int send_frame_height;
   int framerate_input;
@@ -731,7 +729,7 @@ struct VideoSenderInfo : public MediaSenderInfo {
   int preferred_bitrate;
   int adapt_reason;
   int adapt_changes;
-  int avg_encode_ms;
+  int avg_encode_time_ms;
   int encode_usage_percent;
   uint32_t frames_encoded;
   rtc::Optional<uint64_t> qp_sum;

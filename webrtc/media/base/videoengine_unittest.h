@@ -419,14 +419,14 @@ class VideoMediaChannelTest : public testing::Test,
     ASSERT_EQ(1U, info.senders.size());
     // TODO(whyuan): bytes_sent and bytes_rcvd are different. Are both payload?
     // For webrtc, bytes_sent does not include the RTP header length.
-    EXPECT_GT(info.senders[0].bytes_sent, 0);
-    EXPECT_EQ(NumRtpPackets(), info.senders[0].packets_sent);
+    EXPECT_GT(info.senders[0].cumulative_bytes_sent, 0);
+    EXPECT_EQ(NumRtpPackets(), info.senders[0].cumulative_packets_sent);
     EXPECT_EQ(0.0, info.senders[0].fraction_lost);
     ASSERT_TRUE(info.senders[0].codec_payload_type);
     EXPECT_EQ(DefaultCodec().id, *info.senders[0].codec_payload_type);
-    EXPECT_EQ(0, info.senders[0].firs_rcvd);
-    EXPECT_EQ(0, info.senders[0].plis_rcvd);
-    EXPECT_EQ(0, info.senders[0].nacks_rcvd);
+    EXPECT_EQ(0, info.senders[0].firs_received);
+    EXPECT_EQ(0, info.senders[0].plis_received);
+    EXPECT_EQ(0, info.senders[0].nacks_received);
     EXPECT_EQ(kVideoWidth, info.senders[0].send_frame_width);
     EXPECT_EQ(kVideoHeight, info.senders[0].send_frame_height);
     EXPECT_GT(info.senders[0].framerate_input, 0);
@@ -442,10 +442,10 @@ class VideoMediaChannelTest : public testing::Test,
     EXPECT_EQ(info.senders[0].ssrcs()[0], info.receivers[0].ssrcs()[0]);
     ASSERT_TRUE(info.receivers[0].codec_payload_type);
     EXPECT_EQ(DefaultCodec().id, *info.receivers[0].codec_payload_type);
-    EXPECT_EQ(NumRtpBytes(), info.receivers[0].bytes_rcvd);
-    EXPECT_EQ(NumRtpPackets(), info.receivers[0].packets_rcvd);
+    EXPECT_EQ(NumRtpBytes(), info.receivers[0].bytes_received);
+    EXPECT_EQ(NumRtpPackets(), info.receivers[0].packets_received);
     EXPECT_EQ(0.0, info.receivers[0].fraction_lost);
-    EXPECT_EQ(0, info.receivers[0].packets_lost);
+    EXPECT_EQ(0, info.receivers[0].cumulative_packets_lost);
     // TODO(asapersson): Not set for webrtc. Handle missing stats.
     // EXPECT_EQ(0, info.receivers[0].packets_concealed);
     EXPECT_EQ(0, info.receivers[0].firs_sent);
@@ -508,8 +508,9 @@ class VideoMediaChannelTest : public testing::Test,
     ASSERT_EQ(1U, info.senders.size());
     // TODO(whyuan): bytes_sent and bytes_rcvd are different. Are both payload?
     // For webrtc, bytes_sent does not include the RTP header length.
-    EXPECT_GT(GetSenderStats(0).bytes_sent, 0);
-    EXPECT_EQ_WAIT(NumRtpPackets(), GetSenderStats(0).packets_sent, kTimeout);
+    EXPECT_GT(GetSenderStats(0).cumulative_bytes_sent, 0);
+    EXPECT_EQ_WAIT(NumRtpPackets(), GetSenderStats(0).cumulative_packets_sent,
+                   kTimeout);
     EXPECT_EQ(kVideoWidth, GetSenderStats(0).send_frame_width);
     EXPECT_EQ(kVideoHeight, GetSenderStats(0).send_frame_height);
 
@@ -517,8 +518,9 @@ class VideoMediaChannelTest : public testing::Test,
     for (size_t i = 0; i < info.receivers.size(); ++i) {
       EXPECT_EQ(1U, GetReceiverStats(i).ssrcs().size());
       EXPECT_EQ(i + 1, GetReceiverStats(i).ssrcs()[0]);
-      EXPECT_EQ_WAIT(NumRtpBytes(), GetReceiverStats(i).bytes_rcvd, kTimeout);
-      EXPECT_EQ_WAIT(NumRtpPackets(), GetReceiverStats(i).packets_rcvd,
+      EXPECT_EQ_WAIT(NumRtpBytes(), GetReceiverStats(i).bytes_received,
+                     kTimeout);
+      EXPECT_EQ_WAIT(NumRtpPackets(), GetReceiverStats(i).packets_received,
                      kTimeout);
       EXPECT_EQ_WAIT(kVideoWidth, GetReceiverStats(i).frame_width, kTimeout);
       EXPECT_EQ_WAIT(kVideoHeight, GetReceiverStats(i).frame_height, kTimeout);
@@ -570,15 +572,16 @@ class VideoMediaChannelTest : public testing::Test,
       rtc::Thread::Current()->ProcessMessages(1);
       EXPECT_TRUE(channel_->GetStats(&info));
       ASSERT_EQ(2U, info.senders.size());
-      if (info.senders[0].packets_sent + info.senders[1].packets_sent ==
+      if (info.senders[0].cumulative_packets_sent +
+              info.senders[1].cumulative_packets_sent ==
           NumRtpPackets()) {
         // Stats have been updated for both sent frames, expectations can be
         // checked now.
         break;
       }
     }
-    EXPECT_EQ(NumRtpPackets(),
-              info.senders[0].packets_sent + info.senders[1].packets_sent)
+    EXPECT_EQ(NumRtpPackets(), info.senders[0].cumulative_packets_sent +
+                                   info.senders[1].cumulative_packets_sent)
         << "Timed out while waiting for packet counts for all sent packets.";
     EXPECT_EQ(1U, info.senders[0].ssrcs().size());
     EXPECT_EQ(1234U, info.senders[0].ssrcs()[0]);

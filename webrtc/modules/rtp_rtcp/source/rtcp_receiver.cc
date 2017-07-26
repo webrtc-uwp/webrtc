@@ -458,23 +458,24 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
 
   ReportBlockWithRtt* report_block_info =
       &received_report_blocks_[report_block.source_ssrc()][remote_ssrc];
-  report_block_info->report_block.remoteSSRC = remote_ssrc;
-  report_block_info->report_block.sourceSSRC = report_block.source_ssrc();
-  report_block_info->report_block.fractionLost = report_block.fraction_lost();
-  report_block_info->report_block.cumulativeLost =
+  report_block_info->report_block.sender_ssrc = remote_ssrc;
+  report_block_info->report_block.source_ssrc = report_block.source_ssrc();
+  report_block_info->report_block.fraction_lost = report_block.fraction_lost();
+  report_block_info->report_block.cumulative_packets_lost =
       report_block.cumulative_lost();
-  if (report_block.extended_high_seq_num() >
-      report_block_info->report_block.extendedHighSeqNum) {
+  if (report_block.extended_highest_sequence_number() >
+      report_block_info->report_block.extended_highest_sequence_number) {
     // We have successfully delivered new RTP packets to the remote side after
     // the last RR was sent from the remote side.
     last_increased_sequence_number_ms_ = clock_->TimeInMilliseconds();
   }
-  report_block_info->report_block.extendedHighSeqNum =
-      report_block.extended_high_seq_num();
-  report_block_info->report_block.jitter = report_block.jitter();
-  report_block_info->report_block.delaySinceLastSR =
+  report_block_info->report_block.extended_highest_sequence_number =
+      report_block.extended_highest_sequence_number();
+  report_block_info->report_block.interarrival_jitter = report_block.jitter();
+  report_block_info->report_block.delay_since_last_sender_report =
       report_block.delay_since_last_sr();
-  report_block_info->report_block.lastSR = report_block.last_sr();
+  report_block_info->report_block.last_sender_report_timestamp =
+      report_block.last_sr();
 
   int64_t rtt_ms = 0;
   uint32_t send_time_ntp = report_block.last_sr();
@@ -992,23 +993,24 @@ void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
     if (stats_callback_) {
       for (const auto& report_block : packet_information.report_blocks) {
         RtcpStatistics stats;
-        stats.cumulative_lost = report_block.cumulativeLost;
-        stats.extended_max_sequence_number = report_block.extendedHighSeqNum;
-        stats.fraction_lost = report_block.fractionLost;
-        stats.jitter = report_block.jitter;
+        stats.cumulative_packets_lost = report_block.cumulative_packets_lost;
+        stats.extended_highest_sequence_number =
+            report_block.extended_highest_sequence_number;
+        stats.fraction_lost = report_block.fraction_lost;
+        stats.interarrival_jitter = report_block.interarrival_jitter;
 
-        stats_callback_->StatisticsUpdated(stats, report_block.sourceSSRC);
+        stats_callback_->StatisticsUpdated(stats, report_block.source_ssrc);
       }
     }
   }
 }
 
-int32_t RTCPReceiver::CNAME(uint32_t remoteSSRC,
+int32_t RTCPReceiver::CNAME(uint32_t remote_ssrc,
                             char cName[RTCP_CNAME_SIZE]) const {
   RTC_DCHECK(cName);
 
   rtc::CritScope lock(&rtcp_receiver_lock_);
-  auto received_cname_it = received_cnames_.find(remoteSSRC);
+  auto received_cname_it = received_cnames_.find(remote_ssrc);
   if (received_cname_it == received_cnames_.end())
     return -1;
 

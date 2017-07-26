@@ -35,8 +35,8 @@ class ReportBlock {
     fraction_lost_ = fraction_lost;
   }
   bool SetCumulativeLost(uint32_t cumulative_lost);
-  void SetExtHighestSeqNum(uint32_t ext_highest_seq_num) {
-    extended_high_seq_num_ = ext_highest_seq_num;
+  void SetExtHighestSeqNum(uint32_t extended_highest_sequence_number) {
+    extended_highest_sequence_number_ = extended_highest_sequence_number;
   }
   void SetJitter(uint32_t jitter) { jitter_ = jitter; }
   void SetLastSr(uint32_t last_sr) { last_sr_ = last_sr; }
@@ -47,7 +47,9 @@ class ReportBlock {
   uint32_t source_ssrc() const { return source_ssrc_; }
   uint8_t fraction_lost() const { return fraction_lost_; }
   uint32_t cumulative_lost() const { return cumulative_lost_; }
-  uint32_t extended_high_seq_num() const { return extended_high_seq_num_; }
+  uint32_t extended_highest_sequence_number() const {
+    return extended_highest_sequence_number_;
+  }
   uint32_t jitter() const { return jitter_; }
   uint32_t last_sr() const { return last_sr_; }
   uint32_t delay_since_last_sr() const { return delay_since_last_sr_; }
@@ -56,7 +58,7 @@ class ReportBlock {
   uint32_t source_ssrc_;
   uint8_t fraction_lost_;
   uint32_t cumulative_lost_;
-  uint32_t extended_high_seq_num_;
+  uint32_t extended_highest_sequence_number_;
   uint32_t jitter_;
   uint32_t last_sr_;
   uint32_t delay_since_last_sr_;

@@ -275,7 +275,7 @@ struct ConfigHelper {
     std::vector<ReportBlock> report_blocks;
     webrtc::ReportBlock block = kReportBlock;
     report_blocks.push_back(block);  // Has wrong SSRC.
-    block.source_SSRC = kSsrc;
+    block.source_ssrc = kSsrc;
     report_blocks.push_back(block);  // Correct block.
     block.fraction_lost = 0;
     report_blocks.push_back(block);  // Duplicate SSRC, bad fraction_lost.
@@ -415,18 +415,19 @@ TEST(AudioSendStreamTest, GetStats) {
   helper.SetupMockForGetStats();
   AudioSendStream::Stats stats = send_stream.GetStats();
   EXPECT_EQ(kSsrc, stats.local_ssrc);
-  EXPECT_EQ(static_cast<int64_t>(kCallStats.bytesSent), stats.bytes_sent);
-  EXPECT_EQ(kCallStats.packetsSent, stats.packets_sent);
-  EXPECT_EQ(static_cast<int32_t>(kReportBlock.cumulative_num_packets_lost),
-            stats.packets_lost);
+  EXPECT_EQ(static_cast<int64_t>(kCallStats.bytes_sent),
+            stats.cumulative_bytes_sent);
+  EXPECT_EQ(kCallStats.packets_sent, stats.cumulative_packets_sent);
+  EXPECT_EQ(static_cast<int32_t>(kReportBlock.cumulative_packets_lost),
+            stats.cumulative_packets_lost);
   EXPECT_EQ(Q8ToFloat(kReportBlock.fraction_lost), stats.fraction_lost);
   EXPECT_EQ(std::string(kIsacCodec.plname), stats.codec_name);
   EXPECT_EQ(static_cast<int32_t>(kReportBlock.extended_highest_sequence_number),
-            stats.ext_seqnum);
+            stats.extended_highest_sequence_number);
   EXPECT_EQ(static_cast<int32_t>(kReportBlock.interarrival_jitter /
                                  (kIsacCodec.plfreq / 1000)),
-            stats.jitter_ms);
-  EXPECT_EQ(kCallStats.rttMs, stats.rtt_ms);
+            stats.interarrival_jitter_ms);
+  EXPECT_EQ(kCallStats.roundtrip_time_ms, stats.roundtrip_time_ms);
   EXPECT_EQ(static_cast<int32_t>(kSpeechInputLevel), stats.audio_level);
   EXPECT_EQ(kTotalInputEnergy, stats.total_input_energy);
   EXPECT_EQ(kTotalInputDuration, stats.total_input_duration);

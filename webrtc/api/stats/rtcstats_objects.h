@@ -342,7 +342,7 @@ class RTCInboundRTPStreamStats final : public RTCRTPStreamStats {
 
   RTCStatsMember<uint32_t> packets_received;
   RTCStatsMember<uint64_t> bytes_received;
-  RTCStatsMember<uint32_t> packets_lost;
+  RTCStatsMember<uint32_t> cumulative_packets_lost;
   // TODO(hbos): Collect and populate this value for both "audio" and "video",
   // currently not collected for "video". https://bugs.webrtc.org/7065
   RTCStatsMember<double> jitter;
