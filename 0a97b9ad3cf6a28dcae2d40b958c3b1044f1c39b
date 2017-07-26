@@ -679,6 +679,30 @@
     },
     {
       "key": {
+        "uuid": "d30193b6_c0f655e0",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-26T17:57:33Z",
+      "side": 1,
+      "message": "I agree the current comment and algorithm do not match the spec.",
+      "parentUuid": "8dc214a0_e1f10ce4",
+      "range": {
+        "startLine": 50,
+        "startChar": 46,
+        "endLine": 52,
+        "endChar": 47
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "995657ad_1b12d112",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 4
@@ -762,6 +786,30 @@
       "side": 1,
       "message": "Peter, about:\n\"But the SSRCs that are latched or not the SSRCs that are passed into AddSink.\"\nI assume the \"or\" should be an \"are\"? Not trying to nitpick, just trying to make sure I don\u0027t end up misunderstanding.\nAssuming I understood correctly - the way I see it, the RtpDemuxer should handle according to the IETF draft the case that an SSRC that was configured with AddSink (from the SDP) was later latched from a MID, even if this is never supposed to happen.\n\nSteve, about the trade-off: I\u0027m assuming we won\u0027t have so many sinks, that traversing any of the containers would incur a cost significant enough to justify sacrificing correctness for efficiency. (Sacrificing correctness to lower complexity is a different story.)",
       "parentUuid": "c0fcca22_63837f4b",
+      "range": {
+        "startLine": 53,
+        "startChar": 5,
+        "endLine": 54,
+        "endChar": 18
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "abc9491a_dbbcf2f9",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-26T17:57:33Z",
+      "side": 1,
+      "message": "Yes, I was typing too fast :).\n\nAnd it\u0027s not a matter of efficiency.  It\u0027s more a matter additional code complexity for an edge case that should never happen.  I\u0027d be fine not handling that case.  In fact, the way the standard is written, it\u0027s a bit ambiguous of what to do here (I wrote the text and hadn\u0027t thought of this edge case at the time).",
+      "parentUuid": "41349720_9cf7b0cd",
       "range": {
         "startLine": 53,
         "startChar": 5,
