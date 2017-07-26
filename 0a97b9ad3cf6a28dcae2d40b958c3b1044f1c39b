@@ -201,6 +201,24 @@
     },
     {
       "key": {
+        "uuid": "2cfa2d89_4501ad1b",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-26T17:39:24Z",
+      "side": 1,
+      "message": "The demux wouldn\u0027t need to.  The AddSink would need to, in order to know whether to overwrite or reject a new rule.  It would be more simple to just reject and not keep track, though.",
+      "parentUuid": "c6774fe3_be163286",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "43e2002a_eb079a50",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 4
@@ -288,6 +306,30 @@
       "side": 1,
       "message": "How would RSIDs be supported by this algorithm? Wouldn\u0027t they need to be scoped by MID as well (i.e., the mapping would be from std::pair\u003cmid, rsid\u003e to sinks)?",
       "parentUuid": "c07926a4_e195a978",
+      "range": {
+        "startLine": 99,
+        "startChar": 26,
+        "endLine": 99,
+        "endChar": 0
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ccc9588c_26efdac4",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-26T17:39:24Z",
+      "side": 1,
+      "message": "RSIDs would just be one more thing at the end after everything else:\n\nif (packet.rsid) {\n  auto sink \u003d sink_by_rsid[packet.rsid];\n  if (sink) {\n    sink_by_ssrc[packet.ssrc] \u003d sink;\n    return sink;\n  }\n}\n\n\nAlthough I really think we should just remove this and only use RSID for knowing the encoding, not for knowing the track.  This is non-standard and assumes RSIDs are unique across MIDs (not scoped to MIDs), which is not true in the general case.",
+      "parentUuid": "6e3d722c_00a3e724",
       "range": {
         "startLine": 99,
         "startChar": 26,
@@ -706,6 +748,24 @@
       "side": 1,
       "message": "I looked at doing it that way originally, but it looked like it was going to be more complicated because there are many more states that need to be tracked explicitly.\n\nFor example, if two sinks share payload_type but have different MIDs, then the map either needs to store nullptr to signal that there is a conflict or change it to a multimap and identify that there are multiple sinks when trying to match the packet. If storing nullptr, then if a sink is ever removed it needs to look through all the sinks again to see if now one of the payload_types is unique and update the table accordingly.\n\nI\u0027ll see if there\u0027s a way to simplify that implementation because it would allow doing MID checking (as required by the spec, discussed above) cheaper.",
       "parentUuid": "b5969729_502d52ef",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a338eed_f841e9aa",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-26T17:39:24Z",
+      "side": 1,
+      "message": "I think changing it to a multimap is a simple solution here.  If there is exactly one sink in the multimap for a given PT, then route to that one.  Otherwise, drop the packet (or try RSIDs if we support it).\n\nBy the way, we don\u0027t need to worry about perf so much except for two situations:\n\n1.  Make sure demuxing by SSRC when a MID is not present and PT or MID latching is done.   This is by far the common case.  And one map lookup is good enough I think.\n\n2.  Make sure that when we have an MID it\u0027s still fast.  Again, one map lookup is good enough.\n\n\nEverything else can be slow (PT or RSID before latching).  So if you want just two maps (_by_mid and _by_ssrc) and fallback to iterating over a set of criteria for PT and RSID instead of a multimap, that would be fine.  But I think a PT multimap is the most simple and straightforward approach.",
+      "parentUuid": "92f0e363_53b99216",
       "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
