@@ -15,21 +15,44 @@
 #include <string>
 #include <vector>
 
+#include "webrtc/rtc_base/constructormagic.h"
+#include "webrtc/rtc_base/optional.h"
+
 namespace webrtc {
 
+class MidResolutionObserver;
 class RsidResolutionObserver;
 class RtpPacketReceived;
 class RtpPacketSinkInterface;
 
+struct RtpDemuxerCriteria {
+  RtpDemuxerCriteria();
+  RtpDemuxerCriteria(const RtpDemuxerCriteria& o);
+  ~RtpDemuxerCriteria();
+
+  std::vector<uint32_t> ssrcs;
+  std::vector<uint8_t> payload_types;
+  rtc::Optional<std::string> mid;
+  rtc::Optional<std::string> rsid;
+};
+
 // This class represents the RTP demuxing, for a single RTP session (i.e., one
 // ssrc space, see RFC 7656). It isn't thread aware, leaving responsibility of
 // multithreading issues to the user of this class.
-// TODO(nisse): Should be extended to also do MID-based demux and payload-type
-// demux.
 class RtpDemuxer {
  public:
   RtpDemuxer();
   ~RtpDemuxer();
+
+  // Registers a sink, accepting RTP packets according to the given criteria.
+  // Packets will be routed to this sink if they match more of this sink's
+  // criteria than any other sink. For example, if packet P has payload type T
+  // and two sinks both have T as a criteria, the packet will not be routed to
+  // either unless there is another piece of information (e.g., an MID) that
+  // matches the packet to one sink's criteria.
+  // Fields are checked in the following order: SSRC, payload type, MID, RSID,
+  // MID and RSID.
+  void AddSink(RtpDemuxerCriteria criteria, RtpPacketSinkInterface* sink);
 
   // Registers a sink. Multiple SSRCs may be mapped to the same sink, but
   // each SSRC may only be mapped to one sink. The return value reports
@@ -57,21 +80,43 @@ class RtpDemuxer {
   void DeregisterRsidResolutionObserver(const RsidResolutionObserver* observer);
 
  private:
-  // Find the associations of RSID to SSRCs.
-  void ResolveRsidToSsrcAssociations(const RtpPacketReceived& packet);
+  bool TryDemuxWithSsrc(const RtpPacketReceived& packet);
+  bool TryDemuxWithPayloadType(const RtpPacketReceived& packet);
+  bool TryDemuxWithMid(const RtpPacketReceived& packet);
+  bool TryDemuxWithRsid(const RtpPacketReceived& packet);
+  bool TryDemuxWithMidRsid(const RtpPacketReceived& packet);
+
+  // Returns the one sink that matches the given predicate function
+  // (RtpDemuxerCriteria -> bool). If multiple sinks match, then nullptr is
+  // returned.
+  template <class UnaryPredicate>
+  RtpPacketSinkInterface* FindSinkByPredicate(UnaryPredicate pred) const {
+    RtpPacketSinkInterface* found_sink = nullptr;
+    for (const auto& item : sinks_) {
+      const RtpDemuxerCriteria& criteria = item.first;
+      RtpPacketSinkInterface* sink = item.second;
+      if (pred(criteria)) {
+        if (found_sink != nullptr) {
+          return nullptr;
+        }
+        found_sink = sink;
+      }
+    }
+    return found_sink;
+  }
+
+  std::vector<std::pair<RtpDemuxerCriteria, RtpPacketSinkInterface*> > sinks_;
+
+  // Binds the given sink to the given SSRC if a binding does not already exist.
+  // Returns true if the binding was created.
+  bool AddSsrcSinkBinding(uint32_t ssrc, RtpPacketSinkInterface* sink);
 
   // Notify observers of the resolution of an RSID to an SSRC.
   void NotifyObserversOfRsidResolution(const std::string& rsid, uint32_t ssrc);
 
   // This records the association SSRCs to sinks. Other associations, such
   // as by RSID, also end up here once the RSID, etc., is resolved to an SSRC.
-  std::map<uint32_t, RtpPacketSinkInterface*> ssrc_sinks_;
-
-  // A sink may be associated with an RSID - RTP Stream ID. This tag has a
-  // one-to-one association with an SSRC, but that SSRC is not yet known.
-  // When it becomes known, the association of the sink to the RSID is deleted
-  // from this container, and moved into |ssrc_sinks_|.
-  std::map<std::string, RtpPacketSinkInterface*> rsid_sinks_;
+  std::map<uint32_t, RtpPacketSinkInterface*> ssrc_sink_mapping_;
 
   // Observers which will be notified when an RSID association to an SSRC is
   // resolved by this object.

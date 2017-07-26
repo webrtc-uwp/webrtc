@@ -13,6 +13,7 @@
 #include <memory>
 #include <string>
 
+#include "webrtc/call/mid_resolution_observer.h"
 #include "webrtc/call/rsid_resolution_observer.h"
 #include "webrtc/call/rtp_packet_sink_interface.h"
 #include "webrtc/common_types.h"
@@ -45,6 +46,11 @@ class MockRsidResolutionObserver : public RsidResolutionObserver {
   MOCK_METHOD2(OnRsidResolved, void(const std::string& rsid, uint32_t ssrc));
 };
 
+class MockMidResolutionObserver : public MidResolutionObserver {
+ public:
+  MOCK_METHOD2(OnMidResolved, void(const std::string& mid, uint32_t ssrc));
+};
+
 MATCHER_P(SamePacketAs, other, "") {
   return arg.Ssrc() == other.Ssrc() &&
          arg.SequenceNumber() == other.SequenceNumber();
@@ -52,12 +58,13 @@ MATCHER_P(SamePacketAs, other, "") {
 
 std::unique_ptr<RtpPacketReceived> CreateRtpPacketReceived(
     uint32_t ssrc,
-    size_t sequence_number = 0) {
+    size_t sequence_number = 0,
+    RtpPacketReceived::ExtensionManager* extension_manager = nullptr) {
   // |sequence_number| is declared |size_t| to prevent ugly casts when calling
   // the function, but should in reality always be a |uint16_t|.
   EXPECT_LT(sequence_number, 1u << 16);
 
-  auto packet = rtc::MakeUnique<RtpPacketReceived>();
+  auto packet = rtc::MakeUnique<RtpPacketReceived>(extension_manager);
   packet->SetSsrc(ssrc);
   packet->SetSequenceNumber(static_cast<uint16_t>(sequence_number));
   return packet;
@@ -67,17 +74,27 @@ std::unique_ptr<RtpPacketReceived> CreateRtpPacketReceivedWithRsid(
     const std::string& rsid,
     uint32_t ssrc,
     size_t sequence_number = 0) {
-  // |sequence_number| is declared |size_t| to prevent ugly casts when calling
-  // the function, but should in reality always be a |uint16_t|.
-  EXPECT_LT(sequence_number, 1u << 16);
-
   const int rsid_extension_id = 6;
   RtpPacketReceived::ExtensionManager extension_manager;
   extension_manager.Register<RtpStreamId>(rsid_extension_id);
-  auto packet = rtc::MakeUnique<RtpPacketReceived>(&extension_manager);
+
+  auto packet =
+      CreateRtpPacketReceived(ssrc, sequence_number, &extension_manager);
   packet->SetExtension<RtpStreamId>(rsid);
-  packet->SetSsrc(ssrc);
-  packet->SetSequenceNumber(static_cast<uint16_t>(sequence_number));
+  return packet;
+}
+
+std::unique_ptr<RtpPacketReceived> CreateRtpPacketReceivedWithMid(
+    const std::string& mid,
+    uint32_t ssrc,
+    size_t sequence_number = 0) {
+  const int mid_extension_id = 0xb;
+  RtpPacketReceived::ExtensionManager extension_manager;
+  extension_manager.Register<RtpMid>(mid_extension_id);
+
+  auto packet =
+      CreateRtpPacketReceived(ssrc, sequence_number, &extension_manager);
+  packet->SetExtension<RtpMid>(mid);
   return packet;
 }
 
@@ -130,6 +147,29 @@ TEST(RtpDemuxerTest, OnRtpPacketCalledOnCorrectSinkByRsid) {
   }
 
   // Test tear-down
+  for (const auto& sink : sinks) {
+    demuxer.RemoveSink(&sink);
+  }
+}
+
+TEST(RtpDemuxerTest, OnRtpPacketCalledOnCorrectSinkByMid) {
+  RtpDemuxer demuxer;
+
+  const std::string mids[] = {"a", "b", "c"};
+  MockRtpPacketSink sinks[arraysize(mids)];
+  for (size_t i = 0; i < arraysize(mids); i++) {
+    RtpDemuxerCriteria criteria;
+    criteria.mid.emplace(mids[i]);
+    demuxer.AddSink(criteria, &sinks[i]);
+  }
+
+  for (size_t i = 0; i < arraysize(mids); i++) {
+    auto packet =
+        CreateRtpPacketReceivedWithMid(mids[i], static_cast<uint32_t>(i), i);
+    EXPECT_CALL(sinks[i], OnRtpPacket(SamePacketAs(*packet))).Times(1);
+    EXPECT_TRUE(demuxer.OnRtpPacket(*packet));
+  }
+
   for (const auto& sink : sinks) {
     demuxer.RemoveSink(&sink);
   }
@@ -673,6 +713,90 @@ TEST(RtpDemuxerTest, DeregisteredRsidObserversNotInformedOfResolutions) {
   demuxer.DeregisterRsidResolutionObserver(&observer_1);
   demuxer.DeregisterRsidResolutionObserver(&observer_3);
 }
+
+// Tests that when one MID sink is configured, packets that include the MID
+// extension will get routed to that sink and any packets that use the same
+// SSRC as one of those packets later will also get routed to the sink, even
+// if a new SSRC is introduced for the same MID.
+TEST(RtpDemuxerTest, RoutedByMidWhenSsrcAdded) {
+  RtpDemuxer demuxer;
+
+  const std::string mid = "mid";
+  NiceMock<MockRtpPacketSink> sink;
+  RtpDemuxerCriteria criteria;
+  criteria.mid.emplace(mid);
+  demuxer.AddSink(criteria, &sink);
+
+  constexpr uint32_t ssrc1 = 10;
+  constexpr uint32_t ssrc2 = 11;
+
+  auto p1 = CreateRtpPacketReceivedWithMid(mid, ssrc1, 1);
+  EXPECT_CALL(sink, OnRtpPacket(SamePacketAs(*p1))).Times(1);
+  EXPECT_TRUE(demuxer.OnRtpPacket(*p1));
+
+  auto p2 = CreateRtpPacketReceivedWithMid(mid, ssrc2, 2);
+  EXPECT_CALL(sink, OnRtpPacket(SamePacketAs(*p2))).Times(1);
+  EXPECT_TRUE(demuxer.OnRtpPacket(*p2));
+
+  auto p3 = CreateRtpPacketReceived(ssrc1, 3);
+  EXPECT_CALL(sink, OnRtpPacket(SamePacketAs(*p3))).Times(1);
+  EXPECT_TRUE(demuxer.OnRtpPacket(*p3));
+
+  auto p4 = CreateRtpPacketReceived(ssrc2, 4);
+  EXPECT_CALL(sink, OnRtpPacket(SamePacketAs(*p4))).Times(1);
+  EXPECT_TRUE(demuxer.OnRtpPacket(*p4));
+
+  // Test tear-down.
+  demuxer.RemoveSink(&sink);
+}
+
+// Tests that if a new RTP packet arrives with MID and SSRC set, and the SSRC
+// has already been assigned to a different MID, the new packet is still routed
+// to the same sink.
+TEST(RtpDemuxerTest, DropPacketWhenDifferentMidForSameSsrc) {
+  RtpDemuxer demuxer;
+
+  const std::string mid1 = "mid1";
+  const std::string mid2 = "mid2";
+  const uint32_t ssrc = 105;
+  NiceMock<MockRtpPacketSink> sink;
+  RtpDemuxerCriteria criteria;
+  criteria.mid.emplace(mid1);
+  demuxer.AddSink(criteria, &sink);
+
+  auto p1 = CreateRtpPacketReceivedWithMid(mid1, ssrc, 1);
+  EXPECT_CALL(sink, OnRtpPacket(SamePacketAs(*p1))).Times(1);
+  demuxer.OnRtpPacket(*p1);
+
+  auto p2 = CreateRtpPacketReceivedWithMid(mid2, ssrc, 2);
+  EXPECT_CALL(sink, OnRtpPacket(SamePacketAs(*p2))).Times(1);
+  demuxer.OnRtpPacket(*p2);
+
+  // Test tear-down.
+  demuxer.RemoveSink(&sink);
+}
+
+/*TEST(RtpDemuxerTest, MidResolutionObserversNotifiedOnlyOnce) {
+  RtpDemuxer demuxer;
+
+  constexpr uint32_t ssrc = 111;
+  const std::string mid = "mid";
+  NiceMock<MockRtpPacketSink> sink;
+  demuxer.AddMidSink(mid, &sink);
+
+  MockMidResolutionObserver mid_resolution_observer;
+
+  demuxer.RegisterMidResolutionObserver(&mid_resolution_observer);
+
+  EXPECT_CALL(mid_resolution_observer, OnMidResolved(mid, ssrc)).Times(1);
+
+  demuxer.OnRtpPacket(*CreateRtpPacketReceivedWithMid(mid, ssrc));
+  demuxer.OnRtpPacket(*CreateRtpPacketReceivedWithMid(mid, ssrc));
+
+  // Test tear-down.
+  demuxer.RemoveSink(&sink);
+  demuxer.DeregisterMidResolutionObserver(&mid_resolution_observer);
+}*/
 
 #if RTC_DCHECK_IS_ON && GTEST_HAS_DEATH_TEST && !defined(WEBRTC_ANDROID)
 TEST(RtpDemuxerTest, RsidMustBeNonEmpty) {
