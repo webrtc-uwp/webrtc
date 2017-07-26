@@ -490,6 +490,30 @@
     },
     {
       "key": {
+        "uuid": "63e9c908_34211313",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-07-26T18:42:24Z",
+      "side": 1,
+      "message": "I\u0027d also suggest changing \"mid\" to just a string, since an empty string can be assumed to mean \"no MID\". rtc::Optional is mainly useful for things like integer types, where \"no value\" and \"value of 0\" need to be interpreted differently.",
+      "parentUuid": "f6becd3e_fb671e16",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 34
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "97e537e5_e62da9c9",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 4
