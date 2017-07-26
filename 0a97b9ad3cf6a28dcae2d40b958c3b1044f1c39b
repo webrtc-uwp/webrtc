@@ -1,0 +1,227 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ca906b42_c4d73e71",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-26T11:01:15Z",
+      "side": 1,
+      "message": "s/!x.size()/!x.empty()",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8f7325c_a977d90b",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-26T11:01:15Z",
+      "side": 1,
+      "message": "I\u0027d prefer:\nRTC_DCHECK(!criteria.mid || Mid::IsLegalName(*criteria.mid));",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 21
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bcb5bec3_0ca28322",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-26T11:01:15Z",
+      "side": 1,
+      "message": "Similarly.",
+      "range": {
+        "startLine": 42,
+        "startChar": 2,
+        "endLine": 44,
+        "endChar": 3
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "43e2002a_eb079a50",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-26T11:01:15Z",
+      "side": 1,
+      "message": "I don\u0027t see where this local variable is used. I conclude that the CL is still WIP. I\u0027ll stop reviewing here, so as to not bother you with unnecessary comments, but I\u0027ll still send in what I\u0027ve drafted so far, because I think it might be useful. Please ping me when you want me to resume the review.",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6c859b2_4dc4ac5a",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-26T11:01:15Z",
+      "side": 1,
+      "message": "?",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b61b6cd_75fa4734",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-26T11:01:15Z",
+      "side": 1,
+      "message": "?",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e575f1df_0bdfd7fa",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-26T11:01:15Z",
+      "side": 1,
+      "message": "1. Might be better to do this as a separate CL, as people are likely to have some comments.\n2. Speaking of comments :-), I think ssrcs and payload_types should also be optional.\n3. Also, one sink might be associated with multiple RSIDs, as far as I remember; it\u0027s only that one RSID cannot be associated with multiple sinks.",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 34
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8328216_57bdd670",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-26T11:01:15Z",
+      "side": 1,
+      "message": "This implies to me a type of score, but I am not sure how the score would be calculated. Possibly a non-weighted one, where any criterion is given a score of 1, and the sums are compared? But that doesn\u0027t seem to correspond to the algorithm in https://tools.ietf.org/html/draft-ietf-mmusic-sdp-bundle-negotiation-38#section-10.2 (pages 21 bottom to 22 top).",
+      "range": {
+        "startLine": 48,
+        "startChar": 41,
+        "endLine": 49,
+        "endChar": 34
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f28a0af6_8657b3b1",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-26T11:01:15Z",
+      "side": 1,
+      "message": "So unbroken ties lead to dropped packets?",
+      "range": {
+        "startLine": 50,
+        "startChar": 46,
+        "endLine": 52,
+        "endChar": 47
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "995657ad_1b12d112",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-26T11:01:15Z",
+      "side": 1,
+      "message": "This seems to contradict the following line from the aforementioned IETF draft:\n  If the packet has a MID, and that MID is not in the table mapping\n  MID to \"m\u003d\" line, drop the packet and stop.",
+      "range": {
+        "startLine": 53,
+        "startChar": 5,
+        "endLine": 54,
+        "endChar": 18
+      },
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13e2eeea_9c70de3d",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-26T11:01:15Z",
+      "side": 1,
+      "message": "All of the predicates seem to be of the same type, so I wonder if we could get rid of the template and move the implementation to the .cc file?\n(Assuming this is still useful after other comments, that is.)",
+      "revId": "0a97b9ad3cf6a28dcae2d40b958c3b1044f1c39b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
