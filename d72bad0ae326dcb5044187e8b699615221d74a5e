@@ -108,6 +108,24 @@
     },
     {
       "key": {
+        "uuid": "0813d964_b46610a6",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-27T20:39:22Z",
+      "side": 1,
+      "message": "No we shouldn\u0027t; if you\u0027re using the demuxer for \"per encoding\" sinks, it\u0027s valid for two sinks to have the same MID but different RIDs, and end up demuxed either using \"sinks_by_rsid_\" or \"sinks_by_rsid_mid_\".",
+      "parentUuid": "caf15f8c_64e186d0",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0396ace8_88c76c99",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 5
@@ -474,6 +492,30 @@
     },
     {
       "key": {
+        "uuid": "0d5f30cb_c6f29be3",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-27T20:39:22Z",
+      "side": 1,
+      "message": "This is the very cornery case where a packet is received with the same SSRC as seen before but a different MID. If we follow the BUNDLE algorithm to the letter, I guess this would replace the SSRC-\u003esink mapping, but that seems incorrect to me. This is something that should never happen unless the other endpoint is misbehaving, so it\u0027s probably not worth too much thought, as long as the behavior is deterministic and tested.",
+      "parentUuid": "a60d1eda_54caab14",
+      "range": {
+        "startLine": 163,
+        "startChar": 44,
+        "endLine": 163,
+        "endChar": 0
+      },
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a9d402b3_c1b9baec",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 5
@@ -589,6 +631,30 @@
       "writtenOn": "2017-07-27T19:55:30Z",
       "side": 1,
       "message": "I think we should just delete this rule and force RSIDs to be unique.",
+      "range": {
+        "startLine": 208,
+        "startChar": 3,
+        "endLine": 208,
+        "endChar": 0
+      },
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13644725_1f94b9bc",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-27T20:39:22Z",
+      "side": 1,
+      "message": "Does the spec require that? If not, then we\u0027re going to need this functionality eventually. If we decide not to support it now, we should at least be sure to call that out in the header file and have tests for its lack of support, and TODOs.",
+      "parentUuid": "8bf24aa4_1998891d",
       "range": {
         "startLine": 208,
         "startChar": 3,
