@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "11176984_d102de3d",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-27T19:55:30Z",
+      "side": 1,
+      "message": "I think we should verify MIDs and RSIDs as well.  But PTs are different (they can overlap).",
+      "parentUuid": "7be27347_810bf924",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "41bdc2f2_ffc86da7",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 5
@@ -72,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "caf15f8c_64e186d0",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-27T19:55:30Z",
+      "side": 1,
+      "message": "We should return false like we do for SSRC overlap.",
+      "parentUuid": "57214da4_cc129f56",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0396ace8_88c76c99",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 5
@@ -101,6 +137,24 @@
       "side": 1,
       "message": "I think this is also covered by the above comment about MIDs.",
       "parentUuid": "0396ace8_88c76c99",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1690bb20_3ff64695",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-27T19:55:30Z",
+      "side": 1,
+      "message": "PTs can overlap, so it should be accepted.",
+      "parentUuid": "1b76527b_d7dd1a92",
       "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -374,6 +428,121 @@
     },
     {
       "key": {
+        "uuid": "81323831_f19f79e4",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-27T19:55:30Z",
+      "side": 1,
+      "message": "Why are we using ranges for mids?  Why not just use \"sinks_by_mid_.find(mid)\" and \"!\u003d sinks_by_mid.end()\"?",
+      "range": {
+        "startLine": 158,
+        "startChar": 80,
+        "endLine": 158,
+        "endChar": 0
+      },
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a60d1eda_54caab14",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-27T19:55:30Z",
+      "side": 1,
+      "message": "The binding here should take place even if it overwrites an existing ssrc-\u003esink mapping.  So I think this needs to directly alter sink_by_ssrc_ and not use AddSsrcSinkBinding, and always return mid_sink.",
+      "range": {
+        "startLine": 163,
+        "startChar": 44,
+        "endLine": 163,
+        "endChar": 0
+      },
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9d402b3_c1b9baec",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-27T19:55:30Z",
+      "side": 1,
+      "message": "I think you can just do \"if(ssrc_sink)\".",
+      "range": {
+        "startLine": 170,
+        "startChar": 29,
+        "endLine": 170,
+        "endChar": 0
+      },
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3273ff54_ddb78d65",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-27T19:55:30Z",
+      "side": 1,
+      "message": "Same here with the unneeded \"!\u003d nullptr\".",
+      "range": {
+        "startLine": 177,
+        "startChar": 37,
+        "endLine": 177,
+        "endChar": 0
+      },
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "536fd9af_a0f176c8",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-27T19:55:30Z",
+      "side": 1,
+      "message": "Same here with needing to overwrite an existing SSRC-\u003esink mapping.",
+      "range": {
+        "startLine": 180,
+        "startChar": 57,
+        "endLine": 180,
+        "endChar": 0
+      },
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f1083b77_caef9e31",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 5
@@ -403,6 +572,29 @@
       "side": 1,
       "message": "1. Does RSID not have the same semantics as MID? That is, could the sender use a new SSRC with the same RSID and we should still route it?\n2. Shouldn\u0027t ever return false because of the SSRC check above, so I think a DCHECK would be the most appropriate here.",
       "parentUuid": "f1083b77_caef9e31",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8bf24aa4_1998891d",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-27T19:55:30Z",
+      "side": 1,
+      "message": "I think we should just delete this rule and force RSIDs to be unique.",
+      "range": {
+        "startLine": 208,
+        "startChar": 3,
+        "endLine": 208,
+        "endChar": 0
+      },
       "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -444,6 +636,24 @@
     },
     {
       "key": {
+        "uuid": "4ae44d17_c22584d9",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-27T19:55:30Z",
+      "side": 1,
+      "message": "This seems like something we should get rid of across the code base and use the C++ way.  The C++ style guide says to not use it (or the non-RTC version) any more:\n\nhttps://yaqs.googleplex.com/eng/q/6440554812932096\n\n\nWe might want to verify on a thread to webrtc-eng, though.\n\n\nAs for whether this should copyable: I don\u0027t see why a struct shouldn\u0027t be copyable, so might as well allow it.  But classes are different.  It doesn\u0027t make sense to me to copy an RtpDemuxer.",
+      "parentUuid": "547e966b_99f29e06",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "27b33410_b69847f4",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 5
@@ -455,6 +665,24 @@
       "writtenOn": "2017-07-27T15:15:47Z",
       "side": 1,
       "message": "The word \"uniquely\" in the comment makes me wonder. The algorithm from the draft explicitly says \"drop and stop\" or \"route and stop\" in some cases. So I see nothing stopping us from encountering an RTP packet that matches several criteria(*), that nevertheless gets routed, or that matches only one criterion, but gets dropped. So I think this comment is misleading.\n\n(*) This is under the interpretation that \"criteria\" corresponds to members of RtpDemuxerCriteria.",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75d8d3f6_93c6c0b1",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-27T19:55:30Z",
+      "side": 1,
+      "message": "The intention of the spec\u0027s algorithm is to route to one sink.\n\nBut calling it \"uniquely match\" isn\u0027t quite right.  It\u0027s more like \"when the algorithm picks one sink, and you\u0027re sink it picked\".",
+      "parentUuid": "27b33410_b69847f4",
       "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -490,6 +718,47 @@
       "side": 1,
       "message": "1. Not sure what you mean by illegal RSID/MID names? There\u0027s currently a DCHECK that ensures all the names are legal. Should it be changed to a CHECK or just return false in that case?\n2. I think the reader would assume that AddSink would be all or nothing, making no changes if false is returned. I can add a brief note confirming that.\n\nHandling conflicts between overlapping MIDs/RSIDs/payload types/SSRCs does seem to be complicated and arbitrary in some cases. It\u0027s hard to really tell what\u0027s the right behavior without knowing how clients will use the class.",
       "parentUuid": "df58014e_8bf829f5",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad9175a5_9c5486a6",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-27T19:55:30Z",
+      "side": 1,
+      "message": "It should definitely be all or nothing.  If false is returned, it should be as though you never added it.\n\nOverlap isn\u0027t that complicated:\n- MID overlap should be rejected\n- SSRC overlap should be rejected\n- PT overlap should be allowed, but then that PT is not longer used for routing.\n\nThe only unclear one is RSID.  I\u0027d say for now we reject it if RSID overlaps.",
+      "parentUuid": "251f2740_d5c24e68",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4956b267_99988262",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-27T19:55:30Z",
+      "side": 1,
+      "message": "It should reject if the MID is already registered as well (and probably RSID).",
+      "range": {
+        "startLine": 65,
+        "startChar": 32,
+        "endLine": 65,
+        "endChar": 0
+      },
       "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -548,6 +817,24 @@
     },
     {
       "key": {
+        "uuid": "bb9daf4b_b23b2de8",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-27T19:55:30Z",
+      "side": 1,
+      "message": "That is also true of MIDs.  But this comment can be updated when we actually add support for that (which we don\u0027t currently have, do we?).",
+      "parentUuid": "26e70ac9_d5d10501",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5a6a35f2_4e814060",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 5
@@ -577,6 +864,24 @@
       "side": 1,
       "message": "If multiple sinks are registered with criterias that overlap by one field we need to know if it is ambiguous (i.e., more than one value for the key) so that we don\u0027t use that payload type/MID/RSID to route. The alternative is to have a regular map that stores nullptr or some sentinel value to indicate a conflict, but that makes RemoveSink difficult to implement.",
       "parentUuid": "5a6a35f2_4e814060",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f9b2ad1_e8450479",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-27T19:55:30Z",
+      "side": 1,
+      "message": "A multimap is the easiest way to accomplish the funny PT demux properties which are, basically, \"if and only if it\u0027s unique, you may demux with it (after MID and SSRC don\u0027t match)\".  There are other ways this could be implemented, but I think this is the easiest we\u0027ve come up with so far.",
+      "parentUuid": "72763998_75487e98",
       "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -618,6 +923,30 @@
       "side": 1,
       "message": "I think that might be possible. It certainly would simplify things a bit. I\u0027ll try to change that implementation and see if it would break any behaviors.",
       "parentUuid": "3150394d_151dcb43",
+      "range": {
+        "startLine": 119,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 25
+      },
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "10d43982_c98d02df",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-27T19:55:30Z",
+      "side": 1,
+      "message": "I think it would be easier to not treat RSIDs like PTs where they can overlap.  I\u0027d say we only do the non-standard RSID track-level demux if the RSIDS don\u0027t overlap. The complexity of anything else isn\u0027t worth it.",
+      "parentUuid": "d1da2389_25a1e9e5",
       "range": {
         "startLine": 119,
         "startChar": 0,
