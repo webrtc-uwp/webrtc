@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e39046d5_169dd8b7",
+        "filename": "webrtc/modules/audio_coding/acm2/audio_coding_module_unittest.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 1709,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-07-27T15:46:35Z",
+      "side": 0,
+      "message": "Sorry, I removed the other consider too carelessly. Will add WEBRTC_ANDROID back.",
+      "range": {
+        "startLine": 1709,
+        "startChar": 12,
+        "endLine": 1709,
+        "endChar": 26
+      },
+      "revId": "2d4040ed0e52d51e762e120fa8bca05413a8f140",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
