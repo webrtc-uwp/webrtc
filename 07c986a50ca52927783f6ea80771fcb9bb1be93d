@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b2af1e31_a9476e1d",
+        "filename": "webrtc/modules/desktop_capture/cropped_desktop_frame.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-07-27T00:04:52Z",
+      "side": 1,
+      "message": "s/are/the area/",
+      "range": {
+        "startLine": 18,
+        "startChar": 42,
+        "endLine": 18,
+        "endChar": 45
+      },
+      "revId": "07c986a50ca52927783f6ea80771fcb9bb1be93d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
