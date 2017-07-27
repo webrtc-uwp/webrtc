@@ -49,6 +49,7 @@ rtc_source_set("rtp_interfaces") {
 
 rtc_source_set("rtp_receiver") {
   sources = [
+    "mid_resolution_observer.h",
     "rsid_resolution_observer.h",
     "rtcp_demuxer.cc",
     "rtcp_demuxer.h",

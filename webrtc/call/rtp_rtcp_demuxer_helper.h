@@ -84,6 +84,13 @@ bool MapHasValue(const Map& map, const typename Map::mapped_type& value) {
   return std::any_of(map.cbegin(), map.cend(), predicate);
 }
 
+template <typename Container>
+bool MultimapHasKey(const Container& c,
+                    const typename Container::key_type& key) {
+  auto it_range = c.equal_range(key);
+  return it_range.first != it_range.second;
+}
+
 rtc::Optional<uint32_t> ParseRtcpPacketSenderSsrc(
     rtc::ArrayView<const uint8_t> packet);
 
