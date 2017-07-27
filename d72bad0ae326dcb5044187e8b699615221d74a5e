@@ -138,6 +138,97 @@
     },
     {
       "key": {
+        "uuid": "ef0df2a7_5829c2f0",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:27:54Z",
+      "side": 1,
+      "message": "This is a very big function (~70 lines), and should probably be broken down.",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37de15aa_78f692cf",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:27:54Z",
+      "side": 1,
+      "message": "nit: const",
+      "range": {
+        "startLine": 148,
+        "startChar": 0,
+        "endLine": 150,
+        "endChar": 32
+      },
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86d22925_205eaf75",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:27:54Z",
+      "side": 1,
+      "message": "std::next() here too?",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f1a1f14_f0166098",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:27:54Z",
+      "side": 1,
+      "message": "nit: Full stops at the end of the logs?",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1083b77_caef9e31",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:27:54Z",
+      "side": 1,
+      "message": "1. If the SSRC binding works, this will never be triggered again, since from now on, the lookup algorithm would also run into the SSRC and exit the function before reaching this line. ResolveRsidToSsrcAssociations() therefore deleted the RSID at that point. Perhaps you want to either keep ResolveRsidToSsrcAssociations() around and use it, or delete the RSID yourself? Wdyt?\n2. Maybe log some error if this returns false?",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "83b9d50c_70c30d8c",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 5
