@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "dd01fc16_f03805d3",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-27T22:39:13Z",
+      "side": 1,
+      "message": "MIDs and RSIDs can overlap though. I can use MIDs \"video1\" and \"video2\", and RIDs \"full\"/\"half\"/\"quarter\". Neither the MID nor RID is unique per stream.",
+      "parentUuid": "11176984_d102de3d",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "41bdc2f2_ffc86da7",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 5
@@ -138,6 +156,24 @@
       "side": 1,
       "message": "But we\u0027re not implementing per-encoding sinks yet.  When we do, we can figure out how to reject or not.  Then we\u0027ll need something more complex.  But for now, I think we should stick with the simple thing, which is only one sink per MID.",
       "parentUuid": "0813d964_b46610a6",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89574969_f64265a0",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-27T22:39:13Z",
+      "side": 1,
+      "message": "\u003e But we\u0027re not implementing per-encoding sinks yet. \n\nBut we are... see comment further down.",
+      "parentUuid": "daf09f81_d6d44e3a",
       "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -487,6 +523,30 @@
     },
     {
       "key": {
+        "uuid": "4f44f503_8697ea3e",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-27T22:39:13Z",
+      "side": 1,
+      "message": "It\u0027s a multimap. This code needs to differentiate there being no sink for the MID, one sink, or multiple sinks.",
+      "parentUuid": "81323831_f19f79e4",
+      "range": {
+        "startLine": 158,
+        "startChar": 80,
+        "endLine": 158,
+        "endChar": 0
+      },
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a60d1eda_54caab14",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 5
@@ -546,6 +606,30 @@
       "side": 1,
       "message": "This isn\u0027t just about two MIDs with one SSRC.  This is about you signaled an SSRC rule and later a MID rule.  The MID rule should override the SSRC rule.  \n\nI think we should follow the algorithm here because it took a long time and a lot of conversations like this to arrive at that algorithm.  I\u0027d rather not repeat all of that.",
       "parentUuid": "0d5f30cb_c6f29be3",
+      "range": {
+        "startLine": 163,
+        "startChar": 44,
+        "endLine": 163,
+        "endChar": 0
+      },
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21999797_2c3abea0",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-27T22:39:13Z",
+      "side": 1,
+      "message": "\u003e This is about you signaled an SSRC rule and later a MID rule.\n\nDo you mean:\n\n1. Signal \"SSRC X \u003d Track A\"\n2. Signal \"MID foo \u003d Track B\"\n3. Receive packet with SSRC X; it\u0027s mapped to track A.\n4. Receive packet with SSRC X, *and* MID \"foo\". This packet is either discarded (what the code above does) or mapped to track B.\n\nIs that what you\u0027re describing? Mapping one SSRC to two sinks still seems wrong to me. But if this was an intended side effect of the BUNDLE algorithm, ok. It would be nice if the BUNDLE spec explained the reasoning for this, since it\u0027s easy to assume that corner cases like this just weren\u0027t considered (that\u0027s typically what I find when I dig into a corner case in BUNDLE).",
+      "parentUuid": "017fd1f1_af8020fe",
       "range": {
         "startLine": 163,
         "startChar": 44,
@@ -721,6 +805,30 @@
       "side": 1,
       "message": "Demuxing tracks by RSID is already outside the bounds of the spec, so it says nothing about it.  We\u0027re not going to need this eventually.  I think we should just delete it and never use RSID for track-level demux.  RSID should only be used as an encoding-level demux within a track.  There\u0027s no reason to keep RSID-based track-level demux other than that code was already here (which is kind of dubious to begin with).",
       "parentUuid": "13644725_1f94b9bc",
+      "range": {
+        "startLine": 208,
+        "startChar": 3,
+        "endLine": 208,
+        "endChar": 0
+      },
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76bc3f0f_853d1064",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-07-27T22:39:13Z",
+      "side": 1,
+      "message": "\u003e We\u0027re not going to need this eventually.\n\u003e There\u0027s no reason to keep RSID-based track-level demux other than that code was already here\n\nThat code is not dead, it\u0027s being used today in production for encoding-level demux (technically, RTP stream-level). The comments on the design doc from Danil talk about this. I thought the current plan was to have one RtpDemuxer class that can handle different types of demuxing depending on the application\u0027s need. Maybe we need to sync up again and update the doc...",
+      "parentUuid": "cd4025f6_fc5dde4f",
       "range": {
         "startLine": 208,
         "startChar": 3,
