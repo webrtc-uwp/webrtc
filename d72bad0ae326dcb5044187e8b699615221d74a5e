@@ -1,0 +1,265 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8c156a2_809a0840",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:15:47Z",
+      "side": 1,
+      "message": "I see SSRCs are verified before anything is applied, but MIDs, PTs and RSIDs aren\u0027t. What if we have a defective RSID, for instance?",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41bdc2f2_ffc86da7",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:15:47Z",
+      "side": 1,
+      "message": "What if this mid-sink association already exists? We probably want to DCHECK against that. I think there\u0027s a helper function that would let you do that with relatively painless syntax.\nSimilarly elsewhere.",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0396ace8_88c76c99",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:15:47Z",
+      "side": 1,
+      "message": "I wonder if protection against duplicates would be over-the-top?\n(Note: SSRC duplicates already handled gracefully.)",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6276fd37_24b5229b",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:15:47Z",
+      "side": 1,
+      "message": "Prefer push_back() over emplace_back() when emplace_back() isn\u0027t more efficient (as is the case with primitive arithmetic types), because emplace_back() requires the reader to check the vector\u0027s type to see what kind of ctor will be invoked. (Link to more elaborate discussion sent offline.)",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f3c66f53_c38e36a1",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:15:47Z",
+      "side": 1,
+      "message": "+danilchap@ - what is the guideline in such a case? We can probably still push_back because of move-semantics?",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7ad0e7d_b1ddb027",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:15:47Z",
+      "side": 1,
+      "message": "You probably want to pass in a reference to the map, rather than a copy of it.",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26dcdd61_74630f7e",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:15:47Z",
+      "side": 1,
+      "message": "I think you\u0027re looking for std::next() here. That would probably be easier than defining a variable, moving it, and then forgetting it.",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "497f75f6_1cbf66d2",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:15:47Z",
+      "side": 1,
+      "message": "Why do we use a multimap, if we don\u0027t really support multiple values being mapped to the same key?",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83b9d50c_70c30d8c",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:15:47Z",
+      "side": 1,
+      "message": "1. I wonder, with C++11, do we still want to use the macro? (If I am not mistaken, it used to use some hack to achieve a similar result to what is now done using C++11\u0027s \"\u003d delete\".)\n2. Do we really want to disallow these for RtpDemuxerCriteria? What\u0027s the rationale?\n3. Do we perhaps want to disallow those for the RtpDemuxer itself?",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27b33410_b69847f4",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:15:47Z",
+      "side": 1,
+      "message": "The word \"uniquely\" in the comment makes me wonder. The algorithm from the draft explicitly says \"drop and stop\" or \"route and stop\" in some cases. So I see nothing stopping us from encountering an RTP packet that matches several criteria(*), that nevertheless gets routed, or that matches only one criterion, but gets dropped. So I think this comment is misleading.\n\n(*) This is under the interpretation that \"criteria\" corresponds to members of RtpDemuxerCriteria.",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df58014e_8bf829f5",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:15:47Z",
+      "side": 1,
+      "message": "1. Another option that would lead to returning false is illegal RSID/MID names, etc.\n2. Might (open for discussion) be good to have the comment mention what happens in cases that lead to false being returned. Can partial configuration ever be applied, or is it all or nothing? For example, what happens if you try to AddSink() with one legal MID and several RSIDs, one of which is illegal? MID configuration guaranteed to be applied? Guaranteed to not be applied? No guarantee? Then again, I could be over-engineering this...",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7cb71977_d5ce6ec5",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:15:47Z",
+      "side": 1,
+      "message": "nit: The function itself is const.",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26e70ac9_d5d10501",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:15:47Z",
+      "side": 1,
+      "message": "FYI, at least for RSIDs, there will be another vector of discovery - specific RTCP messages that resolve the RSID-SSRC bindings. (This comment is not actionable.)",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a6a35f2_4e814060",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:15:47Z",
+      "side": 1,
+      "message": "Maybe we could talk offline? I didn\u0027t understand why this needs to be a multimap. Similarly for some other multimaps.",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3150394d_151dcb43",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-27T15:15:47Z",
+      "side": 1,
+      "message": "1. Comment explaining RSID with/without MID?\n2. Would it be possible to merge these two containers if we use the sentinel value of the empty string to mean an absent MID?\n3. I\u0027m not sure why these are multimaps.",
+      "range": {
+        "startLine": 119,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 25
+      },
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
