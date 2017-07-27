@@ -159,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "08707d40_e0bda476",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1138974
+      },
+      "writtenOn": "2017-07-27T19:44:00Z",
+      "side": 1,
+      "message": "Use push_back here.\n\nemplace_back and push_back are different functions.\nemplace_back(a,b,c) is a shortcut for push_back(T(a,b,c)) [or insert(T(a,b,c)) for map/set].\n\nHere it make false impression rsid is some type that can be explicitly created from std::string.\npush_back ensure it is std::string or something so similar it can be implicitly converted from std::string",
+      "parentUuid": "f3c66f53_c38e36a1",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d7ad0e7d_b1ddb027",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 5
