@@ -16,6 +16,17 @@
 
 namespace webrtc {
 
+namespace {
+
+DesktopRect TranslateRect(const DesktopRect& rect,
+                          const DesktopVector& top_left) {
+  DesktopRect result = rect;
+  result.Translate(top_left);
+  return result;
+}
+
+}  // namespace
+
 // A DesktopFrame that is a sub-rect of another DesktopFrame.
 class CroppedDesktopFrame : public DesktopFrame {
  public:
@@ -40,7 +51,7 @@ std::unique_ptr<DesktopFrame> CreateCroppedDesktopFrame(
 
 CroppedDesktopFrame::CroppedDesktopFrame(std::unique_ptr<DesktopFrame> frame,
                                          const DesktopRect& rect)
-    : DesktopFrame(rect.size(),
+    : DesktopFrame(TranslateRect(rect, frame->top_left()),
                    frame->stride(),
                    frame->GetFrameDataAtPos(rect.top_left()),
                    frame->shared_memory()) {

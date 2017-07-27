@@ -118,7 +118,12 @@ class DesktopFrame {
 // A DesktopFrame that stores data in the heap.
 class BasicDesktopFrame : public DesktopFrame {
  public:
+  // Deprecated, use the next constructor.
   explicit BasicDesktopFrame(DesktopSize size);
+
+  // Preferred.
+  explicit BasicDesktopFrame(DesktopRect rect);
+
   ~BasicDesktopFrame() override;
 
   // Creates a BasicDesktopFrame that contains copy of |frame|.
@@ -131,23 +136,38 @@ class BasicDesktopFrame : public DesktopFrame {
 // A DesktopFrame that stores data in shared memory.
 class SharedMemoryDesktopFrame : public DesktopFrame {
  public:
+  // May return nullptr if |shared_memory_factory| failed to create a
+  // SharedMemory instance.
+  // |shared_memory_factory| should not be nullptr.
+  // Deprecated, use the next Create() function.
   static std::unique_ptr<DesktopFrame> Create(
       DesktopSize size,
       SharedMemoryFactory* shared_memory_factory);
 
+  // Preferred.
   static std::unique_ptr<DesktopFrame> Create(
-      DesktopSize size,
-      std::unique_ptr<SharedMemory> shared_memory);
+      DesktopRect rect,
+      SharedMemoryFactory* shared_memory_factory);
 
   // Takes ownership of |shared_memory|.
-  // TODO(zijiehe): Hide constructors after fake_desktop_capturer.cc has been
-  // migrated, Create() is preferred.
+  // Deprecated, use the next constructor.
   SharedMemoryDesktopFrame(DesktopSize size,
                            int stride,
                            SharedMemory* shared_memory);
+
+  // Preferred.
+  SharedMemoryDesktopFrame(DesktopRect rect,
+                           int stride,
+                           std::unique_ptr<SharedMemory> shared_memory);
+
   ~SharedMemoryDesktopFrame() override;
 
  private:
+  // Avoid unexpected order of parameter evaluation.
+  SharedMemoryDesktopFrame(DesktopRect rect,
+                           int stride,
+                           SharedMemory* shared_memory);
+
   RTC_DISALLOW_COPY_AND_ASSIGN(SharedMemoryDesktopFrame);
 };
 
