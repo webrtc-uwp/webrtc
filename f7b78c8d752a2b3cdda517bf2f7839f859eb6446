@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ef23bc6b_d8b34d39",
+        "filename": "webrtc/modules/desktop_capture/resolution_tracker.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-07-28T00:52:08Z",
+      "side": 1,
+      "message": "You\u0027ve changed the return value for the calls not immediately following Reset, but haven\u0027t negated the result at the call sites. Was that intentional?",
+      "range": {
+        "startLine": 23,
+        "startChar": 16,
+        "endLine": 23,
+        "endChar": 0
+      },
+      "revId": "f7b78c8d752a2b3cdda517bf2f7839f859eb6446",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef9d13dd_f478b96b",
+        "filename": "webrtc/modules/desktop_capture/resolution_tracker.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-07-28T00:52:08Z",
+      "side": 1,
+      "message": "You can summarize this more succinctly with \"Returns true if a previous size was recorded and differs from |size|.\"",
+      "range": {
+        "startLine": 22,
+        "startChar": 34,
+        "endLine": 22,
+        "endChar": 0
+      },
+      "revId": "f7b78c8d752a2b3cdda517bf2f7839f859eb6446",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
