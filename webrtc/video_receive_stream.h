@@ -25,6 +25,7 @@
 
 namespace webrtc {
 
+class RtpPacketSinkInterface;
 class VideoDecoder;
 
 class VideoReceiveStream {
@@ -220,6 +221,9 @@ class VideoReceiveStream {
   inline void DisableEncodedFrameRecording() {
     EnableEncodedFrameRecording(rtc::kInvalidPlatformFileValue, 0);
   }
+
+  virtual void AddSecondarySink(RtpPacketSinkInterface* sink) = 0;
+  virtual void RemoveSecondarySink(const RtpPacketSinkInterface* sink) = 0;
 
  protected:
   virtual ~VideoReceiveStream() {}

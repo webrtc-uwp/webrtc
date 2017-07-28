@@ -142,6 +142,9 @@ class RtpVideoStreamReceiver : public RtpData,
   rtc::Optional<int64_t> LastReceivedPacketMs() const;
   rtc::Optional<int64_t> LastReceivedKeyframePacketMs() const;
 
+  void AddSecondarySink(RtpPacketSinkInterface* sink);
+  void RemoveSecondarySink(const RtpPacketSinkInterface* sink);
+
  private:
   bool AddReceiveCodec(const VideoCodec& video_codec);
   void ReceivePacket(const uint8_t* packet,
@@ -201,6 +204,10 @@ class RtpVideoStreamReceiver : public RtpData,
   int16_t last_payload_type_ = -1;
 
   bool has_received_frame_;
+
+  // TODO(eladalon): !!! Unit-tests, here and elsewhere, after initial approach
+  // gets the green light.
+  std::vector<RtpPacketSinkInterface*> secondary_sinks_;
 };
 
 }  // namespace webrtc

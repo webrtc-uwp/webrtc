@@ -332,6 +332,16 @@ void FakeVideoReceiveStream::EnableEncodedFrameRecording(rtc::PlatformFile file,
   rtc::ClosePlatformFile(file);
 }
 
+void FakeVideoReceiveStream::AddSecondarySink(
+    webrtc::RtpPacketSinkInterface* sink) {
+  RTC_NOTREACHED() << "Not implemented.";
+}
+
+void FakeVideoReceiveStream::RemoveSecondarySink(
+    const webrtc::RtpPacketSinkInterface* sink) {
+  RTC_NOTREACHED() << "Not implemented.";
+}
+
 FakeFlexfecReceiveStream::FakeFlexfecReceiveStream(
     const webrtc::FlexfecReceiveStream::Config& config)
     : config_(config), receiving_(false) {}
@@ -352,6 +362,10 @@ void FakeFlexfecReceiveStream::Stop() {
 // TODO(brandtr): Implement when the stats have been designed.
 webrtc::FlexfecReceiveStream::Stats FakeFlexfecReceiveStream::GetStats() const {
   return webrtc::FlexfecReceiveStream::Stats();
+}
+
+void FakeFlexfecReceiveStream::OnRtpPacket(const webrtc::RtpPacketReceived&) {
+  RTC_NOTREACHED() << "Not implemented.";
 }
 
 FakeCall::FakeCall(const webrtc::Call::Config& config)
