@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a6a4ebf_5820628c",
+        "filename": "webrtc/call/rtcp_demuxer.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-28T09:54:32Z",
+      "side": 1,
+      "message": "nit: OnRsidBound, perhaps? Rationale: \"binding from RSID\" implies to me that the *sink* is bound to the SSRC, and the RSID is the vector of discovery. But the called of this function isn\u0027t concerned with the sink, but rather the RSID-SSRC connection.\nI\u0027d also be happy with OnRsidBoundToSsrc, etc.",
+      "revId": "3d1321cbb8af649df275848c898a59e73236db05",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "978c52b7_34842efb",
+        "filename": "webrtc/call/ssrc_binding_observer.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-28T09:54:32Z",
+      "side": 1,
+      "message": "nit: I think we would forget to edit this comment later to mention other vectors of discovery (RTCP messages), so I would suggest doing it so now. Just my 2c, though; it\u0027s up to you.",
+      "revId": "3d1321cbb8af649df275848c898a59e73236db05",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
