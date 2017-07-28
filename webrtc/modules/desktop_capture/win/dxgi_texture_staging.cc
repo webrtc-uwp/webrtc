@@ -17,6 +17,7 @@
 
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/logging.h"
+#include "webrtc/system_wrappers/include/metrics.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -44,10 +45,16 @@ bool DxgiTextureStaging::InitializeStage(ID3D11Texture2D* texture) {
     AssertStageAndSurfaceAreSameObject();
     D3D11_TEXTURE2D_DESC current_desc;
     stage_->GetDesc(&current_desc);
-    if (memcmp(&desc, &current_desc, sizeof(D3D11_TEXTURE2D_DESC)) == 0) {
+    const bool recreate_needed =
+        memcmp(&desc, &current_desc, sizeof(D3D11_TEXTURE2D_DESC));
+    RTC_HISTOGRAM_BOOLEAN("WebRTC.DesktopCapture.StagingTextureRecreate",
+                          recreate_needed);
+    if (!recreate_needed) {
       return true;
     }
 
+    LOG(LS_WARNING) << "The staging texture needs to be recreated, this may "
+                       "impact the performance.";
     // The descriptions are not consistent, we need to create a new
     // ID3D11Texture2D instance.
     stage_.Reset();
