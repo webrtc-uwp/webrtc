@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "27779e1a_27300728",
+        "filename": "webrtc/modules/audio_coding/neteq/include/neteq.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-07-28T09:34:48Z",
+      "side": 1,
+      "message": "Perhaps use same nomenclature in this comment as in the one for secondary_decoded_rate - assuming I understand correctly that \"secondary decoding\" is the same as FEC/RED. I\u0027d prefer to use FEC/RED in both places.",
+      "range": {
+        "startLine": 48,
+        "startChar": 63,
+        "endLine": 48,
+        "endChar": 70
+      },
+      "revId": "65301a93ce68d67bae4435607adc99425c11f122",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80a12172_6033ea32",
+        "filename": "webrtc/modules/audio_coding/neteq/packet_buffer.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-07-28T09:34:48Z",
+      "side": 1,
+      "message": "nit: move the CHECK before the condition since it is relied on in both branches\n\nAlso, explain to me why this shouldn\u0027t be a DCHECK? It seems like a logic flaw rather than a runtime condition.\n\nI\u0027d have actually moved the check to the beginning of the function to make it clear that this is part of the contract - never call without valid \u0027stats\u0027.\n\n(Same reasoning applies to functions below, btw)",
+      "revId": "65301a93ce68d67bae4435607adc99425c11f122",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4a82a21_d345bd37",
+        "filename": "webrtc/modules/audio_coding/neteq/packet_buffer.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-07-28T09:34:48Z",
+      "side": 1,
+      "message": "nit: can we use remove_if here as well?",
+      "range": {
+        "startLine": 273,
+        "startChar": 0,
+        "endLine": 273,
+        "endChar": 63
+      },
+      "revId": "65301a93ce68d67bae4435607adc99425c11f122",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a56f5c26_7f73267f",
+        "filename": "webrtc/modules/audio_coding/neteq/packet_buffer_unittest.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-07-28T09:34:48Z",
+      "side": 1,
+      "message": "Should you test that red_level is indeed 1?",
+      "range": {
+        "startLine": 296,
+        "startChar": 0,
+        "endLine": 296,
+        "endChar": 44
+      },
+      "revId": "65301a93ce68d67bae4435607adc99425c11f122",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "192b7c32_72ee797a",
+        "filename": "webrtc/modules/audio_coding/neteq/statistics_calculator.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1126928
+      },
+      "writtenOn": "2017-07-28T09:34:48Z",
+      "side": 1,
+      "message": "Why is \"discarded_packets_\" reset in ResetMcu() but \"discarded_secondart_packets_\" reset here? This code looks brittle to me.",
+      "revId": "65301a93ce68d67bae4435607adc99425c11f122",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
