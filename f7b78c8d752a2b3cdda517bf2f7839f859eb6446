@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f4a25fa9_c5a5986b",
+        "filename": "webrtc/modules/desktop_capture/resolution_tracker.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-28T01:51:13Z",
+      "side": 1,
+      "message": "Sorry, I definitely made a mistake here.",
+      "parentUuid": "ef23bc6b_d8b34d39",
+      "range": {
+        "startLine": 23,
+        "startChar": 16,
+        "endLine": 23,
+        "endChar": 0
+      },
+      "revId": "f7b78c8d752a2b3cdda517bf2f7839f859eb6446",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef9d13dd_f478b96b",
         "filename": "webrtc/modules/desktop_capture/resolution_tracker.h",
         "patchSetId": 4
@@ -45,6 +69,30 @@
       "revId": "f7b78c8d752a2b3cdda517bf2f7839f859eb6446",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc05876e_19ee3bf5",
+        "filename": "webrtc/modules/desktop_capture/resolution_tracker.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-28T01:51:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ef9d13dd_f478b96b",
+      "range": {
+        "startLine": 22,
+        "startChar": 34,
+        "endLine": 22,
+        "endChar": 0
+      },
+      "revId": "f7b78c8d752a2b3cdda517bf2f7839f859eb6446",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
