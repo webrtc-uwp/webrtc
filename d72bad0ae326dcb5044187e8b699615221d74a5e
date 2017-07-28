@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "03e78a1e_33a3f372",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-28T09:48:25Z",
+      "side": 1,
+      "message": "Peter, silly question - when someone calls AddSink(mid \u003d a, rsid \u003d b), does he mean that the RSID is under the MID-space of a, or that there are two completely separate ways to reach the sink, one being through MID-a and one through SSRC-b? Similar question for SSRC.",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a8c156a2_809a0840",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 5
@@ -67,6 +84,24 @@
       "side": 1,
       "message": "MIDs and RSIDs can overlap though. I can use MIDs \"video1\" and \"video2\", and RIDs \"full\"/\"half\"/\"quarter\". Neither the MID nor RID is unique per stream.",
       "parentUuid": "11176984_d102de3d",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fbb45c7b_67ff1901",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-28T09:48:25Z",
+      "side": 1,
+      "message": "I assume we can\u0027t AddSink(mid \u003d video1, a, b, c,...), and then again AddSink(mid \u003d video1, x, y, z...), where the MID is \"video1\" in both times, but the other configuration is different. That is to say, the second call to AddSink() should fail, and none of the configuration should be applied. That means that we should perform validation on MIDs like we do for SSRCs in these lines (46-48), prior to applying any configuration.",
+      "parentUuid": "dd01fc16_f03805d3",
       "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -547,6 +582,47 @@
     },
     {
       "key": {
+        "uuid": "f0bc94b6_868c9bdf",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-28T09:48:25Z",
+      "side": 1,
+      "message": "No sink and one sinks are differentiate-able with a map. As for multiple sinks for the same MID - my apologies that I still don\u0027t understand how that fits the spec. Perhaps you could find the time to clarify this to me offline?",
+      "parentUuid": "4f44f503_8697ea3e",
+      "range": {
+        "startLine": 158,
+        "startChar": 80,
+        "endLine": 158,
+        "endChar": 0
+      },
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f292e0f0_f3b9dd23",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-28T09:48:25Z",
+      "side": 1,
+      "message": "1. The spec mentions some additional rules for recording an additional binding (\"and the packet\u0027s extended sequence number is greater than that of the last MID update\"). We probably want to check those?\n2. Do we want to cap the number of SSRC bindings we allow, to prevent a malicious other side from bombarding us with 2^32 entries?",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a60d1eda_54caab14",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 5
@@ -630,6 +706,30 @@
       "side": 1,
       "message": "\u003e This is about you signaled an SSRC rule and later a MID rule.\n\nDo you mean:\n\n1. Signal \"SSRC X \u003d Track A\"\n2. Signal \"MID foo \u003d Track B\"\n3. Receive packet with SSRC X; it\u0027s mapped to track A.\n4. Receive packet with SSRC X, *and* MID \"foo\". This packet is either discarded (what the code above does) or mapped to track B.\n\nIs that what you\u0027re describing? Mapping one SSRC to two sinks still seems wrong to me. But if this was an intended side effect of the BUNDLE algorithm, ok. It would be nice if the BUNDLE spec explained the reasoning for this, since it\u0027s easy to assume that corner cases like this just weren\u0027t considered (that\u0027s typically what I find when I dig into a corner case in BUNDLE).",
       "parentUuid": "017fd1f1_af8020fe",
+      "range": {
+        "startLine": 163,
+        "startChar": 44,
+        "endLine": 163,
+        "endChar": 0
+      },
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "296320e4_16c08584",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-28T09:48:25Z",
+      "side": 1,
+      "message": "My 2 SEK are that any divergence from the algorithm described in the spec would confuse future maintainers, who would not easily find out the rationale for such changes, or distinguish intentional divergence from bugs. I think it pays to follow the spec to the letter.",
+      "parentUuid": "21999797_2c3abea0",
       "range": {
         "startLine": 163,
         "startChar": 44,
@@ -740,6 +840,24 @@
       "side": 1,
       "message": "1. Does RSID not have the same semantics as MID? That is, could the sender use a new SSRC with the same RSID and we should still route it?\n2. Shouldn\u0027t ever return false because of the SSRC check above, so I think a DCHECK would be the most appropriate here.",
       "parentUuid": "f1083b77_caef9e31",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05c355d1_169b1073",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-28T09:48:25Z",
+      "side": 1,
+      "message": "1. Danil (IIRC) has led me to understand that no, RSID-SSRC mappings may not change. We may ask him for verification. +danilchap@?\n2. Good point. But maybe AddSsrcSinkBinding() could one day fail due to a check that prevents a memory-overuse attack by capping the number of possible SSRC bindings we record?",
+      "parentUuid": "b321bc95_23afdfe9",
       "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -982,6 +1100,24 @@
     },
     {
       "key": {
+        "uuid": "2d34e6dd_f456805d",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-28T09:48:25Z",
+      "side": 1,
+      "message": "1. As we agree on all-or-nothing behavior (as in the STL in general), I would suggest rephrasing the comment to say something along the lines of \"... if the configuration cannot be applied in full, the function returns false, and has no effect.\" (You can probably find something a bit better than my lame attempt.)\n2. Maybe the easiest way to keep track of PT uniqueness is using a flat-map (array of 128 entries, as is the maximum number of different PTs). So:\nstd::vector\u003cSinkInterface\u003e pt_map[128];\nThen (pt_map[packet.PayloadType()].size() \u003d\u003d 1) would check if we can uniquely demux by PT for the given PT.",
+      "parentUuid": "ad9175a5_9c5486a6",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4956b267_99988262",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 5
@@ -1075,6 +1211,24 @@
     },
     {
       "key": {
+        "uuid": "a8cffe6b_426a0c69",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-28T09:48:25Z",
+      "side": 1,
+      "message": "Just an FYI from my side; not actionable. (No, we don\u0027t support that yet. IIRC, Danil has told me that the spec for those RTCP messages has not yet been finalized.)",
+      "parentUuid": "bb9daf4b_b23b2de8",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5a6a35f2_4e814060",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 5
@@ -1122,6 +1276,24 @@
       "side": 1,
       "message": "A multimap is the easiest way to accomplish the funny PT demux properties which are, basically, \"if and only if it\u0027s unique, you may demux with it (after MID and SSRC don\u0027t match)\".  There are other ways this could be implemented, but I think this is the easiest we\u0027ve come up with so far.",
       "parentUuid": "72763998_75487e98",
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b61d869c_a4c14e7a",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-28T09:48:25Z",
+      "side": 1,
+      "message": "Peter, the draft has something that\u0027s not 100% clear to me, perhaps you could clarify?\n\n      If the packet\u0027s SSRC is in the incoming SSRC mapping table, check\n      that the packet\u0027s PT matches a PT included on the associated \"m\u003d\"\n      line.  If so, route the packet to that associated \"m\u003d\" line and\n      stop; otherwise drop the packet and stop.\n\nThis seems to indicate that even for packets with no RSID and no MID, and even if we recognize the SSRC, we should drop packets with an unknown PT.\nUnlike RSIDs or MIDs, PTs are non-optional - they\u0027re part of the RTP header, and all packets have them. But the current implementation ignores them completely.\nDo we intend to make PT an integral part of the implementation, and indeed drop packets with a mismatched PT, or will we diverge from the spec, and demux first according to SSRC, and only second according to PT?",
+      "parentUuid": "6f9b2ad1_e8450479",
       "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -1187,6 +1359,30 @@
       "side": 1,
       "message": "I think it would be easier to not treat RSIDs like PTs where they can overlap.  I\u0027d say we only do the non-standard RSID track-level demux if the RSIDS don\u0027t overlap. The complexity of anything else isn\u0027t worth it.",
       "parentUuid": "d1da2389_25a1e9e5",
+      "range": {
+        "startLine": 119,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 25
+      },
+      "revId": "d72bad0ae326dcb5044187e8b699615221d74a5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ccb04989_873487dc",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-07-28T09:48:25Z",
+      "side": 1,
+      "message": "Peter, I\u0027m not sure I understand \"non-standard RSID track-level\" (my apologies). Do you mean \"only when there\u0027s no MID\"? Or do you mean to assume they\u0027re unique across MIDs? Or something else?",
+      "parentUuid": "10d43982_c98d02df",
       "range": {
         "startLine": 119,
         "startChar": 0,
