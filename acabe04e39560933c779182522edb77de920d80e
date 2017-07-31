@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7b31f8b2_d582b721",
+        "filename": "webrtc/modules/desktop_capture/win/dxgi_texture_staging.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-07-31T17:56:50Z",
+      "side": 1,
+      "message": "If the frequency of recreating the texture is enough to be concerned about performance, won\u0027t this log be very spammy? I suggest you remove it and just rely on the histogram.",
+      "range": {
+        "startLine": 57,
+        "startChar": 49,
+        "endLine": 57,
+        "endChar": 0
+      },
+      "revId": "acabe04e39560933c779182522edb77de920d80e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
