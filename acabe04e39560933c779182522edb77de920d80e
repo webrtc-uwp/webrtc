@@ -46,6 +46,30 @@
       "revId": "acabe04e39560933c779182522edb77de920d80e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8a44cfab_84d8548d",
+        "filename": "webrtc/modules/desktop_capture/win/dxgi_texture_staging.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-07-31T19:37:54Z",
+      "side": 1,
+      "message": "I\u0027m fine with the histogram; I just don\u0027t see the point of the log in addition, especially since it\u0027s not clear to me how often the enclosing method is called. If it\u0027s infrequent, then I don\u0027t think it matters if it\u0027s not very efficient; if it\u0027s frequent, then we should avoid potential log spam.",
+      "parentUuid": "3ea4c067_da675511",
+      "range": {
+        "startLine": 57,
+        "startChar": 49,
+        "endLine": 57,
+        "endChar": 0
+      },
+      "revId": "acabe04e39560933c779182522edb77de920d80e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
