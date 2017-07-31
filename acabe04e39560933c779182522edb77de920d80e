@@ -70,6 +70,30 @@
       "revId": "acabe04e39560933c779182522edb77de920d80e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a8111b92_cf3f49f5",
+        "filename": "webrtc/modules/desktop_capture/win/dxgi_texture_staging.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-31T20:52:53Z",
+      "side": 1,
+      "message": "It\u0027s for debugging purpose: filtering out this log when debugging can help to understand how it would be triggered. AFAIK, we do not have an easy way to track a histogram.\n\nI can add it later if we found the value of the histogram is unexpected.",
+      "parentUuid": "8a44cfab_84d8548d",
+      "range": {
+        "startLine": 57,
+        "startChar": 49,
+        "endLine": 57,
+        "endChar": 0
+      },
+      "revId": "acabe04e39560933c779182522edb77de920d80e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
