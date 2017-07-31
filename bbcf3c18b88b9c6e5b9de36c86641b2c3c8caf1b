@@ -1,0 +1,228 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cccf5504_06a114c5",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-31T23:34:55Z",
+      "side": 1,
+      "message": "I\u0027m not sure we need to optimize for the \"nothing removed\" case.",
+      "range": {
+        "startLine": 141,
+        "startChar": 24,
+        "endLine": 141,
+        "endChar": 0
+      },
+      "revId": "bbcf3c18b88b9c6e5b9de36c86641b2c3c8caf1b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5de02b1_2ca5b532",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-31T23:34:55Z",
+      "side": 1,
+      "message": "In general, I prefer moving code left with early returns:\n\nif (foo) {\n  return x;\n}\n...\nreturn y;\n\n\nIs better than:\n\nif (foo) {\n  return x;\n} else {\n  ...\n  return y;\n}\n\nEspecially with multiple levels.\n\nCould you please use some early returns here?",
+      "revId": "bbcf3c18b88b9c6e5b9de36c86641b2c3c8caf1b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52d0f040_ff1d7cbd",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-31T23:34:55Z",
+      "side": 1,
+      "message": "At this point, mid is already \u003d\u003d \"\", so you don\u0027t need this.",
+      "range": {
+        "startLine": 211,
+        "startChar": 15,
+        "endLine": 211,
+        "endChar": 0
+      },
+      "revId": "bbcf3c18b88b9c6e5b9de36c86641b2c3c8caf1b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5060fd6_17375c96",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-31T23:34:55Z",
+      "side": 1,
+      "message": "Taylor convinced me that we should move this up before the SSRC demux (but after the MID demux).  Can you please move it up there?  I\u0027m guessing a test or two will need to change to reflect that.",
+      "range": {
+        "startLine": 269,
+        "startChar": 3,
+        "endLine": 269,
+        "endChar": 0
+      },
+      "revId": "bbcf3c18b88b9c6e5b9de36c86641b2c3c8caf1b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3dddb1d3_22077265",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-31T23:34:55Z",
+      "side": 1,
+      "message": "You might clarify that \"scoped within the MID\" means the packet needs to have the MID and RSID (are have them known via SSRC latching or RTCP).",
+      "range": {
+        "startLine": 44,
+        "startChar": 55,
+        "endLine": 44,
+        "endChar": 0
+      },
+      "revId": "bbcf3c18b88b9c6e5b9de36c86641b2c3c8caf1b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1dcd9ebf_b9261f96",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-31T23:34:55Z",
+      "side": 1,
+      "message": "Might clarify that if the MID is given without RSIDs, then the MID must not be registered (like MID, *) pair).",
+      "range": {
+        "startLine": 67,
+        "startChar": 57,
+        "endLine": 67,
+        "endChar": 0
+      },
+      "revId": "bbcf3c18b88b9c6e5b9de36c86641b2c3c8caf1b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db15cae5_e8951abf",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-31T23:34:55Z",
+      "side": 1,
+      "message": "We should also note that this causes SSRC\u003c-\u003eID associations to me remembered.",
+      "range": {
+        "startLine": 106,
+        "startChar": 31,
+        "endLine": 106,
+        "endChar": 0
+      },
+      "revId": "bbcf3c18b88b9c6e5b9de36c86641b2c3c8caf1b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e7b0b81_52633cee",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-31T23:34:55Z",
+      "side": 1,
+      "message": "I think it would be more clear to use an out variable like this (from the caller\u0027s perspective):\n\nbool drop_packet;\nauto sink \u003d FindSinkByMid(packet, \u0026drop_packet);",
+      "range": {
+        "startLine": 111,
+        "startChar": 38,
+        "endLine": 111,
+        "endChar": 0
+      },
+      "revId": "bbcf3c18b88b9c6e5b9de36c86641b2c3c8caf1b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a55ff26_9a92f2ba",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-31T23:34:55Z",
+      "side": 1,
+      "message": "The MID isn\u0027t a multimap down below.  Is the comment just not accurate?",
+      "range": {
+        "startLine": 123,
+        "startChar": 73,
+        "endLine": 123,
+        "endChar": 0
+      },
+      "revId": "bbcf3c18b88b9c6e5b9de36c86641b2c3c8caf1b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67c2450e_52e81789",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 1263,
+      "author": {
+        "id": 1125619
+      },
+      "writtenOn": "2017-07-31T23:34:55Z",
+      "side": 1,
+      "message": "What are these tests commented out?",
+      "range": {
+        "startLine": 1263,
+        "startChar": 3,
+        "endLine": 1263,
+        "endChar": 0
+      },
+      "revId": "bbcf3c18b88b9c6e5b9de36c86641b2c3c8caf1b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
