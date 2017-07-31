@@ -22,6 +22,30 @@
       "revId": "acabe04e39560933c779182522edb77de920d80e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ea4c067_da675511",
+        "filename": "webrtc/modules/desktop_capture/win/dxgi_texture_staging.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-07-31T18:18:27Z",
+      "side": 1,
+      "message": "I do not expect this log to be logged at all. Windows 10 removes the color-depth configuration, ideally only the resolution change can impact the D3D11_TEXTURE2D_DESC. But when the resolution changes, DxgiDuplicatorController will be reinitialized itself automatically, and cause the DxgiTextureStaging to be recreated. So the log is more for debugging purpose only. But I cannot confirm whether the same behavior happens on end-users\u0027 machines, so a histogram can help us to track the potential issue.",
+      "parentUuid": "7b31f8b2_d582b721",
+      "range": {
+        "startLine": 57,
+        "startChar": 49,
+        "endLine": 57,
+        "endChar": 0
+      },
+      "revId": "acabe04e39560933c779182522edb77de920d80e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
