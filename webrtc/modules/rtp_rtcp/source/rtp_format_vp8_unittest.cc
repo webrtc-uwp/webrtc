@@ -112,7 +112,7 @@ TEST_F(RtpPacketizerVp8Test, TestStrictMode) {
                                                  helper_->payload_size(),
                                                  helper_->fragmentation());
 
-  // The expected sizes are obtained by running a verified good implementation.
+  // The expected sizes are obtained by hand.
   const size_t kExpectedSizes[] = {9, 9, 12, 13, 13, 13};
   const int kExpectedPart[] = {0, 0, 1, 2, 2, 2};
   const bool kExpectedFragStart[] = {true, false, true, true, false, false};
@@ -142,7 +142,7 @@ TEST_F(RtpPacketizerVp8Test, TestStrictEqualTightPartitions) {
                                                  helper_->payload_size(),
                                                  helper_->fragmentation());
 
-  // The expected sizes are obtained by running a verified good implementation.
+  // The expected sizes are obtained by hand.
   const size_t kExpectedSizes[] = {14, 14, 14};
   const int kExpectedPart[] = {0, 1, 2};
   const bool kExpectedFragStart[] = {true, true, true};
@@ -167,7 +167,7 @@ TEST_F(RtpPacketizerVp8Test, TestAggregateMode) {
                                                  helper_->payload_size(),
                                                  helper_->fragmentation());
 
-  // The expected sizes are obtained by running a verified good implementation.
+  // The expected sizes are obtained by hand.
   const size_t kExpectedSizes[] = {24, 24, 24, 24};
   const int kExpectedPart[] = {0, 0, 0, 1};
   const bool kExpectedFragStart[] = {true, false, false, true};
@@ -197,7 +197,7 @@ TEST_F(RtpPacketizerVp8Test, TestAggregateModePacketReductionCauseExtraPacket) {
                                                  helper_->payload_size(),
                                                  helper_->fragmentation());
 
-  // The expected sizes are obtained by running a verified good implementation.
+  // The expected sizes are obtained by hand.
   const size_t kExpectedSizes[] = {24, 24, 24, 14, 14};
   const int kExpectedPart[] = {0, 0, 0, 1, 2};
   const bool kExpectedFragStart[] = {true, false, false, true, true};
@@ -224,7 +224,7 @@ TEST_F(RtpPacketizerVp8Test, TestAggregateModePacketReduction) {
                                                  helper_->payload_size(),
                                                  helper_->fragmentation());
 
-  // The expected sizes are obtained by running a verified good implementation.
+  // The expected sizes are obtained by hand.
   const size_t kExpectedSizes[] = {24, 24, 24, 24};
   const int kExpectedPart[] = {0, 0, 0, 1};
   const bool kExpectedFragStart[] = {true, false, false, true};
@@ -249,7 +249,7 @@ TEST_F(RtpPacketizerVp8Test, TestAggregateModeSmallPartitions) {
                                                  helper_->payload_size(),
                                                  helper_->fragmentation());
 
-  // The expected sizes are obtained by running a verified good implementation.
+  // The expected sizes are obtained by hand.
   const size_t kExpectedSizes[] = {11, 11, 10};
   const int kExpectedPart[] = {0, 2, 4};
   const bool kExpectedFragStart[] = {true, true, true};
@@ -302,7 +302,7 @@ TEST_F(RtpPacketizerVp8Test, TestAggregateModeManyPartitions2) {
                                                  helper_->payload_size(),
                                                  helper_->fragmentation());
 
-  // The expected sizes are obtained by running a verified good implementation.
+  // The expected sizes are obtained by hand.
   const size_t kExpectedSizes[] = {803, 804, 604, 804, 804, 804};
   const int kExpectedPart[] = {0, 0, 1, 4, 4, 5};
   const bool kExpectedFragStart[] = {true, false, true, true, false, true};
@@ -330,7 +330,7 @@ TEST_F(RtpPacketizerVp8Test, TestAggregateModeTwoLargePartitions) {
                                                  helper_->payload_size(),
                                                  helper_->fragmentation());
 
-  // The expected sizes are obtained by running a verified good implementation.
+  // The expected sizes are obtained by hand.
   const size_t kExpectedSizes[] = {831, 831, 1138, 1138};
   const int kExpectedPart[] = {0, 0, 1, 1};
   const bool kExpectedFragStart[] = {true, false, true, false};
@@ -381,7 +381,7 @@ TEST_F(RtpPacketizerVp8Test, TestEqualSizeWithLastPacketReduction) {
   const size_t kNumPartitions = GTEST_ARRAY_SIZE_(kSizeVector);
   ASSERT_TRUE(Init(kSizeVector, kNumPartitions));
 
-  hdr_info_.pictureId = 200; 
+  hdr_info_.pictureId = 200;
   const size_t kMaxPayloadSize = 15;  // Small enough to produce 5 packets.
   const size_t kLastPacketReduction = 5;
   RtpPacketizerVp8 packetizer(hdr_info_, kMaxPayloadSize, kLastPacketReduction);
