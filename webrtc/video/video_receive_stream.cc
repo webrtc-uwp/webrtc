@@ -474,6 +474,15 @@ void VideoReceiveStream::SetMinimumPlayoutDelay(int delay_ms) {
   video_receiver_.SetMinimumPlayoutDelay(delay_ms);
 }
 
+void VideoReceiveStream::AddSecondarySink(RtpPacketSinkInterface* sink) {
+  rtp_video_stream_receiver_.AddSecondarySink(sink);
+}
+
+void VideoReceiveStream::RemoveSecondarySink(
+    const RtpPacketSinkInterface* sink) {
+  rtp_video_stream_receiver_.RemoveSecondarySink(sink);
+}
+
 void VideoReceiveStream::DecodeThreadFunction(void* ptr) {
   while (static_cast<VideoReceiveStream*>(ptr)->Decode()) {
   }

@@ -107,6 +107,9 @@ class VideoReceiveStream : public webrtc::VideoReceiveStream,
   uint32_t GetPlayoutTimestamp() const override;
   void SetMinimumPlayoutDelay(int delay_ms) override;
 
+  void AddSecondarySink(RtpPacketSinkInterface* sink) override;
+  void RemoveSecondarySink(const RtpPacketSinkInterface* sink) override;
+
  private:
   static void DecodeThreadFunction(void* ptr);
   bool Decode();
