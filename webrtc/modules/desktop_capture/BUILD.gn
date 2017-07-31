@@ -82,6 +82,7 @@ if (rtc_include_tests) {
       "fallback_desktop_capturer_wrapper_unittest.cc",
       "mouse_cursor_monitor_unittest.cc",
       "rgba_color_unittest.cc",
+      "state_monitor_unittest.cc",
       "test_utils.cc",
       "test_utils.h",
       "test_utils_unittest.cc",
@@ -165,6 +166,7 @@ if (rtc_include_tests) {
 
 rtc_static_library("desktop_capture") {
   sources = [
+    "active_state_monitor.h",
     "blank_detector_desktop_capturer_wrapper.cc",
     "blank_detector_desktop_capturer_wrapper.h",
     "cropped_desktop_frame.cc",
@@ -212,6 +214,7 @@ rtc_static_library("desktop_capture") {
     "screen_capturer_helper.h",
     "screen_capturer_mac.mm",
     "screen_capturer_win.cc",
+    "state_monitor.h",
     "win/cursor.cc",
     "win/cursor.h",
     "win/d3d_device.cc",

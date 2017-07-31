@@ -11,6 +11,7 @@
 #ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_DISPLAY_CONFIGURATION_MONITOR_H_
 #define WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_DISPLAY_CONFIGURATION_MONITOR_H_
 
+#include "webrtc/modules/desktop_capture/active_state_monitor.h"
 #include "webrtc/modules/desktop_capture/desktop_geometry.h"
 
 namespace webrtc {
@@ -18,19 +19,10 @@ namespace webrtc {
 // A passive monitor to detect the change of display configuration on a Windows
 // system.
 // TODO(zijiehe): Also check for pixel format changes.
-class DisplayConfigurationMonitor {
- public:
-  // Checks whether the change of display configuration has happened after last
-  // IsChanged() call. This function won't return true for the first time after
-  // constructor or Reset() call.
-  bool IsChanged();
-
-  // Resets to the initial state.
-  void Reset();
-
- private:
-  DesktopRect rect_;
-  bool initialized_ = false;
+class DisplayConfigurationMonitor final
+    : public ActiveStateMonitor<DesktopRect> {
+ protected:
+  DesktopRect Get() override;
 };
 
 }  // namespace webrtc
