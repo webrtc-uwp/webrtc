@@ -13,22 +13,7 @@
 namespace webrtc {
 
 bool ResolutionTracker::SetResolution(DesktopSize size) {
-  if (!initialized_) {
-    initialized_ = true;
-    last_size_ = size;
-    return false;
-  }
-
-  if (last_size_.equals(size)) {
-    return false;
-  }
-
-  last_size_ = size;
-  return true;
-}
-
-void ResolutionTracker::Reset() {
-  initialized_ = false;
+  return Set(size);
 }
 
 }  // namespace webrtc

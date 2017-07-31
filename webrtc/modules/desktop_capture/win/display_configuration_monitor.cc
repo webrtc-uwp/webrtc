@@ -14,24 +14,8 @@
 
 namespace webrtc {
 
-bool DisplayConfigurationMonitor::IsChanged() {
-  DesktopRect rect = GetFullscreenRect();
-  if (!initialized_) {
-    initialized_ = true;
-    rect_ = rect;
-    return false;
-  }
-
-  if (rect.equals(rect_)) {
-    return false;
-  }
-
-  rect_ = rect;
-  return true;
-}
-
-void DisplayConfigurationMonitor::Reset() {
-  initialized_ = false;
+DesktopRect DisplayConfigurationMonitor::Get() {
+  return GetFullscreenRect();
 }
 
 }  // namespace webrtc

@@ -8,21 +8,26 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_RESOLUTION_TRACKER_H_
-#define WEBRTC_MODULES_DESKTOP_CAPTURE_RESOLUTION_TRACKER_H_
+#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_ACTIVE_STATE_MONITOR_H_
+#define WEBRTC_MODULES_DESKTOP_CAPTURE_ACTIVE_STATE_MONITOR_H_
 
-#include "webrtc/modules/desktop_capture/desktop_geometry.h"
 #include "webrtc/modules/desktop_capture/state_monitor.h"
 
 namespace webrtc {
 
-class ResolutionTracker final : public StateMonitor<DesktopSize> {
+// Monitors the change and the latest value of |T|, which is provided by Get()
+// function.
+template <typename T>
+class ActiveStateMonitor : public StateMonitor<T> {
  public:
-  // Sets the resolution to |size|. Returns true if a previous size was recorded
-  // and differs from |size|.
-  bool SetResolution(DesktopSize size);
+  bool IsChanged() {
+    return Set(Get());
+  }
+
+ protected:
+  virtual T Get() = 0;
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_RESOLUTION_TRACKER_H_
+#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_ACTIVE_STATE_MONITOR_H_
