@@ -117,6 +117,30 @@
       "revId": "b43ae5ab2179c5b869c6b75422d92150bac6e360",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6f5bc70_f68297cf",
+        "filename": "webrtc/modules/desktop_capture/desktop_frame.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-01T23:56:29Z",
+      "side": 1,
+      "message": "This private constructor is for the newly added\nSharedMemoryDesktopFrame(DesktopRect rect, int stride, std::unique_ptr\u003cSharedMemory\u003e shared_memory)\nconstructor.\n\nBefore this change, all the Create() function and constructors will execute\nSharedMemoryDesktopFrame(DesktopSize size, int stride, SharedMemory* shared_memory)\nconstructor. (DesktopSize v.s. DesktopRect, I know it\u0027s confusing :( )\n\nAfter this change, all the Create() function and constructors will execute\nSharedMemoryDesktopFrame(DesktopRect rect, int stride, SharedMemory* shared_memory)\nconstructor.\n\nIf |shared_memory| is provided, we DCHECK it, so the construction won\u0027t fail. I.e. we do not need to return nullptr, thus the Create() static function is not needed.\nIf |shared_memory_factory| is provided, it may not be able to create a SharedMemory, so the construction may fail. We return nullptr in this case.\n\nSince the DesktopSize overloading constructor is deprecated, the TODO() is still valid. But the statement is not accurate anymore: we do not need to call the Create() function in this scenario.",
+      "parentUuid": "4438b957_72231dba",
+      "range": {
+        "startLine": 166,
+        "startChar": 52,
+        "endLine": 166,
+        "endChar": 0
+      },
+      "revId": "b43ae5ab2179c5b869c6b75422d92150bac6e360",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
