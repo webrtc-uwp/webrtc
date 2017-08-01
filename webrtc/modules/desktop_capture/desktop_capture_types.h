@@ -56,4 +56,11 @@ namespace DesktopCapturerId {
 
 }  // namespace webrtc
 
+#if defined(WEBRTC_MAC)
+#include <CoreFoundation/CoreFoundation.h>
+
+static_assert(static_cast<WindowId>(webrtc::kCGNullWindowId) == kNullWindowId,
+              "kNullWindowId needs to equal to kCGNullWindowId.");
+#endif
+
 #endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_CAPTURE_TYPES_H_
