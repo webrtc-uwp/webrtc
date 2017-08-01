@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ac262594_fc67cd57",
+        "filename": "webrtc/modules/desktop_capture/desktop_frame.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-01T04:36:41Z",
+      "side": 1,
+      "message": "Oh, yes, I forgot.\nA TODO has been added to DesktopFrame: all the deprecated constructors should be removed in one change.",
+      "parentUuid": "34823694_dc7bf1af",
+      "range": {
+        "startLine": 121,
+        "startChar": 42,
+        "endLine": 121,
+        "endChar": 0
+      },
+      "revId": "b43ae5ab2179c5b869c6b75422d92150bac6e360",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b098418_332e5c36",
         "filename": "webrtc/modules/desktop_capture/desktop_frame.h",
         "patchSetId": 1
@@ -45,6 +69,30 @@
       "revId": "b43ae5ab2179c5b869c6b75422d92150bac6e360",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd644263_ec4ade61",
+        "filename": "webrtc/modules/desktop_capture/desktop_frame.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-01T04:36:41Z",
+      "side": 1,
+      "message": "Ah, yes, the comment has been updated.",
+      "parentUuid": "4b098418_332e5c36",
+      "range": {
+        "startLine": 166,
+        "startChar": 52,
+        "endLine": 166,
+        "endChar": 0
+      },
+      "revId": "b43ae5ab2179c5b869c6b75422d92150bac6e360",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
