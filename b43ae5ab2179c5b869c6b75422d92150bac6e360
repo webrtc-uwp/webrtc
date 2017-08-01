@@ -93,6 +93,30 @@
       "revId": "b43ae5ab2179c5b869c6b75422d92150bac6e360",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4438b957_72231dba",
+        "filename": "webrtc/modules/desktop_capture/desktop_frame.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-01T20:01:30Z",
+      "side": 1,
+      "message": "I understand now; thanks. Is it directly related to this CL though? In other words, is this an existing bug, unrelated to the change of coordinate reference, or do you only need it after this change, perhaps because of longer ctor chains? If it\u0027s an unrelated bugfix, it should be in a separate CL.\n\nI see you removed a TODO about making all ctors private in preference to Create methods. I think that make this unnecessary (because before calling a base class\u0027s Create, you could extract the unique_ptr to a temporary), so perhaps the TODO is still relevant?",
+      "parentUuid": "cd644263_ec4ade61",
+      "range": {
+        "startLine": 166,
+        "startChar": 52,
+        "endLine": 166,
+        "endChar": 0
+      },
+      "revId": "b43ae5ab2179c5b869c6b75422d92150bac6e360",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
