@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "32e7390f_f602a3e4",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "22e2ec32_a716f6a0",
+      "range": {
+        "startLine": 71,
+        "startChar": 2,
+        "endLine": 71,
+        "endChar": 16
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ab306387_fd77d510",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 10
@@ -105,6 +129,30 @@
     },
     {
       "key": {
+        "uuid": "baa76e49_e5d6e81f",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5d848954_2189f649",
+      "range": {
+        "startLine": 154,
+        "startChar": 55,
+        "endLine": 154,
+        "endChar": 61
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d424d7b6_5e365b72",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 10
@@ -119,6 +167,24 @@
       "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0a24359_0d17f4a2",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d424d7b6_5e365b72",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -145,6 +211,30 @@
     },
     {
       "key": {
+        "uuid": "1e8cfe2f_3ce5754a",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7194c8ef_4bba6169",
+      "range": {
+        "startLine": 198,
+        "startChar": 2,
+        "endLine": 198,
+        "endChar": 31
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4e649e2d_0452a7da",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 10
@@ -156,6 +246,24 @@
       "writtenOn": "2017-08-01T19:06:56Z",
       "side": 1,
       "message": "If \"has_mid\" is true, then it\u0027s guaranteed that mid_by_ssrc_[ssrc] \u003d\u003d p_mid. So I don\u0027t think you need to check it here.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db9388d5_d602f3c1",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Sure, but this saves a lookup when we already have the string locally.",
+      "parentUuid": "4e649e2d_0452a7da",
       "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -179,6 +287,24 @@
     },
     {
       "key": {
+        "uuid": "1bdc5b46_fe6d80c1",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "This has been factored out into `ResolveMid`. I have it returning a pointer now, so there is no copying.",
+      "parentUuid": "47c863fe_14564677",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dad1fa1e_b112d33a",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 10
@@ -193,6 +319,24 @@
       "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "17bd8e79_4ef482a5",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dad1fa1e_b112d33a",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -230,6 +374,24 @@
     },
     {
       "key": {
+        "uuid": "d6d95045_53f3a191",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "I added a description/summary of the demuxing algorithm to the class comment. Let me know if that could still use some improvement.",
+      "parentUuid": "16afdb93_1e6a9adf",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8d1472b1_ae9ca25c",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 10
@@ -250,6 +412,30 @@
       "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "409d21e7_95fd92cf",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Changed to ResolveSink.",
+      "parentUuid": "8d1472b1_ae9ca25c",
+      "range": {
+        "startLine": 109,
+        "startChar": 26,
+        "endLine": 109,
+        "endChar": 34
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -276,6 +462,30 @@
     },
     {
       "key": {
+        "uuid": "299505b0_5536f2a8",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "16b9d6ef_212c81f6",
+      "range": {
+        "startLine": 136,
+        "startChar": 0,
+        "endLine": 142,
+        "endChar": 71
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3f5628f5_2517b104",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 10
@@ -290,6 +500,24 @@
       "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa604000_457943c2",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3f5628f5_2517b104",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -310,6 +538,24 @@
     },
     {
       "key": {
+        "uuid": "c8da09b8_cd22722f",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1ae1c4bc_cc6e3da8",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "50bb8393_2498c3b9",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 10
@@ -321,6 +567,24 @@
       "writtenOn": "2017-08-01T19:06:56Z",
       "side": 1,
       "message": "nit: Since this is a low level test for the parameters of AddSink, it should call AddSink directly rather than using the helper method, to make the test expectations more explicit. Or at least use the AddSink helper method and make the criteria in this method.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28dc7b92_d6f178be",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "In general I agree, but I think in this case it\u0027s fine to use the wrapper since the wrapper is very thin and it\u0027s clear from the description exactly what the implementation is.",
+      "parentUuid": "50bb8393_2498c3b9",
       "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -344,6 +608,24 @@
     },
     {
       "key": {
+        "uuid": "39f10154_857c3bf3",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Changed to AddSinkFailsIfCalledForTwoSinksWithSameSsrc",
+      "parentUuid": "ea728629_d506ec15",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ea6e0db9_404f04fe",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 10
@@ -358,6 +640,24 @@
       "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4696da32_18cad5fd",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ea6e0db9_404f04fe",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -384,6 +684,30 @@
     },
     {
       "key": {
+        "uuid": "7d419b9e_228132da",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "981de80e_47311c48",
+      "range": {
+        "startLine": 410,
+        "startChar": 23,
+        "endLine": 410,
+        "endChar": 51
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eadbf132_a333b30e",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 10
@@ -395,6 +719,24 @@
       "writtenOn": "2017-08-01T19:06:56Z",
       "side": 1,
       "message": "nit: I think having individual tests for each combination of general behavior and type of sink (NoCallbackOnMidSink... NoCallbackOnRsidSink... NoCallbackOnSsrcSink) is overkill, and will result in a lot of tests to maintain. I would just have one test, \"NoCallbackOnSinkRemovedBeforeFirstPacket\", and assume that if the test works for one type of sink it will work for all. Same for similar sorts of tests.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be9e72e2_f08a2893",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "I think it\u0027s still useful to test that the basic operations apply to each type of sink (the implementation stores them all differently). More complicated behavior should assume it applies equally to all types though. For example, there should be tests to ensure that OnRtpPacket is not called when removed for each type, but behavior like if it is removed before/after the first packet is only needed for one type.",
+      "parentUuid": "eadbf132_a333b30e",
       "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -470,6 +812,24 @@
     },
     {
       "key": {
+        "uuid": "5a94fa42_7d52f95b",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "OK, I changed the test to ensure that only the RSID sink is notified.",
+      "parentUuid": "eb59a96b_99bc6f8f",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "97f49668_a5bbf699",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 10
@@ -499,6 +859,24 @@
       "side": 1,
       "message": "Again, I think the expectation should be explicit. Either 0 or 1 times.",
       "parentUuid": "97f49668_a5bbf699",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7123f479_c918e082",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 653,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Changed the test to expect OnSsrcBoundToRsid 1 time.",
+      "parentUuid": "16f909f6_6ec62608",
       "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -568,6 +946,30 @@
     },
     {
       "key": {
+        "uuid": "adaa9ff1_775ddaf1",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 731,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "I think it might be best to move the create packet helpers to the fixture and have them automatically increment since seq_num is usually not important to the test.",
+      "parentUuid": "48734e33_23649c89",
+      "range": {
+        "startLine": 731,
+        "startChar": 51,
+        "endLine": 731,
+        "endChar": 52
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5b6e14d2_6d714c3e",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 10
@@ -602,6 +1004,24 @@
       "writtenOn": "2017-08-01T19:06:56Z",
       "side": 1,
       "message": "This is testing what I\u0027d consider a minor limitation of the demuxer. While it\u0027s valid to test this, I\u0027d call it out as a limitation in a comment, and mention that it would be acceptable for it to change in the future.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f9f1b27b_5dc51774",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 765,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Peter and I were discussing this yesterday. This basically tests for the first condition in the BUNDLE algorithm: that a packet with no known MID is dropped without an SSRC binding being made. Although the spec doesn\u0027t go out of its way to explicitly forbid that behavior, it seems to be implied.",
+      "parentUuid": "5de0365f_ddfdd8b3",
       "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -671,6 +1091,30 @@
     },
     {
       "key": {
+        "uuid": "64ad4cf4_95de2e75",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 925,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Unlike MID, the spec doesn\u0027t give any guidance on what to do here so I\u0027ll leave a comment noting that.",
+      "parentUuid": "f3ef852f_6b636e36",
+      "range": {
+        "startLine": 925,
+        "startChar": 23,
+        "endLine": 925,
+        "endChar": 61
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "16162824_ebf2dc44",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 10
@@ -691,6 +1135,30 @@
       "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "846b168d_802af16a",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 1045,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "16162824_ebf2dc44",
+      "range": {
+        "startLine": 1045,
+        "startChar": 23,
+        "endLine": 1045,
+        "endChar": 48
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -791,6 +1259,24 @@
     },
     {
       "key": {
+        "uuid": "7e563c25_d478215e",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 1240,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Must have fallen asleep half way through writing this test.",
+      "parentUuid": "0e4427cf_1700a4ff",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2208aea8_7d7dea3b",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 10
@@ -811,6 +1297,30 @@
       "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25fb99e3_9b2a0660",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 1243,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-01T23:54:49Z",
+      "side": 1,
+      "message": "Looks pretty much identical. Removed.",
+      "parentUuid": "2208aea8_7d7dea3b",
+      "range": {
+        "startLine": 1243,
+        "startChar": 23,
+        "endLine": 1243,
+        "endChar": 54
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
