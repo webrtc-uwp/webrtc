@@ -409,6 +409,23 @@
       "revId": "bbcf3c18b88b9c6e5b9de36c86641b2c3c8caf1b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c0a68e3e_352233ea",
+        "filename": "webrtc/call/ssrc_binding_observer.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "I\u0027m not sure if this makes sense, since an SSRC can use multiple payload types. Maybe remove this until we find the need for something like it?",
+      "revId": "bbcf3c18b88b9c6e5b9de36c86641b2c3c8caf1b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }

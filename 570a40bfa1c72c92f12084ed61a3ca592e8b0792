@@ -2,6 +2,405 @@
   "comments": [
     {
       "key": {
+        "uuid": "22e2ec32_a716f6a0",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "nit: \"ResetKnownMids\" sounds like it\u0027s clearing something, but it\u0027s actually recomputing something. So I\u0027d use a word like \"Update\"/\"Refresh\"/etc. rather than \"Reset\".",
+      "range": {
+        "startLine": 71,
+        "startChar": 2,
+        "endLine": 71,
+        "endChar": 16
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab306387_fd77d510",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "This isn\u0027t checking anything related to the payload type. I think it would be reasonable to; see my comments in a couple of the tests. Though I\u0027d be fine saying \"that\u0027s out of scope for this CL\", and at least document the reasoning in a comment.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1619f4db_cbd2b601",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "What happens if you do AddSink(\"mid1\") then AddSink(\"mid1\", \"rid1\")? It seems like those should conflict. Though this is more corner case territory, so again, I\u0027d be fine not handling this as long as the limitation is mentioned in a comment.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6fade66d_afae753f",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "This comment may need some updating.",
+      "range": {
+        "startLine": 117,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 59
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d848954_2189f649",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "nit: Why \"p_rsid\"? Is that \"packet_rsid\"? If so I\u0027d just call it that; our style guide prefers longer/more descriptive variable names (even though a lot of our old code is inconsistent with that).",
+      "range": {
+        "startLine": 154,
+        "startChar": 55,
+        "endLine": 154,
+        "endChar": 61
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d424d7b6_5e365b72",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "nit: Would this comment be better placed right above the \"if\" condition?",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7194c8ef_4bba6169",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "It would be nice to elaborate on this more. Could even quote the spec directly above each block of code that correlates to a part of the spec.",
+      "range": {
+        "startLine": 198,
+        "startChar": 2,
+        "endLine": 198,
+        "endChar": 31
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e649e2d_0452a7da",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "If \"has_mid\" is true, then it\u0027s guaranteed that mid_by_ssrc_[ssrc] \u003d\u003d p_mid. So I don\u0027t think you need to check it here.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47c863fe_14564677",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "This will do a string copy for every packet received (if using MID-based demuxing); can it store a const ref instead?",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dad1fa1e_b112d33a",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "I\u0027d comment somewhere in here that the ordering of these checks matters, because for corner cases that involve conflicts the order of priority is meant to be \"MID/RID, signaled SSRCs, payload types\". For more explanation for why this is, see one of my comments in the test.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad56b1c7_fee707cf",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "Some comments in this method would be nice, to make it clear that it will return \"false\" if the SSRC-\u003esink binding is unchanged, but return true if it\u0027s a new binding or overwriting another SSRC-\u003esink binding.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16afdb93_1e6a9adf",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "Before landing this CL, I think we should expand on this comment (and/or the comments in RtpDemuxerCriteria), so that it\u0027s possible to fully predict the behavior of the class without having to look at the code/tests/BUNDLE spec.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8d1472b1_ae9ca25c",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "nit: The name \"FindSink\" doesn\u0027t make it obvious that this has side-effects (recording the SSRC\u003c-\u003eID associations).",
+      "range": {
+        "startLine": 109,
+        "startChar": 26,
+        "endLine": 109,
+        "endChar": 34
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16b9d6ef_212c81f6",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "I know these are private methods, but it still would be helpful to have comments describing them briefly.",
+      "range": {
+        "startLine": 136,
+        "startChar": 0,
+        "endLine": 142,
+        "endChar": 71
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f5628f5_2517b104",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "Can you add a comment saying that these are convenience methods for calling AddSink with different parameters, and will also ensure the sink is removed when the test case finishes?",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ae1c4bc_cc6e3da8",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "I\u0027m not sure that DoNotTearDownSink needs to be its own method. If it does though, it should be private.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50bb8393_2498c3b9",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "nit: Since this is a low level test for the parameters of AddSink, it should call AddSink directly rather than using the helper method, to make the test expectations more explicit. Or at least use the AddSink helper method and make the criteria in this method.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea728629_d506ec15",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "nit: Maybe add \"WithSameCriteria\" to the name?",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea6e0db9_404f04fe",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "nit: Again, \"WithSameCriteria\"?",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "981de80e_47311c48",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "nit: This test could have a better name, or a comment explaining it. It sounds like it\u0027s the same as \"OnRtpPacketCalledOnCorrectSinkByRsid\". But it\u0027s really testing that once the SSRC-\u003eRSID mapping is learned, packets continue going to the sink even if the RSID extension isn\u0027t used.",
+      "range": {
+        "startLine": 410,
+        "startChar": 23,
+        "endLine": 410,
+        "endChar": 51
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eadbf132_a333b30e",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "nit: I think having individual tests for each combination of general behavior and type of sink (NoCallbackOnMidSink... NoCallbackOnRsidSink... NoCallbackOnSsrcSink) is overkill, and will result in a lot of tests to maintain. I would just have one test, \"NoCallbackOnSinkRemovedBeforeFirstPacket\", and assume that if the test works for one type of sink it will work for all. Same for similar sorts of tests.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d46552c3_35188717",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 10
@@ -13,6 +412,23 @@
       "writtenOn": "2017-08-01T00:49:40Z",
       "side": 1,
       "message": "@Elad: Same question for this test.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28298119_1be073b1",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "This isn\u0027t what Peter thought the behavior should be when I talked to him. Basically, when it comes down to corner cases that involve criteria conflicting, he believes there should be an order of precedence, which is:\n\n1. MIDs/RIDs\n2. SSRCs\n3. Payload types\n\nWhich comes from the \"trustworthiness\" of each of those fields (the likeliness for the remote endpoint to mess something up). It\u0027s more likely to end up with an SSRC being re-used or an invalid payload type being used than for the packet to be tagged with the wrong MID/RSID. At least, that\u0027s how I understood it. I updated the design doc, and mentioned this as corner case #6.\n\nSo, based on my current understanding with Peter, I think the expected behavior should be that the packet with RSID B is routed to sink B, and the packet with RSID C is dropped.",
       "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -36,6 +452,24 @@
     },
     {
       "key": {
+        "uuid": "eb59a96b_99bc6f8f",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "I think the expectation should be explicit; it should be one or the other. Based on discussion with Peter I think it should go to the RSID sink, since we\u0027re thinking of the RSID as a stronger, more reliable indication than SSRC signaling.",
+      "parentUuid": "175153eb_e61a8531",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "97f49668_a5bbf699",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 10
@@ -47,6 +481,333 @@
       "writtenOn": "2017-08-01T00:49:40Z",
       "side": 1,
       "message": "@Elad: Also this test.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16f909f6_6ec62608",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 653,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "Again, I think the expectation should be explicit. Either 0 or 1 times.",
+      "parentUuid": "97f49668_a5bbf699",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1106ab97_3f31dcf2",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "This comment confuses me; it it supposed to say \"never active\"?",
+      "range": {
+        "startLine": 686,
+        "startChar": 1,
+        "endLine": 686,
+        "endChar": 76
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "779479ad_e9b1f18a",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "nit: How is this different than OnRtpPacketCalledOnCorrectSinkByMid? Is it a subset of it? Before landing this CL it would be nice to group the tests by area of testing and put similar tests next to each other.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48734e33_23649c89",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 731,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "nit: It\u0027s not obvious what the parameters to CreateRtpPacket mean (other than mid). It\u0027s common to do things like this to help:\n\nint ssrc \u003d 10;\nint seq_num \u003d 1;\nauto packet \u003d CreateRtpPacketReceivedWithMid(mid, ssrc, seq_num++);",
+      "range": {
+        "startLine": 731,
+        "startChar": 51,
+        "endLine": 731,
+        "endChar": 52
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b6e14d2_6d714c3e",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "This seems like \"OnRtpPacketCalledForRsidSink\" but for MIDs. Again, would be nice to have more consistent naming/grouping of tests.",
+      "range": {
+        "startLine": 740,
+        "startChar": 23,
+        "endLine": 740,
+        "endChar": 47
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5de0365f_ddfdd8b3",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 765,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "This is testing what I\u0027d consider a minor limitation of the demuxer. While it\u0027s valid to test this, I\u0027d call it out as a limitation in a comment, and mention that it would be acceptable for it to change in the future.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "95854cf7_8e268bcb",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 830,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "How is this different than \"NoCallbackOnXSinkRemovedBeforeFirstPacket\"? If it\u0027s the same, I think they should be grouped together/named consistently, or combined into one test as the other comment suggests. Same with below test with relation to \"NoCallbackOnXSinkRemovedAfterFirstPacket\".",
+      "range": {
+        "startLine": 830,
+        "startChar": 23,
+        "endLine": 830,
+        "endChar": 61
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa3114cf_836d4353",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 862,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "Some comments above these tests would be nice, since it\u0027s hard to fully summarize the expectations with just the test name.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f3ef852f_6b636e36",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 925,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "Similar to DontLearnMidSsrcBindingBeforeSinkAdded, I\u0027d consider this a limitation, which should be called out as such in a comment.",
+      "range": {
+        "startLine": 925,
+        "startChar": 23,
+        "endLine": 925,
+        "endChar": 61
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16162824_ebf2dc44",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 1045,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "This is another situation where I think we only really need one test for \"packet dropped if no sink added\".",
+      "range": {
+        "startLine": 1045,
+        "startChar": 23,
+        "endLine": 1045,
+        "endChar": 48
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a18fec5a_d0ce9ae1",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 1080,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "I\u0027d somewhat expect this second AddSink to fail, and the packet to get routed to sink1.\n\nA more realistic test may be calling AddSink with the same PT but different MIDs, then receiving a packet with that PT but without a MID.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f923c30_80c645e1",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 1103,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "Again, I\u0027d somewhat expect this AddSink to fail, since it\u0027s impossible to demux a packet received with pt1. A more realistic test would involve MIDs set.",
+      "range": {
+        "startLine": 1103,
+        "startChar": 14,
+        "endLine": 1103,
+        "endChar": 21
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a112a607_f696cfed",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 1117,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "Same comment as for DropByPayloadTypeIfMultipleSinks.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d896b38_66e01671",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 1130,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "This is pretty funky behavior. The BUNDLE algorithm would drop the packet here, due to:\n\n     \"If the packet\u0027s SSRC is in the incoming SSRC mapping table, check\n      that the packet\u0027s PT matches a PT included on the associated \"m\u003d\"\n      line.  If so, route the packet to that associated \"m\u003d\" line and\n      stop; otherwise drop the packet and stop.\"\n\nThough we\u0027ve settled on \"our demuxer is loose about this PT restriction,\" so maybe it\u0027s acceptable to do this. But if we do, can we describe it in more detail in a comment here, and make sure the comments in rtpdemuxer.h make it clear this will happen?",
+      "range": {
+        "startLine": 1130,
+        "startChar": 23,
+        "endLine": 1130,
+        "endChar": 53
+      },
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e4427cf_1700a4ff",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 1240,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "Is this meant to just call AddSink? There should be a test expectation somewhere. Unless this is just testing that it doesn\u0027t crash, in which case that should be made more clear.",
+      "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2208aea8_7d7dea3b",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 1243,
+      "author": {
+        "id": 1136110
+      },
+      "writtenOn": "2017-08-01T19:06:56Z",
+      "side": 1,
+      "message": "How is this different than DropByPayloadTypeIfMultipleSinks?",
+      "range": {
+        "startLine": 1243,
+        "startChar": 23,
+        "endLine": 1243,
+        "endChar": 54
+      },
       "revId": "570a40bfa1c72c92f12084ed61a3ca592e8b0792",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
