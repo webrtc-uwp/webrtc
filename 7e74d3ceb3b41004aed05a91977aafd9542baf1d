@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94b50de4_dd1d79f9",
+        "filename": "backup/BUILD.gn",
+        "patchSetId": 7
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1177499
+      },
+      "writtenOn": "2017-08-01T13:00:47Z",
+      "side": 1,
+      "message": "Will this backup folder go away?",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 1
+      },
+      "revId": "7e74d3ceb3b41004aed05a91977aafd9542baf1d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
