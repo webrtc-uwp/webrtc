@@ -141,6 +141,30 @@
       "revId": "b43ae5ab2179c5b869c6b75422d92150bac6e360",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1754088_67c14180",
+        "filename": "webrtc/modules/desktop_capture/desktop_frame.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-02T00:08:10Z",
+      "side": 1,
+      "message": "Thanks for explaining off-line. The reason that this is different is that you\u0027ve chosen to use a ctor rather than a Create method for the DesktopRect version, which introduces this issue, and your rationale for doing so seems sound.",
+      "parentUuid": "e6f5bc70_f68297cf",
+      "range": {
+        "startLine": 166,
+        "startChar": 52,
+        "endLine": 166,
+        "endChar": 0
+      },
+      "revId": "b43ae5ab2179c5b869c6b75422d92150bac6e360",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
