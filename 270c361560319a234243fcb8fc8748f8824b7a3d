@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a992bc5a_1ffd66d4",
+        "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/encoder.mm",
+        "patchSetId": 3
+      },
+      "lineNbr": 579,
+      "author": {
+        "id": 1163304
+      },
+      "writtenOn": "2017-08-02T14:16:53Z",
+      "side": 1,
+      "message": "please use #if defined(WEBRTC_MAC) for consistency with the rest of the codebase.",
+      "range": {
+        "startLine": 579,
+        "startChar": 6,
+        "endLine": 579,
+        "endChar": 7
+      },
+      "revId": "270c361560319a234243fcb8fc8748f8824b7a3d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a566a58f_215213fc",
+        "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/encoder.mm",
+        "patchSetId": 3
+      },
+      "lineNbr": 613,
+      "author": {
+        "id": 1163304
+      },
+      "writtenOn": "2017-08-02T14:16:53Z",
+      "side": 1,
+      "message": "please use #if defined(WEBRTC_MAC) for consistency with the rest of the codebase.",
+      "revId": "270c361560319a234243fcb8fc8748f8824b7a3d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "495e6957_c44ffa59",
+        "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/encoder.mm",
+        "patchSetId": 3
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1163304
+      },
+      "writtenOn": "2017-08-02T14:16:53Z",
+      "side": 1,
+      "message": "Remove this leading space and the one below",
+      "revId": "270c361560319a234243fcb8fc8748f8824b7a3d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
