@@ -316,6 +316,8 @@ bool WindowCapturerLinux::HandleXEvent(const XEvent& event) {
   return false;
 }
 
+// TODO(zijiehe): This function should return the ancestor window of |window|
+// other than the root_window.
 ::Window WindowCapturerLinux::GetApplicationWindow(::Window window) {
   // Get WM_STATE property of the window.
   XWindowProperty<uint32_t> window_state(display(), window, wm_state_atom_);
