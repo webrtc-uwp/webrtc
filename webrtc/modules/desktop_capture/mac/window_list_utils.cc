@@ -12,12 +12,19 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 
+#include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/macutils.h"
+
+static_assert(
+    static_cast<webrtc::WindowId>(kCGNullWindowID) == webrtc::kNullWindowId,
+    "kNullWindowId needs to equal to kCGNullWindowID.");
 
 namespace webrtc {
 
-bool GetWindowList(DesktopCapturer::SourceList* windows,
+bool GetWindowList(rtc::FunctionView<bool(CFDictionaryRef)> on_window,
                    bool ignore_minimized) {
+  RTC_DCHECK(on_window);
+
   // Only get on screen, non-desktop windows.
   CFArrayRef window_array = CGWindowListCopyWindowInfo(
       kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements,
@@ -37,40 +44,63 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
   for (CFIndex i = 0; i < count; ++i) {
     CFDictionaryRef window = reinterpret_cast<CFDictionaryRef>(
         CFArrayGetValueAtIndex(window_array, i));
+    if (!window) {
+      continue;
+    }
+
     CFStringRef window_title = reinterpret_cast<CFStringRef>(
         CFDictionaryGetValue(window, kCGWindowName));
+    if (!window_title) {
+      continue;
+    }
+
     CFNumberRef window_id = reinterpret_cast<CFNumberRef>(
         CFDictionaryGetValue(window, kCGWindowNumber));
+    if (!window_id) {
+      continue;
+    }
+
     CFNumberRef window_layer = reinterpret_cast<CFNumberRef>(
         CFDictionaryGetValue(window, kCGWindowLayer));
-    if (window_title && window_id && window_layer) {
-      // Skip windows with layer=0 (menu, dock).
-      int layer;
-      CFNumberGetValue(window_layer, kCFNumberIntType, &layer);
-      if (layer != 0)
-        continue;
+    if (!window_layer) {
+      continue;
+    }
 
-      int id;
-      CFNumberGetValue(window_id, kCFNumberIntType, &id);
+    // Skip windows with layer=0 (menu, dock).
+    int layer;
+    CFNumberGetValue(window_layer, kCFNumberIntType, &layer);
+    if (layer != 0) {
+      continue;
+    }
 
-      // Skip windows that are minimized and not full screen.
-      if (ignore_minimized && IsWindowMinimized(id) &&
-          !IsWindowFullScreen(desktop_config, window)) {
-        continue;
-      }
+    // Skip windows that are minimized and not full screen.
+    if (ignore_minimized && IsWindowMinimized(window) &&
+        !IsWindowFullScreen(desktop_config, window)) {
+      continue;
+    }
 
-      DesktopCapturer::Source window;
-      window.id = id;
-      if (!rtc::ToUtf8(window_title, &(window.title)) ||
-          window.title.empty()) {
-        continue;
-      }
-      windows->push_back(window);
+    if (!on_window(window)) {
+      break;
     }
   }
 
   CFRelease(window_array);
   return true;
+}
+
+bool GetWindowList(DesktopCapturer::SourceList* windows,
+                   bool ignore_minimized) {
+  return GetWindowList(
+      [windows](CFDictionaryRef window) {
+        WindowId id = GetWindowId(window);
+        std::string title = GetWindowTitle(window);
+        if (id != kNullWindowId &&
+            !title.empty()) {
+          windows->push_back(DesktopCapturer::Source{ id, title });
+        }
+        return true;
+      },
+      ignore_minimized);
 }
 
 // Returns true if the window is occupying a full screen.
@@ -100,6 +130,12 @@ bool IsWindowFullScreen(
   return fullscreen;
 }
 
+bool IsWindowMinimized(CFDictionaryRef window) {
+  CFBooleanRef on_screen = reinterpret_cast<CFBooleanRef>(
+      CFDictionaryGetValue(window, kCGWindowIsOnscreen));
+  return !on_screen;
+}
+
 // Returns true if the window is minimized.
 bool IsWindowMinimized(CGWindowID id) {
   CFArrayRef window_id_array =
@@ -109,12 +145,8 @@ bool IsWindowMinimized(CGWindowID id) {
   bool minimized = false;
 
   if (window_array && CFArrayGetCount(window_array)) {
-    CFDictionaryRef window = reinterpret_cast<CFDictionaryRef>(
-        CFArrayGetValueAtIndex(window_array, 0));
-    CFBooleanRef on_screen =  reinterpret_cast<CFBooleanRef>(
-        CFDictionaryGetValue(window, kCGWindowIsOnscreen));
-
-    minimized = !on_screen;
+    minimized = IsWindowMinimized(reinterpret_cast<CFDictionaryRef>(
+        CFArrayGetValueAtIndex(window_array, 0)));
   }
 
   CFRelease(window_id_array);
@@ -123,6 +155,44 @@ bool IsWindowMinimized(CGWindowID id) {
   return minimized;
 }
 
+std::string GetWindowTitle(CFDictionaryRef window) {
+  CFStringRef title = reinterpret_cast<CFStringRef>(
+      CFDictionaryGetValue(window, kCGWindowName));
+  std::string result;
+  if (title && rtc::ToUtf8(title, &result)) {
+    return result;
+  }
+  return std::string();
+}
 
+WindowId GetWindowId(CFDictionaryRef window) {
+  CFNumberRef window_id = reinterpret_cast<CFNumberRef>(
+      CFDictionaryGetValue(window, kCGWindowNumber));
+  if (!window_id) {
+    return kNullWindowId;
+  }
+
+  WindowId id;
+  CFNumberGetValue(window_id, kCFNumberIntType, &id);
+  return id;
+}
+
+DesktopRect GetWindowBounds(CFDictionaryRef window) {
+  CFDictionaryRef window_bounds = reinterpret_cast<CFDictionaryRef>(
+      CFDictionaryGetValue(window, kCGWindowBounds));
+  if (!window_bounds) {
+    return DesktopRect();
+  }
+
+  CGRect gc_window_rect;
+  if (!CGRectMakeWithDictionaryRepresentation(window_bounds, &gc_window_rect)) {
+    return DesktopRect();
+  }
+
+  return DesktopRect::MakeXYWH(gc_window_rect.origin.x,
+                               gc_window_rect.origin.y,
+                               gc_window_rect.size.width,
+                               gc_window_rect.size.height);
+}
 
 }  // namespace webrtc
