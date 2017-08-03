@@ -130,6 +130,7 @@ class StatsReport {
     // Internal StatsValue names.
     kStatsValueNameAccelerateRate,
     kStatsValueNameActualEncBitrate,
+    kStatsValueNameAdaptationReason,
     kStatsValueNameAdaptationChanges,
     kStatsValueNameAvailableReceiveBandwidth,
     kStatsValueNameAvailableSendBandwidth,

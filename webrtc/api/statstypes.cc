@@ -552,6 +552,8 @@ const char* StatsReport::Value::display_name() const {
       return "googLocalCandidateType";
     case kStatsValueNameLocalCertificateId:
       return "localCertificateId";
+    case kStatsValueNameAdaptationReason:
+      return "googAdaptationReason";
     case kStatsValueNameAdaptationChanges:
       return "googAdaptationChanges";
     case kStatsValueNameNacksReceived:

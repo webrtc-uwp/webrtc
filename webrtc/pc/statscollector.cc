@@ -285,6 +285,7 @@ void ExtractStats(const cricket::VideoSenderInfo& info, StatsReport* report) {
     report->AddInt(StatsReport::kStatsValueNameQpSum, *info.qp_sum);
 
   const IntForAdd ints[] = {
+    { StatsReport::kStatsValueNameAdaptationReason, info.adapt_reason },
     { StatsReport::kStatsValueNameAdaptationChanges, info.adapt_changes },
     { StatsReport::kStatsValueNameAvgEncodeMs, info.avg_encode_ms },
     { StatsReport::kStatsValueNameEncodeUsagePercent,
