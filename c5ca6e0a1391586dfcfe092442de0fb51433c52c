@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "262d3a6c_7cb300ef",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 11
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-03T01:26:26Z",
+      "side": 1,
+      "message": "I find this comment confusing. On the one hand you seem to be saying that supporting Mac would need a bunch of refactoring, but on the other hand, you say that this CL supports Mac.",
+      "range": {
+        "startLine": 10,
+        "startChar": 75,
+        "endLine": 10,
+        "endChar": 0
+      },
+      "revId": "c5ca6e0a1391586dfcfe092442de0fb51433c52c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c948cc28_01aeaeef",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 11
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-03T01:26:26Z",
+      "side": 1,
+      "message": "This comment is confusing. It seems to suggest that lots of refactoring would be needed for Mac, but then goes ahead and implements it anyway. Is the comment out of date?",
+      "range": {
+        "startLine": 12,
+        "startChar": 43,
+        "endLine": 12,
+        "endChar": 0
+      },
+      "revId": "c5ca6e0a1391586dfcfe092442de0fb51433c52c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1fc1f60_971582e7",
+        "filename": "webrtc/modules/desktop_capture/mac/window_list_utils.cc",
+        "patchSetId": 11
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-03T01:26:26Z",
+      "side": 1,
+      "message": "This function is not documented as returning the windows in the z-order you want, and I don\u0027t see any code to sort them. I think you need to do that for your GetWindowUnderPoint function to work on Mac.",
+      "range": {
+        "startLine": 29,
+        "startChar": 28,
+        "endLine": 29,
+        "endChar": 54
+      },
+      "revId": "c5ca6e0a1391586dfcfe092442de0fb51433c52c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84d4f6f1_ca9f3287",
+        "filename": "webrtc/modules/desktop_capture/mac/window_list_utils.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-03T01:26:26Z",
+      "side": 1,
+      "message": "decreasing",
+      "range": {
+        "startLine": 24,
+        "startChar": 37,
+        "endLine": 24,
+        "endChar": 46
+      },
+      "revId": "c5ca6e0a1391586dfcfe092442de0fb51433c52c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30cba376_8e1d8558",
+        "filename": "webrtc/modules/desktop_capture/mac/window_list_utils.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-03T01:26:26Z",
+      "side": 1,
+      "message": "s/This function/GetWindowList/ (because the previous sentence refers to on_window, it\u0027s good to disambiguate what you mean by \"this function\" here).",
+      "range": {
+        "startLine": 26,
+        "startChar": 16,
+        "endLine": 26,
+        "endChar": 29
+      },
+      "revId": "c5ca6e0a1391586dfcfe092442de0fb51433c52c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
