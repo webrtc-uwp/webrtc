@@ -114,7 +114,9 @@ TestConfig::TestConfig()
       codec_settings(nullptr),
       verbose(true) {}
 
-TestConfig::~TestConfig() {}
+TestConfig::~TestConfig() = default;
+
+VideoProcessor::~VideoProcessor() = default;
 
 VideoProcessorImpl::VideoProcessorImpl(webrtc::VideoEncoder* encoder,
                                        webrtc::VideoDecoder* decoder,
@@ -129,8 +131,6 @@ VideoProcessorImpl::VideoProcessorImpl(webrtc::VideoEncoder* encoder,
     : encoder_(encoder),
       decoder_(decoder),
       bitrate_allocator_(CreateBitrateAllocator(config)),
-      encode_callback_(new VideoProcessorEncodeCompleteCallback(this)),
-      decode_callback_(new VideoProcessorDecodeCompleteCallback(this)),
       packet_manipulator_(packet_manipulator),
       config_(config),
       analysis_frame_reader_(analysis_frame_reader),
@@ -156,9 +156,14 @@ VideoProcessorImpl::VideoProcessorImpl(webrtc::VideoEncoder* encoder,
   RTC_DCHECK(stats);
 
   frame_infos_.reserve(num_frames_);
+
+  task_checker_.Detach();
 }
 
+VideoProcessorImpl::~VideoProcessorImpl() = default;
+
 bool VideoProcessorImpl::Init() {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
   RTC_DCHECK(!initialized_)
       << "This VideoProcessor has already been initialized.";
 
@@ -166,9 +171,11 @@ bool VideoProcessorImpl::Init() {
   bit_rate_factor_ = config_.codec_settings->maxFramerate * 0.001 * 8;  // bits
 
   // Setup required callbacks for the encoder/decoder.
+  encode_callback_.reset(new VideoProcessorEncodeCompleteCallback(this));
   RTC_CHECK_EQ(encoder_->RegisterEncodeCompleteCallback(encode_callback_.get()),
                WEBRTC_VIDEO_CODEC_OK)
       << "Failed to register encode complete callback";
+  decode_callback_.reset(new VideoProcessorDecodeCompleteCallback(this));
   RTC_CHECK_EQ(decoder_->RegisterDecodeCompleteCallback(decode_callback_.get()),
                WEBRTC_VIDEO_CODEC_OK)
       << "Failed to register decode complete callback";
@@ -203,12 +210,14 @@ bool VideoProcessorImpl::Init() {
   return true;
 }
 
-VideoProcessorImpl::~VideoProcessorImpl() {
+void VideoProcessorImpl::DeregisterCallbacks() {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
   encoder_->RegisterEncodeCompleteCallback(nullptr);
   decoder_->RegisterDecodeCompleteCallback(nullptr);
 }
 
 void VideoProcessorImpl::SetRates(int bit_rate, int frame_rate) {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
   int set_rates_result = encoder_->SetRateAllocation(
       bitrate_allocator_->GetAllocation(bit_rate * 1000, frame_rate),
       frame_rate);
@@ -219,24 +228,29 @@ void VideoProcessorImpl::SetRates(int bit_rate, int frame_rate) {
 }
 
 size_t VideoProcessorImpl::EncodedFrameSize(int frame_number) {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
   RTC_DCHECK_LT(frame_number, frame_infos_.size());
   return frame_infos_[frame_number].encoded_frame_size;
 }
 
 FrameType VideoProcessorImpl::EncodedFrameType(int frame_number) {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
   RTC_DCHECK_LT(frame_number, frame_infos_.size());
   return frame_infos_[frame_number].encoded_frame_type;
 }
 
 int VideoProcessorImpl::NumberDroppedFrames() {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
   return num_dropped_frames_;
 }
 
 int VideoProcessorImpl::NumberSpatialResizes() {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
   return num_spatial_resizes_;
 }
 
 bool VideoProcessorImpl::ProcessFrame(int frame_number) {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
   RTC_DCHECK_GE(frame_number, 0);
   RTC_DCHECK_LE(frame_number, frame_infos_.size())
       << "Must process frames without gaps.";
@@ -296,8 +310,12 @@ void VideoProcessorImpl::FrameEncoded(
     webrtc::VideoCodecType codec,
     const EncodedImage& encoded_image,
     const webrtc::RTPFragmentationHeader* fragmentation) {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
+
   // For the highest measurement accuracy of the encode time, the start/stop
   // time recordings should wrap the Encode call as tightly as possible.
+  // TODO(brandtr): Consider moving this measurement into the callback wrapper
+  // class.
   int64_t encode_stop_ns = rtc::TimeNanos();
 
   if (encoded_frame_writer_) {
@@ -420,8 +438,12 @@ void VideoProcessorImpl::FrameEncoded(
 }
 
 void VideoProcessorImpl::FrameDecoded(const VideoFrame& image) {
+  RTC_DCHECK_CALLED_SEQUENTIALLY(&task_checker_);
+
   // For the highest measurement accuracy of the decode time, the start/stop
   // time recordings should wrap the Decode call as tightly as possible.
+  // TODO(brandtr): Consider moving this measurement into the callback wrapper
+  // class.
   int64_t decode_stop_ns = rtc::TimeNanos();
 
   // Update frame information and statistics.
