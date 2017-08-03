@@ -22,29 +22,49 @@ RtcpDemuxer::RtcpDemuxer() = default;
 RtcpDemuxer::~RtcpDemuxer() {
   RTC_DCHECK(ssrc_sinks_.empty());
   RTC_DCHECK(rsid_sinks_.empty());
+  RTC_DCHECK(mid_sinks_.empty());
+  RTC_DCHECK(mid_rsid_sinks_.empty());
+  RTC_DCHECK(payload_type_sinks_.empty());
   RTC_DCHECK(broadcast_sinks_.empty());
 }
 
 void RtcpDemuxer::AddSink(uint32_t sender_ssrc, RtcpPacketSinkInterface* sink) {
-  RTC_DCHECK(sink);
-  RTC_DCHECK(!ContainerHasKey(broadcast_sinks_, sink));
-  RTC_DCHECK(!MultimapAssociationExists(ssrc_sinks_, sender_ssrc, sink));
-  ssrc_sinks_.emplace(sender_ssrc, sink);
+  AddSinkToMap(&ssrc_sinks_, sender_ssrc, sink);
 }
 
 void RtcpDemuxer::AddSink(const std::string& rsid,
                           RtcpPacketSinkInterface* sink) {
   RTC_DCHECK(StreamId::IsLegalName(rsid));
-  RTC_DCHECK(sink);
-  RTC_DCHECK(!ContainerHasKey(broadcast_sinks_, sink));
-  RTC_DCHECK(!MultimapAssociationExists(rsid_sinks_, rsid, sink));
-  rsid_sinks_.emplace(rsid, sink);
+  AddSinkToMap(&rsid_sinks_, rsid, sink);
+}
+
+void RtcpDemuxer::AddMidSink(const std::string& mid,
+                             RtcpPacketSinkInterface* sink) {
+  RTC_DCHECK(Mid::IsLegalName(mid));
+  AddSinkToMap(&mid_sinks_, mid, sink);
+}
+
+void RtcpDemuxer::AddMidRsidSink(const std::string& mid,
+                                 const std::string& rsid,
+                                 RtcpPacketSinkInterface* sink) {
+  RTC_DCHECK(Mid::IsLegalName(mid));
+  RTC_DCHECK(StreamId::IsLegalName(rsid));
+  const auto key = std::make_pair(mid, rsid);
+  AddSinkToMap(&mid_rsid_sinks_, key, sink);
+}
+
+void RtcpDemuxer::AddPayloadTypeSink(uint8_t payload_type,
+                                     RtcpPacketSinkInterface* sink) {
+  AddSinkToMap(&payload_type_sinks_, payload_type, sink);
 }
 
 void RtcpDemuxer::AddBroadcastSink(RtcpPacketSinkInterface* sink) {
   RTC_DCHECK(sink);
   RTC_DCHECK(!MultimapHasValue(ssrc_sinks_, sink));
   RTC_DCHECK(!MultimapHasValue(rsid_sinks_, sink));
+  RTC_DCHECK(!MultimapHasValue(mid_sinks_, sink));
+  RTC_DCHECK(!MultimapHasValue(mid_rsid_sinks_, sink));
+  RTC_DCHECK(!MultimapHasValue(payload_type_sinks_, sink));
   RTC_DCHECK(!ContainerHasKey(broadcast_sinks_, sink));
   broadcast_sinks_.push_back(sink);
 }
@@ -52,7 +72,10 @@ void RtcpDemuxer::AddBroadcastSink(RtcpPacketSinkInterface* sink) {
 void RtcpDemuxer::RemoveSink(const RtcpPacketSinkInterface* sink) {
   RTC_DCHECK(sink);
   size_t removal_count = RemoveFromMultimapByValue(&ssrc_sinks_, sink) +
-                         RemoveFromMultimapByValue(&rsid_sinks_, sink);
+                         RemoveFromMultimapByValue(&rsid_sinks_, sink) +
+                         RemoveFromMultimapByValue(&mid_sinks_, sink) +
+                         RemoveFromMultimapByValue(&mid_rsid_sinks_, sink) +
+                         RemoveFromMultimapByValue(&payload_type_sinks_, sink);
   RTC_DCHECK_GT(removal_count, 0);
 }
 
@@ -81,20 +104,22 @@ void RtcpDemuxer::OnRtcpPacket(rtc::ArrayView<const uint8_t> packet) {
 }
 
 void RtcpDemuxer::OnSsrcBoundToRsid(const std::string& rsid, uint32_t ssrc) {
-  // Record the new SSRC association for all of the sinks that were associated
-  // with the RSID.
-  auto it_range = rsid_sinks_.equal_range(rsid);
-  for (auto it = it_range.first; it != it_range.second; ++it) {
-    RtcpPacketSinkInterface* sink = it->second;
-    // Watch out for pre-existing SSRC-based associations.
-    if (!MultimapAssociationExists(ssrc_sinks_, ssrc, sink)) {
-      AddSink(ssrc, sink);
-    }
-  }
+  BindSinksToSsrc(rsid_sinks_, rsid, ssrc);
+}
 
-  // RSIDs are uniquely associated with SSRCs; no need to keep in memory
-  // the RSID-to-sink association of resolved RSIDs.
-  rsid_sinks_.erase(it_range.first, it_range.second);
+void RtcpDemuxer::OnSsrcBoundToMid(const std::string& mid, uint32_t ssrc) {
+  BindSinksToSsrc(mid_sinks_, mid, ssrc);
+}
+
+void RtcpDemuxer::OnSsrcBoundToMidRsid(const std::string& mid,
+                                       const std::string& rsid,
+                                       uint32_t ssrc) {
+  BindSinksToSsrc(mid_rsid_sinks_, std::make_pair(mid, rsid), ssrc);
+}
+
+void RtcpDemuxer::OnSsrcBoundToPayloadType(uint8_t payload_type,
+                                           uint32_t ssrc) {
+  BindSinksToSsrc(payload_type_sinks_, payload_type, ssrc);
 }
 
 }  // namespace webrtc
