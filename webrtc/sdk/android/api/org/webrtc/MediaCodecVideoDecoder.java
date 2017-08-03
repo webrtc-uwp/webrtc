@@ -72,7 +72,7 @@ public class MediaCodecVideoDecoder {
   private ByteBuffer[] outputBuffers;
   private static final String VP8_MIME_TYPE = "video/x-vnd.on2.vp8";
   private static final String VP9_MIME_TYPE = "video/x-vnd.on2.vp9";
-  private static final String H264_MIME_TYPE = "video/avc";
+  private static final String H264_MIME_TYPE = "video/hevc";
   // List of supported HW VP8 decoders.
   private static final String[] supportedVp8HwCodecPrefixes = {
       "OMX.qcom.", "OMX.Nvidia.", "OMX.Exynos.", "OMX.Intel."};
