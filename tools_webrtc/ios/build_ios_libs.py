@@ -227,7 +227,7 @@ def main():
     license_script_path = os.path.join(SCRIPT_DIR, 'generate_licenses.py')
     ninja_dirs = [os.path.join(args.output_dir, arch + '_libs')
                   for arch in architectures]
-    gn_target_full_name = '//webrtc/sdk:' + gn_target_name
+    gn_target_full_name = '//sdk:' + gn_target_name
     cmd = [sys.executable, license_script_path, gn_target_full_name,
            os.path.join(args.output_dir, SDK_FRAMEWORK_NAME)] + ninja_dirs
     _RunCommand(cmd)

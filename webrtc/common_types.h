@@ -17,12 +17,12 @@
 #include <string>
 #include <vector>
 
-#include "webrtc/api/video/video_content_type.h"
-#include "webrtc/api/video/video_rotation.h"
-#include "webrtc/api/video/video_timing.h"
-#include "webrtc/rtc_base/array_view.h"
-#include "webrtc/rtc_base/checks.h"
-#include "webrtc/rtc_base/optional.h"
+#include "api/video/video_content_type.h"
+#include "api/video/video_rotation.h"
+#include "api/video/video_timing.h"
+#include "rtc_base/array_view.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/optional.h"
 #include "webrtc/typedefs.h"
 
 #if defined(_MSC_VER)
