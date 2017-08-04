@@ -1,0 +1,595 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a2c0304b_9e20c507",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "RTC_DCHECK(ssrc_binding_observers_.empty());",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "57425922_5a22bdd5",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "Styles vary, so this is only a suggestion:\nif (a \u0026\u0026 b) {\n} else if (a) {\n} else if (b) {\n\nWhere A and B refer to MID and RSID.\nI believe that would be easier to read.\n\nIf you like this suggestion, you might want to apply it to CriteriaWouldConflict(), too.",
+      "range": {
+        "startLine": 51,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 3
+      },
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6721e612_93825799",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "I think the use of |known_mids_| is confusing here. I\u0027d have preferred simple look-ups in the individual containers, over this lookup in a container derived of both, which requires me (the reader) to go and find out how |known_mids_| was derived. IMHO, the expected gains in speed are not enough to justify this.",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "31aa07e6_0aa598c9",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "Also RTC_DCHECK that each entry in criteria.ssrcs is unique. Otherwise, suppose you get:\nAddSink({123, 123}, sink);\nThe CriteriaWouldConflict() would not fail for that, but then you\u0027d be running into a problem when you try to insert/emplace the second (123-\u003esink) mapping.\n\n(I think an RTC_DCHECK is preferable to reporting a conflict here, because that\u0027s a mistake that the external module could have spotted by itself, without repeating any of the work done by this module.)",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e0e1fde_e4581f14",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "1. I\u0027ve not seen anyone else do this, but I personally add \"!!!\" for TODOs which I intend to handle before landing, and avoid that marker for TODOs which I intend to land (and fix some other time). FYI. So my question is - will this be handled in a later revision of this CL, or in a future CL?\n2. I\u0027d suggest RTC_DCHECKing for no repetitions of PT in |criteria.payload_types|, like I\u0027ve suggested for the SSRCs.",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5afdfdc4_79883ecf",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "For my information - is it possible to have both RSID and RRID in the same packet? That might be an illegal case, for which we could break early (drop the packet), in which case we can also slim down the interface of ResolveSinkByMidRsid()?",
+      "range": {
+        "startLine": 169,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 73
+      },
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "02d47b97_30836358",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "nit: You drop packets with an unknown MID; you don\u0027t drop the MID itself.",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "770bea14_fa821524",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "nit: s/stuff/information for a more professional tone? :-) :-)",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5555dad6_6e463d12",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "This in particular looks like it would be problematic if you can have both an RSID and an RRID for the same packet, unless they happen to be composed of the very same string.",
+      "range": {
+        "startLine": 185,
+        "startChar": 0,
+        "endLine": 190,
+        "endChar": 3
+      },
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "57e652fe_e49e3f4a",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "nit: A fresh reader might conclude that you\u0027re making a design decision here, rather than following the spec with illuminating comments about why the spec was written in that way.",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f12afef2_a28cb71f",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "I think it\u0027s better to explicitly capture what you want to capture, rather than using [\u0026].\nHere and everywhere in this file.",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87cf1d9b_5bfde140",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "If you take my suggestion about |sinks_by_pt_|, you\u0027ll be able to replace that code with:\n\n  RTC_CHECK_LE(ssrc, 127);  // Don\u0027t hard-code the 127, naturally.\n  const std::vector\u003cRtpPacketSinkInterface*\u003e\u0026 pt_container \u003d sinks_by_pt_[ssrc];\n  if (pt_container.size() !\u003d 1) {\n    return nullptr;\n  }\n  // Your code for notifying the observers.\n  return pt_container[0];\n\nSo I think that would be an improvement in both efficiency as well as readability.",
+      "range": {
+        "startLine": 319,
+        "startChar": 0,
+        "endLine": 334,
+        "endChar": 17
+      },
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0bd36e95_d4aa570d",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "Do you perhaps use this in the .cc file? If so, move it there, and otherwise just delete it?",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c76fff2c_f1c7e8a1",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "Remove?",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "173b22fd_a42b46fc",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "nit: Would probably be good to capitalize in all comments?",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9cd9a859_be86870e",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "nit: Capitalize SSRC in all comments?",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be5349d5_d3ba555b",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "Sorry for being nitpicky. This is a long and important comment, and I think it would be important to keep it as clear and accurate as possible; I hope I can help by providing a fresh reader\u0027s perspective.\n\n1. I think \"has a MID\" is confusing, because of the ambiguity between having a MID header extension present in the packet itself, and having an SSRC that\u0027s previously been bound to a MID. I would suggest rephrasing to avoid the ambiguity.\n2. If the packet has an SSRC that\u0027s previously been bound to a MID, I assume that binding overrides any possible other configuration of the SSRC, and so the \"exactly one sink\" part would be irrelevant then?\n\nHow about:\n// 2. If the packet has the MID header extension, but no RSID extension,\n//    and the MID is bound to a sink, then bind its SSRC to the same sink and\n//    forward this packet to that sink.\n//    Note that rebinding to the same sink is not an error.\n//    (Later packets with that SSRC would therefore be forwarded to the same\n//    sink, whether they have the MID header extension or not.)",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9fa154fd_7296514b",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "a. We should probably explicitly mention the lack of an RSID in #2, or literally following it would mean that #3 can never be reached.\nb. I would suggest similar ambiguity resolution here.",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d55b237b_b4d9dad9",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "Why would it matter if the sink is also associated with payload-types?",
+      "range": {
+        "startLine": 67,
+        "startChar": 32,
+        "endLine": 68,
+        "endChar": 10
+      },
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e38dd37_20b0e854",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "nit: \"If there is a sink added\"\nThe word \"added\" suggests to me that what is meant is only a previous call to AddSink(ssrc, sink), and not an inferred binding. But reading only this comment, before looking at the code, I am not sure. It might be good to rephrase for clarity, one way or another.",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c4ef81d0_7b127a64",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "Similarly",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20b06811_ae026272",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "None of the cases listed involve bad inferences from binding SSRCs to MIDs/RSIDs. Is this by design?",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2ea586f_9b4a752c",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "Payload type collision is not an error? Might be good to explicitly state that here, to convey that it\u0027s not an omission.",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c063c2ec_fa3f100c",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "1. You probably want to modify this line.\n2. You seem to be based on an earlier version of the code, before my latest CL.",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff47ba16_bd0847d5",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "nit: #2 seems like a bit too much implementation detail for a function\u0027d documentation, I think.",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1bf25ce7_2bbd1abf",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "It is counter-intuitive that a function would get a string so that it might return it, and return the string from a mapping to the SSRC otherwise. More natural, IMHO, would have been to not perform any resolution if you already have the MID (!packet_mid.empty()), and only resolve otherwise.",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c59854c6_32e08fcd",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "1. The name is confusing.\n2. Similar concerns.",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f925eaf7_5a844827",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "Wouldn\u0027t it be more efficient to have an array of vectors? Payload types a between 0 and 127, if memory serves. So this would be quite efficient:\nstd::vector\u003cRtpPacketSinkInterface*\u003e sinks_by_pt_[128];\n\n**Note that it\u0027s an array of vectors.**",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e4d41bf_763bc160",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "This doesn\u0027t look like it\u0027s necessary to me.\nPlease also note the added complexity of this - without it, we wouldn\u0027t need RefreshKnownMids(), or the unit-tests to make sure RefreshKnownMids() is always called when needed.",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0cb83098_848e4c31",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "IIRC, the style-guide says to have methods precede the variables, and avoid intermixing of the two blocks.",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d0084a2_614f9226",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "Could the comment perhaps mention why we\u0027d want to remember these associations?",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a6b83ae_cd32bb50",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "I suggest using this instead:\n  void NotifyObservers(std::function\u003cvoid(SsrcBindingObserver*)\u003e fn) {\nThat way, you\u0027ll also get rid of the template, which would then also allow you to move the implementation away from the header file.\nPlease remember to #include \u003cfunctional\u003e.",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "118fa82e_a70d2ca9",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-04T12:58:06Z",
+      "side": 1,
+      "message": "Please see my comments on https://chromium-review.googlesource.com/c/601049 for my thoughts on these macros and helper-functions.\n\nI\u0027ll review this file after we\u0027ve settled that specific point (whichever way it ends up being).",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
