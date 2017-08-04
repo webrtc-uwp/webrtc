@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "54b8d569_f77f6dfe",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a2c0304b_9e20c507",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "57425922_5a22bdd5",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 16
@@ -59,6 +77,24 @@
     },
     {
       "key": {
+        "uuid": "be7ea978_79202c32",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "Looking up a mid in the sink_by_mid_and_rsid_ map would require iterating through the map and comparing each mid against the new mid. I guess it still wouldn\u0027t matter all that much since this is not called frequently. I see some plus/minuses for having/not having known_mid_, so am indifferent as to whether to keep it.",
+      "parentUuid": "6721e612_93825799",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "31aa07e6_0aa598c9",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 16
@@ -73,6 +109,24 @@
       "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c9098ec_0ee16f7f",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "I changed the ssrcs and payload_types fields to std::set to enforce that in the container.",
+      "parentUuid": "31aa07e6_0aa598c9",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -158,6 +212,30 @@
     },
     {
       "key": {
+        "uuid": "765f0a07_30c01e1d",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "Elad makes a good point below that the handling is arbitrary (and possibly unexpected) if this happens. Should there be a check that if both are included and they are different, the packet is dropped (or defaults to using the repaired RSID)?",
+      "parentUuid": "655aaf36_8651ac8f",
+      "range": {
+        "startLine": 169,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 73
+      },
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "02d47b97_30836358",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 16
@@ -175,6 +253,24 @@
     },
     {
       "key": {
+        "uuid": "f354d5b0_25023578",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "02d47b97_30836358",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "770bea14_fa821524",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 16
@@ -189,6 +285,24 @@
       "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "edb82f40_1d5c589e",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "770bea14_fa821524",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -232,6 +346,24 @@
     },
     {
       "key": {
+        "uuid": "4c14a531_6ddce912",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "57e652fe_e49e3f4a",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f12afef2_a28cb71f",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 16
@@ -246,6 +378,24 @@
       "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1004f892_a872117f",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "Removed the lambda and replaced with an explicit for loop.",
+      "parentUuid": "f12afef2_a28cb71f",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -289,6 +439,24 @@
     },
     {
       "key": {
+        "uuid": "7dd6b648_07bc3d8c",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "It\u0027s needed for std::pair (used as the key for sink_by_mid_and_rsid_).",
+      "parentUuid": "0bd36e95_d4aa570d",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c76fff2c_f1c7e8a1",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 16
@@ -303,6 +471,24 @@
       "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b37636c8_f55ed332",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c76fff2c_f1c7e8a1",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -323,6 +509,24 @@
     },
     {
       "key": {
+        "uuid": "8dd4d8c9_86d22b4f",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "173b22fd_a42b46fc",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9cd9a859_be86870e",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 16
@@ -337,6 +541,24 @@
       "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2eede949_9e37779b",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9cd9a859_be86870e",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -357,6 +579,24 @@
     },
     {
       "key": {
+        "uuid": "c26cc766_f7263858",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "That sounds good. I\u0027ve changed step #2 to the text you\u0027ve written.",
+      "parentUuid": "be5349d5_d3ba555b",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9fa154fd_7296514b",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 16
@@ -371,6 +611,24 @@
       "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64dcb2ff_920e0644",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9fa154fd_7296514b",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -397,6 +655,30 @@
     },
     {
       "key": {
+        "uuid": "2cafb80d_0fdbdba9",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "That line is a bit unclear. It means that the sink is added just with the RSID and no MID (analogous to step 2). I\u0027ve rephrased steps 2-4 to be more explicit in the style of your suggestion above.",
+      "parentUuid": "d55b237b_b4d9dad9",
+      "range": {
+        "startLine": 67,
+        "startChar": 32,
+        "endLine": 68,
+        "endChar": 10
+      },
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0e38dd37_20b0e854",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 16
@@ -414,6 +696,24 @@
     },
     {
       "key": {
+        "uuid": "ad886d6e_569eebf2",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0e38dd37_20b0e854",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4ef81d0_7b127a64",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 16
@@ -428,6 +728,24 @@
       "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b9419d9_f7cbcb18",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c4ef81d0_7b127a64",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -586,6 +904,24 @@
     },
     {
       "key": {
+        "uuid": "95d62c11_fd0914f6",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "My understanding is that payload types are fairly sparse. I.e., we would expect maybe a handful of entries in this map? In that case, I think instantiating 128 std::vectors would hurt memory usage significantly and not really improve lookup performance all that much. Maybe I am missing something?",
+      "parentUuid": "f925eaf7_5a844827",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8e4d41bf_763bc160",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 16
@@ -621,6 +957,24 @@
     },
     {
       "key": {
+        "uuid": "0e71b11f_f3c8ca84",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "We need to know all the MIDs that have been registered (either by themselves or with an RSID). The only way to find MIDs that have been added to sink_by_mid_and_rsid_ is to iterate through each key value pair to look for the MID. Considering that this check needs to be done frequently, I think it makes sense to optimize it with a dedicated data structure.",
+      "parentUuid": "8e4d41bf_763bc160",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0cb83098_848e4c31",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 16
@@ -635,6 +989,24 @@
       "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f77c7e6a_8c8a8eaa",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0cb83098_848e4c31",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -687,6 +1059,24 @@
       "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86f08301_20fef589",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-04T21:56:18Z",
+      "side": 1,
+      "message": "Actually, I\u0027ll just inline the loop since this function is so small and the overhead of defining a lambda is not really worth it.",
+      "parentUuid": "2a6b83ae_cd32bb50",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
