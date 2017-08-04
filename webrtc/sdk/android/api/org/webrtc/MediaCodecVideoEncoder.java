@@ -76,7 +76,7 @@ public class MediaCodecVideoEncoder {
 
   private static final String VP8_MIME_TYPE = "video/x-vnd.on2.vp8";
   private static final String VP9_MIME_TYPE = "video/x-vnd.on2.vp9";
-  private static final String H264_MIME_TYPE = "video/avc";
+  private static final String H264_MIME_TYPE = "video/hevc";
 
   // Type of bitrate adjustment for video encoder.
   public enum BitrateAdjustmentType {
@@ -407,7 +407,7 @@ public class MediaCodecVideoEncoder {
       mime = H264_MIME_TYPE;
       properties = findHwEncoder(
           H264_MIME_TYPE, h264HwList, useSurface ? supportedSurfaceColorList : supportedColorList);
-      keyFrameIntervalSec = 20;
+      keyFrameIntervalSec = 100;
     }
     if (properties == null) {
       throw new RuntimeException("Can not find HW encoder for " + type);
