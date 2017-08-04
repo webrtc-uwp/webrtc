@@ -93,6 +93,24 @@
     },
     {
       "key": {
+        "uuid": "b3ca1fcd_848b93c0",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-08-04T21:12:45Z",
+      "side": 1,
+      "message": "I do that too (add a TODO without an owner, which the presubmit complains about until I fix). But in this case, it *is* intended to be handled in a later CL.",
+      "parentUuid": "4e0e1fde_e4581f14",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5afdfdc4_79883ecf",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 16
@@ -104,6 +122,30 @@
       "writtenOn": "2017-08-04T12:58:06Z",
       "side": 1,
       "message": "For my information - is it possible to have both RSID and RRID in the same packet? That might be an illegal case, for which we could break early (drop the packet), in which case we can also slim down the interface of ResolveSinkByMidRsid()?",
+      "range": {
+        "startLine": 169,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 73
+      },
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "655aaf36_8651ac8f",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-08-04T21:12:45Z",
+      "side": 1,
+      "message": "Technically, it\u0027s not illegal, but I think it\u0027s unlikely that WebRTC endpoints would ever do it.",
+      "parentUuid": "5afdfdc4_79883ecf",
       "range": {
         "startLine": 169,
         "startChar": 0,
@@ -457,6 +499,24 @@
     },
     {
       "key": {
+        "uuid": "2976e01f_d6e28a69",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-08-04T21:12:45Z",
+      "side": 1,
+      "message": "I think it\u0027s reasonable since it\u0027s a private method.",
+      "parentUuid": "ff47ba16_bd0847d5",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1bf25ce7_2bbd1abf",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 16
@@ -468,6 +528,24 @@
       "writtenOn": "2017-08-04T12:58:06Z",
       "side": 1,
       "message": "It is counter-intuitive that a function would get a string so that it might return it, and return the string from a mapping to the SSRC otherwise. More natural, IMHO, would have been to not perform any resolution if you already have the MID (!packet_mid.empty()), and only resolve otherwise.",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47764a0d_547957d1",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-08-04T21:12:45Z",
+      "side": 1,
+      "message": "It does seem odd if you just look at the function itself, but if you look at where it\u0027s used it does make the code simpler to read.",
+      "parentUuid": "1bf25ce7_2bbd1abf",
       "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -525,6 +603,24 @@
     },
     {
       "key": {
+        "uuid": "e3a23a7f_7b27a6ee",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-08-04T21:12:45Z",
+      "side": 1,
+      "message": "What would be the alternative? Looking at \"sink_by_mid_.keys()\" and \"sink_by_mid_and_rsid_.keys()\"? That would be less efficient, but since this only needs to be done when a packet has a MID extension, it\u0027s probably fine.",
+      "parentUuid": "8e4d41bf_763bc160",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0cb83098_848e4c31",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 16
@@ -553,6 +649,24 @@
       "writtenOn": "2017-08-04T12:58:06Z",
       "side": 1,
       "message": "Could the comment perhaps mention why we\u0027d want to remember these associations?",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a407ab6e_8c7b4c55",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-08-04T21:12:45Z",
+      "side": 1,
+      "message": "This is already somewhat implied; \"because if a sink is removed we want to still remember these associations.\" I think the implication is that an application may want to seamlessly transition from one sink to another, without having to re-learn the MID mappings. Or the criteria for a sink may slightly change, requiring calling RemoveSink/AddSink again.",
+      "parentUuid": "7d0084a2_614f9226",
       "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
