@@ -17,10 +17,10 @@
 #include <vector>
 
 #include "webrtc/common_types.h"
-#include "webrtc/rtc_base/basictypes.h"
-#include "webrtc/rtc_base/optional.h"
-#include "webrtc/rtc_base/refcount.h"
-#include "webrtc/rtc_base/scoped_ref_ptr.h"
+#include "rtc_base/basictypes.h"
+#include "rtc_base/optional.h"
+#include "rtc_base/refcount.h"
+#include "rtc_base/scoped_ref_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
