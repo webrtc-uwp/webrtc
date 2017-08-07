@@ -143,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "5fcadcec_0f04a473",
+        "filename": "webrtc/modules/desktop_capture/mac/window_list_utils.cc",
+        "patchSetId": 11
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-07T21:37:11Z",
+      "side": 1,
+      "message": "Can you add a comment to that effect? I only looked at the documentation for CGWindowListCopyWindowInfo, which doesn\u0027t mention this.",
+      "parentUuid": "df633fbb_2212bcf7",
+      "range": {
+        "startLine": 29,
+        "startChar": 28,
+        "endLine": 29,
+        "endChar": 54
+      },
+      "revId": "c5ca6e0a1391586dfcfe092442de0fb51433c52c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "84d4f6f1_ca9f3287",
         "filename": "webrtc/modules/desktop_capture/mac/window_list_utils.h",
         "patchSetId": 11
