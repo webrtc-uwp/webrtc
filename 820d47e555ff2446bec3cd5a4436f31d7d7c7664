@@ -130,6 +130,24 @@
     },
     {
       "key": {
+        "uuid": "3d0e8239_25e6c326",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-07T11:53:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6c9098ec_0ee16f7f",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4e0e1fde_e4581f14",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 16
@@ -162,6 +180,24 @@
       "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8418f973_c74fb3bd",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-07T11:53:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b3ca1fcd_848b93c0",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -454,6 +490,24 @@
       "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d94e9af_3b36bf8c",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-07T11:53:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7dd6b648_07bc3d8c",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -835,6 +889,24 @@
     },
     {
       "key": {
+        "uuid": "76a3342a_c6ea81bc",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-07T11:53:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2976e01f_d6e28a69",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1bf25ce7_2bbd1abf",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 16
@@ -867,6 +939,24 @@
       "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff338e85_ac48bc3a",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-07T11:53:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "47764a0d_547957d1",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -922,6 +1012,24 @@
     },
     {
       "key": {
+        "uuid": "e499882c_d259dc29",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-07T11:53:30Z",
+      "side": 1,
+      "message": "***The bottom-line is that this is just a suggestion; it\u0027s OK either way, and is completely up to you.***\n\nMy thoughts:\nBecause both multimap and vector allocate memory dynamically, and because their overhead is implementation-dependent, it would be difficult for us to be sure of the exact values of the trade-off, at least without doing more work than this merits.\n\nI tend to prefer the vector approach, because I make these implicit assumptions/interpretations:\na. std::vector probably has very low overhead for an empty vector.\nb. 128 is a very low number, and it cannot be changed.\nc. There will be very few instances of RtpDemuxer, so this extra memory usage would not be much.\nd. Methods of multimap are more complicated than those of vector.\ne. If we don\u0027t use a multimap here, we\u0027d soon be able to get rid of RemoveFromMultimapByValue() and its friends, and it\u0027s always good to remove things from the codebase. (Pending changes to RtcpDemuxer.)\nf. ResolveSink() would be (slightly) faster with the array of vectors - you just jump to the right vector, and then you only look at its first element (if any).\ng. The code is simpler with a direct lookup in an array of vectors, than with a multimap, and likely so is the produced binary.\n\nThese are all of varying importance and certainty (you might easily disagree on B, for example). It\u0027s eventually up to you.",
+      "parentUuid": "95d62c11_fd0914f6",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8e4d41bf_763bc160",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 16
@@ -969,6 +1077,24 @@
       "side": 1,
       "message": "We need to know all the MIDs that have been registered (either by themselves or with an RSID). The only way to find MIDs that have been added to sink_by_mid_and_rsid_ is to iterate through each key value pair to look for the MID. Considering that this check needs to be done frequently, I think it makes sense to optimize it with a dedicated data structure.",
       "parentUuid": "8e4d41bf_763bc160",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b512fe5c_685c84d4",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-07T11:53:30Z",
+      "side": 1,
+      "message": "I have forgotten that for (MID, RSID) pairs, the key is not fully known for just MID, requiring a full traversal of the container. With this in mind, the optimization does make sense (modulo a few questions elsewhere about the current implementation).",
+      "parentUuid": "0e71b11f_f3c8ca84",
       "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -1074,6 +1200,24 @@
       "side": 1,
       "message": "Actually, I\u0027ll just inline the loop since this function is so small and the overhead of defining a lambda is not really worth it.",
       "parentUuid": "2a6b83ae_cd32bb50",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3955b4ef_a592482d",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-07T11:53:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "86f08301_20fef589",
       "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
