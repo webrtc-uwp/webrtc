@@ -41,7 +41,7 @@ WEBRTC_ROOT = os.path.join(CHECKOUT_ROOT, 'webrtc')
 def GetThirdPartyLibraries(buildfile_dir, target_name):
   def ExtractLibName(string_list):
     # Sample input:
-    # ["   //third_party/usrsctp:usrsctp", "    //webrtc:webrtc_common"]
+    # ["   //third_party/usrsctp:usrsctp", "    //:webrtc_common"]
     # Sample output:
     # ["usrsctp"]
     return re.sub(r'\(.*\)', '', string_list).strip().split(

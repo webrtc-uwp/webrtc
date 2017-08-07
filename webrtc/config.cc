@@ -13,7 +13,7 @@
 #include <sstream>
 #include <string>
 
-#include "webrtc/rtc_base/checks.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 std::string NackConfig::ToString() const {
