@@ -34,18 +34,14 @@
 
 namespace webrtc {
 
+constexpr int VideoStreamEncoder::kMinPixelsPerFrame;
+constexpr int VideoStreamEncoder::kMinFramerateFps;
+constexpr int VideoStreamEncoder::kMaxFramerateFps;
+
 namespace {
 
 // Time interval for logging frame counts.
 const int64_t kFrameLogIntervalMs = 60000;
-
-// We will never ask for a resolution lower than this.
-// TODO(kthelgason): Lower this limit when better testing
-// on MediaCodec and fallback implementations are in place.
-// See https://bugs.chromium.org/p/webrtc/issues/detail?id=7206
-const int kMinPixelsPerFrame = 320 * 180;
-const int kMinFramerateFps = 2;
-const int kMaxFramerateFps = 120;
 
 // The maximum number of frames to drop at beginning of stream
 // to try and achieve desired bitrate.
@@ -965,15 +961,6 @@ void VideoStreamEncoder::AdaptDown(AdaptReason reason) {
       break;
     case VideoSendStream::DegradationPreference::kDegradationDisabled:
       return;
-  }
-
-  if (reason == kCpu) {
-    if (GetConstAdaptCounter().ResolutionCount(kCpu) >=
-            kMaxCpuResolutionDowngrades ||
-        GetConstAdaptCounter().FramerateCount(kCpu) >=
-            kMaxCpuFramerateDowngrades) {
-      return;
-    }
   }
 
   switch (degradation_preference_) {

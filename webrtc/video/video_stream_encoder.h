@@ -68,10 +68,13 @@ class VideoStreamEncoder : public rtc::VideoSinkInterface<VideoFrame>,
     int fps = 0;
   };
 
-  // Downscale resolution at most 2 times for CPU reasons.
-  static const int kMaxCpuResolutionDowngrades = 2;
-  // Downscale framerate at most 4 times.
-  static const int kMaxCpuFramerateDowngrades = 4;
+  // We will never ask for a resolution lower than this.
+  // TODO(kthelgason): Lower this limit when better testing
+  // on MediaCodec and fallback implementations are in place.
+  // See https://bugs.chromium.org/p/webrtc/issues/detail?id=7206
+  static constexpr int kMinPixelsPerFrame = 320 * 180;
+  static constexpr int kMinFramerateFps = 2;
+  static constexpr int kMaxFramerateFps = 120;
 
   VideoStreamEncoder(uint32_t number_of_cores,
                      SendStatisticsProxy* stats_proxy,
