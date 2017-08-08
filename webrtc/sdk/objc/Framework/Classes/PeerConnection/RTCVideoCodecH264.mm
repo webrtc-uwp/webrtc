@@ -266,7 +266,7 @@ class H264VideoToolboxDecodeCompleteCallback : public webrtc::DecodedImageCallba
 
   if (IsHighProfileEnabled()) {
     NSDictionary<NSString *, NSString *> *constrainedHighParams = @{
-      @"profile-level-id" : @"640c1f",  // Level 3.1 Constrained High.
+      @"profile-level-id" : @"640c29",  // Level 4.1 Constrained High.
       @"level-asymmetry-allowed" : @"1",
       @"packetization-mode" : @"1",
     };
@@ -278,7 +278,7 @@ class H264VideoToolboxDecodeCompleteCallback : public webrtc::DecodedImageCallba
   }
 
   NSDictionary<NSString *, NSString *> *constrainedBaselineParams = @{
-    @"profile-level-id" : @"42e01f",  // Level 3.1 Constrained Baseline.
+    @"profile-level-id" : @"42e029",  // Level 4.1 Constrained Baseline.
     @"level-asymmetry-allowed" : @"1",
     @"packetization-mode" : @"1",
   };
