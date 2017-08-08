@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1578d900_8802a03e",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 17
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-08T01:07:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "21862517_fe123a63",
+      "revId": "14e75b1114f0b6a6c1a2d77cef74352f15a3a093",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "80e1b1f7_4b72b15a",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 17
@@ -33,6 +51,24 @@
       "revId": "14e75b1114f0b6a6c1a2d77cef74352f15a3a093",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60a5356e_d87337bc",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 17
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-08T01:07:25Z",
+      "side": 1,
+      "message": "The style guide itself doesn\u0027t really say, but the style committee has said it\u0027s allowed.",
+      "parentUuid": "80e1b1f7_4b72b15a",
+      "revId": "14e75b1114f0b6a6c1a2d77cef74352f15a3a093",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -59,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "122cb754_65991407",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 17
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-08T01:07:25Z",
+      "side": 1,
+      "message": "Yes, this happens on line 176 above.",
+      "parentUuid": "ae4397c8_bd57a346",
+      "range": {
+        "startLine": 207,
+        "startChar": 0,
+        "endLine": 210,
+        "endChar": 5
+      },
+      "revId": "14e75b1114f0b6a6c1a2d77cef74352f15a3a093",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "86f8c3ed_64198afc",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 17
@@ -70,6 +130,24 @@
       "writtenOn": "2017-08-07T11:53:30Z",
       "side": 1,
       "message": "Suppose we previously saw:\nAddSink(mid_1, rsid_1);\nNow ResolveSink() gets a packet with mid_1 but:\nScenario #1 - without any RSID.\nScenario #2 - with RSID set to \"rsid_2\".\nI am not 100% clear on what should happen in each case. Specifically, it looks like the current implementation would ignore the MID completely for scenario #1. If this is intended - cool. I just want to be sure this was intended.",
+      "revId": "14e75b1114f0b6a6c1a2d77cef74352f15a3a093",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "480483d2_9c90921a",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 17
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-08T01:07:25Z",
+      "side": 1,
+      "message": "In both cases the packet would get dropped. In scenario #1 there is never any binding learned for rsid_1 and the AddSink call explicitly names rsid_1. In scenario #2 the RSID is different so won\u0027t match.",
+      "parentUuid": "86f8c3ed_64198afc",
       "revId": "14e75b1114f0b6a6c1a2d77cef74352f15a3a093",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -93,6 +171,24 @@
     },
     {
       "key": {
+        "uuid": "338edd09_da2b54ea",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 17
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-08T01:07:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "49d51b83_b0f20456",
+      "revId": "14e75b1114f0b6a6c1a2d77cef74352f15a3a093",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47e70ec3_a0733271",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 17
@@ -107,6 +203,24 @@
       "revId": "14e75b1114f0b6a6c1a2d77cef74352f15a3a093",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e1e89ef_4671cb25",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 17
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-08T01:07:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "47e70ec3_a0733271",
+      "revId": "14e75b1114f0b6a6c1a2d77cef74352f15a3a093",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -127,6 +241,24 @@
     },
     {
       "key": {
+        "uuid": "1af1d1ba_9cbdf9a4",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-08T01:07:25Z",
+      "side": 1,
+      "message": "I agree it could be better, but the behavior is well described here and adding additional fields might cause more confusion than it\u0027s worth.",
+      "parentUuid": "64f57778_21a0df49",
+      "revId": "14e75b1114f0b6a6c1a2d77cef74352f15a3a093",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a223490e_7503ebe2",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 17
@@ -141,6 +273,24 @@
       "revId": "14e75b1114f0b6a6c1a2d77cef74352f15a3a093",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c3c08af_c09a09ca",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-08T01:07:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a223490e_7503ebe2",
+      "revId": "14e75b1114f0b6a6c1a2d77cef74352f15a3a093",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }

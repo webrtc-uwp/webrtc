@@ -1030,6 +1030,24 @@
     },
     {
       "key": {
+        "uuid": "df3ce011_e77d80c3",
+        "filename": "webrtc/call/rtp_demuxer.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-08T01:07:25Z",
+      "side": 1,
+      "message": "I agree with all your points, but I think the memory overhead outweighs the benefits from simplifying the code.",
+      "parentUuid": "e499882c_d259dc29",
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8e4d41bf_763bc160",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 16
