@@ -65,8 +65,9 @@ CaptureInputPin::GetMediaType (IN int iPosition, OUT CMediaType * pmt)
                             sizeof(VIDEOINFOHEADER));
     if(NULL == pvi)
     {
-        WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, 0,
-                     "CheckMediaType VIDEOINFOHEADER is NULL. Returning...Line:%d\n", __LINE__);
+        LOG(LS_INFO)
+            << "CheckMediaType VIDEOINFOHEADER is NULL. Returning...Line:"
+            << __LINE__ << "\n";
         return(E_OUTOFMEMORY);
     }
 
@@ -148,10 +149,10 @@ CaptureInputPin::GetMediaType (IN int iPosition, OUT CMediaType * pmt)
         return VFW_S_NO_MORE_ITEMS;
     }
     pmt->SetSampleSize(pvi->bmiHeader.biSizeImage);
-    WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, 0,
-             "GetMediaType position %d, width %d, height %d, biCompression 0x%x",
-             iPosition, _requestedCapability.width,
-             _requestedCapability.height,pvi->bmiHeader.biCompression);
+    LOG(LS_INFO) << "GetMediaType position " << iPosition << ", width "
+                 << _requestedCapability.width << ", height "
+                 << _requestedCapability.height << ", biCompression 0x"
+                 << pvi->bmiHeader.biCompression;
     return NOERROR;
 }
 
@@ -197,10 +198,10 @@ CaptureInputPin::CheckMediaType ( IN const CMediaType * pMediaType)
            _resultingCapability.height = abs(pvi->bmiHeader.biHeight);
         }
 
-        WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, 0,
-                     "CheckMediaType width:%d height:%d Compression:0x%x\n",
-                     pvi->bmiHeader.biWidth,pvi->bmiHeader.biHeight,
-                     pvi->bmiHeader.biCompression);
+        LOG(LS_INFO) << "CheckMediaType width:" << pvi->bmiHeader.biWidth
+                     << " height:" << pvi->bmiHeader.biHeight
+                     << " Compression:0x" << pvi->bmiHeader.biCompression
+                     << "\n";
 
         if(*SubType == MEDIASUBTYPE_MJPG
             && pvi->bmiHeader.biCompression == MAKEFOURCC('M','J','P','G'))
@@ -250,10 +251,10 @@ CaptureInputPin::CheckMediaType ( IN const CMediaType * pMediaType)
             return E_INVALIDARG;
         }
 
-        WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, 0,
-                     "CheckMediaType width:%d height:%d Compression:0x%x\n",
-                     pvi->bmiHeader.biWidth,pvi->bmiHeader.biHeight,
-                     pvi->bmiHeader.biCompression);
+        LOG(LS_INFO) << "CheckMediaType width:" << pvi->bmiHeader.biWidth
+                     << " height:" << pvi->bmiHeader.biHeight
+                     << " Compression:0x" << pvi->bmiHeader.biCompression
+                     << "\n";
 
         _resultingCapability.width = pvi->bmiHeader.biWidth;
 
