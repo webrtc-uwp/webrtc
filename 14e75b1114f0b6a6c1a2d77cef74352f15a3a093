@@ -119,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "60f0a2a7_f3c035b8",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 17
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-08T15:58:03Z",
+      "side": 1,
+      "message": "Please see comment below (213).",
+      "parentUuid": "122cb754_65991407",
+      "range": {
+        "startLine": 207,
+        "startChar": 0,
+        "endLine": 210,
+        "endChar": 5
+      },
+      "revId": "14e75b1114f0b6a6c1a2d77cef74352f15a3a093",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "86f8c3ed_64198afc",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 17
@@ -148,6 +172,24 @@
       "side": 1,
       "message": "In both cases the packet would get dropped. In scenario #1 there is never any binding learned for rsid_1 and the AddSink call explicitly names rsid_1. In scenario #2 the RSID is different so won\u0027t match.",
       "parentUuid": "86f8c3ed_64198afc",
+      "revId": "14e75b1114f0b6a6c1a2d77cef74352f15a3a093",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32557bc3_23111904",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 17
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-08T15:58:03Z",
+      "side": 1,
+      "message": "In both cases the there is no early exit from this function, and the packet could end up being routed according to its payload-type, instead of being dropped. Or am I missing something?",
+      "parentUuid": "480483d2_9c90921a",
       "revId": "14e75b1114f0b6a6c1a2d77cef74352f15a3a093",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
