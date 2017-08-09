@@ -272,6 +272,30 @@
     },
     {
       "key": {
+        "uuid": "c706ef68_0e097c6b",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-08-09T01:55:02Z",
+      "side": 1,
+      "message": "If a repair stream is using both RRID and RSID, they *should* be different. For example, you may have streams \"foo\" and \"bar\", and repair streams \"repair-foo\" and \"repair-bar\". If the repair stream is using both the RRID and RSID extensions (for whatever reason), then \"repair-foo\" would use an RSID of \"repair-foo\" (its own ID) and an RRID of \"foo\" (the ID of the stream it\u0027s repairing). So I don\u0027t understand the problem here really.\n\nOh, looking below I see the problem. There\u0027s only one map used for both SSRC-\u003eRSID mappings and SSRC-\u003eRRID mappings. Why not just use two maps?",
+      "parentUuid": "765f0a07_30c01e1d",
+      "range": {
+        "startLine": 169,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 73
+      },
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "02d47b97_30836358",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 16
