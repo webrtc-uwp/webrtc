@@ -368,6 +368,30 @@
     },
     {
       "key": {
+        "uuid": "823495ae_5f9d9daf",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1138974
+      },
+      "writtenOn": "2017-08-09T16:46:35Z",
+      "side": 1,
+      "message": "the way I understand RRID, if RSID and RRID both present, RSID is preferred.\nmy understand of the RRID that it shouldn\u0027t even go to the same sink as RSID, though that might overcomplicate demuxing:\nlet\u0027s say we have a media stream \u0027a\u0027 and an rtx stream \u0027b\u0027 that repairs it.\nthen\npacket with rsid \u0027a\u0027 should go to sink A\npacket with rrid \u0027a\u0027 should go to sink B\npacket with rsid \u0027b\u0027 and rrid \u0027a\u0027 is valid and should go to sink B.\npacket with rsid \u0027a\u0027 and rrid \u0027a\u0027 is odd (Why whould stream try to repair itself?) and probably should be dropped, but for simplicity might go to sink A and processed (may be dropped) there.\npacket with rrid \u0027b\u0027 looks odd (why repair stream that itself used for repairs) and probably should be treated same as with unknown rrid \u0027c\u0027.\n\nMay it is better not to support rrid initially at all, and discuss and add it later.",
+      "parentUuid": "56833178_bd05ca05",
+      "range": {
+        "startLine": 169,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 73
+      },
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "02d47b97_30836358",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 16
