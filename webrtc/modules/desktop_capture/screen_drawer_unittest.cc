@@ -57,4 +57,20 @@ TEST(ScreenDrawerTest, DISABLED_DrawRectangles) {
   SleepMs(10000);
 }
 
+// This test is expected to be timed out, only one ScreenDrawer instance can be
+// generated at a certain time.
+// You may need to manually remove the semaphore file on Posix systems. E.g. on
+// Linux, execute
+// sudo rm \
+// /dev/shm/sem.global-screen-drawer-linux-54fe5552-8047-11e6-a725-3f429a5b4fb4
+TEST(ScreenDrawerTest, DISABLED_TwoScreenDrawerLocks) {
+  std::unique_ptr<ScreenDrawerLock> lock = ScreenDrawerLock::Create();
+  if (!lock) {
+    LOG(LS_WARNING) <<
+        "No ScreenDrawerLock implementation for current platform.";
+    return;
+  }
+  ScreenDrawerLock::Create();
+}
+
 }  // namespace webrtc
