@@ -57,4 +57,15 @@ TEST(ScreenDrawerTest, DISABLED_DrawRectangles) {
   SleepMs(10000);
 }
 
+// This test is expected to be timed out, only one ScreenDrawer instance can be
+// generated at a certain time.
+TEST(ScreenDrawerTest, DISABLED_TwoScreenDrawers) {
+  std::unique_ptr<ScreenDrawer> drawer = ScreenDrawer::Create();
+  if (!drawer) {
+    LOG(LS_WARNING) << "No ScreenDrawer implementation for current platform.";
+    return;
+  }
+  ScreenDrawer::Create();
+}
+
 }  // namespace webrtc
