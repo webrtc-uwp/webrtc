@@ -344,6 +344,30 @@
     },
     {
       "key": {
+        "uuid": "56833178_bd05ca05",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-09T16:22:31Z",
+      "side": 1,
+      "message": "The comment in the .h file doesn\u0027t mention RRIDs, only RSIDs. If we can have only one or the other, RRIDs can be seen as specialized RSIDs, and the comment doesn\u0027t need any elaboration. But if we allow packets that can carry both, we need to explain how we handle them.\n\nSo I see several things which need clarification and/or modification:\n1. What happens when a packet has both an RSID and an RRID? To which sink does it go?\n2. Supposing the RSID and RRID of the packet are not the same string, how does having the same sink configured for those separate IDs affect #1?\n3. Supposing the RSID and RRID of the packet are not the same string, how does having separate sinks configured for those separate IDs affect #1?\n4. If the packet has both an RSID and RRID, but they happen to be the same string, they\u0027ll trivially be mapping to the same sink. Explicit indication that this is correct is probably in order.\n\nIMHO, it might be best to just drop packets with both an RSID and RRID in this CL, and leave it as a TODO for the future.",
+      "parentUuid": "f47b76c3_4e82663b",
+      "range": {
+        "startLine": 169,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 73
+      },
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "02d47b97_30836358",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 16
