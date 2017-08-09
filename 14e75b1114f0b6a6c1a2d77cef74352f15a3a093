@@ -214,6 +214,24 @@
     },
     {
       "key": {
+        "uuid": "6dd7aad9_df69be8b",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 17
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-09T08:21:47Z",
+      "side": 1,
+      "message": "@Peter, if you\u0027re okay with this, I have no problem with it. But I think it\u0027s an edge-case that\u0027s only missing from the BUNDLE algorithm because it doesn\u0027t concern itself with RSIDs. A packet with a MID should always be forwarded only by its MID, but this loophole would allow it to be forwarded by payload-type instead.",
+      "parentUuid": "092bfe86_e2767f23",
+      "revId": "14e75b1114f0b6a6c1a2d77cef74352f15a3a093",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "49d51b83_b0f20456",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 17

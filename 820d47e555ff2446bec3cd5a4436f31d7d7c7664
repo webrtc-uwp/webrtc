@@ -296,6 +296,30 @@
     },
     {
       "key": {
+        "uuid": "c50c889b_bdee1973",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-09T08:21:47Z",
+      "side": 1,
+      "message": "Taylor, it sounds like we could just drop such packets? If so, great. If not, two maps does sound like an okay solution, though we then also need to discuss the order of preference for routing not just with RSID (which is not in the BUNDLE algorithm), but also RRID, and specifically, the order between them. I think dropping is best.",
+      "parentUuid": "c706ef68_0e097c6b",
+      "range": {
+        "startLine": 169,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 73
+      },
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "02d47b97_30836358",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 16
