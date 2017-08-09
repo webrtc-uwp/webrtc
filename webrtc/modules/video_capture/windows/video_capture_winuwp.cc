@@ -54,7 +54,8 @@ namespace webrtc {
 namespace videocapturemodule {
 
 void RunOnCoreDispatcher(std::function<void()> fn, bool async) {
-  Windows::UI::Core::CoreDispatcher^ _windowDispatcher =	VideoCommonWinUWP::GetCoreDispatcher();
+  Windows::UI::Core::CoreDispatcher^ _windowDispatcher =
+    VideoCommonWinUWP::GetCoreDispatcher();
   if (_windowDispatcher != nullptr) {
     auto handler = ref new Windows::UI::Core::DispatchedHandler([fn]() {
       fn();
@@ -267,7 +268,6 @@ void CaptureDevice::Cleanup() {
   }
   if (capture_started_) {
     if (_stopped->Wait(5000) == kEventTimeout) {
-
       Concurrency::create_task(
         media_capture->StopRecordAsync()).
         then([this](Concurrency::task<void>& async_info) {
@@ -277,8 +277,7 @@ void CaptureDevice::Cleanup() {
           CleanupMediaCapture();
           device_id_ = nullptr;
           _stopped->Set();
-        }
-        catch (Platform::Exception^ e) {
+        } catch (Platform::Exception^ e) {
           CleanupSink();
           CleanupMediaCapture();
           device_id_ = nullptr;
@@ -357,7 +356,8 @@ void CaptureDevice::StartCapture(
 
 #ifdef WIN10
   // Tell the video device controller to optimize for Low Latency then Power consumption
-  media_capture_->VideoDeviceController->DesiredOptimization = Windows::Media::Devices::MediaCaptureOptimization::LatencyThenPower;
+  media_capture_->VideoDeviceController->DesiredOptimization =
+    Windows::Media::Devices::MediaCaptureOptimization::LatencyThenPower;
 #endif
 
   media_sink_ = ref new VideoCaptureMediaSinkProxyWinUWP();
@@ -968,8 +968,6 @@ void VideoCaptureWinUWP::OnIncomingFrame(
   const VideoCaptureCapability& frame_info) {
   if (device_->CaptureStarted()) {
     last_frame_info_ = frame_info;
-
-
   }
   IncomingFrame(video_frame, video_frame_length, frame_info);
 }

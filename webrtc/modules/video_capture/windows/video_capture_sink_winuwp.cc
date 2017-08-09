@@ -362,7 +362,6 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::GetMediaTypeHandler(
   return hr;
 }
 
-// We received a sample from an upstream component
 IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::ProcessSample(IMFSample *pSample) {
   if (pSample == nullptr) {
     return E_INVALIDARG;
@@ -376,13 +375,11 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::ProcessSample(IMFSample *pSample) {
     hr = MF_E_SHUTDOWN;
   }
 
-  // Validate the operation.
   if (SUCCEEDED(hr)) {
     hr = ValidateOperation(OpProcessSample);
   }
 
   if (SUCCEEDED(hr)) {
-    // Add the sample to the sample queue.
     if (SUCCEEDED(hr)) {
       _sampleQueue.push(pSample);
     }
@@ -391,7 +388,6 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::ProcessSample(IMFSample *pSample) {
     // dispatch the next sample.
     if (SUCCEEDED(hr)) {
       if (_state != State_Paused) {
-        // Queue the operation.
         hr = QueueAsyncOperation(OpProcessSample);
       }
     }
@@ -408,7 +404,41 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::PlaceMarker(
     MFSTREAMSINK_MARKER_TYPE eMarkerType,
     const PROPVARIANT *pvarMarkerValue,
     const PROPVARIANT *pvarContextValue) {
-  return(E_NOTIMPL);
+
+  CriticalSectionScoped cs(_critSec);
+
+  HRESULT hr = S_OK;
+  ComPtr<IMarker> spMarker;
+
+  if (_isShutdown) {
+    hr = MF_E_SHUTDOWN;
+  }
+
+  if (SUCCEEDED(hr)) {
+    hr = ValidateOperation(OpPlaceMarker);
+  }
+
+  if (SUCCEEDED(hr)) {
+    hr = Marker::Create(eMarkerType, pvarMarkerValue, pvarContextValue, &spMarker);
+  }
+
+  if (SUCCEEDED(hr)) {
+    _sampleQueue.push(spMarker.Get());
+  }
+
+  // Unless we are paused, start an async operation to
+  // dispatch the next sample/marker.
+  if (SUCCEEDED(hr)) {
+    if (_state != State_Paused) {
+      hr = QueueAsyncOperation(OpPlaceMarker);
+    }
+  }
+
+  if (!SUCCEEDED(hr)) {
+    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+  }
+
+  return hr;
 }
 
 // Discards all samples that were not processed yet.
@@ -753,16 +783,16 @@ BOOL VideoCaptureStreamSinkWinUWP::ValidStateMatrix
     [VideoCaptureStreamSinkWinUWP::State_Count]
     [VideoCaptureStreamSinkWinUWP::Op_Count] = {
   // States:    Operations:
-  //            SetType  Start  Restart  Pause  Stop  Sample
-  /* NotSet */  TRUE, FALSE, FALSE, FALSE, FALSE, FALSE,
+  //            SetType  Start  Restart  Pause  Stop  Sample Marker
+  /* NotSet */  TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
 
-  /* Ready */   TRUE, TRUE, FALSE, TRUE, TRUE, FALSE,
+  /* Ready */   TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE,
 
-  /* Start */   TRUE, TRUE, FALSE, TRUE, TRUE, TRUE,
+  /* Start */   TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE,
 
-  /* Pause */   TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
+  /* Pause */   TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
 
-  /* Stop */    TRUE, TRUE, FALSE, FALSE, TRUE, FALSE,
+  /* Stop */    TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, TRUE,
 };
 
 // Checks if an operation is valid in the current state.
@@ -833,7 +863,7 @@ HRESULT VideoCaptureStreamSinkWinUWP::OnDispatchWorkItem(
 
     // The state object is a AsyncOperation object.
     AsyncOperation *pOp = static_cast<AsyncOperation *>(spState.Get());
-    StreamOperation op = pOp->m_op;
+    StreamOperation op = pOp->_op;
 
     switch (op) {
     case OpStart:
@@ -864,6 +894,7 @@ HRESULT VideoCaptureStreamSinkWinUWP::OnDispatchWorkItem(
       break;
 
     case OpProcessSample:
+    case OpPlaceMarker:
     case OpSetMediaType:
       DispatchProcessSample(pOp);
       break;
@@ -881,7 +912,7 @@ void VideoCaptureStreamSinkWinUWP::DispatchProcessSample(AsyncOperation *pOp) {
 
   // Ask for another sample
   if (fRequestMoreSamples && !_isShutdown) {
-    if (pOp->m_op == OpProcessSample) {
+    if (pOp->_op == OpProcessSample) {
       ThrowIfError(
         QueueEvent(MEStreamSinkRequestSample, GUID_NULL, S_OK, nullptr));
     }
@@ -935,6 +966,21 @@ bool VideoCaptureStreamSinkWinUWP::ProcessSamplesFromQueue(bool fFlush) {
       if (!fFlush) {
         fProcessingSample = true;
       }
+    } else {
+      ComPtr<IMarker> spMarker;
+      if (SUCCEEDED(spunkSample.As(&spMarker))) {
+        MFSTREAMSINK_MARKER_TYPE markerType;
+        PROPVARIANT var;
+        PropVariantInit(&var);
+        ThrowIfError(spMarker->GetMarkerType(&markerType));
+        ThrowIfError(spMarker->GetContext(&var));
+
+        HRESULT hr = QueueEvent(MEStreamSinkMarker, GUID_NULL, S_OK, &var);
+
+        PropVariantClear(&var);
+
+        ThrowIfError(hr);
+      }
     }
 
     {
@@ -974,7 +1020,7 @@ void VideoCaptureStreamSinkWinUWP::ProcessFormatChange(
 
 VideoCaptureStreamSinkWinUWP::AsyncOperation::AsyncOperation(StreamOperation op)
   : _cRef(1),
-    m_op(op) {
+    _op(op) {
 }
 
 VideoCaptureStreamSinkWinUWP::AsyncOperation::~AsyncOperation() {
@@ -1008,6 +1054,122 @@ HRESULT VideoCaptureStreamSinkWinUWP::AsyncOperation::QueryInterface(
   }
   AddRef();
   return S_OK;
+}
+
+VideoCaptureStreamSinkWinUWP::Marker::Marker(
+    MFSTREAMSINK_MARKER_TYPE eMarkerType)
+  : _cRef(1),
+    _eMarkerType(eMarkerType) {
+  ZeroMemory(&_varMarkerValue, sizeof(_varMarkerValue));
+  ZeroMemory(&_varContextValue, sizeof(_varContextValue));
+}
+
+VideoCaptureStreamSinkWinUWP::Marker::~Marker() {
+  assert(_cRef == 0);
+
+  PropVariantClear(&_varMarkerValue);
+  PropVariantClear(&_varContextValue);
+}
+
+/* static */
+HRESULT VideoCaptureStreamSinkWinUWP::Marker::Create(
+    MFSTREAMSINK_MARKER_TYPE eMarkerType,
+    const PROPVARIANT *pvarMarkerValue,
+    const PROPVARIANT *pvarContextValue,
+    IMarker **ppMarker) {
+
+  if (ppMarker == nullptr) {
+    return E_POINTER;
+  }
+
+  HRESULT hr = S_OK;
+  ComPtr<Marker> spMarker;
+
+  spMarker.Attach(new (std::nothrow) Marker(eMarkerType));
+
+  if (spMarker == nullptr) {
+    hr = E_OUTOFMEMORY;
+  }
+
+  if (SUCCEEDED(hr)) {
+    if (pvarMarkerValue) {
+      hr = PropVariantCopy(&spMarker->_varMarkerValue, pvarMarkerValue);
+    }
+  }
+
+  if (SUCCEEDED(hr)) {
+    if (pvarContextValue) {
+      hr = PropVariantCopy(&spMarker->_varContextValue, pvarContextValue);
+    }
+  }
+
+  if (SUCCEEDED(hr)) {
+    *ppMarker = spMarker.Detach();
+  }
+
+  return hr;
+}
+
+// IUnknown methods.
+IFACEMETHODIMP_(ULONG) VideoCaptureStreamSinkWinUWP::Marker::AddRef() {
+  return InterlockedIncrement(&_cRef);
+}
+
+IFACEMETHODIMP_(ULONG) VideoCaptureStreamSinkWinUWP::Marker::Release() {
+
+  ULONG cRef = InterlockedDecrement(&_cRef);
+  if (cRef == 0) {
+    delete this;
+  }
+
+  return cRef;
+}
+
+IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::Marker::QueryInterface(
+    REFIID riid, void **ppv) {
+
+  if (ppv == nullptr) {
+    return E_POINTER;
+  }
+  (*ppv) = nullptr;
+
+  HRESULT hr = S_OK;
+  if (riid == IID_IUnknown || riid == __uuidof(IMarker)) {
+    (*ppv) = static_cast<IMarker*>(this);
+    AddRef();
+  } else {
+    hr = E_NOINTERFACE;
+  }
+
+  return hr;
+}
+
+// IMarker methods
+IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::Marker::GetMarkerType(
+    MFSTREAMSINK_MARKER_TYPE *pType) {
+
+  if (pType == NULL) {
+    return E_POINTER;
+  }
+
+  *pType = _eMarkerType;
+  return S_OK;
+}
+
+IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::Marker::GetMarkerValue(
+    PROPVARIANT *pvar) {
+  if (pvar == NULL) {
+    return E_POINTER;
+  }
+  return PropVariantCopy(pvar, &_varMarkerValue);
+}
+
+IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::Marker::GetContext(
+    PROPVARIANT *pvar) {
+  if (pvar == NULL) {
+    return E_POINTER;
+  }
+  return PropVariantCopy(pvar, &_varContextValue);
 }
 
 void VideoCaptureStreamSinkWinUWP::HandleError(HRESULT hr) {

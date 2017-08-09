@@ -106,9 +106,9 @@ MediaCaptureDevicesWinUWP::GetMediaCapture(Platform::String^ device_id) {
         });
     });
 
-	Windows::UI::Core::CoreDispatcher^ _windowDispatcher =	VideoCommonWinUWP::GetCoreDispatcher();
-    if (_windowDispatcher != nullptr) {
-      auto dispatcher_action = _windowDispatcher->RunAsync(
+    Windows::UI::Core::CoreDispatcher^ windowDispatcher =	VideoCommonWinUWP::GetCoreDispatcher();
+    if (windowDispatcher != nullptr) {
+      auto dispatcher_action = windowDispatcher->RunAsync(
         CoreDispatcherPriority::Normal, handler);
       Concurrency::create_task(dispatcher_action).wait();
     } else {

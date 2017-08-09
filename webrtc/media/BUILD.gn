@@ -101,8 +101,6 @@ rtc_static_library("rtc_media") {
   libs = []
   deps = []
   sources = [
-    "devices/winuwpdevicemanager.cc",
-    "devices/winuwpdevicemanager.h",
     "engine/apm_helpers.cc",
     "engine/apm_helpers.h",
     "engine/internaldecoderfactory.cc",
@@ -184,6 +182,12 @@ rtc_static_library("rtc_media") {
 
   if (current_os == "win" || is_winuwp) {
     deps += [ "//third_party/winuwp_h264:winuwp_h264" ]
+  }
+  if (is_winuwp) {
+    sources += [
+      "devices/winuwpdevicemanager.cc",
+      "devices/winuwpdevicemanager.h",
+    ]
   }
 
   if (rtc_enable_sctp && rtc_build_usrsctp) {
