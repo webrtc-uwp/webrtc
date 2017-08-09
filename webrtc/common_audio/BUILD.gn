@@ -416,3 +416,16 @@ if (rtc_include_tests) {
     }
   }
 }
+
+rtc_executable("test_vad") {
+  sources = [
+    "vad/test_vad.cc",
+  ]
+  deps = [
+    ":common_audio",
+    "..:webrtc_common",
+    "../rtc_base:gtest_prod",
+    "../rtc_base:rtc_base_approved",
+    "//third_party/gflags",
+  ]
+}
