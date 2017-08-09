@@ -392,6 +392,30 @@
     },
     {
       "key": {
+        "uuid": "1336b1d8_cd8b0e6f",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1132136
+      },
+      "writtenOn": "2017-08-09T17:31:40Z",
+      "side": 1,
+      "message": "Danil\u0027s comment matches my understanding. And I agree it would probably be better to handle this in a separate CL. To respond to Elad\u0027s questions:\n\n1. What happens when a packet has both an RSID and an RRID? To which sink does it go?\n\nThis seems like a combination of questions 2 and 3, so see those answers.\n\n2. Supposing the RSID and RRID of the packet are not the same string, how does having the same sink configured for those separate IDs affect #1?\n\nThat\u0027s the expected case. The AddSink call would presumably be:\n\nAddSink({rsid:\"repair-a\", rrid:\"a\"}, rtxSink);\n\nWhich in human language means \"there\u0027s a stream called \u0027repair-a\u0027 that\u0027s repairing stream \u0027a\u0027; route it to this sink\".\n\nThough I notice that AddSink doesn\u0027t even take an RRID parameter? So maybe I\u0027m misunderstanding how this was intended to work. How would one configure separate sinks for the repair and non-repair streams with the current API? That\u0027s something I thought we did need to support (given Danil\u0027s comments on the design doc).\n\n3. Supposing the RSID and RRID of the packet are not the same string, how does having separate sinks configured for those separate IDs affect #1?\n\nMeaning if you did this?:\n\nAddSink({rsid: \"repair-a\"}, rtxSink1);\nAddSink({rrid: \"a\"}, rtxSink2);\n\nWhich in human language means \"route packets from the \u0027repair-a\u0027 stream to this sink, and route packets that are repairing stream \u0027a\u0027 to this other sink\".\n\nI guess I\u0027d suggest choosing the RSID sink and logging a warning, since this likely indicates an application-level bug.\n\n4. If the packet has both an RSID and RRID, but they happen to be the same string, they\u0027ll trivially be mapping to the same sink. Explicit indication that this is correct is probably in order.\n\nHaving the same RSID and RRID should be illegal. A stream can\u0027t repair itself.",
+      "parentUuid": "823495ae_5f9d9daf",
+      "range": {
+        "startLine": 169,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 73
+      },
+      "revId": "820d47e555ff2446bec3cd5a4436f31d7d7c7664",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "02d47b97_30836358",
         "filename": "webrtc/call/rtp_demuxer.cc",
         "patchSetId": 16
