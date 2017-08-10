@@ -19,9 +19,13 @@
 #import "RTCPeerConnection+Private.h"
 #import "RTCVideoSource+Private.h"
 #import "RTCVideoTrack+Private.h"
+#import "WebRTC/RTCAudioDecoderFactory.h"
+#import "WebRTC/RTCAudioEncoderFactory.h"
 #import "WebRTC/RTCLogging.h"
 #import "WebRTC/RTCVideoCodecFactory.h"
 #ifndef HAVE_NO_MEDIA
+#import "WebRTC/RTCBuiltinAudioDecoderFactory.h"
+#import "WebRTC/RTCBuiltinAudioEncoderFactory.h"
 #import "WebRTC/RTCVideoCodecH264.h"
 #endif
 
@@ -47,15 +51,22 @@
 
 - (instancetype)init {
 #ifdef HAVE_NO_MEDIA
-  return [self initWithEncoderFactory:nil decoderFactory:nil];
+  return [self initWithAudioEncoderFactory:nil
+                       audioDecoderFactory:nil
+                       videoEncoderFactory:nil
+                       videoDecoderFactory:nil;
 #else
-  return [self initWithEncoderFactory:[[RTCVideoEncoderFactoryH264 alloc] init]
-                       decoderFactory:[[RTCVideoDecoderFactoryH264 alloc] init]];
+  return [self initWithAudioEncoderFactory:[[RTCBuiltinAudioEncoderFactory alloc] init]
+                       audioDecoderFactory:[[RTCBuiltinAudioDecoderFactory alloc] init]
+                       videoEncoderFactory:[[RTCVideoEncoderFactoryH264 alloc] init]
+                       videoDecoderFactory:[[RTCVideoDecoderFactoryH264 alloc] init]];
 #endif
 }
 
-- (instancetype)initWithEncoderFactory:(nullable id<RTCVideoEncoderFactory>)encoderFactory
-                        decoderFactory:(nullable id<RTCVideoDecoderFactory>)decoderFactory {
+- (instancetype)initWithAudioEncoderFactory:(id<RTCAudioEncoderFactory>)audioEncoderFactory
+                        audioDecoderFactory:(id<RTCAudioDecoderFactory>)audioDecoderFactory
+                        videoEncoderFactory:(id<RTCVideoEncoderFactory>)videoEncoderFactory
+                        videoDecoderFactory:(id<RTCVideoDecoderFactory>)videoDecoderFactory {
   if (self = [super init]) {
     _networkThread = rtc::Thread::CreateWithSocketServer();
     BOOL result = _networkThread->Start();
@@ -83,13 +94,21 @@
         std::unique_ptr<webrtc::CallFactoryInterface>(),
         std::unique_ptr<webrtc::RtcEventLogFactoryInterface>());
 #else
-    cricket::WebRtcVideoEncoderFactory *platform_encoder_factory = nullptr;
-    cricket::WebRtcVideoDecoderFactory *platform_decoder_factory = nullptr;
-    if (encoderFactory) {
-      platform_encoder_factory = new webrtc::ObjCVideoEncoderFactory(encoderFactory);
+    rtc::scoped_refptr<webrtc::AudioEncoderFactory> platform_audio_encoder_factory = nullptr;
+    rtc::scoped_refptr<webrtc::AudioDecoderFactory> platform_audio_decoder_factory = nullptr;
+    if (audioEncoderFactory) {
+      platform_audio_encoder_factory = [audioEncoderFactory audioEncoderFactory];
     }
-    if (decoderFactory) {
-      platform_decoder_factory = new webrtc::ObjCVideoDecoderFactory(decoderFactory);
+    if (audioDecoderFactory) {
+      platform_audio_decoder_factory = [audioDecoderFactory audioDecoderFactory];
+    }
+    cricket::WebRtcVideoEncoderFactory *platform_video_encoder_factory = nullptr;
+    cricket::WebRtcVideoDecoderFactory *platform_video_decoder_factory = nullptr;
+    if (videoEncoderFactory) {
+      platform_video_encoder_factory = new webrtc::ObjCVideoEncoderFactory(videoEncoderFactory);
+    }
+    if (videoDecoderFactory) {
+      platform_video_decoder_factory = new webrtc::ObjCVideoDecoderFactory(videoDecoderFactory);
     }
 
     // Ownership of encoder/decoder factories is passed on to the
@@ -97,9 +116,11 @@
     _nativeFactory = webrtc::CreatePeerConnectionFactory(_networkThread.get(),
                                                          _workerThread.get(),
                                                          _signalingThread.get(),
-                                                         nullptr,
-                                                         platform_encoder_factory,
-                                                         platform_decoder_factory);
+                                                         nullptr,  // audio device module
+                                                         platform_audio_encoder_factory,
+                                                         platform_audio_decoder_factory,
+                                                         platform_video_encoder_factory,
+                                                         platform_video_decoder_factory);
 #endif
     NSAssert(_nativeFactory, @"Failed to initialize PeerConnectionFactory!");
   }
