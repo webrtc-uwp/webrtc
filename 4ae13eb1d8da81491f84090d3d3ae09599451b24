@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f2d9fbdf_d0212f77",
+        "filename": "webrtc/modules/desktop_capture/x11/window_list_utils.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-10T20:17:53Z",
+      "side": 1,
+      "message": "Let\u0027s discuss this offline.",
+      "parentUuid": "e11677e8_ec0c0071",
+      "range": {
+        "startLine": 29,
+        "startChar": 18,
+        "endLine": 29,
+        "endChar": 0
+      },
+      "revId": "4ae13eb1d8da81491f84090d3d3ae09599451b24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "16753081_0be8c79e",
         "filename": "webrtc/modules/desktop_capture/x11/window_list_utils.cc",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2017-08-10T00:47:05Z",
       "side": 1,
       "message": "Use scoped_x_resource? If you make it a template, scoped_x_resource\u003cPropertyType\u003e, you can maybe get rid of your reinterpret_casts too.",
+      "range": {
+        "startLine": 88,
+        "startChar": 33,
+        "endLine": 88,
+        "endChar": 0
+      },
+      "revId": "4ae13eb1d8da81491f84090d3d3ae09599451b24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b76397a2_e4402ca7",
+        "filename": "webrtc/modules/desktop_capture/x11/window_list_utils.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-10T20:17:53Z",
+      "side": 1,
+      "message": "I think reinterpret_casts are always needed, either here or in ScopedXResource: XGetWindowProperty always returns unsigned char*.",
+      "parentUuid": "16753081_0be8c79e",
       "range": {
         "startLine": 88,
         "startChar": 33,
@@ -68,6 +116,30 @@
       "revId": "4ae13eb1d8da81491f84090d3d3ae09599451b24",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cdd0fb83_47ee477c",
+        "filename": "webrtc/modules/desktop_capture/x11/window_list_utils.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-10T20:17:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1be732a1_8d76469a",
+      "range": {
+        "startLine": 106,
+        "startChar": 73,
+        "endLine": 106,
+        "endChar": 0
+      },
+      "revId": "4ae13eb1d8da81491f84090d3d3ae09599451b24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "3a43c386_2bf03511",
+        "filename": "webrtc/modules/desktop_capture/x11/window_list_utils.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-10T20:17:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "67010ae8_ce1f7893",
+      "range": {
+        "startLine": 24,
+        "startChar": 40,
+        "endLine": 24,
+        "endChar": 49
+      },
+      "revId": "4ae13eb1d8da81491f84090d3d3ae09599451b24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "59e802b1_f0df646b",
         "filename": "webrtc/modules/desktop_capture/x11/window_list_utils.h",
         "patchSetId": 3
@@ -163,6 +259,54 @@
     },
     {
       "key": {
+        "uuid": "f3c34a40_50d89754",
+        "filename": "webrtc/modules/desktop_capture/x11/window_list_utils.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-10T20:17:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "99e94065_5eceb73c",
+      "range": {
+        "startLine": 26,
+        "startChar": 44,
+        "endLine": 26,
+        "endChar": 0
+      },
+      "revId": "4ae13eb1d8da81491f84090d3d3ae09599451b24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d658f95_7992e88e",
+        "filename": "webrtc/modules/desktop_capture/x11/window_list_utils.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-10T20:17:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "59e802b1_f0df646b",
+      "range": {
+        "startLine": 26,
+        "startChar": 3,
+        "endLine": 26,
+        "endChar": 9
+      },
+      "revId": "4ae13eb1d8da81491f84090d3d3ae09599451b24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9476716d_b242ca66",
         "filename": "webrtc/modules/desktop_capture/x11/x_atom_cache.h",
         "patchSetId": 3
@@ -183,6 +327,30 @@
       "revId": "4ae13eb1d8da81491f84090d3d3ae09599451b24",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "46538c38_fbcc169d",
+        "filename": "webrtc/modules/desktop_capture/x11/x_atom_cache.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-10T20:17:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9476716d_b242ca66",
+      "range": {
+        "startLine": 19,
+        "startChar": 51,
+        "endLine": 19,
+        "endChar": 57
+      },
+      "revId": "4ae13eb1d8da81491f84090d3d3ae09599451b24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
