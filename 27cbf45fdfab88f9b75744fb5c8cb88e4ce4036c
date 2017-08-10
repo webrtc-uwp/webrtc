@@ -1,0 +1,112 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74369b86_bbfa815a",
+        "filename": "webrtc/modules/audio_processing/test/py_quality_assessment/quality_assessment/eval_scores.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1184474
+      },
+      "writtenOn": "2017-08-10T09:28:31Z",
+      "side": 1,
+      "message": "I don\u0027t think we will ever use this. Shall I remove it?\nI kept it in this PS to ask what you think before removing it.",
+      "range": {
+        "startLine": 314,
+        "startChar": 56,
+        "endLine": 314,
+        "endChar": 0
+      },
+      "revId": "27cbf45fdfab88f9b75744fb5c8cb88e4ce4036c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9251a790_5321e172",
+        "filename": "webrtc/modules/audio_processing/test/py_quality_assessment/quality_assessment/input_signal_creator.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1184474
+      },
+      "writtenOn": "2017-08-10T09:28:31Z",
+      "side": 1,
+      "message": "This class is used to easily use common signals (e.g., a pure tone) removing the\nneed for providing a (handcrafted) .wav file. This is important for the THD\nscore computation, since it requires a pure tone as input signal. This class not\nonly creates the input signal, but it also generates its metadata (e.g.,\nfrequency of a pure tone).",
+      "revId": "27cbf45fdfab88f9b75744fb5c8cb88e4ce4036c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6eaf2377_10d48364",
+        "filename": "webrtc/modules/audio_processing/test/py_quality_assessment/quality_assessment/signal_processing.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1184474
+      },
+      "writtenOn": "2017-08-10T09:28:31Z",
+      "side": 1,
+      "message": "This method is not directly related to the THD score, but it reduces code duplication in APM-QA.",
+      "revId": "27cbf45fdfab88f9b75744fb5c8cb88e4ce4036c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b8072a69_551b83a8",
+        "filename": "webrtc/modules/audio_processing/test/py_quality_assessment/quality_assessment/simulation.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1184474
+      },
+      "writtenOn": "2017-08-10T09:28:31Z",
+      "side": 1,
+      "message": "This is the point in the pipeline where the (optional) input signal metadata is loaded.",
+      "revId": "27cbf45fdfab88f9b75744fb5c8cb88e4ce4036c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "273df059_72368949",
+        "filename": "webrtc/modules/audio_processing/test/py_quality_assessment/quality_assessment/simulation.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1184474
+      },
+      "writtenOn": "2017-08-10T09:28:31Z",
+      "side": 1,
+      "message": "Now an evaluation score worker can raise an exception if the preconditions are not met (e.g., if the input for the THD score evaluation is not a pure tone with known frequency).",
+      "revId": "27cbf45fdfab88f9b75744fb5c8cb88e4ce4036c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2cd1b27_63fd84b9",
+        "filename": "webrtc/modules/audio_processing/test/py_quality_assessment/quality_assessment/simulation_unittest.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1184474
+      },
+      "writtenOn": "2017-08-10T09:28:31Z",
+      "side": 1,
+      "message": "Note that by naming the input signal file like this, it will trigger the pure tone creation (because the file doesn\u0027t exist).",
+      "revId": "27cbf45fdfab88f9b75744fb5c8cb88e4ce4036c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
