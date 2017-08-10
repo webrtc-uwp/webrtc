@@ -31,6 +31,7 @@
 #include "webrtc/rtc_base/openssl.h"
 #include "webrtc/rtc_base/safe_conversions.h"
 #include "webrtc/rtc_base/sslroots.h"
+#include "webrtc/rtc_base/stringencode.h"
 #include "webrtc/rtc_base/stringutils.h"
 #include "webrtc/rtc_base/thread.h"
 
@@ -167,6 +168,24 @@ static void LogSslError() {
       break;
     }
   } while (error_code != 0);
+}
+
+static std::string ParseAlpnProtocols(const std::string& alpn_protocols) {
+  std::vector<std::string> tokens;
+  rtc::tokenize(alpn_protocols, ',', &tokens);
+
+  std::string parsed_alpn;
+  for (const std::string& token : tokens) {
+    if (token.size() == 0 || token.size() > 0xFF) {
+      LOG(LS_ERROR) << "OpenSSLAdapter::Error("
+                    << "ParseAlpnProtocols received proto with size "
+                    << token.size() << ")";
+      return "";
+    }
+    parsed_alpn += static_cast<char>(token.size());
+    parsed_alpn += token;
+  }
+  return parsed_alpn;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -366,9 +385,15 @@ OpenSSLAdapter::BeginSSL() {
   }
 
   // Set a couple common TLS extensions; even though we don't use them yet.
-  // TODO(emadomara) Add ALPN extension.
   SSL_enable_ocsp_stapling(ssl_);
   SSL_enable_signed_cert_timestamps(ssl_);
+
+  if (!alpn_protocols().empty()) {
+    std::string tls_alpn_string = ParseAlpnProtocols(alpn_protocols());
+    SSL_set_alpn_protos(ssl_,
+      reinterpret_cast<const unsigned char *>(tls_alpn_string.data()),
+      tls_alpn_string.size());
+  }
 
   // the SSL object owns the bio now
   bio = nullptr;

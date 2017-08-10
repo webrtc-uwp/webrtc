@@ -26,6 +26,11 @@ class SSLAdapter : public AsyncSocketAdapter {
   bool ignore_bad_cert() const { return ignore_bad_cert_; }
   void set_ignore_bad_cert(bool ignore) { ignore_bad_cert_ = ignore; }
 
+  std::string alpn_protocols() const { return alpn_protocols_; }
+  void set_alpn_protocols(const std::string& protos) {
+    alpn_protocols_ = protos;
+  }
+
   // Do DTLS or TLS (default is TLS, if unspecified)
   virtual void SetMode(SSLMode mode) = 0;
 
@@ -42,6 +47,8 @@ class SSLAdapter : public AsyncSocketAdapter {
  private:
   // If true, the server certificate need not match the configured hostname.
   bool ignore_bad_cert_;
+  // Comma separated list of protocols to be used in the TLS ALPN extension.
+  std::string alpn_protocols_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

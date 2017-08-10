@@ -110,6 +110,9 @@ public class PeerConnection {
     // necessary.
     public final String hostname;
 
+    // Comma separated list of protocols to be used in the TLS ALPN extension.
+    public final String alpnProtocols;
+
     /** Convenience constructor for STUN servers. */
     public IceServer(String uri) {
       this(uri, "", "");
@@ -125,16 +128,22 @@ public class PeerConnection {
 
     public IceServer(String uri, String username, String password, TlsCertPolicy tlsCertPolicy,
         String hostname) {
+      this(uri, username, password, tlsCertPolicy, hostname, "");
+    }
+
+    public IceServer(String uri, String username, String password, TlsCertPolicy tlsCertPolicy,
+        String hostname, String alpnProtocols) {
       this.uri = uri;
       this.username = username;
       this.password = password;
       this.tlsCertPolicy = tlsCertPolicy;
       this.hostname = hostname;
+      this.alpnProtocols = alpnProtocols;
     }
 
     public String toString() {
       return uri + " [" + username + ":" + password + "] [" + tlsCertPolicy + "] [" + hostname
-          + "]";
+          + "] [" + alpnProtocols + "]";
     }
   }
 

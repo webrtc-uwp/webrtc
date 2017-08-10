@@ -60,6 +60,10 @@ class SSLAdapterTestDummyClient : public sigslot::has_slots<> {
         &SSLAdapterTestDummyClient::OnSSLAdapterCloseEvent);
   }
 
+  void SetAlpnProtocols(const std::string& protos) {
+    ssl_adapter_->set_alpn_protocols(protos);
+  }
+
   rtc::SocketAddress GetAddress() const {
     return ssl_adapter_->GetLocalAddress();
   }
@@ -282,6 +286,10 @@ class SSLAdapterTestBase : public testing::Test,
     handshake_wait_ = wait;
   }
 
+  void SetAlpnProtocols(const std::string& protos) {
+    client_->SetAlpnProtocols(protos);
+  }
+
   void TestHandshake(bool expect_success) {
     int rv;
 
@@ -430,6 +438,13 @@ TEST_F(SSLAdapterTestTLS_RSA, TestTLSTransferWithBlockedSocket) {
 
 // Test transfer between client and server, using ECDSA
 TEST_F(SSLAdapterTestTLS_ECDSA, TestTLSTransfer) {
+  TestHandshake(true);
+  TestTransfer("Hello, world!");
+}
+
+// Test transfer using ALPN with protos as h2 and http/1.1
+TEST_F(SSLAdapterTestTLS_ECDSA, TestTLSALPN) {
+  SetAlpnProtocols("h2,http/1.1");
   TestHandshake(true);
   TestTransfer("Hello, world!");
 }

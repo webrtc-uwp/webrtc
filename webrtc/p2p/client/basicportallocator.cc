@@ -1447,6 +1447,7 @@ void AllocationSequence::CreateTurnPort(const RelayServerConfig& config) {
     }
     RTC_DCHECK(port != NULL);
     port->SetTlsCertPolicy(config.tls_cert_policy);
+    port->SetAlpnProtocols(config.alpn_protocols);
     session_->AddAllocatedPort(port, this, true);
   }
 }

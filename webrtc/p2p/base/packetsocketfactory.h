@@ -54,6 +54,20 @@ class PacketSocketFactory {
       const std::string& user_agent,
       int opts) = 0;
 
+  // TODO: |proxy_info| and |user_agent| should be set
+  // per-factory and not when socket is created.
+  virtual AsyncPacketSocket* CreateClientTcpSocket(
+      const SocketAddress& local_address,
+      const SocketAddress& remote_address,
+      const ProxyInfo& proxy_info,
+      const std::string& user_agent,
+      const std::string& alpn_protocols,
+      int opts) {
+    return CreateClientTcpSocket(local_address, remote_address, proxy_info,
+                                 user_agent, opts);
+  }
+
+
   virtual AsyncResolverInterface* CreateAsyncResolver() = 0;
 
  private:

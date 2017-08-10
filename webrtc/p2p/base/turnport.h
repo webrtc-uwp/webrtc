@@ -95,6 +95,12 @@ class TurnPort : public Port {
     tls_cert_policy_ = tls_cert_policy;
   }
 
+  virtual std::string GetAlpnProtocols() const { return alpn_protocols_; }
+
+  virtual void SetAlpnProtocols(const std::string& alpn_protocols) {
+    alpn_protocols_ = alpn_protocols;
+  }
+
   virtual void PrepareAddress();
   virtual Connection* CreateConnection(
       const Candidate& c, PortInterface::CandidateOrigin origin);
@@ -266,6 +272,7 @@ class TurnPort : public Port {
 
   ProtocolAddress server_address_;
   TlsCertPolicy tls_cert_policy_ = TlsCertPolicy::TLS_CERT_POLICY_SECURE;
+  std::string alpn_protocols_;
   RelayCredentials credentials_;
   AttemptedServerSet attempted_server_addresses_;
 

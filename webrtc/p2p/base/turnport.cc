@@ -338,7 +338,7 @@ bool TurnPort::CreateTurnClientSocket() {
 
     socket_ = socket_factory()->CreateClientTcpSocket(
         rtc::SocketAddress(Network()->GetBestIP(), 0), server_address_.address,
-        proxy(), user_agent(), opts);
+        proxy(), user_agent(), alpn_protocols_, opts);
   }
 
   if (!socket_) {
