@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9e9f6150_6decf889",
+        "filename": "webrtc/p2p/base/packetsocketfactory.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1224374
+      },
+      "writtenOn": "2017-08-10T23:14:26Z",
+      "side": 1,
+      "message": "I\u0027m worried we keep adding more information later which will require changing the function signature, could you please wrap this and the int opt into a structure called SocketOptions or add a TODO for now and implement it in another cl",
+      "range": {
+        "startLine": 64,
+        "startChar": 25,
+        "endLine": 64,
+        "endChar": 39
+      },
+      "revId": "9d70155b2792318a3949b950db6a307b38042e93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c4acf771_b62edd54",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1224374
+      },
+      "writtenOn": "2017-08-10T23:14:26Z",
+      "side": 1,
+      "message": "Please consider renaming this as we discussed offline",
+      "range": {
+        "startLine": 173,
+        "startChar": 19,
+        "endLine": 173,
+        "endChar": 38
+      },
+      "revId": "9d70155b2792318a3949b950db6a307b38042e93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9b3d200_19efdbc5",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1224374
+      },
+      "writtenOn": "2017-08-10T23:14:26Z",
+      "side": 1,
+      "message": "Please LOG(Verbose) here the string before and after parsing",
+      "range": {
+        "startLine": 175,
+        "startChar": 0,
+        "endLine": 175,
+        "endChar": 46
+      },
+      "revId": "9d70155b2792318a3949b950db6a307b38042e93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2bd976bf_aa6e34db",
+        "filename": "webrtc/rtc_base/ssladapter_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1224374
+      },
+      "writtenOn": "2017-08-10T23:14:26Z",
+      "side": 1,
+      "message": "Please add a separate unit test for the new parsing function",
+      "range": {
+        "startLine": 447,
+        "startChar": 2,
+        "endLine": 447,
+        "endChar": 18
+      },
+      "revId": "9d70155b2792318a3949b950db6a307b38042e93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
