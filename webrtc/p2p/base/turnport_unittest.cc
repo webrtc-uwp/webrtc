@@ -267,6 +267,14 @@ class TurnPortTest : public testing::Test,
     // This TURN port will be the controlling.
     turn_port_->SetIceRole(ICEROLE_CONTROLLING);
     ConnectSignals();
+
+    if (server_address.proto == cricket::PROTO_TLS) {
+      // The test TURN server has a self-signed certificate so will not pass
+      // the normal client validation. Instruct the client to ignore certificate
+      // errors for testing only.
+      turn_port_->SetTlsCertPolicy(
+          TlsCertPolicy::TLS_CERT_POLICY_INSECURE_NO_CHECK);
+    }
   }
 
   void CreateSharedTurnPort(const std::string& username,
@@ -338,6 +346,10 @@ class TurnPortTest : public testing::Test,
         // The virtual socket server will delay by a fixed half a round trip
         // for a TCP connection. Round up to 1.
         return 1;
+      case PROTO_TLS:
+        // TLS operates over TCP and additionally has a round of HELLO for
+        // negotiating ciphers and a round for exchanging certificates.
+        return 2 + NumRoundTripsToConnect(PROTO_TCP);
       case PROTO_UDP:
       default:
         // UDP requires no round trips to set up the connection.
@@ -536,6 +548,7 @@ class TurnPortTest : public testing::Test,
     PrepareTurnAndUdpPorts(protocol_type);
 
     // Send ping from UDP to TURN.
+    ASSERT_GE(turn_port_->Candidates().size(), 1U);
     Connection* conn1 = udp_port_->CreateConnection(
                     turn_port_->Candidates()[0], Port::ORIGIN_MESSAGE);
     ASSERT_TRUE(conn1 != NULL);
@@ -1077,6 +1090,10 @@ TEST_F(TurnPortTest, TestTurnAlternateServerTCP) {
   TestTurnAlternateServer(PROTO_TCP);
 }
 
+TEST_F(TurnPortTest, TestTurnAlternateServerTLS) {
+  TestTurnAlternateServer(PROTO_TLS);
+}
+
 // Test that we fail when we redirect to an address different from
 // current IP family.
 TEST_F(TurnPortTest, TestTurnAlternateServerV4toV6UDP) {
@@ -1085,6 +1102,10 @@ TEST_F(TurnPortTest, TestTurnAlternateServerV4toV6UDP) {
 
 TEST_F(TurnPortTest, TestTurnAlternateServerV4toV6TCP) {
   TestTurnAlternateServerV4toV6(PROTO_TCP);
+}
+
+TEST_F(TurnPortTest, TestTurnAlternateServerV4toV6TLS) {
+  TestTurnAlternateServerV4toV6(PROTO_TLS);
 }
 
 // Test try-alternate-server catches the case of pingpong.
@@ -1096,12 +1117,20 @@ TEST_F(TurnPortTest, TestTurnAlternateServerPingPongTCP) {
   TestTurnAlternateServerPingPong(PROTO_TCP);
 }
 
+TEST_F(TurnPortTest, TestTurnAlternateServerPingPongTLS) {
+  TestTurnAlternateServerPingPong(PROTO_TLS);
+}
+
 // Test try-alternate-server catch the case of repeated server.
 TEST_F(TurnPortTest, TestTurnAlternateServerDetectRepetitionUDP) {
   TestTurnAlternateServerDetectRepetition(PROTO_UDP);
 }
 
 TEST_F(TurnPortTest, TestTurnAlternateServerDetectRepetitionTCP) {
+  TestTurnAlternateServerDetectRepetition(PROTO_TCP);
+}
+
+TEST_F(TurnPortTest, TestTurnAlternateServerDetectRepetitionTLS) {
   TestTurnAlternateServerDetectRepetition(PROTO_TCP);
 }
 
@@ -1120,6 +1149,14 @@ TEST_F(TurnPortTest, TestTurnAlternateServerLoopbackTcpIpv4) {
 
 TEST_F(TurnPortTest, TestTurnAlternateServerLoopbackTcpIpv6) {
   TestTurnAlternateServerLoopback(PROTO_TCP, true);
+}
+
+TEST_F(TurnPortTest, TestTurnAlternateServerLoopbackTlsIpv4) {
+  TestTurnAlternateServerLoopback(PROTO_TLS, false);
+}
+
+TEST_F(TurnPortTest, TestTurnAlternateServerLoopbackTlsIpv6) {
+  TestTurnAlternateServerLoopback(PROTO_TLS, true);
 }
 
 // Do a TURN allocation and try to send a packet to it from the outside.
@@ -1144,6 +1181,13 @@ TEST_F(TurnPortTest, TestTurnTcpConnection) {
   TestTurnConnection(PROTO_TCP);
 }
 
+// Test that we can establish a TLS connection with TURN server.
+TEST_F(TurnPortTest, TestTurnTlsConnection) {
+  turn_server_.AddInternalSocket(kTurnTcpIntAddr, PROTO_TLS);
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnTlsProtoAddr);
+  TestTurnConnection(PROTO_TLS);
+}
+
 // Test that if a connection on a TURN port is destroyed, the TURN port can
 // still receive ping on that connection as if it is from an unknown address.
 // If the connection is created again, it will be used to receive ping.
@@ -1156,17 +1200,6 @@ TEST_F(TurnPortTest, TestDestroyTurnConnection) {
 TEST_F(TurnPortTest, TestDestroyTurnConnectionUsingSharedSocket) {
   CreateSharedTurnPort(kTurnUsername, kTurnPassword, kTurnUdpProtoAddr);
   TestDestroyTurnConnection();
-}
-
-// Test that we fail to create a connection when we want to use TLS over TCP.
-// This test should be removed once we have TLS support.
-TEST_F(TurnPortTest, TestTurnTlsTcpConnectionFails) {
-  ProtocolAddress secure_addr(kTurnTlsProtoAddr.address,
-                              kTurnTlsProtoAddr.proto);
-  CreateTurnPort(kTurnUsername, kTurnPassword, secure_addr);
-  turn_port_->PrepareAddress();
-  EXPECT_TRUE_SIMULATED_WAIT(turn_error_, kSimulatedRtt * 2, fake_clock_);
-  ASSERT_EQ(0U, turn_port_->Candidates().size());
 }
 
 // Run TurnConnectionTest with one-time-use nonce feature.
@@ -1252,6 +1285,14 @@ TEST_F(TurnPortTest, TestTurnSendDataTurnTcpToUdp) {
   CreateTurnPort(kTurnUsername, kTurnPassword, kTurnTcpProtoAddr);
   TestTurnSendData(PROTO_TCP);
   EXPECT_EQ(TCP_PROTOCOL_NAME, turn_port_->Candidates()[0].relay_protocol());
+}
+
+// Do a TURN allocation, establish a TLS connection, and send some data.
+TEST_F(TurnPortTest, TestTurnSendDataTurnTlsToUdp) {
+  turn_server_.AddInternalSocket(kTurnTcpIntAddr, PROTO_TLS);
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnTlsProtoAddr);
+  TestTurnSendData(PROTO_TLS);
+  EXPECT_EQ(TLS_PROTOCOL_NAME, turn_port_->Candidates()[0].relay_protocol());
 }
 
 // Test TURN fails to make a connection from IPv6 address to a server which has
@@ -1366,6 +1407,18 @@ TEST_F(TurnPortTest, TestTurnTCPReleaseAllocation) {
   CreateTurnPort(kTurnUsername, kTurnPassword, kTurnTcpProtoAddr);
   turn_port_->PrepareAddress();
   EXPECT_TRUE_SIMULATED_WAIT(turn_ready_, kSimulatedRtt * 3, fake_clock_);
+
+  ASSERT_GT(turn_server_.server()->allocations().size(), 0U);
+  turn_port_.reset();
+  EXPECT_EQ_SIMULATED_WAIT(0U, turn_server_.server()->allocations().size(),
+                           kSimulatedRtt, fake_clock_);
+}
+
+TEST_F(TurnPortTest, TestTurnTLSReleaseAllocation) {
+  turn_server_.AddInternalSocket(kTurnTcpIntAddr, PROTO_TLS);
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnTlsProtoAddr);
+  turn_port_->PrepareAddress();
+  EXPECT_TRUE_SIMULATED_WAIT(turn_ready_, kSimulatedRtt * 5, fake_clock_);
 
   ASSERT_GT(turn_server_.server()->allocations().size(), 0U);
   turn_port_.reset();
