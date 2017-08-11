@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "8687ab53_196bc99a",
+        "filename": "webrtc/modules/desktop_capture/x11/window_list_utils.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-11T00:33:53Z",
+      "side": 1,
+      "message": "As discussed, if this is worth doing, then it can be a follow-up. I hadn\u0027t realized that most of this code had simply been moved from another file.",
+      "parentUuid": "f2d9fbdf_d0212f77",
+      "range": {
+        "startLine": 29,
+        "startChar": 18,
+        "endLine": 29,
+        "endChar": 0
+      },
+      "revId": "4ae13eb1d8da81491f84090d3d3ae09599451b24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "16753081_0be8c79e",
         "filename": "webrtc/modules/desktop_capture/x11/window_list_utils.cc",
         "patchSetId": 3
@@ -93,6 +117,30 @@
       "revId": "4ae13eb1d8da81491f84090d3d3ae09599451b24",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d30bb154_528ff970",
+        "filename": "webrtc/modules/desktop_capture/x11/window_list_utils.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-11T00:33:53Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b76397a2_e4402ca7",
+      "range": {
+        "startLine": 88,
+        "startChar": 33,
+        "endLine": 88,
+        "endChar": 0
+      },
+      "revId": "4ae13eb1d8da81491f84090d3d3ae09599451b24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -163,6 +211,30 @@
       "revId": "4ae13eb1d8da81491f84090d3d3ae09599451b24",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0168ce1a_a670e8ac",
+        "filename": "webrtc/modules/desktop_capture/x11/window_list_utils.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-11T00:33:53Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "68e6266c_b7956e8a",
+      "range": {
+        "startLine": 108,
+        "startChar": 21,
+        "endLine": 108,
+        "endChar": 0
+      },
+      "revId": "4ae13eb1d8da81491f84090d3d3ae09599451b24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
