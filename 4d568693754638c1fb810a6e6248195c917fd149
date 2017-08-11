@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "25aafca8_90d5cb90",
+        "filename": "webrtc/p2p/base/turnport_unittest.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 394,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-11T23:38:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "985e28cc_fc472054",
+      "range": {
+        "startLine": 394,
+        "startChar": 6,
+        "endLine": 394,
+        "endChar": 44
+      },
+      "revId": "4d568693754638c1fb810a6e6248195c917fd149",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ed23ab2c_4414f5fe",
         "filename": "webrtc/p2p/base/turnport_unittest.cc",
         "patchSetId": 7
@@ -45,6 +69,30 @@
       "revId": "4d568693754638c1fb810a6e6248195c917fd149",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f6ad07c_aebeddcc",
+        "filename": "webrtc/p2p/base/turnport_unittest.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-11T23:38:13Z",
+      "side": 1,
+      "message": "OK, the problem was that the virtual socket server uses a fixed half a RTT as delay, so NumRoundTripsToConnect had to round up to 1. I changed the methods to return the time directly so now it can return kSimulatedRtt / 2 for TCP connect.",
+      "parentUuid": "ed23ab2c_4414f5fe",
+      "range": {
+        "startLine": 416,
+        "startChar": 24,
+        "endLine": 416,
+        "endChar": 62
+      },
+      "revId": "4d568693754638c1fb810a6e6248195c917fd149",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
