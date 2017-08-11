@@ -16,6 +16,98 @@
       "revId": "4678700d38fe3474eacc983e2caf5b7cc0c23b47",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b7e5aee_bf175936",
+        "filename": "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1126939
+      },
+      "writtenOn": "2017-08-11T18:08:37Z",
+      "side": 1,
+      "message": "missing ]",
+      "range": {
+        "startLine": 57,
+        "startChar": 47,
+        "endLine": 57,
+        "endChar": 0
+      },
+      "revId": "4678700d38fe3474eacc983e2caf5b7cc0c23b47",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "992aba57_2300f696",
+        "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCAudioDecoderFactory.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1126939
+      },
+      "writtenOn": "2017-08-11T18:08:37Z",
+      "side": 1,
+      "message": "clang-format? iirc there\u0027s a space that will get introduced",
+      "range": {
+        "startLine": 18,
+        "startChar": 32,
+        "endLine": 18,
+        "endChar": 33
+      },
+      "revId": "4678700d38fe3474eacc983e2caf5b7cc0c23b47",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96d77f5b_e5a985a4",
+        "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCAudioDecoderFactory.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1126939
+      },
+      "writtenOn": "2017-08-11T18:08:37Z",
+      "side": 1,
+      "message": "nit: we\u0027ve been using \"native\" to indicate C++ types on ObjC things\nmaybe nativeFactory or nativeAudioDecoderFactory",
+      "range": {
+        "startLine": 20,
+        "startChar": 79,
+        "endLine": 20,
+        "endChar": 98
+      },
+      "revId": "4678700d38fe3474eacc983e2caf5b7cc0c23b47",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "905538c4_6c364173",
+        "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCAudioEncoderFactory.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1126939
+      },
+      "writtenOn": "2017-08-11T18:08:37Z",
+      "side": 1,
+      "message": "ditto re: clang-format and \"native\"",
+      "range": {
+        "startLine": 18,
+        "startChar": 32,
+        "endLine": 18,
+        "endChar": 33
+      },
+      "revId": "4678700d38fe3474eacc983e2caf5b7cc0c23b47",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
