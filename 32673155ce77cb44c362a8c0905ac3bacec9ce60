@@ -1,0 +1,373 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0cd073cb_e6df48e6",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "nit: IMHO, if you\u0027re aiming to show that something is one-byte (I assume this is why hexadecimal notation was used), 0x0b would be a bit clearer than 0xb. Super-nit, though; not important.",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "11c6c995_c21d1a3b",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "It would be good for all tests of configuration rejection to be grouped together. The way it\u0027s ordered now, they break up the flow between CanAddSinkBySsrc and OnRtpPacketCalledOnCorrectSinkBySsrc, etc., which are configuration-acceptance tests.",
+      "range": {
+        "startLine": 214,
+        "startChar": 1,
+        "endLine": 293,
+        "endChar": 1
+      },
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5112caf5_f2763466",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "This change doesn\u0027t not seem significant. There are two reasons to generally avoid such changes:\n1. They distract from important changes.\n2. They mess up the history (git-blame) of the file. Not a significant case now, but in general.",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a8730df0_28702097",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 511,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "Would be good to group this with other *CalledOnCorrectSink* tests.",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7b3e61f_80ae49db",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 572,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "The guidelines is to prefer size_t as the index type when iterating, accessing members of an array, etc. (Unless you\u0027re using the variable for something else, too, like uint16_t for a sequence number that\u0027s only that size. But for pure indices, like here, size_t is preferred over int.)",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7cb99620_c188036b",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "Expecting zero-calls, so wildcard is indeed appropriate.",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c39482d2_b8a52dd4",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 606,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "In this case, you\u0027re not really expecting the call - you just want to suppress the warning you get if you don\u0027t do this. The way to do that is by using NiceMock. The different mocks work as follows:\n1. \"Normal\" mock (neither strict nor nice) - anything unexpected is a warning.\n2. Strict mock - anything unexpected is a failure.\n3. Nice mock - anything unexpected is ignored. You *can* however EXPECT(...).Times(0), if you want to make sure something doesn\u0027t happen. It *would* fail in that case.",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8897f74f_c302934c",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "Please expect with the wildcard when expecting Times(0).",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ad4acad_7e047817",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 744,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "nit: The shorthand \"obs\" does not appear anywhere else in the codebase. (I have no problems with it - if I had to pick any, I\u0027d go for \"obs\" too. But it\u0027s probably better to avoid introducing new conventions, because then we end up with too many different ones.)",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b18849c7_2e0087bb",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 860,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "Testing that the routing the first packet by MID is separate from testing that the SSRC is memorized. Tests should be broken down, and EXPECT-ations used sparingly, so as to reflect for each test the one small thing it tests. (Sorry, that\u0027s not me; these are the guidelines.)",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7775fc1_c6a7fece",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 885,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "(like)",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b69d769_11b2edb5",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 889,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "nit: It would be good to name the packets something other than p1 and p2. Only if you can find something clear, though; it\u0027s not terribly easy to find something short enough that would still be illuminating.",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8920676b_57eaef6b",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 896,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "Wildcard here, please.",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2cae9b32_1b518a26",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 935,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "Is it possible to serially expect the first packet, then the second packet, or is this necessary because setting a later expectation overrides the first one? I think it should be possible. (I\u0027m referring to getting rid of the wildcard.)",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33a44e93_1772fcbb",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 1332,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "The guidelines for unit-tests might appear a bit counter-intuitive at times, but they have a reason. I also began by EXPECT-ing as much as I could, hoping to provide better coverage, but the cost of that is unclarity about what each test is checking. In this one, you\u0027re checking that observers are notified, not that OnRtpPacket() returns |true| - so you shouldn\u0027t expect it. That should be covered by separate tests.\n\nOn a related matter, if some tests cannot continue past a point if something doesn\u0027t hold true, or if you want to point out something to future readers, ASSERT is the tool for that. It will also mark the test as having failed, and would also exit early (preventing, for example, crashing due to dereferncing a nullptr, etc.), as well as let the reader know that this is not the focus of the test. (This is an FYI, though; I don\u0027t think this is necessary in this specific case.)",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1cc558fc_2e1889ac",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 1378,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "IMHO, it\u0027s good to check the exact parameters are given when checking that something IS called, and check the wildcard (_) when making sure something is NOT called. That gives better coverage. What if OnSsrcBoundToRsid() is just called with garbage? We\u0027d want the test to fail.",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d6756352_359ce62f",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 1382,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "I\u0027ve posted comments about the implementation of the test, but I\u0027d also like to mention that I am not sure that this is somethign that should be tested. In general, the unit-test should check the \"contract\" of the class, and not implementation details. The prevention of this memory-overuse-attack seems to me like an implementation detail.\nPlease consult someone with more experience than me, though. I recommend danilchap@ for that.",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bff37f16_4c4cab6d",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 1383,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "Could we tie the value here to the one used in the class-under-test? I know I\u0027ve mentioned before about the style guideline of putting the constant in the .cc file, but if you end up using it from the unit-test, that would be a good enough reason to put the constant in the .h file - which is the style that both you and I seem to prefer. ;-)",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2ab7d86_046735fe",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 1395,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "You seem to have an off-by-one error here. 1002 is two too many. The test would potentially let-slide a case of 1001 not being rejected.",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8e0430d_c108c689",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 1402,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "nit: I don\u0027t think this comment is helpful. \"Irrecoverable panic\" would probably confuse more readers than would find this illuminating? Also, \"following tests\" is not well-defined.",
+      "range": {
+        "startLine": 1401,
+        "startChar": 0,
+        "endLine": 1402,
+        "endChar": 9
+      },
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc3b42f4_1bfd43ba",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 21
+      },
+      "lineNbr": 1418,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T20:44:52Z",
+      "side": 1,
+      "message": "This doesn\u0027t really work anymore, because you\u0027re using the Criteria object, where the MID being an empty string is just a sentinel value for no-MID-criterion; it\u0027s not illegal. (What is failing here is that an empty Criteria object is illegal - but you already have a separate test for that - CriteriaMustBeNonEmpty.)\n\nSimilarly for the RSID case.",
+      "revId": "32673155ce77cb44c362a8c0905ac3bacec9ce60",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
