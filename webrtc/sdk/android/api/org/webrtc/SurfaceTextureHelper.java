@@ -39,10 +39,8 @@ public class SurfaceTextureHelper {
   private static final String TAG = "SurfaceTextureHelper";
   /**
    * Callback interface for being notified that a new texture frame is available. The calls will be
-   * made on a dedicated thread with a bound EGLContext. The thread will be the same throughout the
-   * lifetime of the SurfaceTextureHelper instance, but different from the thread calling the
-   * SurfaceTextureHelper constructor. The callee is not allowed to make another EGLContext current
-   * on the calling thread.
+   * made on the SurfaceTextureHelper handler thread, with a bound EGLContext. The callee is not
+   * allowed to make another EGLContext current on the calling thread.
    */
   public interface OnTextureFrameAvailableListener {
     abstract void onTextureFrameAvailable(
@@ -133,7 +131,7 @@ public class SurfaceTextureHelper {
         hasPendingTexture = true;
         tryDeliverTextureFrame();
       }
-    });
+    }, handler);
   }
 
   /**
