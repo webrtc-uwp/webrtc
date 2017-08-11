@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "38bac85f_1a9dc26d",
+        "filename": "webrtc/sdk/BUILD.gn",
+        "patchSetId": 2
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 1163304
+      },
+      "writtenOn": "2017-08-11T07:26:25Z",
+      "side": 1,
+      "message": "Don\u0027t forget to add these to the umbrella header webrtc.h as well.",
+      "revId": "4678700d38fe3474eacc983e2caf5b7cc0c23b47",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
