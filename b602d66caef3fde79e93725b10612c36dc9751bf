@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "925ea6db_a83c6403",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 18
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T14:45:52Z",
+      "side": 1,
+      "message": "So have we agreed on dropping all things RRID-related? I\u0027m okay with that option.\n\nOtherwise, if I understand Danil\u0027s answer correctly, I think the simplest behavior is \"if there is an RRID, ignore the RSID; the RRID itself is treated in a way equivalent to an RSID, for the case of RSID-only.\" I would be happy with that, too.",
+      "revId": "b602d66caef3fde79e93725b10612c36dc9751bf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "79a9626a_3ec29811",
         "filename": "webrtc/call/rtp_demuxer.h",
         "patchSetId": 18
@@ -66,6 +83,24 @@
       "side": 1,
       "message": "Done",
       "parentUuid": "d7194058_f962d227",
+      "revId": "b602d66caef3fde79e93725b10612c36dc9751bf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c96185e4_91761c5a",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 18
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-11T14:45:52Z",
+      "side": 1,
+      "message": "Could you please rebase this CL on top of that other CL, so that the changes offloaded to the other CL would not appear as part of this CL? It would make it easier to review, in which case I\u0027d be able to do a better job. :-)",
+      "parentUuid": "300c5f6e_b3796643",
       "revId": "b602d66caef3fde79e93725b10612c36dc9751bf",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
