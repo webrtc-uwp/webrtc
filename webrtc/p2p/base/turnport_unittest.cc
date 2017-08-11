@@ -320,16 +320,38 @@ class TurnPortTest : public testing::Test,
     // turn_port_ should have been created.
     ASSERT_TRUE(turn_port_ != nullptr);
     turn_port_->PrepareAddress();
-    // Two round trips are required to allocate a TURN candidate.
-    // Plus, an extra round trip is needed for TCP.
     ASSERT_TRUE_SIMULATED_WAIT(
         turn_ready_,
-        protocol_type == PROTO_TCP ? kSimulatedRtt * 3 : kSimulatedRtt * 2,
+        kSimulatedRtt * NumRoundTripsForTurnCandidate(protocol_type),
         fake_clock_);
 
     CreateUdpPort();
     udp_port_->PrepareAddress();
     ASSERT_TRUE_SIMULATED_WAIT(udp_ready_, kSimulatedRtt, fake_clock_);
+  }
+
+  // Returns the number of round trips required to establish a connection over
+  // the given protocol.
+  int NumRoundTripsToConnect(ProtocolType protocol_type) {
+    switch (protocol_type) {
+      case PROTO_TCP:
+        // The virtual socket server will delay by a fixed half a round trip
+        // for a TCP connection. Round up to 1.
+        return 1;
+      case PROTO_UDP:
+      default:
+        // UDP requires no round trips to set up the connection.
+        return 0;
+    }
+  }
+
+  // Returns the total number of round trips to establish a connection with a
+  // TURN server over the given protocol and to allocate a TURN candidate.
+  int NumRoundTripsForTurnCandidate(ProtocolType protocol_type) {
+    // For a simple allocation, the first Allocate message will return with an
+    // error asking for credentials and will succeed after the second Allocate
+    // message.
+    return 2 + NumRoundTripsToConnect(protocol_type);
   }
 
   bool CheckConnectionFailedAndPruned(Connection* conn) {
@@ -352,6 +374,16 @@ class TurnPortTest : public testing::Test,
     return true;
   }
 
+  // Number of round trips to do the following:
+  // 1. Connect to primary TURN server
+  // 2. Send Allocate and receive a redirect from the primary TURN server
+  // 3. Connect to alternate TURN server
+  // 4. Send Allocate and receive a request for credentials
+  // 5. Send Allocate with credentials and receive allocation
+  int NumRoundTripsForAlternateTurnCandidate(ProtocolType protocol_type) {
+    return 3 + 2 * NumRoundTripsToConnect(protocol_type);
+  }
+
   void TestTurnAlternateServer(ProtocolType protocol_type) {
     std::vector<rtc::SocketAddress> redirect_addresses;
     redirect_addresses.push_back(kTurnAlternateIntAddr);
@@ -368,10 +400,9 @@ class TurnPortTest : public testing::Test,
     const SocketAddress old_addr = turn_port_->server_address().address;
 
     turn_port_->PrepareAddress();
-    // Extra round trip due to "use alternate server" error response.
     EXPECT_TRUE_SIMULATED_WAIT(
         turn_ready_,
-        (protocol_type == PROTO_TCP ? kSimulatedRtt * 4 : kSimulatedRtt * 3),
+        kSimulatedRtt * NumRoundTripsForAlternateTurnCandidate(protocol_type),
         fake_clock_);
     // Retrieve the address again, the turn port's address should be
     // changed.
@@ -393,7 +424,12 @@ class TurnPortTest : public testing::Test,
     CreateTurnPort(kTurnUsername, kTurnPassword,
                    ProtocolAddress(kTurnIntAddr, protocol_type));
     turn_port_->PrepareAddress();
-    EXPECT_TRUE_SIMULATED_WAIT(turn_error_, kSimulatedRtt * 2, fake_clock_);
+    // Need time to connect to TURN server, send Allocate request and receive
+    // redirect notice.
+    EXPECT_TRUE_SIMULATED_WAIT(
+        turn_error_,
+        kSimulatedRtt * (1 + NumRoundTripsToConnect(protocol_type)),
+        fake_clock_);
   }
 
   void TestTurnAlternateServerPingPong(ProtocolType protocol_type) {
@@ -410,10 +446,9 @@ class TurnPortTest : public testing::Test,
                    ProtocolAddress(kTurnIntAddr, protocol_type));
 
     turn_port_->PrepareAddress();
-    // Extra round trip due to "use alternate server" error response.
     EXPECT_TRUE_SIMULATED_WAIT(
         turn_error_,
-        (protocol_type == PROTO_TCP ? kSimulatedRtt * 4 : kSimulatedRtt * 3),
+        kSimulatedRtt * NumRoundTripsForAlternateTurnCandidate(protocol_type),
         fake_clock_);
     ASSERT_EQ(0U, turn_port_->Candidates().size());
     rtc::SocketAddress address;
@@ -436,10 +471,9 @@ class TurnPortTest : public testing::Test,
                    ProtocolAddress(kTurnIntAddr, protocol_type));
 
     turn_port_->PrepareAddress();
-    // Extra round trip due to "use alternate server" error response.
     EXPECT_TRUE_SIMULATED_WAIT(
         turn_error_,
-        (protocol_type == PROTO_TCP ? kSimulatedRtt * 4 : kSimulatedRtt * 3),
+        kSimulatedRtt * NumRoundTripsForAlternateTurnCandidate(protocol_type),
         fake_clock_);
     ASSERT_EQ(0U, turn_port_->Candidates().size());
   }
@@ -480,7 +514,7 @@ class TurnPortTest : public testing::Test,
     turn_port_->PrepareAddress();
     EXPECT_TRUE_SIMULATED_WAIT(
         turn_error_,
-        (protocol_type == PROTO_TCP ? kSimulatedRtt * 3 : kSimulatedRtt * 2),
+        kSimulatedRtt * NumRoundTripsForTurnCandidate(protocol_type),
         fake_clock_);
 
     // Wait for some extra time, and make sure no packets were received on the
