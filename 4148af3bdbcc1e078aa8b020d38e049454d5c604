@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c8d1ec50_4d0e305e",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-11T17:44:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "66f80917_c376b720",
+      "revId": "4148af3bdbcc1e078aa8b020d38e049454d5c604",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b3f0efee_e1b1d581",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "671832f8_1ace5877",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-11T17:44:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b3f0efee_e1b1d581",
+      "revId": "4148af3bdbcc1e078aa8b020d38e049454d5c604",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e84bfdb7_c2aaa1e8",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2017-08-11T14:39:47Z",
       "side": 1,
       "message": "This makes it difficult to create a specific sequence number. I\u0027d prefer it if we didn\u0027t use this, and rather passed in a value explicitly.",
+      "revId": "4148af3bdbcc1e078aa8b020d38e049454d5c604",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5899ddd4_7c935573",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-11T17:44:13Z",
+      "side": 1,
+      "message": "The intent is to provide a reasonable default for most tests that do not care about what sequence number is set (which is probably all of them considering RtpDemuxer doesn\u0027t look at sequence number). Tests that do care can specify it by calling SetSequenceNumber on the returned packet. Of course, tests that do not set a sequence number manually should not rely on the default behavior.\n\nHaving each test specify it manually seemed cumbersome and distracting from the purpose of the test. Auto-incrementing the sequence number means that the RTP packets are valid which I think is more robust than using invalid sequence numbers (e.g., always using 0).\n\nI had a comment that described the behavior before that got lost in the shuffle. I\u0027ll re-add that comment. Let me know if that sounds agreeable to you.",
+      "parentUuid": "e84bfdb7_c2aaa1e8",
       "revId": "4148af3bdbcc1e078aa8b020d38e049454d5c604",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "2a765bbc_6308ba91",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-11T17:44:13Z",
+      "side": 1,
+      "message": "Nope, not sure why that was done. Also, for the record, is 6 arbitrary here?",
+      "parentUuid": "d914d78b_190e9a9d",
+      "revId": "4148af3bdbcc1e078aa8b020d38e049454d5c604",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3c98cbe4_63bfa9de",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 1
@@ -81,6 +153,24 @@
       "writtenOn": "2017-08-11T14:39:47Z",
       "side": 1,
       "message": "I think we should prefer to be explicit in the unit-tests. I would remove this.\n(Suffix an underscore for member variables, btw.)",
+      "revId": "4148af3bdbcc1e078aa8b020d38e049454d5c604",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba9c424e_b7d45415",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-11T17:44:13Z",
+      "side": 1,
+      "message": "Added the underscore. See comment above about justification for this.",
+      "parentUuid": "3c98cbe4_63bfa9de",
       "revId": "4148af3bdbcc1e078aa8b020d38e049454d5c604",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
