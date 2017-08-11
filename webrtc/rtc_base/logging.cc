@@ -126,7 +126,8 @@ LogMessage::LogMessage(const char* file,
   if (timestamp_) {
     // Use SystemTimeMillis so that even if tests use fake clocks, the timestamp
     // in log messages represents the real system time.
-    int64_t time = TimeDiff(SystemTimeMillis(), LogStartTime());
+    // int64_t time = TimeDiff(SystemTimeMillis(), LogStartTime());
+    int64_t time = TimeMillis();
     // Also ensure WallClockStartTime is initialized, so that it matches
     // LogStartTime.
     WallClockStartTime();
