@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "3c631e4d_ea01d57f",
+        "filename": "webrtc/api/peerconnectioninterface.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-08-11T05:31:03Z",
+      "side": 1,
+      "message": "OOC, did you consider using std::vector\u003cstd::string\u003e here?",
+      "range": {
+        "startLine": 196,
+        "startChar": 13,
+        "endLine": 196,
+        "endChar": 22
+      },
+      "revId": "9d70155b2792318a3949b950db6a307b38042e93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9e9f6150_6decf889",
         "filename": "webrtc/p2p/base/packetsocketfactory.h",
         "patchSetId": 1
@@ -19,6 +42,47 @@
         "endLine": 64,
         "endChar": 39
       },
+      "revId": "9d70155b2792318a3949b950db6a307b38042e93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a95f0e8_e47a2a28",
+        "filename": "webrtc/p2p/base/packetsocketfactory.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-08-11T05:31:03Z",
+      "side": 1,
+      "message": "+1, suggest calling this PacketSocketTcpOptions",
+      "parentUuid": "9e9f6150_6decf889",
+      "range": {
+        "startLine": 64,
+        "startChar": 25,
+        "endLine": 64,
+        "endChar": 39
+      },
+      "revId": "9d70155b2792318a3949b950db6a307b38042e93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae300e4f_8d84a71e",
+        "filename": "webrtc/p2p/base/turnport.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-08-11T05:31:03Z",
+      "side": 1,
+      "message": "Not a fan of this approach, I think it would be better to be passed in via the ctor; this method has no effect if called after the port starts up.",
       "revId": "9d70155b2792318a3949b950db6a307b38042e93",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
@@ -48,6 +112,30 @@
     },
     {
       "key": {
+        "uuid": "179ec74f_e53e3206",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-08-11T05:31:03Z",
+      "side": 1,
+      "message": "This could also use a comment explaining what it is doing",
+      "parentUuid": "c4acf771_b62edd54",
+      "range": {
+        "startLine": 173,
+        "startChar": 19,
+        "endLine": 173,
+        "endChar": 38
+      },
+      "revId": "9d70155b2792318a3949b950db6a307b38042e93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a9b3d200_19efdbc5",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 1
@@ -65,6 +153,23 @@
         "endLine": 175,
         "endChar": 46
       },
+      "revId": "9d70155b2792318a3949b950db6a307b38042e93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "714c4909_8424a1d8",
+        "filename": "webrtc/rtc_base/ssladapter.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1126895
+      },
+      "writtenOn": "2017-08-11T05:31:03Z",
+      "side": 1,
+      "message": "I don\u0027t think we want to do this in the base class. I think any real APIs should be pure virtual here and implemented in the derived classes.",
       "revId": "9d70155b2792318a3949b950db6a307b38042e93",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
