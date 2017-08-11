@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "985e28cc_fc472054",
+        "filename": "webrtc/p2p/base/turnport_unittest.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 394,
+      "author": {
+        "id": 1149620
+      },
+      "writtenOn": "2017-08-11T21:52:22Z",
+      "side": 1,
+      "message": "nit: It would be better to put this with the other two helper methods(NumRoundTripsToConnect etc.).",
+      "range": {
+        "startLine": 394,
+        "startChar": 6,
+        "endLine": 394,
+        "endChar": 44
+      },
+      "revId": "4d568693754638c1fb810a6e6248195c917fd149",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed23ab2c_4414f5fe",
+        "filename": "webrtc/p2p/base/turnport_unittest.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1149620
+      },
+      "writtenOn": "2017-08-11T21:52:22Z",
+      "side": 1,
+      "message": "This returns either 3 or 5 which is not equivalent with the original test. Is this expected?",
+      "range": {
+        "startLine": 416,
+        "startChar": 24,
+        "endLine": 416,
+        "endChar": 62
+      },
+      "revId": "4d568693754638c1fb810a6e6248195c917fd149",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
