@@ -106,7 +106,8 @@ AsyncPacketSocket* BasicPacketSocketFactory::CreateServerTcpSocket(
 
 AsyncPacketSocket* BasicPacketSocketFactory::CreateClientTcpSocket(
     const SocketAddress& local_address, const SocketAddress& remote_address,
-    const ProxyInfo& proxy_info, const std::string& user_agent, int opts) {
+    const ProxyInfo& proxy_info, const std::string& user_agent,
+    const std::string& alpn_protocols, int opts) {
   AsyncSocket* socket =
       socket_factory()->CreateAsyncSocket(local_address.family(), SOCK_STREAM);
   if (!socket) {
@@ -152,8 +153,10 @@ AsyncPacketSocket* BasicPacketSocketFactory::CreateClientTcpSocket(
     }
 
     if (tlsOpts & PacketSocketFactory::OPT_TLS_INSECURE) {
-      ssl_adapter->set_ignore_bad_cert(true);
+      ssl_adapter->SetIgnoreBadCert(true);
     }
+
+    ssl_adapter->SetAlpnProtocols(alpn_protocols);
 
     socket = ssl_adapter;
 

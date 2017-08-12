@@ -34,6 +34,9 @@ public:
   OpenSSLAdapter(AsyncSocket* socket);
   ~OpenSSLAdapter() override;
 
+  void SetIgnoreBadCert(bool ignore) override;
+  void SetAlpnProtocols(const std::string& protos) override;
+
   void SetMode(SSLMode mode) override;
   int StartSSL(const char* hostname, bool restartable) override;
   int Send(const void* pv, size_t cb) override;
@@ -101,6 +104,10 @@ private:
   std::string ssl_host_name_;
   // Do DTLS or not
   SSLMode ssl_mode_;
+  // If true, the server certificate need not match the configured hostname.
+  bool ignore_bad_cert_;
+  // Comma separated list of protocols to be used in the TLS ALPN extension.
+  std::string alpn_protocols_;
 
   bool custom_verification_succeeded_;
 };
