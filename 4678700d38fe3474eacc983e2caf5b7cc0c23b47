@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8f899680_5af35fe3",
+        "filename": "webrtc/sdk/BUILD.gn",
+        "patchSetId": 2
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 1238363
+      },
+      "writtenOn": "2017-08-12T05:18:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "38bac85f_1a9dc26d",
+      "revId": "4678700d38fe3474eacc983e2caf5b7cc0c23b47",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3b7e5aee_bf175936",
         "filename": "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
         "patchSetId": 2
@@ -39,6 +57,30 @@
       "revId": "4678700d38fe3474eacc983e2caf5b7cc0c23b47",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66a821a8_8bb0d41a",
+        "filename": "webrtc/sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1238363
+      },
+      "writtenOn": "2017-08-12T05:18:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3b7e5aee_bf175936",
+      "range": {
+        "startLine": 57,
+        "startChar": 47,
+        "endLine": 57,
+        "endChar": 0
+      },
+      "revId": "4678700d38fe3474eacc983e2caf5b7cc0c23b47",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "cc8fd693_a3e932f0",
+        "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCAudioDecoderFactory.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1238363
+      },
+      "writtenOn": "2017-08-12T05:18:08Z",
+      "side": 1,
+      "message": "I got my clang-format correctly using the right settings now.\n\nI think xcode (and maybe Duo\u0027s clang) adds a space here but using the webrtc\u0027s clang-format settings removes it, although that might depend on the version of clang that\u0027s being used.  I think i\u0027m on latest now.",
+      "parentUuid": "992aba57_2300f696",
+      "range": {
+        "startLine": 18,
+        "startChar": 32,
+        "endLine": 18,
+        "endChar": 33
+      },
+      "revId": "4678700d38fe3474eacc983e2caf5b7cc0c23b47",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "96d77f5b_e5a985a4",
         "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCAudioDecoderFactory.h",
         "patchSetId": 2
@@ -88,6 +154,30 @@
     },
     {
       "key": {
+        "uuid": "8cb1a956_82ee06a3",
+        "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCAudioDecoderFactory.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1238363
+      },
+      "writtenOn": "2017-08-12T05:18:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "96d77f5b_e5a985a4",
+      "range": {
+        "startLine": 20,
+        "startChar": 79,
+        "endLine": 20,
+        "endChar": 98
+      },
+      "revId": "4678700d38fe3474eacc983e2caf5b7cc0c23b47",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "905538c4_6c364173",
         "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCAudioEncoderFactory.h",
         "patchSetId": 2
@@ -108,6 +198,30 @@
       "revId": "4678700d38fe3474eacc983e2caf5b7cc0c23b47",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd791de2_5c51cbf7",
+        "filename": "webrtc/sdk/objc/Framework/Headers/WebRTC/RTCAudioEncoderFactory.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1238363
+      },
+      "writtenOn": "2017-08-12T05:18:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "905538c4_6c364173",
+      "range": {
+        "startLine": 18,
+        "startChar": 32,
+        "endLine": 18,
+        "endChar": 33
+      },
+      "revId": "4678700d38fe3474eacc983e2caf5b7cc0c23b47",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
