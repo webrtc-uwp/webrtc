@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "45d11972_bbcc0e77",
+        "filename": "webrtc/api/peerconnectioninterface.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1238500
+      },
+      "writtenOn": "2017-08-12T00:52:31Z",
+      "side": 1,
+      "message": "I did, but considering that ALPN is rarely going to be used, I felt it\u0027d be better to make the API simpler in the cases where it\u0027s not used.\nI\u0027m open to changing it though if you think it\u0027d be better as a vector.",
+      "parentUuid": "3c631e4d_ea01d57f",
+      "range": {
+        "startLine": 196,
+        "startChar": 13,
+        "endLine": 196,
+        "endChar": 22
+      },
+      "revId": "9d70155b2792318a3949b950db6a307b38042e93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9e9f6150_6decf889",
         "filename": "webrtc/p2p/base/packetsocketfactory.h",
         "patchSetId": 1
@@ -72,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "02dca171_389a6935",
+        "filename": "webrtc/p2p/base/packetsocketfactory.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1238500
+      },
+      "writtenOn": "2017-08-12T00:52:31Z",
+      "side": 1,
+      "message": "There\u0027s currently a non-webrtc class in google3 which is derived from this. I\u0027m concerned about changing signatures here breaking them. I\u0027ve added a TODO for now but if we\u0027re looking to change it in this CL, what\u0027s the approach for synchronizing the changes?",
+      "parentUuid": "6a95f0e8_e47a2a28",
+      "range": {
+        "startLine": 64,
+        "startChar": 25,
+        "endLine": 64,
+        "endChar": 39
+      },
+      "revId": "9d70155b2792318a3949b950db6a307b38042e93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ae300e4f_8d84a71e",
         "filename": "webrtc/p2p/base/turnport.h",
         "patchSetId": 1
@@ -86,6 +134,24 @@
       "revId": "9d70155b2792318a3949b950db6a307b38042e93",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "725ec389_c69b0cec",
+        "filename": "webrtc/p2p/base/turnport.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1238500
+      },
+      "writtenOn": "2017-08-12T00:52:31Z",
+      "side": 1,
+      "message": "Done. Worthwhile doing the same change to TlsCertPolicy too? I\u0027m concerned about consistency, but adding more TLS specific fields to an already cluttered TurnPort constructor also doesn\u0027t seem nice.",
+      "parentUuid": "ae300e4f_8d84a71e",
+      "revId": "9d70155b2792318a3949b950db6a307b38042e93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -136,6 +202,30 @@
     },
     {
       "key": {
+        "uuid": "1f4bcf29_da977004",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1238500
+      },
+      "writtenOn": "2017-08-12T00:52:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "179ec74f_e53e3206",
+      "range": {
+        "startLine": 173,
+        "startChar": 19,
+        "endLine": 173,
+        "endChar": 38
+      },
+      "revId": "9d70155b2792318a3949b950db6a307b38042e93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a9b3d200_19efdbc5",
         "filename": "webrtc/rtc_base/openssladapter.cc",
         "patchSetId": 1
@@ -159,6 +249,30 @@
     },
     {
       "key": {
+        "uuid": "2496eba5_92d78105",
+        "filename": "webrtc/rtc_base/openssladapter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1238500
+      },
+      "writtenOn": "2017-08-12T00:52:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a9b3d200_19efdbc5",
+      "range": {
+        "startLine": 175,
+        "startChar": 0,
+        "endLine": 175,
+        "endChar": 46
+      },
+      "revId": "9d70155b2792318a3949b950db6a307b38042e93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "714c4909_8424a1d8",
         "filename": "webrtc/rtc_base/ssladapter.h",
         "patchSetId": 1
@@ -173,6 +287,24 @@
       "revId": "9d70155b2792318a3949b950db6a307b38042e93",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe8d181c_ed388a70",
+        "filename": "webrtc/rtc_base/ssladapter.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1238500
+      },
+      "writtenOn": "2017-08-12T00:52:31Z",
+      "side": 1,
+      "message": "Done. Also applied the same changes to ignore_bad_cert, for consistency.",
+      "parentUuid": "714c4909_8424a1d8",
+      "revId": "9d70155b2792318a3949b950db6a307b38042e93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
