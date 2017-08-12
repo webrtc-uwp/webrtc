@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7575a298_9132a557",
+        "filename": "webrtc/modules/desktop_capture/window_capturer_x11.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-12T00:56:32Z",
+      "side": 1,
+      "message": "Most of the change in this CL are copy-paste with minor formatting work. But this function has been significantly modified. The original implementation is wrong AFAICT.\nFeel free to talk offline if you have concern to it.",
+      "range": {
+        "startLine": 219,
+        "startChar": 0,
+        "endLine": 219,
+        "endChar": 61
+      },
+      "revId": "5cdad4ad8d0b439c6e043606f5cc88842613c9b7",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
