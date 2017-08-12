@@ -23,6 +23,8 @@ NS_ASSUME_NONNULL_BEGIN
 @class RTCPeerConnection;
 @class RTCVideoSource;
 @class RTCVideoTrack;
+@protocol RTCAudioEncoderFactory;
+@protocol RTCAudioDecoderFactory;
 @protocol RTCPeerConnectionDelegate;
 @protocol RTCVideoDecoderFactory;
 @protocol RTCVideoEncoderFactory;
@@ -30,19 +32,28 @@ NS_ASSUME_NONNULL_BEGIN
 RTC_EXPORT
 @interface RTCPeerConnectionFactory : NSObject
 
-/* Initialize object with default H264 video encoder/decoder factories */
+/* Initialize object with default audio and H264 video encoder/decoder factories
+ */
 - (instancetype)init;
 
-/* Initialize object with injectable video encoder/decoder factories */
-- (instancetype)initWithEncoderFactory:(nullable id<RTCVideoEncoderFactory>)encoderFactory
-                        decoderFactory:(nullable id<RTCVideoDecoderFactory>)decoderFactory
+/* Initialize object with injectable audio/video encoder/decoder factories */
+- (instancetype)
+initWithAudioEncoderFactory:
+    (nullable id<RTCAudioEncoderFactory>)audioEncoderFactory
+        audioDecoderFactory:
+            (nullable id<RTCAudioDecoderFactory>)audioDecoderFactory
+        videoEncoderFactory:
+            (nullable id<RTCVideoEncoderFactory>)videoEncoderFactory
+        videoDecoderFactory:
+            (nullable id<RTCVideoDecoderFactory>)videoDecoderFactory
     NS_DESIGNATED_INITIALIZER;
 
 /** Initialize an RTCAudioSource with constraints. */
-- (RTCAudioSource *)audioSourceWithConstraints:(nullable RTCMediaConstraints *)constraints;
+- (RTCAudioSource *)audioSourceWithConstraints:
+    (nullable RTCMediaConstraints *)constraints;
 
-/** Initialize an RTCAudioTrack with an id. Convenience ctor to use an audio source with no
- *  constraints.
+/** Initialize an RTCAudioTrack with an id. Convenience ctor to use an audio
+ * source with no constraints.
  */
 - (RTCAudioTrack *)audioTrackWithTrackId:(NSString *)trackId;
 
@@ -54,8 +65,9 @@ RTC_EXPORT
 - (RTCAVFoundationVideoSource *)avFoundationVideoSourceWithConstraints:
     (nullable RTCMediaConstraints *)constraints;
 
-/** Initialize a generic RTCVideoSource. The RTCVideoSource should be passed to a RTCVideoCapturer
- *  implementation, e.g. RTCCameraVideoCapturer, in order to produce frames.
+/** Initialize a generic RTCVideoSource. The RTCVideoSource should be passed to
+ * a RTCVideoCapturer implementation, e.g. RTCCameraVideoCapturer, in order to
+ * produce frames.
  */
 - (RTCVideoSource *)videoSource;
 
@@ -69,14 +81,14 @@ RTC_EXPORT
 /** Initialize an RTCPeerConnection with a configuration, constraints, and
  *  delegate.
  */
-- (RTCPeerConnection *)peerConnectionWithConfiguration:
-    (RTCConfiguration *)configuration
-                                           constraints:
-    (RTCMediaConstraints *)constraints
-                                              delegate:
-    (nullable id<RTCPeerConnectionDelegate>)delegate;
+- (RTCPeerConnection *)
+peerConnectionWithConfiguration:(RTCConfiguration *)configuration
+                    constraints:(RTCMediaConstraints *)constraints
+                       delegate:
+                           (nullable id<RTCPeerConnectionDelegate>)delegate;
 
-/** Start an AecDump recording. This API call will likely change in the future. */
+/** Start an AecDump recording. This API call will likely change in the future.
+ */
 - (BOOL)startAecDumpWithFilePath:(NSString *)filePath
                   maxSizeInBytes:(int64_t)maxSizeInBytes;
 
