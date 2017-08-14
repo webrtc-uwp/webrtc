@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45f4cac3_906cbe04",
+        "filename": "webrtc/modules/desktop_capture/screen_drawer_lock_posix.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-14T18:00:26Z",
+      "side": 1,
+      "message": "If I\u0027m reading this correctly, the reason we can\u0027t unlink is that the object needs to exist in the namespace so that different processes get the same semaphore instance; is that correct? If so, then I think this is a great comment to explain why we\u0027re not unlinking it, but I don\u0027t see any way of safely deleting it, and so I don\u0027t think this TODO is actually doable. I think you should delete it and the commented-out code.",
+      "range": {
+        "startLine": 38,
+        "startChar": 68,
+        "endLine": 38,
+        "endChar": 0
+      },
+      "revId": "b8709a34c629196d45926ad4873ca8bc5870c908",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c859f4d_5891e8ad",
+        "filename": "webrtc/modules/desktop_capture/screen_drawer_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-14T18:00:26Z",
+      "side": 1,
+      "message": "Please don\u0027t add disabled tests. If the semantics of ScreenDrawerLock don\u0027t currently provide a way of testing whether or not a lock could be acquired without blocking, then consider adding one (for test only) and rewrite this test to use it. If that\u0027s not possible given the underlying APIs, then either delete the test or find a way to make it runnable.",
+      "range": {
+        "startLine": 74,
+        "startChar": 1,
+        "endLine": 74,
+        "endChar": 0
+      },
+      "revId": "b8709a34c629196d45926ad4873ca8bc5870c908",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
