@@ -10,11 +10,23 @@
 
 #include "webrtc/modules/desktop_capture/window_under_point.h"
 
+#include "webrtc/modules/desktop_capture/x11/window_list_utils.h"
+
 namespace webrtc {
 
-WindowId GetWindowUnderPoint(DesktopVector point) {
-  // TODO(zijiehe): Implementation required.
-  return kNullWindowId;
+WindowId GetWindowUnderPoint(XAtomCache* cache, DesktopVector point) {
+  WindowId id = kNullWindowId;
+  GetWindowList(cache,
+                [&id, cache, point](::Window window) {
+                  DesktopRect rect;
+                  if (GetWindowRect(cache->display(), window, &rect) &&
+                      rect.Contains(point)) {
+                    id = window;
+                    return false;
+                  }
+                  return true;
+                });
+  return id;
 }
 
 }  // namespace webrtc

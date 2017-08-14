@@ -19,7 +19,13 @@ namespace webrtc {
 // Returns the id of the visible window under |point|. This function returns
 // kNullWindowId if no window is under |point| and the platform does not have
 // "root window" concept, i.e. the visible area under |point| is the desktop.
+#if defined (USE_X11)
+class XAtomCache;
+
+WindowId GetWindowUnderPoint(XAtomCache* cache, DesktopVector point);
+#else
 WindowId GetWindowUnderPoint(DesktopVector point);
+#endif
 
 }  // namespace webrtc
 

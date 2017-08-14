@@ -16,18 +16,16 @@
 namespace webrtc {
 
 WindowId GetWindowUnderPoint(DesktopVector point) {
-  WindowId id;
-  if (!GetWindowList([&id, point](CFDictionaryRef window) {
-                       DesktopRect bounds = GetWindowBounds(window);
-                       if (bounds.Contains(point)) {
-                         id = GetWindowId(window);
-                         return false;
-                       }
-                       return true;
-                     },
-                     true)) {
-    return kNullWindowId;
-  }
+  WindowId id = kNullWindowId;
+  GetWindowList([&id, point](CFDictionaryRef window) {
+                  DesktopRect bounds = GetWindowBounds(window);
+                  if (bounds.Contains(point)) {
+                    id = GetWindowId(window);
+                    return false;
+                  }
+                  return true;
+                },
+                true);
   return id;
 }
 
