@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "ec6eace4_98daf15b",
+        "filename": "webrtc/modules/desktop_capture/window_capturer_x11.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-14T21:11:15Z",
+      "side": 1,
+      "message": "I have updated the code. But personally I still think this version is better. (Four nesting if-conditions v.s. one if-condition.)",
+      "parentUuid": "e2a33f66_4a3379ca",
+      "range": {
+        "startLine": 221,
+        "startChar": 17,
+        "endLine": 221,
+        "endChar": 0
+      },
+      "revId": "5cdad4ad8d0b439c6e043606f5cc88842613c9b7",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6ec630e8_c2649fd4",
         "filename": "webrtc/modules/desktop_capture/window_under_point_linux.cc",
         "patchSetId": 1
@@ -71,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "8852768f_07699b78",
+        "filename": "webrtc/modules/desktop_capture/window_under_point_linux.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-14T21:11:15Z",
+      "side": 1,
+      "message": "Done.\nMac OSX version is also updated.",
+      "parentUuid": "6ec630e8_c2649fd4",
+      "range": {
+        "startLine": 19,
+        "startChar": 28,
+        "endLine": 19,
+        "endChar": 0
+      },
+      "revId": "5cdad4ad8d0b439c6e043606f5cc88842613c9b7",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "550517ac_e89a7464",
         "filename": "webrtc/modules/desktop_capture/x11/x_server_pixel_buffer.h",
         "patchSetId": 1
@@ -91,6 +139,30 @@
       "revId": "5cdad4ad8d0b439c6e043606f5cc88842613c9b7",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "57556c3c_3631d7b6",
+        "filename": "webrtc/modules/desktop_capture/x11/x_server_pixel_buffer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-14T21:11:15Z",
+      "side": 1,
+      "message": "My fault, a reference is missed.",
+      "parentUuid": "550517ac_e89a7464",
+      "range": {
+        "startLine": 45,
+        "startChar": 2,
+        "endLine": 45,
+        "endChar": 7
+      },
+      "revId": "5cdad4ad8d0b439c6e043606f5cc88842613c9b7",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }

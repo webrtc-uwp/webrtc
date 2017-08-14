@@ -22,6 +22,30 @@
       "revId": "577b5b469ce60d6e1718f89475df773578f5491c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c2feb15_ba079522",
+        "filename": "webrtc/modules/desktop_capture/window_under_point_linux.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-14T21:11:15Z",
+      "side": 0,
+      "message": "This version is removed when USE_X11 is defined.",
+      "parentUuid": "e47bb6db_ed521115",
+      "range": {
+        "startLine": 16,
+        "startChar": 44,
+        "endLine": 16,
+        "endChar": 0
+      },
+      "revId": "577b5b469ce60d6e1718f89475df773578f5491c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
