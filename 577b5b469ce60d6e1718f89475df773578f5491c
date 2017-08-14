@@ -46,6 +46,30 @@
       "revId": "577b5b469ce60d6e1718f89475df773578f5491c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9f59bf7_933e17e1",
+        "filename": "webrtc/modules/desktop_capture/window_under_point_linux.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-14T22:14:28Z",
+      "side": 0,
+      "message": "Oh, I see what\u0027s going on. There are two methods declared in the header, but only one will be defined, depending on the #defines. I\u0027m not a fan of this approach; we use it occasionally in Chromium where there\u0027s a factory method that has the same method signature on all platforms, but the implementation is per-platform. It allows cross-platform code to instantiate a per-platform instance without needing to know the details.\n\nHowever, that\u0027s not the case here. The X11 specific function should be defined in a separate header that\u0027s only included in Linux implementations, since the calling code needs to know the platform details anyway to pass in the correct parameter. Alternatively, you could make XAtomCache a global so you don\u0027t need to pass it in, and have the same method signature on all platforms. That\u0027s probably more work though.",
+      "parentUuid": "1c2feb15_ba079522",
+      "range": {
+        "startLine": 16,
+        "startChar": 44,
+        "endLine": 16,
+        "endChar": 0
+      },
+      "revId": "577b5b469ce60d6e1718f89475df773578f5491c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
