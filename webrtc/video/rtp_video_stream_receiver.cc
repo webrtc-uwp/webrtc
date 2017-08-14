@@ -42,7 +42,7 @@
 namespace webrtc {
 
 namespace {
-constexpr int kPacketBufferStartSize = 32;
+constexpr int kPacketBufferStartSize = 512;
 constexpr int kPacketBufferMaxSixe = 2048;
 }
 
