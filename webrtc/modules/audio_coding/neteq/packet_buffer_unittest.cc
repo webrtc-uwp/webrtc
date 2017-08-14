@@ -294,7 +294,7 @@ TEST(PacketBuffer, ExtractOrderRedundancy) {
     Packet packet = gen.NextPacket(kPayloadLength);
     packet.priority.red_level = packet_facts[i].primary ? 0 : 1;
     if (packet_facts[i].extract_order < 0) {
-      EXPECT_CALL(mock_stats, PacketsDiscarded(1));
+      EXPECT_CALL(mock_stats, SecondaryPacketsDiscarded(1));
     }
     EXPECT_CALL(check, Call(i));
     EXPECT_EQ(PacketBuffer::kOK,

@@ -100,7 +100,7 @@ int PacketBuffer::InsertPacket(Packet&& packet, StatisticsCalculator* stats) {
   // packet to list.
   if (rit != buffer_.rend() && packet.timestamp == rit->timestamp) {
     RTC_CHECK(stats);
-    stats->PacketsDiscarded(1);
+    stats->SecondaryPacketsDiscarded(1);
     return return_val;
   }
 
@@ -111,7 +111,7 @@ int PacketBuffer::InsertPacket(Packet&& packet, StatisticsCalculator* stats) {
   if (it != buffer_.end() && packet.timestamp == it->timestamp) {
     it = buffer_.erase(it);
     RTC_CHECK(stats);
-    stats->PacketsDiscarded(1);
+    stats->SecondaryPacketsDiscarded(1);
   }
   buffer_.insert(it, std::move(packet));  // Insert the packet at that position.
 
@@ -218,24 +218,46 @@ int PacketBuffer::DiscardNextPacket(StatisticsCalculator* stats) {
     return kBufferEmpty;
   }
   // Assert that the packet sanity checks in InsertPacket method works.
-  RTC_DCHECK(!buffer_.front().empty());
+  const Packet& packet = buffer_.front();
+  RTC_DCHECK(!packet.empty());
+
+  if (packet.priority.codec_level > 0) {
+    RTC_CHECK(stats);
+    stats->SecondaryPacketsDiscarded(1);
+  } else {
+    RTC_CHECK(stats);
+    stats->PacketsDiscarded(1);
+  }
+
   buffer_.pop_front();
-  RTC_CHECK(stats);
-  stats->PacketsDiscarded(1);
   return kOK;
 }
 
 void PacketBuffer::DiscardOldPackets(uint32_t timestamp_limit,
                                      uint32_t horizon_samples,
                                      StatisticsCalculator* stats) {
-  const size_t old_size = buffer_.size();
-  buffer_.remove_if([timestamp_limit, horizon_samples](const Packet& p) {
-    return timestamp_limit != p.timestamp &&
-           IsObsoleteTimestamp(p.timestamp, timestamp_limit, horizon_samples);
+  size_t packets_discarded = 0;
+  size_t secondary_packets_discarded = 0;
+  buffer_.remove_if([timestamp_limit, horizon_samples, &packets_discarded,
+                     &secondary_packets_discarded](const Packet& p) {
+    if (timestamp_limit == p.timestamp ||
+        !IsObsoleteTimestamp(p.timestamp, timestamp_limit, horizon_samples)) {
+      return false;
+    }
+    if (p.priority.codec_level > 0) {
+      ++secondary_packets_discarded;
+    } else {
+      ++packets_discarded;
+    }
+    return true;
   });
-  if (old_size > buffer_.size()) {
+  if (packets_discarded > 0) {
     RTC_CHECK(stats);
-    stats->PacketsDiscarded(old_size - buffer_.size());
+    stats->PacketsDiscarded(packets_discarded);
+  }
+  if (secondary_packets_discarded > 0) {
+    RTC_CHECK(stats);
+    stats->SecondaryPacketsDiscarded(secondary_packets_discarded);
   }
 }
 
@@ -247,11 +269,16 @@ void PacketBuffer::DiscardAllOldPackets(uint32_t timestamp_limit,
 void PacketBuffer::DiscardPacketsWithPayloadType(uint8_t payload_type,
                                                  StatisticsCalculator* stats) {
   int packets_discarded = 0;
+  int secondary_packets_discarded = 0;
   for (auto it = buffer_.begin(); it != buffer_.end(); /* */) {
     const Packet& packet = *it;
     if (packet.payload_type == payload_type) {
+      if (packet.priority.codec_level > 0) {
+        ++secondary_packets_discarded;
+      } else {
+        ++packets_discarded;
+      }
       it = buffer_.erase(it);
-      ++packets_discarded;
     } else {
       ++it;
     }
@@ -259,6 +286,10 @@ void PacketBuffer::DiscardPacketsWithPayloadType(uint8_t payload_type,
   if (packets_discarded > 0) {
     RTC_CHECK(stats);
     stats->PacketsDiscarded(packets_discarded);
+  }
+  if (secondary_packets_discarded > 0) {
+    RTC_CHECK(stats);
+    stats->SecondaryPacketsDiscarded(secondary_packets_discarded);
   }
 }
 
