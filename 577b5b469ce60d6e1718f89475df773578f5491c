@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e47bb6db_ed521115",
+        "filename": "webrtc/modules/desktop_capture/window_under_point_linux.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-14T17:36:28Z",
+      "side": 0,
+      "message": "I think you still need to provide this since it\u0027s declared in the header.",
+      "range": {
+        "startLine": 16,
+        "startChar": 44,
+        "endLine": 16,
+        "endChar": 0
+      },
+      "revId": "577b5b469ce60d6e1718f89475df773578f5491c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}

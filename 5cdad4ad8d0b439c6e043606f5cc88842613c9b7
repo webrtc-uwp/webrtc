@@ -22,6 +22,75 @@
       "revId": "5cdad4ad8d0b439c6e043606f5cc88842613c9b7",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2a33f66_4a3379ca",
+        "filename": "webrtc/modules/desktop_capture/window_capturer_x11.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-14T17:36:28Z",
+      "side": 1,
+      "message": "These early \"return false\" statements seem a bit odd when the function returns false anyway, and the only side-effect it has is hidden inside a conditional. I think the way the function was originally structured was better--just remove the \"return true\" if you think it\u0027s wrong.",
+      "range": {
+        "startLine": 221,
+        "startChar": 17,
+        "endLine": 221,
+        "endChar": 0
+      },
+      "revId": "5cdad4ad8d0b439c6e043606f5cc88842613c9b7",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ec630e8_c2649fd4",
+        "filename": "webrtc/modules/desktop_capture/window_under_point_linux.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-14T17:36:28Z",
+      "side": 1,
+      "message": "GetWindowList only returns false on failure, right? So there\u0027s no guarantee that the callback ever assigned a value to |id|. I think it would be better to initialize |id| to |kNullWindowId|, and you can get rid of the conditional altogether.",
+      "range": {
+        "startLine": 19,
+        "startChar": 28,
+        "endLine": 19,
+        "endChar": 0
+      },
+      "revId": "5cdad4ad8d0b439c6e043606f5cc88842613c9b7",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "550517ac_e89a7464",
+        "filename": "webrtc/modules/desktop_capture/x11/x_server_pixel_buffer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-14T17:36:28Z",
+      "side": 1,
+      "message": "No point in const here, I don\u0027t think, unless you want to return it by reference instead (in which case you should be consistent and update window_size() too).",
+      "range": {
+        "startLine": 45,
+        "startChar": 2,
+        "endLine": 45,
+        "endChar": 7
+      },
+      "revId": "5cdad4ad8d0b439c6e043606f5cc88842613c9b7",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
