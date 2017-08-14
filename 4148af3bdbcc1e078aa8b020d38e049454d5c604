@@ -107,6 +107,24 @@
     },
     {
       "key": {
+        "uuid": "37eca1d0_46a4a0c7",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-14T08:16:41Z",
+      "side": 1,
+      "message": "Generally, I think you\u0027re right. Looking at the code again, I only have a (very small) concern over PacketsDeliveredInRightOrder. Perhaps you could either add a comment there, saying the different packets get different sequence numbers? (Otherwise, the check that things happen in sequence is not very convincing.) You might want instead to create a version of CreateRtpPacketReceived() that takes a sequence-number explicitly? (That would make you have to decide what to do if the original version is ever called after the new one, btw - increment from last next_sn_ or from last manually provided value.)",
+      "parentUuid": "5899ddd4_7c935573",
+      "revId": "4148af3bdbcc1e078aa8b020d38e049454d5c604",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d914d78b_190e9a9d",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 1
@@ -136,6 +154,24 @@
       "side": 1,
       "message": "Nope, not sure why that was done. Also, for the record, is 6 arbitrary here?",
       "parentUuid": "d914d78b_190e9a9d",
+      "revId": "4148af3bdbcc1e078aa8b020d38e049454d5c604",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96b70bc7_232c8704",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-14T08:16:41Z",
+      "side": 1,
+      "message": "As far as I know, yes. There is some mapping between kRtpExtensionRtpStreamId and ID; you might want to look more into that if you\u0027re curious.",
+      "parentUuid": "2a765bbc_6308ba91",
       "revId": "4148af3bdbcc1e078aa8b020d38e049454d5c604",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
