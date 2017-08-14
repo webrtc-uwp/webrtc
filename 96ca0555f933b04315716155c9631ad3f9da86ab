@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e92c8b08_50629ce8",
+        "filename": "webrtc/sdk/objc/Framework/Classes/VideoToolbox/encoder.mm",
+        "patchSetId": 5
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1163304
+      },
+      "writtenOn": "2017-08-14T09:26:27Z",
+      "side": 1,
+      "message": "There is a space at the start of the log strings that should not be there. Take a look at the other log lines in the file.",
+      "range": {
+        "startLine": 623,
+        "startChar": 21,
+        "endLine": 623,
+        "endChar": 22
+      },
+      "revId": "96ca0555f933b04315716155c9631ad3f9da86ab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
