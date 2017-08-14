@@ -14,9 +14,15 @@
 
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/random.h"
+#include "webrtc/rtc_base/platform_thread.h"
 #include "webrtc/rtc_base/timeutils.h"
 #include "webrtc/system_wrappers/include/sleep.h"
 #include "webrtc/test/gtest.h"
+
+#if defined(WEBRTC_POSIX)
+#include "semaphore.h"
+#include "webrtc/modules/desktop_capture/screen_drawer_lock_posix.h"
+#endif
 
 namespace webrtc {
 
@@ -55,6 +61,74 @@ TEST(ScreenDrawerTest, DISABLED_DrawRectangles) {
   }
 
   SleepMs(10000);
+}
+
+TEST(ScreenDrawerTest, TwoScreenDrawerLocks) {
+#if defined (WEBRTC_POSIX)
+  // ScreenDrawerLockPosix won't be able to unlink the named semaphore. So use a
+  // different semaphore name to avoid deadlock.
+  const char* semaphore_name =
+      "/global-screen-drawer-linux-8784541a-8120-11e7-88ff-67427b900ef1";
+  ScreenDrawerLockPosix::Unlink(semaphore_name);
+#else
+  // ScreenDrawerLock may not be implemented for all platforms: check its
+  // availability first.
+  {
+    std::unique_ptr<ScreenDrawerLock> lock = ScreenDrawerLock::Create();
+    if (!lock) {
+      LOG(LS_WARNING) <<
+          "No ScreenDrawerLock implementation for current platform.";
+      return;
+    }
+  }
+#endif
+
+  const int64_t start_ms = rtc::TimeMillis();
+  bool created = false;
+
+  class Task {
+   public:
+    Task(bool* created, const char* name)
+        : created_(created),
+          name_(name) {}
+
+    ~Task() = default;
+
+    static void RunTask(void* me) {
+      Task* task = static_cast<Task*>(me);
+#if defined(WEBRTC_POSIX)
+      ScreenDrawerLockPosix lock(task->name_);
+#else
+      std::unique_ptr<ScreenDrawerLock> lock = ScreenDrawerLock::Create();
+#endif
+      *(task->created_) = true;
+      SleepMs(100);
+    }
+
+   private:
+    bool* const created_;
+    const char* name_;
+  } task(&created, semaphore_name);
+
+  rtc::PlatformThread lock_thread(&Task::RunTask, &task, "lock_thread");
+  lock_thread.Start();
+
+  // CriticalSection cannot be released in a different thread, which triggers
+  // "mutex was not held" error.
+  // Event does not implemented for all platforms.
+  // So fallback to use a manual loop.
+  // TODO(zijiehe): Find a better solution to wait for the creation of the first
+  // lock.
+  while (!created) {
+    SleepMs(10);
+  }
+
+#if defined(WEBRTC_POSIX)
+  { ScreenDrawerLockPosix lock(semaphore_name); }
+#else
+  ScreenDrawerLock::Create();
+#endif
+  ASSERT_LE(100, rtc::TimeMillis() - start_ms);
 }
 
 }  // namespace webrtc
