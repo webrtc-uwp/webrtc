@@ -328,6 +328,30 @@
       "revId": "9d70155b2792318a3949b950db6a307b38042e93",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec1483eb_8f20700e",
+        "filename": "webrtc/rtc_base/ssladapter_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1238500
+      },
+      "writtenOn": "2017-08-14T20:07:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2bd976bf_aa6e34db",
+      "range": {
+        "startLine": 447,
+        "startChar": 2,
+        "endLine": 447,
+        "endChar": 18
+      },
+      "revId": "9d70155b2792318a3949b950db6a307b38042e93",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
