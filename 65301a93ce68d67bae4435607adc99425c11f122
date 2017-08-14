@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "bb996882_fd00b542",
+        "filename": "webrtc/modules/audio_coding/neteq/include/neteq.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-08-14T14:13:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "27779e1a_27300728",
+      "range": {
+        "startLine": 48,
+        "startChar": 63,
+        "endLine": 48,
+        "endChar": 70
+      },
+      "revId": "65301a93ce68d67bae4435607adc99425c11f122",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "80a12172_6033ea32",
         "filename": "webrtc/modules/audio_coding/neteq/packet_buffer.cc",
         "patchSetId": 3
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "3500f74c_fb340d42",
+        "filename": "webrtc/modules/audio_coding/neteq/packet_buffer.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-08-14T14:13:08Z",
+      "side": 1,
+      "message": "Yes, it is a logic flaw. But it can be a security risk if we DCHECK and let it run through. That is why I chose CHECK and put it right before its usage.",
+      "parentUuid": "80a12172_6033ea32",
+      "revId": "65301a93ce68d67bae4435607adc99425c11f122",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d4a82a21_d345bd37",
         "filename": "webrtc/modules/audio_coding/neteq/packet_buffer.cc",
         "patchSetId": 3
@@ -53,6 +95,30 @@
       "writtenOn": "2017-07-28T09:34:48Z",
       "side": 1,
       "message": "nit: can we use remove_if here as well?",
+      "range": {
+        "startLine": 273,
+        "startChar": 0,
+        "endLine": 273,
+        "endChar": 63
+      },
+      "revId": "65301a93ce68d67bae4435607adc99425c11f122",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "43816fa1_7375a97f",
+        "filename": "webrtc/modules/audio_coding/neteq/packet_buffer.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-08-14T14:13:08Z",
+      "side": 1,
+      "message": "Good idea!",
+      "parentUuid": "d4a82a21_d345bd37",
       "range": {
         "startLine": 273,
         "startChar": 0,
@@ -88,6 +154,30 @@
     },
     {
       "key": {
+        "uuid": "551da14e_e6c697f0",
+        "filename": "webrtc/modules/audio_coding/neteq/packet_buffer_unittest.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-08-14T14:13:08Z",
+      "side": 1,
+      "message": "Good question. This makes me double check the implementation and test. I made a mistake in counting all retransmission as secondary_discarded_packets. I should have also divided them into primary and secondary. See new patch.",
+      "parentUuid": "a56f5c26_7f73267f",
+      "range": {
+        "startLine": 296,
+        "startChar": 0,
+        "endLine": 296,
+        "endChar": 44
+      },
+      "revId": "65301a93ce68d67bae4435607adc99425c11f122",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "192b7c32_72ee797a",
         "filename": "webrtc/modules/audio_coding/neteq/statistics_calculator.cc",
         "patchSetId": 3
@@ -99,6 +189,24 @@
       "writtenOn": "2017-07-28T09:34:48Z",
       "side": 1,
       "message": "Why is \"discarded_packets_\" reset in ResetMcu() but \"discarded_secondart_packets_\" reset here? This code looks brittle to me.",
+      "revId": "65301a93ce68d67bae4435607adc99425c11f122",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27cd2a85_8be2cdb7",
+        "filename": "webrtc/modules/audio_coding/neteq/statistics_calculator.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-08-14T14:13:08Z",
+      "side": 1,
+      "message": "I agree. I have not looked into discarded_packets_ yet. It is never used and does not fulfill the spec, so there is a need for retouching it (but a separate task). This CL only tries to get discarded_secondary_packets_ correct.",
+      "parentUuid": "192b7c32_72ee797a",
       "revId": "65301a93ce68d67bae4435607adc99425c11f122",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
