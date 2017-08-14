@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5530aacd_856e0fa6",
+        "filename": "webrtc/modules/audio_processing/include/mock_audio_processing.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1184474
+      },
+      "writtenOn": "2017-08-14T10:27:25Z",
+      "side": 0,
+      "message": "Is there any test checking the number of calls for the methods above?\nI guess not, I\u0027m asking because the PS doesn\u0027t include any unit test.",
+      "range": {
+        "startLine": 189,
+        "startChar": 42,
+        "endLine": 189,
+        "endChar": 0
+      },
+      "revId": "7731bc829c3722cb1bcb9ee8109b9c9b6fc3ac1c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
