@@ -1007,6 +1007,7 @@ if (rtc_include_tests) {
     }
     if (is_posix) {
       sources += [
+        "openssladapter_unittest.cc",
         "ssladapter_unittest.cc",
         "sslidentity_unittest.cc",
         "sslstreamadapter_unittest.cc",

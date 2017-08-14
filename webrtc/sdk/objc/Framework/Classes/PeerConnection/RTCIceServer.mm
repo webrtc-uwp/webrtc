@@ -19,6 +19,7 @@
 @synthesize credential = _credential;
 @synthesize tlsCertPolicy = _tlsCertPolicy;
 @synthesize hostname = _hostname;
+@synthesize alpnProtocols = _alpnProtocols;
 
 - (instancetype)initWithURLStrings:(NSArray<NSString *> *)urlStrings {
   return [self initWithURLStrings:urlStrings
@@ -51,6 +52,20 @@
                         credential:(NSString *)credential
                      tlsCertPolicy:(RTCTlsCertPolicy)tlsCertPolicy
                           hostname:(NSString *)hostname {
+  return [self initWithURLStrings:urlStrings
+                         username:username
+                       credential:credential
+                    tlsCertPolicy:tlsCertPolicy
+                         hostname:hostname
+                    alpnProtocols:nil];
+}
+
+- (instancetype)initWithURLStrings:(NSArray<NSString *> *)urlStrings
+                          username:(NSString *)username
+                        credential:(NSString *)credential
+                     tlsCertPolicy:(RTCTlsCertPolicy)tlsCertPolicy
+                          hostname:(NSString *)hostname
+                     alpnProtocols:(NSString *)alpnProtocols {
   NSParameterAssert(urlStrings.count);
   if (self = [super init]) {
     _urlStrings = [[NSArray alloc] initWithArray:urlStrings copyItems:YES];
@@ -58,17 +73,19 @@
     _credential = [credential copy];
     _tlsCertPolicy = tlsCertPolicy;
     _hostname = [hostname copy];
+    _alpnProtocols = [alpnProtocols copy];
   }
   return self;
 }
 
 - (NSString *)description {
-  return [NSString stringWithFormat:@"RTCIceServer:\n%@\n%@\n%@\n%@\n%@",
+  return [NSString stringWithFormat:@"RTCIceServer:\n%@\n%@\n%@\n%@\n%@\n%@",
                                     _urlStrings,
                                     _username,
                                     _credential,
                                     [self stringForTlsCertPolicy:_tlsCertPolicy],
-                                    _hostname];
+                                    _hostname,
+                                    _alpnProtocols];
 }
 
 #pragma mark - Private
@@ -88,6 +105,7 @@
   iceServer.username = [NSString stdStringForString:_username];
   iceServer.password = [NSString stdStringForString:_credential];
   iceServer.hostname = [NSString stdStringForString:_hostname];
+  iceServer.alpn_protocols = [NSString stdStringForString:_alpnProtocols];
 
   [_urlStrings enumerateObjectsUsingBlock:^(NSString *url,
                                             NSUInteger idx,
@@ -118,6 +136,8 @@
   NSString *username = [NSString stringForStdString:nativeServer.username];
   NSString *credential = [NSString stringForStdString:nativeServer.password];
   NSString *hostname = [NSString stringForStdString:nativeServer.hostname];
+  NSString *alpnProtocols = [NSString
+  stringForStdString:nativeServer.alpn_protocols];
   RTCTlsCertPolicy tlsCertPolicy;
 
   switch (nativeServer.tls_cert_policy) {
@@ -133,7 +153,8 @@
                          username:username
                        credential:credential
                     tlsCertPolicy:tlsCertPolicy
-                         hostname:hostname];
+                         hostname:hostname
+                    alpnProtocols:alpnProtocols];
   return self;
 }
 

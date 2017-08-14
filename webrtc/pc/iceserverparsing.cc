@@ -257,6 +257,8 @@ static RTCErrorType ParseIceServerUrl(
         config.tls_cert_policy =
             cricket::TlsCertPolicy::TLS_CERT_POLICY_INSECURE_NO_CHECK;
       }
+      config.alpn_protocols = server.alpn_protocols;
+
       turn_servers->push_back(config);
       break;
     }
