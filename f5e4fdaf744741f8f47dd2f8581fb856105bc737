@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "449a80a8_0ce4ea2a",
+        "filename": "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-08-14T12:35:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "3e078777_375f33a4",
+      "range": {
+        "startLine": 393,
+        "startChar": 37,
+        "endLine": 393,
+        "endChar": 46
+      },
+      "revId": "f5e4fdaf744741f8f47dd2f8581fb856105bc737",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0e738e29_38707871",
         "filename": "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.h",
         "patchSetId": 6
@@ -60,6 +84,30 @@
       "side": 1,
       "message": "Ack",
       "parentUuid": "0e738e29_38707871",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 33
+      },
+      "revId": "f5e4fdaf744741f8f47dd2f8581fb856105bc737",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1010e1d4_b4f46177",
+        "filename": "webrtc/modules/audio_coding/codecs/opus/audio_encoder_opus.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1118997
+      },
+      "writtenOn": "2017-08-14T12:35:18Z",
+      "side": 1,
+      "message": "It turns out MakeUnique needs it. But this should be placed in .cc file.",
+      "parentUuid": "f13ee983_b080f13a",
       "range": {
         "startLine": 25,
         "startChar": 0,
