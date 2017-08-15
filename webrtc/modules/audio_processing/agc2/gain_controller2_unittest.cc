@@ -11,7 +11,6 @@
 #include <memory>
 #include <string>
 
-#include "webrtc/modules/audio_processing/agc2/digital_gain_applier.h"
 #include "webrtc/modules/audio_processing/agc2/gain_controller2.h"
 #include "webrtc/modules/audio_processing/audio_buffer.h"
 #include "webrtc/rtc_base/array_view.h"
@@ -32,64 +31,29 @@ void SetAudioBufferSamples(float value, AudioBuffer* ab) {
   }
 }
 
-template<typename Functor>
-bool CheckAudioBufferSamples(Functor validator, AudioBuffer* ab) {
-  for (size_t k = 0; k < ab->num_channels(); ++k) {
-    auto channel = rtc::ArrayView<float>(ab->channels_f()[k], ab->num_frames());
-    for (auto& sample : channel) { if (!validator(sample)) { return false; } }
-  }
-  return true;
-}
-
-bool TestDigitalGainApplier(float sample_value, float gain, float expected) {
-  AudioBuffer ab(kNumFrames, kStereo, kNumFrames, kStereo, kNumFrames);
-  SetAudioBufferSamples(sample_value, &ab);
-
-  DigitalGainApplier gain_applier;
-  for (size_t k = 0; k < ab.num_channels(); ++k) {
-    auto channel_view = rtc::ArrayView<float>(
-        ab.channels_f()[k], ab.num_frames());
-    gain_applier.Process(gain, channel_view);
-  }
-
-  auto check_expectation = [expected](float sample) {
-      return sample == expected; };
-  return CheckAudioBufferSamples(check_expectation, &ab);
-}
-
 }  // namespace
 
 TEST(GainController2, Instance) {
   std::unique_ptr<GainController2> gain_controller2;
-  gain_controller2.reset(new GainController2(
-      AudioProcessing::kSampleRate48kHz));
+  gain_controller2.reset(new GainController2(5.f));
 }
 
 TEST(GainController2, ToString) {
   AudioProcessing::Config config;
+  config.gain_controller2.fixed_gain_db = 5.f;
 
   config.gain_controller2.enabled = false;
-  EXPECT_EQ("{enabled: false}",
+  EXPECT_EQ("{enabled: false, fixed_gain_dB: 5.0}",
             GainController2::ToString(config.gain_controller2));
 
   config.gain_controller2.enabled = true;
-  EXPECT_EQ("{enabled: true}",
+  EXPECT_EQ("{enabled: true, fixed_gain_dB: 5.0}",
             GainController2::ToString(config.gain_controller2));
-}
-
-TEST(GainController2, DigitalGainApplierProcess) {
-  EXPECT_TRUE(TestDigitalGainApplier(1000.0f, 0.5, 500.0f));
-}
-
-TEST(GainController2, DigitalGainApplierCheckClipping) {
-  EXPECT_TRUE(TestDigitalGainApplier(30000.0f, 1.5, 32767.0f));
-  EXPECT_TRUE(TestDigitalGainApplier(-30000.0f, 1.5, -32767.0f));
 }
 
 TEST(GainController2, Usage) {
   std::unique_ptr<GainController2> gain_controller2;
-  gain_controller2.reset(new GainController2(
-      AudioProcessing::kSampleRate48kHz));
+  gain_controller2.reset(new GainController2(5.f));
   AudioBuffer ab(kNumFrames, kStereo, kNumFrames, kStereo, kNumFrames);
   SetAudioBufferSamples(1000.0f, &ab);
   gain_controller2->Process(&ab);

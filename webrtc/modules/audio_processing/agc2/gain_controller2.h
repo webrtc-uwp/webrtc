@@ -14,7 +14,6 @@
 #include <memory>
 #include <string>
 
-#include "webrtc/modules/audio_processing/agc2/digital_gain_applier.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/rtc_base/constructormagic.h"
 
@@ -26,14 +25,15 @@ class AudioBuffer;
 // Gain Controller 2 aims to automatically adjust levels by acting on the
 // microphone gain and/or applying digital gain.
 //
-// It temporarily implements a hard-coded gain mode only.
+// It temporarily implements a fixed gain mode with hard-clipping.
 class GainController2 {
  public:
-  explicit GainController2(int sample_rate_hz);
+  explicit GainController2(const float fixed_gain_db);
   ~GainController2();
 
   int sample_rate_hz() { return sample_rate_hz_; }
 
+  void Initialize(int sample_rate_hz);
   void Process(AudioBuffer* audio);
 
   static bool Validate(const AudioProcessing::Config::GainController2& config);
@@ -43,11 +43,9 @@ class GainController2 {
  private:
   int sample_rate_hz_;
   std::unique_ptr<ApmDataDumper> data_dumper_;
-  DigitalGainApplier digital_gain_applier_;
   static int instance_count_;
-  // TODO(alessiob): Remove once a meaningful gain controller mode is
-  // implemented.
-  const float gain_;
+  const float fixed_gain_;
+
   RTC_DISALLOW_COPY_AND_ASSIGN(GainController2);
 };
 
