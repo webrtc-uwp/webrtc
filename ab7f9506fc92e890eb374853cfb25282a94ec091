@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16df7c7c_6396e2ac",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 24
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-15T08:34:55Z",
+      "side": 1,
+      "message": "If we check for RRID first, in cases where it\u0027s present, we can avoid checking the RSID altogether. So something like:\n\nstd::string packet_rid;\nbool has_rid \u003d packet.GetExtension\u003cRepairedRtpStreamId\u003e(\u0026packet_rid);\nif (!has_rid) {\n  has_rid \u003d packet.GetExtension\u003cRtpStreamId\u003e(\u0026packet_rid);\n}\n\nThat saves you one call, as well as makes the if-else-if chain further down the line a bit simpler.",
+      "revId": "ab7f9506fc92e890eb374853cfb25282a94ec091",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75f856c8_467a6073",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 24
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-15T08:34:55Z",
+      "side": 1,
+      "message": "With the above suggestion, these two cases are collapsed into one.",
+      "range": {
+        "startLine": 200,
+        "startChar": 0,
+        "endLine": 205,
+        "endChar": 24
+      },
+      "revId": "ab7f9506fc92e890eb374853cfb25282a94ec091",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b522d56_0c62354d",
+        "filename": "webrtc/call/rtp_demuxer.cc",
+        "patchSetId": 24
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1179449
+      },
+      "writtenOn": "2017-08-15T08:34:55Z",
+      "side": 1,
+      "message": "By this point, |rsid| can either be the RSID or the RRID. I would ask Peter if it might merit changing the name from RSID to RID or something, but I am not familiar enough with that to know if this could be confusing to anyone; not a major issue, I guess. (Similarly for all of the comments, function documentation, etc. - might be more work than it\u0027s worth; I really don\u0027t know.)",
+      "revId": "ab7f9506fc92e890eb374853cfb25282a94ec091",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
