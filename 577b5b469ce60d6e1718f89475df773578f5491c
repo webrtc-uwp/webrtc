@@ -70,6 +70,30 @@
       "revId": "577b5b469ce60d6e1718f89475df773578f5491c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13947b57_0f7010cf",
+        "filename": "webrtc/modules/desktop_capture/window_under_point_linux.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-15T03:24:47Z",
+      "side": 0,
+      "message": "Yes, a factory function is a little bit over-kill, creating an instance for this pure function is not worthy. Currently all the clients of this function are platform-dependent. We can add an interface / implementation if we need it later.\n\nMaking XAtomCache singleton breaks the DesktopCaptureOptions, which can provide a different Display*. I\u0027d prefer to avoid it.\n\nI have moved this function into _x11.h / cc file pair.",
+      "parentUuid": "a9f59bf7_933e17e1",
+      "range": {
+        "startLine": 16,
+        "startChar": 44,
+        "endLine": 16,
+        "endChar": 0
+      },
+      "revId": "577b5b469ce60d6e1718f89475df773578f5491c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
