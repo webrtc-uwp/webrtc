@@ -149,6 +149,7 @@ DEFINE_int32(agc_limiter,
 DEFINE_int32(agc_compression_gain,
              kParameterNotSpecifiedValue,
              "Specify the AGC compression gain (0-90)");
+DEFINE_double(agc2_fixed_gain_db, 0.0, "AGC2 fixed gain (dB) to apply");
 DEFINE_int32(vad_likelihood,
              kParameterNotSpecifiedValue,
              "Specify the VAD likelihood (0-3)");
@@ -187,6 +188,12 @@ void SetSettingIfSpecified(int value, rtc::Optional<int>* parameter) {
   }
 }
 
+void SetSettingIfSpecified(double value, rtc::Optional<double>* parameter) {
+  if (value != kParameterNotSpecifiedValue) {
+    *parameter = rtc::Optional<double>(value);
+  }
+}
+
 void SetSettingIfFlagSet(int32_t flag, rtc::Optional<bool>* parameter) {
   if (flag == 0) {
     *parameter = rtc::Optional<bool>(false);
@@ -206,6 +213,7 @@ SimulationSettings CreateSettings() {
     settings.use_ns = rtc::Optional<bool>(true);
     settings.use_hpf = rtc::Optional<bool>(true);
     settings.use_agc = rtc::Optional<bool>(true);
+    settings.use_agc2 = rtc::Optional<bool>(false);
     settings.use_aec = rtc::Optional<bool>(true);
     settings.use_aecm = rtc::Optional<bool>(false);
     settings.use_ed = rtc::Optional<bool>(false);
@@ -261,6 +269,7 @@ SimulationSettings CreateSettings() {
   SetSettingIfFlagSet(FLAGS_agc_limiter, &settings.use_agc_limiter);
   SetSettingIfSpecified(FLAGS_agc_compression_gain,
                         &settings.agc_compression_gain);
+  SetSettingIfSpecified(FLAGS_agc2_fixed_gain_db, &settings.agc2_fixed_gain_db);
   SetSettingIfSpecified(FLAGS_vad_likelihood, &settings.vad_likelihood);
   SetSettingIfSpecified(FLAGS_ns_level, &settings.ns_level);
   SetSettingIfSpecified(FLAGS_stream_delay, &settings.stream_delay);
@@ -363,6 +372,10 @@ void PerformBasicParameterSanityChecks(const SimulationSettings& settings) {
       settings.agc_compression_gain && ((*settings.agc_compression_gain) < 0 ||
                                         (*settings.agc_compression_gain) > 90),
       "Error: --agc_compression_gain must be specified between 0 and 90.\n");
+
+  ReportConditionalErrorAndExit(
+      *settings.use_agc && *settings.use_agc2,
+      "Error: --agc and --agc2 cannot be both active.\n");
 
   ReportConditionalErrorAndExit(
       settings.vad_likelihood &&
