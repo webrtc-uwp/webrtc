@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "75be0a7d_7ab8581a",
+        "filename": "webrtc/modules/desktop_capture/screen_drawer_lock_posix.cc",
+        "patchSetId": 12
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-15T03:24:44Z",
+      "side": 1,
+      "message": "I should add a comment in the code review.\nThe original name is too long for Mac OSX, it accepts only 30 characters and the leading slash is not allowed.\nI do not think there are any external dependencies, this static variable is defined in a cc file.",
+      "parentUuid": "43056fb5_1e924554",
+      "range": {
+        "startLine": 23,
+        "startChar": 74,
+        "endLine": 23,
+        "endChar": 0
+      },
+      "revId": "7eb152ef5cd66ef7d6fb8498ac8ddc5df5af9e53",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0437f608_b719b54e",
         "filename": "webrtc/modules/desktop_capture/screen_drawer_lock_posix.cc",
         "patchSetId": 12
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "6a3fa435_e5334a09",
+        "filename": "webrtc/modules/desktop_capture/screen_drawer_lock_posix.cc",
+        "patchSetId": 12
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-15T03:24:44Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "0437f608_b719b54e",
+      "range": {
+        "startLine": 34,
+        "startChar": 11,
+        "endLine": 34,
+        "endChar": 0
+      },
+      "revId": "7eb152ef5cd66ef7d6fb8498ac8ddc5df5af9e53",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "285a61e6_d7610d1d",
         "filename": "webrtc/modules/desktop_capture/screen_drawer_unittest.cc",
         "patchSetId": 12
@@ -68,6 +116,30 @@
       "revId": "7eb152ef5cd66ef7d6fb8498ac8ddc5df5af9e53",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e7e5594_3aeb0d3e",
+        "filename": "webrtc/modules/desktop_capture/screen_drawer_unittest.cc",
+        "patchSetId": 12
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-15T03:24:44Z",
+      "side": 1,
+      "message": "Let me abstract the cross-platform part of the test into a standalone function to reduce the if-defineds.",
+      "parentUuid": "285a61e6_d7610d1d",
+      "range": {
+        "startLine": 66,
+        "startChar": 46,
+        "endLine": 66,
+        "endChar": 0
+      },
+      "revId": "7eb152ef5cd66ef7d6fb8498ac8ddc5df5af9e53",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
