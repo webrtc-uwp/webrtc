@@ -70,6 +70,30 @@
       "revId": "880239c52a2a6ca809d6ae7a2d02855228eaf265",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2118d12_e5f2ff68",
+        "filename": "webrtc/call/flexfec_receive_stream_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1144186
+      },
+      "writtenOn": "2017-08-15T11:01:26Z",
+      "side": 0,
+      "message": "I\u0027m not entirely sure how things work at teardown, but it\u0027s unchanged in this cl. I hope code tearing down Call ensures that no new RTP packets enter Call::DeliverPacket during destruction.",
+      "parentUuid": "b6d769d3_ad0b3ce7",
+      "range": {
+        "startLine": 149,
+        "startChar": 43,
+        "endLine": 149,
+        "endChar": 74
+      },
+      "revId": "880239c52a2a6ca809d6ae7a2d02855228eaf265",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
