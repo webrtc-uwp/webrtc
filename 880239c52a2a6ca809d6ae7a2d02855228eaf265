@@ -22,6 +22,30 @@
       "revId": "880239c52a2a6ca809d6ae7a2d02855228eaf265",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00d101f1_e2f33e7a",
+        "filename": "webrtc/call/flexfec_receive_stream_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1144186
+      },
+      "writtenOn": "2017-08-15T08:22:26Z",
+      "side": 0,
+      "message": "\u003e Do we know that the RtpStreamReceiverController always outlives FlexfecReceiveStream in the production code?\n\nAt least that\u0027s the intention. Production code should create a RtpStreamReceiverController, and pass it to the constructor of all receive streams, and it has to destroy all streams before destroying the controller. The receive streams, in turn, are expected to call the RtpStreamReceiverController::CreateReceiver and take ownership of the returned object, and will typically interact with the controller only via these Receiver objects.\n \n\u003e If we can\u0027t Stop() the FlexfecReceiveStream, we better know that the callback always exists.\n\nI\u0027m not sure which callback you refer to. OnRtpPacket?",
+      "parentUuid": "4ed24a64_fbd499e0",
+      "range": {
+        "startLine": 149,
+        "startChar": 43,
+        "endLine": 149,
+        "endChar": 74
+      },
+      "revId": "880239c52a2a6ca809d6ae7a2d02855228eaf265",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
