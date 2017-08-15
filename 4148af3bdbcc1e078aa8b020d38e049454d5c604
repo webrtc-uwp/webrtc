@@ -125,6 +125,24 @@
     },
     {
       "key": {
+        "uuid": "166434d8_a28f6c9d",
+        "filename": "webrtc/call/rtp_demuxer_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1228509
+      },
+      "writtenOn": "2017-08-15T00:16:24Z",
+      "side": 1,
+      "message": "OK, I added an explicit call to SetSequenceNumber in that test. I think this is more clear than having another argument to CreatePacket and demonstrates that the attribute is important to the test.",
+      "parentUuid": "37eca1d0_46a4a0c7",
+      "revId": "4148af3bdbcc1e078aa8b020d38e049454d5c604",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d914d78b_190e9a9d",
         "filename": "webrtc/call/rtp_demuxer_unittest.cc",
         "patchSetId": 1
