@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ed24a64_fbd499e0",
+        "filename": "webrtc/call/flexfec_receive_stream_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1155749
+      },
+      "writtenOn": "2017-08-15T08:11:41Z",
+      "side": 0,
+      "message": "Do we know that the RtpStreamReceiverController always outlives FlexfecReceiveStream in the production code?\n\nIf we can\u0027t Stop() the FlexfecReceiveStream, we better know that the callback always exists.",
+      "range": {
+        "startLine": 149,
+        "startChar": 43,
+        "endLine": 149,
+        "endChar": 74
+      },
+      "revId": "880239c52a2a6ca809d6ae7a2d02855228eaf265",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
