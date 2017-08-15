@@ -8,24 +8,24 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <CoreFoundation/CoreFoundation.h>
+#include "webrtc/modules/desktop_capture/window_under_point_x11.h"
 
-#include "webrtc/modules/desktop_capture/mac/window_list_utils.h"
-#include "webrtc/modules/desktop_capture/window_under_point.h"
+#include "webrtc/modules/desktop_capture/x11/window_list_utils.h"
 
 namespace webrtc {
 
-WindowId GetWindowUnderPoint(DesktopVector point) {
+WindowId GetWindowUnderPoint(XAtomCache* cache, DesktopVector point) {
   WindowId id = kNullWindowId;
-  GetWindowList([&id, point](CFDictionaryRef window) {
-                  DesktopRect bounds = GetWindowBounds(window);
-                  if (bounds.Contains(point)) {
-                    id = GetWindowId(window);
+  GetWindowList(cache,
+                [&id, cache, point](::Window window) {
+                  DesktopRect rect;
+                  if (GetWindowRect(cache->display(), window, &rect) &&
+                      rect.Contains(point)) {
+                    id = window;
                     return false;
                   }
                   return true;
-                },
-                true);
+                });
   return id;
 }
 
