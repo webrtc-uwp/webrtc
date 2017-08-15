@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "36c4a21e_a47d900a",
+        "filename": "webrtc/common_types.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1122982
+      },
+      "writtenOn": "2017-08-15T11:21:38Z",
+      "side": 1,
+      "message": "Is this as a fraction of all secondary data, or as a fraction of all data? I mean, if all FEC/RED encodings are discarded, will this be 1.0 (in Q14)?",
+      "range": {
+        "startLine": 385,
+        "startChar": 5,
+        "endLine": 385,
+        "endChar": 13
+      },
+      "revId": "4e72b29d81d55e4bafb5d816f366612206d9a329",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8d2da75d_d30d306b",
+        "filename": "webrtc/modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 449,
+      "author": {
+        "id": 1122982
+      },
+      "writtenOn": "2017-08-15T11:21:38Z",
+      "side": 1,
+      "message": "Did they all align now? Interesting. You could then get rid of the PlatformChecksum thing here.",
+      "range": {
+        "startLine": 449,
+        "startChar": 24,
+        "endLine": 449,
+        "endChar": 64
+      },
+      "revId": "4e72b29d81d55e4bafb5d816f366612206d9a329",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30194cd4_e1443225",
+        "filename": "webrtc/modules/audio_coding/neteq/packet_buffer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1122982
+      },
+      "writtenOn": "2017-08-15T11:21:38Z",
+      "side": 1,
+      "message": "You are doing the same thing in at least three places. I suggest you instead extend the PacketsDiscarded method with one parameter indicating the priority of the packet.\n\nPacketsDiscarded(size_t num_packets, int priority)\n\nsuch that you can simply call\nstats-\u003ePacketsDiscarded(1, packet.priority.codec_level);\n\nIt can then be an internal matter of the StatisticsCalculator to bucketize the priorities into primary and secondary.",
+      "range": {
+        "startLine": 103,
+        "startChar": 24,
+        "endLine": 103,
+        "endChar": 35
+      },
+      "revId": "4e72b29d81d55e4bafb5d816f366612206d9a329",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8d3a0bc0_a03e5bab",
+        "filename": "webrtc/modules/audio_coding/neteq/packet_buffer.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1122982
+      },
+      "writtenOn": "2017-08-15T11:21:38Z",
+      "side": 1,
+      "message": "Pass the stats pointer as a capture to the lambda, and call\nstats-\u003ePacketsDiscarded(1, p.priority.codec_level)\nas I suggested above.",
+      "range": {
+        "startLine": 254,
+        "startChar": 4,
+        "endLine": 254,
+        "endChar": 6
+      },
+      "revId": "4e72b29d81d55e4bafb5d816f366612206d9a329",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}

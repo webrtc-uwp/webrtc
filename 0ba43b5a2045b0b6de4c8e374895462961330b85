@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "235aee00_6745135c",
+        "filename": "webrtc/common_types.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1122982
+      },
+      "writtenOn": "2017-08-15T11:21:38Z",
+      "side": 0,
+      "message": "I think you will have to make this in two steps to avoid breaking downstream clients.",
+      "range": {
+        "startLine": 373,
+        "startChar": 11,
+        "endLine": 373,
+        "endChar": 29
+      },
+      "revId": "0ba43b5a2045b0b6de4c8e374895462961330b85",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
