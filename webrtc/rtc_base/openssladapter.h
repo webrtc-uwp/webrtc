@@ -94,6 +94,10 @@ class OpenSSLAdapter : public SSLAdapter, public MessageHandler {
   static int SSLVerifyCallback(int ok, X509_STORE_CTX* store);
   static VerificationCallback custom_verify_callback_;
   friend class OpenSSLStreamAdapter;  // for custom_verify_callback_;
+  // If the SSL_CTX was created with |enable_cache| set to true, this callback
+  // will be called when a SSL session has been successfully established,
+  // to allow its SSL_SESSION* to be cached for later resumption.
+  static int NewSSLSessionCallback(SSL* ssl, SSL_SESSION* session);
 
   // If the SSL_CTX was created with |enable_cache| set to true, this callback
   // will be called when a SSL session has been successfully established,

@@ -69,7 +69,7 @@ struct CRYPTO_dynlock_value {
 static int socket_write(BIO* h, const char* buf, int num);
 static int socket_read(BIO* h, char* buf, int size);
 static int socket_puts(BIO* h, const char* str);
-static long socket_ctrl(BIO* h, int cmd, long arg1, void* arg2);
+static long socket_ctrl(BIO* h, int cmd, long arg1, void* arg2);  // NOLINT
 static int socket_new(BIO* h);
 static int socket_free(BIO* data);
 
@@ -138,7 +138,7 @@ static int socket_puts(BIO* b, const char* str) {
   return socket_write(b, str, rtc::checked_cast<int>(strlen(str)));
 }
 
-static long socket_ctrl(BIO* b, int cmd, long num, void* ptr) {
+static long socket_ctrl(BIO* b, int cmd, long num, void* ptr) {  // NOLINT
   switch (cmd) {
   case BIO_CTRL_RESET:
     return 0;
