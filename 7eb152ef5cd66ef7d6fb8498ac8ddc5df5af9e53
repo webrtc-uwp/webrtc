@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43056fb5_1e924554",
+        "filename": "webrtc/modules/desktop_capture/screen_drawer_lock_posix.cc",
+        "patchSetId": 12
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-15T00:22:57Z",
+      "side": 1,
+      "message": "Why have you changed this? It\u0027s probably fine to do so, but if it doesn\u0027t matter I\u0027d prefer it to remain the same in case there are any external dependencies on this name.",
+      "range": {
+        "startLine": 23,
+        "startChar": 74,
+        "endLine": 23,
+        "endChar": 0
+      },
+      "revId": "7eb152ef5cd66ef7d6fb8498ac8ddc5df5af9e53",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0437f608_b719b54e",
+        "filename": "webrtc/modules/desktop_capture/screen_drawer_lock_posix.cc",
+        "patchSetId": 12
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-15T00:22:57Z",
+      "side": 1,
+      "message": "This is risky in a ctor. There\u0027s no way to indicate failure to the caller, which expects this to block until the semaphore is held. I think an assert would be more appropriate here.",
+      "range": {
+        "startLine": 34,
+        "startChar": 11,
+        "endLine": 34,
+        "endChar": 0
+      },
+      "revId": "7eb152ef5cd66ef7d6fb8498ac8ddc5df5af9e53",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "285a61e6_d7610d1d",
+        "filename": "webrtc/modules/desktop_capture/screen_drawer_unittest.cc",
+        "patchSetId": 12
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1000528
+      },
+      "writtenOn": "2017-08-15T00:22:57Z",
+      "side": 1,
+      "message": "There\u0027s a lot of ifdef code here, which makes it hard to follow the flow of the test, and makes me skeptical that there\u0027s really enough cross-platform logic to make it worth trying to share the test. I think it would be better to make the whole test Posix-specific, and perhaps add an equivalent test for other platforms.",
+      "range": {
+        "startLine": 66,
+        "startChar": 46,
+        "endLine": 66,
+        "endChar": 0
+      },
+      "revId": "7eb152ef5cd66ef7d6fb8498ac8ddc5df5af9e53",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
