@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3fe31ed6_a6c96679",
+        "filename": "webrtc/sdk/android/api/org/webrtc/SurfaceTextureHelper.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1152084
+      },
+      "writtenOn": "2017-08-15T12:53:46Z",
+      "side": 1,
+      "message": "This is only available in API level 21+ so it cannot be used. We need to support API level 16.\n\nhttps://developer.android.com/reference/android/graphics/SurfaceTexture.html#setOnFrameAvailableListener(android.graphics.SurfaceTexture.OnFrameAvailableListener, android.os.Handler)",
+      "range": {
+        "startLine": 134,
+        "startChar": 5,
+        "endLine": 134,
+        "endChar": 16
+      },
+      "revId": "ec0e9f807e630cb47c04a315796052827770e45f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
