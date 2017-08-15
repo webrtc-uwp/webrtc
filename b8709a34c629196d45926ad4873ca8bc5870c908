@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9b25ff53_a65c469b",
+        "filename": "webrtc/modules/desktop_capture/screen_drawer_lock_posix.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-15T00:07:14Z",
+      "side": 1,
+      "message": "No, I do not think this is doable by using any sem_*() functions. The TODO and commented-out code have been removed.",
+      "parentUuid": "45f4cac3_906cbe04",
+      "range": {
+        "startLine": 38,
+        "startChar": 68,
+        "endLine": 38,
+        "endChar": 0
+      },
+      "revId": "b8709a34c629196d45926ad4873ca8bc5870c908",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4c859f4d_5891e8ad",
         "filename": "webrtc/modules/desktop_capture/screen_drawer_unittest.cc",
         "patchSetId": 2
@@ -45,6 +69,30 @@
       "revId": "b8709a34c629196d45926ad4873ca8bc5870c908",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b15e49ad_3ac95d21",
+        "filename": "webrtc/modules/desktop_capture/screen_drawer_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1196069
+      },
+      "writtenOn": "2017-08-15T00:07:14Z",
+      "side": 1,
+      "message": "Updated.",
+      "parentUuid": "4c859f4d_5891e8ad",
+      "range": {
+        "startLine": 74,
+        "startChar": 1,
+        "endLine": 74,
+        "endChar": 0
+      },
+      "revId": "b8709a34c629196d45926ad4873ca8bc5870c908",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
