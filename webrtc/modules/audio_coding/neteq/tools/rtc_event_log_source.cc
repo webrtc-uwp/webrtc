@@ -49,7 +49,7 @@ std::unique_ptr<Packet> RtcEventLogSource::NextPacket() {
       parsed_stream_.GetRtpHeader(rtp_packet_index_, &direction, nullptr,
                                   &header_length, &packet_length);
 
-      if (direction != kIncomingPacket) {
+      if (direction != PacketDirection::kIncoming) {
         continue;
       }
 

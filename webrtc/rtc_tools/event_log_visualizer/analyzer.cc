@@ -339,9 +339,9 @@ EventLogAnalyzer::EventLogAnalyzer(const ParsedRtcEventLog& log)
     switch (parsed_log_.GetEventType(i)) {
       case ParsedRtcEventLog::VIDEO_RECEIVER_CONFIG_EVENT: {
         rtclog::StreamConfig config = parsed_log_.GetVideoReceiveConfig(i);
-        StreamId stream(config.remote_ssrc, kIncomingPacket);
+        StreamId stream(config.remote_ssrc, PacketDirection::kIncoming);
         video_ssrcs_.insert(stream);
-        StreamId rtx_stream(config.rtx_ssrc, kIncomingPacket);
+        StreamId rtx_stream(config.rtx_ssrc, PacketDirection::kIncoming);
         video_ssrcs_.insert(rtx_stream);
         rtx_ssrcs_.insert(rtx_stream);
         break;
@@ -350,9 +350,9 @@ EventLogAnalyzer::EventLogAnalyzer(const ParsedRtcEventLog& log)
         std::vector<rtclog::StreamConfig> configs =
             parsed_log_.GetVideoSendConfig(i);
         for (const auto& config : configs) {
-          StreamId stream(config.local_ssrc, kOutgoingPacket);
+          StreamId stream(config.local_ssrc, PacketDirection::kOutgoing);
           video_ssrcs_.insert(stream);
-          StreamId rtx_stream(config.rtx_ssrc, kOutgoingPacket);
+          StreamId rtx_stream(config.rtx_ssrc, PacketDirection::kOutgoing);
           video_ssrcs_.insert(rtx_stream);
           rtx_ssrcs_.insert(rtx_stream);
         }
@@ -360,13 +360,13 @@ EventLogAnalyzer::EventLogAnalyzer(const ParsedRtcEventLog& log)
       }
       case ParsedRtcEventLog::AUDIO_RECEIVER_CONFIG_EVENT: {
         rtclog::StreamConfig config = parsed_log_.GetAudioReceiveConfig(i);
-        StreamId stream(config.remote_ssrc, kIncomingPacket);
+        StreamId stream(config.remote_ssrc, PacketDirection::kIncoming);
         audio_ssrcs_.insert(stream);
         break;
       }
       case ParsedRtcEventLog::AUDIO_SENDER_CONFIG_EVENT: {
         rtclog::StreamConfig config = parsed_log_.GetAudioSendConfig(i);
-        StreamId stream(config.local_ssrc, kOutgoingPacket);
+        StreamId stream(config.local_ssrc, PacketDirection::kOutgoing);
         audio_ssrcs_.insert(stream);
         break;
       }
@@ -396,7 +396,7 @@ EventLogAnalyzer::EventLogAnalyzer(const ParsedRtcEventLog& log)
         // Currently incoming RTCP packets are logged twice, both for audio and
         // video. Only act on one of them. Compare against the previous parsed
         // incoming RTCP packet.
-        if (direction == webrtc::kIncomingPacket) {
+        if (direction == PacketDirection::kIncoming) {
           RTC_CHECK_LE(total_length, IP_PACKET_SIZE);
           if (total_length == last_incoming_rtcp_packet_length &&
               memcmp(last_incoming_rtcp_packet, packet, total_length) == 0) {
@@ -579,7 +579,7 @@ std::string EventLogAnalyzer::GetStreamName(StreamId stream_id) const {
   }
   if (IsRtxSsrc(stream_id))
     name << "RTX ";
-  if (stream_id.GetDirection() == kIncomingPacket) {
+  if (stream_id.GetDirection() == PacketDirection::kIncoming) {
     name << "(In) ";
   } else {
     name << "(Out) ";
@@ -611,9 +611,9 @@ void EventLogAnalyzer::CreatePacketGraph(PacketDirection desired_direction,
   plot->SetXAxis(0, call_duration_s_, "Time (s)", kLeftMargin, kRightMargin);
   plot->SetSuggestedYAxis(0, 1, "Packet size (bytes)", kBottomMargin,
                           kTopMargin);
-  if (desired_direction == webrtc::PacketDirection::kIncomingPacket) {
+  if (desired_direction == PacketDirection::kIncoming) {
     plot->SetTitle("Incoming RTP packets");
-  } else if (desired_direction == webrtc::PacketDirection::kOutgoingPacket) {
+  } else if (desired_direction == PacketDirection::kOutgoing) {
     plot->SetTitle("Outgoing RTP packets");
   }
 }
@@ -655,9 +655,9 @@ void EventLogAnalyzer::CreateAccumulatedPacketsGraph(
 
   plot->SetXAxis(0, call_duration_s_, "Time (s)", kLeftMargin, kRightMargin);
   plot->SetSuggestedYAxis(0, 1, "Received Packets", kBottomMargin, kTopMargin);
-  if (desired_direction == webrtc::PacketDirection::kIncomingPacket) {
+  if (desired_direction == PacketDirection::kIncoming) {
     plot->SetTitle("Accumulated Incoming RTP/RTCP packets");
-  } else if (desired_direction == webrtc::PacketDirection::kOutgoingPacket) {
+  } else if (desired_direction == PacketDirection::kOutgoing) {
     plot->SetTitle("Accumulated Outgoing RTP/RTCP packets");
   }
 }
@@ -740,7 +740,7 @@ void EventLogAnalyzer::CreateSequenceNumberGraph(Plot* plot) {
     StreamId stream_id = kv.first;
     const std::vector<LoggedRtpPacket>& packet_stream = kv.second;
     // Filter on direction and SSRC.
-    if (stream_id.GetDirection() != kIncomingPacket ||
+    if (stream_id.GetDirection() != PacketDirection::kIncoming ||
         !MatchingSsrc(stream_id.GetSsrc(), desired_ssrc_)) {
       continue;
     }
@@ -769,7 +769,7 @@ void EventLogAnalyzer::CreateIncomingPacketLossGraph(Plot* plot) {
     StreamId stream_id = kv.first;
     const std::vector<LoggedRtpPacket>& packet_stream = kv.second;
     // Filter on direction and SSRC.
-    if (stream_id.GetDirection() != kIncomingPacket ||
+    if (stream_id.GetDirection() != PacketDirection::kIncoming ||
         !MatchingSsrc(stream_id.GetSsrc(), desired_ssrc_) ||
         packet_stream.size() == 0) {
       continue;
@@ -826,7 +826,7 @@ void EventLogAnalyzer::CreateIncomingDelayDeltaGraph(Plot* plot) {
     StreamId stream_id = kv.first;
     const std::vector<LoggedRtpPacket>& packet_stream = kv.second;
     // Filter on direction and SSRC.
-    if (stream_id.GetDirection() != kIncomingPacket ||
+    if (stream_id.GetDirection() != PacketDirection::kIncoming ||
         !MatchingSsrc(stream_id.GetSsrc(), desired_ssrc_) ||
         IsAudioSsrc(stream_id) || !IsVideoSsrc(stream_id) ||
         IsRtxSsrc(stream_id)) {
@@ -859,7 +859,7 @@ void EventLogAnalyzer::CreateIncomingDelayGraph(Plot* plot) {
     StreamId stream_id = kv.first;
     const std::vector<LoggedRtpPacket>& packet_stream = kv.second;
     // Filter on direction and SSRC.
-    if (stream_id.GetDirection() != kIncomingPacket ||
+    if (stream_id.GetDirection() != PacketDirection::kIncoming ||
         !MatchingSsrc(stream_id.GetSsrc(), desired_ssrc_) ||
         IsAudioSsrc(stream_id) || !IsVideoSsrc(stream_id) ||
         IsRtxSsrc(stream_id)) {
@@ -957,7 +957,7 @@ void EventLogAnalyzer::CreateTotalBitrateGraph(
   plot->AppendTimeSeries(std::move(bitrate_series));
 
   // Overlay the send-side bandwidth estimate over the outgoing bitrate.
-  if (desired_direction == kOutgoingPacket) {
+  if (desired_direction == PacketDirection::kOutgoing) {
     TimeSeries loss_series("Loss-based estimate", LINE_STEP_GRAPH);
     for (auto& loss_update : bwe_loss_updates_) {
       float x =
@@ -1039,7 +1039,9 @@ void EventLogAnalyzer::CreateTotalBitrateGraph(
   // Overlay the incoming REMB over the outgoing bitrate
   // and outgoing REMB over incoming bitrate.
   PacketDirection remb_direction =
-      desired_direction == kOutgoingPacket ? kIncomingPacket : kOutgoingPacket;
+      desired_direction == PacketDirection::kOutgoing
+          ? PacketDirection::kIncoming
+          : PacketDirection::kOutgoing;
   TimeSeries remb_series("Remb", LINE_STEP_GRAPH);
   std::multimap<uint64_t, const LoggedRtcpPacket*> remb_packets;
   for (const auto& kv : rtcp_packets_) {
@@ -1064,9 +1066,9 @@ void EventLogAnalyzer::CreateTotalBitrateGraph(
 
   plot->SetXAxis(0, call_duration_s_, "Time (s)", kLeftMargin, kRightMargin);
   plot->SetSuggestedYAxis(0, 1, "Bitrate (kbps)", kBottomMargin, kTopMargin);
-  if (desired_direction == webrtc::PacketDirection::kIncomingPacket) {
+  if (desired_direction == PacketDirection::kIncoming) {
     plot->SetTitle("Incoming RTP bitrate");
-  } else if (desired_direction == webrtc::PacketDirection::kOutgoingPacket) {
+  } else if (desired_direction == PacketDirection::kOutgoing) {
     plot->SetTitle("Outgoing RTP bitrate");
   }
 }
@@ -1096,9 +1098,9 @@ void EventLogAnalyzer::CreateStreamBitrateGraph(
 
   plot->SetXAxis(0, call_duration_s_, "Time (s)", kLeftMargin, kRightMargin);
   plot->SetSuggestedYAxis(0, 1, "Bitrate (kbps)", kBottomMargin, kTopMargin);
-  if (desired_direction == webrtc::PacketDirection::kIncomingPacket) {
+  if (desired_direction == PacketDirection::kIncoming) {
     plot->SetTitle("Incoming bitrate per stream");
-  } else if (desired_direction == webrtc::PacketDirection::kOutgoingPacket) {
+  } else if (desired_direction == PacketDirection::kOutgoing) {
     plot->SetTitle("Outgoing bitrate per stream");
   }
 }
@@ -1108,14 +1110,14 @@ void EventLogAnalyzer::CreateBweSimulationGraph(Plot* plot) {
   std::multimap<uint64_t, const LoggedRtcpPacket*> incoming_rtcp;
 
   for (const auto& kv : rtp_packets_) {
-    if (kv.first.GetDirection() == PacketDirection::kOutgoingPacket) {
+    if (kv.first.GetDirection() == PacketDirection::kOutgoing) {
       for (const LoggedRtpPacket& rtp_packet : kv.second)
         outgoing_rtp.insert(std::make_pair(rtp_packet.timestamp, &rtp_packet));
     }
   }
 
   for (const auto& kv : rtcp_packets_) {
-    if (kv.first.GetDirection() == PacketDirection::kIncomingPacket) {
+    if (kv.first.GetDirection() == PacketDirection::kIncoming) {
       for (const LoggedRtcpPacket& rtcp_packet : kv.second)
         incoming_rtcp.insert(
             std::make_pair(rtcp_packet.timestamp, &rtcp_packet));
@@ -1230,14 +1232,14 @@ void EventLogAnalyzer::CreateNetworkDelayFeedbackGraph(Plot* plot) {
   std::multimap<uint64_t, const LoggedRtcpPacket*> incoming_rtcp;
 
   for (const auto& kv : rtp_packets_) {
-    if (kv.first.GetDirection() == PacketDirection::kOutgoingPacket) {
+    if (kv.first.GetDirection() == PacketDirection::kOutgoing) {
       for (const LoggedRtpPacket& rtp_packet : kv.second)
         outgoing_rtp.insert(std::make_pair(rtp_packet.timestamp, &rtp_packet));
     }
   }
 
   for (const auto& kv : rtcp_packets_) {
-    if (kv.first.GetDirection() == PacketDirection::kIncomingPacket) {
+    if (kv.first.GetDirection() == PacketDirection::kIncoming) {
       for (const LoggedRtcpPacket& rtcp_packet : kv.second)
         incoming_rtcp.insert(
             std::make_pair(rtcp_packet.timestamp, &rtcp_packet));
@@ -1333,7 +1335,7 @@ std::vector<std::pair<int64_t, int64_t>> EventLogAnalyzer::GetFrameTimestamps()
   // Find the incoming video stream with the most number of packets that is
   // not rtx.
   for (const auto& kv : rtp_packets_) {
-    if (kv.first.GetDirection() == kIncomingPacket &&
+    if (kv.first.GetDirection() == PacketDirection::kIncoming &&
         video_ssrcs_.find(kv.first) != video_ssrcs_.end() &&
         rtx_ssrcs_.find(kv.first) == rtx_ssrcs_.end() &&
         kv.second.size() > largest_stream_size) {
@@ -1638,7 +1640,7 @@ void EventLogAnalyzer::CreateAudioJitterBufferGraph(
   const auto& incoming_audio_kv = std::find_if(
       rtp_packets_.begin(), rtp_packets_.end(),
       [this](std::pair<StreamId, std::vector<LoggedRtpPacket>> kv) {
-        return kv.first.GetDirection() == kIncomingPacket &&
+        return kv.first.GetDirection() == PacketDirection::kIncoming &&
                this->IsAudioSsrc(kv.first);
       });
   if (incoming_audio_kv == rtp_packets_.end()) {
