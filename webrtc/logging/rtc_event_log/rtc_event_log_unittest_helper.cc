@@ -49,11 +49,11 @@ BandwidthUsage GetRuntimeDetectorState(
 rtclog::BweProbeResult::ResultType GetProbeResultType(
     ProbeFailureReason failure_reason) {
   switch (failure_reason) {
-    case kInvalidSendReceiveInterval:
+    case ProbeFailureReason::kInvalidSendReceiveInterval:
       return rtclog::BweProbeResult::INVALID_SEND_RECEIVE_INTERVAL;
-    case kInvalidSendReceiveRatio:
+    case ProbeFailureReason::kInvalidSendReceiveRatio:
       return rtclog::BweProbeResult::INVALID_SEND_RECEIVE_RATIO;
-    case kTimeout:
+    case ProbeFailureReason::kTimeout:
       return rtclog::BweProbeResult::TIMEOUT;
   }
   RTC_NOTREACHED();
@@ -360,7 +360,7 @@ void RtcEventLogTestHelper::VerifyRtpEvent(const ParsedRtcEventLog& parsed_log,
   ASSERT_EQ(rtclog::Event::RTP_EVENT, event.type());
   const rtclog::RtpPacket& rtp_packet = event.rtp_packet();
   ASSERT_TRUE(rtp_packet.has_incoming());
-  EXPECT_EQ(direction == kIncomingPacket, rtp_packet.incoming());
+  EXPECT_EQ(direction == PacketDirection::kIncoming, rtp_packet.incoming());
   ASSERT_TRUE(rtp_packet.has_packet_length());
   EXPECT_EQ(total_size, rtp_packet.packet_length());
   ASSERT_TRUE(rtp_packet.has_header());
@@ -391,7 +391,7 @@ void RtcEventLogTestHelper::VerifyRtcpEvent(const ParsedRtcEventLog& parsed_log,
   ASSERT_EQ(rtclog::Event::RTCP_EVENT, event.type());
   const rtclog::RtcpPacket& rtcp_packet = event.rtcp_packet();
   ASSERT_TRUE(rtcp_packet.has_incoming());
-  EXPECT_EQ(direction == kIncomingPacket, rtcp_packet.incoming());
+  EXPECT_EQ(direction == PacketDirection::kIncoming, rtcp_packet.incoming());
   ASSERT_TRUE(rtcp_packet.has_packet_data());
   ASSERT_EQ(total_size, rtcp_packet.packet_data().size());
   for (size_t i = 0; i < total_size; i++) {

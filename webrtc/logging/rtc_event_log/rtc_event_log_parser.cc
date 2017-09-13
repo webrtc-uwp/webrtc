@@ -211,10 +211,10 @@ bool ParsedRtcEventLog::ParseStream(std::istream& stream) {
       case VIDEO_RECEIVER_CONFIG_EVENT: {
         rtclog::StreamConfig config = GetVideoReceiveConfig(event);
         streams_.emplace_back(config.remote_ssrc, MediaType::VIDEO,
-                              kIncomingPacket,
+                              PacketDirection::kIncoming,
                               RtpHeaderExtensionMap(config.rtp_extensions));
         streams_.emplace_back(config.local_ssrc, MediaType::VIDEO,
-                              kOutgoingPacket,
+                              PacketDirection::kOutgoing,
                               RtpHeaderExtensionMap(config.rtp_extensions));
         break;
       }
@@ -222,11 +222,12 @@ bool ParsedRtcEventLog::ParseStream(std::istream& stream) {
         std::vector<rtclog::StreamConfig> configs = GetVideoSendConfig(event);
         for (size_t i = 0; i < configs.size(); i++) {
           streams_.emplace_back(
-              configs[i].local_ssrc, MediaType::VIDEO, kOutgoingPacket,
+              configs[i].local_ssrc, MediaType::VIDEO,
+              PacketDirection::kOutgoing,
               RtpHeaderExtensionMap(configs[i].rtp_extensions));
 
           streams_.emplace_back(
-              configs[i].rtx_ssrc, MediaType::VIDEO, kOutgoingPacket,
+              configs[i].rtx_ssrc, MediaType::VIDEO, PacketDirection::kOutgoing,
               RtpHeaderExtensionMap(configs[i].rtp_extensions));
         }
         break;
@@ -234,17 +235,17 @@ bool ParsedRtcEventLog::ParseStream(std::istream& stream) {
       case AUDIO_RECEIVER_CONFIG_EVENT: {
         rtclog::StreamConfig config = GetAudioReceiveConfig(event);
         streams_.emplace_back(config.remote_ssrc, MediaType::AUDIO,
-                              kIncomingPacket,
+                              PacketDirection::kIncoming,
                               RtpHeaderExtensionMap(config.rtp_extensions));
         streams_.emplace_back(config.local_ssrc, MediaType::AUDIO,
-                              kOutgoingPacket,
+                              PacketDirection::kOutgoing,
                               RtpHeaderExtensionMap(config.rtp_extensions));
         break;
       }
       case AUDIO_SENDER_CONFIG_EVENT: {
         rtclog::StreamConfig config = GetAudioSendConfig(event);
         streams_.emplace_back(config.local_ssrc, MediaType::AUDIO,
-                              kOutgoingPacket,
+                              PacketDirection::kOutgoing,
                               RtpHeaderExtensionMap(config.rtp_extensions));
         break;
       }
@@ -291,7 +292,8 @@ webrtc::RtpHeaderExtensionMap* ParsedRtcEventLog::GetRtpHeader(
   // Get direction of packet.
   RTC_CHECK(rtp_packet.has_incoming());
   if (incoming != nullptr) {
-    *incoming = rtp_packet.incoming() ? kIncomingPacket : kOutgoingPacket;
+    *incoming = rtp_packet.incoming() ? PacketDirection::kIncoming
+                                      : PacketDirection::kOutgoing;
   }
   // Get packet length.
   RTC_CHECK(rtp_packet.has_packet_length());
@@ -311,8 +313,9 @@ webrtc::RtpHeaderExtensionMap* ParsedRtcEventLog::GetRtpHeader(
                  static_cast<size_t>(IP_PACKET_SIZE));
     memcpy(header, rtp_packet.header().data(), rtp_packet.header().size());
     uint32_t ssrc = ByteReader<uint32_t>::ReadBigEndian(header + 8);
-    StreamId stream_id(
-        ssrc, rtp_packet.incoming() ? kIncomingPacket : kOutgoingPacket);
+    StreamId stream_id(ssrc, rtp_packet.incoming()
+                                 ? PacketDirection::kIncoming
+                                 : PacketDirection::kOutgoing);
     auto it = rtp_extensions_maps_.find(stream_id);
     if (it != rtp_extensions_maps_.end()) {
       return it->second;
@@ -335,7 +338,8 @@ void ParsedRtcEventLog::GetRtcpPacket(size_t index,
   // Get direction of packet.
   RTC_CHECK(rtcp_packet.has_incoming());
   if (incoming != nullptr) {
-    *incoming = rtcp_packet.incoming() ? kIncomingPacket : kOutgoingPacket;
+    *incoming = rtcp_packet.incoming() ? PacketDirection::kIncoming
+                                       : PacketDirection::kOutgoing;
   }
   // Get packet length.
   RTC_CHECK(rtcp_packet.has_packet_data());
@@ -628,14 +632,12 @@ ParsedRtcEventLog::BweProbeResultEvent ParsedRtcEventLog::GetBweProbeResult(
     res.bitrate_bps = rtc::Optional<uint64_t>(pr_event.bitrate_bps());
   } else if (pr_event.result() ==
              rtclog::BweProbeResult::INVALID_SEND_RECEIVE_INTERVAL) {
-    res.failure_reason =
-        rtc::Optional<ProbeFailureReason>(kInvalidSendReceiveInterval);
+    res.failure_reason.emplace(ProbeFailureReason::kInvalidSendReceiveInterval);
   } else if (pr_event.result() ==
              rtclog::BweProbeResult::INVALID_SEND_RECEIVE_RATIO) {
-    res.failure_reason =
-        rtc::Optional<ProbeFailureReason>(kInvalidSendReceiveRatio);
+    res.failure_reason.emplace(ProbeFailureReason::kInvalidSendReceiveRatio);
   } else if (pr_event.result() == rtclog::BweProbeResult::TIMEOUT) {
-    res.failure_reason = rtc::Optional<ProbeFailureReason>(kTimeout);
+    res.failure_reason.emplace(ProbeFailureReason::kTimeout);
   } else {
     RTC_NOTREACHED();
   }

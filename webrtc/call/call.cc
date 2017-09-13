@@ -1302,7 +1302,7 @@ PacketReceiver::DeliveryStatus Call::DeliverRtcp(MediaType media_type,
   }
 
   if (rtcp_delivered)
-    event_log_->LogRtcpPacket(kIncomingPacket, packet, length);
+    event_log_->LogRtcpPacket(PacketDirection::kIncoming, packet, length);
 
   return rtcp_delivered ? DELIVERY_OK : DELIVERY_PACKET_ERROR;
 }
@@ -1351,7 +1351,7 @@ PacketReceiver::DeliveryStatus Call::DeliverRtp(MediaType media_type,
     if (audio_receiver_controller_.OnRtpPacket(*parsed_packet)) {
       received_bytes_per_second_counter_.Add(static_cast<int>(length));
       received_audio_bytes_per_second_counter_.Add(static_cast<int>(length));
-      event_log_->LogRtpHeader(kIncomingPacket, packet, length);
+      event_log_->LogRtpHeader(PacketDirection::kIncoming, packet, length);
       const int64_t arrival_time_ms = parsed_packet->arrival_time_ms();
       if (!first_received_rtp_audio_ms_) {
         first_received_rtp_audio_ms_.emplace(arrival_time_ms);
@@ -1363,7 +1363,7 @@ PacketReceiver::DeliveryStatus Call::DeliverRtp(MediaType media_type,
     if (video_receiver_controller_.OnRtpPacket(*parsed_packet)) {
       received_bytes_per_second_counter_.Add(static_cast<int>(length));
       received_video_bytes_per_second_counter_.Add(static_cast<int>(length));
-      event_log_->LogRtpHeader(kIncomingPacket, packet, length);
+      event_log_->LogRtpHeader(PacketDirection::kIncoming, packet, length);
       const int64_t arrival_time_ms = parsed_packet->arrival_time_ms();
       if (!first_received_rtp_video_ms_) {
         first_received_rtp_video_ms_.emplace(arrival_time_ms);

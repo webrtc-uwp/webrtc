@@ -34,8 +34,17 @@ struct AudioEncoderRuntimeConfig;
 enum class MediaType;
 enum class BandwidthUsage;
 
-enum PacketDirection { kIncomingPacket = 0, kOutgoingPacket };
-enum ProbeFailureReason {
+enum class PacketDirection {
+  kIncoming = 0,
+  kOutgoing,
+  // TODO(steveanton): Remove these aliases once clients have been updated.
+  kIncomingPacket = kIncoming,
+  kOutgoingPacket = kOutgoing
+};
+// TODO(steveanton): Remove these aliases once clients have been updated.
+constexpr PacketDirection kIncomingPacket = PacketDirection::kIncoming;
+constexpr PacketDirection kOutgoingPacket = PacketDirection::kOutgoing;
+enum class ProbeFailureReason {
   kInvalidSendReceiveInterval,
   kInvalidSendReceiveRatio,
   kTimeout

@@ -141,7 +141,7 @@ int main(int argc, char* argv[]) {
                                                      packet.length);
 
       // TODO(terelius): Maybe add a flag to dump outgoing traffic instead?
-      if (direction == webrtc::kOutgoingPacket)
+      if (direction == webrtc::PacketDirection::kOutgoing)
         continue;
 
       webrtc::RTPHeader parsed_header;
@@ -176,7 +176,7 @@ int main(int argc, char* argv[]) {
       packet.time_ms = parsed_stream.GetTimestamp(i) / 1000;
 
       // TODO(terelius): Maybe add a flag to dump outgoing traffic instead?
-      if (direction == webrtc::kOutgoingPacket)
+      if (direction == webrtc::PacketDirection::kOutgoing)
         continue;
 
       // Note that |packet_ssrc| is the sender SSRC. An RTCP message may contain
