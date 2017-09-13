@@ -304,15 +304,17 @@ void LogSessionAndReadBack(size_t rtp_count,
     size_t playout_index = 1;
     size_t bwe_loss_index = 1;
     for (size_t i = 1; i <= rtp_count; i++) {
-      log_dumper->LogRtpHeader(
-          (i % 2 == 0) ? kIncomingPacket : kOutgoingPacket,
-          rtp_packets[i - 1].data(), rtp_packets[i - 1].size());
+      log_dumper->LogRtpHeader((i % 2 == 0) ? PacketDirection::kIncoming
+                                            : PacketDirection::kOutgoing,
+                               rtp_packets[i - 1].data(),
+                               rtp_packets[i - 1].size());
       fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
       if (i * rtcp_count >= rtcp_index * rtp_count) {
-        log_dumper->LogRtcpPacket(
-            (rtcp_index % 2 == 0) ? kIncomingPacket : kOutgoingPacket,
-            rtcp_packets[rtcp_index - 1].data(),
-            rtcp_packets[rtcp_index - 1].size());
+        log_dumper->LogRtcpPacket((rtcp_index % 2 == 0)
+                                      ? PacketDirection::kIncoming
+                                      : PacketDirection::kOutgoing,
+                                  rtcp_packets[rtcp_index - 1].data(),
+                                  rtcp_packets[rtcp_index - 1].size());
         rtcp_index++;
         fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
       }
@@ -365,14 +367,15 @@ void LogSessionAndReadBack(size_t rtp_count,
   for (size_t i = 1; i <= rtp_count; i++) {
     RtcEventLogTestHelper::VerifyRtpEvent(
         parsed_log, event_index,
-        (i % 2 == 0) ? kIncomingPacket : kOutgoingPacket,
+        (i % 2 == 0) ? PacketDirection::kIncoming : PacketDirection::kOutgoing,
         rtp_packets[i - 1].data(), rtp_packets[i - 1].headers_size(),
         rtp_packets[i - 1].size());
     event_index++;
     if (i * rtcp_count >= rtcp_index * rtp_count) {
       RtcEventLogTestHelper::VerifyRtcpEvent(
           parsed_log, event_index,
-          rtcp_index % 2 == 0 ? kIncomingPacket : kOutgoingPacket,
+          rtcp_index % 2 == 0 ? PacketDirection::kIncoming
+                              : PacketDirection::kOutgoing,
           rtcp_packets[rtcp_index - 1].data(),
           rtcp_packets[rtcp_index - 1].size());
       event_index++;
@@ -450,14 +453,14 @@ TEST(RtcEventLogTest, LogEventAndReadBack) {
   fake_clock.SetTimeMicros(prng.Rand<uint32_t>());
   std::unique_ptr<RtcEventLog> log_dumper(RtcEventLog::Create());
 
-  log_dumper->LogRtpHeader(kIncomingPacket, rtp_packet.data(),
+  log_dumper->LogRtpHeader(PacketDirection::kIncoming, rtp_packet.data(),
                            rtp_packet.size());
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
 
   log_dumper->StartLogging(temp_filename, 10000000);
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
 
-  log_dumper->LogRtcpPacket(kOutgoingPacket, rtcp_packet.data(),
+  log_dumper->LogRtcpPacket(PacketDirection::kOutgoing, rtcp_packet.data(),
                             rtcp_packet.size());
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
 
@@ -474,11 +477,12 @@ TEST(RtcEventLogTest, LogEventAndReadBack) {
   RtcEventLogTestHelper::VerifyLogStartEvent(parsed_log, 0);
 
   RtcEventLogTestHelper::VerifyRtpEvent(
-      parsed_log, 1, kIncomingPacket, rtp_packet.data(),
+      parsed_log, 1, PacketDirection::kIncoming, rtp_packet.data(),
       rtp_packet.headers_size(), rtp_packet.size());
 
   RtcEventLogTestHelper::VerifyRtcpEvent(
-      parsed_log, 2, kOutgoingPacket, rtcp_packet.data(), rtcp_packet.size());
+      parsed_log, 2, PacketDirection::kOutgoing, rtcp_packet.data(),
+      rtcp_packet.size());
 
   RtcEventLogTestHelper::VerifyLogEndEvent(parsed_log, 3);
 

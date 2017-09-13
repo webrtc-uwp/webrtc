@@ -176,20 +176,20 @@ int main(int argc, char* argv[]) {
       new webrtc::plotting::PythonPlotCollection());
 
   if (FLAG_plot_incoming_packet_sizes) {
-    analyzer.CreatePacketGraph(webrtc::PacketDirection::kIncomingPacket,
+    analyzer.CreatePacketGraph(webrtc::PacketDirection::kIncoming,
                                collection->AppendNewPlot());
   }
   if (FLAG_plot_outgoing_packet_sizes) {
-    analyzer.CreatePacketGraph(webrtc::PacketDirection::kOutgoingPacket,
+    analyzer.CreatePacketGraph(webrtc::PacketDirection::kOutgoing,
                                collection->AppendNewPlot());
   }
   if (FLAG_plot_incoming_packet_count) {
-    analyzer.CreateAccumulatedPacketsGraph(
-        webrtc::PacketDirection::kIncomingPacket, collection->AppendNewPlot());
+    analyzer.CreateAccumulatedPacketsGraph(webrtc::PacketDirection::kIncoming,
+                                           collection->AppendNewPlot());
   }
   if (FLAG_plot_outgoing_packet_count) {
-    analyzer.CreateAccumulatedPacketsGraph(
-        webrtc::PacketDirection::kOutgoingPacket, collection->AppendNewPlot());
+    analyzer.CreateAccumulatedPacketsGraph(webrtc::PacketDirection::kOutgoing,
+                                           collection->AppendNewPlot());
   }
   if (FLAG_plot_audio_playout) {
     analyzer.CreatePlayoutGraph(collection->AppendNewPlot());
@@ -210,21 +210,21 @@ int main(int argc, char* argv[]) {
     analyzer.CreateIncomingPacketLossGraph(collection->AppendNewPlot());
   }
   if (FLAG_plot_incoming_bitrate) {
-    analyzer.CreateTotalBitrateGraph(webrtc::PacketDirection::kIncomingPacket,
+    analyzer.CreateTotalBitrateGraph(webrtc::PacketDirection::kIncoming,
                                      collection->AppendNewPlot(),
                                      FLAG_show_detector_state);
   }
   if (FLAG_plot_outgoing_bitrate) {
-    analyzer.CreateTotalBitrateGraph(webrtc::PacketDirection::kOutgoingPacket,
+    analyzer.CreateTotalBitrateGraph(webrtc::PacketDirection::kOutgoing,
                                      collection->AppendNewPlot(),
                                      FLAG_show_detector_state);
   }
   if (FLAG_plot_incoming_stream_bitrate) {
-    analyzer.CreateStreamBitrateGraph(webrtc::PacketDirection::kIncomingPacket,
+    analyzer.CreateStreamBitrateGraph(webrtc::PacketDirection::kIncoming,
                                       collection->AppendNewPlot());
   }
   if (FLAG_plot_outgoing_stream_bitrate) {
-    analyzer.CreateStreamBitrateGraph(webrtc::PacketDirection::kOutgoingPacket,
+    analyzer.CreateStreamBitrateGraph(webrtc::PacketDirection::kOutgoing,
                                       collection->AppendNewPlot());
   }
   if (FLAG_plot_simulated_sendside_bwe) {

@@ -222,11 +222,11 @@ rtclog::DelayBasedBweUpdate::DetectorState ConvertDetectorState(
 rtclog::BweProbeResult::ResultType ConvertProbeResultType(
     ProbeFailureReason failure_reason) {
   switch (failure_reason) {
-    case kInvalidSendReceiveInterval:
+    case ProbeFailureReason::kInvalidSendReceiveInterval:
       return rtclog::BweProbeResult::INVALID_SEND_RECEIVE_INTERVAL;
-    case kInvalidSendReceiveRatio:
+    case ProbeFailureReason::kInvalidSendReceiveRatio:
       return rtclog::BweProbeResult::INVALID_SEND_RECEIVE_RATIO;
-    case kTimeout:
+    case ProbeFailureReason::kTimeout:
       return rtclog::BweProbeResult::TIMEOUT;
   }
   RTC_NOTREACHED();
@@ -459,7 +459,8 @@ void RtcEventLogImpl::LogRtpHeader(PacketDirection direction,
   std::unique_ptr<rtclog::Event> rtp_event(new rtclog::Event());
   rtp_event->set_timestamp_us(rtc::TimeMicros());
   rtp_event->set_type(rtclog::Event::RTP_EVENT);
-  rtp_event->mutable_rtp_packet()->set_incoming(direction == kIncomingPacket);
+  rtp_event->mutable_rtp_packet()->set_incoming(direction ==
+                                                PacketDirection::kIncoming);
   rtp_event->mutable_rtp_packet()->set_packet_length(packet_length);
   rtp_event->mutable_rtp_packet()->set_header(header, header_length);
   if (probe_cluster_id != PacedPacketInfo::kNotAProbe)
@@ -473,7 +474,8 @@ void RtcEventLogImpl::LogRtcpPacket(PacketDirection direction,
   std::unique_ptr<rtclog::Event> rtcp_event(new rtclog::Event());
   rtcp_event->set_timestamp_us(rtc::TimeMicros());
   rtcp_event->set_type(rtclog::Event::RTCP_EVENT);
-  rtcp_event->mutable_rtcp_packet()->set_incoming(direction == kIncomingPacket);
+  rtcp_event->mutable_rtcp_packet()->set_incoming(direction ==
+                                                  PacketDirection::kIncoming);
 
   rtcp::CommonHeader header;
   const uint8_t* block_begin = packet;

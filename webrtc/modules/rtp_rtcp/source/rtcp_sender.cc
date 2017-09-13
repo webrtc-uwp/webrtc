@@ -99,7 +99,7 @@ class PacketContainer : public rtcp::CompoundPacket,
     if (transport_->SendRtcp(data, length)) {
       bytes_sent_ += length;
       if (event_log_) {
-        event_log_->LogRtcpPacket(kOutgoingPacket, data, length);
+        event_log_->LogRtcpPacket(PacketDirection::kOutgoing, data, length);
       }
     }
   }
@@ -962,7 +962,7 @@ bool RTCPSender::SendFeedbackPacket(const rtcp::TransportFeedback& packet) {
     void OnPacketReady(uint8_t* data, size_t length) override {
       if (transport_->SendRtcp(data, length)) {
         if (event_log_) {
-          event_log_->LogRtcpPacket(kOutgoingPacket, data, length);
+          event_log_->LogRtcpPacket(PacketDirection::kOutgoing, data, length);
         }
       } else {
         send_failure_ = true;

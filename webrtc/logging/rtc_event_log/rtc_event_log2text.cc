@@ -84,9 +84,9 @@ bool ParseSsrc(std::string str) {
 bool ExcludePacket(webrtc::PacketDirection direction,
                    MediaType media_type,
                    uint32_t packet_ssrc) {
-  if (!FLAG_outgoing && direction == webrtc::kOutgoingPacket)
+  if (!FLAG_outgoing && direction == webrtc::PacketDirection::kOutgoing)
     return true;
-  if (!FLAG_incoming && direction == webrtc::kIncomingPacket)
+  if (!FLAG_incoming && direction == webrtc::PacketDirection::kIncoming)
     return true;
   if (!FLAG_audio && media_type == MediaType::AUDIO)
     return true;
@@ -101,7 +101,7 @@ bool ExcludePacket(webrtc::PacketDirection direction,
 
 const char* StreamInfo(webrtc::PacketDirection direction,
                        MediaType media_type) {
-  if (direction == webrtc::kOutgoingPacket) {
+  if (direction == webrtc::PacketDirection::kOutgoing) {
     if (media_type == MediaType::AUDIO)
       return "(out,audio)";
     else if (media_type == MediaType::VIDEO)
@@ -111,7 +111,7 @@ const char* StreamInfo(webrtc::PacketDirection direction,
     else
       return "(out)";
   }
-  if (direction == webrtc::kIncomingPacket) {
+  if (direction == webrtc::PacketDirection::kIncoming) {
     if (media_type == MediaType::AUDIO)
       return "(in,audio)";
     else if (media_type == MediaType::VIDEO)
