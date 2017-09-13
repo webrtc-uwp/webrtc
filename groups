@@ -1,7 +1,7 @@
 # UUID                                  	Group Name
 #
 ad4c2627af83fc3af20913368007c3b0afb7087b	webrtc-releasers
+cria:project-webrtc-admins              	cria/project-webrtc-admins
+cria:project-webrtc-committers          	cria/project-webrtc-committers
 dd041408fe937b6856088fa9e1ad97d4d1bd3b78	chrome-commit-bot
-cria:project-webrtc-admins    	cria/project-webrtc-admins
-cria:project-webrtc-committers	cria/project-webrtc-committers
-global:Registered-Users                 	Registered Users
+global:Registered-Users                 	Logged-in Public Users
