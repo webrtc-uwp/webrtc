@@ -1,7 +1,6 @@
 {
-  "base_url": "https://chromium.googlesource.com/external/webrtc/trunk",
+  "base_url": "https://webrtc.googlesource.com/src/webrtc",
   "enabled_paths": [
-    "talk",
     "webrtc"
   ],
   "enabled_refglobs": [
