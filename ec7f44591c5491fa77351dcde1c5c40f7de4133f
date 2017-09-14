@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "95eddcfa_4bedcd86",
+        "filename": "webrtc/pc/test/androidtestinitializer.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 5027
+      },
+      "writtenOn": "2017-09-14T13:14:25Z",
+      "side": 1,
+      "message": "This guy here introduces IsVMInitialized() and AttachCurrentThread() from the Chromium base package. I really don\u0027t understand how their definitions (which should be in base/android/jni_android.cc) get pulled in so the binary can link. We don\u0027t publicly depend on anything in chromium\u0027s base from what I can see, and if I add it a bunch of other things fail to compile. I don\u0027t know how to solve this, so I walled off this file in the gn file so we can gn --check the rest of the test code, at least.",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 22,
+        "endChar": 37
+      },
+      "revId": "ec7f44591c5491fa77351dcde1c5c40f7de4133f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
