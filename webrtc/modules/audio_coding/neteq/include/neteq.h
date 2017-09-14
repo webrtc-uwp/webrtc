@@ -68,6 +68,10 @@ struct NetEqLifetimeStatistics {
   // conceal packet loss.
   // https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamtrackstats-concealedsamples
   uint64_t concealed_samples = 0;
+  // Number of times a concealed sample is synthesized after a non-concealed
+  // sample.
+  // https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamtrackstats-concealmentevents
+  uint64_t concealment_events = 0;
 };
 
 enum NetEqPlayoutMode {

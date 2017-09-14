@@ -151,14 +151,20 @@ void StatisticsCalculator::ResetMcu() {
   timestamps_since_last_report_ = 0;
 }
 
-void StatisticsCalculator::ExpandedVoiceSamples(size_t num_samples) {
+void StatisticsCalculator::ExpandedVoiceSamples(size_t num_samples,
+                                                bool isNewConcealEvent) {
   expanded_speech_samples_ += num_samples;
   lifetime_stats_.concealed_samples += num_samples;
+  lifetime_stats_.concealment_events +=
+      static_cast<uint64_t>(isNewConcealEvent);
 }
 
-void StatisticsCalculator::ExpandedNoiseSamples(size_t num_samples) {
+void StatisticsCalculator::ExpandedNoiseSamples(size_t num_samples,
+                                                bool isNewConcealEvent) {
   expanded_noise_samples_ += num_samples;
   lifetime_stats_.concealed_samples += num_samples;
+  lifetime_stats_.concealment_events +=
+      static_cast<uint64_t>(isNewConcealEvent);
 }
 
 void StatisticsCalculator::ExpandedVoiceSamplesCorrection(int num_samples) {
