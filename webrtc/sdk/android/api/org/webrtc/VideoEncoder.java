@@ -18,7 +18,6 @@ public interface VideoEncoder {
   /** Settings passed to the encoder by WebRTC. */
   public class Settings {
     public final int numberOfCores;
-    public final int width;
     public final int height;
     public final int startBitrate; // Kilobits per second.
     public final int maxFramerate;
