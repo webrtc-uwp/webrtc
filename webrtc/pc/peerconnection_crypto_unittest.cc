@@ -17,9 +17,14 @@
 namespace {
 
 using RTCConfiguration = webrtc::PeerConnectionInterface::RTCConfiguration;
+using ::testing::Values;
+using ::testing::Combine;
+using webrtc::MockCreateSessionDescriptionObserver;
 using webrtc::PeerConnectionInterface;
 using webrtc::PeerConnectionFactoryInterface;
 using webrtc::SessionDescriptionInterface;
+
+int kGenerateCertTimeout = 1000;
 
 class PeerConnectionWrapperForCryptoUnitTest
     : public webrtc::PeerConnectionWrapper {
@@ -27,21 +32,6 @@ class PeerConnectionWrapperForCryptoUnitTest
   PeerConnectionWrapperForCryptoUnitTest(
       rtc::scoped_refptr<PeerConnectionFactoryInterface> pc_factory)
       : PeerConnectionWrapper(pc_factory) {}
-
-  bool Initialize(const RTCConfiguration& config) {
-    auto fake_port_allocator = rtc::MakeUnique<cricket::FakePortAllocator>(
-        rtc::Thread::Current(), nullptr);
-
-    std::unique_ptr<FakeRTCCertificateGenerator> cert_generator;
-    if (config.enable_dtls_srtp.value_or(false) &&
-        config.certificates.empty()) {
-      cert_generator.reset(new FakeRTCCertificateGenerator());
-    }
-    fake_certificate_generator_ = cert_generator.get();
-
-    return InitializePeerConnection(config, std::move(fake_port_allocator),
-                                    std::move(cert_generator));
-  }
 
   FakeRTCCertificateGenerator* fake_certificate_generator_ = nullptr;
 };
@@ -52,17 +42,35 @@ class PeerConnectionCryptoUnitTest
   typedef std::unique_ptr<PeerConnectionWrapperForCryptoUnitTest> WrapperPtr;
 
   WrapperPtr CreatePeerConnection(const RTCConfiguration& config) {
+    std::unique_ptr<FakeRTCCertificateGenerator> fake_certificate_generator;
+    if (config.enable_dtls_srtp.value_or(false) &&
+        config.certificates.empty()) {
+      fake_certificate_generator.reset(new FakeRTCCertificateGenerator());
+    }
+    return CreatePeerConnection(config, std::move(fake_certificate_generator));
+  }
+
+  WrapperPtr CreatePeerConnection(
+      const RTCConfiguration& config,
+      std::unique_ptr<FakeRTCCertificateGenerator> fake_certificate_generator) {
+    auto fake_port_allocator = rtc::MakeUnique<cricket::FakePortAllocator>(
+        rtc::Thread::Current(), nullptr);
     auto wrapper =
         rtc::MakeUnique<PeerConnectionWrapperForCryptoUnitTest>(pc_factory_);
-    if (!wrapper->Initialize(config)) {
+    wrapper->fake_certificate_generator_ = fake_certificate_generator.get();
+    if (!wrapper->InitializePeerConnection(
+            config, std::move(fake_port_allocator),
+            std::move(fake_certificate_generator))) {
       return nullptr;
     }
     return wrapper;
   }
 
-  WrapperPtr CreatePeerConnectionWithAudioVideo(
-      const RTCConfiguration& config) {
-    auto wrapper = CreatePeerConnection(config);
+  // Accepts the same arguments as CreatePeerConnection and adds default audio
+  // and video tracks.
+  template <typename... Args>
+  WrapperPtr CreatePeerConnectionWithAudioVideo(Args&&... args) {
+    auto wrapper = CreatePeerConnection(std::forward<Args>(args)...);
     if (!wrapper) {
       return nullptr;
     }
@@ -481,5 +489,144 @@ TEST_F(PeerConnectionCryptoUnitTest, ExchangeOfferAnswerWhenNoEncryption) {
   ASSERT_TRUE(answer);
   ASSERT_TRUE(caller->SetRemoteDescription(std::move(answer)));
 }
+
+// Tests that a DTLS call can be established when the certificate is specified
+// in the PeerConnection config and no certificate generator is specified.
+TEST_F(PeerConnectionCryptoUnitTest,
+       ExchangeOfferAnswerWhenDtlsCertificateInConfig) {
+  RTCConfiguration caller_config;
+  caller_config.enable_dtls_srtp.emplace(true);
+  caller_config.certificates.push_back(
+      FakeRTCCertificateGenerator::GenerateCertificate());
+  auto caller = CreatePeerConnectionWithAudioVideo(caller_config);
+
+  RTCConfiguration callee_config;
+  callee_config.enable_dtls_srtp.emplace(true);
+  callee_config.certificates.push_back(
+      FakeRTCCertificateGenerator::GenerateCertificate());
+  auto callee = CreatePeerConnectionWithAudioVideo(callee_config);
+
+  auto offer = caller->CreateOfferAndSetAsLocal();
+  ASSERT_TRUE(offer);
+  ASSERT_TRUE(callee->SetRemoteDescription(std::move(offer)));
+
+  auto answer = callee->CreateAnswerAndSetAsLocal();
+  ASSERT_TRUE(answer);
+  ASSERT_TRUE(caller->SetRemoteDescription(std::move(answer)));
+}
+
+// The following parameterized test verifies that CreateOffer/CreateAnswer
+// returns successfully (or with failure if the underlying certificate generator
+// fails) no matter when the DTLS certificate is generated.
+
+// Whether the test will call CreateOffer or CreateAnswer.
+enum class SdpType { kOffer, kAnswer };
+std::ostream& operator<<(std::ostream& out, SdpType value) {
+  switch (value) {
+    case SdpType::kOffer:
+      return out << "offer";
+    case SdpType::kAnswer:
+      return out << "answer";
+  }
+}
+
+// Whether the certificate will be generated before calling CreateOffer or
+// while CreateOffer is executing.
+enum class CertGenTime { kBefore, kDuring };
+std::ostream& operator<<(std::ostream& out, CertGenTime value) {
+  switch (value) {
+    case CertGenTime::kBefore:
+      return out << "before";
+    case CertGenTime::kDuring:
+      return out << "during";
+  }
+}
+
+// Whether the fake certificate generator will produce a certificate or fail.
+enum class CertGenResult { kSucceed, kFail };
+std::ostream& operator<<(std::ostream& out, CertGenResult value) {
+  switch (value) {
+    case CertGenResult::kSucceed:
+      return out << "succeed";
+    case CertGenResult::kFail:
+      return out << "fail";
+  }
+}
+
+class PeerConnectionCryptoDtlsCertGenUnitTest
+    : public PeerConnectionCryptoUnitTest,
+      public ::testing::WithParamInterface<
+          ::testing::tuple<SdpType, CertGenTime, CertGenResult, int>> {
+ protected:
+  PeerConnectionCryptoDtlsCertGenUnitTest() {
+    sdp_type_ = ::testing::get<0>(GetParam());
+    cert_gen_time_ = ::testing::get<1>(GetParam());
+    cert_gen_result_ = ::testing::get<2>(GetParam());
+    concurrent_calls_ = ::testing::get<3>(GetParam());
+  }
+
+  SdpType sdp_type_;
+  CertGenTime cert_gen_time_;
+  CertGenResult cert_gen_result_;
+  int concurrent_calls_;
+};
+
+TEST_P(PeerConnectionCryptoDtlsCertGenUnitTest, TestCertificateGeneration) {
+  RTCConfiguration config;
+  config.enable_dtls_srtp.emplace(true);
+  auto fake_certificate_generator =
+      rtc::MakeUnique<FakeRTCCertificateGenerator>();
+  fake_certificate_generator->set_should_fail(cert_gen_result_ ==
+                                              CertGenResult::kFail);
+  fake_certificate_generator->set_should_wait(cert_gen_time_ ==
+                                              CertGenTime::kDuring);
+  WrapperPtr pc;
+  if (sdp_type_ == SdpType::kOffer) {
+    pc = CreatePeerConnectionWithAudioVideo(
+        config, std::move(fake_certificate_generator));
+  } else {
+    auto caller = CreatePeerConnectionWithAudioVideo(config);
+    pc = CreatePeerConnectionWithAudioVideo(
+        config, std::move(fake_certificate_generator));
+    pc->SetRemoteDescription(caller->CreateOfferAndSetAsLocal());
+  }
+  if (cert_gen_time_ == CertGenTime::kBefore) {
+    EXPECT_TRUE_WAIT(
+        pc->fake_certificate_generator_->generated_certificates() +
+                pc->fake_certificate_generator_->generated_failures() >
+            0,
+        kGenerateCertTimeout);
+  } else {
+    EXPECT_EQ(pc->fake_certificate_generator_->generated_certificates(), 0);
+    pc->fake_certificate_generator_->set_should_wait(false);
+  }
+  rtc::scoped_refptr<MockCreateSessionDescriptionObserver>
+      observers[concurrent_calls_];
+  for (auto& observer : observers) {
+    observer =
+        new rtc::RefCountedObject<MockCreateSessionDescriptionObserver>();
+    if (sdp_type_ == SdpType::kOffer) {
+      pc->pc()->CreateOffer(observer, nullptr);
+    } else {
+      pc->pc()->CreateAnswer(observer, nullptr);
+    }
+  }
+  for (auto& observer : observers) {
+    EXPECT_TRUE_WAIT(observer->called(), 1000);
+    if (cert_gen_result_ == CertGenResult::kSucceed) {
+      ASSERT_TRUE(observer->result());
+    } else {
+      ASSERT_FALSE(observer->result());
+    }
+  }
+}
+
+INSTANTIATE_TEST_CASE_P(
+    PeerConnectionCryptoUnitTest,
+    PeerConnectionCryptoDtlsCertGenUnitTest,
+    Combine(Values(SdpType::kOffer, SdpType::kAnswer),
+            Values(CertGenTime::kBefore, CertGenTime::kDuring),
+            Values(CertGenResult::kSucceed, CertGenResult::kFail),
+            Values(1, 3)));
 
 }  // namespace

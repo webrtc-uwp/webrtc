@@ -47,6 +47,14 @@ class PeerConnectionWrapper {
   PeerConnectionInterface* pc();
   MockPeerConnectionObserver* observer();
 
+  // Creates the underlying PeerConnection with the given parameters. Registers
+  // the MockPeerConnectionObserver with the new PeerConnection to receive
+  // events. Returns true if the PeerConnection was created successfully.
+  bool InitializePeerConnection(
+      const PeerConnectionInterface::RTCConfiguration& config,
+      std::unique_ptr<cricket::PortAllocator> port_allocator,
+      std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator);
+
   // Calls the underlying PeerConnection's CreateOffer method and returns the
   // resulting SessionDescription once it is available. If the method call
   // failed, null is returned.
@@ -87,15 +95,6 @@ class PeerConnectionWrapper {
   void AddAudioVideoStream(const std::string& stream_label,
                            const std::string& audio_track_label,
                            const std::string& video_track_label);
-
- protected:
-  // Creates the underlying PeerConnection with the given parameters. Registers
-  // the MockPeerConnectionObserver with the new PeerConnection to receive
-  // events. Returns true if the PeerConnection was created successfully.
-  bool InitializePeerConnection(
-      const PeerConnectionInterface::RTCConfiguration& config,
-      std::unique_ptr<cricket::PortAllocator> port_allocator,
-      std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator);
 
  private:
   std::unique_ptr<SessionDescriptionInterface> CreateSdp(

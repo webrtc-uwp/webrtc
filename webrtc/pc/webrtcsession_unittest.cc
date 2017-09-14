@@ -105,10 +105,6 @@ static const char kMediaContentName1[] = "video";
 static const int kDefaultTimeout = 10000;  // 10 seconds.
 static const int kIceCandidatesTimeout = 10000;
 
-static const char kFakeDtlsFingerprint[] =
-    "BB:CD:72:F7:2F:D0:BA:43:F3:68:B1:0C:23:72:B6:4A:"
-    "0F:DE:34:06:BC:E0:FE:01:BC:73:C8:6D:F4:65:D5:24";
-
 static const char kTooLongIceUfragPwd[] =
     "IceUfragIceUfragIceUfragIceUfragIceUfragIceUfragIceUfragIceUfragIceUfrag"
     "IceUfragIceUfragIceUfragIceUfragIceUfragIceUfragIceUfragIceUfragIceUfrag"
@@ -818,36 +814,6 @@ class WebRtcSessionTest
             session_->video_channel() != NULL);
   }
 
-  void VerifyNoCryptoParams(const cricket::SessionDescription* sdp, bool dtls) {
-    const cricket::ContentInfo* content = cricket::GetFirstAudioContent(sdp);
-    ASSERT_TRUE(content != NULL);
-    const cricket::AudioContentDescription* audio_content =
-        static_cast<const cricket::AudioContentDescription*>(
-            content->description);
-    ASSERT_TRUE(audio_content != NULL);
-    ASSERT_EQ(0U, audio_content->cryptos().size());
-
-    content = cricket::GetFirstVideoContent(sdp);
-    ASSERT_TRUE(content != NULL);
-    const cricket::VideoContentDescription* video_content =
-        static_cast<const cricket::VideoContentDescription*>(
-            content->description);
-    ASSERT_TRUE(video_content != NULL);
-    ASSERT_EQ(0U, video_content->cryptos().size());
-
-    if (dtls) {
-      EXPECT_EQ(std::string(cricket::kMediaProtocolDtlsSavpf),
-                audio_content->protocol());
-      EXPECT_EQ(std::string(cricket::kMediaProtocolDtlsSavpf),
-                video_content->protocol());
-    } else {
-      EXPECT_EQ(std::string(cricket::kMediaProtocolAvpf),
-                audio_content->protocol());
-      EXPECT_EQ(std::string(cricket::kMediaProtocolAvpf),
-                video_content->protocol());
-    }
-  }
-
   // Set the internal fake description factories to do DTLS-SRTP.
   void SetFactoryDtlsSrtp() {
     desc_factory_->set_secure(cricket::SEC_DISABLED);
@@ -858,16 +824,6 @@ class WebRtcSessionTest
         rtc::RTCCertificate::Create(std::unique_ptr<rtc::SSLIdentity>(
             rtc::SSLIdentity::Generate(identity_name, rtc::KT_DEFAULT))));
     tdesc_factory_->set_secure(cricket::SEC_REQUIRED);
-  }
-
-  void VerifyFingerprintStatus(const cricket::SessionDescription* sdp,
-                               bool expected) {
-    const TransportInfo* audio = sdp->GetTransportInfoByName("audio");
-    ASSERT_TRUE(audio != NULL);
-    ASSERT_EQ(expected, audio->description.identity_fingerprint.get() != NULL);
-    const TransportInfo* video = sdp->GetTransportInfoByName("video");
-    ASSERT_TRUE(video != NULL);
-    ASSERT_EQ(expected, video->description.identity_fingerprint.get() != NULL);
   }
 
   bool IceUfragPwdEqual(const cricket::SessionDescription* desc1,
@@ -1453,63 +1409,6 @@ class WebRtcSessionTest
     CreateDataChannel();
     SessionDescriptionInterface* offer = CreateOffer();
     SetLocalDescriptionWithoutError(offer);
-  }
-
-  void VerifyMultipleAsyncCreateDescription(
-      RTCCertificateGenerationMethod cert_gen_method,
-      CreateSessionDescriptionRequest::Type type) {
-    InitWithDtls(cert_gen_method);
-    VerifyMultipleAsyncCreateDescriptionAfterInit(true, type);
-  }
-
-  void VerifyMultipleAsyncCreateDescriptionIdentityGenFailure(
-      CreateSessionDescriptionRequest::Type type) {
-    InitWithDtlsIdentityGenFail();
-    VerifyMultipleAsyncCreateDescriptionAfterInit(false, type);
-  }
-
-  void VerifyMultipleAsyncCreateDescriptionAfterInit(
-      bool success, CreateSessionDescriptionRequest::Type type) {
-    RTC_CHECK(session_);
-    SetFactoryDtlsSrtp();
-    if (type == CreateSessionDescriptionRequest::kAnswer) {
-      cricket::MediaSessionOptions options;
-      GetOptionsForRemoteOffer(&options);
-      std::unique_ptr<JsepSessionDescription> offer(
-          CreateRemoteOffer(options, cricket::SEC_DISABLED));
-      ASSERT_TRUE(offer.get() != NULL);
-      SetRemoteDescriptionWithoutError(offer.release());
-    }
-
-    PeerConnectionInterface::RTCOfferAnswerOptions options;
-    cricket::MediaSessionOptions offer_session_options;
-    cricket::MediaSessionOptions answer_session_options;
-    GetOptionsForOffer(options, &offer_session_options);
-    GetOptionsForAnswer(&answer_session_options);
-    const int kNumber = 3;
-    rtc::scoped_refptr<WebRtcSessionCreateSDPObserverForTest>
-        observers[kNumber];
-    for (int i = 0; i < kNumber; ++i) {
-      observers[i] = new WebRtcSessionCreateSDPObserverForTest();
-      if (type == CreateSessionDescriptionRequest::kOffer) {
-        session_->CreateOffer(observers[i], options, offer_session_options);
-      } else {
-        session_->CreateAnswer(observers[i], answer_session_options);
-      }
-    }
-
-    WebRtcSessionCreateSDPObserverForTest::State expected_state =
-        success ? WebRtcSessionCreateSDPObserverForTest::kSucceeded :
-                  WebRtcSessionCreateSDPObserverForTest::kFailed;
-
-    for (int i = 0; i < kNumber; ++i) {
-      EXPECT_EQ_WAIT(expected_state, observers[i]->state(), 1000);
-      if (success) {
-        EXPECT_TRUE(observers[i]->description() != NULL);
-      } else {
-        EXPECT_TRUE(observers[i]->description() == NULL);
-      }
-    }
   }
 
   void ConfigureAllocatorWithTurn() {
@@ -3801,129 +3700,6 @@ TEST_P(WebRtcSessionTest, TestSctpDataChannelOpenMessage) {
   EXPECT_FALSE(last_data_channel_config_.negotiated);
   EXPECT_EQ(webrtc::InternalDataChannelInit::kAcker,
             last_data_channel_config_.open_handshake_role);
-}
-
-TEST_P(WebRtcSessionTest, TestUsesProvidedCertificate) {
-  rtc::scoped_refptr<rtc::RTCCertificate> certificate =
-      FakeRTCCertificateGenerator::GenerateCertificate();
-
-  configuration_.certificates.push_back(certificate);
-  Init();
-  EXPECT_TRUE_WAIT(!session_->waiting_for_certificate_for_testing(), 1000);
-
-  EXPECT_EQ(session_->certificate_for_testing(), certificate);
-}
-
-// Verifies that CreateOffer succeeds when CreateOffer is called before async
-// identity generation is finished (even if a certificate is provided this is
-// an async op).
-TEST_P(WebRtcSessionTest, TestCreateOfferBeforeIdentityRequestReturnSuccess) {
-  InitWithDtls(GetParam());
-
-  EXPECT_TRUE(session_->waiting_for_certificate_for_testing());
-  SendAudioVideoStream1();
-  std::unique_ptr<SessionDescriptionInterface> offer(CreateOffer());
-
-  EXPECT_TRUE(offer != NULL);
-  VerifyNoCryptoParams(offer->description(), true);
-  VerifyFingerprintStatus(offer->description(), true);
-}
-
-// Verifies that CreateAnswer succeeds when CreateOffer is called before async
-// identity generation is finished (even if a certificate is provided this is
-// an async op).
-TEST_P(WebRtcSessionTest, TestCreateAnswerBeforeIdentityRequestReturnSuccess) {
-  InitWithDtls(GetParam());
-  SetFactoryDtlsSrtp();
-
-  cricket::MediaSessionOptions options;
-  GetOptionsForRemoteOffer(&options);
-  std::unique_ptr<JsepSessionDescription> offer(
-      CreateRemoteOffer(options, cricket::SEC_DISABLED));
-  ASSERT_TRUE(offer.get() != NULL);
-  SetRemoteDescriptionWithoutError(offer.release());
-
-  std::unique_ptr<SessionDescriptionInterface> answer(CreateAnswer());
-  EXPECT_TRUE(answer != NULL);
-  VerifyNoCryptoParams(answer->description(), true);
-  VerifyFingerprintStatus(answer->description(), true);
-}
-
-// Verifies that CreateOffer succeeds when CreateOffer is called after async
-// identity generation is finished (even if a certificate is provided this is
-// an async op).
-TEST_P(WebRtcSessionTest, TestCreateOfferAfterIdentityRequestReturnSuccess) {
-  InitWithDtls(GetParam());
-
-  EXPECT_TRUE_WAIT(!session_->waiting_for_certificate_for_testing(), 1000);
-
-  std::unique_ptr<SessionDescriptionInterface> offer(CreateOffer());
-  EXPECT_TRUE(offer != NULL);
-}
-
-// Verifies that CreateOffer fails when CreateOffer is called after async
-// identity generation fails.
-TEST_F(WebRtcSessionTest, TestCreateOfferAfterIdentityRequestReturnFailure) {
-  InitWithDtlsIdentityGenFail();
-
-  EXPECT_TRUE_WAIT(!session_->waiting_for_certificate_for_testing(), 1000);
-
-  std::unique_ptr<SessionDescriptionInterface> offer(CreateOffer());
-  EXPECT_TRUE(offer == NULL);
-}
-
-// Verifies that CreateOffer succeeds when Multiple CreateOffer calls are made
-// before async identity generation is finished.
-TEST_P(WebRtcSessionTest,
-       TestMultipleCreateOfferBeforeIdentityRequestReturnSuccess) {
-  VerifyMultipleAsyncCreateDescription(GetParam(),
-                                       CreateSessionDescriptionRequest::kOffer);
-}
-
-// Verifies that CreateOffer fails when Multiple CreateOffer calls are made
-// before async identity generation fails.
-TEST_F(WebRtcSessionTest,
-       TestMultipleCreateOfferBeforeIdentityRequestReturnFailure) {
-  VerifyMultipleAsyncCreateDescriptionIdentityGenFailure(
-      CreateSessionDescriptionRequest::kOffer);
-}
-
-// Verifies that CreateAnswer succeeds when Multiple CreateAnswer calls are made
-// before async identity generation is finished.
-TEST_P(WebRtcSessionTest,
-       TestMultipleCreateAnswerBeforeIdentityRequestReturnSuccess) {
-  VerifyMultipleAsyncCreateDescription(
-      GetParam(), CreateSessionDescriptionRequest::kAnswer);
-}
-
-// Verifies that CreateAnswer fails when Multiple CreateAnswer calls are made
-// before async identity generation fails.
-TEST_F(WebRtcSessionTest,
-       TestMultipleCreateAnswerBeforeIdentityRequestReturnFailure) {
-  VerifyMultipleAsyncCreateDescriptionIdentityGenFailure(
-      CreateSessionDescriptionRequest::kAnswer);
-}
-
-// Verifies that setRemoteDescription fails when DTLS is disabled and the remote
-// offer has no SDES crypto but only DTLS fingerprint.
-TEST_F(WebRtcSessionTest, TestSetRemoteOfferFailIfDtlsDisabledAndNoCrypto) {
-  // Init without DTLS.
-  Init();
-  // Create a remote offer with secured transport disabled.
-  cricket::MediaSessionOptions options;
-  GetOptionsForRemoteOffer(&options);
-  JsepSessionDescription* offer(CreateRemoteOffer(
-      options, cricket::SEC_DISABLED));
-  // Adds a DTLS fingerprint to the remote offer.
-  cricket::SessionDescription* sdp = offer->description();
-  TransportInfo* audio = sdp->GetTransportInfoByName("audio");
-  ASSERT_TRUE(audio != NULL);
-  ASSERT_TRUE(audio->description.identity_fingerprint.get() == NULL);
-  audio->description.identity_fingerprint.reset(
-      rtc::SSLFingerprint::CreateFromRfc4572(
-          rtc::DIGEST_SHA_256, kFakeDtlsFingerprint));
-  SetRemoteDescriptionOfferExpectError(kSdpWithoutSdesCrypto,
-                                       offer);
 }
 
 TEST_F(WebRtcSessionTest, TestCombinedAudioVideoBweConstraint) {
