@@ -70,7 +70,7 @@ using webrtc::WebRtcSession;
 using webrtc::kBundleWithoutRtcpMux;
 using webrtc::kCreateChannelFailed;
 using webrtc::kInvalidSdp;
-using webrtc::kMlineMismatch;
+using webrtc::kMlineMismatchInAnswer;
 using webrtc::kPushDownTDFailed;
 using webrtc::kSdpWithoutIceUfragPwd;
 using webrtc::kSdpWithoutDtlsFingerprint;
@@ -3744,7 +3744,8 @@ TEST_F(WebRtcSessionTest, TestIncorrectMLinesInRemoteAnswer) {
   EXPECT_TRUE(modified_answer->Initialize(answer_copy,
                                           answer->session_id(),
                                           answer->session_version()));
-  SetRemoteDescriptionAnswerExpectError(kMlineMismatch, modified_answer);
+  SetRemoteDescriptionAnswerExpectError(kMlineMismatchInAnswer,
+                                        modified_answer);
 
   // Different content names.
   std::string sdp;
@@ -3757,7 +3758,8 @@ TEST_F(WebRtcSessionTest, TestIncorrectMLinesInRemoteAnswer) {
                              &sdp);
   SessionDescriptionInterface* modified_answer1 =
       CreateSessionDescription(JsepSessionDescription::kAnswer, sdp, NULL);
-  SetRemoteDescriptionAnswerExpectError(kMlineMismatch, modified_answer1);
+  SetRemoteDescriptionAnswerExpectError(kMlineMismatchInAnswer,
+                                        modified_answer1);
 
   // Different media types.
   EXPECT_TRUE(answer->ToString(&sdp));
@@ -3769,7 +3771,8 @@ TEST_F(WebRtcSessionTest, TestIncorrectMLinesInRemoteAnswer) {
                              &sdp);
   SessionDescriptionInterface* modified_answer2 =
       CreateSessionDescription(JsepSessionDescription::kAnswer, sdp, NULL);
-  SetRemoteDescriptionAnswerExpectError(kMlineMismatch, modified_answer2);
+  SetRemoteDescriptionAnswerExpectError(kMlineMismatchInAnswer,
+                                        modified_answer2);
 
   SetRemoteDescriptionWithoutError(answer.release());
 }
@@ -3791,7 +3794,7 @@ TEST_F(WebRtcSessionTest, TestIncorrectMLinesInLocalAnswer) {
   EXPECT_TRUE(modified_answer->Initialize(answer_copy,
                                           answer->session_id(),
                                           answer->session_version()));
-  SetLocalDescriptionAnswerExpectError(kMlineMismatch, modified_answer);
+  SetLocalDescriptionAnswerExpectError(kMlineMismatchInAnswer, modified_answer);
   SetLocalDescriptionWithoutError(answer);
 }
 
