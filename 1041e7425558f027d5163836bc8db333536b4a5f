@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c5384b05_26de3199",
+        "filename": "PRESUBMIT.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 5017
+      },
+      "writtenOn": "2017-09-14T17:03:28Z",
+      "side": 1,
+      "message": "Sort alphabetically?",
+      "range": {
+        "startLine": 19,
+        "startChar": 3,
+        "endLine": 19,
+        "endChar": 15
+      },
+      "revId": "1041e7425558f027d5163836bc8db333536b4a5f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b772c17e_c0d8371d",
+        "filename": "PRESUBMIT.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 5017
+      },
+      "writtenOn": "2017-09-14T17:03:28Z",
+      "side": 1,
+      "message": "This is what\u0027s needed to preserve the old behavior, but I think it\u0027s overkill. The old one probably wasn\u0027t even needed, since I don\u0027t see how a CL would contain files outside of webrtc/ before. I guess the only case would have been changes to tools_webrtc etc, but in that case I think it would have been wrong to not check them.\n\nSo I think you can actually skip all this and rely on the source_file_filter only to classify GN files.",
+      "range": {
+        "startLine": 352,
+        "startChar": 2,
+        "endLine": 363,
+        "endChar": 24
+      },
+      "revId": "1041e7425558f027d5163836bc8db333536b4a5f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "11478083_72140d3b",
+        "filename": "PRESUBMIT.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 5017
+      },
+      "writtenOn": "2017-09-14T17:03:28Z",
+      "side": 1,
+      "message": "Do we need to comment them out? Can\u0027t we just skip presubmit checks when we run this for real?\nWe can of course disable them and run \u0027git cl presubmit -fv\u0027 to verify things, but then enable them before submit.",
+      "range": {
+        "startLine": 611,
+        "startChar": 2,
+        "endLine": 612,
+        "endChar": 76
+      },
+      "revId": "1041e7425558f027d5163836bc8db333536b4a5f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
