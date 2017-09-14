@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a92ba06_7d5f8770",
+        "filename": "PRESUBMIT.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 5087
+      },
+      "writtenOn": "2017-09-14T19:41:11Z",
+      "side": 1,
+      "message": "This was in the src/webrtc/PRESUBMIT.py file. I moved it here.\nOther functions from src/webrtc/PRESUBMIT.py were already present in this file.",
+      "range": {
+        "startLine": 509,
+        "startChar": 0,
+        "endLine": 528,
+        "endChar": 23
+      },
+      "revId": "a9aa30027a39e9360a3c8fdcfd47c99cdce4cc5a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}

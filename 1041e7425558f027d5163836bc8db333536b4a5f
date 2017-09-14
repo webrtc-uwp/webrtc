@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "97c60282_90eaa12c",
+        "filename": "PRESUBMIT.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 5087
+      },
+      "writtenOn": "2017-09-14T19:41:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c5384b05_26de3199",
+      "range": {
+        "startLine": 19,
+        "startChar": 3,
+        "endLine": 19,
+        "endChar": 15
+      },
+      "revId": "1041e7425558f027d5163836bc8db333536b4a5f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b772c17e_c0d8371d",
         "filename": "PRESUBMIT.py",
         "patchSetId": 1
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "0a54a9e9_f7e72083",
+        "filename": "PRESUBMIT.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 5087
+      },
+      "writtenOn": "2017-09-14T19:41:11Z",
+      "side": 1,
+      "message": "Yeah, it makes a lot of sense. Done.",
+      "parentUuid": "b772c17e_c0d8371d",
+      "range": {
+        "startLine": 352,
+        "startChar": 2,
+        "endLine": 363,
+        "endChar": 24
+      },
+      "revId": "1041e7425558f027d5163836bc8db333536b4a5f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "11478083_72140d3b",
         "filename": "PRESUBMIT.py",
         "patchSetId": 1
@@ -59,6 +107,30 @@
       "writtenOn": "2017-09-14T17:03:28Z",
       "side": 1,
       "message": "Do we need to comment them out? Can\u0027t we just skip presubmit checks when we run this for real?\nWe can of course disable them and run \u0027git cl presubmit -fv\u0027 to verify things, but then enable them before submit.",
+      "range": {
+        "startLine": 611,
+        "startChar": 2,
+        "endLine": 612,
+        "endChar": 76
+      },
+      "revId": "1041e7425558f027d5163836bc8db333536b4a5f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97704b7d_0ef091e5",
+        "filename": "PRESUBMIT.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 5087
+      },
+      "writtenOn": "2017-09-14T19:41:11Z",
+      "side": 1,
+      "message": "These are the only two checks that are failing (causing an error):\n- _CheckOrphanHeaders: because it finds some orphan headers since we have moved everything\n- _CheckNewLineAtTheEndOfProtoFiles: is probably doing something wrong. I have a TODO to check tomorrow afternoon.\n\nI think we can keep them skipped and just land a CL to re-enable _CheckOrphanHeaders after the migration. I will re-enable _CheckNewLineAtTheEndOfProtoFiles later.",
+      "parentUuid": "11478083_72140d3b",
       "range": {
         "startLine": 611,
         "startChar": 2,
