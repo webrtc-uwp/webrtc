@@ -1,4 +1,0 @@
-include_rules = [
-  "+webrtc/system_wrappers",
-  "+webrtc/logging/rtc_event_log"
-]
