@@ -18,8 +18,6 @@
 #include "webrtc/p2p/base/sessiondescription.h"
 #include "webrtc/pc/mediasession.h"
 #include "webrtc/rtc_base/gunit.h"
-#include "webrtc/rtc_base/helpers.h"
-#include "webrtc/rtc_base/ssladapter.h"
 #include "webrtc/rtc_base/stringencode.h"
 
 using webrtc::IceCandidateCollection;
