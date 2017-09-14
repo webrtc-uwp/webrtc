@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "11b93a93_96010963",
+        "filename": "webrtc/modules/desktop_capture/capture_result_desktop_capturer_wrapper.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 5166
+      },
+      "writtenOn": "2017-09-14T19:41:21Z",
+      "side": 1,
+      "message": "I think you can simplify this logic to a single if...else followed that overrides result or frame, by notifying the callback. No need for multiple calls to OnCaptureResult nor early returns.",
+      "range": {
+        "startLine": 51,
+        "startChar": 3,
+        "endLine": 51,
+        "endChar": 0
+      },
+      "revId": "aa5dcd61d7a3e34ec51e01cd3ea290c9eb53d2f7",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f0cfe63_532928e0",
+        "filename": "webrtc/modules/desktop_capture/capture_result_desktop_capturer_wrapper.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 5166
+      },
+      "writtenOn": "2017-09-14T19:41:21Z",
+      "side": 1,
+      "message": "I think a better pattern for this would be to provide a new, pure-virtual method that subclasses are then required to override. This class would then provide its own override for OnCaptureResult along the lines of:\n\nvoid OnCaptureResult(result, frame) {\n  modified_result \u003d ...\n  modified_frame \u003d ...\n  OnBeforeCaptureResultNotify(modified_result, modified_frame);\n  callback_-\u003eOnCaptureResult(result, frame);\n}\n\nBetter still, consider providing a second callback for observers so that you don\u0027t need to subclass CaptureResultDesktopCapturerWrapper--you just invoke observer_callback_-\u003eOnCaptureResult() before callback_-\u003eOnCaptureResult(). Google \"prefer composition over inheritance\" for why this pattern is better in most cases.\n\nThe details are not very clear to me, however. For example, why is sanity-checking the |result| and |frame| parameters intrinsically tied to observing them? They seem unrelated to me.",
+      "range": {
+        "startLine": 24,
+        "startChar": 19,
+        "endLine": 24,
+        "endChar": 0
+      },
+      "revId": "aa5dcd61d7a3e34ec51e01cd3ea290c9eb53d2f7",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
