@@ -1634,4 +1634,38 @@ TEST_F(NetEqDecodingTest, LastDecodedTimestampsTwoDecoded) {
             neteq_->LastDecodedTimestamps());
 }
 
+TEST_F(NetEqDecodingTest, TestConcealmentEvents) {
+  const uint64_t kNumConcealmentEvents = 19;
+  const size_t kSamples = 10 * 16;
+  const size_t kPayloadBytes = kSamples * 2;
+  int seqNo = 0;
+  RTPHeader rtp_info;
+  rtp_info.ssrc = 0x1234;     // Just an arbitrary SSRC.
+  rtp_info.payloadType = 94;  // PCM16b WB codec.
+  rtp_info.markerBit = 0;
+  const uint8_t payload[kPayloadBytes] = {0};
+  bool muted;
+
+  for (uint64_t i = 0; i < kNumConcealmentEvents; i++) {
+    // Put some packets
+    for (int j = 0; j < 10; j++) {
+      rtp_info.sequenceNumber = seqNo++;
+      rtp_info.timestamp = rtp_info.sequenceNumber * kSamples;
+      neteq_->InsertPacket(rtp_info, payload, 0);
+      neteq_->GetAudio(&out_frame_, &muted);
+    }
+
+    // Lose some packets
+    int numLost = 1 + i;  // Any number would do
+    for (int j = 0; j < numLost; j++) {
+      seqNo++;
+      neteq_->GetAudio(&out_frame_, &muted);
+    }
+  }
+
+  // Check number of concealment events
+  NetEqLifetimeStatistics stats = neteq_->GetLifetimeStatistics();
+  EXPECT_EQ(kNumConcealmentEvents, stats.concealment_events);
+}
+
 }  // namespace webrtc
