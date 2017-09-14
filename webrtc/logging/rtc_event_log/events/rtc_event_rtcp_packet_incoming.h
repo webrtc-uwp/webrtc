@@ -11,17 +11,22 @@
 #ifndef WEBRTC_LOGGING_RTC_EVENT_LOG_EVENTS_RTC_EVENT_RTCP_PACKET_INCOMING_H_
 #define WEBRTC_LOGGING_RTC_EVENT_LOG_EVENTS_RTC_EVENT_RTCP_PACKET_INCOMING_H_
 
+#include "webrtc/api/array_view.h"
 #include "webrtc/logging/rtc_event_log/events/rtc_event.h"
+#include "webrtc/rtc_base/buffer.h"
 
 namespace webrtc {
 
 class RtcEventRtcpPacketIncoming final : public RtcEvent {
  public:
-  ~RtcEventRtcpPacketIncoming() override = default;
+  explicit RtcEventRtcpPacketIncoming(rtc::ArrayView<const uint8_t> packet);
+  ~RtcEventRtcpPacketIncoming() override;
 
   Type GetType() const override;
 
   bool IsConfigEvent() const override;
+
+  rtc::Buffer packet_;
 };
 
 }  // namespace webrtc

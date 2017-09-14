@@ -11,6 +11,12 @@
 #ifndef WEBRTC_LOGGING_RTC_EVENT_LOG_EVENTS_RTC_EVENT_H_
 #define WEBRTC_LOGGING_RTC_EVENT_LOG_EVENTS_RTC_EVENT_H_
 
+#include <webrtc/typedefs.h>
+
+namespace rtc {
+int64_t TimeMicros();
+}  // namespace rtc
+
 namespace webrtc {
 
 // This class allows us to store unencoded RTC events. Subclasses of this class
@@ -45,11 +51,14 @@ class RtcEvent {
     VideoSendStreamConfig
   };
 
+  RtcEvent() : timestamp_us_(rtc::TimeMicros()) {}
   virtual ~RtcEvent() = default;
 
   virtual Type GetType() const = 0;
 
   virtual bool IsConfigEvent() const = 0;
+
+  const int64_t timestamp_us_;
 };
 
 }  // namespace webrtc

@@ -12,16 +12,25 @@
 #define WEBRTC_LOGGING_RTC_EVENT_LOG_EVENTS_RTC_EVENT_RTP_PACKET_OUTGOING_H_
 
 #include "webrtc/logging/rtc_event_log/events/rtc_event.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_packet.h"
 
 namespace webrtc {
 
+class RtpPacketToSend;
+
 class RtcEventRtpPacketOutgoing final : public RtcEvent {
  public:
-  ~RtcEventRtpPacketOutgoing() override = default;
+  RtcEventRtpPacketOutgoing(const RtpPacketToSend& packet,
+                            int probe_cluster_id);
+  ~RtcEventRtpPacketOutgoing() override;
 
   Type GetType() const override;
 
   bool IsConfigEvent() const override;
+
+  rtp::Packet header_;          // Only the packet's header will be stored here.
+  const size_t packet_length_;  // Length before stripping away all but header.
+  const int probe_cluster_id_;
 };
 
 }  // namespace webrtc

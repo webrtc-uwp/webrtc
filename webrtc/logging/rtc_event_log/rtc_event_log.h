@@ -19,6 +19,8 @@
 // TODO(eladalon): Get rid of this later in the CL-stack.
 #include "webrtc/api/rtpparameters.h"
 #include "webrtc/common_types.h"
+// TODO(eladalon): Get rid of this later in the CL-stack.
+#include "webrtc/logging/rtc_event_log/events/rtc_event_probe_result_failure.h"
 #include "webrtc/rtc_base/platform_file.h"
 
 namespace webrtc {
@@ -38,11 +40,6 @@ enum class MediaType;
 enum class BandwidthUsage;
 
 enum PacketDirection { kIncomingPacket = 0, kOutgoingPacket };
-enum ProbeFailureReason {
-  kInvalidSendReceiveInterval,
-  kInvalidSendReceiveRatio,
-  kTimeout
-};
 
 class RtcEventLog {
  public:
