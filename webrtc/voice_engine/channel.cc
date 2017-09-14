@@ -20,6 +20,25 @@
 #include "webrtc/audio/utility/audio_frame_operations.h"
 #include "webrtc/call/rtp_transport_controller_send_interface.h"
 #include "webrtc/logging/rtc_event_log/rtc_event_log.h"
+// TODO(eladalon): Remove events/* after removing the deprecated functions.
+#include "webrtc/logging/rtc_event_log/events/rtc_event_audio_network_adaptation.h"
+#include "webrtc/logging/rtc_event_log/events/rtc_event_audio_playout.h"
+#include "webrtc/logging/rtc_event_log/events/rtc_event_audio_receive_stream_config.h"
+#include "webrtc/logging/rtc_event_log/events/rtc_event_audio_send_stream_config.h"
+#include "webrtc/logging/rtc_event_log/events/rtc_event_bwe_update_delay_based.h"
+#include "webrtc/logging/rtc_event_log/events/rtc_event_bwe_update_loss_based.h"
+#include "webrtc/logging/rtc_event_log/events/rtc_event_logging_started.h"
+#include "webrtc/logging/rtc_event_log/events/rtc_event_logging_stopped.h"
+#include "webrtc/logging/rtc_event_log/events/rtc_event_probe_cluster_created.h"
+#include "webrtc/logging/rtc_event_log/events/rtc_event_probe_result_failure.h"
+#include "webrtc/logging/rtc_event_log/events/rtc_event_probe_result_success.h"
+#include "webrtc/logging/rtc_event_log/events/rtc_event_rtcp_packet_incoming.h"
+#include "webrtc/logging/rtc_event_log/events/rtc_event_rtcp_packet_outgoing.h"
+#include "webrtc/logging/rtc_event_log/events/rtc_event_rtp_packet_incoming.h"
+#include "webrtc/logging/rtc_event_log/events/rtc_event_rtp_packet_outgoing.h"
+#include "webrtc/logging/rtc_event_log/events/rtc_event_video_receive_stream_config.h"
+#include "webrtc/logging/rtc_event_log/events/rtc_event_video_send_stream_config.h"
+#include "webrtc/modules/audio_coding/audio_network_adaptor/include/audio_network_adaptor_config.h"
 #include "webrtc/modules/audio_coding/codecs/audio_format_conversion.h"
 #include "webrtc/modules/audio_device/include/audio_device.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
@@ -36,6 +55,7 @@
 #include "webrtc/rtc_base/format_macros.h"
 #include "webrtc/rtc_base/location.h"
 #include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/ptr_util.h"
 #include "webrtc/rtc_base/rate_limiter.h"
 #include "webrtc/rtc_base/task_queue.h"
 #include "webrtc/rtc_base/thread_checker.h"
@@ -78,6 +98,13 @@ class RtcEventLogProxy final : public webrtc::RtcEventLog {
 
   void StopLogging() override { RTC_NOTREACHED(); }
 
+  void Log(std::unique_ptr<RtcEvent> event) override {
+    rtc::CritScope lock(&crit_);
+    if (event_log_) {
+      event_log_->Log(std::move(event));
+    }
+  }
+
   void LogVideoReceiveStreamConfig(
       const webrtc::rtclog::StreamConfig&) override {
     RTC_NOTREACHED();
@@ -91,7 +118,8 @@ class RtcEventLogProxy final : public webrtc::RtcEventLog {
       const webrtc::rtclog::StreamConfig& config) override {
     rtc::CritScope lock(&crit_);
     if (event_log_) {
-      event_log_->LogAudioReceiveStreamConfig(config);
+      event_log_->Log(rtc::MakeUnique<RtcEventAudioReceiveStreamConfig>(
+          rtc::MakeUnique<webrtc::rtclog::StreamConfig>(config)));
     }
   }
 
@@ -99,14 +127,15 @@ class RtcEventLogProxy final : public webrtc::RtcEventLog {
       const webrtc::rtclog::StreamConfig& config) override {
     rtc::CritScope lock(&crit_);
     if (event_log_) {
-      event_log_->LogAudioSendStreamConfig(config);
+      event_log_->Log(rtc::MakeUnique<RtcEventAudioSendStreamConfig>(
+          rtc::MakeUnique<webrtc::rtclog::StreamConfig>(config)));
     }
   }
 
   void LogIncomingRtpHeader(const RtpPacketReceived& packet) override {
     rtc::CritScope lock(&crit_);
     if (event_log_) {
-      event_log_->LogIncomingRtpHeader(packet);
+      event_log_->Log(rtc::MakeUnique<RtcEventRtpPacketIncoming>(packet));
     }
   }
 
@@ -114,28 +143,29 @@ class RtcEventLogProxy final : public webrtc::RtcEventLog {
                             int probe_cluster_id) override {
     rtc::CritScope lock(&crit_);
     if (event_log_) {
-      event_log_->LogOutgoingRtpHeader(packet, probe_cluster_id);
+      event_log_->Log(
+          rtc::MakeUnique<RtcEventRtpPacketOutgoing>(packet, probe_cluster_id));
     }
   }
 
   void LogIncomingRtcpPacket(rtc::ArrayView<const uint8_t> packet) override {
     rtc::CritScope lock(&crit_);
     if (event_log_) {
-      event_log_->LogIncomingRtcpPacket(packet);
+      event_log_->Log(rtc::MakeUnique<RtcEventRtcpPacketIncoming>(packet));
     }
   }
 
   void LogOutgoingRtcpPacket(rtc::ArrayView<const uint8_t> packet) override {
     rtc::CritScope lock(&crit_);
     if (event_log_) {
-      event_log_->LogOutgoingRtcpPacket(packet);
+      event_log_->Log(rtc::MakeUnique<RtcEventRtcpPacketOutgoing>(packet));
     }
   }
 
   void LogAudioPlayout(uint32_t ssrc) override {
     rtc::CritScope lock(&crit_);
     if (event_log_) {
-      event_log_->LogAudioPlayout(ssrc);
+      event_log_->Log(rtc::MakeUnique<RtcEventAudioPlayout>(ssrc));
     }
   }
 
@@ -144,8 +174,8 @@ class RtcEventLogProxy final : public webrtc::RtcEventLog {
                              int32_t total_packets) override {
     rtc::CritScope lock(&crit_);
     if (event_log_) {
-      event_log_->LogLossBasedBweUpdate(bitrate_bps, fraction_loss,
-                                        total_packets);
+      event_log_->Log(rtc::MakeUnique<RtcEventBweUpdateLossBased>(
+          bitrate_bps, fraction_loss, total_packets));
     }
   }
 
@@ -153,7 +183,8 @@ class RtcEventLogProxy final : public webrtc::RtcEventLog {
                               BandwidthUsage detector_state) override {
     rtc::CritScope lock(&crit_);
     if (event_log_) {
-      event_log_->LogDelayBasedBweUpdate(bitrate_bps, detector_state);
+      event_log_->Log(rtc::MakeUnique<RtcEventBweUpdateDelayBased>(
+          bitrate_bps, detector_state));
     }
   }
 
@@ -161,7 +192,8 @@ class RtcEventLogProxy final : public webrtc::RtcEventLog {
       const AudioEncoderRuntimeConfig& config) override {
     rtc::CritScope lock(&crit_);
     if (event_log_) {
-      event_log_->LogAudioNetworkAdaptation(config);
+      event_log_->Log(rtc::MakeUnique<RtcEventAudioNetworkAdaptation>(
+          rtc::MakeUnique<AudioEncoderRuntimeConfig>(config)));
     }
   }
 
@@ -171,15 +203,16 @@ class RtcEventLogProxy final : public webrtc::RtcEventLog {
                               int min_bytes) override {
     rtc::CritScope lock(&crit_);
     if (event_log_) {
-      event_log_->LogProbeClusterCreated(id, bitrate_bps, min_probes,
-                                         min_bytes);
+      event_log_->Log(rtc::MakeUnique<RtcEventProbeClusterCreated>(
+          id, bitrate_bps, min_probes, min_bytes));
     }
   };
 
   void LogProbeResultSuccess(int id, int bitrate_bps) override {
     rtc::CritScope lock(&crit_);
     if (event_log_) {
-      event_log_->LogProbeResultSuccess(id, bitrate_bps);
+      event_log_->Log(
+          rtc::MakeUnique<RtcEventProbeResultSuccess>(id, bitrate_bps));
     }
   };
 
@@ -187,7 +220,8 @@ class RtcEventLogProxy final : public webrtc::RtcEventLog {
                              ProbeFailureReason failure_reason) override {
     rtc::CritScope lock(&crit_);
     if (event_log_) {
-      event_log_->LogProbeResultFailure(id, failure_reason);
+      event_log_->Log(
+          rtc::MakeUnique<RtcEventProbeResultFailure>(id, failure_reason));
     }
   };
 
