@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aba7866d_6e3fb81f",
+        "filename": "tools_webrtc/autoroller/roll_deps.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 5017
+      },
+      "writtenOn": "2017-09-14T16:53:14Z",
+      "side": 1,
+      "message": "Please use the current user instead of me, like our Chromium roll script does:\nhttps://chromium.googlesource.com/chromium/src/+/master/tools/roll_webrtc.py#203",
+      "range": {
+        "startLine": 321,
+        "startChar": 25,
+        "endLine": 321,
+        "endChar": 46
+      },
+      "revId": "033a1bf33777ca06c3b968f0cf61af3af13804f2",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
