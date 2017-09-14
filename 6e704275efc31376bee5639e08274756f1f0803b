@@ -22,6 +22,30 @@
       "revId": "6e704275efc31376bee5639e08274756f1f0803b",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a9e7c2b_ff22c04b",
+        "filename": "tools_webrtc/autoroller/roll_deps.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 5028
+      },
+      "writtenOn": "2017-09-14T12:51:35Z",
+      "side": 1,
+      "message": "Needs to be non-empty for Gerrit to pick it up",
+      "parentUuid": "8d6947f7_350bddd0",
+      "range": {
+        "startLine": 322,
+        "startChar": 25,
+        "endLine": 322,
+        "endChar": 47
+      },
+      "revId": "6e704275efc31376bee5639e08274756f1f0803b",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
