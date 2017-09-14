@@ -218,21 +218,20 @@ bool PacketRouter::SendRemb(uint32_t bitrate_bps,
   return true;
 }
 
-bool PacketRouter::SendTransportFeedback(rtcp::TransportFeedback* packet) {
+void PacketRouter::SendTransportFeedback(std::unique_ptr<rtcp::TransportFeedback> packet) {
   RTC_DCHECK_RUNS_SERIALIZED(&pacer_race_);
   rtc::CritScope cs(&modules_crit_);
   // Prefer send modules.
   for (auto* rtp_module : rtp_send_modules_) {
     packet->SetSenderSsrc(rtp_module->SSRC());
     if (rtp_module->SendFeedbackPacket(*packet))
-      return true;
+      return;
   }
   for (auto* rtp_module : rtp_receive_modules_) {
     packet->SetSenderSsrc(rtp_module->SSRC());
     if (rtp_module->SendFeedbackPacket(*packet))
-      return true;
+      return;
   }
-  return false;
 }
 
 void PacketRouter::AddRembModuleCandidate(RtpRtcp* candidate_module,
