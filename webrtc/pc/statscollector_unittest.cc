@@ -16,7 +16,6 @@
 #include "webrtc/pc/statscollector.h"
 
 #include "webrtc/api/mediastreaminterface.h"
-#include "webrtc/logging/rtc_event_log/rtc_event_log.h"
 #include "webrtc/media/base/fakemediaengine.h"
 #include "webrtc/media/base/test/mock_mediachannel.h"
 #include "webrtc/pc/channelmanager.h"
@@ -32,7 +31,6 @@
 #include "webrtc/rtc_base/base64.h"
 #include "webrtc/rtc_base/fakesslidentity.h"
 #include "webrtc/rtc_base/gunit.h"
-#include "webrtc/rtc_base/network.h"
 #include "webrtc/rtc_base/stringencode.h"
 #include "webrtc/test/gmock.h"
 #include "webrtc/test/gtest.h"
