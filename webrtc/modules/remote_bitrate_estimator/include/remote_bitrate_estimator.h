@@ -23,7 +23,9 @@
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
-
+namespace rtcp {
+class TransportFeedback;
+}  // namespace rtcp
 class Clock;
 
 // RemoteBitrateObserver is used to signal changes in bitrate estimates for
@@ -36,6 +38,12 @@ class RemoteBitrateObserver {
                                        uint32_t bitrate) = 0;
 
   virtual ~RemoteBitrateObserver() {}
+};
+
+class TransportFeedbackSenderInterface {
+ public:
+  virtual ~TransportFeedbackSenderInterface() = default;
+  virtual bool SendTransportFeedback(rtcp::TransportFeedback* packet) = 0;
 };
 
 // TODO(holmer): Remove when all implementations have been updated.
