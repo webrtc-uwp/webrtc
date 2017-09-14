@@ -17,6 +17,7 @@
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/fakeclock.h"
+#include "webrtc/rtc_base/ptr_util.h"
 #include "webrtc/test/gmock.h"
 #include "webrtc/test/gtest.h"
 
@@ -39,6 +40,7 @@ using ::testing::NiceMock;
 using ::testing::Return;
 using ::testing::ReturnPointee;
 using ::testing::SaveArg;
+using ::webrtc::rtcp::TransportFeedback;
 
 constexpr int kProbeMinProbes = 5;
 constexpr int kProbeMinBytes = 1000;
@@ -96,14 +98,6 @@ TEST(PacketRouterTest, Sanity_NoModuleRegistered_SendRemb) {
   constexpr uint32_t bitrate_bps = 10000;
 
   EXPECT_FALSE(packet_router.SendRemb(bitrate_bps, ssrcs));
-}
-
-TEST(PacketRouterTest, Sanity_NoModuleRegistered_SendTransportFeedback) {
-  PacketRouter packet_router;
-
-  rtcp::TransportFeedback feedback;
-
-  EXPECT_FALSE(packet_router.SendTransportFeedback(&feedback));
 }
 
 TEST(PacketRouterTest, TimeToSendPacket) {
@@ -327,12 +321,11 @@ TEST(PacketRouterTest, SendTransportFeedback) {
   packet_router.AddSendRtpModule(&rtp_1, false);
   packet_router.AddReceiveRtpModule(&rtp_2, false);
 
-  rtcp::TransportFeedback feedback;
   EXPECT_CALL(rtp_1, SendFeedbackPacket(_)).Times(1).WillOnce(Return(true));
-  packet_router.SendTransportFeedback(&feedback);
+  packet_router.SendTransportFeedback(rtc::MakeUnique<TransportFeedback>());
   packet_router.RemoveSendRtpModule(&rtp_1);
   EXPECT_CALL(rtp_2, SendFeedbackPacket(_)).Times(1).WillOnce(Return(true));
-  packet_router.SendTransportFeedback(&feedback);
+  packet_router.SendTransportFeedback(rtc::MakeUnique<TransportFeedback>());
   packet_router.RemoveReceiveRtpModule(&rtp_2);
 }
 

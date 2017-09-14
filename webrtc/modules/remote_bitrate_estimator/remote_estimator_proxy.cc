@@ -13,11 +13,10 @@
 #include <limits>
 #include <algorithm>
 
-#include "webrtc/modules/pacing/packet_router.h"
-#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/ptr_util.h"
 #include "webrtc/rtc_base/safe_minmax.h"
 #include "webrtc/system_wrappers/include/clock.h"
 
@@ -35,9 +34,9 @@ static constexpr int64_t kMaxTimeMs =
     std::numeric_limits<int64_t>::max() / 1000;
 
 RemoteEstimatorProxy::RemoteEstimatorProxy(const Clock* clock,
-                                           PacketRouter* packet_router)
+                                           TransportFeedbackSender* feedback_sender)
     : clock_(clock),
-      packet_router_(packet_router),
+      feedback_sender_(feedback_sender),
       last_process_time_ms_(-1),
       media_ssrc_(0),
       feedback_sequence_(0),
@@ -81,10 +80,10 @@ void RemoteEstimatorProxy::Process() {
 
   bool more_to_build = true;
   while (more_to_build) {
-    rtcp::TransportFeedback feedback_packet;
-    if (BuildFeedbackPacket(&feedback_packet)) {
-      RTC_DCHECK(packet_router_ != nullptr);
-      packet_router_->SendTransportFeedback(&feedback_packet);
+    auto feedback_packet = rtc::MakeUnique<rtcp::TransportFeedback>();
+    if (BuildFeedbackPacket(feedback_packet.get())) {
+      RTC_DCHECK(feedback_sender_ != nullptr);
+      feedback_sender_->SendTransportFeedback(std::move(feedback_packet));
     } else {
       more_to_build = false;
     }

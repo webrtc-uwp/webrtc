@@ -61,8 +61,10 @@ TargetBitrate::BitrateItem::BitrateItem(uint8_t spatial_layer,
 //  If VP9 SVC is used, there will be only one SSRC, so each spatial and
 //  temporal layer combo used shall be specified in the TargetBitrate packet.
 
-TargetBitrate::TargetBitrate() {}
-TargetBitrate::~TargetBitrate() {}
+TargetBitrate::TargetBitrate() = default;
+TargetBitrate::TargetBitrate(const TargetBitrate&) = default;
+TargetBitrate& TargetBitrate::operator=(const TargetBitrate&) = default;
+TargetBitrate::~TargetBitrate() = default;
 
 void TargetBitrate::Parse(const uint8_t* block, uint16_t block_length) {
   // Validate block header (should already have been parsed and checked).

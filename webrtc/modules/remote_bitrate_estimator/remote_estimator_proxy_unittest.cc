@@ -50,10 +50,12 @@ std::vector<int64_t> TimestampsMs(
   return timestamps;
 }
 
-class MockPacketRouter : public PacketRouter {
+class MockPacketRouter : public TransportFeedbackSender {
  public:
-  MOCK_METHOD1(SendTransportFeedback,
-               bool(rtcp::TransportFeedback* feedback_packet));
+  MOCK_METHOD1(SendTransportFeedback, void(rtcp::TransportFeedback*));
+  void SendTransportFeedback(std::unique_ptr<rtcp::TransportFeedback> packet) override {
+    SendTransportFeedback(packet.get());
+  }
 };
 
 class RemoteEstimatorProxyTest : public ::testing::Test {
@@ -90,7 +92,6 @@ TEST_F(RemoteEstimatorProxyTest, SendsSinglePacketFeedback) {
 
         EXPECT_THAT(SequenceNumbers(*feedback_packet), ElementsAre(kBaseSeq));
         EXPECT_THAT(TimestampsMs(*feedback_packet), ElementsAre(kBaseTimeMs));
-        return true;
       }));
 
   Process();
@@ -107,7 +108,6 @@ TEST_F(RemoteEstimatorProxyTest, DuplicatedPackets) {
 
         EXPECT_THAT(SequenceNumbers(*feedback_packet), ElementsAre(kBaseSeq));
         EXPECT_THAT(TimestampsMs(*feedback_packet), ElementsAre(kBaseTimeMs));
-        return true;
       }));
 
   Process();
@@ -117,7 +117,7 @@ TEST_F(RemoteEstimatorProxyTest, FeedbackWithMissingStart) {
   // First feedback.
   IncomingPacket(kBaseSeq, kBaseTimeMs);
   IncomingPacket(kBaseSeq + 1, kBaseTimeMs + 1000);
-  EXPECT_CALL(router_, SendTransportFeedback(_)).WillOnce(Return(true));
+  EXPECT_CALL(router_, SendTransportFeedback(_));
   Process();
 
   // Second feedback starts with a missing packet (DROP kBaseSeq + 2).
@@ -132,7 +132,6 @@ TEST_F(RemoteEstimatorProxyTest, FeedbackWithMissingStart) {
                     ElementsAre(kBaseSeq + 3));
         EXPECT_THAT(TimestampsMs(*feedback_packet),
                     ElementsAre(kBaseTimeMs + 3000));
-        return true;
       }));
 
   Process();
@@ -153,7 +152,6 @@ TEST_F(RemoteEstimatorProxyTest, SendsFeedbackWithVaryingDeltas) {
         EXPECT_THAT(TimestampsMs(*feedback_packet),
                     ElementsAre(kBaseTimeMs, kBaseTimeMs + kMaxSmallDeltaMs,
                                 kBaseTimeMs + (2 * kMaxSmallDeltaMs) + 1));
-        return true;
       }));
 
   Process();
@@ -173,7 +171,6 @@ TEST_F(RemoteEstimatorProxyTest, SendsFragmentedFeedback) {
 
         EXPECT_THAT(SequenceNumbers(*feedback_packet), ElementsAre(kBaseSeq));
         EXPECT_THAT(TimestampsMs(*feedback_packet), ElementsAre(kBaseTimeMs));
-        return true;
       }))
       .WillOnce(Invoke([](rtcp::TransportFeedback* feedback_packet) {
         EXPECT_EQ(kBaseSeq + 1, feedback_packet->GetBaseSequence());
@@ -183,7 +180,6 @@ TEST_F(RemoteEstimatorProxyTest, SendsFragmentedFeedback) {
                     ElementsAre(kBaseSeq + 1));
         EXPECT_THAT(TimestampsMs(*feedback_packet),
                     ElementsAre(kBaseTimeMs + kTooLargeDelta));
-        return true;
       }));
 
   Process();
@@ -201,7 +197,6 @@ TEST_F(RemoteEstimatorProxyTest, GracefullyHandlesReorderingAndWrap) {
         EXPECT_EQ(kMediaSsrc, feedback_packet->media_ssrc());
 
         EXPECT_THAT(TimestampsMs(*feedback_packet), ElementsAre(kBaseTimeMs));
-        return true;
       }));
 
   Process();
@@ -220,7 +215,6 @@ TEST_F(RemoteEstimatorProxyTest, ResendsTimestampsOnReordering) {
                     ElementsAre(kBaseSeq, kBaseSeq + 2));
         EXPECT_THAT(TimestampsMs(*feedback_packet),
                     ElementsAre(kBaseTimeMs, kBaseTimeMs + 2));
-        return true;
       }));
 
   Process();
@@ -236,7 +230,6 @@ TEST_F(RemoteEstimatorProxyTest, ResendsTimestampsOnReordering) {
                     ElementsAre(kBaseSeq + 1, kBaseSeq + 2));
         EXPECT_THAT(TimestampsMs(*feedback_packet),
                     ElementsAre(kBaseTimeMs + 1, kBaseTimeMs + 2));
-        return true;
       }));
 
   Process();
@@ -253,7 +246,6 @@ TEST_F(RemoteEstimatorProxyTest, RemovesTimestampsOutOfScope) {
         EXPECT_EQ(kBaseSeq + 2, feedback_packet->GetBaseSequence());
 
         EXPECT_THAT(TimestampsMs(*feedback_packet), ElementsAre(kBaseTimeMs));
-        return true;
       }));
 
   Process();
@@ -267,7 +259,6 @@ TEST_F(RemoteEstimatorProxyTest, RemovesTimestampsOutOfScope) {
 
             EXPECT_THAT(TimestampsMs(*feedback_packet),
                         ElementsAre(kTimeoutTimeMs));
-            return true;
           }));
 
   Process();
@@ -287,7 +278,6 @@ TEST_F(RemoteEstimatorProxyTest, RemovesTimestampsOutOfScope) {
             EXPECT_THAT(TimestampsMs(*feedback_packet),
                         ElementsAre(kBaseTimeMs - 1, kTimeoutTimeMs - 1,
                                     kTimeoutTimeMs));
-            return true;
           }));
 
   Process();

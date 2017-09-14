@@ -37,7 +37,8 @@ class TransportFeedback;
 // receive modules.
 class PacketRouter : public PacedSender::PacketSender,
                      public TransportSequenceNumberAllocator,
-                     public RemoteBitrateObserver {
+                     public RemoteBitrateObserver,
+                     public TransportFeedbackSender {
  public:
   PacketRouter();
   ~PacketRouter() override;
@@ -91,8 +92,9 @@ class PacketRouter : public PacedSender::PacketSender,
   virtual bool SendRemb(uint32_t bitrate_bps,
                         const std::vector<uint32_t>& ssrcs);
 
+  // Implements TransportFeedbackSender.
   // Send transport feedback packet to send-side.
-  virtual bool SendTransportFeedback(rtcp::TransportFeedback* packet);
+  void SendTransportFeedback(std::unique_ptr<rtcp::TransportFeedback> packet) override;
 
  private:
   void AddRembModuleCandidate(RtpRtcp* candidate_module, bool sender)
