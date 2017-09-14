@@ -373,7 +373,6 @@ if (rtc_include_tests) {
   }
 
   rtc_test("peerconnection_unittests") {
-    check_includes = false  # TODO(kjellander): Remove (bugs.webrtc.org/6828)
     testonly = true
     sources = [
       "datachannel_unittest.cc",
