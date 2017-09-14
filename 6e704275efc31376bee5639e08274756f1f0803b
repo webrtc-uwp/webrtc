@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d6947f7_350bddd0",
+        "filename": "tools_webrtc/autoroller/roll_deps.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 5027
+      },
+      "writtenOn": "2017-09-14T12:49:18Z",
+      "side": 1,
+      "message": "Why?",
+      "range": {
+        "startLine": 322,
+        "startChar": 25,
+        "endLine": 322,
+        "endChar": 47
+      },
+      "revId": "6e704275efc31376bee5639e08274756f1f0803b",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
