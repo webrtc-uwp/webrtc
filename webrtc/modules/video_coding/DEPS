@@ -17,4 +17,7 @@ specific_include_rules = {
      "+webrtc/media/engine",
      "+webrtc/sdk",
   ],
+  "codecs\/h264\/include\/h264\.h": [
+    "+webrtc/media/base/codec.h"
+  ],
 }
