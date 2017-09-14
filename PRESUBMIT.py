@@ -6,6 +6,7 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
+import fnmatch
 import json
 import os
 import re
@@ -16,28 +17,28 @@ import sys
 # Files and directories that are *skipped* by cpplint in the presubmit script.
 CPPLINT_BLACKLIST = [
   'tools_webrtc',
-  'webrtc/api/video_codecs/video_decoder.h',
-  'webrtc/examples/objc',
-  'webrtc/media',
-  'webrtc/modules/audio_coding',
-  'webrtc/modules/audio_conference_mixer',
-  'webrtc/modules/audio_device',
-  'webrtc/modules/audio_processing',
-  'webrtc/modules/desktop_capture',
-  'webrtc/modules/include/module_common_types.h',
-  'webrtc/modules/media_file',
-  'webrtc/modules/utility',
-  'webrtc/modules/video_capture',
-  'webrtc/p2p',
-  'webrtc/pc',
-  'webrtc/rtc_base',
-  'webrtc/sdk/android/src/jni',
-  'webrtc/sdk/objc',
-  'webrtc/system_wrappers',
-  'webrtc/test',
-  'webrtc/voice_engine',
-  'webrtc/common_types.h',
-  'webrtc/common_types.cc',
+  'api/video_codecs/video_decoder.h',
+  'examples/objc',
+  'media',
+  'modules/audio_coding',
+  'modules/audio_conference_mixer',
+  'modules/audio_device',
+  'modules/audio_processing',
+  'modules/desktop_capture',
+  'modules/include/module_common_types.h',
+  'modules/media_file',
+  'modules/utility',
+  'modules/video_capture',
+  'p2p',
+  'pc',
+  'rtc_base',
+  'sdk/android/src/jni',
+  'sdk/objc',
+  'system_wrappers',
+  'test',
+  'voice_engine',
+  'common_types.h',
+  'common_types.cc',
 ]
 
 # These filters will always be removed, even if the caller specifies a filter
@@ -62,34 +63,33 @@ BLACKLIST_LINT_FILTERS = [
 #    webrtc-users@google.com (internal list).
 # 4. (later) The deprecated APIs are removed.
 NATIVE_API_DIRS = (
-  'webrtc',
-  'webrtc/api',
-  'webrtc/media',
-  'webrtc/modules/audio_device/include',
-  'webrtc/pc',
+  'api',
+  'media',
+  'modules/audio_device/include',
+  'pc',
 )
 # These directories should not be used but are maintained only to avoid breaking
 # some legacy downstream code.
 LEGACY_API_DIRS = (
-  'webrtc/common_audio/include',
-  'webrtc/modules/audio_coding/include',
-  'webrtc/modules/audio_conference_mixer/include',
-  'webrtc/modules/audio_processing/include',
-  'webrtc/modules/bitrate_controller/include',
-  'webrtc/modules/congestion_controller/include',
-  'webrtc/modules/include',
-  'webrtc/modules/remote_bitrate_estimator/include',
-  'webrtc/modules/rtp_rtcp/include',
-  'webrtc/modules/rtp_rtcp/source',
-  'webrtc/modules/utility/include',
-  'webrtc/modules/video_coding/codecs/h264/include',
-  'webrtc/modules/video_coding/codecs/i420/include',
-  'webrtc/modules/video_coding/codecs/vp8/include',
-  'webrtc/modules/video_coding/codecs/vp9/include',
-  'webrtc/modules/video_coding/include',
-  'webrtc/rtc_base',
-  'webrtc/system_wrappers/include',
-  'webrtc/voice_engine/include',
+  'common_audio/include',
+  'modules/audio_coding/include',
+  'modules/audio_conference_mixer/include',
+  'modules/audio_processing/include',
+  'modules/bitrate_controller/include',
+  'modules/congestion_controller/include',
+  'modules/include',
+  'modules/remote_bitrate_estimator/include',
+  'modules/rtp_rtcp/include',
+  'modules/rtp_rtcp/source',
+  'modules/utility/include',
+  'modules/video_coding/codecs/h264/include',
+  'modules/video_coding/codecs/i420/include',
+  'modules/video_coding/codecs/vp8/include',
+  'modules/video_coding/codecs/vp9/include',
+  'modules/video_coding/include',
+  'rtc_base',
+  'system_wrappers/include',
+  'voice_engine/include',
 )
 API_DIRS = NATIVE_API_DIRS[:] + LEGACY_API_DIRS[:]
 
@@ -331,8 +331,7 @@ def _CheckNoPackageBoundaryViolations(input_api, gn_files, output_api):
   cwd = input_api.PresubmitLocalPath()
   script_path = os.path.join('tools_webrtc', 'presubmit_checks_lib',
                              'check_package_boundaries.py')
-  webrtc_path = os.path.join('webrtc')
-  command = [sys.executable, script_path, webrtc_path]
+  command = [sys.executable, script_path]
   command += [gn_file.LocalPath() for gn_file in gn_files]
   returncode, _, stderr = _RunCommand(command, cwd)
   if returncode:
@@ -341,13 +340,26 @@ def _CheckNoPackageBoundaryViolations(input_api, gn_files, output_api):
         '%s' % stderr)]
   return []
 
+def _Matches(path, files_to_ignore):
+  return any(fnmatch.fnmatchcase(path, pattern)
+             for pattern in files_to_ignore)
+
 def _CheckGnChanges(input_api, output_api):
   source_file_filter = lambda x: input_api.FilterSourceFile(
       x, white_list=(r'.+\.(gn|gni)$',))
 
   gn_files = []
+  if os.path.isfile('.gitignore'):
+    with open('.gitignore') as f:
+      files_to_ignore = f.read().splitlines()
+  patterns_to_ignore = []
+  for pattern in files_to_ignore:
+    if pattern.startswith('/'):
+      patterns_to_ignore.append(pattern[1:] + '*')
+    else:
+      patterns_to_ignore.append(pattern + '*')
   for f in input_api.AffectedSourceFiles(source_file_filter):
-    if f.LocalPath().startswith('webrtc'):
+    if not _Matches(f.LocalPath(), patterns_to_ignore):
       gn_files.append(f)
 
   result = []
@@ -468,9 +480,9 @@ def _RunPythonTests(input_api, output_api):
     return input_api.os_path.join(input_api.PresubmitLocalPath(), *args)
 
   test_directories = [
-      Join('webrtc', 'rtc_tools', 'py_event_log_analyzer'),
-      Join('webrtc', 'rtc_tools'),
-      Join('webrtc', 'audio', 'test', 'unittests'),
+      Join('rtc_tools', 'py_event_log_analyzer'),
+      Join('rtc_tools'),
+      Join('audio', 'test', 'unittests'),
   ] + [
       root for root, _, files in os.walk(Join('tools_webrtc'))
       if any(f.endswith('_test.py') for f in files)
@@ -491,7 +503,7 @@ def _CheckUsageOfGoogleProtobufNamespace(input_api, output_api):
   """Checks that the namespace google::protobuf has not been used."""
   files = []
   pattern = input_api.re.compile(r'google::protobuf')
-  proto_utils_path = os.path.join('webrtc', 'rtc_base', 'protobuf_utils.h')
+  proto_utils_path = os.path.join('rtc_base', 'protobuf_utils.h')
   for f in input_api.AffectedSourceFiles(input_api.FilterSourceFile):
     if f.LocalPath() in [proto_utils_path, 'PRESUBMIT.py']:
       continue
@@ -507,6 +519,28 @@ def _CheckUsageOfGoogleProtobufNamespace(input_api, output_api):
   return []
 
 
+def _LicenseHeader(input_api):
+  """Returns the license header regexp."""
+  # Accept any year number from 2003 to the current year
+  current_year = int(input_api.time.strftime('%Y'))
+  allowed_years = (str(s) for s in reversed(xrange(2003, current_year + 1)))
+  years_re = '(' + '|'.join(allowed_years) + ')'
+  license_header = (
+      r'.*? Copyright( \(c\))? %(year)s The WebRTC [Pp]roject [Aa]uthors\. '
+        r'All [Rr]ights [Rr]eserved\.\n'
+      r'.*?\n'
+      r'.*? Use of this source code is governed by a BSD-style license\n'
+      r'.*? that can be found in the LICENSE file in the root of the source\n'
+      r'.*? tree\. An additional intellectual property rights grant can be '
+        r'found\n'
+      r'.*? in the file PATENTS\.  All contributing project authors may\n'
+      r'.*? be found in the AUTHORS file in the root of the source tree\.\n'
+  ) % {
+      'year': years_re,
+  }
+  return license_header
+
+
 def _CommonChecks(input_api, output_api):
   """Checks common to both upload and commit."""
   results = []
@@ -515,11 +549,12 @@ def _CommonChecks(input_api, output_api):
   black_list = input_api.DEFAULT_BLACK_LIST + (
     r".*\bobjc[\\\/].*",
     r".*objc\.[hcm]+$",
-    r"webrtc\/build\/ios\/SDK\/.*",
   )
   source_file_filter = lambda x: input_api.FilterSourceFile(x, None, black_list)
   results.extend(_CheckApprovedFilesLintClean(
       input_api, output_api, source_file_filter))
+  results.extend(input_api.canned_checks.CheckLicense(
+      input_api, output_api, _LicenseHeader(input_api)))
   results.extend(input_api.canned_checks.RunPylint(input_api, output_api,
       black_list=(r'^base[\\\/].*\.py$',
                   r'^build[\\\/].*\.py$',
@@ -573,8 +608,8 @@ def _CommonChecks(input_api, output_api):
   results.extend(_CheckJSONParseErrors(input_api, output_api))
   results.extend(_RunPythonTests(input_api, output_api))
   results.extend(_CheckUsageOfGoogleProtobufNamespace(input_api, output_api))
-  results.extend(_CheckOrphanHeaders(input_api, output_api))
-  results.extend(_CheckNewLineAtTheEndOfProtoFiles(input_api, output_api))
+  # results.extend(_CheckOrphanHeaders(input_api, output_api))
+  # results.extend(_CheckNewLineAtTheEndOfProtoFiles(input_api, output_api))
   return results
 
 
