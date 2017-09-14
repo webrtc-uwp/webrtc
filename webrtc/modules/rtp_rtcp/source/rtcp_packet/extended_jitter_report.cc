@@ -16,6 +16,7 @@
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/safe_conversions.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -85,7 +86,7 @@ bool ExtendedJitterReport::Create(
       return false;
   }
   const size_t index_end = *index + BlockLength();
-  size_t length = inter_arrival_jitters_.size();
+  uint8_t length = rtc::dchecked_cast<uint8_t>(inter_arrival_jitters_.size());
   CreateHeader(length, kPacketType, length, packet, index);
 
   for (uint32_t jitter : inter_arrival_jitters_) {

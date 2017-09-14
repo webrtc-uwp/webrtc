@@ -16,6 +16,7 @@
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/safe_conversions.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -168,13 +169,14 @@ bool Sdes::Create(uint8_t* packet,
       return false;
   }
   const size_t index_end = *index + BlockLength();
-  CreateHeader(chunks_.size(), kPacketType, HeaderLength(), packet, index);
+  CreateHeader(rtc::dchecked_cast<uint8_t>(chunks_.size()), kPacketType,
+               HeaderLength(), packet, index);
 
   for (const Sdes::Chunk& chunk : chunks_) {
     ByteWriter<uint32_t>::WriteBigEndian(&packet[*index + 0], chunk.ssrc);
     ByteWriter<uint8_t>::WriteBigEndian(&packet[*index + 4], kCnameTag);
-    ByteWriter<uint8_t>::WriteBigEndian(&packet[*index + 5],
-                                        chunk.cname.size());
+    ByteWriter<uint8_t>::WriteBigEndian(
+        &packet[*index + 5], rtc::dchecked_cast<uint8_t>(chunk.cname.size()));
     memcpy(&packet[*index + 6], chunk.cname.data(), chunk.cname.size());
     *index += (6 + chunk.cname.size());
 

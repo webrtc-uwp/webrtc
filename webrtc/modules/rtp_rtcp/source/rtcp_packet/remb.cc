@@ -16,6 +16,7 @@
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 #include "webrtc/rtc_base/checks.h"
 #include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/safe_conversions.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -125,7 +126,7 @@ bool Remb::Create(uint8_t* packet,
     mantissa >>= 1;
     ++exponenta;
   }
-  packet[(*index)++] = ssrcs_.size();
+  packet[(*index)++] = rtc::dchecked_cast<uint8_t>(ssrcs_.size());
   packet[(*index)++] = (exponenta << 2) | (mantissa >> 16);
   ByteWriter<uint16_t>::WriteBigEndian(packet + *index, mantissa & 0xffff);
   *index += sizeof(uint16_t);
