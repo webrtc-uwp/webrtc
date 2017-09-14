@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c576919_e16e1e42",
+        "filename": "webrtc/pc/dtmfsender_unittest.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 5027
+      },
+      "writtenOn": "2017-09-14T13:10:14Z",
+      "side": 0,
+      "message": "Tests shouldn\u0027t log or printf anyway.",
+      "range": {
+        "startLine": 42,
+        "startChar": 4,
+        "endLine": 42,
+        "endChar": 74
+      },
+      "revId": "9a2d5c98465424806ef3fcf1062e1cb8b82b7cc8",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
