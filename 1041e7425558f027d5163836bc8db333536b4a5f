@@ -140,6 +140,30 @@
       "revId": "1041e7425558f027d5163836bc8db333536b4a5f",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "24804fc6_16c6c754",
+        "filename": "PRESUBMIT.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 5017
+      },
+      "writtenOn": "2017-09-14T19:50:12Z",
+      "side": 1,
+      "message": "sgtm\nbut then maybe just add a little comment for each explaining exactly that.",
+      "parentUuid": "97704b7d_0ef091e5",
+      "range": {
+        "startLine": 611,
+        "startChar": 2,
+        "endLine": 612,
+        "endChar": 76
+      },
+      "revId": "1041e7425558f027d5163836bc8db333536b4a5f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
