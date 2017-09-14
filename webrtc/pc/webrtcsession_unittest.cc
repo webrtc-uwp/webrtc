@@ -15,7 +15,6 @@
 #include "webrtc/api/fakemetricsobserver.h"
 #include "webrtc/api/jsepicecandidate.h"
 #include "webrtc/api/jsepsessiondescription.h"
-#include "webrtc/logging/rtc_event_log/rtc_event_log.h"
 #include "webrtc/media/base/fakemediaengine.h"
 #include "webrtc/media/base/fakevideorenderer.h"
 #include "webrtc/media/base/mediachannel.h"
@@ -40,12 +39,7 @@
 #include "webrtc/rtc_base/firewallsocketserver.h"
 #include "webrtc/rtc_base/gunit.h"
 #include "webrtc/rtc_base/logging.h"
-#include "webrtc/rtc_base/network.h"
-#include "webrtc/rtc_base/ssladapter.h"
-#include "webrtc/rtc_base/sslidentity.h"
-#include "webrtc/rtc_base/sslstreamadapter.h"
 #include "webrtc/rtc_base/stringutils.h"
-#include "webrtc/rtc_base/thread.h"
 #include "webrtc/rtc_base/virtualsocketserver.h"
 
 using cricket::FakeVoiceMediaChannel;

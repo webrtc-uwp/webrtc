@@ -42,13 +42,8 @@
 #include "webrtc/pc/test/fakertccertificategenerator.h"
 #include "webrtc/pc/test/fakevideotrackrenderer.h"
 #include "webrtc/pc/test/mockpeerconnectionobservers.h"
-#include "webrtc/rtc_base/asyncinvoker.h"
 #include "webrtc/rtc_base/fakenetwork.h"
 #include "webrtc/rtc_base/gunit.h"
-#include "webrtc/rtc_base/helpers.h"
-#include "webrtc/rtc_base/ssladapter.h"
-#include "webrtc/rtc_base/sslstreamadapter.h"
-#include "webrtc/rtc_base/thread.h"
 #include "webrtc/rtc_base/virtualsocketserver.h"
 
 using cricket::ContentInfo;
