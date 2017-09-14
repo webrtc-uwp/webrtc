@@ -53,7 +53,7 @@ TEST(RenderDelayController, NoRenderSignal) {
         RenderDelayController::Create(AudioProcessing::Config::EchoCanceller3(),
                                       rate));
     for (size_t k = 0; k < 100; ++k) {
-      EXPECT_EQ(kMinEchoPathDelayBlocks,
+      EXPECT_EQ(static_cast<int>(kMinEchoPathDelayBlocks),
                 delay_controller->GetDelay(
                     delay_buffer->GetDownsampledRenderBuffer(), block));
     }

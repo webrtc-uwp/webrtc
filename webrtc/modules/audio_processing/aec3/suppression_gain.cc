@@ -25,6 +25,29 @@
 namespace webrtc {
 namespace {
 
+// Adjust the gain to what is realizeable.
+void EnsureRealizeableGain(std::array<float, kFftLengthBy2Plus1>* gain) {
+  constexpr float kFilterMaxBandDynamics = 100.f;
+  constexpr float kFilterMaxNeighborDynamics = 5.f;
+
+  return;
+  std::array<float, kFftLengthBy2Plus1> gain_tmp;
+
+  for (size_t k = 1; k < gain->size() - 1; ++k) {
+    gain_tmp[k] = std::min(
+        std::min((*gain)[k - 1], (*gain)[k + 1]) * kFilterMaxNeighborDynamics,
+        (*gain)[k]);
+  }
+  gain_tmp[0] = gain_tmp[1];
+  gain_tmp[kFftLengthBy2Plus1 - 2] = gain_tmp[kFftLengthBy2Plus1 - 1];
+
+  auto max_gain = (*std::min_element(gain_tmp.begin(), gain_tmp.end())) *
+                  kFilterMaxBandDynamics;
+  for (size_t k = 0; k < gain->size(); ++k) {
+    (*gain)[k] = std::min(gain_tmp[k], max_gain);
+  }
+}
+
 // Reduce gain to avoid narrow band echo leakage.
 void NarrowBandAttenuation(int narrow_bin,
                            std::array<float, kFftLengthBy2Plus1>* gain) {
@@ -200,10 +223,17 @@ void MaskingPower(const AudioProcessing::Config::EchoCanceller3& config,
                   const std::array<float, kFftLengthBy2Plus1>& gain,
                   std::array<float, kFftLengthBy2Plus1>* masker) {
   std::array<float, kFftLengthBy2Plus1> side_band_masker;
+  float max_masking_band = 0.f;
   for (size_t k = 0; k < gain.size(); ++k) {
-    side_band_masker[k] = nearend[k] * gain[k] + comfort_noise[k];
-    (*masker)[k] =
-        comfort_noise[k] + config.param.gain_mask.m4 * last_masker[k];
+    side_band_masker[k] = nearend[k] * gain[k];
+    max_masking_band = 0.f * std::max(max_masking_band, side_band_masker[k]);
+  }
+  max_masking_band *= 0.001;
+  for (size_t k = 0; k < gain.size(); ++k) {
+    side_band_masker[k] += comfort_noise[k];
+    (*masker)[k] = comfort_noise[k] +
+                   config.param.gain_mask.m4 * last_masker[k] +
+                   max_masking_band;
   }
   for (size_t k = 1; k < gain.size() - 1; ++k) {
     (*masker)[k] += 0.1f * (side_band_masker[k - 1] + side_band_masker[k + 1]);
@@ -273,6 +303,13 @@ void SuppressionGain::LowerBandGain(
   // Update the allowed maximum gain increase.
   UpdateMaxGainIncrease(config_, no_saturation_counter_, low_noise_render,
                         last_echo_, echo, last_gain_, *gain, &gain_increase_);
+
+  // Ensure that the gain is such that it can be realized using the filterbank.
+  EnsureRealizeableGain(gain);
+  for (float v : *gain)
+    if (v > 1) {
+      printf("hoho\n");
+    }
 
   // Store data required for the gain computation of the next block.
   std::copy(echo.begin(), echo.end(), last_echo_.begin());

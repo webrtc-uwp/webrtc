@@ -35,8 +35,8 @@ class RenderDelayController {
   virtual void SetDelay(size_t render_delay) = 0;
 
   // Aligns the render buffer content with the capture signal.
-  virtual size_t GetDelay(const DownsampledRenderBuffer& render_buffer,
-                          rtc::ArrayView<const float> capture) = 0;
+  virtual int GetDelay(const DownsampledRenderBuffer& render_buffer,
+                       rtc::ArrayView<const float> capture) = 0;
 
   // Returns an approximate value for the headroom in the buffer alignment.
   virtual rtc::Optional<size_t> AlignmentHeadroomSamples() const = 0;
