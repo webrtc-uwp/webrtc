@@ -470,11 +470,6 @@ class WebRtcSessionTest
     Init(nullptr, rtcp_mux_policy, rtc::CryptoOptions());
   }
 
-  void InitWithCryptoOptions(const rtc::CryptoOptions& crypto_options) {
-    Init(nullptr, PeerConnectionInterface::kRtcpMuxPolicyNegotiate,
-         crypto_options);
-  }
-
   // Successfully init with DTLS; with a certificate generated and supplied or
   // with a store that generates it for us.
   void InitWithDtls(RTCCertificateGenerationMethod cert_gen_method) {
@@ -501,12 +496,6 @@ class WebRtcSessionTest
     Init(std::move(cert_generator),
          PeerConnectionInterface::kRtcpMuxPolicyNegotiate,
          rtc::CryptoOptions());
-  }
-
-  void InitWithGcm() {
-    rtc::CryptoOptions crypto_options;
-    crypto_options.enable_gcm_crypto_suites = true;
-    InitWithCryptoOptions(crypto_options);
   }
 
   // The following convenience functions can be applied for both local side and
@@ -829,60 +818,6 @@ class WebRtcSessionTest
             session_->video_channel() != NULL);
   }
 
-  void VerifyCryptoParams(const cricket::SessionDescription* sdp,
-      bool gcm_enabled = false) {
-    ASSERT_TRUE(session_.get() != NULL);
-    const cricket::ContentInfo* content = cricket::GetFirstAudioContent(sdp);
-    ASSERT_TRUE(content != NULL);
-    const cricket::AudioContentDescription* audio_content =
-        static_cast<const cricket::AudioContentDescription*>(
-            content->description);
-    ASSERT_TRUE(audio_content != NULL);
-    if (!gcm_enabled) {
-      ASSERT_EQ(1U, audio_content->cryptos().size());
-      ASSERT_EQ(47U, audio_content->cryptos()[0].key_params.size());
-      ASSERT_EQ("AES_CM_128_HMAC_SHA1_80",
-                audio_content->cryptos()[0].cipher_suite);
-      EXPECT_EQ(std::string(cricket::kMediaProtocolSavpf),
-                audio_content->protocol());
-    } else {
-      // The offer contains 3 possible crypto suites, the answer 1.
-      EXPECT_LE(1U, audio_content->cryptos().size());
-      EXPECT_NE(2U, audio_content->cryptos().size());
-      EXPECT_GE(3U, audio_content->cryptos().size());
-      ASSERT_EQ(67U, audio_content->cryptos()[0].key_params.size());
-      ASSERT_EQ("AEAD_AES_256_GCM",
-                audio_content->cryptos()[0].cipher_suite);
-      EXPECT_EQ(std::string(cricket::kMediaProtocolSavpf),
-                audio_content->protocol());
-    }
-
-    content = cricket::GetFirstVideoContent(sdp);
-    ASSERT_TRUE(content != NULL);
-    const cricket::VideoContentDescription* video_content =
-        static_cast<const cricket::VideoContentDescription*>(
-            content->description);
-    ASSERT_TRUE(video_content != NULL);
-    if (!gcm_enabled) {
-      ASSERT_EQ(1U, video_content->cryptos().size());
-      ASSERT_EQ("AES_CM_128_HMAC_SHA1_80",
-                video_content->cryptos()[0].cipher_suite);
-      ASSERT_EQ(47U, video_content->cryptos()[0].key_params.size());
-      EXPECT_EQ(std::string(cricket::kMediaProtocolSavpf),
-                video_content->protocol());
-    } else {
-      // The offer contains 3 possible crypto suites, the answer 1.
-      EXPECT_LE(1U, video_content->cryptos().size());
-      EXPECT_NE(2U, video_content->cryptos().size());
-      EXPECT_GE(3U, video_content->cryptos().size());
-      ASSERT_EQ("AEAD_AES_256_GCM",
-                video_content->cryptos()[0].cipher_suite);
-      ASSERT_EQ(67U, video_content->cryptos()[0].key_params.size());
-      EXPECT_EQ(std::string(cricket::kMediaProtocolSavpf),
-                video_content->protocol());
-    }
-  }
-
   void VerifyNoCryptoParams(const cricket::SessionDescription* sdp, bool dtls) {
     const cricket::ContentInfo* content = cricket::GetFirstAudioContent(sdp);
     ASSERT_TRUE(content != NULL);
@@ -933,35 +868,6 @@ class WebRtcSessionTest
     const TransportInfo* video = sdp->GetTransportInfoByName("video");
     ASSERT_TRUE(video != NULL);
     ASSERT_EQ(expected, video->description.identity_fingerprint.get() != NULL);
-  }
-
-  void VerifyAnswerFromNonCryptoOffer() {
-    // Create an SDP without Crypto.
-    cricket::MediaSessionOptions options;
-    GetOptionsForRemoteOffer(&options);
-    JsepSessionDescription* offer(
-        CreateRemoteOffer(options, cricket::SEC_DISABLED));
-    ASSERT_TRUE(offer != NULL);
-    VerifyNoCryptoParams(offer->description(), false);
-    SetRemoteDescriptionOfferExpectError(kSdpWithoutSdesCrypto,
-                                         offer);
-    const webrtc::SessionDescriptionInterface* answer = CreateAnswer();
-    // Answer should be NULL as no crypto params in offer.
-    ASSERT_TRUE(answer == NULL);
-  }
-
-  void VerifyAnswerFromCryptoOffer() {
-    cricket::MediaSessionOptions options;
-    GetOptionsForRemoteOffer(&options);
-    options.bundle_enabled = true;
-    std::unique_ptr<JsepSessionDescription> offer(
-        CreateRemoteOffer(options, cricket::SEC_REQUIRED));
-    ASSERT_TRUE(offer.get() != NULL);
-    VerifyCryptoParams(offer->description());
-    SetRemoteDescriptionWithoutError(offer.release());
-    std::unique_ptr<SessionDescriptionInterface> answer(CreateAnswer());
-    ASSERT_TRUE(answer.get() != NULL);
-    VerifyCryptoParams(answer->description());
   }
 
   bool IceUfragPwdEqual(const cricket::SessionDescription* desc1,
@@ -1135,48 +1041,6 @@ class WebRtcSessionTest
       const std::string& expected_error, SessionDescriptionInterface* desc) {
     SetRemoteDescriptionExpectError(SessionDescriptionInterface::kAnswer,
                                     expected_error, desc);
-  }
-
-  void CreateCryptoOfferAndNonCryptoAnswer(SessionDescriptionInterface** offer,
-      SessionDescriptionInterface** nocrypto_answer) {
-    // Create a SDP without Crypto.
-    cricket::MediaSessionOptions options;
-    GetOptionsForRemoteOffer(&options);
-    options.bundle_enabled = true;
-    *offer = CreateRemoteOffer(options, cricket::SEC_ENABLED);
-    ASSERT_TRUE(*offer != NULL);
-    VerifyCryptoParams((*offer)->description());
-
-    cricket::MediaSessionOptions answer_options;
-    GetOptionsForRemoteAnswer(&answer_options);
-    *nocrypto_answer =
-        CreateRemoteAnswer(*offer, answer_options, cricket::SEC_DISABLED);
-    EXPECT_TRUE(*nocrypto_answer != NULL);
-  }
-
-  void CreateDtlsOfferAndNonDtlsAnswer(SessionDescriptionInterface** offer,
-      SessionDescriptionInterface** nodtls_answer) {
-    cricket::MediaSessionOptions options;
-    AddMediaSection(cricket::MEDIA_TYPE_AUDIO, cricket::CN_AUDIO,
-                    cricket::MD_RECVONLY, kActive, &options);
-    AddMediaSection(cricket::MEDIA_TYPE_VIDEO, cricket::CN_VIDEO,
-                    cricket::MD_RECVONLY, kActive, &options);
-    options.bundle_enabled = true;
-
-    std::unique_ptr<SessionDescriptionInterface> temp_offer(
-        CreateRemoteOffer(options, cricket::SEC_ENABLED));
-
-    *nodtls_answer =
-        CreateRemoteAnswer(temp_offer.get(), options, cricket::SEC_ENABLED);
-    EXPECT_TRUE(*nodtls_answer != NULL);
-    VerifyFingerprintStatus((*nodtls_answer)->description(), false);
-    VerifyCryptoParams((*nodtls_answer)->description());
-
-    SetFactoryDtlsSrtp();
-    *offer = CreateRemoteOffer(options, cricket::SEC_ENABLED);
-    ASSERT_TRUE(*offer != NULL);
-    VerifyFingerprintStatus((*offer)->description(), true);
-    VerifyCryptoParams((*offer)->description());
   }
 
   JsepSessionDescription* CreateRemoteOfferWithVersion(
@@ -1704,18 +1568,6 @@ class WebRtcSessionTest
   rtc::CryptoOptions crypto_options_;
 };
 
-TEST_P(WebRtcSessionTest, TestInitializeWithDtls) {
-  InitWithDtls(GetParam());
-  // SDES is disabled when DTLS is on.
-  EXPECT_EQ(cricket::SEC_DISABLED, session_->SdesPolicy());
-}
-
-TEST_F(WebRtcSessionTest, TestInitializeWithoutDtls) {
-  Init();
-  // SDES is required if DTLS is off.
-  EXPECT_EQ(cricket::SEC_REQUIRED, session_->SdesPolicy());
-}
-
 TEST_F(WebRtcSessionTest, TestSessionCandidates) {
   TestSessionCandidatesWithBundleRtcpMux(false, false);
 }
@@ -1833,12 +1685,10 @@ TEST_F(WebRtcSessionTest, TestReceiveSdesOfferCreateSdesAnswer) {
   Init();
   SendAudioVideoStream2();
   SessionDescriptionInterface* offer = CreateOffer();
-  VerifyCryptoParams(offer->description());
   SetRemoteDescriptionWithoutError(offer);
 
   SendAudioVideoStream1();
   SessionDescriptionInterface* answer = CreateAnswer();
-  VerifyCryptoParams(answer->description());
   SetLocalDescriptionWithoutError(answer);
 
   const std::string session_id_orig = answer->session_id();
@@ -1899,255 +1749,6 @@ TEST_F(WebRtcSessionTest, SetLocalSdpFailedOnCreateChannel) {
   offer = CreateOffer();
   ASSERT_TRUE(offer != NULL);
   SetLocalDescriptionOfferExpectError(kCreateChannelFailed, offer);
-}
-
-//
-// Tests for creating/setting SDP under different SDES/DTLS polices:
-//
-// --DTLS off and SDES on
-// TestCreateSdesOfferReceiveSdesAnswer/TestReceiveSdesOfferCreateSdesAnswer:
-//     set local/remote offer/answer with crypto --> success
-// TestSetNonSdesOfferWhenSdesOn: set local/remote offer without crypto --->
-//     failure
-// TestSetLocalNonSdesAnswerWhenSdesOn: set local answer without crypto -->
-//     failure
-// TestSetRemoteNonSdesAnswerWhenSdesOn: set remote answer without crypto -->
-//     failure
-//
-// --DTLS on and SDES off
-// TestCreateDtlsOfferReceiveDtlsAnswer/TestReceiveDtlsOfferCreateDtlsAnswer:
-//     set local/remote offer/answer with DTLS fingerprint --> success
-// TestReceiveNonDtlsOfferWhenDtlsOn: set local/remote offer without DTLS
-//     fingerprint --> failure
-// TestSetLocalNonDtlsAnswerWhenDtlsOn: set local answer without fingerprint
-//     --> failure
-// TestSetRemoteNonDtlsAnswerWhenDtlsOn: set remote answer without fingerprint
-//     --> failure
-//
-// --Encryption disabled: DTLS off and SDES off
-// TestCreateOfferReceiveAnswerWithoutEncryption: set local offer and remote
-//     answer without SDES or DTLS --> success
-// TestCreateAnswerReceiveOfferWithoutEncryption: set remote offer and local
-//     answer without SDES or DTLS --> success
-//
-
-// Test that we return a failure when applying a remote/local offer that doesn't
-// have cryptos enabled when DTLS is off.
-TEST_F(WebRtcSessionTest, TestSetNonSdesOfferWhenSdesOn) {
-  Init();
-  cricket::MediaSessionOptions options;
-  GetOptionsForRemoteOffer(&options);
-  JsepSessionDescription* offer = CreateRemoteOffer(
-      options, cricket::SEC_DISABLED);
-  ASSERT_TRUE(offer != NULL);
-  VerifyNoCryptoParams(offer->description(), false);
-  // SetRemoteDescription and SetLocalDescription will take the ownership of
-  // the offer.
-  SetRemoteDescriptionOfferExpectError(kSdpWithoutSdesCrypto, offer);
-  offer = CreateRemoteOffer(options, cricket::SEC_DISABLED);
-  ASSERT_TRUE(offer != NULL);
-  SetLocalDescriptionOfferExpectError(kSdpWithoutSdesCrypto, offer);
-}
-
-// Test that we return a failure when applying a local answer that doesn't have
-// cryptos enabled when DTLS is off.
-TEST_F(WebRtcSessionTest, TestSetLocalNonSdesAnswerWhenSdesOn) {
-  Init();
-  SessionDescriptionInterface* offer = NULL;
-  SessionDescriptionInterface* answer = NULL;
-  CreateCryptoOfferAndNonCryptoAnswer(&offer, &answer);
-  // SetRemoteDescription and SetLocalDescription will take the ownership of
-  // the offer.
-  SetRemoteDescriptionWithoutError(offer);
-  SetLocalDescriptionAnswerExpectError(kSdpWithoutSdesCrypto, answer);
-}
-
-// Test we will return fail when apply an remote answer that doesn't have
-// crypto enabled when DTLS is off.
-TEST_F(WebRtcSessionTest, TestSetRemoteNonSdesAnswerWhenSdesOn) {
-  Init();
-  SessionDescriptionInterface* offer = NULL;
-  SessionDescriptionInterface* answer = NULL;
-  CreateCryptoOfferAndNonCryptoAnswer(&offer, &answer);
-  // SetRemoteDescription and SetLocalDescription will take the ownership of
-  // the offer.
-  SetLocalDescriptionWithoutError(offer);
-  SetRemoteDescriptionAnswerExpectError(kSdpWithoutSdesCrypto, answer);
-}
-
-// Test that we accept an offer with a DTLS fingerprint when DTLS is on
-// and that we return an answer with a DTLS fingerprint.
-TEST_P(WebRtcSessionTest, TestReceiveDtlsOfferCreateDtlsAnswer) {
-  SendAudioVideoStream1();
-  InitWithDtls(GetParam());
-  SetFactoryDtlsSrtp();
-  cricket::MediaSessionOptions options;
-  GetOptionsForRemoteOffer(&options);
-  JsepSessionDescription* offer =
-      CreateRemoteOffer(options, cricket::SEC_DISABLED);
-  ASSERT_TRUE(offer != NULL);
-  VerifyFingerprintStatus(offer->description(), true);
-  VerifyNoCryptoParams(offer->description(), true);
-
-  // SetRemoteDescription will take the ownership of the offer.
-  SetRemoteDescriptionWithoutError(offer);
-
-  // Verify that we get a crypto fingerprint in the answer.
-  SessionDescriptionInterface* answer = CreateAnswer();
-  ASSERT_TRUE(answer != NULL);
-  VerifyFingerprintStatus(answer->description(), true);
-  // Check that we don't have an a=crypto line in the answer.
-  VerifyNoCryptoParams(answer->description(), true);
-
-  // Now set the local description, which should work, even without a=crypto.
-  SetLocalDescriptionWithoutError(answer);
-}
-
-// Test that we set a local offer with a DTLS fingerprint when DTLS is on
-// and then we accept a remote answer with a DTLS fingerprint successfully.
-TEST_P(WebRtcSessionTest, TestCreateDtlsOfferReceiveDtlsAnswer) {
-  SendAudioVideoStream1();
-  InitWithDtls(GetParam());
-  SetFactoryDtlsSrtp();
-
-  // Verify that we get a crypto fingerprint in the answer.
-  SessionDescriptionInterface* offer = CreateOffer();
-  ASSERT_TRUE(offer != NULL);
-  VerifyFingerprintStatus(offer->description(), true);
-  // Check that we don't have an a=crypto line in the offer.
-  VerifyNoCryptoParams(offer->description(), true);
-
-  // Now set the local description, which should work, even without a=crypto.
-  SetLocalDescriptionWithoutError(offer);
-
-  cricket::MediaSessionOptions options;
-  GetOptionsForAnswer(&options);
-  JsepSessionDescription* answer =
-      CreateRemoteAnswer(offer, options, cricket::SEC_DISABLED);
-  ASSERT_TRUE(answer != NULL);
-  VerifyFingerprintStatus(answer->description(), true);
-  VerifyNoCryptoParams(answer->description(), true);
-
-  // SetRemoteDescription will take the ownership of the answer.
-  SetRemoteDescriptionWithoutError(answer);
-}
-
-// Test that if we support DTLS and the other side didn't offer a fingerprint,
-// we will fail to set the remote description.
-TEST_P(WebRtcSessionTest, TestReceiveNonDtlsOfferWhenDtlsOn) {
-  InitWithDtls(GetParam());
-  cricket::MediaSessionOptions options;
-  GetOptionsForRemoteOffer(&options);
-  options.bundle_enabled = true;
-  JsepSessionDescription* offer = CreateRemoteOffer(
-      options, cricket::SEC_REQUIRED);
-  ASSERT_TRUE(offer != NULL);
-  VerifyFingerprintStatus(offer->description(), false);
-  VerifyCryptoParams(offer->description());
-
-  // SetRemoteDescription will take the ownership of the offer.
-  SetRemoteDescriptionOfferExpectError(
-      kSdpWithoutDtlsFingerprint, offer);
-
-  offer = CreateRemoteOffer(options, cricket::SEC_REQUIRED);
-  // SetLocalDescription will take the ownership of the offer.
-  SetLocalDescriptionOfferExpectError(
-      kSdpWithoutDtlsFingerprint, offer);
-}
-
-// Test that we return a failure when applying a local answer that doesn't have
-// a DTLS fingerprint when DTLS is required.
-TEST_P(WebRtcSessionTest, TestSetLocalNonDtlsAnswerWhenDtlsOn) {
-  InitWithDtls(GetParam());
-  SessionDescriptionInterface* offer = NULL;
-  SessionDescriptionInterface* answer = NULL;
-  CreateDtlsOfferAndNonDtlsAnswer(&offer, &answer);
-
-  // SetRemoteDescription and SetLocalDescription will take the ownership of
-  // the offer and answer.
-  SetRemoteDescriptionWithoutError(offer);
-  SetLocalDescriptionAnswerExpectError(
-      kSdpWithoutDtlsFingerprint, answer);
-}
-
-// Test that we return a failure when applying a remote answer that doesn't have
-// a DTLS fingerprint when DTLS is required.
-TEST_P(WebRtcSessionTest, TestSetRemoteNonDtlsAnswerWhenDtlsOn) {
-  InitWithDtls(GetParam());
-  SessionDescriptionInterface* offer = CreateOffer();
-  cricket::MediaSessionOptions offer_options;
-  GetOptionsForRemoteOffer(&offer_options);
-
-  std::unique_ptr<SessionDescriptionInterface> temp_offer(
-      CreateRemoteOffer(offer_options, cricket::SEC_ENABLED));
-
-  cricket::MediaSessionOptions answer_options;
-  GetOptionsForAnswer(&answer_options);
-  JsepSessionDescription* answer = CreateRemoteAnswer(
-      temp_offer.get(), answer_options, cricket::SEC_ENABLED);
-
-  // SetRemoteDescription and SetLocalDescription will take the ownership of
-  // the offer and answer.
-  SetLocalDescriptionWithoutError(offer);
-  SetRemoteDescriptionAnswerExpectError(
-      kSdpWithoutDtlsFingerprint, answer);
-}
-
-// Test that we create a local offer without SDES or DTLS and accept a remote
-// answer without SDES or DTLS when encryption is disabled.
-TEST_P(WebRtcSessionTest, TestCreateOfferReceiveAnswerWithoutEncryption) {
-  SendAudioVideoStream1();
-  options_.disable_encryption = true;
-  InitWithDtls(GetParam());
-
-  // Verify that we get a crypto fingerprint in the answer.
-  SessionDescriptionInterface* offer = CreateOffer();
-  ASSERT_TRUE(offer != NULL);
-  VerifyFingerprintStatus(offer->description(), false);
-  // Check that we don't have an a=crypto line in the offer.
-  VerifyNoCryptoParams(offer->description(), false);
-
-  // Now set the local description, which should work, even without a=crypto.
-  SetLocalDescriptionWithoutError(offer);
-
-  cricket::MediaSessionOptions options;
-  GetOptionsForAnswer(&options);
-  JsepSessionDescription* answer =
-      CreateRemoteAnswer(offer, options, cricket::SEC_DISABLED);
-  ASSERT_TRUE(answer != NULL);
-  VerifyFingerprintStatus(answer->description(), false);
-  VerifyNoCryptoParams(answer->description(), false);
-
-  // SetRemoteDescription will take the ownership of the answer.
-  SetRemoteDescriptionWithoutError(answer);
-}
-
-// Test that we create a local answer without SDES or DTLS and accept a remote
-// offer without SDES or DTLS when encryption is disabled.
-TEST_P(WebRtcSessionTest, TestCreateAnswerReceiveOfferWithoutEncryption) {
-  options_.disable_encryption = true;
-  InitWithDtls(GetParam());
-
-  cricket::MediaSessionOptions options;
-  GetOptionsForRemoteOffer(&options);
-  JsepSessionDescription* offer =
-      CreateRemoteOffer(options, cricket::SEC_DISABLED);
-  ASSERT_TRUE(offer != NULL);
-  VerifyFingerprintStatus(offer->description(), false);
-  VerifyNoCryptoParams(offer->description(), false);
-
-  // SetRemoteDescription will take the ownership of the offer.
-  SetRemoteDescriptionWithoutError(offer);
-
-  // Verify that we get a crypto fingerprint in the answer.
-  SessionDescriptionInterface* answer = CreateAnswer();
-  ASSERT_TRUE(answer != NULL);
-  VerifyFingerprintStatus(answer->description(), false);
-  // Check that we don't have an a=crypto line in the answer.
-  VerifyNoCryptoParams(answer->description(), false);
-
-  // Now set the local description, which should work, even without a=crypto.
-  SetLocalDescriptionWithoutError(answer);
 }
 
 // Test that we can create and set an answer correctly when different
@@ -3047,44 +2648,6 @@ TEST_F(WebRtcSessionTest, TestAVOfferWithVideoOnlyAnswer) {
   EXPECT_EQ(kVideoTrack2, video_channel_->send_streams()[0].id);
 }
 
-TEST_F(WebRtcSessionTest, VerifyCryptoParamsInSDP) {
-  Init();
-  SendAudioVideoStream1();
-  std::unique_ptr<SessionDescriptionInterface> offer(CreateOffer());
-  VerifyCryptoParams(offer->description());
-  SetRemoteDescriptionWithoutError(offer.release());
-  std::unique_ptr<SessionDescriptionInterface> answer(CreateAnswer());
-  VerifyCryptoParams(answer->description());
-}
-
-TEST_F(WebRtcSessionTest, VerifyCryptoParamsInSDPGcm) {
-  InitWithGcm();
-  SendAudioVideoStream1();
-  std::unique_ptr<SessionDescriptionInterface> offer(CreateOffer());
-  VerifyCryptoParams(offer->description(), true);
-  SetRemoteDescriptionWithoutError(offer.release());
-  std::unique_ptr<SessionDescriptionInterface> answer(CreateAnswer());
-  VerifyCryptoParams(answer->description(), true);
-}
-
-TEST_F(WebRtcSessionTest, VerifyNoCryptoParamsInSDP) {
-  options_.disable_encryption = true;
-  Init();
-  SendAudioVideoStream1();
-  std::unique_ptr<SessionDescriptionInterface> offer(CreateOffer());
-  VerifyNoCryptoParams(offer->description(), false);
-}
-
-TEST_F(WebRtcSessionTest, VerifyAnswerFromNonCryptoOffer) {
-  Init();
-  VerifyAnswerFromNonCryptoOffer();
-}
-
-TEST_F(WebRtcSessionTest, VerifyAnswerFromCryptoOffer) {
-  Init();
-  VerifyAnswerFromCryptoOffer();
-}
-
 // This test verifies that setLocalDescription fails if
 // no a=ice-ufrag and a=ice-pwd lines are present in the SDP.
 TEST_F(WebRtcSessionTest, TestSetLocalDescriptionWithoutIce) {
@@ -3696,12 +3259,6 @@ TEST_F(WebRtcSessionTest, TestDisabledRtcpMuxWithBundleEnabled) {
 
   // Trying unmodified SDP.
   SetLocalDescriptionWithoutError(offer);
-}
-
-TEST_F(WebRtcSessionTest, SetSetupGcm) {
-  InitWithGcm();
-  SendAudioVideoStream1();
-  CreateAndSetRemoteOfferAndLocalAnswer();
 }
 
 // This test verifies the |initial_offerer| flag when session initiates the
