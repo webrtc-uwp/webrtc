@@ -399,20 +399,14 @@ def _LocalCommit(commit_msg, dry_run):
     _RunCommand(['git', 'commit', '-m', commit_msg])
 
 
-def _UploadCL(dry_run, rietveld_email=None):
+def _UploadCL(dry_run, skip_cq=False):
   logging.info('Uploading CL...')
   if not dry_run:
-    cmd = ['git', 'cl', 'upload', '-f']
-    if rietveld_email:
-      cmd.append('--email=%s' % rietveld_email)
+    cmd = ['git', 'cl', 'upload', '-f', '--gerrit']
+    if not skip_cq:
+      logging.info('Sending the CL to the CQ...')
+      cmd.extend(['--use-commit-queue', '--send-mail'])
     _RunCommand(cmd, extra_env={'EDITOR': 'true'})
-
-
-def _SendToCQ(dry_run, skip_cq):
-  logging.info('Sending the CL to the CQ...')
-  if not dry_run and not skip_cq:
-    _RunCommand(['git', 'cl', 'set_commit'])
-    logging.info('Sent the CL to the CQ.')
 
 
 def main():
@@ -483,8 +477,7 @@ def main():
     logging.info("No DEPS changes detected, skipping CL creation.")
   else:
     _LocalCommit(commit_msg, opts.dry_run)
-    _UploadCL(opts.dry_run, opts.rietveld_email)
-    _SendToCQ(opts.dry_run, opts.skip_cq)
+    _UploadCL(opts.dry_run, opts.skip_cq)
   return 0
 
 
