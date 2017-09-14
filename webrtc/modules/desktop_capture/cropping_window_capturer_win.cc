@@ -115,6 +115,17 @@ BOOL CALLBACK TopWindowVerifier(HWND hwnd, LPARAM param) {
     return FALSE;
   }
 
+  // Some applications, such as Chrome, use detachable sub-windows. Using
+  // GA_ROOT cannot get the root window of these sub-windows. I have not found a
+  // reliable way to differentiate whether the |hwnd| is a detachable sub-window
+  // or a message box. But since screen capturer is preferred, if the sub-window
+  // is inside of the |context|->selected_window, let's still use the screen
+  // capturer.
+  if (GetAncestor(hwnd, GA_ROOTOWNER) == context->selected_window &&
+      context->selected_window_rect.ContainsRect(content_rect)) {
+    return TRUE;
+  }
+
   content_rect.IntersectWith(context->selected_window_rect);
 
   // If intersection is not empty, the selected window is not on top.
