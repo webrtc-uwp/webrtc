@@ -62,6 +62,9 @@ class AudioReceiveStream {
     // See description of "concealedSamples" in the WebRTC stats spec:
     // https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamtrackstats-concealedsamples
     uint64_t concealed_samples = 0;
+    // See description of "concealmentEvents" in the WebRTC stats spec:
+    // https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamtrackstats-concealmentevents
+    uint64_t concealment_events = 0;
     float expand_rate = 0.0f;
     float speech_expand_rate = 0.0f;
     float secondary_decoded_rate = 0.0f;
