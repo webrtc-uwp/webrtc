@@ -23,6 +23,7 @@
 #include "webrtc/call/video_receive_stream.h"
 #include "webrtc/call/video_send_stream.h"
 #include "webrtc/common_types.h"
+#include "webrtc/logging/rtc_event_log/rtc_stream_config.h"
 #include "webrtc/modules/audio_coding/neteq/tools/audio_sink.h"
 #include "webrtc/modules/audio_coding/neteq/tools/fake_decode_from_file.h"
 #include "webrtc/modules/audio_coding/neteq/tools/neteq_delay_analyzer.h"

@@ -28,6 +28,7 @@
 #include "webrtc/call/rtp_stream_receiver_controller.h"
 #include "webrtc/call/rtp_transport_controller_send.h"
 #include "webrtc/logging/rtc_event_log/rtc_event_log.h"
+#include "webrtc/logging/rtc_event_log/rtc_stream_config.h"
 #include "webrtc/modules/bitrate_controller/include/bitrate_controller.h"
 #include "webrtc/modules/congestion_controller/include/receive_side_congestion_controller.h"
 #include "webrtc/modules/rtp_rtcp/include/flexfec_receiver.h"

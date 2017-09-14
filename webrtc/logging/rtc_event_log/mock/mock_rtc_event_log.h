@@ -14,6 +14,7 @@
 #include <string>
 
 #include "webrtc/logging/rtc_event_log/rtc_event_log.h"
+#include "webrtc/logging/rtc_event_log/rtc_stream_config.h"
 #include "webrtc/modules/audio_coding/audio_network_adaptor/include/audio_network_adaptor.h"
 #include "webrtc/test/gmock.h"
 
