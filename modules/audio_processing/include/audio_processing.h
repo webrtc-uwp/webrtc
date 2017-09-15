@@ -32,6 +32,7 @@ namespace webrtc {
 struct AecCore;
 
 class AecDump;
+class AudioBuffer;
 class AudioFrame;
 
 class NonlinearBeamformer;
@@ -45,6 +46,7 @@ class GainControl;
 class HighPassFilter;
 class LevelEstimator;
 class NoiseSuppression;
+class PostProcessing;
 class VoiceDetection;
 
 // Use to enable the extended filter mode in the AEC, along with robustness
@@ -328,6 +330,13 @@ class AudioProcessing : public rtc::RefCountInterface {
       bool enabled = false;
     } gain_controller2;
 
+    // Enables and disables the capture post processor. It may only be enabled
+    // if an instance has been provided to the audio processing module upon
+    // construction.
+    struct CapturePostProcessing {
+      bool enabled = false;
+    } capture_post_processor;
+
     // Explicit copy assignment implementation to avoid issues with memory
     // sanitizer complaints in case of self-assignment.
     // TODO(peah): Add buildflag to ensure that this is only included for memory
@@ -359,9 +368,12 @@ class AudioProcessing : public rtc::RefCountInterface {
   static AudioProcessing* Create();
   // Allows passing in an optional configuration at create-time.
   static AudioProcessing* Create(const webrtc::Config& config);
-  // Only for testing.
-  static AudioProcessing* Create(const webrtc::Config& config,
-                                 NonlinearBeamformer* beamformer);
+  // Allows passing in an optional user-defined capture post processing module.
+  // Passing in a non-null beamformer is only for testing.
+  static AudioProcessing* Create(
+      const webrtc::Config& config,
+      std::unique_ptr<PostProcessing> capture_post_processor,
+      NonlinearBeamformer* beamformer);
   ~AudioProcessing() override {}
 
   // Initializes internal states, while retaining all user settings. This
@@ -1087,6 +1099,19 @@ class NoiseSuppression {
   virtual ~NoiseSuppression() {}
 };
 
+// Interface for a post processing submodule.
+class PostProcessing {
+ public:
+  // (Re-)Initializes the submodule.
+  virtual void Initialize(int sample_rate_hz, int num_channels) = 0;
+  // Processes the given capture or render signal.
+  virtual void Process(AudioBuffer* audio) = 0;
+  // Returns a string representation of the module state.
+  virtual std::string ToString() const = 0;
+
+  virtual ~PostProcessing() {}
+};
+
 // The voice activity detection (VAD) component analyzes the stream to
 // determine if voice is present. A facility is also provided to pass in an
 // external VAD decision.
@@ -1136,6 +1161,7 @@ class VoiceDetection {
  protected:
   virtual ~VoiceDetection() {}
 };
+
 }  // namespace webrtc
 
 #endif  // MODULES_AUDIO_PROCESSING_INCLUDE_AUDIO_PROCESSING_H_
