@@ -43,6 +43,17 @@ rtc_static_library("bitrate_controller") {
   ]
 }
 
+rtc_source_set("mock_bitrate_header") {
+  testonly = true
+  sources = [
+    "include/mock/mock_bitrate_controller.h",
+  ]
+  deps = [
+    ":bitrate_controller",
+    "../../test:test_support",
+  ]
+}
+
 if (rtc_include_tests) {
   rtc_source_set("bitrate_controller_unittests") {
     testonly = true
