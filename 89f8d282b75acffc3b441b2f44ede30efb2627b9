@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "02a5317f_d1ed7aad",
+        "filename": "webrtc/modules/rtp_rtcp/source/rtcp_packet/bye.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-15T11:45:02Z",
+      "side": 1,
+      "message": "normal DCHECK is done when csrcs_ are set. (same in other places: parameters are validated when set. When written to buffer explicit conversion done just to make win bots happy).\n\nto make code a bit cleaner pushed dcheck into CreateHeader since it is common to pass size of some container as 1st parameter.",
+      "parentUuid": "0a5d854d_755c3a72",
+      "revId": "89f8d282b75acffc3b441b2f44ede30efb2627b9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6540712a_1f873414",
         "filename": "webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.cc",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-15T07:30:23Z",
       "side": 1,
       "message": "Perhaps a stricter check on size_, that makes sure it fits in the exact amount of bits available, which is less than 16?",
+      "revId": "89f8d282b75acffc3b441b2f44ede30efb2627b9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e44a432_2ee7f91d",
+        "filename": "webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-15T11:45:02Z",
+      "side": 1,
+      "message": "there is that check one line above.",
+      "parentUuid": "6540712a_1f873414",
       "revId": "89f8d282b75acffc3b441b2f44ede30efb2627b9",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
