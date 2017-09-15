@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a5d854d_755c3a72",
+        "filename": "webrtc/modules/rtp_rtcp/source/rtcp_packet/bye.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 5147
+      },
+      "writtenOn": "2017-09-15T07:30:23Z",
+      "side": 1,
+      "message": "This check would fail in debug, but wrap-around in release. How about DCHECK-ing normally, then using saturated_cast?\n(Same suggestion in other places in this CL.)",
+      "revId": "89f8d282b75acffc3b441b2f44ede30efb2627b9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6540712a_1f873414",
+        "filename": "webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 5147
+      },
+      "writtenOn": "2017-09-15T07:30:23Z",
+      "side": 1,
+      "message": "Perhaps a stricter check on size_, that makes sure it fits in the exact amount of bits available, which is less than 16?",
+      "revId": "89f8d282b75acffc3b441b2f44ede30efb2627b9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
