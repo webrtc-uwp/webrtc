@@ -22,73 +22,36 @@ namespace webrtc {
 BlankDetectorDesktopCapturerWrapper::BlankDetectorDesktopCapturerWrapper(
     std::unique_ptr<DesktopCapturer> capturer,
     RgbaColor blank_pixel)
-    : capturer_(std::move(capturer)),
-      blank_pixel_(blank_pixel) {
-  RTC_DCHECK(capturer_);
-}
+    : CaptureResultDesktopCapturerWrapper(std::move(capturer), this),
+      blank_pixel_(blank_pixel) {}
 
 BlankDetectorDesktopCapturerWrapper::~BlankDetectorDesktopCapturerWrapper() =
     default;
 
-void BlankDetectorDesktopCapturerWrapper::Start(
-    DesktopCapturer::Callback* callback) {
-  capturer_->Start(this);
-  callback_ = callback;
-}
-
-void BlankDetectorDesktopCapturerWrapper::SetSharedMemoryFactory(
-    std::unique_ptr<SharedMemoryFactory> shared_memory_factory) {
-  capturer_->SetSharedMemoryFactory(std::move(shared_memory_factory));
-}
-
-void BlankDetectorDesktopCapturerWrapper::CaptureFrame() {
-  RTC_DCHECK(callback_);
-  capturer_->CaptureFrame();
-}
-
-void BlankDetectorDesktopCapturerWrapper::SetExcludedWindow(WindowId window) {
-  capturer_->SetExcludedWindow(window);
-}
-
-bool BlankDetectorDesktopCapturerWrapper::GetSourceList(SourceList* sources) {
-  return capturer_->GetSourceList(sources);
-}
-
-bool BlankDetectorDesktopCapturerWrapper::SelectSource(SourceId id) {
-  return capturer_->SelectSource(id);
-}
-
-bool BlankDetectorDesktopCapturerWrapper::FocusOnSelectedSource() {
-  return capturer_->FocusOnSelectedSource();
-}
-
-void BlankDetectorDesktopCapturerWrapper::OnCaptureResult(
-    Result result,
-    std::unique_ptr<DesktopFrame> frame) {
-  RTC_DCHECK(callback_);
-  if (result != Result::SUCCESS || non_blank_frame_received_) {
-    callback_->OnCaptureResult(result, std::move(frame));
+void BlankDetectorDesktopCapturerWrapper::Observe(
+    Result* result,
+    std::unique_ptr<DesktopFrame>* frame) {
+  if (*result != Result::SUCCESS || non_blank_frame_received_) {
     return;
   }
 
-  RTC_DCHECK(frame);
+  RTC_DCHECK(*frame);
 
   // If nothing has been changed in current frame, we do not need to check it
   // again.
-  if (!frame->updated_region().is_empty() || is_first_frame_) {
-    last_frame_is_blank_ = IsBlankFrame(*frame);
+  if (!(*frame)->updated_region().is_empty() || is_first_frame_) {
+    last_frame_is_blank_ = IsBlankFrame(**frame);
     is_first_frame_ = false;
   }
   RTC_HISTOGRAM_BOOLEAN("WebRTC.DesktopCapture.BlankFrameDetected",
                         last_frame_is_blank_);
   if (!last_frame_is_blank_) {
     non_blank_frame_received_ = true;
-    callback_->OnCaptureResult(Result::SUCCESS, std::move(frame));
     return;
   }
 
-  callback_->OnCaptureResult(Result::ERROR_TEMPORARY,
-                             std::unique_ptr<DesktopFrame>());
+  *result = Result::ERROR_TEMPORARY;
+  frame->reset();
 }
 
 bool BlankDetectorDesktopCapturerWrapper::IsBlankFrame(

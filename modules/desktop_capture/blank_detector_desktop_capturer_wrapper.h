@@ -13,7 +13,7 @@
 
 #include <memory>
 
-#include "modules/desktop_capture/desktop_capturer.h"
+#include "modules/desktop_capture/capture_result_desktop_capturer_wrapper.h"
 #include "modules/desktop_capture/rgba_color.h"
 
 namespace webrtc {
@@ -24,8 +24,8 @@ namespace webrtc {
 // returns ERROR_TEMPORARY. If the DesktopCapturer implementation fails for too
 // many times, this wrapper returns ERROR_PERMANENT.
 class BlankDetectorDesktopCapturerWrapper final
-    : public DesktopCapturer,
-      public DesktopCapturer::Callback {
+    : public CaptureResultDesktopCapturerWrapper,
+      public CaptureResultDesktopCapturerWrapper::ResultObserver {
  public:
   // Creates BlankDetectorDesktopCapturerWrapper. BlankDesktopCapturerWrapper
   // takes ownership of |capturer|. The |blank_pixel| is the unmodified color
@@ -34,27 +34,15 @@ class BlankDetectorDesktopCapturerWrapper final
                                       RgbaColor blank_pixel);
   ~BlankDetectorDesktopCapturerWrapper() override;
 
-  // DesktopCapturer interface.
-  void Start(DesktopCapturer::Callback* callback) override;
-  void SetSharedMemoryFactory(
-      std::unique_ptr<SharedMemoryFactory> shared_memory_factory) override;
-  void CaptureFrame() override;
-  void SetExcludedWindow(WindowId window) override;
-  bool GetSourceList(SourceList* sources) override;
-  bool SelectSource(SourceId id) override;
-  bool FocusOnSelectedSource() override;
-
  private:
-  // DesktopCapturer::Callback interface.
-  void OnCaptureResult(Result result,
-                       std::unique_ptr<DesktopFrame> frame) override;
+  // CaptureResultDesktopCapturer::ResultObserver implementations.
+  void Observe(Result* result, std::unique_ptr<DesktopFrame>* frame) override;
 
   bool IsBlankFrame(const DesktopFrame& frame) const;
 
   // Detects whether pixel at (x, y) equals to |blank_pixel_|.
   bool IsBlankPixel(const DesktopFrame& frame, int x, int y) const;
 
-  const std::unique_ptr<DesktopCapturer> capturer_;
   const RgbaColor blank_pixel_;
 
   // Whether a non-blank frame has been received.
@@ -65,8 +53,6 @@ class BlankDetectorDesktopCapturerWrapper final
 
   // Whether current frame is the first frame.
   bool is_first_frame_ = true;
-
-  DesktopCapturer::Callback* callback_ = nullptr;
 };
 
 }  // namespace webrtc
