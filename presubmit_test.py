@@ -1,4 +1,13 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
+
+#  Copyright 2017 The WebRTC project authors. All Rights Reserved.
+#
+#  Use of this source code is governed by a BSD-style license
+#  that can be found in the LICENSE file in the root of the source
+#  tree. An additional intellectual property rights grant can be found
+#  in the file PATENTS.  All contributing project authors may
+#  be found in the AUTHORS file in the root of the source tree.
+
 import unittest
 
 import PRESUBMIT
@@ -9,7 +18,7 @@ class CheckBugEntryField(unittest.TestCase):
   def testCommitMessageBugEntryWithNoError(self):
     mock_input_api = MockInputApi()
     mock_output_api = MockOutputApi()
-    mock_input_api.change.BUG = 'webrtc:1234'
+    mock_input_api.change.BUG = 'webrtc:1234'  # pylint: disable=C0103
     errors = PRESUBMIT.CheckCommitMessageBugEntry(mock_input_api,
                                                   mock_output_api)
     self.assertEqual(0, len(errors))
@@ -17,6 +26,8 @@ class CheckBugEntryField(unittest.TestCase):
   def testCommitMessageBugEntryReturnError(self):
     mock_input_api = MockInputApi()
     mock_output_api = MockOutputApi()
+
+    # pylint: disable=C0103
     mock_input_api.change.BUG = 'webrtc:1234,webrtc=4321'
     errors = PRESUBMIT.CheckCommitMessageBugEntry(mock_input_api,
                                                   mock_output_api)
@@ -29,7 +40,7 @@ class CheckBugEntryField(unittest.TestCase):
   def testCommitMessageBugEntryIsNone(self):
     mock_input_api = MockInputApi()
     mock_output_api = MockOutputApi()
-    mock_input_api.change.BUG = 'None'
+    mock_input_api.change.BUG = 'None'  # pylint: disable=C0103
     errors = PRESUBMIT.CheckCommitMessageBugEntry(mock_input_api,
                                                   mock_output_api)
     self.assertEqual(0, len(errors))
@@ -37,4 +48,3 @@ class CheckBugEntryField(unittest.TestCase):
 
 if __name__ == '__main__':
   unittest.main()
-
