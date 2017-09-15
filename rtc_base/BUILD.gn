@@ -74,6 +74,21 @@ source_set("protobuf_utils") {
   }
 }
 
+rtc_source_set("networkroute") {
+  sources = [
+    "networkroute.h",
+  ]
+}
+
+rtc_source_set("keep_ref_until_done") {
+  sources = [
+    "keep_ref_until_done.h",
+  ]
+  deps = [
+    ":rtc_base_approved_generic",
+  ]
+}
+
 source_set("compile_assert_c") {
   sources = [
     "compile_assert_c.h",
@@ -94,6 +109,8 @@ rtc_source_set("rtc_base_approved_generic") {
   visibility = [
     ":rtc_base_approved",
     ":rtc_base_approved_objc",
+    ":keep_ref_until_done",
+    ":networkroute",
   ]
 
   # TODO(kjellander): Remove (bugs.webrtc.org/7480)
@@ -509,6 +526,7 @@ rtc_static_library("rtc_base_generic") {
     "crc32.h",
     "cryptstring.cc",
     "cryptstring.h",
+    "dscp.h",
     "filerotatingstream.cc",
     "filerotatingstream.h",
     "fileutils.cc",
@@ -546,6 +564,7 @@ rtc_static_library("rtc_base_generic") {
     "opensslidentity.h",
     "opensslstreamadapter.cc",
     "opensslstreamadapter.h",
+    "optional.h",
     "physicalsocketserver.cc",
     "physicalsocketserver.h",
     "proxyinfo.cc",
@@ -1093,6 +1112,7 @@ if (rtc_include_tests) {
       ]
     }
     deps = [
+      ":keep_ref_until_done",
       ":rtc_base_tests_main",
       ":rtc_base_tests_utils",
       "../api:optional",

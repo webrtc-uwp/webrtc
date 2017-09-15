@@ -273,6 +273,7 @@ rtc_static_library("webrtc_vp9") {
     ":video_coding_utility",
     "..:module_api",
     "../../common_video",
+    "../../rtc_base:keep_ref_until_done",
     "../../rtc_base:rtc_base_approved",
     "../../system_wrappers",
   ]

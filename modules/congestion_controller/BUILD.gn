@@ -51,6 +51,7 @@ rtc_static_library("congestion_controller") {
     "../..:webrtc_common",
     "../../api:optional",
     "../../logging:rtc_event_log_api",
+    "../../rtc_base:networkroute",
     "../../rtc_base:rtc_base",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_numerics",
