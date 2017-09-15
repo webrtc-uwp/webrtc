@@ -11,6 +11,7 @@
 #include <stdio.h>
 
 #include <algorithm>
+#include <array>
 #include <limits>
 #include <memory>
 #include <queue>
@@ -24,6 +25,7 @@
 #include "modules/audio_processing/beamformer/mock_nonlinear_beamformer.h"
 #include "modules/audio_processing/common.h"
 #include "modules/audio_processing/include/audio_processing.h"
+#include "modules/audio_processing/include/mock_audio_processing.h"
 #include "modules/audio_processing/level_controller/level_controller_constants.h"
 #include "modules/audio_processing/test/protobuf_utils.h"
 #include "modules/audio_processing/test/test_utils.h"
@@ -1305,7 +1307,7 @@ TEST_F(ApmTest, AgcOnlyAdaptsWhenTargetSignalIsPresent) {
   testing::NiceMock<MockNonlinearBeamformer>* beamformer =
       new testing::NiceMock<MockNonlinearBeamformer>(geometry, 1u);
   std::unique_ptr<AudioProcessing> apm(
-      AudioProcessing::Create(config, beamformer));
+      AudioProcessing::Create(config, nullptr, beamformer));
   EXPECT_EQ(kNoErr, apm->gain_control()->Enable(true));
   ChannelBuffer<float> src_buf(kSamplesPerChannel, kNumInputChannels);
   ChannelBuffer<float> dest_buf(kSamplesPerChannel, kNumOutputChannels);
@@ -2889,6 +2891,54 @@ TEST(ApmConfiguration, InValidConfigBehavior) {
   EXPECT_NEAR(kTargetLcPeakLeveldBFS,
               apm->config_.level_controller.initial_peak_level_dbfs,
               std::numeric_limits<float>::epsilon());
+}
+
+TEST(ApmConfiguration, ToggleCapturePostProcessing) {
+  // Verify that apm uses a capture post processing module if and only if it is
+  // enabled, and that the toggling works as intended.
+  // This expects precisely one Process call to the post processor for each
+  // frame it is expected to process.
+  webrtc::Config webrtc_config;
+  testing::NiceMock<test::MockPostProcessing>* mock_post_processor_ptr =
+      new testing::NiceMock<test::MockPostProcessing>();
+  auto mock_post_processor =
+      std::unique_ptr<PostProcessing>(mock_post_processor_ptr);
+  rtc::scoped_refptr<AudioProcessing> apm = AudioProcessing::Create(
+      webrtc_config, std::move(mock_post_processor), nullptr);
+
+  const size_t sample_rate_hz = AudioProcessing::NativeRate::kSampleRate16kHz;
+  const size_t sample_count = static_cast<size_t>(
+      AudioProcessing::kChunkSizeMs * sample_rate_hz / 1000);
+  std::array<int16_t, sample_count> data;
+  data.fill(0);
+
+  auto audio = std::unique_ptr<AudioFrame>(new AudioFrame());
+  audio->UpdateFrame(0, 0, data.begin(), sample_count, sample_rate_hz,
+                     AudioFrame::SpeechType::kNormalSpeech,
+                     AudioFrame::VADActivity::kVadActive);
+
+  // Check provided post processor active by default.
+  EXPECT_CALL(*mock_post_processor_ptr, Process(testing::_)).Times(1);
+  apm->ProcessStream(audio.get());
+
+  AudioProcessing::Config config;
+  const bool post_processor_enabled[4] = {true, false, false, true};
+  for (bool enabled : post_processor_enabled) {
+    config.capture_post_processor.enabled = enabled;
+    apm->ApplyConfig(config);
+    EXPECT_CALL(*mock_post_processor_ptr, Process(testing::_))
+        .Times(enabled ? 1 : 0);
+    apm->ProcessStream(audio.get());
+  }
+}
+
+TEST(ApmConfiguration, HandlesEnableWithoutCapturePostProcessor) {
+  // Verify that trying to enable a non-existent capture post processor is
+  // handled gracefully.
+  rtc::scoped_refptr<AudioProcessing> apm = AudioProcessing::Create();
+  AudioProcessing::Config config;
+  config.capture_post_processor.enabled = true;
+  apm->ApplyConfig(config);
 }
 
 }  // namespace webrtc

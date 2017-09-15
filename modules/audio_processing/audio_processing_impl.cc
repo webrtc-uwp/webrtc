@@ -186,7 +186,8 @@ bool AudioProcessingImpl::ApmSubmoduleStates::Update(
     bool echo_canceller3_enabled,
     bool voice_activity_detector_enabled,
     bool level_estimator_enabled,
-    bool transient_suppressor_enabled) {
+    bool transient_suppressor_enabled,
+    bool capture_post_processor_enabled) {
   bool changed = false;
   changed |= (low_cut_filter_enabled != low_cut_filter_enabled_);
   changed |= (echo_canceller_enabled != echo_canceller_enabled_);
@@ -208,6 +209,8 @@ bool AudioProcessingImpl::ApmSubmoduleStates::Update(
   changed |=
       (voice_activity_detector_enabled != voice_activity_detector_enabled_);
   changed |= (transient_suppressor_enabled != transient_suppressor_enabled_);
+  changed |=
+      (capture_post_processor_enabled != capture_post_processor_enabled_);
   if (changed) {
     low_cut_filter_enabled_ = low_cut_filter_enabled;
     echo_canceller_enabled_ = echo_canceller_enabled;
@@ -223,6 +226,7 @@ bool AudioProcessingImpl::ApmSubmoduleStates::Update(
     level_estimator_enabled_ = level_estimator_enabled;
     voice_activity_detector_enabled_ = voice_activity_detector_enabled;
     transient_suppressor_enabled_ = transient_suppressor_enabled;
+    capture_post_processor_enabled_ = capture_post_processor_enabled;
   }
 
   changed |= first_update_;
@@ -289,8 +293,10 @@ struct AudioProcessingImpl::ApmPublicSubmodules {
 };
 
 struct AudioProcessingImpl::ApmPrivateSubmodules {
-  explicit ApmPrivateSubmodules(NonlinearBeamformer* beamformer)
-      : beamformer(beamformer) {}
+  ApmPrivateSubmodules(NonlinearBeamformer* beamformer,
+                       std::unique_ptr<PostProcessing> capture_post_processor)
+      : beamformer(beamformer),
+        capture_post_processor(std::move(capture_post_processor)) {}
   // Accessed internally from capture or during initialization
   std::unique_ptr<NonlinearBeamformer> beamformer;
   std::unique_ptr<AgcManagerDirect> agc_manager;
@@ -299,21 +305,24 @@ struct AudioProcessingImpl::ApmPrivateSubmodules {
   std::unique_ptr<LevelController> level_controller;
   std::unique_ptr<ResidualEchoDetector> residual_echo_detector;
   std::unique_ptr<EchoCanceller3> echo_canceller3;
+  std::unique_ptr<PostProcessing> capture_post_processor;
 };
 
 AudioProcessing* AudioProcessing::Create() {
   webrtc::Config config;
-  return Create(config, nullptr);
+  return Create(config, nullptr, nullptr);
 }
 
 AudioProcessing* AudioProcessing::Create(const webrtc::Config& config) {
-  return Create(config, nullptr);
+  return Create(config, nullptr, nullptr);
 }
 
-AudioProcessing* AudioProcessing::Create(const webrtc::Config& config,
-                                         NonlinearBeamformer* beamformer) {
-  AudioProcessingImpl* apm =
-      new rtc::RefCountedObject<AudioProcessingImpl>(config, beamformer);
+AudioProcessing* AudioProcessing::Create(
+    const webrtc::Config& config,
+    std::unique_ptr<PostProcessing> capture_post_processor,
+    NonlinearBeamformer* beamformer) {
+  AudioProcessingImpl* apm = new rtc::RefCountedObject<AudioProcessingImpl>(
+      config, std::move(capture_post_processor), beamformer);
   if (apm->Initialize() != kNoError) {
     delete apm;
     apm = nullptr;
@@ -323,13 +332,17 @@ AudioProcessing* AudioProcessing::Create(const webrtc::Config& config,
 }
 
 AudioProcessingImpl::AudioProcessingImpl(const webrtc::Config& config)
-    : AudioProcessingImpl(config, nullptr) {}
+    : AudioProcessingImpl(config, nullptr, nullptr) {}
 
-AudioProcessingImpl::AudioProcessingImpl(const webrtc::Config& config,
-                                         NonlinearBeamformer* beamformer)
+AudioProcessingImpl::AudioProcessingImpl(
+    const webrtc::Config& config,
+    std::unique_ptr<PostProcessing> capture_post_processor,
+    NonlinearBeamformer* beamformer)
     : high_pass_filter_impl_(new HighPassFilterImpl(this)),
       public_submodules_(new ApmPublicSubmodules()),
-      private_submodules_(new ApmPrivateSubmodules(beamformer)),
+      private_submodules_(
+          new ApmPrivateSubmodules(beamformer,
+                                   std::move(capture_post_processor))),
       constants_(config.Get<ExperimentalAgc>().startup_min_volume,
                  config.Get<ExperimentalAgc>().clipped_level_min,
 #if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
@@ -344,8 +357,10 @@ AudioProcessingImpl::AudioProcessingImpl(const webrtc::Config& config,
 #endif
                config.Get<Beamforming>().array_geometry,
                config.Get<Beamforming>().target_direction),
-      capture_nonlocked_(config.Get<Beamforming>().enabled,
-                         config.Get<Intelligibility>().enabled) {
+      capture_nonlocked_(
+          config.Get<Beamforming>().enabled,
+          config.Get<Intelligibility>().enabled,
+          static_cast<bool>(private_submodules_->capture_post_processor)) {
   {
     rtc::CritScope cs_render(&crit_render_);
     rtc::CritScope cs_capture(&crit_capture_);
@@ -525,6 +540,9 @@ int AudioProcessingImpl::InitializeLocked() {
   InitializeResidualEchoDetector();
   InitializeEchoCanceller3();
   InitializeGainController2();
+  if (capture_nonlocked_.capture_post_processor_enabled) {
+    InitializePostProcessor();
+  }
 
   if (aec_dump_) {
     aec_dump_->WriteInitMessage(ToStreamsConfig(formats_.api_format));
@@ -693,6 +711,21 @@ void AudioProcessingImpl::ApplyConfig(const AudioProcessing::Config& config) {
     InitializeGainController2();
     LOG(LS_INFO) << "Gain controller 2 activated: "
                  << capture_nonlocked_.gain_controller2_enabled;
+  }
+
+  if (config.capture_post_processor.enabled !=
+      capture_nonlocked_.capture_post_processor_enabled) {
+    if (private_submodules_->capture_post_processor) {
+      capture_nonlocked_.capture_post_processor_enabled =
+          config.capture_post_processor.enabled;
+      InitializePostProcessor();
+      LOG(LS_INFO) << "Capture post processor activated: "
+                   << config.capture_post_processor.enabled;
+    } else {
+      LOG(LS_ERROR) << "AudioProcessing module config error: "
+                    << "No PostProcessing module to enable";
+      capture_nonlocked_.capture_post_processor_enabled = false;
+    }
   }
 }
 
@@ -1278,6 +1311,10 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
     private_submodules_->level_controller->Process(capture_buffer);
   }
 
+  if (capture_nonlocked_.capture_post_processor_enabled) {
+    private_submodules_->capture_post_processor->Process(capture_buffer);
+  }
+
   // The level estimator operates on the recombined data.
   public_submodules_->level_estimator->ProcessStream(capture_buffer);
 
@@ -1623,7 +1660,8 @@ bool AudioProcessingImpl::UpdateActiveSubmoduleStates() {
       capture_nonlocked_.echo_canceller3_enabled,
       public_submodules_->voice_detection->is_enabled(),
       public_submodules_->level_estimator->is_enabled(),
-      capture_.transient_suppressor_enabled);
+      capture_.transient_suppressor_enabled,
+      capture_nonlocked_.capture_post_processor_enabled);
 }
 
 
@@ -1694,6 +1732,12 @@ void AudioProcessingImpl::InitializeLevelController() {
 
 void AudioProcessingImpl::InitializeResidualEchoDetector() {
   private_submodules_->residual_echo_detector->Initialize();
+}
+
+void AudioProcessingImpl::InitializePostProcessor() {
+  RTC_DCHECK(private_submodules_->capture_post_processor);
+  private_submodules_->capture_post_processor->Initialize(proc_sample_rate_hz(),
+                                                          num_proc_channels());
 }
 
 void AudioProcessingImpl::MaybeUpdateHistograms() {

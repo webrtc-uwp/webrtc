@@ -39,8 +39,10 @@ class AudioProcessingImpl : public AudioProcessing {
   // Methods forcing APM to run in a single-threaded manner.
   // Acquires both the render and capture locks.
   explicit AudioProcessingImpl(const webrtc::Config& config);
-  // AudioProcessingImpl takes ownership of beamformer.
+  // AudioProcessingImpl takes ownership of capture post processor and
+  // beamformer.
   AudioProcessingImpl(const webrtc::Config& config,
+                      std::unique_ptr<PostProcessing> capture_post_processor,
                       NonlinearBeamformer* beamformer);
   ~AudioProcessingImpl() override;
   int Initialize() override;
@@ -156,7 +158,8 @@ class AudioProcessingImpl : public AudioProcessing {
                 bool echo_canceller3_enabled,
                 bool voice_activity_detector_enabled,
                 bool level_estimator_enabled,
-                bool transient_suppressor_enabled);
+                bool transient_suppressor_enabled,
+                bool capture_post_processor_enabled);
     bool CaptureMultiBandSubModulesActive() const;
     bool CaptureMultiBandProcessingActive() const;
     bool CaptureFullBandProcessingActive() const;
@@ -178,6 +181,7 @@ class AudioProcessingImpl : public AudioProcessing {
     bool level_estimator_enabled_ = false;
     bool voice_activity_detector_enabled_ = false;
     bool transient_suppressor_enabled_ = false;
+    bool capture_post_processor_enabled_ = false;
     bool first_update_ = true;
   };
 
@@ -218,7 +222,8 @@ class AudioProcessingImpl : public AudioProcessing {
       RTC_EXCLUSIVE_LOCKS_REQUIRED(crit_render_, crit_capture_);
   void InitializeLowCutFilter() RTC_EXCLUSIVE_LOCKS_REQUIRED(crit_capture_);
   void InitializeEchoCanceller3() RTC_EXCLUSIVE_LOCKS_REQUIRED(crit_capture_);
-  void InitializeGainController2();
+  void InitializeGainController2() RTC_EXCLUSIVE_LOCKS_REQUIRED(crit_capture_);
+  void InitializePostProcessor() RTC_EXCLUSIVE_LOCKS_REQUIRED(crit_capture_);
 
   void EmptyQueuedRenderAudio();
   void AllocateRenderQueue()
@@ -350,12 +355,14 @@ class AudioProcessingImpl : public AudioProcessing {
 
   struct ApmCaptureNonLockedState {
     ApmCaptureNonLockedState(bool beamformer_enabled,
-                             bool intelligibility_enabled)
+                             bool intelligibility_enabled,
+                             bool capture_post_processor_enabled)
         : capture_processing_format(kSampleRate16kHz),
           split_rate(kSampleRate16kHz),
           stream_delay_ms(0),
           beamformer_enabled(beamformer_enabled),
-          intelligibility_enabled(intelligibility_enabled) {}
+          intelligibility_enabled(intelligibility_enabled),
+          capture_post_processor_enabled(capture_post_processor_enabled) {}
     // Only the rate and samples fields of capture_processing_format_ are used
     // because the forward processing number of channels is mutable and is
     // tracked by the capture_audio_.
@@ -367,6 +374,7 @@ class AudioProcessingImpl : public AudioProcessing {
     bool level_controller_enabled = false;
     bool echo_canceller3_enabled = false;
     bool gain_controller2_enabled = false;
+    bool capture_post_processor_enabled;
   } capture_nonlocked_;
 
   struct ApmRenderState {
