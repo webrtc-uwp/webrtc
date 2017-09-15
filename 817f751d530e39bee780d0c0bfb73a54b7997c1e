@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa8dcc04_4a528ad4",
+        "filename": "modules/audio_coding/neteq/statistics_calculator.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-15T14:42:01Z",
+      "side": 1,
+      "message": "Are positive corrections more frequent than negative? Otherwise it might make sense to avoid changing concealed_samples in the Expanded*SamplesCorrection functions to avoid the positive bias.",
+      "revId": "817f751d530e39bee780d0c0bfb73a54b7997c1e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98a6c662_7520b108",
+        "filename": "modules/audio_coding/neteq/statistics_calculator.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-15T14:42:01Z",
+      "side": 1,
+      "message": "Same question",
+      "revId": "817f751d530e39bee780d0c0bfb73a54b7997c1e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
