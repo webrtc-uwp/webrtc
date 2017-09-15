@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d10dea52_2e305768",
+        "filename": "PRESUBMIT.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 682,
+      "author": {
+        "id": 5018
+      },
+      "writtenOn": "2017-09-15T13:05:02Z",
+      "side": 1,
+      "message": "Can I haz unit test for this?",
+      "range": {
+        "startLine": 682,
+        "startChar": 4,
+        "endLine": 682,
+        "endChar": 36
+      },
+      "revId": "4f4bc329d89e870bfe268a35a193284d33b3a1ac",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
