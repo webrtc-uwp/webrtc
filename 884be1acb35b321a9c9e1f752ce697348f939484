@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f3eacf02_5793eda0",
+        "filename": "webrtc/modules/desktop_capture/capture_result_desktop_capturer_wrapper.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 5166
+      },
+      "writtenOn": "2017-09-15T01:55:10Z",
+      "side": 1,
+      "message": "Optional: Consider passing both parameters by pointer for symmetry. I didn\u0027t notice at first the the unique_ptr is being passed by pointer, thinking that this was limited to modifying only the Result. If both were passed by pointer, it would be clearer that the implementation can modify either one.",
+      "range": {
+        "startLine": 38,
+        "startChar": 69,
+        "endLine": 38,
+        "endChar": 0
+      },
+      "revId": "884be1acb35b321a9c9e1f752ce697348f939484",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "39fc4591_d977625a",
+        "filename": "webrtc/modules/desktop_capture/capture_result_desktop_capturer_wrapper.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 5166
+      },
+      "writtenOn": "2017-09-15T01:55:10Z",
+      "side": 1,
+      "message": "I\u0027m not a fan of this pattern of allowing either a regular or a unique_ptr to represent the callback. Is there precedent of it being used elsewhere in WebRTC? If so then I guess it\u0027s okay, but it seems messy to me. Perhaps reference-counting or a weak pointer would be a better design to allow you to have only one ctor?",
+      "range": {
+        "startLine": 48,
+        "startChar": 48,
+        "endLine": 48,
+        "endChar": 0
+      },
+      "revId": "884be1acb35b321a9c9e1f752ce697348f939484",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
