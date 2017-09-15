@@ -1,0 +1,174 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8528c38_b395c0f4",
+        "filename": "webrtc/pc/peerconnectionunittestfixture.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-15T03:08:42Z",
+      "side": 1,
+      "message": "It\u0027s not ideal that the constructor doesn\u0027t leave the class in a usable state (InitializePeerConnection still needs to be called). Why not have a constructor that takes both a PeerConnection and its factory as input, and rely on the test itself to call CreatePeerConnection?\n\nOr, another pattern we use pretty often is to make both the constructor and an \"Init\" method private, then have a static \"Create\" method that constructs an object, calls Init and returns null on failure.",
+      "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae1500ad_74adc2f7",
+        "filename": "webrtc/pc/peerconnectionunittestfixture.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-15T03:08:42Z",
+      "side": 1,
+      "message": "Where does the \"signaling state stable\" check come from? It seems out of place.",
+      "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d97cc08_9f18e7a2",
+        "filename": "webrtc/pc/peerconnectionunittestfixture.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-15T03:08:42Z",
+      "side": 1,
+      "message": "Should pass along the return value here.",
+      "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b70acb98_e6099e9e",
+        "filename": "webrtc/pc/peerconnectionunittestfixture.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-15T03:08:42Z",
+      "side": 1,
+      "message": "Here too.",
+      "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62012003_25e2036f",
+        "filename": "webrtc/pc/peerconnectionunittestfixture.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-15T03:08:42Z",
+      "side": 1,
+      "message": "Should check the return value here.",
+      "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a624627f_44265d37",
+        "filename": "webrtc/pc/peerconnectionunittestfixture.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-15T03:08:42Z",
+      "side": 1,
+      "message": "Here too.",
+      "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92c05482_9f79db48",
+        "filename": "webrtc/pc/peerconnectionunittestfixture.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-15T03:08:42Z",
+      "side": 1,
+      "message": "\"... and provides an observer object that stores information from PeerConnectionObserver callbacks\"?",
+      "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e39ccfd6_57905dbe",
+        "filename": "webrtc/pc/peerconnectionunittestfixture.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-15T03:08:42Z",
+      "side": 1,
+      "message": "I wonder if we could combine this with the PeerConnectionWrapper in peerconnection_integrationtest.cc. They\u0027re pretty much the same in concept; the integration test one just has a lot of features peerconnectioninterface_unittest doesn\u0027t use. So either we could have one big class, and have peerconnectioninterface_unittest ignore most the methods, or we could add the extra features in a subclass.",
+      "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01528c28_888ee92e",
+        "filename": "webrtc/pc/peerconnectionunittestfixture.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-15T03:08:42Z",
+      "side": 1,
+      "message": "I don\u0027t think we really need a base test fixture. Different tests may want to configure the PC factory in different ways (using different mock/fake objects).",
+      "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32319ab1_b8314b22",
+        "filename": "webrtc/pc/test/mockpeerconnectionobservers.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-15T03:08:42Z",
+      "side": 1,
+      "message": "Can you add a TODO for renaming these objects? They\u0027re not really \"mocks\".",
+      "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
