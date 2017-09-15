@@ -11,6 +11,7 @@
 #include "modules/rtp_rtcp/source/rtcp_packet.h"
 
 #include "rtc_base/checks.h"
+#include "rtc_base/safe_conversions.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -65,7 +66,7 @@ size_t RtcpPacket::HeaderLength() const {
 //  |V=2|P| RC/FMT  |      PT       |             length            |
 //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 void RtcpPacket::CreateHeader(
-    uint8_t count_or_format,  // Depends on packet type.
+    size_t count_or_format,  // Depends on packet type.
     uint8_t packet_type,
     size_t length,
     uint8_t* buffer,
@@ -74,7 +75,8 @@ void RtcpPacket::CreateHeader(
   RTC_DCHECK_LE(count_or_format, 0x1f);
   constexpr uint8_t kVersionBits = 2 << 6;
   constexpr uint8_t kNoPaddingBit = 0 << 5;
-  buffer[*pos + 0] = kVersionBits | kNoPaddingBit | count_or_format;
+  buffer[*pos + 0] = kVersionBits | kNoPaddingBit |
+                     rtc::dchecked_cast<uint8_t>(count_or_format);
   buffer[*pos + 1] = packet_type;
   buffer[*pos + 2] = (length >> 8) & 0xff;
   buffer[*pos + 3] = length & 0xff;
