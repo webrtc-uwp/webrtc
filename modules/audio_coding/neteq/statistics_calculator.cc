@@ -164,13 +164,17 @@ void StatisticsCalculator::ExpandedNoiseSamples(size_t num_samples) {
 void StatisticsCalculator::ExpandedVoiceSamplesCorrection(int num_samples) {
   expanded_speech_samples_ =
       AddIntToSizeTWithLowerCap(num_samples, expanded_speech_samples_);
-  lifetime_stats_.concealed_samples += num_samples;
+  // Don't add a negative value to the lifetime stats, since stats-consuming
+  // applications may not be prepared for it.
+  lifetime_stats_.concealed_samples += std::max(num_samples, 0);
 }
 
 void StatisticsCalculator::ExpandedNoiseSamplesCorrection(int num_samples) {
   expanded_noise_samples_ =
       AddIntToSizeTWithLowerCap(num_samples, expanded_noise_samples_);
-  lifetime_stats_.concealed_samples += num_samples;
+  // Don't add a negative value to the lifetime stats, since stats-consuming
+  // applications may not be prepared for it.
+  lifetime_stats_.concealed_samples += std::max(num_samples, 0);
 }
 
 void StatisticsCalculator::PreemptiveExpandedSamples(size_t num_samples) {
