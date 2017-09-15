@@ -68,6 +68,7 @@ rtc_static_library("rtc_pc_base") {
     "../media:rtc_h264_profile_id",
     "../media:rtc_media_base",
     "../p2p:rtc_p2p",
+    "../rtc_base:networkroute",
     "../rtc_base:rtc_base",
     "../rtc_base:rtc_task_queue",
   ]

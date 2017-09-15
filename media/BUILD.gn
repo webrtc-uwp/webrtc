@@ -134,7 +134,9 @@ rtc_static_library("rtc_media_base") {
 rtc_static_library("rtc_audio_video") {
   defines = []
   libs = []
-  deps = []
+  deps = [
+    "../rtc_base:networkroute",
+  ]
   sources = [
     "engine/adm_helpers.cc",
     "engine/adm_helpers.h",
@@ -339,6 +341,7 @@ if (rtc_include_tests) {
       "../modules/audio_processing:audio_processing",
       "../modules/rtp_rtcp:rtp_rtcp",
       "../p2p:rtc_p2p",
+      "../rtc_base:networkroute",
     ]
     sources = [
       "base/fakemediaengine.h",
