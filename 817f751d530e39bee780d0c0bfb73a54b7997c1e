@@ -19,6 +19,29 @@
     },
     {
       "key": {
+        "uuid": "88d9660b_3b4b3ebb",
+        "filename": "modules/audio_coding/neteq/statistics_calculator.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-15T23:14:10Z",
+      "side": 1,
+      "message": "I don\u0027t feel good about this; this means the stats on average will show a higher number of concealed samples than in reality.\n\nI think we need to store the negative number somewhere, and then next time a *positive* number shows up, have to two cancel out. Something like this:\n\nif (num_samples \u003c 0) {\n  lifetime_stats_.concealed_samples_correction -\u003d num_samples;\n} else {\n  int canceled_out \u003d std::min(num_samples, lifetime_stats_.concealed_samples_correction);\n  lifetime_stats_.concealed_samples_correction -\u003d canceled out;\n  lifetime_stats_.concealed_samples +\u003d num_samples - canceled_out;\n}",
+      "range": {
+        "startLine": 169,
+        "startChar": 36,
+        "endLine": 169,
+        "endChar": 37
+      },
+      "revId": "817f751d530e39bee780d0c0bfb73a54b7997c1e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "98a6c662_7520b108",
         "filename": "modules/audio_coding/neteq/statistics_calculator.cc",
         "patchSetId": 1
