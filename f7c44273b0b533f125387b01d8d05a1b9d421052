@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6fa71d6d_8b1b86b8",
+        "filename": "logging/rtc_event_log/rtc_event_log.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-09-15T12:24:07Z",
+      "side": 1,
+      "message": "Shouldn\u0027t these also be in the anonymous namespace?",
+      "revId": "f7c44273b0b533f125387b01d8d05a1b9d421052",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
