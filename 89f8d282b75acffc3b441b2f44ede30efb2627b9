@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "3759e4dc_dab64dc2",
+        "filename": "webrtc/modules/rtp_rtcp/source/rtcp_packet/bye.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 5147
+      },
+      "writtenOn": "2017-09-15T14:16:35Z",
+      "side": 1,
+      "message": "I\u0027m not sure I get the last sentence in your comment.",
+      "parentUuid": "02a5317f_d1ed7aad",
+      "revId": "89f8d282b75acffc3b441b2f44ede30efb2627b9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6540712a_1f873414",
         "filename": "webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.cc",
         "patchSetId": 3
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "there is that check one line above.",
       "parentUuid": "6540712a_1f873414",
+      "revId": "89f8d282b75acffc3b441b2f44ede30efb2627b9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8a2f2bb_bfd07cc2",
+        "filename": "webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 5147
+      },
+      "writtenOn": "2017-09-15T14:16:35Z",
+      "side": 1,
+      "message": "So dchecked_cast would just redo the work when running in debug, right? So maybe just drop the dcheck_cast here, or switch to saturated_cast?",
+      "parentUuid": "6e44a432_2ee7f91d",
       "revId": "89f8d282b75acffc3b441b2f44ede30efb2627b9",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
