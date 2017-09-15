@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "88478112_0d2b4320",
+        "filename": "call/audio_receive_stream.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-15T15:09:09Z",
+      "side": 1,
+      "message": "\u003cbikeshedding\u003e\nThis style isn\u0027t very common, except in old C code. Not used in call/ or audio/, so please stick to the // style here.\n\u003c/bikeshedding\u003e\n\nAlso, adding back the link to https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamtrackstats would be convenient. Agree it is a good idea to not repeat it for every field.",
+      "parentUuid": "c8ca2df4_3cd81507",
+      "range": {
+        "startLine": 53,
+        "startChar": 4,
+        "endLine": 53,
+        "endChar": 5
+      },
+      "revId": "7d08eb27e0953eccc68d30660b56dba3098db98f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c63a6063_f1b8c2ee",
         "filename": "media/base/mediachannel.h",
         "patchSetId": 6
@@ -117,6 +141,81 @@
       "revId": "7d08eb27e0953eccc68d30660b56dba3098db98f",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d874a6fe_f0f9df4e",
+        "filename": "media/base/mediachannel.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 682,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-15T15:09:09Z",
+      "side": 1,
+      "message": "Don\u0027t see this style elsewhere in media/ either. Revert.",
+      "parentUuid": "e2cca461_b4a3237e",
+      "range": {
+        "startLine": 682,
+        "startChar": 2,
+        "endLine": 682,
+        "endChar": 3
+      },
+      "revId": "7d08eb27e0953eccc68d30660b56dba3098db98f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1095c8e5_4ed81ea8",
+        "filename": "modules/audio_coding/neteq/include/neteq.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-15T15:09:09Z",
+      "side": 1,
+      "message": "Revert",
+      "revId": "7d08eb27e0953eccc68d30660b56dba3098db98f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b7a7327_920699fa",
+        "filename": "modules/audio_coding/neteq/neteq_impl.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 1576,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-15T15:09:09Z",
+      "side": 1,
+      "message": "is_new_concealment_event ? That\u0027s the term we use elsewhere.",
+      "revId": "7d08eb27e0953eccc68d30660b56dba3098db98f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f104e9d_11bdbe90",
+        "filename": "modules/audio_coding/neteq/statistics_calculator.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-15T15:09:09Z",
+      "side": 1,
+      "message": "..ment ?",
+      "revId": "7d08eb27e0953eccc68d30660b56dba3098db98f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
