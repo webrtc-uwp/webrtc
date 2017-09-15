@@ -46,4 +46,8 @@ void CaptureResultDesktopCapturerWrapper::OnCaptureResult(
   callback_->OnCaptureResult(result, std::move(frame));
 }
 
+CaptureResultDesktopCapturerWrapper::ResultObserver::ResultObserver() = default;
+CaptureResultDesktopCapturerWrapper::
+ResultObserver::~ResultObserver() = default;
+
 }  // namespace webrtc
