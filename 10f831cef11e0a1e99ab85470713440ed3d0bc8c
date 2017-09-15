@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25b282dc_62dda412",
+        "filename": "webrtc/call/audio_receive_stream.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-15T02:43:13Z",
+      "side": 1,
+      "message": "These comments are getting a little redundant. Could we do something like this?\n\n/****************************************************************************\n * Stats below correspond to similarly-named fields in the WebRTC stats spec.\n ***************************************************************************/\ndouble total_output_energy;\nuint64_t total_samples_received;\ndouble total_output_duration;\nuint64_t concealed_samples;\nuint64_t concealment_events;\n/******************************************************************************\n * Stats below DO NOT correspond directly to anything in the WebRTC stats spec.\n *****************************************************************************/\nfloat expand_rate;\nfloat speech_expand_rate;\n...",
+      "revId": "10f831cef11e0a1e99ab85470713440ed3d0bc8c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c566a33_a573b3f7",
+        "filename": "webrtc/media/base/mediachannel.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-15T02:43:13Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "10f831cef11e0a1e99ab85470713440ed3d0bc8c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "57cee5b7_39b968c6",
+        "filename": "webrtc/modules/audio_coding/neteq/include/neteq.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-15T02:43:13Z",
+      "side": 1,
+      "message": "And here.",
+      "revId": "10f831cef11e0a1e99ab85470713440ed3d0bc8c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
