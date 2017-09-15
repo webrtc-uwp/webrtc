@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "79c071a5_9f35a798",
+        "filename": "webrtc/modules/rtp_rtcp/source/rtcp_packet/bye.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-15T15:05:06Z",
+      "side": 1,
+      "message": "changed RtcpPacket::CreateHeader to take size_t as 1st parameter (so that win64 bots would not error on \u0027possible\u0027 data loss).\nstatic cast from size_t to uint8_t done inside RtcpPacket::CreateHeader.\nthis is cleaner for rtcp messages that use it as count rather than format.",
+      "parentUuid": "3759e4dc_dab64dc2",
+      "revId": "89f8d282b75acffc3b441b2f44ede30efb2627b9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6540712a_1f873414",
         "filename": "webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.cc",
         "patchSetId": 3
@@ -105,6 +123,24 @@
       "revId": "89f8d282b75acffc3b441b2f44ede30efb2627b9",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16086a4b_5d21472d",
+        "filename": "webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-15T15:05:06Z",
+      "side": 1,
+      "message": "good point, replaced all dchecked_cast with static_cast where there is stricter DCHECK.\nStill have to use static_cast to make win bots happy.",
+      "parentUuid": "c8a2f2bb_bfd07cc2",
+      "revId": "89f8d282b75acffc3b441b2f44ede30efb2627b9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
