@@ -24,6 +24,7 @@
 #include "modules/audio_processing/beamformer/mock_nonlinear_beamformer.h"
 #include "modules/audio_processing/common.h"
 #include "modules/audio_processing/include/audio_processing.h"
+#include "modules/audio_processing/include/mock_audio_processing.h"
 #include "modules/audio_processing/level_controller/level_controller_constants.h"
 #include "modules/audio_processing/test/protobuf_utils.h"
 #include "modules/audio_processing/test/test_utils.h"
@@ -1305,7 +1306,7 @@ TEST_F(ApmTest, AgcOnlyAdaptsWhenTargetSignalIsPresent) {
   testing::NiceMock<MockNonlinearBeamformer>* beamformer =
       new testing::NiceMock<MockNonlinearBeamformer>(geometry, 1u);
   std::unique_ptr<AudioProcessing> apm(
-      AudioProcessing::Create(config, beamformer));
+      AudioProcessing::Create(config, nullptr, beamformer));
   EXPECT_EQ(kNoErr, apm->gain_control()->Enable(true));
   ChannelBuffer<float> src_buf(kSamplesPerChannel, kNumInputChannels);
   ChannelBuffer<float> dest_buf(kSamplesPerChannel, kNumOutputChannels);
@@ -2889,6 +2890,30 @@ TEST(ApmConfiguration, InValidConfigBehavior) {
   EXPECT_NEAR(kTargetLcPeakLeveldBFS,
               apm->config_.level_controller.initial_peak_level_dbfs,
               std::numeric_limits<float>::epsilon());
+}
+
+void FillAudioFrameWithZeros(AudioFrame& audio) {
+  const size_t sample_rate_hz = AudioProcessing::NativeRate::kSampleRate16kHz;
+  const size_t sample_count = static_cast<size_t>(
+      AudioProcessing::kChunkSizeMs * sample_rate_hz / 1000);
+  audio.UpdateFrame(0, 0, nullptr, sample_count, sample_rate_hz,
+                    AudioFrame::SpeechType::kNormalSpeech,
+                    AudioFrame::VADActivity::kVadActive);
+}
+
+TEST(ApmConfiguration, EnablePostProcessing) {
+  // Verify that apm uses a capture post processing module if one is provided.
+  webrtc::Config webrtc_config;
+  auto mock_post_processor_ptr =
+      new testing::NiceMock<test::MockPostProcessing>();
+  auto mock_post_processor =
+      std::unique_ptr<PostProcessing>(mock_post_processor_ptr);
+  rtc::scoped_refptr<AudioProcessing> apm = AudioProcessing::Create(
+      webrtc_config, std::move(mock_post_processor), nullptr);
+  EXPECT_CALL(*mock_post_processor_ptr, Process(testing::_)).Times(1);
+  AudioFrame audio;
+  FillAudioFrameWithZeros(audio);
+  apm->ProcessStream(&audio);
 }
 
 }  // namespace webrtc
