@@ -15,11 +15,8 @@
 #include "webrtc/rtc_base/gunit.h"
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/ptr_util.h"
-#include "webrtc/rtc_base/ssladapter.h"
-#include "webrtc/rtc_base/sslstreamadapter.h"
 #include "webrtc/rtc_base/stringencode.h"
 #include "webrtc/rtc_base/stringutils.h"
-#include "webrtc/rtc_base/thread.h"
 #ifdef WEBRTC_ANDROID
 #include "webrtc/pc/test/androidtestinitializer.h"
 #endif
