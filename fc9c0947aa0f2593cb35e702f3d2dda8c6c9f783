@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bf4efe20_300c6812",
+        "filename": "webrtc/pc/peerconnectionunittestfixture.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 5039
+      },
+      "writtenOn": "2017-09-15T22:26:55Z",
+      "side": 1,
+      "message": "The intent was to have the test fixture define factory methods which would create a wrapper, set specific data fields on it, then call CreatePeerConnection to finalize the wrapper. But it looks just about as good to have the factory method construct a wrapper with all the PeerConnection parameters (which will create the PeerConnection), then set specific data fields on it before returning to the test. I\u0027ve changed that in the latest patch set.",
+      "parentUuid": "e8528c38_b395c0f4",
+      "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ae1500ad_74adc2f7",
         "filename": "webrtc/pc/peerconnectionunittestfixture.cc",
         "patchSetId": 3
@@ -33,6 +51,24 @@
       "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d16e9de0_291331e7",
+        "filename": "webrtc/pc/peerconnectionunittestfixture.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 5039
+      },
+      "writtenOn": "2017-09-15T22:26:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ae1500ad_74adc2f7",
+      "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "56ad6046_8ea02364",
+        "filename": "webrtc/pc/peerconnectionunittestfixture.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 5039
+      },
+      "writtenOn": "2017-09-15T22:26:55Z",
+      "side": 1,
+      "message": "CreateOffer doesn\u0027t return anything?",
+      "parentUuid": "1d97cc08_9f18e7a2",
+      "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b70acb98_e6099e9e",
         "filename": "webrtc/pc/peerconnectionunittestfixture.cc",
         "patchSetId": 3
@@ -64,6 +118,24 @@
       "writtenOn": "2017-09-15T03:08:42Z",
       "side": 1,
       "message": "Here too.",
+      "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "18fab058_5bcf874c",
+        "filename": "webrtc/pc/peerconnectionunittestfixture.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 5039
+      },
+      "writtenOn": "2017-09-15T22:26:55Z",
+      "side": 1,
+      "message": "CreateAnswer doesn\u0027t return anything?",
+      "parentUuid": "b70acb98_e6099e9e",
       "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
@@ -121,6 +193,24 @@
     },
     {
       "key": {
+        "uuid": "4b4a6972_6242ea2a",
+        "filename": "webrtc/pc/peerconnectionunittestfixture.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 5039
+      },
+      "writtenOn": "2017-09-15T22:26:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "92c05482_9f79db48",
+      "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e39ccfd6_57905dbe",
         "filename": "webrtc/pc/peerconnectionunittestfixture.h",
         "patchSetId": 3
@@ -135,6 +225,24 @@
       "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "56cc9e02_aa335c7a",
+        "filename": "webrtc/pc/peerconnectionunittestfixture.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 5039
+      },
+      "writtenOn": "2017-09-15T22:26:55Z",
+      "side": 1,
+      "message": "I\u0027ll leave a TODO to make PeerConnectionWrapper in peerconnection_integrationtest a subclass of this. I think it\u0027s easier to read if tests subclass the wrapper and add more specific methods rather than having them all in one class.",
+      "parentUuid": "e39ccfd6_57905dbe",
+      "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -155,6 +263,24 @@
     },
     {
       "key": {
+        "uuid": "1725906c_05b3e905",
+        "filename": "webrtc/pc/peerconnectionunittestfixture.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 5039
+      },
+      "writtenOn": "2017-09-15T22:26:55Z",
+      "side": 1,
+      "message": "Yeah, originally I thought there would be more in here but it looks like most everything ended up in PeerConnectionWrapper/its subclasses.",
+      "parentUuid": "01528c28_888ee92e",
+      "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "32319ab1_b8314b22",
         "filename": "webrtc/pc/test/mockpeerconnectionobservers.h",
         "patchSetId": 3
@@ -169,6 +295,24 @@
       "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "732ce689_fe64bff6",
+        "filename": "webrtc/pc/test/mockpeerconnectionobservers.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 5039
+      },
+      "writtenOn": "2017-09-15T22:26:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "32319ab1_b8314b22",
+      "revId": "fc9c0947aa0f2593cb35e702f3d2dda8c6c9f783",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
