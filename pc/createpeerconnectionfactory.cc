@@ -68,9 +68,8 @@ rtc::scoped_refptr<PeerConnectionFactoryInterface> CreatePeerConnectionFactory(
       CreateRtcEventLogFactory();
 
   return CreateModularPeerConnectionFactory(
-      network_thread, worker_thread, signaling_thread, video_encoder_factory,
-      video_decoder_factory, std::move(media_engine), std::move(call_factory),
-      std::move(event_log_factory));
+      network_thread, worker_thread, signaling_thread, std::move(media_engine),
+      std::move(call_factory), std::move(event_log_factory));
 }
 
 rtc::scoped_refptr<PeerConnectionFactoryInterface>
