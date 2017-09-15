@@ -50,7 +50,7 @@ std::vector<int64_t> TimestampsMs(
   return timestamps;
 }
 
-class MockPacketRouter : public PacketRouter {
+class MockPacketRouter : public TransportFeedbackSenderInterface {
  public:
   MOCK_METHOD1(SendTransportFeedback,
                bool(rtcp::TransportFeedback* feedback_packet));
