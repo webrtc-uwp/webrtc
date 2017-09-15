@@ -16,6 +16,7 @@
 #include "modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/safe_conversions.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -87,7 +88,8 @@ bool Bye::Create(uint8_t* packet,
   }
   const size_t index_end = *index + BlockLength();
 
-  CreateHeader(1 + csrcs_.size(), kPacketType, HeaderLength(), packet, index);
+  CreateHeader(rtc::dchecked_cast<uint8_t>(1 + csrcs_.size()), kPacketType,
+               HeaderLength(), packet, index);
   // Store srcs of the leaving clients.
   ByteWriter<uint32_t>::WriteBigEndian(&packet[*index], sender_ssrc_);
   *index += sizeof(uint32_t);
@@ -97,7 +99,7 @@ bool Bye::Create(uint8_t* packet,
   }
   // Store the reason to leave.
   if (!reason_.empty()) {
-    uint8_t reason_length = reason_.size();
+    uint8_t reason_length = rtc::dchecked_cast<uint8_t>(reason_.size());
     packet[(*index)++] = reason_length;
     memcpy(&packet[*index], reason_.data(), reason_length);
     *index += reason_length;

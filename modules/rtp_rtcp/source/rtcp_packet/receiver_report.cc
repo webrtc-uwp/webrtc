@@ -16,6 +16,7 @@
 #include "modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/safe_conversions.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -76,8 +77,8 @@ bool ReceiverReport::Create(uint8_t* packet,
     if (!OnBufferFull(packet, index, callback))
       return false;
   }
-  CreateHeader(report_blocks_.size(), kPacketType, HeaderLength(), packet,
-               index);
+  CreateHeader(rtc::dchecked_cast<uint8_t>(report_blocks_.size()), kPacketType,
+               HeaderLength(), packet, index);
   ByteWriter<uint32_t>::WriteBigEndian(packet + *index, sender_ssrc_);
   *index += kRrBaseLength;
   for (const ReportBlock& block : report_blocks_) {
