@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "406bcaf0_9d4d0ef0",
+        "filename": "webrtc/modules/desktop_capture/capture_result_desktop_capturer_wrapper.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 5030
+      },
+      "writtenOn": "2017-09-15T16:12:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f3eacf02_5793eda0",
+      "range": {
+        "startLine": 38,
+        "startChar": 69,
+        "endLine": 38,
+        "endChar": 0
+      },
+      "revId": "884be1acb35b321a9c9e1f752ce697348f939484",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "39fc4591_d977625a",
         "filename": "webrtc/modules/desktop_capture/capture_result_desktop_capturer_wrapper.h",
         "patchSetId": 4
@@ -45,6 +69,30 @@
       "revId": "884be1acb35b321a9c9e1f752ce697348f939484",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1548523d_af2f9487",
+        "filename": "webrtc/modules/desktop_capture/capture_result_desktop_capturer_wrapper.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 5030
+      },
+      "writtenOn": "2017-09-15T16:12:47Z",
+      "side": 1,
+      "message": "I think raw-pointer should be enough: in general the |observer| should be |this|.",
+      "parentUuid": "39fc4591_d977625a",
+      "range": {
+        "startLine": 48,
+        "startChar": 48,
+        "endLine": 48,
+        "endChar": 0
+      },
+      "revId": "884be1acb35b321a9c9e1f752ce697348f939484",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
