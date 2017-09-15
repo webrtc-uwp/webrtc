@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9ad2d8d5_f1bd98ac",
+        "filename": "call/audio_receive_stream.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 5091
+      },
+      "writtenOn": "2017-09-15T13:20:53Z",
+      "side": 1,
+      "message": "I actually don\u0027t think we use this comment style. Have you seen it in other places?",
+      "range": {
+        "startLine": 53,
+        "startChar": 4,
+        "endLine": 53,
+        "endChar": 5
+      },
+      "revId": "7d08eb27e0953eccc68d30660b56dba3098db98f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c63a6063_f1b8c2ee",
+        "filename": "media/base/mediachannel.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 682,
+      "author": {
+        "id": 5091
+      },
+      "writtenOn": "2017-09-15T13:20:53Z",
+      "side": 1,
+      "message": "Same here",
+      "range": {
+        "startLine": 682,
+        "startChar": 2,
+        "endLine": 682,
+        "endChar": 3
+      },
+      "revId": "7d08eb27e0953eccc68d30660b56dba3098db98f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
