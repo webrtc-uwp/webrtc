@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2963139e_8b3709ae",
+        "filename": "modules/rtp_rtcp/source/receive_statistics_impl.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-18T09:54:18Z",
+      "side": 1,
+      "message": "Needs a comment here or in the header file, on the purpose of the method. What\u0027s being \"Reset\"?",
+      "range": {
+        "startLine": 200,
+        "startChar": 29,
+        "endLine": 200,
+        "endChar": 56
+      },
+      "revId": "be3ac9720ac447ea76b640fffa0a55acb1e9532e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3cf2487c_4a906d72",
+        "filename": "modules/rtp_rtcp/source/receive_statistics_impl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-18T09:54:18Z",
+      "side": 1,
+      "message": "What would it take to delete the reset argument, treating it as always true?\n\nOnly possibly non-true call is here,  https://codesearch.chromium.org/chromium/src/third_party/webrtc/voice_engine/channel.cc?type\u003dcs\u0026sq\u003dpackage:chromium\u0026l\u003d2641, where it\u0027s false if RTCP mode !\u003d RtcpMode::kOff",
+      "range": {
+        "startLine": 34,
+        "startChar": 54,
+        "endLine": 34,
+        "endChar": 59
+      },
+      "revId": "be3ac9720ac447ea76b640fffa0a55acb1e9532e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5af9937b_b0c707b4",
+        "filename": "modules/rtp_rtcp/source/receive_statistics_impl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-18T09:54:18Z",
+      "side": 1,
+      "message": "Does it make sense to delete this \"convenience\" alias in this cl? Since you delete StatisticianMap.",
+      "range": {
+        "startLine": 127,
+        "startChar": 54,
+        "endLine": 127,
+        "endChar": 73
+      },
+      "revId": "be3ac9720ac447ea76b640fffa0a55acb1e9532e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9b4d7db_98edf8b6",
+        "filename": "modules/rtp_rtcp/source/receive_statistics_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-18T09:54:18Z",
+      "side": 1,
+      "message": "It\u0027s unobvious what\u0027s being returned here. Rename |statisticians| to |report_blocks|. And maybe write an explicit type, instead of auto.",
+      "range": {
+        "startLine": 74,
+        "startChar": 7,
+        "endLine": 74,
+        "endChar": 20
+      },
+      "revId": "be3ac9720ac447ea76b640fffa0a55acb1e9532e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
