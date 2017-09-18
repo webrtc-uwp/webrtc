@@ -323,8 +323,10 @@ TEST_F(RtpRtcpImplTest, Rtt) {
   header.sequenceNumber = 123;
   header.ssrc = kSenderSsrc;
   header.headerLength = 12;
+  // XXX
+#if 0
   receiver_.receive_statistics_->IncomingPacket(header, 100, false);
-
+#endif
   // Send Frame before sending an SR.
   SendFrame(&sender_, kBaseLayerTid);
   // Sender module should send an SR.

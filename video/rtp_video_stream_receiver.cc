@@ -354,8 +354,16 @@ void RtpVideoStreamReceiver::OnRtpPacket(const RtpPacketReceived& packet) {
   if (!packet.recovered()) {
     // TODO(nisse): We should pass a recovered flag to stats, to aid
     // fixing bug bugs.webrtc.org/6339.
-    rtp_receive_statistics_->IncomingPacket(
-        header, packet.size(), IsPacketRetransmitted(header, in_order));
+
+    // TODO(nisse): The argument retransmitted = IsPacketRetransmitted(header,
+    // in_order) lost here. Both IsPacketInOrder and IsPacketRetransmitted look
+    // like wrappers deferring the real work to the object returned by
+    // rtp_receive_statistics_->GetStatistician(), so we could perhaps move that
+    // responsibility there. One obstacle is that |in_order| is passed also to
+    // |rtp_receiver_->IncomingRtpPacket|, where it looks like it is ultimately
+    // used to control updates of |last_received_frame_time_ms_| and
+    // |last_received_sequence_number_|.
+    rtp_receive_statistics_->OnRtpPacket(packet);
   }
 
   for (RtpPacketSinkInterface* secondary_sink : secondary_sinks_) {

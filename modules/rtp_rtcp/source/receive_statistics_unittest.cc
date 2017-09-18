@@ -17,8 +17,10 @@
 
 namespace webrtc {
 
+#if 0
 const size_t kPacketSize1 = 100;
 const size_t kPacketSize2 = 300;
+#endif
 const uint32_t kSsrc1 = 1;
 const uint32_t kSsrc2 = 2;
 
@@ -42,6 +44,8 @@ class ReceiveStatisticsTest : public ::testing::Test {
   RTPHeader header2_;
 };
 
+// XXX
+#if 0
 TEST_F(ReceiveStatisticsTest, TwoIncomingSsrcs) {
   receive_statistics_->IncomingPacket(header1_, kPacketSize1, false);
   ++header1_.sequenceNumber;
@@ -238,6 +242,7 @@ TEST_F(ReceiveStatisticsTest, RtcpCallbacks) {
   // Should not have been called after deregister.
   EXPECT_EQ(1u, callback.num_calls_);
 }
+#endif
 
 class RtpTestCallback : public StreamDataCountersCallback {
  public:
@@ -275,6 +280,8 @@ class RtpTestCallback : public StreamDataCountersCallback {
   StreamDataCounters stats_;
 };
 
+// XXX
+#if 0
 TEST_F(ReceiveStatisticsTest, RtpCallbacks) {
   RtpTestCallback callback;
   receive_statistics_->RegisterRtpStatisticsCallback(&callback);
@@ -379,4 +386,5 @@ TEST_F(ReceiveStatisticsTest, RtpCallbacksFecFirst) {
   expected.fec.packets = 1;
   callback.Matches(2, kSsrc1, expected);
 }
+#endif
 }  // namespace webrtc

@@ -59,8 +59,11 @@ void NadaBweReceiver::ReceivePacket(int64_t arrival_time_ms,
   const int64_t kDelayMaxThresholdMs = 400;  // Referred as d_max.
 
   clock_.AdvanceTimeMilliseconds(arrival_time_ms - clock_.TimeInMilliseconds());
+#if 0
+  // XXX
   recv_stats_->IncomingPacket(media_packet.header(),
                               media_packet.payload_size(), false);
+#endif
   // Refered as x_n.
   int64_t delay_ms = arrival_time_ms - media_packet.sender_timestamp_ms();
 

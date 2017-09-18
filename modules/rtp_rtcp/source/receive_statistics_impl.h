@@ -41,9 +41,7 @@ class StreamStatisticianImpl : public StreamStatistician {
                                int64_t min_rtt) const override;
   bool IsPacketInOrder(uint16_t sequence_number) const override;
 
-  void IncomingPacket(const RTPHeader& rtp_header,
-                      size_t packet_length,
-                      bool retransmitted);
+  void OnRtpPacket(const RtpPacketReceived& packet);
   void FecPacketReceived(const RTPHeader& header, size_t packet_length);
   void SetMaxReorderingThreshold(int max_reordering_threshold);
   virtual void LastReceiveTimeNtp(uint32_t* secs, uint32_t* frac) const;
@@ -103,9 +101,7 @@ class ReceiveStatisticsImpl : public ReceiveStatistics,
   std::vector<rtcp::ReportBlock> RtcpReportBlocks(size_t max_blocks) override;
 
   // Implement ReceiveStatistics.
-  void IncomingPacket(const RTPHeader& header,
-                      size_t packet_length,
-                      bool retransmitted) override;
+  void OnRtpPacket(const RtpPacketReceived& packet) override;
   void FecPacketReceived(const RTPHeader& header,
                          size_t packet_length) override;
   StatisticianMap GetActiveStatisticians() const override;

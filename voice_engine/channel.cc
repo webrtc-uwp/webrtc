@@ -1710,8 +1710,14 @@ bool Channel::OnRtpPacketWithHeader(const uint8_t* received_packet,
   if (header->payload_type_frequency < 0)
     return false;
   bool in_order = IsPacketInOrder(*header);
+  // TODO(nisse): Passes retransmitted = IsPacketRetransmitted(*header,
+  // in_order), Like in RtpVideoStreamReceiver, infering in_order and
+  // rretransmitted is delegated to the object returned by
+  // rtp_receive_statistics_->GetStatistician().
+#if 0
   rtp_receive_statistics_->IncomingPacket(
       *header, length, IsPacketRetransmitted(*header, in_order));
+#endif
   rtp_payload_registry_->SetIncomingPayloadType(*header);
 
   return ReceivePacket(received_packet, length, *header, in_order);

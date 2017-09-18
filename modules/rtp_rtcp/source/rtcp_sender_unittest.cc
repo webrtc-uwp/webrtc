@@ -247,6 +247,8 @@ class RtcpSenderTest : public ::testing::Test {
   }
 
   void InsertIncomingPacket(uint32_t remote_ssrc, uint16_t seq_num) {
+    // XXX
+#if 0
     RTPHeader header;
     header.ssrc = remote_ssrc;
     header.sequenceNumber = seq_num;
@@ -254,6 +256,7 @@ class RtcpSenderTest : public ::testing::Test {
     header.headerLength = 12;
     size_t kPacketLength = 100;
     receive_statistics_->IncomingPacket(header, kPacketLength, false);
+#endif
   }
 
   test::RtcpPacketParser* parser() { return &test_transport_.parser_; }

@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_config.h"
 #include "modules/rtp_rtcp/source/time_util.h"
 #include "rtc_base/logging.h"
@@ -54,11 +55,12 @@ StreamStatisticianImpl::StreamStatisticianImpl(
       rtcp_callback_(rtcp_callback),
       rtp_callback_(rtp_callback) {}
 
-void StreamStatisticianImpl::IncomingPacket(const RTPHeader& header,
-                                            size_t packet_length,
-                                            bool retransmitted) {
+void StreamStatisticianImpl::OnRtpPacket(const RtpPacketReceived& packet) {
+  // XXX
+#if 0
   auto counters = UpdateCounters(header, packet_length, retransmitted);
   rtp_callback_->DataCountersUpdated(counters, ssrc_);
+#endif
 }
 
 StreamDataCounters StreamStatisticianImpl::UpdateCounters(
@@ -374,25 +376,23 @@ ReceiveStatisticsImpl::~ReceiveStatisticsImpl() {
   }
 }
 
-void ReceiveStatisticsImpl::IncomingPacket(const RTPHeader& header,
-                                           size_t packet_length,
-                                           bool retransmitted) {
+void ReceiveStatisticsImpl::OnRtpPacket(const RtpPacketReceived& packet) {
   StreamStatisticianImpl* impl;
   {
     rtc::CritScope cs(&receive_statistics_lock_);
-    StatisticianImplMap::iterator it = statisticians_.find(header.ssrc);
+    StatisticianImplMap::iterator it = statisticians_.find(packet.Ssrc());
     if (it != statisticians_.end()) {
       impl = it->second;
     } else {
-      impl = new StreamStatisticianImpl(header.ssrc, clock_, this, this);
-      statisticians_[header.ssrc] = impl;
+      impl = new StreamStatisticianImpl(packet.Ssrc(), clock_, this, this);
+      statisticians_[packet.Ssrc()] = impl;
     }
   }
   // StreamStatisticianImpl instance is created once and only destroyed when
   // this whole ReceiveStatisticsImpl is destroyed. StreamStatisticianImpl has
   // it's own locking so don't hold receive_statistics_lock_ (potential
   // deadlock).
-  impl->IncomingPacket(header, packet_length, retransmitted);
+  impl->OnRtpPacket(packet);
 }
 
 void ReceiveStatisticsImpl::FecPacketReceived(const RTPHeader& header,

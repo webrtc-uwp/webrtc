@@ -14,6 +14,7 @@
 #include <map>
 #include <vector>
 
+#include "call/rtp_packet_sink_interface.h"
 #include "modules/include/module.h"
 #include "modules/include/module_common_types.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/report_block.h"
@@ -57,16 +58,15 @@ class StreamStatistician {
 
 typedef std::map<uint32_t, StreamStatistician*> StatisticianMap;
 
-class ReceiveStatistics : public ReceiveStatisticsProvider {
+class ReceiveStatistics : public ReceiveStatisticsProvider,
+                          public RtpPacketSinkInterface {
  public:
   ~ReceiveStatistics() override = default;
 
   static ReceiveStatistics* Create(Clock* clock);
 
   // Updates the receive statistics with this packet.
-  virtual void IncomingPacket(const RTPHeader& rtp_header,
-                              size_t packet_length,
-                              bool retransmitted) = 0;
+  void OnRtpPacket(const RtpPacketReceived& packet) override = 0;
 
   // Increment counter for number of FEC packets received.
   virtual void FecPacketReceived(const RTPHeader& header,

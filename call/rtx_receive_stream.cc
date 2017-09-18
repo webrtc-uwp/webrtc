@@ -36,10 +36,8 @@ RtxReceiveStream::~RtxReceiveStream() = default;
 
 void RtxReceiveStream::OnRtpPacket(const RtpPacketReceived& rtx_packet) {
   if (rtp_receive_statistics_) {
-    RTPHeader header;
-    rtx_packet.GetHeader(&header);
-    rtp_receive_statistics_->IncomingPacket(header, rtx_packet.size(),
-                                            false /* retransmitted */);
+    // XXX retransmitted == false
+    rtp_receive_statistics_->OnRtpPacket(rtx_packet);
   }
   rtc::ArrayView<const uint8_t> payload = rtx_packet.payload();
 

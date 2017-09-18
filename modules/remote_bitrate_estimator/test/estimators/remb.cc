@@ -85,9 +85,11 @@ RembReceiver::~RembReceiver() {
 
 void RembReceiver::ReceivePacket(int64_t arrival_time_ms,
                                  const MediaPacket& media_packet) {
+  // XXX
+#if 0
   recv_stats_->IncomingPacket(media_packet.header(),
                               media_packet.payload_size(), false);
-
+#endif
   latest_estimate_bps_ = -1;
 
   int64_t step_ms = std::max<int64_t>(estimator_->TimeUntilNextProcess(), 0);
