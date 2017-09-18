@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1b174f1f_5bbe66f8",
+        "filename": "modules/rtp_rtcp/source/receive_statistics_impl.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-18T10:55:58Z",
+      "side": 1,
+      "message": "same as |reset| flag in the function above.\nAdded simple comment to the header file.",
+      "parentUuid": "2963139e_8b3709ae",
+      "range": {
+        "startLine": 200,
+        "startChar": 29,
+        "endLine": 200,
+        "endChar": 56
+      },
+      "revId": "be3ac9720ac447ea76b640fffa0a55acb1e9532e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3cf2487c_4a906d72",
         "filename": "modules/rtp_rtcp/source/receive_statistics_impl.h",
         "patchSetId": 1
@@ -45,6 +69,30 @@
       "revId": "be3ac9720ac447ea76b640fffa0a55acb1e9532e",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "149a2812_404c566a",
+        "filename": "modules/rtp_rtcp/source/receive_statistics_impl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-18T10:55:58Z",
+      "side": 1,
+      "message": "Too much to do it in this CL.\nOne non-trivial call from voice engine is enough to postpone that cleanup for later.",
+      "parentUuid": "3cf2487c_4a906d72",
+      "range": {
+        "startLine": 34,
+        "startChar": 54,
+        "endLine": 34,
+        "endChar": 59
+      },
+      "revId": "be3ac9720ac447ea76b640fffa0a55acb1e9532e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "1aa6607e_ff252a65",
+        "filename": "modules/rtp_rtcp/source/receive_statistics_impl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-18T10:55:58Z",
+      "side": 1,
+      "message": "a bit out of scope of this CL, but a good cleanup.\nDone",
+      "parentUuid": "5af9937b_b0c707b4",
+      "range": {
+        "startLine": 127,
+        "startChar": 54,
+        "endLine": 127,
+        "endChar": 73
+      },
+      "revId": "be3ac9720ac447ea76b640fffa0a55acb1e9532e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a9b4d7db_98edf8b6",
         "filename": "modules/rtp_rtcp/source/receive_statistics_unittest.cc",
         "patchSetId": 1
@@ -91,6 +163,30 @@
       "revId": "be3ac9720ac447ea76b640fffa0a55acb1e9532e",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7b634e7_4671c468",
+        "filename": "modules/rtp_rtcp/source/receive_statistics_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-18T10:55:58Z",
+      "side": 1,
+      "message": "only size is tested, so I\u0027ve combined expectation with the call.",
+      "parentUuid": "a9b4d7db_98edf8b6",
+      "range": {
+        "startLine": 74,
+        "startChar": 7,
+        "endLine": 74,
+        "endChar": 20
+      },
+      "revId": "be3ac9720ac447ea76b640fffa0a55acb1e9532e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
