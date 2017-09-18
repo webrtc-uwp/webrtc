@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 
-#include "media/base/streamparams.h"
+#include "api/streamparams.h"
 #include "media/engine/constants.h"
 #include "media/engine/simulcast.h"
 #include "rtc_base/arraysize.h"

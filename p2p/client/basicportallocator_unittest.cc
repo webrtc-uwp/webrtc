@@ -12,7 +12,7 @@
 #include <memory>
 
 #include "p2p/base/basicpacketsocketfactory.h"
-#include "p2p/base/p2pconstants.h"
+#include "api/p2pconstants.h"
 #include "p2p/base/p2ptransportchannel.h"
 #include "p2p/base/testrelayserver.h"
 #include "p2p/base/teststunserver.h"

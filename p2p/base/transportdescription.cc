@@ -10,7 +10,7 @@
 
 #include "p2p/base/transportdescription.h"
 
-#include "p2p/base/p2pconstants.h"
+#include "api/p2pconstants.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/stringutils.h"
 

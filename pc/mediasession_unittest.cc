@@ -14,7 +14,7 @@
 
 #include "media/base/codec.h"
 #include "media/base/testutils.h"
-#include "p2p/base/p2pconstants.h"
+#include "api/p2pconstants.h"
 #include "p2p/base/transportdescription.h"
 #include "p2p/base/transportinfo.h"
 #include "pc/mediasession.h"

@@ -27,7 +27,7 @@
 #include "api/peerconnectioninterface.h"
 #include "api/test/fakeconstraints.h"
 #include "media/engine/fakewebrtcvideoengine.h"
-#include "p2p/base/p2pconstants.h"
+#include "api/p2pconstants.h"
 #include "p2p/base/portinterface.h"
 #include "p2p/base/sessiondescription.h"
 #include "p2p/base/testturnserver.h"

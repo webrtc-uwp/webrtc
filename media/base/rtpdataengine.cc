@@ -13,7 +13,7 @@
 #include "media/base/codec.h"
 #include "media/base/mediaconstants.h"
 #include "media/base/rtputils.h"
-#include "media/base/streamparams.h"
+#include "api/streamparams.h"
 #include "rtc_base/copyonwritebuffer.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/logging.h"

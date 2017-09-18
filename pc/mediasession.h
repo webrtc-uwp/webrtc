@@ -24,7 +24,7 @@
 #include "media/base/mediachannel.h"
 #include "media/base/mediaconstants.h"
 #include "media/base/mediaengine.h"  // For DataChannelType
-#include "media/base/streamparams.h"
+#include "api/streamparams.h"
 #include "p2p/base/sessiondescription.h"
 #include "p2p/base/jseptransport.h"
 #include "p2p/base/transportdescriptionfactory.h"

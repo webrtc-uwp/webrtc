@@ -22,7 +22,7 @@
 #include "api/rtpreceiverinterface.h"
 #include "media/base/mediachannel.h"
 #include "media/base/mediaengine.h"
-#include "media/base/streamparams.h"
+#include "api/streamparams.h"
 #include "media/base/videosinkinterface.h"
 #include "media/base/videosourceinterface.h"
 #include "p2p/base/dtlstransportinternal.h"

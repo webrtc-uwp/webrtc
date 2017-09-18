@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "media/base/streamparams.h"
+#include "api/streamparams.h"
 #include "media/base/testutils.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/gunit.h"

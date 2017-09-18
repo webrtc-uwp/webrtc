@@ -14,8 +14,8 @@
 #include <string>
 #include <vector>
 
-#include "p2p/base/candidate.h"
-#include "p2p/base/p2pconstants.h"
+#include "api/candidate.h"
+#include "api/p2pconstants.h"
 #include "p2p/base/transportdescription.h"
 #include "rtc_base/helpers.h"
 

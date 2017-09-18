@@ -13,9 +13,9 @@
 #include <memory>
 #include <utility>  // for std::pair
 
-#include "p2p/base/candidate.h"
+#include "api/candidate.h"
 #include "p2p/base/dtlstransport.h"
-#include "p2p/base/p2pconstants.h"
+#include "api/p2pconstants.h"
 #include "p2p/base/p2ptransportchannel.h"
 #include "p2p/base/port.h"
 #include "rtc_base/bind.h"
