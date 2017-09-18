@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "70be7458_b9ed3d3c",
+        "filename": "presubmit_test.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 5087
+      },
+      "writtenOn": "2017-09-18T13:26:26Z",
+      "side": 1,
+      "message": "A CL is not its way to uniform the other classes in this file.",
+      "range": {
+        "startLine": 95,
+        "startChar": 26,
+        "endLine": 95,
+        "endChar": 30
+      },
+      "revId": "179dceae2c8a4f9a973f3be51265b34f9895a224",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a039111d_0a264ad5",
+        "filename": "presubmit_test.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 5087
+      },
+      "writtenOn": "2017-09-18T13:26:26Z",
+      "side": 1,
+      "message": "I avoided to add this assertion in all the other tests because it is redundant and too strict.",
+      "range": {
+        "startLine": 185,
+        "startChar": 0,
+        "endLine": 202,
+        "endChar": 23
+      },
+      "revId": "179dceae2c8a4f9a973f3be51265b34f9895a224",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    }
+  ]
+}
