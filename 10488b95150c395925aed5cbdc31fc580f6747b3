@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3335a494_4d118ddf",
+        "filename": "modules/rtp_rtcp/source/receive_statistics_impl.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 483,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-18T11:58:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1f3737e7_5ee116c9",
+      "range": {
+        "startLine": 483,
+        "startChar": 2,
+        "endLine": 483,
+        "endChar": 10
+      },
+      "revId": "10488b95150c395925aed5cbdc31fc580f6747b3",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5ff678b2_998dc674",
         "filename": "modules/rtp_rtcp/source/receive_statistics_impl.cc",
         "patchSetId": 2
@@ -45,6 +69,30 @@
       "revId": "10488b95150c395925aed5cbdc31fc580f6747b3",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "411390bb_e39b713d",
+        "filename": "modules/rtp_rtcp/source/receive_statistics_impl.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-18T11:58:49Z",
+      "side": 1,
+      "message": "prefer not:\nGetActiveStatisticsAndReset is a non-const function.\nit would still compile since statisticians is a map to non-const pointers, but want to stress that non-const function is called below.\n\nSame reason why this function itself is non-const.",
+      "parentUuid": "5ff678b2_998dc674",
+      "range": {
+        "startLine": 490,
+        "startChar": 7,
+        "endLine": 490,
+        "endChar": 11
+      },
+      "revId": "10488b95150c395925aed5cbdc31fc580f6747b3",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
