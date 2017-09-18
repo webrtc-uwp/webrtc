@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "802c71cb_cd0a3573",
+        "filename": "modules/desktop_capture/mapping_device_desktop_capturer_wrapper.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 5030
+      },
+      "writtenOn": "2017-09-18T21:20:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f0ffa22e_3dae562b",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 53
+      },
+      "revId": "0532ee64b7938859f70310cec0eb072e8045be2f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "39c51133_786b3cde",
         "filename": "modules/desktop_capture/mapping_device_desktop_capturer_wrapper.h",
         "patchSetId": 2
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "735a30af_e5514eed",
+        "filename": "modules/desktop_capture/mapping_device_desktop_capturer_wrapper.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 5030
+      },
+      "writtenOn": "2017-09-18T21:20:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "39c51133_786b3cde",
+      "range": {
+        "startLine": 24,
+        "startChar": 43,
+        "endLine": 24,
+        "endChar": 72
+      },
+      "revId": "0532ee64b7938859f70310cec0eb072e8045be2f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ea0c99b6_6ef25238",
         "filename": "modules/desktop_capture/mapping_device_desktop_capturer_wrapper.h",
         "patchSetId": 2
@@ -59,6 +107,30 @@
       "writtenOn": "2017-09-18T18:21:40Z",
       "side": 1,
       "message": "These sentences don\u0027t make sense. I think what you mean is something like:\n\nGetSourceList and SelectSource perform the mapping between internal and external SourceIds.",
+      "range": {
+        "startLine": 28,
+        "startChar": 3,
+        "endLine": 31,
+        "endChar": 45
+      },
+      "revId": "0532ee64b7938859f70310cec0eb072e8045be2f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4439770d_ed246531",
+        "filename": "modules/desktop_capture/mapping_device_desktop_capturer_wrapper.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 5030
+      },
+      "writtenOn": "2017-09-18T21:20:56Z",
+      "side": 1,
+      "message": "I have removed this sentence entirely.",
+      "parentUuid": "ea0c99b6_6ef25238",
       "range": {
         "startLine": 28,
         "startChar": 3,
