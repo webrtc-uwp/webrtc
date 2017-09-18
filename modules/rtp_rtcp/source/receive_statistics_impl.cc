@@ -197,6 +197,28 @@ bool StreamStatisticianImpl::GetStatistics(RtcpStatistics* statistics,
   return true;
 }
 
+bool StreamStatisticianImpl::GetActiveStatisticsAndReset(
+    RtcpStatistics* statistics) {
+  {
+    rtc::CritScope cs(&stream_lock_);
+    if (clock_->CurrentNtpInMilliseconds() - last_receive_time_ntp_.ToMs() >=
+        kStatisticsTimeoutMs) {
+      // Not active.
+      return false;
+    }
+    if (received_seq_first_ == 0 &&
+        receive_counters_.transmitted.payload_bytes == 0) {
+      // We have not received anything.
+      return false;
+    }
+
+    *statistics = CalculateRtcpStatistics();
+  }
+
+  rtcp_callback_->StatisticsUpdated(*statistics, ssrc_);
+  return true;
+}
+
 RtcpStatistics StreamStatisticianImpl::CalculateRtcpStatistics() {
   RtcpStatistics stats;
 
@@ -294,13 +316,6 @@ void StreamStatisticianImpl::GetReceiveStreamDataCounters(
 uint32_t StreamStatisticianImpl::BitrateReceived() const {
   rtc::CritScope cs(&stream_lock_);
   return incoming_bitrate_.Rate(clock_->TimeInMilliseconds()).value_or(0);
-}
-
-void StreamStatisticianImpl::LastReceiveTimeNtp(uint32_t* secs,
-                                                uint32_t* frac) const {
-  rtc::CritScope cs(&stream_lock_);
-  *secs = last_receive_time_ntp_.seconds();
-  *frac = last_receive_time_ntp_.fractions();
 }
 
 bool StreamStatisticianImpl::IsRetransmitOfOldPacket(
@@ -409,22 +424,6 @@ void ReceiveStatisticsImpl::FecPacketReceived(const RTPHeader& header,
   impl->FecPacketReceived(header, packet_length);
 }
 
-StatisticianMap ReceiveStatisticsImpl::GetActiveStatisticians() const {
-  StatisticianMap active_statisticians;
-  rtc::CritScope cs(&receive_statistics_lock_);
-  for (StatisticianImplMap::const_iterator it = statisticians_.begin();
-       it != statisticians_.end(); ++it) {
-    uint32_t secs;
-    uint32_t frac;
-    it->second->LastReceiveTimeNtp(&secs, &frac);
-    if (clock_->CurrentNtpInMilliseconds() -
-        Clock::NtpToMs(secs, frac) < kStatisticsTimeoutMs) {
-      active_statisticians[it->first] = it->second;
-    }
-  }
-  return active_statisticians;
-}
-
 StreamStatistician* ReceiveStatisticsImpl::GetStatistician(
     uint32_t ssrc) const {
   rtc::CritScope cs(&receive_statistics_lock_);
@@ -482,7 +481,11 @@ void ReceiveStatisticsImpl::DataCountersUpdated(const StreamDataCounters& stats,
 
 std::vector<rtcp::ReportBlock> ReceiveStatisticsImpl::RtcpReportBlocks(
     size_t max_blocks) {
-  StatisticianMap statisticians = GetActiveStatisticians();
+  StatisticianImplMap statisticians;
+  {
+    rtc::CritScope cs(&receive_statistics_lock_);
+    statisticians = statisticians_;
+  }
   std::vector<rtcp::ReportBlock> result;
   result.reserve(std::min(max_blocks, statisticians.size()));
   for (auto& statistician : statisticians) {
@@ -494,7 +497,7 @@ std::vector<rtcp::ReportBlock> ReceiveStatisticsImpl::RtcpReportBlocks(
 
     // Do we have receive statistics to send?
     RtcpStatistics stats;
-    if (!statistician.second->GetStatistics(&stats, true))
+    if (!statistician.second->GetActiveStatisticsAndReset(&stats))
       continue;
     result.emplace_back();
     rtcp::ReportBlock& block = result.back();

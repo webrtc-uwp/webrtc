@@ -32,6 +32,7 @@ class StreamStatisticianImpl : public StreamStatistician {
   virtual ~StreamStatisticianImpl() {}
 
   bool GetStatistics(RtcpStatistics* statistics, bool reset) override;
+  bool GetActiveStatisticsAndReset(RtcpStatistics* statistics);
   void GetDataCounters(size_t* bytes_received,
                        uint32_t* packets_received) const override;
   void GetReceiveStreamDataCounters(
@@ -46,7 +47,6 @@ class StreamStatisticianImpl : public StreamStatistician {
                       bool retransmitted);
   void FecPacketReceived(const RTPHeader& header, size_t packet_length);
   void SetMaxReorderingThreshold(int max_reordering_threshold);
-  virtual void LastReceiveTimeNtp(uint32_t* secs, uint32_t* frac) const;
 
  private:
   bool InOrderPacketInternal(uint16_t sequence_number) const;
@@ -108,7 +108,6 @@ class ReceiveStatisticsImpl : public ReceiveStatistics,
                       bool retransmitted) override;
   void FecPacketReceived(const RTPHeader& header,
                          size_t packet_length) override;
-  StatisticianMap GetActiveStatisticians() const override;
   StreamStatistician* GetStatistician(uint32_t ssrc) const override;
   void SetMaxReorderingThreshold(int max_reordering_threshold) override;
 
