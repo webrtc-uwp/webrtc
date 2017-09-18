@@ -166,7 +166,6 @@ class RtpVideoStreamReceiver : public RtpData,
   bool IsPacketInOrder(const RTPHeader& header) const;
   bool IsPacketRetransmitted(const RTPHeader& header, bool in_order) const;
   void UpdateHistograms();
-  void EnableReceiveRtpHeaderExtension(const std::string& extension, int id);
   bool IsRedEnabled() const;
   void InsertSpsPpsIntoTracker(uint8_t payload_type);
 
@@ -179,7 +178,7 @@ class RtpVideoStreamReceiver : public RtpData,
   RemoteNtpTimeEstimator ntp_estimator_;
   RTPPayloadRegistry rtp_payload_registry_;
 
-  const std::unique_ptr<RtpHeaderParser> rtp_header_parser_;
+  RtpHeaderExtensionMap rtp_header_extensions_;
   const std::unique_ptr<RtpReceiver> rtp_receiver_;
   ReceiveStatistics* const rtp_receive_statistics_;
   std::unique_ptr<UlpfecReceiver> ulpfec_receiver_;

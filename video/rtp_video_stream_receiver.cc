@@ -98,7 +98,7 @@ RtpVideoStreamReceiver::RtpVideoStreamReceiver(
       packet_router_(packet_router),
       process_thread_(process_thread),
       ntp_estimator_(clock_),
-      rtp_header_parser_(RtpHeaderParser::Create()),
+      rtp_header_extensions_(config_.rtp.extensions),
       rtp_receiver_(RtpReceiver::CreateVideoReceiver(clock_,
                                                      this,
                                                      this,
@@ -133,11 +133,6 @@ RtpVideoStreamReceiver::RtpVideoStreamReceiver(
   rtp_rtcp_->SetSSRC(config_.rtp.local_ssrc);
   rtp_rtcp_->SetRemoteSSRC(config_.rtp.remote_ssrc);
   rtp_rtcp_->SetKeyFrameRequestMethod(kKeyFrameReqPliRtcp);
-
-  for (size_t i = 0; i < config_.rtp.extensions.size(); ++i) {
-    EnableReceiveRtpHeaderExtension(config_.rtp.extensions[i].uri,
-                                    config_.rtp.extensions[i].id);
-  }
 
   static const int kMaxPacketAgeToNack = 450;
   const int max_reordering_threshold = (config_.rtp.nack.rtp_history_ms > 0)
@@ -281,11 +276,14 @@ int32_t RtpVideoStreamReceiver::OnReceivedPayloadData(
 // for callbacks from |ulpfec_receiver_|.
 void RtpVideoStreamReceiver::OnRecoveredPacket(const uint8_t* rtp_packet,
                                                size_t rtp_packet_length) {
-  RTPHeader header;
-  if (!rtp_header_parser_->Parse(rtp_packet, rtp_packet_length, &header)) {
+  RtpPacketReceived packet;
+  if (!packet.Parse(rtp_packet, rtp_packet_length))
     return;
-  }
-  header.payload_type_frequency = kVideoPayloadTypeFrequency;
+  packet.IdentifyExtensions(rtp_header_extensions_);
+  packet.set_payload_type_frequency(kVideoPayloadTypeFrequency);
+
+  RTPHeader header;
+  packet.GetHeader(&header);
   bool in_order = IsPacketInOrder(header);
   ReceivePacket(rtp_packet, rtp_packet_length, header, in_order);
 }
@@ -645,16 +643,6 @@ void RtpVideoStreamReceiver::UpdateHistograms() {
                              static_cast<int>(counter.num_recovered_packets *
                                               100 / counter.num_fec_packets));
   }
-}
-
-void RtpVideoStreamReceiver::EnableReceiveRtpHeaderExtension(
-    const std::string& extension, int id) {
-  // One-byte-extension local identifiers are in the range 1-14 inclusive.
-  RTC_DCHECK_GE(id, 1);
-  RTC_DCHECK_LE(id, 14);
-  RTC_DCHECK(RtpExtension::IsSupportedForVideo(extension));
-  RTC_CHECK(rtp_header_parser_->RegisterRtpHeaderExtension(
-      StringToRtpExtensionType(extension), id));
 }
 
 void RtpVideoStreamReceiver::InsertSpsPpsIntoTracker(uint8_t payload_type) {
