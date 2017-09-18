@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-#include "p2p/base/p2pconstants.h"
+#include "api/p2pconstants.h"
 #include "rtc_base/sslfingerprint.h"
 
 namespace cricket {

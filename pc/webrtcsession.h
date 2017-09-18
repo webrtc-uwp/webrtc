@@ -20,7 +20,7 @@
 #include "api/peerconnectioninterface.h"
 #include "api/statstypes.h"
 #include "call/call.h"
-#include "p2p/base/candidate.h"
+#include "api/candidate.h"
 #include "p2p/base/transportcontroller.h"
 #include "pc/datachannel.h"
 #include "pc/mediasession.h"

@@ -21,7 +21,7 @@
 #include "api/call/audio_sink.h"
 #include "media/base/audiosource.h"
 #include "media/base/mediaconstants.h"
-#include "media/base/streamparams.h"
+#include "api/streamparams.h"
 #include "media/engine/adm_helpers.h"
 #include "media/engine/apm_helpers.h"
 #include "media/engine/payload_type_mapper.h"

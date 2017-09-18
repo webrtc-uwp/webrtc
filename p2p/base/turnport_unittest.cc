@@ -15,7 +15,7 @@
 #include <memory>
 
 #include "p2p/base/basicpacketsocketfactory.h"
-#include "p2p/base/p2pconstants.h"
+#include "api/p2pconstants.h"
 #include "p2p/base/portallocator.h"
 #include "p2p/base/tcpport.h"
 #include "p2p/base/testturnserver.h"

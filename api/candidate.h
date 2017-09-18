@@ -20,7 +20,7 @@
 #include <sstream>
 #include <string>
 
-#include "p2p/base/p2pconstants.h"
+#include "api/p2pconstants.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/network.h"

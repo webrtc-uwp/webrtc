@@ -21,7 +21,7 @@
 #include "media/base/fakevideocapturer.h"
 #include "media/base/fakevideorenderer.h"
 #include "media/base/mediachannel.h"
-#include "media/base/streamparams.h"
+#include "api/streamparams.h"
 #include "media/engine/fakewebrtccall.h"
 #include "rtc_base/bytebuffer.h"
 #include "rtc_base/gunit.h"

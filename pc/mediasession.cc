@@ -23,7 +23,7 @@
 #include "media/base/cryptoparams.h"
 #include "media/base/h264_profile_level_id.h"
 #include "media/base/mediaconstants.h"
-#include "p2p/base/p2pconstants.h"
+#include "api/p2pconstants.h"
 #include "pc/channelmanager.h"
 #include "pc/srtpfilter.h"
 #include "rtc_base/base64.h"

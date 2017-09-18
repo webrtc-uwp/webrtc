@@ -16,7 +16,7 @@
 
 #include "api/ortc/srtptransportinterface.h"
 #include "api/rtcerror.h"
-#include "media/base/streamparams.h"
+#include "api/streamparams.h"
 #include "ortc/rtptransportcontrolleradapter.h"
 #include "pc/channel.h"
 #include "rtc_base/constructormagic.h"

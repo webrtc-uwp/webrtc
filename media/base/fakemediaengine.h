@@ -22,7 +22,7 @@
 #include "media/base/audiosource.h"
 #include "media/base/mediaengine.h"
 #include "media/base/rtputils.h"
-#include "media/base/streamparams.h"
+#include "api/streamparams.h"
 #include "media/engine/webrtcvideoengine.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "p2p/base/sessiondescription.h"

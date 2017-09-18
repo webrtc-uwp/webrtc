@@ -80,8 +80,6 @@ rtc_static_library("rtc_media_base") {
     "base/rtpdataengine.h",
     "base/rtputils.cc",
     "base/rtputils.h",
-    "base/streamparams.cc",
-    "base/streamparams.h",
     "base/turnutils.cc",
     "base/turnutils.h",
     "base/videoadapter.cc",
@@ -266,7 +264,9 @@ rtc_static_library("rtc_audio_video") {
 
 rtc_static_library("rtc_data") {
   defines = []
-  deps = []
+  deps = [
+    "../api:libjingle_peerconnection_api",
+  ]
 
   if (rtc_enable_sctp) {
     sources = [
@@ -335,6 +335,7 @@ if (rtc_include_tests) {
     include_dirs = []
     public_deps = []
     deps = [
+      "../api:libjingle_peerconnection_api",
       "../call:video_stream_api",
       "../modules/audio_coding:rent_a_codec",
       "../modules/audio_processing:audio_processing",
@@ -436,6 +437,7 @@ if (rtc_include_tests) {
 
     defines = []
     deps = [
+      "../api:libjingle_peerconnection_api",
       "../pc:rtc_pc",
       "../test:field_trial",
     ]
@@ -443,7 +445,6 @@ if (rtc_include_tests) {
       "base/codec_unittest.cc",
       "base/rtpdataengine_unittest.cc",
       "base/rtputils_unittest.cc",
-      "base/streamparams_unittest.cc",
       "base/turnutils_unittest.cc",
       "base/videoadapter_unittest.cc",
       "base/videobroadcaster_unittest.cc",

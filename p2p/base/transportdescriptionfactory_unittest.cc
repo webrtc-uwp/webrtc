@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-#include "p2p/base/p2pconstants.h"
+#include "api/p2pconstants.h"
 #include "p2p/base/transportdescription.h"
 #include "p2p/base/transportdescriptionfactory.h"
 #include "rtc_base/fakesslidentity.h"

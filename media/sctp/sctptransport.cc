@@ -29,7 +29,7 @@ enum PreservedErrno {
 #include "usrsctplib/usrsctp.h"
 #include "media/base/codec.h"
 #include "media/base/mediaconstants.h"
-#include "media/base/streamparams.h"
+#include "api/streamparams.h"
 #include "p2p/base/dtlstransportinternal.h"  // For PF_NORMAL
 #include "rtc_base/arraysize.h"
 #include "rtc_base/copyonwritebuffer.h"

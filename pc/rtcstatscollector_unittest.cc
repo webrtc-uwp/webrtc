@@ -24,7 +24,7 @@
 #include "api/test/mock_rtpsender.h"
 #include "media/base/fakemediaengine.h"
 #include "media/base/test/mock_mediachannel.h"
-#include "p2p/base/p2pconstants.h"
+#include "api/p2pconstants.h"
 #include "p2p/base/port.h"
 #include "pc/mediastream.h"
 #include "pc/mediastreamtrack.h"

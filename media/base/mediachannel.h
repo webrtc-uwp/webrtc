@@ -23,7 +23,7 @@
 #include "call/video_config.h"
 #include "media/base/codec.h"
 #include "media/base/mediaconstants.h"
-#include "media/base/streamparams.h"
+#include "api/streamparams.h"
 #include "media/base/videosinkinterface.h"
 #include "media/base/videosourceinterface.h"
 #include "rtc_base/basictypes.h"
