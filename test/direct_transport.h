@@ -24,7 +24,7 @@
 namespace webrtc {
 
 class Clock;
-class PacketReceiver;
+class PacketReceiverInterface;
 
 namespace test {
 
@@ -53,7 +53,7 @@ class DirectTransport : public Transport {
   RTC_DEPRECATED void StopSending();
 
   // TODO(holmer): Look into moving this to the constructor.
-  virtual void SetReceiver(PacketReceiver* receiver);
+  virtual void SetReceiver(PacketReceiverInterface* receiver);
 
   bool SendRtp(const uint8_t* data,
                size_t length,

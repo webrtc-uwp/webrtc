@@ -86,8 +86,7 @@ class FakeAudioReceiveStream final : public webrtc::AudioReceiveStream {
   bool VerifyLastPacket(const uint8_t* data, size_t length) const;
   const webrtc::AudioSinkInterface* sink() const { return sink_.get(); }
   float gain() const { return gain_; }
-  bool DeliverRtp(const uint8_t* packet,
-                  size_t length,
+  bool DeliverRtp(rtc::CopyOnWriteBuffer packet,
                   const webrtc::PacketTime& packet_time);
   bool started() const { return started_; }
 
@@ -110,7 +109,7 @@ class FakeAudioReceiveStream final : public webrtc::AudioReceiveStream {
   int received_packets_ = 0;
   std::unique_ptr<webrtc::AudioSinkInterface> sink_;
   float gain_ = 1.0f;
-  rtc::Buffer last_packet_;
+  rtc::CopyOnWriteBuffer last_packet_;
   bool started_ = false;
 };
 
@@ -229,7 +228,8 @@ class FakeFlexfecReceiveStream final : public webrtc::FlexfecReceiveStream {
   webrtc::FlexfecReceiveStream::Config config_;
 };
 
-class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {
+class FakeCall final : public webrtc::Call,
+                       public webrtc::PacketReceiverInterface {
  public:
   explicit FakeCall(const webrtc::Call::Config& config);
   ~FakeCall() override;
@@ -283,11 +283,10 @@ class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {
   void DestroyFlexfecReceiveStream(
       webrtc::FlexfecReceiveStream* receive_stream) override;
 
-  webrtc::PacketReceiver* Receiver() override;
+  webrtc::PacketReceiverInterface* Receiver() override;
 
   DeliveryStatus DeliverPacket(webrtc::MediaType media_type,
-                               const uint8_t* packet,
-                               size_t length,
+                               rtc::CopyOnWriteBuffer packet,
                                const webrtc::PacketTime& packet_time) override;
 
   webrtc::Call::Stats GetStats() const override;

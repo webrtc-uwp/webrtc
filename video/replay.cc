@@ -281,9 +281,9 @@ void RtpReplay() {
     ++num_packets;
     switch (call->Receiver()->DeliverPacket(
         webrtc::MediaType::VIDEO, packet.data, packet.length, PacketTime())) {
-      case PacketReceiver::DELIVERY_OK:
+      case PacketReceiverInterface::DELIVERY_OK:
         break;
-      case PacketReceiver::DELIVERY_UNKNOWN_SSRC: {
+      case PacketReceiverInterface::DELIVERY_UNKNOWN_SSRC: {
         RTPHeader header;
         std::unique_ptr<RtpHeaderParser> parser(RtpHeaderParser::Create());
         parser->Parse(packet.data, packet.length, &header);
@@ -292,7 +292,7 @@ void RtpReplay() {
         ++unknown_packets[header.ssrc];
         break;
       }
-      case PacketReceiver::DELIVERY_PACKET_ERROR: {
+      case PacketReceiverInterface::DELIVERY_PACKET_ERROR: {
         fprintf(stderr, "Packet error, corrupt packets or incorrect setup?\n");
         RTPHeader header;
         std::unique_ptr<RtpHeaderParser> parser(RtpHeaderParser::Create());

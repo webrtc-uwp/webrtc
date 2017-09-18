@@ -24,6 +24,7 @@
 #include "call/video_receive_stream.h"
 #include "call/video_send_stream.h"
 #include "common_types.h"  // NOLINT(build/include)
+#include "rtc_base/copyonwritebuffer.h"
 #include "rtc_base/networkroute.h"
 #include "rtc_base/platform_file.h"
 #include "rtc_base/socket.h"
@@ -53,7 +54,7 @@ static T MinPositive(T a, T b) {
   return std::min(a, b);
 }
 
-class PacketReceiver {
+class PacketReceiverInterface {
  public:
   enum DeliveryStatus {
     DELIVERY_OK,
@@ -62,12 +63,11 @@ class PacketReceiver {
   };
 
   virtual DeliveryStatus DeliverPacket(MediaType media_type,
-                                       const uint8_t* packet,
-                                       size_t length,
+                                       rtc::CopyOnWriteBuffer packet,
                                        const PacketTime& packet_time) = 0;
 
  protected:
-  virtual ~PacketReceiver() {}
+  virtual ~PacketReceiverInterface() = default;
 };
 
 // A Call instance can contain several send and/or receive streams. All streams
@@ -161,7 +161,7 @@ class Call {
   // All received RTP and RTCP packets for the call should be inserted to this
   // PacketReceiver. The PacketReceiver pointer is valid as long as the
   // Call instance exists.
-  virtual PacketReceiver* Receiver() = 0;
+  virtual PacketReceiverInterface* Receiver() = 0;
 
   // Returns the call statistics, such as estimated send and receive bandwidth,
   // pacing delay, etc.

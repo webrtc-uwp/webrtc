@@ -31,7 +31,7 @@ constexpr int64_t kDefaultProcessIntervalMs = 5;
 DemuxerImpl::DemuxerImpl(const std::map<uint8_t, MediaType>& payload_type_map)
     : packet_receiver_(nullptr), payload_type_map_(payload_type_map) {}
 
-void DemuxerImpl::SetReceiver(PacketReceiver* receiver) {
+void DemuxerImpl::SetReceiver(PacketReceiverInterface* receiver) {
   packet_receiver_ = receiver;
 }
 
@@ -53,8 +53,9 @@ void DemuxerImpl::DeliverPacket(const NetworkPacket* packet,
         << "payload type " << static_cast<int>(payload_type) << " unknown.";
     media_type = it->second;
   }
-  packet_receiver_->DeliverPacket(media_type, packet_data, packet_length,
-                                  packet_time);
+  packet_receiver_->DeliverPacket(
+      media_type, rtc::CopyOnWriteBuffer(packet_data, packet_length),
+      packet_time);
 }
 
 FakeNetworkPipe::FakeNetworkPipe(Clock* clock,
@@ -90,7 +91,7 @@ FakeNetworkPipe::~FakeNetworkPipe() {
   }
 }
 
-void FakeNetworkPipe::SetReceiver(PacketReceiver* receiver) {
+void FakeNetworkPipe::SetReceiver(PacketReceiverInterface* receiver) {
   RTC_CHECK(demuxer_);
   demuxer_->SetReceiver(receiver);
 }

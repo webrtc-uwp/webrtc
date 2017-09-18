@@ -145,7 +145,7 @@ bool IsFlexfec(int payload_type) {
 
 namespace webrtc {
 
-class VideoAnalyzer : public PacketReceiver,
+class VideoAnalyzer : public PacketReceiverInterface,
                       public Transport,
                       public rtc::VideoSinkInterface<VideoFrame> {
  public:
@@ -242,7 +242,9 @@ class VideoAnalyzer : public PacketReceiver,
     }
   }
 
-  virtual void SetReceiver(PacketReceiver* receiver) { receiver_ = receiver; }
+  virtual void SetReceiver(PacketReceiverInterface* receiver) {
+    receiver_ = receiver;
+  }
 
   void SetSource(test::VideoCapturer* video_capturer, bool respect_sink_wants) {
     if (respect_sink_wants)
@@ -277,25 +279,25 @@ class VideoAnalyzer : public PacketReceiver,
   }
 
   DeliveryStatus DeliverPacket(MediaType media_type,
-                               const uint8_t* packet,
-                               size_t length,
+                               rtc::CopyOnWriteBuffer packet,
                                const PacketTime& packet_time) override {
     // Ignore timestamps of RTCP packets. They're not synchronized with
     // RTP packet timestamps and so they would confuse wrap_handler_.
-    if (RtpHeaderParser::IsRtcp(packet, length)) {
-      return receiver_->DeliverPacket(media_type, packet, length, packet_time);
+    if (RtpHeaderParser::IsRtcp(packet.cdata(), packet.size())) {
+      return receiver_->DeliverPacket(media_type, std::move(packet),
+                                      packet_time);
     }
 
     if (rtp_file_writer_) {
       test::RtpPacket p;
-      memcpy(p.data, packet, length);
-      p.length = length;
-      p.original_length = length;
+      memcpy(p.data, packet.cdata(), packet.size());
+      p.length = packet.size();
+      p.original_length = packet.size();
       p.time_ms = clock_->TimeInMilliseconds() - start_ms_;
       rtp_file_writer_->WritePacket(&p);
     }
 
-    RtpUtility::RtpHeaderParser parser(packet, length);
+    RtpUtility::RtpHeaderParser parser(packet.cdata(), packet.size());
     RTPHeader header;
     parser.Parse(&header);
     if (!IsFlexfec(header.payloadType) &&
@@ -312,7 +314,7 @@ class VideoAnalyzer : public PacketReceiver,
           Clock::GetRealTimeClock()->CurrentNtpInMilliseconds();
     }
 
-    return receiver_->DeliverPacket(media_type, packet, length, packet_time);
+    return receiver_->DeliverPacket(media_type, std::move(packet), packet_time);
   }
 
   void MeasuredEncodeTiming(int64_t ntp_time_ms, int encode_time_ms) {
@@ -503,7 +505,7 @@ class VideoAnalyzer : public PacketReceiver,
   }
 
   test::LayerFilteringTransport* const transport_;
-  PacketReceiver* receiver_;
+  PacketReceiverInterface* receiver_;
 
  private:
   struct FrameComparison {

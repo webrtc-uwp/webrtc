@@ -71,7 +71,7 @@ void DirectTransport::StopSending() {
   task_queue_->CancelTask(next_scheduled_task_);
 }
 
-void DirectTransport::SetReceiver(PacketReceiver* receiver) {
+void DirectTransport::SetReceiver(PacketReceiverInterface* receiver) {
   RTC_DCHECK_CALLED_SEQUENTIALLY(&sequence_checker_);
   fake_network_.SetReceiver(receiver);
 }

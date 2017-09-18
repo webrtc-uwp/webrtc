@@ -26,7 +26,7 @@
 namespace webrtc {
 
 class Clock;
-class PacketReceiver;
+class PacketReceiverInterface;
 enum class MediaType;
 
 class NetworkPacket {
@@ -64,7 +64,7 @@ class NetworkPacket {
 class Demuxer {
  public:
   virtual ~Demuxer() = default;
-  virtual void SetReceiver(PacketReceiver* receiver) = 0;
+  virtual void SetReceiver(PacketReceiverInterface* receiver) = 0;
   virtual void DeliverPacket(const NetworkPacket* packet,
                              const PacketTime& packet_time) = 0;
 };
@@ -73,12 +73,12 @@ class DemuxerImpl final : public Demuxer {
  public:
   explicit DemuxerImpl(const std::map<uint8_t, MediaType>& payload_type_map);
 
-  void SetReceiver(PacketReceiver* receiver) override;
+  void SetReceiver(PacketReceiverInterface* receiver) override;
   void DeliverPacket(const NetworkPacket* packet,
                      const PacketTime& packet_time) override;
 
  private:
-  PacketReceiver* packet_receiver_;
+  PacketReceiverInterface* packet_receiver_;
   const std::map<uint8_t, MediaType> payload_type_map_;
   RTC_DISALLOW_COPY_AND_ASSIGN(DemuxerImpl);
 };
@@ -124,7 +124,7 @@ class FakeNetworkPipe {
   void SendPacket(const uint8_t* packet, size_t packet_length);
 
   // Must not be called in parallel with SendPacket or Process.
-  void SetReceiver(PacketReceiver* receiver);
+  void SetReceiver(PacketReceiverInterface* receiver);
 
   // Processes the network queues and trigger PacketReceiver::IncomingPacket for
   // packets ready to be delivered.

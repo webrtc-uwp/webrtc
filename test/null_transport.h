@@ -13,9 +13,6 @@
 #include "api/call/transport.h"
 
 namespace webrtc {
-
-class PacketReceiver;
-
 namespace test {
 class NullTransport : public Transport {
  public:

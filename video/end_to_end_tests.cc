@@ -1338,31 +1338,30 @@ TEST_F(EndToEndTest, ReceivesPliAndRecoversWithoutNack) {
 }
 
 TEST_F(EndToEndTest, UnknownRtpPacketGivesUnknownSsrcReturnCode) {
-  class PacketInputObserver : public PacketReceiver {
+  class PacketInputObserver : public PacketReceiverInterface {
    public:
-    explicit PacketInputObserver(PacketReceiver* receiver)
+    explicit PacketInputObserver(PacketReceiverInterface* receiver)
         : receiver_(receiver), delivered_packet_(false, false) {}
 
     bool Wait() { return delivered_packet_.Wait(kDefaultTimeoutMs); }
 
    private:
     DeliveryStatus DeliverPacket(MediaType media_type,
-                                 const uint8_t* packet,
-                                 size_t length,
+                                 rtc::CopyOnWriteBuffer packet,
                                  const PacketTime& packet_time) override {
-      if (RtpHeaderParser::IsRtcp(packet, length)) {
-        return receiver_->DeliverPacket(media_type, packet, length,
+      if (RtpHeaderParser::IsRtcp(packet.cdata(), packet.size())) {
+        return receiver_->DeliverPacket(media_type, std::move(packet),
                                         packet_time);
       } else {
-        DeliveryStatus delivery_status =
-            receiver_->DeliverPacket(media_type, packet, length, packet_time);
+        DeliveryStatus delivery_status = receiver_->DeliverPacket(
+            media_type, std::move(packet), packet_time);
         EXPECT_EQ(DELIVERY_UNKNOWN_SSRC, delivery_status);
         delivered_packet_.Set();
         return delivery_status;
       }
     }
 
-    PacketReceiver* receiver_;
+    PacketReceiverInterface* receiver_;
     rtc::Event delivered_packet_;
   };
 
