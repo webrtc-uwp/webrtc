@@ -92,5 +92,199 @@ class CheckNewlineAtTheEndOfProtoFiles(unittest.TestCase):
         package webrtc.audioproc;"""))
 
 
+class CheckNoMixingSourcesTest(unittest.TestCase):
+
+  def setUp(self):
+    self.tmp_dir = tempfile.mkdtemp()
+    self.file_path = os.path.join(self.tmp_dir, 'BUILD.gn')
+    self.input_api = MockInputApi()
+    self.output_api = MockOutputApi()
+
+  def tearDown(self):
+    shutil.rmtree(self.tmp_dir, ignore_errors=True)
+
+  def testErrorIfCAndCppAreMixed(self):
+    self.__GenerateBuildFile(textwrap.dedent("""
+      rtc_source_set("foo_bar") {
+        sources = [
+          "foo.c",
+          "bar.cc",
+          "bar.h",
+        ],
+      }
+    """))
+    self.input_api.files = [MockFile(self.file_path)]
+    errors = PRESUBMIT.CheckNoMixingSources(self.input_api,
+                                            [MockFile(self.file_path)],
+                                            self.output_api)
+    self.assertEqual(1, len(errors))
+
+  def testErrorIfCAndObjCAreMixed(self):
+    self.__GenerateBuildFile(textwrap.dedent("""
+      rtc_source_set("foo_bar") {
+        sources = [
+          "foo.c",
+          "bar.m",
+          "bar.h",
+        ],
+      }
+    """))
+    self.input_api.files = [MockFile(self.file_path)]
+    errors = PRESUBMIT.CheckNoMixingSources(self.input_api,
+                                            [MockFile(self.file_path)],
+                                            self.output_api)
+    self.assertEqual(1, len(errors))
+
+  def testErrorIfCAndObjCppAreMixed(self):
+    self.__GenerateBuildFile(textwrap.dedent("""
+      rtc_source_set("foo_bar") {
+        sources = [
+          "foo.c",
+          "bar.mm",
+          "bar.h",
+        ],
+      }
+    """))
+    self.input_api.files = [MockFile(self.file_path)]
+    errors = PRESUBMIT.CheckNoMixingSources(self.input_api,
+                                            [MockFile(self.file_path)],
+                                            self.output_api)
+    self.assertEqual(1, len(errors))
+
+  def testErrorIfCppAndObjCAreMixed(self):
+    self.__GenerateBuildFile(textwrap.dedent("""
+      rtc_source_set("foo_bar") {
+        sources = [
+          "foo.cc",
+          "bar.m",
+          "bar.h",
+        ],
+      }
+    """))
+    self.input_api.files = [MockFile(self.file_path)]
+    errors = PRESUBMIT.CheckNoMixingSources(self.input_api,
+                                            [MockFile(self.file_path)],
+                                            self.output_api)
+    self.assertEqual(1, len(errors))
+
+  def testErrorIfCppAndObjCppAreMixed(self):
+    self.__GenerateBuildFile(textwrap.dedent("""
+      rtc_source_set("foo_bar") {
+        sources = [
+          "foo.cc",
+          "bar.mm",
+          "bar.h",
+        ],
+      }
+    """))
+    self.input_api.files = [MockFile(self.file_path)]
+    errors = PRESUBMIT.CheckNoMixingSources(self.input_api,
+                                            [MockFile(self.file_path)],
+                                            self.output_api)
+    self.assertEqual(1, len(errors))
+    self.assertEqual(
+        'GN targets cannot mix .c, .cc and .m (or .mm) source files.\n'
+        'Please create a separate target for each collection of sources.\n'
+        'Mixed sources: \n'
+        '{\n'
+        '  "%s": [\n'
+        '    [\n'
+        '      "foo_bar", \n'
+        '      [\n'
+        '        "bar.mm", \n'
+        '        "foo.cc"\n'
+        '      ]\n'
+        '    ]\n'
+        '  ]\n'
+        '}\n'
+        'Violating GN files:\n'
+        '%s\n' % (self.file_path, self.file_path),
+        str(errors[0]))
+
+  def testNoErrorIfOnlyC(self):
+    self.__GenerateBuildFile(textwrap.dedent("""
+      rtc_source_set("foo_bar") {
+        sources = [
+          "foo.c",
+          "bar.c",
+          "bar.h",
+        ],
+      }
+    """))
+    self.input_api.files = [MockFile(self.file_path)]
+    errors = PRESUBMIT.CheckNoMixingSources(self.input_api,
+                                            [MockFile(self.file_path)],
+                                            self.output_api)
+    self.assertEqual(0, len(errors))
+
+  def testNoErrorIfOnlyCpp(self):
+    self.__GenerateBuildFile(textwrap.dedent("""
+      rtc_source_set("foo_bar") {
+        sources = [
+          "foo.cc",
+          "bar.cc",
+          "bar.h",
+        ],
+      }
+    """))
+    self.input_api.files = [MockFile(self.file_path)]
+    errors = PRESUBMIT.CheckNoMixingSources(self.input_api,
+                                            [MockFile(self.file_path)],
+                                            self.output_api)
+    self.assertEqual(0, len(errors))
+
+  def testNoErrorIfOnlyObjC(self):
+    self.__GenerateBuildFile(textwrap.dedent("""
+      rtc_source_set("foo_bar") {
+        sources = [
+          "foo.m",
+          "bar.m",
+          "bar.h",
+        ],
+      }
+    """))
+    self.input_api.files = [MockFile(self.file_path)]
+    errors = PRESUBMIT.CheckNoMixingSources(self.input_api,
+                                            [MockFile(self.file_path)],
+                                            self.output_api)
+    self.assertEqual(0, len(errors))
+
+  def testNoErrorIfOnlyObjCpp(self):
+    self.__GenerateBuildFile(textwrap.dedent("""
+      rtc_source_set("foo_bar") {
+        sources = [
+          "foo.mm",
+          "bar.mm",
+          "bar.h",
+        ],
+      }
+    """))
+    self.input_api.files = [MockFile(self.file_path)]
+    errors = PRESUBMIT.CheckNoMixingSources(self.input_api,
+                                            [MockFile(self.file_path)],
+                                            self.output_api)
+    self.assertEqual(0, len(errors))
+
+  def testNoErrorIfObjCAndObjCppAreMixed(self):
+    self.__GenerateBuildFile(textwrap.dedent("""
+      rtc_source_set("foo_bar") {
+        sources = [
+          "foo.m",
+          "bar.mm",
+          "bar.h",
+        ],
+      }
+    """))
+    self.input_api.files = [MockFile(self.file_path)]
+    errors = PRESUBMIT.CheckNoMixingSources(self.input_api,
+                                            [MockFile(self.file_path)],
+                                            self.output_api)
+    self.assertEqual(0, len(errors))
+
+  def __GenerateBuildFile(self, content):
+    with open(self.file_path, 'w') as f:
+      f.write(content)
+
+
 if __name__ == '__main__':
   unittest.main()
