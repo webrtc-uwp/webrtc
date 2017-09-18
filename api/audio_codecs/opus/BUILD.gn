@@ -43,6 +43,9 @@ rtc_source_set("audio_encoder_opus") {
     # TODO(kwiberg): Remove this public_dep when bug 7847 has been fixed.
     "../../../rtc_base:protobuf_utils",
   ]
+  if (rtc_enable_protobuf) {
+    public_deps += [ "//third_party/protobuf:protobuf_lite" ]
+  }
 }
 
 rtc_static_library("audio_decoder_opus") {
@@ -57,4 +60,7 @@ rtc_static_library("audio_decoder_opus") {
     "../../../modules/audio_coding:webrtc_opus",
     "../../../rtc_base:rtc_base_approved",
   ]
+  if (rtc_enable_protobuf) {
+    deps += [ "//third_party/protobuf:protobuf_lite" ]
+  }
 }
