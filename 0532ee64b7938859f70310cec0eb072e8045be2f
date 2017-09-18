@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0ffa22e_3dae562b",
+        "filename": "modules/desktop_capture/mapping_device_desktop_capturer_wrapper.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 5166
+      },
+      "writtenOn": "2017-09-18T18:21:40Z",
+      "side": 1,
+      "message": "Without more information on what \"internal\" and \"external\" mean, this line doesn\u0027t add anything. I think it needs more explanation; if I\u0027m understanding the purpose of this class, something like this would work:\n\nMaps between string (\"internal\") and numeric (\"external\") source identifiers. This allows capturers operating on the same physical display hardware to be expose the same external source identifiers even if the underlying capture APIs assign them different HANDLEs, for example.",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 53
+      },
+      "revId": "0532ee64b7938859f70310cec0eb072e8045be2f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "39c51133_786b3cde",
+        "filename": "modules/desktop_capture/mapping_device_desktop_capturer_wrapper.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 5166
+      },
+      "writtenOn": "2017-09-18T18:21:40Z",
+      "side": 1,
+      "message": "\"consistency between the\"",
+      "range": {
+        "startLine": 24,
+        "startChar": 43,
+        "endLine": 24,
+        "endChar": 72
+      },
+      "revId": "0532ee64b7938859f70310cec0eb072e8045be2f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea0c99b6_6ef25238",
+        "filename": "modules/desktop_capture/mapping_device_desktop_capturer_wrapper.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 5166
+      },
+      "writtenOn": "2017-09-18T18:21:40Z",
+      "side": 1,
+      "message": "These sentences don\u0027t make sense. I think what you mean is something like:\n\nGetSourceList and SelectSource perform the mapping between internal and external SourceIds.",
+      "range": {
+        "startLine": 28,
+        "startChar": 3,
+        "endLine": 31,
+        "endChar": 45
+      },
+      "revId": "0532ee64b7938859f70310cec0eb072e8045be2f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
