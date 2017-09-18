@@ -42,6 +42,48 @@
     },
     {
       "key": {
+        "uuid": "d176fe59_3786b96b",
+        "filename": "modules/audio_coding/neteq/statistics_calculator.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 5100
+      },
+      "writtenOn": "2017-09-18T07:03:13Z",
+      "side": 1,
+      "message": "I thought they would be about as much positive as negative. However, I did a small test based on the NetEqDecodingTest.TestBitExactness unittest, which shows that negative corrections are dominant.",
+      "parentUuid": "aa8dcc04_4a528ad4",
+      "revId": "817f751d530e39bee780d0c0bfb73a54b7997c1e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dda15f00_a2d83fc4",
+        "filename": "modules/audio_coding/neteq/statistics_calculator.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 5100
+      },
+      "writtenOn": "2017-09-18T07:03:13Z",
+      "side": 1,
+      "message": "This makes sense. It\u0027a bit more convoluted, but I think this is the right way.",
+      "parentUuid": "88d9660b_3b4b3ebb",
+      "range": {
+        "startLine": 169,
+        "startChar": 36,
+        "endLine": 169,
+        "endChar": 37
+      },
+      "revId": "817f751d530e39bee780d0c0bfb73a54b7997c1e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "98a6c662_7520b108",
         "filename": "modules/audio_coding/neteq/statistics_calculator.cc",
         "patchSetId": 1
@@ -53,6 +95,24 @@
       "writtenOn": "2017-09-15T14:42:01Z",
       "side": 1,
       "message": "Same question",
+      "revId": "817f751d530e39bee780d0c0bfb73a54b7997c1e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c58eb6b1_2845bbc9",
+        "filename": "modules/audio_coding/neteq/statistics_calculator.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 5100
+      },
+      "writtenOn": "2017-09-18T07:03:13Z",
+      "side": 1,
+      "message": "Same answer...",
+      "parentUuid": "98a6c662_7520b108",
       "revId": "817f751d530e39bee780d0c0bfb73a54b7997c1e",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
