@@ -84,6 +84,30 @@
     },
     {
       "key": {
+        "uuid": "d4c9e5b2_2e946789",
+        "filename": "modules/audio_coding/neteq/statistics_calculator.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 5142
+      },
+      "writtenOn": "2017-09-18T12:12:26Z",
+      "side": 1,
+      "message": "+1 to this approach.",
+      "parentUuid": "dda15f00_a2d83fc4",
+      "range": {
+        "startLine": 169,
+        "startChar": 36,
+        "endLine": 169,
+        "endChar": 37
+      },
+      "revId": "817f751d530e39bee780d0c0bfb73a54b7997c1e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "98a6c662_7520b108",
         "filename": "modules/audio_coding/neteq/statistics_calculator.cc",
         "patchSetId": 1
