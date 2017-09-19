@@ -22,6 +22,29 @@
       "revId": "7a791227d50eb1f11758bb2bbe0c2fcece006c24",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9dfc8974_ce310264",
+        "filename": "presubmit_test.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 5017
+      },
+      "writtenOn": "2017-09-19T13:09:27Z",
+      "side": 1,
+      "message": "This got really complex now. Is it a good idea to have two targets here, while only one is supposed to throw an error (the second, I guess?).\n\nDo we even handle all the combinations that are possible with if-conditions? I\u0027m wondering if it\u0027s even possible for us to write a safe check that handles all possible variations? It seems we need to evaluate the platforms and get the \"end-result sources\" list for each platform in order to do this check properly. It may be overkill but I don\u0027t know if this current check might fail on some of our existing targets - maybe we can run it on our current codebase?",
+      "range": {
+        "startLine": 183,
+        "startChar": 6,
+        "endLine": 199,
+        "endChar": 9
+      },
+      "revId": "7a791227d50eb1f11758bb2bbe0c2fcece006c24",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
