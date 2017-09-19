@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45894237_739506f0",
+        "filename": "PRESUBMIT.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 5087
+      },
+      "writtenOn": "2017-09-19T11:57:35Z",
+      "side": 1,
+      "message": "So basically we have to keep in consideration complex targets that (like rtc_base) are mixing source files but in in the same sources variable.",
+      "range": {
+        "startLine": 332,
+        "startChar": 0,
+        "endLine": 345,
+        "endChar": 26
+      },
+      "revId": "7a791227d50eb1f11758bb2bbe0c2fcece006c24",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
