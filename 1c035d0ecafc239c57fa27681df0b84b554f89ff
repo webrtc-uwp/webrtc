@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9df39f8d_65a79a0a",
+        "filename": "webrtc/voice_engine/channel.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 5091
+      },
+      "writtenOn": "2017-09-19T08:39:02Z",
+      "side": 1,
+      "message": "How do you decide kTraceInfo -\u003e LS_VERBOSE? There is a LS_INFO as well.",
+      "range": {
+        "startLine": 505,
+        "startChar": 4,
+        "endLine": 505,
+        "endChar": 7
+      },
+      "revId": "1c035d0ecafc239c57fa27681df0b84b554f89ff",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f653a42_b73cbdfe",
+        "filename": "webrtc/voice_engine/channel.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 1152,
+      "author": {
+        "id": 5091
+      },
+      "writtenOn": "2017-09-19T08:39:02Z",
+      "side": 1,
+      "message": "I think that VERBOSE logging is by default disabled in most of our clients and will need changes in client code to be displayed. It might be the correct choice, still, not sure why you change from info to verbose.",
+      "range": {
+        "startLine": 1152,
+        "startChar": 2,
+        "endLine": 1152,
+        "endChar": 5
+      },
+      "revId": "1c035d0ecafc239c57fa27681df0b84b554f89ff",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
