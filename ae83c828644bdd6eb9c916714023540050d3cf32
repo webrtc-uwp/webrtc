@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f2d2a74f_a608b80f",
+        "filename": "presubmit_test.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 5017
+      },
+      "writtenOn": "2017-09-19T08:31:33Z",
+      "side": 1,
+      "message": "I don\u0027t know when __ is used, isn\u0027t one enough?\nI guess it should also be uppercase A, e.g. _AssertNumberOfErrorsWithSources since the regular asserts come from unittest so they have a different style, but this is our code.",
+      "range": {
+        "startLine": 136,
+        "startChar": 6,
+        "endLine": 136,
+        "endChar": 39
+      },
+      "revId": "ae83c828644bdd6eb9c916714023540050d3cf32",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f061fa9_56d787e1",
+        "filename": "presubmit_test.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 5017
+      },
+      "writtenOn": "2017-09-19T08:31:33Z",
+      "side": 1,
+      "message": "I guess you might want to add\nassert len(sources) \u003d\u003d 3\nif you have a hard assertion on that in the code (which is fine).",
+      "range": {
+        "startLine": 137,
+        "startChar": 4,
+        "endLine": 137,
+        "endChar": 48
+      },
+      "revId": "ae83c828644bdd6eb9c916714023540050d3cf32",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
