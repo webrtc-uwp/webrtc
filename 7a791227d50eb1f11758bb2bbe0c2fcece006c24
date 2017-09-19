@@ -45,6 +45,30 @@
       "revId": "7a791227d50eb1f11758bb2bbe0c2fcece006c24",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92bcf834_bf2141f1",
+        "filename": "presubmit_test.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 5087
+      },
+      "writtenOn": "2017-09-19T13:21:22Z",
+      "side": 1,
+      "message": "This is actually finding 3 errors:\n- the first target is using +\u003d to mix source files;\n- the second target is using both +\u003d and a single initialization of a list that violates this check.\nlen(errors) it is still one because we are only dealing with one file, but there are 3 errors in the error message.\n\nYes, you are right on the second point. That should be the way to go, but it is also overkill so maybe this is a good trade off. Consider that we should run a check also on all the possible gn args, so the test matrix can grow a lot...\n\nLet me run the check on the whole code base before landing.",
+      "parentUuid": "9dfc8974_ce310264",
+      "range": {
+        "startLine": 183,
+        "startChar": 6,
+        "endLine": 199,
+        "endChar": 9
+      },
+      "revId": "7a791227d50eb1f11758bb2bbe0c2fcece006c24",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
