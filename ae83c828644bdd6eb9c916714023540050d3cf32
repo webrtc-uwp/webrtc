@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "22a1d9a4_632aa183",
+        "filename": "presubmit_test.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 5087
+      },
+      "writtenOn": "2017-09-19T08:41:23Z",
+      "side": 1,
+      "message": "__ is used to mark a method as private. We usually only mark them protected (https://google.github.io/styleguide/pyguide.html?showone\u003dNaming#Naming).\nAnyway it is fine to switch to protected in this case. It isn\u0027t a big difference.",
+      "parentUuid": "f2d2a74f_a608b80f",
+      "range": {
+        "startLine": 136,
+        "startChar": 6,
+        "endLine": 136,
+        "endChar": 39
+      },
+      "revId": "ae83c828644bdd6eb9c916714023540050d3cf32",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3f061fa9_56d787e1",
         "filename": "presubmit_test.py",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2017-09-19T08:31:33Z",
       "side": 1,
       "message": "I guess you might want to add\nassert len(sources) \u003d\u003d 3\nif you have a hard assertion on that in the code (which is fine).",
+      "range": {
+        "startLine": 137,
+        "startChar": 4,
+        "endLine": 137,
+        "endChar": 48
+      },
+      "revId": "ae83c828644bdd6eb9c916714023540050d3cf32",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5664b82b_6c1428e6",
+        "filename": "presubmit_test.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 5087
+      },
+      "writtenOn": "2017-09-19T08:41:23Z",
+      "side": 1,
+      "message": "Good catch! Done.",
+      "parentUuid": "3f061fa9_56d787e1",
       "range": {
         "startLine": 137,
         "startChar": 4,
