@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "0385fd99_0868bf6e",
+        "filename": "presubmit_test.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 5017
+      },
+      "writtenOn": "2017-09-19T06:19:30Z",
+      "side": 1,
+      "message": "I think there\u0027s too much duplication added here. Essentially it should all fit into a helper function and you could make each test be only one line, like:\n\ndef testErrorIfCAndCppAreMixed(self):\n  self._assertNumberOfErrorsWithSources(1, [\u0027foo.c\u0027, \u0027bar.cc\u0027, \u0027bar.h\u0027])",
+      "range": {
+        "startLine": 107,
+        "startChar": 4,
+        "endLine": 120,
+        "endChar": 36
+      },
+      "revId": "179dceae2c8a4f9a973f3be51265b34f9895a224",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a039111d_0a264ad5",
         "filename": "presubmit_test.py",
         "patchSetId": 1
@@ -45,6 +68,30 @@
       "revId": "179dceae2c8a4f9a973f3be51265b34f9895a224",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1620c331_82b6a353",
+        "filename": "presubmit_test.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 5017
+      },
+      "writtenOn": "2017-09-19T06:19:30Z",
+      "side": 1,
+      "message": "I think it\u0027s overkill to check the entire error message since it just adds maintenance if it\u0027s updated. You could possibly sanity check that the strings bar.mm and foo.cc are in it, and be done with that.",
+      "parentUuid": "a039111d_0a264ad5",
+      "range": {
+        "startLine": 185,
+        "startChar": 0,
+        "endLine": 202,
+        "endChar": 23
+      },
+      "revId": "179dceae2c8a4f9a973f3be51265b34f9895a224",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
