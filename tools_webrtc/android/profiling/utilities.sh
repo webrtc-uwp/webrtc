@@ -76,6 +76,7 @@ function path_remove {
 # application name given as input parameter.
 function find_app_pid() {
   local app_name="$1"
+  # adb shell ps -A | grep "${app_name}" | awk '{print $2}'
   adb shell ps | grep "${app_name}" | awk '{print $2}'
 }
 

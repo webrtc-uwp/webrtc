@@ -309,6 +309,7 @@ void WebRtcVoiceEngine::Init() {
 
   // Set default engine options.
   {
+    LOG(LS_INFO) << "---------------------------------------------";
     AudioOptions options;
     options.echo_cancellation = rtc::Optional<bool>(true);
     options.auto_gain_control = rtc::Optional<bool>(true);
@@ -440,7 +441,12 @@ bool WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
   options.intelligibility_enhancer = rtc::Optional<bool>(false);
 #endif
 
+  if (!options.echo_cancellation) {
+    LOG(LS_INFO) << "_____________________________________";
+  }
+
   if (options.echo_cancellation) {
+    LOG(LS_INFO) << "=====================================================";
     // Check if platform supports built-in EC. Currently only supported on
     // Android and in combination with Java based audio layer.
     // TODO(henrika): investigate possibility to support built-in EC also
@@ -460,6 +466,8 @@ bool WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
         LOG(LS_INFO) << "Disabling EC since built-in EC will be used instead";
       }
     }
+    LOG(LS_INFO)  << "SetEcStatus: EC=" << *options.echo_cancellation
+                  << ", ec_mode:" << ec_mode;
     webrtc::apm_helpers::SetEcStatus(
         apm(), *options.echo_cancellation, ec_mode);
 #if !defined(ANDROID)
@@ -590,6 +598,7 @@ bool WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
   }
 
   if (intelligibility_enhancer_) {
+
     LOG(LS_INFO) << "Intelligibility Enhancer is enabled? "
                  << *intelligibility_enhancer_;
     config.Set<webrtc::Intelligibility>(
@@ -618,6 +627,12 @@ bool WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
 
   if (options.residual_echo_detector) {
     apm_config.residual_echo_detector.enabled = *options.residual_echo_detector;
+  }
+
+  if (options.echo_cancellation) {
+    apm_config.echo_canceller3.enabled = *options.echo_cancellation;
+    LOG(LS_INFO) << "apm_config.echo_canceller3.enabled: "
+                 << apm_config.echo_canceller3.enabled;
   }
 
   apm()->SetExtraOptions(config);

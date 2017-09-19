@@ -346,11 +346,11 @@ main() {
 
   # Verify that user has sourced envsetup.sh.
   # TODO(henrika): might be possible to remove this check.
-  if [[ -z "$ENVSETUP_GYP_CHROME_SRC" ]]; then
-    error "must source envsetup script first"
-    return 1
-  fi
-  ok "envsetup script has been sourced"
+  # if [[ -z "$ENVSETUP_GYP_CHROME_SRC" ]]; then
+  #   error "must source envsetup script first"
+  #   return 1
+  # fi
+  # ok "envsetup script has been sourced"
 
   # Given that envsetup is sourced, the adb tool should be accessible but
   # do one extra check just in case.
