@@ -61,7 +61,10 @@ rtc_static_library("rtc_event_log_impl") {
 
   if (rtc_enable_protobuf) {
     defines += [ "ENABLE_RTC_EVENT_LOG" ]
-    deps += [ ":rtc_event_log_proto" ]
+    deps += [
+      ":rtc_event_log_proto",
+      "//third_party/protobuf:protobuf_lite",
+    ]
   }
   if (!build_with_chromium && is_clang) {
     # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
@@ -101,6 +104,7 @@ if (rtc_enable_protobuf) {
       "../call:video_stream_api",
       "../rtc_base:protobuf_utils",
       "../rtc_base:rtc_base_approved",
+      "//third_party/protobuf:protobuf_lite",
     ]
   }
 

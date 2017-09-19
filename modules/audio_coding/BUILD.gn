@@ -73,6 +73,9 @@ rtc_static_library("rent_a_codec") {
            ":isac_fix_c",
            ":neteq_decoder_enum",
          ] + audio_codec_deps
+  if (rtc_enable_protobuf) {
+    deps += [ "//third_party/protobuf:protobuf_lite" ]
+  }
 
   defines = audio_codec_defines
 }
@@ -825,6 +828,11 @@ rtc_static_library("webrtc_opus") {
     "../../rtc_base:rtc_numerics",
     "../../system_wrappers",
   ]
+
+  if (rtc_enable_protobuf) {
+    deps += [ "//third_party/protobuf:protobuf_lite" ]
+  }
+
   public_deps = [
     ":webrtc_opus_c",
     "../../rtc_base:protobuf_utils",
@@ -1356,6 +1364,10 @@ if (rtc_include_tests) {
       "../../test:test_support",
     ]
 
+    if (rtc_enable_protobuf) {
+      deps += [ "//third_party/protobuf:protobuf_lite" ]
+    }
+
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
       suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
@@ -1502,6 +1514,10 @@ if (rtc_include_tests) {
       "../../test:test_main",
       "//testing/gtest",
     ]
+
+    if (rtc_enable_protobuf) {
+      deps += [ "//third_party/protobuf:protobuf_lite" ]
+    }
 
     data = audio_decoder_unittests_resources
 

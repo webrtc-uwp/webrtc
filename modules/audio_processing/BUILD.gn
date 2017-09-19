@@ -704,6 +704,10 @@ if (rtc_include_tests) {
       "//testing/gtest",
     ]
 
+    if (rtc_enable_protobuf) {
+      deps += [ "//third_party/protobuf:protobuf_lite" ]
+    }
+
     if (rtc_enable_intelligibility_enhancer) {
       defines = [ "WEBRTC_INTELLIGIBILITY_ENHANCER=1" ]
     } else {
