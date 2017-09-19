@@ -92,5 +92,71 @@ class CheckNewlineAtTheEndOfProtoFiles(unittest.TestCase):
         package webrtc.audioproc;"""))
 
 
+class CheckNoMixingSourcesTest(unittest.TestCase):
+
+  def setUp(self):
+    self.tmp_dir = tempfile.mkdtemp()
+    self.file_path = os.path.join(self.tmp_dir, 'BUILD.gn')
+    self.input_api = MockInputApi()
+    self.output_api = MockOutputApi()
+
+  def tearDown(self):
+    shutil.rmtree(self.tmp_dir, ignore_errors=True)
+
+  def testErrorIfCAndCppAreMixed(self):
+    self.__assertNumberOfErrorsWithSources(1, ['foo.c', 'bar.cc', 'bar.h'])
+
+  def testErrorIfCAndObjCAreMixed(self):
+    self.__assertNumberOfErrorsWithSources(1, ['foo.c', 'bar.m', 'bar.h'])
+
+  def testErrorIfCAndObjCppAreMixed(self):
+    self.__assertNumberOfErrorsWithSources(1, ['foo.c', 'bar.mm', 'bar.h'])
+
+  def testErrorIfCppAndObjCAreMixed(self):
+    self.__assertNumberOfErrorsWithSources(1, ['foo.cc', 'bar.m', 'bar.h'])
+
+  def testErrorIfCppAndObjCppAreMixed(self):
+    self.__assertNumberOfErrorsWithSources(1, ['foo.cc', 'bar.mm', 'bar.h'])
+
+  def testNoErrorIfOnlyC(self):
+    self.__assertNumberOfErrorsWithSources(0, ['foo.c', 'bar.c', 'bar.h'])
+
+  def testNoErrorIfOnlyCpp(self):
+    self.__assertNumberOfErrorsWithSources(0, ['foo.cc', 'bar.cc', 'bar.h'])
+
+  def testNoErrorIfOnlyObjC(self):
+    self.__assertNumberOfErrorsWithSources(0, ['foo.m', 'bar.m', 'bar.h'])
+
+  def testNoErrorIfOnlyObjCpp(self):
+    self.__assertNumberOfErrorsWithSources(0, ['foo.mm', 'bar.mm', 'bar.h'])
+
+  def testNoErrorIfObjCAndObjCppAreMixed(self):
+    self.__assertNumberOfErrorsWithSources(0, ['foo.m', 'bar.mm', 'bar.h'])
+
+  def __assertNumberOfErrorsWithSources(self, number_of_errors, sources):
+    self.__GenerateBuildFile(textwrap.dedent("""
+      rtc_source_set("foo_bar") {
+        sources = [
+          "%s",
+          "%s",
+          "%s",
+        ],
+      }
+    """ % tuple(sources)))
+    self.input_api.files = [MockFile(self.file_path)]
+    errors = PRESUBMIT.CheckNoMixingSources(self.input_api,
+                                            [MockFile(self.file_path)],
+                                            self.output_api)
+    self.assertEqual(number_of_errors, len(errors))
+    if number_of_errors == 1:
+      for source in sources:
+        if not source.endswith('.h'):
+          self.assertTrue(source in str(errors[0]))
+
+  def __GenerateBuildFile(self, content):
+    with open(self.file_path, 'w') as f:
+      f.write(content)
+
+
 if __name__ == '__main__':
   unittest.main()
