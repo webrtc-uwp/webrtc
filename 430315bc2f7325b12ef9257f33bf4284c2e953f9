@@ -22,6 +22,30 @@
       "revId": "430315bc2f7325b12ef9257f33bf4284c2e953f9",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "736132a9_c158d8f2",
+        "filename": "modules/rtp_rtcp/BUILD.gn",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-21T17:42:22Z",
+      "side": 1,
+      "message": "I started out with public empty, then moved files from sources to public one by one until gn check didn\u0027t complain anymore. The best strategy is probably to have as few things as possible in public, meaning that the CL in question should be the one to move it.",
+      "parentUuid": "26a10b75_fb4d4f1d",
+      "range": {
+        "startLine": 77,
+        "startChar": 26,
+        "endLine": 77,
+        "endChar": 0
+      },
+      "revId": "430315bc2f7325b12ef9257f33bf4284c2e953f9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
