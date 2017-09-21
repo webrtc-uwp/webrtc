@@ -22,6 +22,30 @@
       "revId": "beacb5101d5e71cbb14f9db8d64df00a71ee5532",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ecc591aa_aefad936",
+        "filename": "video/rtp_video_stream_receiver.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 464,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-21T08:44:54Z",
+      "side": 1,
+      "message": "What I\u0027d really want to do to solve this potential issue is to eliminate the mutex in RTPPayloadRegistry, and make it the caller\u0027s responsibility to not make concurrent method calls. However, I would also like to not spend too much time on things that are only distantly related to the problem I\u0027m actually trying to solve (injection of foreign audio codecs).\n\nOne robust quick fix would be to change the return value of PayloadTypeToPayload from const Payload* to Optional\u003cPayload\u003e. That\u0027ll cost us a copy each time, but Payload isn\u0027t that expensive to copy I think. WDYT?",
+      "parentUuid": "10f57644_fcf84eea",
+      "range": {
+        "startLine": 464,
+        "startChar": 28,
+        "endLine": 464,
+        "endChar": 48
+      },
+      "revId": "beacb5101d5e71cbb14f9db8d64df00a71ee5532",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
