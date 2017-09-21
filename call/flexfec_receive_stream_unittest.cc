@@ -82,22 +82,18 @@ TEST(FlexfecReceiveStreamConfigTest, IsCompleteAndEnabled) {
 class FlexfecReceiveStreamTest : public ::testing::Test {
  protected:
   FlexfecReceiveStreamTest()
-      : config_(CreateDefaultConfig(&rtcp_send_transport_)) {
-    EXPECT_CALL(process_thread_, RegisterModule(_, _)).Times(1);
+      : config_(CreateDefaultConfig(&rtcp_send_transport_)),
+        process_thread_("thread") {
     receive_stream_ = rtc::MakeUnique<FlexfecReceiveStreamImpl>(
         &rtp_stream_receiver_controller_, config_, &recovered_packet_receiver_,
         &rtt_stats_, &process_thread_);
-  }
-
-  ~FlexfecReceiveStreamTest() {
-    EXPECT_CALL(process_thread_, DeRegisterModule(_)).Times(1);
   }
 
   MockTransport rtcp_send_transport_;
   FlexfecReceiveStream::Config config_;
   MockRecoveredPacketReceiver recovered_packet_receiver_;
   MockRtcpRttStats rtt_stats_;
-  MockProcessThread process_thread_;
+  ProcessThread process_thread_;
   RtpStreamReceiverController rtp_stream_receiver_controller_;
   std::unique_ptr<FlexfecReceiveStreamImpl> receive_stream_;
 };
@@ -140,7 +136,6 @@ TEST_F(FlexfecReceiveStreamTest, RecoversPacket) {
   // clang-format on
 
   testing::StrictMock<MockRecoveredPacketReceiver> recovered_packet_receiver;
-  EXPECT_CALL(process_thread_, RegisterModule(_, _)).Times(1);
   FlexfecReceiveStreamImpl receive_stream(&rtp_stream_receiver_controller_,
                                           config_, &recovered_packet_receiver,
                                           &rtt_stats_, &process_thread_);
@@ -149,9 +144,6 @@ TEST_F(FlexfecReceiveStreamTest, RecoversPacket) {
               OnRecoveredPacket(_, kRtpHeaderSize + kPayloadLength[1]));
 
   receive_stream.OnRtpPacket(ParsePacket(kFlexfecPacket));
-
-  // Tear-down
-  EXPECT_CALL(process_thread_, DeRegisterModule(_)).Times(1);
 }
 
 }  // namespace webrtc

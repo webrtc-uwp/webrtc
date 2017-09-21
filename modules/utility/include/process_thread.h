@@ -15,19 +15,12 @@
 
 #include "typedefs.h"  // NOLINT(build/include)
 
-#if defined(WEBRTC_WIN)
-// Due to a bug in the std::unique_ptr implementation that ships with MSVS,
-// we need the full definition of QueuedTask, on Windows.
+#include "rtc_base/criticalsection.h"
 #include "rtc_base/task_queue.h"
-#else
-namespace rtc {
-class QueuedTask;
-}
-#endif
 
 namespace rtc {
 class Location;
-}
+}  // namespace rtc
 
 namespace webrtc {
 class Module;
@@ -36,40 +29,40 @@ class Module;
 // interface.  There exists one override besides ProcessThreadImpl,
 // MockProcessThread, but when looking at how it is used, it seems
 // a nullptr might suffice (or simply an actual ProcessThread instance).
-class ProcessThread {
+class ProcessThread : public rtc::TaskQueue {
  public:
-  virtual ~ProcessThread();
-
   static std::unique_ptr<ProcessThread> Create(const char* thread_name);
 
+  ProcessThread(const char* thread_name);
+  ~ProcessThread();
+
   // Starts the worker thread.  Must be called from the construction thread.
-  virtual void Start() = 0;
+  void Start();
 
   // Stops the worker thread.  Must be called from the construction thread.
-  virtual void Stop() = 0;
+  void Stop();
 
   // Wakes the thread up to give a module a chance to do processing right
   // away.  This causes the worker thread to wake up and requery the specified
   // module for when it should be called back. (Typically the module should
   // return 0 from TimeUntilNextProcess on the worker thread at that point).
   // Can be called on any thread.
-  virtual void WakeUp(Module* module) = 0;
-
-  // Queues a task object to run on the worker thread.  Ownership of the
-  // task object is transferred to the ProcessThread and the object will
-  // either be deleted after running on the worker thread, or on the
-  // construction thread of the ProcessThread instance, if the task did not
-  // get a chance to run (e.g. posting the task while shutting down or when
-  // the thread never runs).
-  virtual void PostTask(std::unique_ptr<rtc::QueuedTask> task) = 0;
+  void WakeUp(Module* module);
 
   // Adds a module that will start to receive callbacks on the worker thread.
   // Can be called from any thread.
-  virtual void RegisterModule(Module* module, const rtc::Location& from) = 0;
+  void RegisterModule(Module* module, const rtc::Location& from);
 
   // Removes a previously registered module.
   // Can be called from any thread.
-  virtual void DeRegisterModule(Module* module) = 0;
+  void DeRegisterModule(Module* module);
+
+ private:
+  class ModuleTask;
+  rtc::CriticalSection cs_;  // Used to guard modules_, tasks_ and stop_.
+
+  bool started_ RTC_GUARDED_BY(cs_);
+  std::vector<ModuleTask*> modules_ RTC_GUARDED_BY(cs_);
 };
 
 }  // namespace webrtc
