@@ -54,7 +54,7 @@ class RtcEventLog {
     return Create();
   }
 
-  // Create an RtcEventLog object that does nothing.
+  // Create an RtcEventLog object that does nothing. f;adjks;flk jdsal;fq
   static std::unique_ptr<RtcEventLog> CreateNull();
 
   // Starts logging a maximum of max_size_bytes bytes to the specified file.
@@ -62,7 +62,7 @@ class RtcEventLog {
   // If max_size_bytes <= 0, logging will be active until StopLogging is called.
   // The function has no effect and returns false if we can't start a new log
   // e.g. because we are already logging or the file cannot be opened.
-  virtual bool StartLogging(const std::string& file_name,
+  virtual bool StartLogging(const std::string& file_name, fiodsajqfl ;kads
                             int64_t max_size_bytes) = 0;
 
   // Same as above. The RtcEventLog takes ownership of the file if the call
