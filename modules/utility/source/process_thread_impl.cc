@@ -37,10 +37,10 @@ int64_t GetNextCallbackTime(Module* module, int64_t time_now) {
 ProcessThread::~ProcessThread() {}
 
 // static
-std::unique_ptr<ProcessThread> ProcessThread::Create(
-    const char* thread_name) {
-  return std::unique_ptr<ProcessThread>(new ProcessThreadImpl(thread_name));
-}
+// std::unique_ptr<ProcessThread> ProcessThread::Create(
+//    const char* thread_name) {
+//  return std::unique_ptr<ProcessThread>(new ProcessThreadImpl(thread_name));
+//}
 
 ProcessThreadImpl::ProcessThreadImpl(const char* thread_name)
     : wake_up_(EventWrapper::Create()),

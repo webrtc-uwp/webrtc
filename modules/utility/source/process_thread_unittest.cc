@@ -12,10 +12,11 @@
 #include <utility>
 
 #include "modules/include/module.h"
-#include "modules/utility/source/process_thread_impl.h"
+#include "modules/utility/include/process_thread.h"
 #include "rtc_base/location.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/timeutils.h"
+#include "system_wrappers/include/event_wrapper.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -42,7 +43,7 @@ class MockModule : public Module {
 
 class RaiseEventTask : public rtc::QueuedTask {
  public:
-  RaiseEventTask(EventWrapper* event) : event_(event) {}
+  explicit RaiseEventTask(EventWrapper* event) : event_(event) {}
   bool Run() override {
     event_->Set();
     return true;
@@ -65,13 +66,13 @@ ACTION_P(SetTimestamp, ptr) {
 }
 
 TEST(ProcessThreadImpl, StartStop) {
-  ProcessThreadImpl thread("ProcessThread");
+  ProcessThread thread("ProcessThread");
   thread.Start();
   thread.Stop();
 }
 
 TEST(ProcessThreadImpl, MultipleStartStop) {
-  ProcessThreadImpl thread("ProcessThread");
+  ProcessThread thread("ProcessThread");
   for (int i = 0; i < 5; ++i) {
     thread.Start();
     thread.Stop();
@@ -80,7 +81,7 @@ TEST(ProcessThreadImpl, MultipleStartStop) {
 
 // Verifies that we get at least call back to Process() on the worker thread.
 TEST(ProcessThreadImpl, ProcessCall) {
-  ProcessThreadImpl thread("ProcessThread");
+  ProcessThread thread("ProcessThread");
   thread.Start();
 
   std::unique_ptr<EventWrapper> event(EventWrapper::Create());
@@ -104,7 +105,7 @@ TEST(ProcessThreadImpl, ProcessCall) {
 // Same as ProcessCall except the module is registered before the
 // call to Start().
 TEST(ProcessThreadImpl, ProcessCall2) {
-  ProcessThreadImpl thread("ProcessThread");
+  ProcessThread thread("ProcessThread");
   std::unique_ptr<EventWrapper> event(EventWrapper::Create());
 
   MockModule module;
@@ -128,7 +129,7 @@ TEST(ProcessThreadImpl, ProcessCall2) {
 // Tests setting up a module for callbacks and then unregister that module.
 // After unregistration, we should not receive any further callbacks.
 TEST(ProcessThreadImpl, Deregister) {
-  ProcessThreadImpl thread("ProcessThread");
+  ProcessThread thread("ProcessThread");
   std::unique_ptr<EventWrapper> event(EventWrapper::Create());
 
   int process_count = 0;
@@ -137,9 +138,8 @@ TEST(ProcessThreadImpl, Deregister) {
       .WillOnce(Return(0))
       .WillRepeatedly(Return(1));
   EXPECT_CALL(module, Process())
-      .WillOnce(DoAll(SetEvent(event.get()),
-                      Increment(&process_count),
-                      Return()))
+      .WillOnce(
+          DoAll(SetEvent(event.get()), Increment(&process_count), Return()))
       .WillRepeatedly(DoAll(Increment(&process_count), Return()));
 
   thread.RegisterModule(&module, RTC_FROM_HERE);
@@ -165,7 +165,7 @@ TEST(ProcessThreadImpl, Deregister) {
 // time.  There's some variance of timing built into it to reduce chance of
 // flakiness on bots.
 void ProcessCallAfterAFewMs(int64_t milliseconds) {
-  ProcessThreadImpl thread("ProcessThread");
+  ProcessThread thread("ProcessThread");
   thread.Start();
 
   std::unique_ptr<EventWrapper> event(EventWrapper::Create());
@@ -174,13 +174,11 @@ void ProcessCallAfterAFewMs(int64_t milliseconds) {
   int64_t start_time = 0;
   int64_t called_time = 0;
   EXPECT_CALL(module, TimeUntilNextProcess())
-      .WillOnce(DoAll(SetTimestamp(&start_time),
-                      Return(milliseconds)))
+      .WillOnce(DoAll(SetTimestamp(&start_time), Return(milliseconds)))
       .WillRepeatedly(Return(milliseconds));
   EXPECT_CALL(module, Process())
-      .WillOnce(DoAll(SetTimestamp(&called_time),
-                      SetEvent(event.get()),
-                      Return()))
+      .WillOnce(
+          DoAll(SetTimestamp(&called_time), SetEvent(event.get()), Return()))
       .WillRepeatedly(Return());
 
   EXPECT_CALL(module, ProcessThreadAttached(&thread)).Times(1);
@@ -230,7 +228,7 @@ TEST(ProcessThreadImpl, DISABLED_ProcessCallAfter200ms) {
 // build bots.
 // TODO(tommi): Fix.
 TEST(ProcessThreadImpl, DISABLED_Process50Times) {
-  ProcessThreadImpl thread("ProcessThread");
+  ProcessThread thread("ProcessThread");
   thread.Start();
 
   std::unique_ptr<EventWrapper> event(EventWrapper::Create());
@@ -238,11 +236,9 @@ TEST(ProcessThreadImpl, DISABLED_Process50Times) {
   MockModule module;
   int callback_count = 0;
   // Ask for a callback after 20ms.
-  EXPECT_CALL(module, TimeUntilNextProcess())
-      .WillRepeatedly(Return(20));
+  EXPECT_CALL(module, TimeUntilNextProcess()).WillRepeatedly(Return(20));
   EXPECT_CALL(module, Process())
-      .WillRepeatedly(DoAll(Increment(&callback_count),
-                            Return()));
+      .WillRepeatedly(DoAll(Increment(&callback_count), Return()));
 
   EXPECT_CALL(module, ProcessThreadAttached(&thread)).Times(1);
   thread.RegisterModule(&module, RTC_FROM_HERE);
@@ -263,7 +259,7 @@ TEST(ProcessThreadImpl, DISABLED_Process50Times) {
 // Tests that we can wake up the worker thread to give us a callback right
 // away when we know the thread is sleeping.
 TEST(ProcessThreadImpl, WakeUp) {
-  ProcessThreadImpl thread("ProcessThread");
+  ProcessThread thread("ProcessThread");
   thread.Start();
 
   std::unique_ptr<EventWrapper> started(EventWrapper::Create());
@@ -281,8 +277,7 @@ TEST(ProcessThreadImpl, WakeUp) {
   // The second time TimeUntilNextProcess is then called, is after Process
   // has been called and we don't expect any more calls.
   EXPECT_CALL(module, TimeUntilNextProcess())
-      .WillOnce(DoAll(SetTimestamp(&start_time),
-                      SetEvent(started.get()),
+      .WillOnce(DoAll(SetTimestamp(&start_time), SetEvent(started.get()),
                       Return(1000)))
       .WillOnce(Return(1000));
   EXPECT_CALL(module, Process())
@@ -309,7 +304,7 @@ TEST(ProcessThreadImpl, WakeUp) {
 // Tests that we can post a task that gets run straight away on the worker
 // thread.
 TEST(ProcessThreadImpl, PostTask) {
-  ProcessThreadImpl thread("ProcessThread");
+  ProcessThread thread("ProcessThread");
   std::unique_ptr<EventWrapper> task_ran(EventWrapper::Create());
   std::unique_ptr<RaiseEventTask> task(new RaiseEventTask(task_ran.get()));
   thread.Start();
