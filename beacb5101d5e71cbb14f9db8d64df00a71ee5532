@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10f57644_fcf84eea",
+        "filename": "video/rtp_video_stream_receiver.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 464,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-21T06:58:01Z",
+      "side": 1,
+      "message": "Can RegisterPayload/DeregisterPayload be called same time on another thread?\nMay be it is safer to refactor creation of the Registry to make the map const (or at least never remove from it) to be sure using pointer to it without holding the lock is safe.",
+      "range": {
+        "startLine": 464,
+        "startChar": 28,
+        "endLine": 464,
+        "endChar": 48
+      },
+      "revId": "beacb5101d5e71cbb14f9db8d64df00a71ee5532",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
