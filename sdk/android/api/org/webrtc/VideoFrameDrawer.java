@@ -183,6 +183,16 @@ public class VideoFrameDrawer {
   public void drawFrame(VideoFrame frame, RendererCommon.GlDrawer drawer,
       Matrix additionalRenderMatrix, int viewportX, int viewportY, int viewportWidth,
       int viewportHeight) {
+    drawFrame(frame, drawer, additionalRenderMatrix, viewportX, viewportY, viewportWidth,
+        viewportHeight, true /* applyRotation */);
+  }
+
+  /**
+   * Draws the frame using the drawer supplied.
+   */
+  public void drawFrame(VideoFrame frame, RendererCommon.GlDrawer drawer,
+      Matrix additionalRenderMatrix, int viewportX, int viewportY, int viewportWidth,
+      int viewportHeight, boolean applyRotation) {
     final int width = frame.getRotatedWidth();
     final int height = frame.getRotatedHeight();
 
@@ -194,7 +204,9 @@ public class VideoFrameDrawer {
     if (!isTextureFrame) {
       renderMatrix.preScale(1f, -1f); // I420-frames are upside down
     }
-    renderMatrix.preRotate(frame.getRotation());
+    if (applyRotation) {
+      renderMatrix.preRotate(frame.getRotation());
+    }
     renderMatrix.preTranslate(-0.5f, -0.5f);
     if (additionalRenderMatrix != null) {
       renderMatrix.preConcat(additionalRenderMatrix);
