@@ -108,6 +108,48 @@
     },
     {
       "key": {
+        "uuid": "ac6e72a1_622401ef",
+        "filename": "modules/audio_coding/neteq/statistics_calculator.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 5100
+      },
+      "writtenOn": "2017-09-22T13:41:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d176fe59_3786b96b",
+      "revId": "817f751d530e39bee780d0c0bfb73a54b7997c1e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "224ad2bd_de94bdbe",
+        "filename": "modules/audio_coding/neteq/statistics_calculator.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 5100
+      },
+      "writtenOn": "2017-09-22T13:41:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d4c9e5b2_2e946789",
+      "range": {
+        "startLine": 169,
+        "startChar": 36,
+        "endLine": 169,
+        "endChar": 37
+      },
+      "revId": "817f751d530e39bee780d0c0bfb73a54b7997c1e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "98a6c662_7520b108",
         "filename": "modules/audio_coding/neteq/statistics_calculator.cc",
         "patchSetId": 1
@@ -140,6 +182,24 @@
       "revId": "817f751d530e39bee780d0c0bfb73a54b7997c1e",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7b560bc_bd9d05ac",
+        "filename": "modules/audio_coding/neteq/statistics_calculator.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 5100
+      },
+      "writtenOn": "2017-09-22T13:41:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c58eb6b1_2845bbc9",
+      "revId": "817f751d530e39bee780d0c0bfb73a54b7997c1e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
