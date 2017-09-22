@@ -15,8 +15,8 @@ deps = {
     Var('chromium_git') + '/chromium/buildtools.git' + '@' + '64e38f0cebdde27aa0cfb405f330063582f9ac76',
 
   # Entry only present in WebRTC, not Chromium.
-  'src/third_party/gflags/src':
-    Var('chromium_git') + '/external/github.com/gflags/gflags@03bebcb065c83beff83d50ae025a55a4bf94dfca',
+  'src/third_party/gtest-parallel':
+    Var('chromium_git') + '/external/github.com/google/gtest-parallel' + '@' + 'ee2027381105650fb1c66b2b121ba00b79e84d5c',
 }
 
 deps_os = {
