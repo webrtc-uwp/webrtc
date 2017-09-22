@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "775ae874_2edfa316",
+        "filename": "video/rtp_video_stream_receiver.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-22T08:14:47Z",
+      "side": 1,
+      "message": "I\u0027d like to have ReceivePacket and the methods it calls accept an RtpPacketReceived too (like RtpPacketSinkInterface), but I think this cl is a good initial step.",
+      "range": {
+        "startLine": 287,
+        "startChar": 2,
+        "endLine": 287,
+        "endChar": 15
+      },
+      "revId": "036d1db67a413e0eda30ee32a2f795085b92e082",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
