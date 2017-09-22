@@ -12,7 +12,7 @@
 
 #include <utility>
 
-#include "rtc_base/atomicops.h"
+#include "rtc_base/refcounter.h"
 
 namespace rtc {
 
@@ -30,10 +30,11 @@ class RefCountedObject : public T {
           std::forward<P1>(p1),
           std::forward<Args>(args)...) {}
 
-  virtual int AddRef() const { return AtomicOps::Increment(&ref_count_); }
+  // TODO(nisse): What would it take to change return values here?
+  virtual int AddRef() const { return ref_count_.AddRef(); }
 
   virtual int Release() const {
-    int count = AtomicOps::Decrement(&ref_count_);
+    int count = ref_count_.Release();
     if (!count) {
       delete this;
     }
@@ -46,14 +47,12 @@ class RefCountedObject : public T {
   // performs the test for a reference count of one, and performs the memory
   // barrier needed for the owning thread to act on the object, knowing that it
   // has exclusive access to the object.
-  virtual bool HasOneRef() const {
-    return AtomicOps::AcquireLoad(&ref_count_) == 1;
-  }
+  virtual bool HasOneRef() const { return ref_count_.HasOneRef(); }
 
  protected:
   virtual ~RefCountedObject() {}
 
-  mutable volatile int ref_count_ = 0;
+  mutable webrtc::webrtc_impl::RefCounter ref_count_;
 };
 
 }  // namespace rtc
