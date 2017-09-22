@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "803d151e_25b42c2b",
+        "filename": "modules/audio_coding/neteq/statistics_calculator.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-22T14:52:15Z",
+      "side": 1,
+      "message": "Can\u0027t this just call ConcealedSamplesCorrection? Sure, it will hit an \"if\" condition that always evaluates to false, but that seems like a small price to pay for code readability.",
+      "revId": "b9517fa6a73a0b46491be7617cac46b0a95cf60e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fbcd73c0_6eed3e98",
+        "filename": "modules/audio_coding/neteq/statistics_calculator.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-22T14:52:15Z",
+      "side": 1,
+      "message": "Should have a comment explaining the logic, or point to a comment in the header file.",
+      "revId": "b9517fa6a73a0b46491be7617cac46b0a95cf60e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bf637328_22644ed7",
+        "filename": "modules/audio_coding/neteq/statistics_calculator.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-22T14:52:15Z",
+      "side": 1,
+      "message": "nit: Don\u0027t think this DCHECK adds anything, since it\u0027s guaranteed pretty clearly by std::min.",
+      "revId": "b9517fa6a73a0b46491be7617cac46b0a95cf60e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4435bd7f_e4aa95d2",
+        "filename": "modules/audio_coding/neteq/statistics_calculator.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-22T14:52:15Z",
+      "side": 1,
+      "message": "nit: \"liftime_stats_\"\n\nAlso, this comment should go into a bit more detail. It\u0027s not immediately obvious what \"corrects the concealed samples counter\" means.",
+      "revId": "b9517fa6a73a0b46491be7617cac46b0a95cf60e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c587180_1bbd680a",
+        "filename": "modules/audio_coding/neteq/statistics_calculator_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-22T14:52:15Z",
+      "side": 1,
+      "message": "Should have a comment explaining this test in more detail. For instance, should explain *why* the concealed samples count can\u0027t decrease (since it feeds into webrtc stats, and given the definition in the spec, stats-consuming applications wouldn\u0027t expect it to decrease).",
+      "revId": "b9517fa6a73a0b46491be7617cac46b0a95cf60e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7796bc3_f4b3bfda",
+        "filename": "modules/audio_coding/neteq/statistics_calculator_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-22T14:52:15Z",
+      "side": 1,
+      "message": "This one too.",
+      "revId": "b9517fa6a73a0b46491be7617cac46b0a95cf60e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
