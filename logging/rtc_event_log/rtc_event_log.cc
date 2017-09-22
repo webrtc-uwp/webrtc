@@ -37,6 +37,8 @@
 #include "logging/rtc_event_log/events/rtc_event_rtp_packet_outgoing.h"
 #include "logging/rtc_event_log/events/rtc_event_video_receive_stream_config.h"
 #include "logging/rtc_event_log/events/rtc_event_video_send_stream_config.h"
+#include "logging/rtc_event_log/output/rtc_event_log_output.h"
+#include "logging/rtc_event_log/output/rtc_event_log_output_file.h"
 #include "logging/rtc_event_log/rtc_stream_config.h"
 // TODO(eladalon): Remove these when deprecated functions are removed.
 #include "modules/audio_coding/audio_network_adaptor/include/audio_network_adaptor.h"
@@ -59,14 +61,11 @@
 #include "rtc_base/constructormagic.h"
 #include "rtc_base/event.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/protobuf_utils.h"
 #include "rtc_base/ptr_util.h"
+#include "rtc_base/safe_conversions.h"
 #include "rtc_base/sequenced_task_checker.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/thread_annotations.h"
-#include "rtc_base/timeutils.h"
-// TODO(eladalon): Remove this when output is modularized away.
-#include "system_wrappers/include/file_wrapper.h"
 #include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
@@ -121,8 +120,14 @@ class RtcEventLogImpl final : public RtcEventLog {
                     int64_t max_size_bytes) override;
   bool StartLogging(rtc::PlatformFile platform_file,
                     int64_t max_size_bytes) override;
+
+  // TODO(eladalon): We should change these name to reflect that what we're
+  // actually starting/stopping is the output of the log, not the log itself.
+  bool StartLogging(std::unique_ptr<RtcEventLogOutput> output) override;
   void StopLogging() override;
+
   void Log(std::unique_ptr<RtcEvent> event) override;
+
   void LogVideoReceiveStreamConfig(const rtclog::StreamConfig& config) override;
   void LogVideoSendStreamConfig(const rtclog::StreamConfig& config) override;
   void LogAudioReceiveStreamConfig(const rtclog::StreamConfig& config) override;
@@ -165,21 +170,23 @@ class RtcEventLogImpl final : public RtcEventLog {
                              ProbeFailureReason failure_reason) override;
 
  private:
-  void StartLoggingInternal(std::unique_ptr<FileWrapper> file,
-                            int64_t max_size_bytes);
-
   // Appends an event to the output protobuf string, returning true on success.
   // Fails and returns false in case the limit on output size prevents the
   // event from being added; in this case, the output string is left unchanged.
   // The event is encoded before being appended.
+  // We could have avoided this, because the output repeats the check, but this
+  // way, we minimize the number of lock acquisitions, task switches, etc.,
+  // that might be associated with each call to RtcEventLogOutput::Write().
   bool AppendEventToString(const RtcEvent& event,
-                           ProtoString* output_string) RTC_WARN_UNUSED_RESULT;
+                           std::string* output_string) RTC_WARN_UNUSED_RESULT;
 
-  void LogToMemory(std::unique_ptr<RtcEvent> event);
+  void LogToMemory(std::unique_ptr<RtcEvent> event) RTC_RUN_ON(&task_queue_);
 
-  void StartLogFile();
-  void LogToFile(std::unique_ptr<RtcEvent> event);
-  void StopLogFile(int64_t stop_time);
+  void LogEventsFromMemoryToOutput() RTC_RUN_ON(&task_queue_);
+  void LogToOutput(std::unique_ptr<RtcEvent> event) RTC_RUN_ON(&task_queue_);
+  void StopOutput() RTC_RUN_ON(&task_queue_);
+
+  void StopLoggingInternal() RTC_RUN_ON(&task_queue_);
 
   // Make sure that the event log is "managed" - created/destroyed, as well
   // as started/stopped - from the same thread/task-queue.
@@ -192,12 +199,11 @@ class RtcEventLogImpl final : public RtcEventLog {
   // History containing the most recent (non-configuration) events (~10s).
   std::deque<std::unique_ptr<RtcEvent>> history_ RTC_ACCESS_ON(task_queue_);
 
-  std::unique_ptr<FileWrapper> file_ RTC_ACCESS_ON(task_queue_);
-
   size_t max_size_bytes_ RTC_ACCESS_ON(task_queue_);
   size_t written_bytes_ RTC_ACCESS_ON(task_queue_);
 
   std::unique_ptr<RtcEventLogEncoder> event_encoder_ RTC_ACCESS_ON(task_queue_);
+  std::unique_ptr<RtcEventLogOutput> event_output_ RTC_ACCESS_ON(task_queue_);
 
   // Keep this last to ensure it destructs first, or else tasks living on the
   // queue might access other members after they've been torn down.
@@ -208,8 +214,7 @@ class RtcEventLogImpl final : public RtcEventLog {
 
 RtcEventLogImpl::RtcEventLogImpl(
     std::unique_ptr<RtcEventLogEncoder> event_encoder)
-    : file_(FileWrapper::Create()),
-      max_size_bytes_(std::numeric_limits<decltype(max_size_bytes_)>::max()),
+    : max_size_bytes_(std::numeric_limits<decltype(max_size_bytes_)>::max()),
       written_bytes_(0),
       event_encoder_(std::move(event_encoder)),
       task_queue_("rtc_event_log") {}
@@ -217,7 +222,7 @@ RtcEventLogImpl::RtcEventLogImpl(
 RtcEventLogImpl::~RtcEventLogImpl() {
   RTC_DCHECK_CALLED_SEQUENTIALLY(&owner_sequence_checker_);
 
-  // If we're logging to the file, this will stop that. Blocking function.
+  // If we're logging to the output, this will stop that. Blocking function.
   StopLogging();
 
   int count = std::atomic_fetch_sub(&rtc_event_log_count, 1) - 1;
@@ -226,40 +231,34 @@ RtcEventLogImpl::~RtcEventLogImpl() {
 
 bool RtcEventLogImpl::StartLogging(const std::string& file_name,
                                    int64_t max_size_bytes) {
-  RTC_DCHECK_CALLED_SEQUENTIALLY(&owner_sequence_checker_);
-
-  auto file = rtc::WrapUnique<FileWrapper>(FileWrapper::Create());
-  if (!file->OpenFile(file_name.c_str(), false)) {
-    LOG(LS_ERROR) << "Can't open file. WebRTC event log not started.";
-    return false;
-  }
-
-  StartLoggingInternal(std::move(file), max_size_bytes);
-
-  return true;
+  RTC_CHECK(max_size_bytes > 0 || max_size_bytes == kUnlimitedOutput);
+  return StartLogging(rtc::MakeUnique<RtcEventLogOutputFile>(
+      file_name, rtc::saturated_cast<size_t>(max_size_bytes)));
 }
 
 bool RtcEventLogImpl::StartLogging(rtc::PlatformFile platform_file,
                                    int64_t max_size_bytes) {
+  RTC_CHECK(max_size_bytes > 0 || max_size_bytes == kUnlimitedOutput);
+  return StartLogging(rtc::MakeUnique<RtcEventLogOutputFile>(
+      platform_file, rtc::saturated_cast<size_t>(max_size_bytes)));
+}
+
+bool RtcEventLogImpl::StartLogging(std::unique_ptr<RtcEventLogOutput> output) {
   RTC_DCHECK_CALLED_SEQUENTIALLY(&owner_sequence_checker_);
 
-  auto file = rtc::WrapUnique<FileWrapper>(FileWrapper::Create());
-  FILE* file_handle = rtc::FdopenPlatformFileForWriting(platform_file);
-  if (!file_handle) {
-    LOG(LS_ERROR) << "Can't open file. WebRTC event log not started.";
-    // Even though we failed to open a FILE*, the platform_file is still open
-    // and needs to be closed.
-    if (!rtc::ClosePlatformFile(platform_file)) {
-      LOG(LS_ERROR) << "Can't close file.";
-    }
-    return false;
-  }
-  if (!file->OpenFromFileHandle(file_handle)) {
-    LOG(LS_ERROR) << "Can't open file. WebRTC event log not started.";
+  if (!output->IsActive()) {
     return false;
   }
 
-  StartLoggingInternal(std::move(file), max_size_bytes);
+  auto output_starter = [this](std::unique_ptr<RtcEventLogOutput> output) {
+    RTC_DCHECK_RUN_ON(&task_queue_);
+    RTC_DCHECK(output->IsActive());
+    event_output_ = std::move(output);
+    LogEventsFromMemoryToOutput();
+  };
+
+  task_queue_.PostTask(rtc::MakeUnique<ResourceOwningTask<RtcEventLogOutput>>(
+      std::move(output), output_starter));
 
   return true;
 }
@@ -269,19 +268,15 @@ void RtcEventLogImpl::StopLogging() {
 
   LOG(LS_INFO) << "Stopping WebRTC event log.";
 
-  const int64_t stop_time = rtc::TimeMicros();
+  rtc::Event output_stopped(true, false);
 
-  rtc::Event file_finished(true, false);
-
-  task_queue_.PostTask([this, stop_time, &file_finished]() {
+  task_queue_.PostTask([this, &output_stopped]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
-    if (file_->is_open()) {
-      StopLogFile(stop_time);
-    }
-    file_finished.Set();
+    StopLoggingInternal();
+    output_stopped.Set();
   });
 
-  file_finished.Wait(rtc::Event::kForever);
+  output_stopped.Wait(rtc::Event::kForever);
 
   LOG(LS_INFO) << "WebRTC event log successfully stopped.";
 }
@@ -291,8 +286,8 @@ void RtcEventLogImpl::Log(std::unique_ptr<RtcEvent> event) {
 
   auto event_handler = [this](std::unique_ptr<RtcEvent> unencoded_event) {
     RTC_DCHECK_RUN_ON(&task_queue_);
-    if (file_->is_open()) {
-      LogToFile(std::move(unencoded_event));
+    if (event_output_) {
+      LogToOutput(std::move(unencoded_event));
     } else {
       LogToMemory(std::move(unencoded_event));
     }
@@ -420,31 +415,8 @@ void RtcEventLogImpl::LogProbeResultFailure(int id,
   Log(rtc::MakeUnique<RtcEventProbeResultFailure>(id, failure_reason));
 }
 
-void RtcEventLogImpl::StartLoggingInternal(std::unique_ptr<FileWrapper> file,
-                                           int64_t max_size_bytes) {
-  LOG(LS_INFO) << "Starting WebRTC event log.";
-
-  max_size_bytes = (max_size_bytes <= 0)
-                       ? std::numeric_limits<decltype(max_size_bytes)>::max()
-                       : max_size_bytes;
-  auto file_handler = [this,
-                       max_size_bytes](std::unique_ptr<FileWrapper> file) {
-    RTC_DCHECK_RUN_ON(&task_queue_);
-    if (!file_->is_open()) {
-      max_size_bytes_ = max_size_bytes;
-      file_ = std::move(file);
-      StartLogFile();
-    } else {
-      // Already started. Ignore message and close file handle.
-      file->CloseFile();
-    }
-  };
-  task_queue_.PostTask(rtc::MakeUnique<ResourceOwningTask<FileWrapper>>(
-      std::move(file), file_handler));
-}
-
 bool RtcEventLogImpl::AppendEventToString(const RtcEvent& event,
-                                          ProtoString* output_string) {
+                                          std::string* output_string) {
   RTC_DCHECK_RUN_ON(&task_queue_);
 
   std::string encoded_event = event_encoder_->Encode(event);
@@ -453,6 +425,7 @@ bool RtcEventLogImpl::AppendEventToString(const RtcEvent& event,
   size_t potential_new_size =
       written_bytes_ + output_string->size() + encoded_event.length();
   if (potential_new_size <= max_size_bytes_) {
+    // TODO(eladalon): This is inefficient; fix this in a separate CL.
     *output_string += encoded_event;
     appended = true;
   } else {
@@ -463,8 +436,7 @@ bool RtcEventLogImpl::AppendEventToString(const RtcEvent& event,
 }
 
 void RtcEventLogImpl::LogToMemory(std::unique_ptr<RtcEvent> event) {
-  RTC_DCHECK_RUN_ON(&task_queue_);
-  RTC_DCHECK(!file_->is_open());
+  RTC_DCHECK(!event_output_);
 
   if (event->IsConfigEvent()) {
     config_history_.push_back(std::move(event));
@@ -476,11 +448,10 @@ void RtcEventLogImpl::LogToMemory(std::unique_ptr<RtcEvent> event) {
   }
 }
 
-void RtcEventLogImpl::StartLogFile() {
-  RTC_DCHECK_RUN_ON(&task_queue_);
-  RTC_DCHECK(file_->is_open());
+void RtcEventLogImpl::LogEventsFromMemoryToOutput() {
+  RTC_DCHECK(event_output_ && event_output_->IsActive());
 
-  ProtoString output_string;
+  std::string output_string;
 
   // Create and serialize the LOG_START event.
   // The timestamp used will correspond to when logging has started. The log
@@ -489,7 +460,7 @@ void RtcEventLogImpl::StartLogFile() {
   bool appended = AppendEventToString(RtcEventLoggingStarted(), &output_string);
 
   // Serialize the config information for all old streams, including streams
-  // which were already logged to previous files.
+  // which were already logged to previous outputs.
   for (auto& event : config_history_) {
     if (!appended) {
       break;
@@ -501,33 +472,34 @@ void RtcEventLogImpl::StartLogFile() {
   while (appended && !history_.empty()) {
     appended = AppendEventToString(*history_.front(), &output_string);
     if (appended) {
-      // Known issue - if writing to the file fails, these events will have
+      // Known issue - if writing to the output fails, these events will have
       // been lost. If we try to open a new file, these events will be missing
       // from it.
       history_.pop_front();
     }
   }
 
-  // Write to file.
-  if (!file_->Write(output_string.data(), output_string.size())) {
+  if (!event_output_->Write(output_string)) {
     LOG(LS_ERROR) << "FileWrapper failed to write WebRtcEventLog file.";
-    // The current FileWrapper implementation closes the file on error.
-    RTC_DCHECK(!file_->is_open());
+    // The first failure closes the output.
+    RTC_DCHECK(!event_output_->IsActive());
+    StopOutput();  // Clean-up.
     return;
   }
-  written_bytes_ += output_string.size();
 
-  if (!appended) {
-    RTC_DCHECK(file_->is_open());
-    StopLogFile(rtc::TimeMicros());
+  if (appended) {
+    written_bytes_ += output_string.size();
+  } else {
+    // Successful partial write to the file. Some events could not be written;
+    // the output should be closed, to avoid gaps.
+    StopOutput();
   }
 }
 
-void RtcEventLogImpl::LogToFile(std::unique_ptr<RtcEvent> event) {
-  RTC_DCHECK_RUN_ON(&task_queue_);
-  RTC_DCHECK(file_->is_open());
+void RtcEventLogImpl::LogToOutput(std::unique_ptr<RtcEvent> event) {
+  RTC_DCHECK(event_output_ && event_output_->IsActive());
 
-  ProtoString output_string;
+  std::string output_string;
 
   bool appended = AppendEventToString(*event, &output_string);
 
@@ -536,44 +508,35 @@ void RtcEventLogImpl::LogToFile(std::unique_ptr<RtcEvent> event) {
   }
 
   if (!appended) {
-    RTC_DCHECK(file_->is_open());
     history_.push_back(std::move(event));
-    StopLogFile(rtc::TimeMicros());
+    StopOutput();
     return;
   }
 
   // Write string to file.
-  if (file_->Write(output_string.data(), output_string.size())) {
+  if (event_output_->Write(output_string)) {
     written_bytes_ += output_string.size();
   } else {
     LOG(LS_ERROR) << "FileWrapper failed to write WebRtcEventLog file.";
     // The current FileWrapper implementation closes the file on error.
-    RTC_DCHECK(!file_->is_open());
+    RTC_DCHECK(!event_output_);
+    StopOutput();
   }
 }
 
-void RtcEventLogImpl::StopLogFile(int64_t stop_time) {
-  RTC_DCHECK_RUN_ON(&task_queue_);
-  RTC_DCHECK(file_->is_open());
-
-  ProtoString output_string;
-
-  bool appended = AppendEventToString(RtcEventLoggingStopped(), &output_string);
-
-  if (appended) {
-    if (!file_->Write(output_string.data(), output_string.size())) {
-      LOG(LS_ERROR) << "FileWrapper failed to write WebRtcEventLog file.";
-      // The current FileWrapper implementation closes the file on error.
-      RTC_DCHECK(!file_->is_open());
-    }
-    written_bytes_ += output_string.size();
-  }
-
+void RtcEventLogImpl::StopOutput() {
   max_size_bytes_ = std::numeric_limits<decltype(max_size_bytes_)>::max();
   written_bytes_ = 0;
+  event_output_.reset();
+}
 
-  file_->CloseFile();
-  RTC_DCHECK(!file_->is_open());
+void RtcEventLogImpl::StopLoggingInternal() {
+  if (event_output_) {
+    RTC_DCHECK(event_output_->IsActive());
+    event_output_->Write(
+        event_encoder_->Encode(*rtc::MakeUnique<RtcEventLoggingStopped>()));
+  }
+  StopOutput();
 }
 
 }  // namespace
