@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "77a5ff31_e53ecc46",
+        "filename": "tools_webrtc/autoroller/unittests/testdata/DEPS",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 5114
+      },
+      "writtenOn": "2017-09-22T12:53:15Z",
+      "side": 1,
+      "message": "I tried to be nice and add an alternative test case instead of removing it, but it fails\n\nTestError: Got unexpected\n([\u0027git\u0027, \u0027ls-remote\u0027, \u0027https://chromium.googlesource.com/external/github.com/google/gtest-parallel\u0027, \u0027HEAD\u0027],)",
+      "revId": "36d5ae36b578df9e85c6871edf128a9be1966b6e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
