@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03355fc2_2c58a586",
+        "filename": "api/p2pconstants.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-22T12:12:46Z",
+      "side": 0,
+      "message": "I don\u0027t find any of the constants here to be used in candidate.h. Can you show me what is?",
+      "revId": "cb728ea83a93d5d8dc4dee377260de0eda8a6203",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b950f373_2a4f8d2a",
+        "filename": "api/streamparams.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-22T12:12:46Z",
+      "side": 0,
+      "message": "I see streamparams.h included in api/mediastreaminterface.h, but not that either of the types SsrcGroup, StreamParams or MediaStreams is actually used in api/. What is being used from here?",
+      "revId": "cb728ea83a93d5d8dc4dee377260de0eda8a6203",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}

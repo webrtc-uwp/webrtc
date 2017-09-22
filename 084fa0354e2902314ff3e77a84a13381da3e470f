@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4bc826a7_ff475a23",
+        "filename": "api/BUILD.gn",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-22T12:12:46Z",
+      "side": 1,
+      "message": "Alphabetical order?",
+      "revId": "084fa0354e2902314ff3e77a84a13381da3e470f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "015337a7_cc700620",
+        "filename": "api/candidate.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-22T12:12:46Z",
+      "side": 1,
+      "message": "Add a TODO or issue that this should be cleaned up to remove everything not strictly needed in the public API.",
+      "revId": "084fa0354e2902314ff3e77a84a13381da3e470f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33c95ad4_848119db",
+        "filename": "api/candidate.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-22T12:12:46Z",
+      "side": 1,
+      "message": "Is this used by the public API? If not, (re)move it.",
+      "revId": "084fa0354e2902314ff3e77a84a13381da3e470f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
