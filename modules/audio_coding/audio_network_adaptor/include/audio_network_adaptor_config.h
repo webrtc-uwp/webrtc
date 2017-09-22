@@ -19,6 +19,7 @@ struct AudioEncoderRuntimeConfig {
   AudioEncoderRuntimeConfig();
   AudioEncoderRuntimeConfig(const AudioEncoderRuntimeConfig& other);
   AudioEncoderRuntimeConfig& operator=(const AudioEncoderRuntimeConfig& other);
+  bool operator==(const AudioEncoderRuntimeConfig& other) const;
   ~AudioEncoderRuntimeConfig();
   rtc::Optional<int> bitrate_bps;
   rtc::Optional<int> frame_length_ms;
