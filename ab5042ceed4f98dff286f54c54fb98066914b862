@@ -1,0 +1,273 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee19571d_7c1718fb",
+        "filename": "api/BUILD.gn",
+        "patchSetId": 5
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-23T18:23:13Z",
+      "side": 1,
+      "message": "\"public\"—see https://bugs.chromium.org/p/webrtc/issues/detail?id\u003d8255",
+      "range": {
+        "startLine": 222,
+        "startChar": 2,
+        "endLine": 222,
+        "endChar": 9
+      },
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7debb2fa_2df6cb86",
+        "filename": "api/refcountedbase.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-23T18:23:13Z",
+      "side": 1,
+      "message": "rtc for now, for consistency with nearby code. We may want to stop using rtc eventually, but perhaps not in this CL.",
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4118693_5017cb72",
+        "filename": "api/refcountedbase.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-23T18:23:13Z",
+      "side": 1,
+      "message": "In RefCountInterface(), both of these return int. But scoped_refptr doesn\u0027t use the return value, so letting it be void here seems like a good idea.",
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38d868df_94c37486",
+        "filename": "api/refcountedbase.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-23T18:23:13Z",
+      "side": 1,
+      "message": "scoped_refptr doesn\u0027t seem to need it, so leave it out for now.",
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "caab62f4_71e7ea1e",
+        "filename": "modules/desktop_capture/mac/desktop_configuration_monitor.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-23T18:23:13Z",
+      "side": 1,
+      "message": "The destructor can be public, right? Because this class doesn\u0027t have subclasses? (Consider proving this by making the class final.)",
+      "range": {
+        "startLine": 42,
+        "startChar": 1,
+        "endLine": 42,
+        "endChar": 10
+      },
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81944f65_e54007e8",
+        "filename": "modules/desktop_capture/mac/full_screen_chrome_window_detector.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-23T18:23:13Z",
+      "side": 1,
+      "message": "private, final? (see earlier comment)",
+      "range": {
+        "startLine": 45,
+        "startChar": 1,
+        "endLine": 45,
+        "endChar": 10
+      },
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f08f68f9_8fa89d34",
+        "filename": "modules/desktop_capture/x11/shared_x_display.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-23T18:23:13Z",
+      "side": 1,
+      "message": "private, final? (see earlier comment)",
+      "range": {
+        "startLine": 66,
+        "startChar": 1,
+        "endLine": 66,
+        "endChar": 10
+      },
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc1a1a4b_2c223728",
+        "filename": "rtc_base/refcountedobject.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-23T18:23:13Z",
+      "side": 1,
+      "message": "Fiat? We could probably just do it, and it\u0027d probably just work, except if third parties have implemented RefCountedInterface manually.",
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e5f0ad4_72f310cc",
+        "filename": "rtc_base/refcounter.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-23T18:23:13Z",
+      "side": 1,
+      "message": "You\u0027ve made the ref counter a mutable class member in both places where you use it above. That means you don\u0027t have to make the ref count mutable here and make these methods const.\n\n(You could go the other way and keep the \"mutable\" only in this class, but I like the other solution better.)",
+      "range": {
+        "startLine": 21,
+        "startChar": 15,
+        "endLine": 21,
+        "endChar": 20
+      },
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55dd3292_ea7ab7cc",
+        "filename": "rtc_base/refcounter.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-23T18:23:13Z",
+      "side": 1,
+      "message": "Consider naming these methods something other than AddRef and Release, to prevent confusion with RefCountedInterface and the protocol required by scoped_refptr. IncRef/DecRef?",
+      "range": {
+        "startLine": 26,
+        "startChar": 6,
+        "endLine": 26,
+        "endChar": 13
+      },
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4e09d77_0c4b9961",
+        "filename": "rtc_base/refcounter.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-23T18:23:13Z",
+      "side": 1,
+      "message": "[...] act on the resource protected by the reference counter, knowing that [...]",
+      "range": {
+        "startLine": 32,
+        "startChar": 56,
+        "endLine": 32,
+        "endChar": 62
+      },
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5660e76d_1981937b",
+        "filename": "rtc_base/refcounter.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-23T18:23:13Z",
+      "side": 1,
+      "message": "Spurious blank line.",
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "713223de_1fe4929b",
+        "filename": "rtc_base/refcounter.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-23T18:23:13Z",
+      "side": 1,
+      "message": "Consider making the initial count a constructor argument, and forbidding default construction. As is, it was not obvious where this class was used if the reference counter started at 0 or 1.",
+      "range": {
+        "startLine": 40,
+        "startChar": 36,
+        "endLine": 40,
+        "endChar": 37
+      },
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
