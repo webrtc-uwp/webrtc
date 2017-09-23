@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c598529_f2de36f7",
+        "filename": "sdk/android/api/org/webrtc/VideoFrameDrawer.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-23T15:04:55Z",
+      "side": 1,
+      "message": "I think it\u0027s better if the caller makes a new VideoFrame with rotation 0 instead of adding this function.",
+      "range": {
+        "startLine": 193,
+        "startChar": 14,
+        "endLine": 193,
+        "endChar": 23
+      },
+      "revId": "ab30cbea5568b957bedc9790ff26a4d36883755c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fc4e6c7f_44b8aa29",
+        "filename": "sdk/android/instrumentationtests/src/org/webrtc/HardwareVideoEncoderTest.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-23T15:04:55Z",
+      "side": 1,
+      "message": "Can\u0027t you use a mocking framework instead of creating these classes manually?",
+      "range": {
+        "startLine": 114,
+        "startChar": 32,
+        "endLine": 114,
+        "endChar": 46
+      },
+      "revId": "ab30cbea5568b957bedc9790ff26a4d36883755c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
