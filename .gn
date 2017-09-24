@@ -67,4 +67,6 @@ default_args = {
 
   # WebRTC relies on Chromium's Android test infrastructure.
   use_cxx11_on_android = false
+
+  libyuv_use_gflags = false
 }
