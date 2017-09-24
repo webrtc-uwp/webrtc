@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "584bb009_eca5acdf",
+        "filename": "webrtc/modules/audio_processing/test/aec_dump_based_simulator.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-09-24T20:19:05Z",
+      "side": 1,
+      "message": "This is a bit redundant in the sense that the AEC dump usage is explicitly specified when running audioproc_f.\n\nI think it is fine to have it as it is, but a suggestion is to change it to\nLOG(LS_VERBOSE) \u003c\u003c \"Simulating analog mic gain\";\n\nIn that case, it should probably be moved to audio_processing_simulator.cc",
+      "range": {
+        "startLine": 70,
+        "startChar": 51,
+        "endLine": 70,
+        "endChar": 56
+      },
+      "revId": "bab4563a92fa0f0046b5bc4cdeab3b7d8bedc180",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8aa7f8a2_d1a5404c",
+        "filename": "webrtc/modules/audio_processing/test/fake_recording_device.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-09-24T20:19:05Z",
+      "side": 1,
+      "message": "In order to speed this up, please put the if-statement outside the loops.\n\nThen specify  \nconst float divisor \u003d undo_mic_level_ \u0026\u0026 *undo_mic_level_ \u003e 0 ? *undo_mic_level_ : 255.0f;\nand use that inside the loop.",
+      "range": {
+        "startLine": 76,
+        "startChar": 10,
+        "endLine": 76,
+        "endChar": 25
+      },
+      "revId": "bab4563a92fa0f0046b5bc4cdeab3b7d8bedc180",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "efe771cb_1b82860e",
+        "filename": "webrtc/modules/audio_processing/test/fake_recording_device.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-09-24T20:19:05Z",
+      "side": 1,
+      "message": "I know that we discussed it before, but since the handling of the case *undo_mic_level_ is a bit strange, I think that it warrants a comment.",
+      "range": {
+        "startLine": 89,
+        "startChar": 64,
+        "endLine": 89,
+        "endChar": 70
+      },
+      "revId": "bab4563a92fa0f0046b5bc4cdeab3b7d8bedc180",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5dd7cea8_7a49e195",
+        "filename": "webrtc/modules/audio_processing/test/fake_recording_device.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-09-24T20:19:05Z",
+      "side": 1,
+      "message": "In order to speed this up, please put the if-statement outside the loops.\n\nThen specify  \nconst float divisor \u003d undo_mic_level_ \u0026\u0026 *undo_mic_level_ \u003e 0 ? *undo_mic_level_ : 255.0f;\nand use that inside the loop.",
+      "range": {
+        "startLine": 96,
+        "startChar": 12,
+        "endLine": 96,
+        "endChar": 27
+      },
+      "revId": "bab4563a92fa0f0046b5bc4cdeab3b7d8bedc180",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8160a06e_15966aca",
+        "filename": "webrtc/modules/audio_processing/test/fake_recording_device.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-09-24T20:19:05Z",
+      "side": 1,
+      "message": "I know that we discussed it before, but since the handling of the case *undo_mic_level_ is a bit strange, I think that it warrants a comment.",
+      "range": {
+        "startLine": 107,
+        "startChar": 66,
+        "endLine": 107,
+        "endChar": 72
+      },
+      "revId": "bab4563a92fa0f0046b5bc4cdeab3b7d8bedc180",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e5d3a9d_0c33400d",
+        "filename": "webrtc/modules/audio_processing/test/fake_recording_device.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-09-24T20:19:05Z",
+      "side": 1,
+      "message": "Please change level to be an int.\n\nFrom the implementation of this method it is clear that level must be specified.\nFurthermore from the usage of this method it is clear that it cannot be called with level unspecified.\n\nTherefore, it should be changed to not take an Optional.",
+      "range": {
+        "startLine": 55,
+        "startChar": 48,
+        "endLine": 55,
+        "endChar": 53
+      },
+      "revId": "bab4563a92fa0f0046b5bc4cdeab3b7d8bedc180",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
