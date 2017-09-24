@@ -29,7 +29,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(BaseJUnit4ClassRunner.class)
-public class SurfaceViewRendererOnMeasureTest {
+public class SurfaceVideoViewOnMeasureTest {
   @Rule public UiThreadTestRule uiThreadTestRule = new UiThreadTestRule();
 
   /**
@@ -62,13 +62,13 @@ public class SurfaceViewRendererOnMeasureTest {
    * Assert onMeasure() with given parameters will result in expected measured size.
    */
   @SuppressLint("WrongCall")
-  private static void assertMeasuredSize(SurfaceViewRenderer surfaceViewRenderer,
+  private static void assertMeasuredSize(SurfaceVideoView surfaceVideoView,
       RendererCommon.ScalingType scalingType, String frameDimensions, int expectedWidth,
       int expectedHeight, int widthSpec, int heightSpec) {
-    surfaceViewRenderer.setScalingType(scalingType);
-    surfaceViewRenderer.onMeasure(widthSpec, heightSpec);
-    final int measuredWidth = surfaceViewRenderer.getMeasuredWidth();
-    final int measuredHeight = surfaceViewRenderer.getMeasuredHeight();
+    surfaceVideoView.setScalingType(scalingType);
+    surfaceVideoView.onMeasure(widthSpec, heightSpec);
+    final int measuredWidth = surfaceVideoView.getMeasuredWidth();
+    final int measuredHeight = surfaceVideoView.getMeasuredHeight();
     if (measuredWidth != expectedWidth || measuredHeight != expectedHeight) {
       fail("onMeasure(" + MeasureSpec.toString(widthSpec) + ", " + MeasureSpec.toString(heightSpec)
           + ")"
@@ -79,53 +79,57 @@ public class SurfaceViewRendererOnMeasureTest {
   }
 
   /**
-   * Test how SurfaceViewRenderer.onMeasure() behaves when no frame has been delivered.
+   * Test how SurfaceVideoView.onMeasure() behaves when no frame has been delivered.
    */
   @Test
   @UiThreadTest
   @MediumTest
   public void testNoFrame() {
-    final SurfaceViewRenderer surfaceViewRenderer =
-        new SurfaceViewRenderer(InstrumentationRegistry.getContext());
+    final SurfaceVideoView surfaceVideoView =
+        new SurfaceVideoView(InstrumentationRegistry.getContext());
+    final SurfaceVideoRenderer surfaceVideoRenderer =
+        new SurfaceVideoRenderer(surfaceVideoView.getName());
     final String frameDimensions = "null";
 
-    // Test behaviour before SurfaceViewRenderer.init() is called.
+    // Test behaviour before SurfaceVideoRenderer.init() is called.
     for (RendererCommon.ScalingType scalingType : scalingTypes) {
       for (int measureSpecMode : measureSpecModes) {
         final int zeroMeasureSize = MeasureSpec.makeMeasureSpec(0, measureSpecMode);
-        assertMeasuredSize(surfaceViewRenderer, scalingType, frameDimensions, 0, 0, zeroMeasureSize,
-            zeroMeasureSize);
-        assertMeasuredSize(surfaceViewRenderer, scalingType, frameDimensions, 1280, 720,
+        assertMeasuredSize(
+            surfaceVideoView, scalingType, frameDimensions, 0, 0, zeroMeasureSize, zeroMeasureSize);
+        assertMeasuredSize(surfaceVideoView, scalingType, frameDimensions, 1280, 720,
             MeasureSpec.makeMeasureSpec(1280, measureSpecMode),
             MeasureSpec.makeMeasureSpec(720, measureSpecMode));
       }
     }
 
-    // Test behaviour after SurfaceViewRenderer.init() is called, but still no frame.
-    surfaceViewRenderer.init((EglBase.Context) null, null);
+    // Test behaviour after SurfaceVideoRenderer.init() is called, but still no frame.
+    surfaceVideoRenderer.init((EglBase.Context) null, null);
     for (RendererCommon.ScalingType scalingType : scalingTypes) {
       for (int measureSpecMode : measureSpecModes) {
         final int zeroMeasureSize = MeasureSpec.makeMeasureSpec(0, measureSpecMode);
-        assertMeasuredSize(surfaceViewRenderer, scalingType, frameDimensions, 0, 0, zeroMeasureSize,
-            zeroMeasureSize);
-        assertMeasuredSize(surfaceViewRenderer, scalingType, frameDimensions, 1280, 720,
+        assertMeasuredSize(
+            surfaceVideoView, scalingType, frameDimensions, 0, 0, zeroMeasureSize, zeroMeasureSize);
+        assertMeasuredSize(surfaceVideoView, scalingType, frameDimensions, 1280, 720,
             MeasureSpec.makeMeasureSpec(1280, measureSpecMode),
             MeasureSpec.makeMeasureSpec(720, measureSpecMode));
       }
     }
 
-    surfaceViewRenderer.release();
+    surfaceVideoRenderer.release();
   }
 
   /**
-   * Test how SurfaceViewRenderer.onMeasure() behaves with a 1280x720 frame.
+   * Test how SurfaceVideoView.onMeasure() behaves with a 1280x720 frame.
    */
   @Test
   @UiThreadTest
   @MediumTest
   public void testFrame1280x720() throws InterruptedException {
-    final SurfaceViewRenderer surfaceViewRenderer =
-        new SurfaceViewRenderer(InstrumentationRegistry.getContext());
+    final SurfaceVideoView surfaceVideoView =
+        new SurfaceVideoView(InstrumentationRegistry.getContext());
+    final SurfaceVideoRenderer surfaceVideoRenderer =
+        new SurfaceVideoRenderer(surfaceVideoView.getName());
     /**
      * Mock renderer events with blocking wait functionality for frame size changes.
      */
@@ -133,6 +137,12 @@ public class SurfaceViewRendererOnMeasureTest {
       private int frameWidth;
       private int frameHeight;
       private int rotation;
+
+      private final RendererCommon.RendererEvents next;
+
+      public MockRendererEvents(RendererCommon.RendererEvents next) {
+        this.next = next;
+      }
 
       public synchronized void waitForFrameSize(int frameWidth, int frameHeight, int rotation)
           throws InterruptedException {
@@ -142,18 +152,21 @@ public class SurfaceViewRendererOnMeasureTest {
         }
       }
 
-      public void onFirstFrameRendered() {}
+      public void onFirstFrameRendered() {
+        next.onFirstFrameRendered();
+      }
 
       public synchronized void onFrameResolutionChanged(
           int frameWidth, int frameHeight, int rotation) {
+        next.onFrameResolutionChanged(frameWidth, frameHeight, rotation);
         this.frameWidth = frameWidth;
         this.frameHeight = frameHeight;
         this.rotation = rotation;
         notifyAll();
       }
     }
-    final MockRendererEvents rendererEvents = new MockRendererEvents();
-    surfaceViewRenderer.init((EglBase.Context) null, rendererEvents);
+    final MockRendererEvents rendererEvents = new MockRendererEvents(surfaceVideoView);
+    surfaceVideoRenderer.init((EglBase.Context) null, rendererEvents);
 
     // Test different rotation degress, but same rotated size.
     for (int rotationDegree : new int[] {0, 90, 180, 270}) {
@@ -167,22 +180,22 @@ public class SurfaceViewRendererOnMeasureTest {
       assertEquals(rotatedHeight, frame.rotatedHeight());
       final String frameDimensions =
           unrotatedWidth + "x" + unrotatedHeight + " with rotation " + rotationDegree;
-      surfaceViewRenderer.renderFrame(frame);
+      surfaceVideoRenderer.renderFrame(frame);
       rendererEvents.waitForFrameSize(unrotatedWidth, unrotatedHeight, rotationDegree);
 
       // Test forcing to zero size.
       for (RendererCommon.ScalingType scalingType : scalingTypes) {
         for (int measureSpecMode : measureSpecModes) {
           final int zeroMeasureSize = MeasureSpec.makeMeasureSpec(0, measureSpecMode);
-          assertMeasuredSize(surfaceViewRenderer, scalingType, frameDimensions, 0, 0,
-              zeroMeasureSize, zeroMeasureSize);
+          assertMeasuredSize(surfaceVideoView, scalingType, frameDimensions, 0, 0, zeroMeasureSize,
+              zeroMeasureSize);
         }
       }
 
       // Test perfect fit.
       for (RendererCommon.ScalingType scalingType : scalingTypes) {
         for (int measureSpecMode : measureSpecModes) {
-          assertMeasuredSize(surfaceViewRenderer, scalingType, frameDimensions, rotatedWidth,
+          assertMeasuredSize(surfaceVideoView, scalingType, frameDimensions, rotatedWidth,
               rotatedHeight, MeasureSpec.makeMeasureSpec(rotatedWidth, measureSpecMode),
               MeasureSpec.makeMeasureSpec(rotatedHeight, measureSpecMode));
         }
@@ -190,7 +203,7 @@ public class SurfaceViewRendererOnMeasureTest {
 
       // Force spec size with different aspect ratio than frame aspect ratio.
       for (RendererCommon.ScalingType scalingType : scalingTypes) {
-        assertMeasuredSize(surfaceViewRenderer, scalingType, frameDimensions, 720, 1280,
+        assertMeasuredSize(surfaceVideoView, scalingType, frameDimensions, 720, 1280,
             MeasureSpec.makeMeasureSpec(720, MeasureSpec.EXACTLY),
             MeasureSpec.makeMeasureSpec(1280, MeasureSpec.EXACTLY));
       }
@@ -203,7 +216,7 @@ public class SurfaceViewRendererOnMeasureTest {
         for (RendererCommon.ScalingType scalingType : scalingTypes) {
           final Point expectedSize =
               RendererCommon.getDisplaySize(scalingType, videoAspectRatio, 720, 1280);
-          assertMeasuredSize(surfaceViewRenderer, scalingType, frameDimensions, expectedSize.x,
+          assertMeasuredSize(surfaceVideoView, scalingType, frameDimensions, expectedSize.x,
               expectedSize.y, widthSpec, heightSpec);
         }
       }
@@ -215,7 +228,7 @@ public class SurfaceViewRendererOnMeasureTest {
         for (RendererCommon.ScalingType scalingType : scalingTypes) {
           final Point expectedSize =
               RendererCommon.getDisplaySize(scalingType, videoAspectRatio, 720, 1280);
-          assertMeasuredSize(surfaceViewRenderer, scalingType, frameDimensions, expectedSize.x,
+          assertMeasuredSize(surfaceVideoView, scalingType, frameDimensions, expectedSize.x,
               expectedSize.y, widthSpec, heightSpec);
         }
       }
@@ -225,11 +238,11 @@ public class SurfaceViewRendererOnMeasureTest {
         final int heightSpec = MeasureSpec.makeMeasureSpec(1280, MeasureSpec.EXACTLY);
         for (RendererCommon.ScalingType scalingType : scalingTypes) {
           assertMeasuredSize(
-              surfaceViewRenderer, scalingType, frameDimensions, 720, 1280, widthSpec, heightSpec);
+              surfaceVideoView, scalingType, frameDimensions, 720, 1280, widthSpec, heightSpec);
         }
       }
     }
 
-    surfaceViewRenderer.release();
+    surfaceVideoRenderer.release();
   }
 }
