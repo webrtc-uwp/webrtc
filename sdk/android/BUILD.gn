@@ -415,7 +415,8 @@ android_library("libjingle_peerconnection_java") {
     "api/org/webrtc/StatsObserver.java",
     "api/org/webrtc/StatsReport.java",
     "api/org/webrtc/SurfaceTextureHelper.java",
-    "api/org/webrtc/SurfaceViewRenderer.java",
+    "api/org/webrtc/SurfaceVideoRenderer.java",
+    "api/org/webrtc/SurfaceVideoView.java",
     "api/org/webrtc/VideoCapturer.java",
     "api/org/webrtc/VideoCodecInfo.java",
     "api/org/webrtc/VideoCodecStatus.java",
@@ -497,7 +498,7 @@ if (rtc_include_tests) {
       "instrumentationtests/src/org/webrtc/PeerConnectionTest.java",
       "instrumentationtests/src/org/webrtc/RendererCommonTest.java",
       "instrumentationtests/src/org/webrtc/SurfaceTextureHelperTest.java",
-      "instrumentationtests/src/org/webrtc/SurfaceViewRendererOnMeasureTest.java",
+      "instrumentationtests/src/org/webrtc/SurfaceVideoViewOnMeasureTest.java",
       "instrumentationtests/src/org/webrtc/VideoFileRendererTest.java",
       "instrumentationtests/src/org/webrtc/WebRtcJniBootTest.java",
     ]

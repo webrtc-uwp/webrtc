@@ -53,7 +53,8 @@ import org.webrtc.RendererCommon.ScalingType;
 import org.webrtc.ScreenCapturerAndroid;
 import org.webrtc.SessionDescription;
 import org.webrtc.StatsReport;
-import org.webrtc.SurfaceViewRenderer;
+import org.webrtc.SurfaceVideoRenderer;
+import org.webrtc.SurfaceVideoView;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoFileRenderer;
 import org.webrtc.VideoFrame;
@@ -175,8 +176,10 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
   private AppRTCClient appRtcClient;
   private SignalingParameters signalingParameters;
   private AppRTCAudioManager audioManager = null;
-  private SurfaceViewRenderer pipRenderer;
-  private SurfaceViewRenderer fullscreenRenderer;
+  private SurfaceVideoView pipView;
+  private SurfaceVideoRenderer pipRenderer;
+  private SurfaceVideoView fullscreenView;
+  private SurfaceVideoRenderer fullscreenRenderer;
   private VideoFileRenderer videoFileRenderer;
   private final List<VideoRenderer.Callbacks> remoteRenderers =
       new ArrayList<VideoRenderer.Callbacks>();
@@ -220,8 +223,8 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
     signalingParameters = null;
 
     // Create UI controls.
-    pipRenderer = (SurfaceViewRenderer) findViewById(R.id.pip_video_view);
-    fullscreenRenderer = (SurfaceViewRenderer) findViewById(R.id.fullscreen_video_view);
+    pipView = (SurfaceVideoView) findViewById(R.id.pip_video_view);
+    fullscreenView = (SurfaceVideoView) findViewById(R.id.fullscreen_video_view);
     callFragment = new CallFragment();
     hudFragment = new HudFragment();
 
@@ -234,14 +237,14 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
     };
 
     // Swap feeds on pip view click.
-    pipRenderer.setOnClickListener(new View.OnClickListener() {
+    pipView.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
         setSwappedFeeds(!isSwappedFeeds);
       }
     });
 
-    fullscreenRenderer.setOnClickListener(listener);
+    fullscreenView.setOnClickListener(listener);
     remoteRenderers.add(remoteProxyRenderer);
 
     final Intent intent = getIntent();
@@ -250,8 +253,11 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
     peerConnectionClient = new PeerConnectionClient();
 
     // Create video renderers.
-    pipRenderer.init(peerConnectionClient.getRenderContext(), null);
-    pipRenderer.setScalingType(ScalingType.SCALE_ASPECT_FIT);
+    pipRenderer = new SurfaceVideoRenderer(pipView.getName());
+    pipRenderer.init(peerConnectionClient.getRenderContext(), pipView);
+    pipView.setScalingType(ScalingType.SCALE_ASPECT_FIT);
+    pipView.getHolder().addCallback(pipRenderer);
+
     String saveRemoteVideoToFile = intent.getStringExtra(EXTRA_SAVE_REMOTE_VIDEO_TO_FILE);
 
     // When saveRemoteVideoToFile is set we save the video from the remote to a file.
@@ -267,12 +273,14 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
             "Failed to open video file for output: " + saveRemoteVideoToFile, e);
       }
     }
-    fullscreenRenderer.init(peerConnectionClient.getRenderContext(), null);
-    fullscreenRenderer.setScalingType(ScalingType.SCALE_ASPECT_FILL);
+    fullscreenRenderer = new SurfaceVideoRenderer(fullscreenView.getName());
+    fullscreenRenderer.init(peerConnectionClient.getRenderContext(), fullscreenView);
+    fullscreenView.setScalingType(ScalingType.SCALE_ASPECT_FILL);
+    fullscreenView.getHolder().addCallback(fullscreenRenderer);
 
-    pipRenderer.setZOrderMediaOverlay(true);
-    pipRenderer.setEnableHardwareScaler(true /* enabled */);
-    fullscreenRenderer.setEnableHardwareScaler(true /* enabled */);
+    pipView.setZOrderMediaOverlay(true);
+    pipView.setEnableHardwareScaler(true /* enabled */);
+    fullscreenView.setEnableHardwareScaler(true /* enabled */);
     // Start with local feed in fullscreen and swap it to the pip when the call is connected.
     setSwappedFeeds(true /* isSwappedFeeds */);
 
@@ -538,7 +546,7 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
 
   @Override
   public void onVideoScalingSwitch(ScalingType scalingType) {
-    fullscreenRenderer.setScalingType(scalingType);
+    fullscreenView.setScalingType(scalingType);
   }
 
   @Override
