@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8480a7c3_c7aaf957",
+        "filename": "modules/audio_processing/audio_processing_impl.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-09-24T20:37:15Z",
+      "side": 1,
+      "message": "This works, and is probably fine by the style guide, but a static_cast from a unique_ptr to a bool looks strange.\n\nI\u0027d rather use submodule_states_(!!capture_post_processor)",
+      "range": {
+        "startLine": 340,
+        "startChar": 24,
+        "endLine": 340,
+        "endChar": 65
+      },
+      "revId": "49a128a98a25a2694ab2a12dc43c2478b34fef71",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b232835_63c0d482",
+        "filename": "modules/audio_processing/audio_processing_impl.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-09-24T20:37:15Z",
+      "side": 1,
+      "message": "Please consider using !!",
+      "range": {
+        "startLine": 388,
+        "startChar": 20,
+        "endLine": 388,
+        "endChar": 31
+      },
+      "revId": "49a128a98a25a2694ab2a12dc43c2478b34fef71",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "990d329f_7974daf9",
+        "filename": "modules/audio_processing/audio_processing_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 2895,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-09-24T20:37:15Z",
+      "side": 1,
+      "message": "Please put this method  into the anonymous namespace.\n\nHowever, since it is only used in one place, please rather either put it inline in the test below, or make it a lambda in that test.",
+      "range": {
+        "startLine": 2895,
+        "startChar": 5,
+        "endLine": 2895,
+        "endChar": 28
+      },
+      "revId": "49a128a98a25a2694ab2a12dc43c2478b34fef71",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba4a0845_ce56ed28",
+        "filename": "modules/audio_processing/audio_processing_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 2896,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-09-24T20:37:15Z",
+      "side": 1,
+      "message": "Is constexpr possible?",
+      "range": {
+        "startLine": 2896,
+        "startChar": 2,
+        "endLine": 2896,
+        "endChar": 7
+      },
+      "revId": "49a128a98a25a2694ab2a12dc43c2478b34fef71",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8643bab7_881ad359",
+        "filename": "modules/audio_processing/audio_processing_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 2897,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-09-24T20:37:15Z",
+      "side": 1,
+      "message": "Is constexpr possible?",
+      "range": {
+        "startLine": 2897,
+        "startChar": 2,
+        "endLine": 2897,
+        "endChar": 7
+      },
+      "revId": "49a128a98a25a2694ab2a12dc43c2478b34fef71",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "718581dd_f657bc4c",
+        "filename": "modules/audio_processing/include/audio_processing.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1157,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-09-24T20:37:15Z",
+      "side": 1,
+      "message": "Intentional newline?",
+      "revId": "49a128a98a25a2694ab2a12dc43c2478b34fef71",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
