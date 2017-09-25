@@ -22,6 +22,30 @@
       "revId": "86021d9548d62b7a92f7f839607c3ae941e30a1d",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9ed5d6d_5ea1f830",
+        "filename": "test/BUILD.gn",
+        "patchSetId": 4
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 5114
+      },
+      "writtenOn": "2017-09-25T08:29:16Z",
+      "side": 0,
+      "message": "Yes, untouched. git show -w -U1 \n\n@@ -177,5 +177,2 @@ rtc_source_set(\"test_support\") {\n \n-if (!build_with_chromium) {\n-  # This target used to depend on //third_party/gflags which Chromium does not\n-  # provide. TODO(oprypin): remove the conditional.\n rtc_source_set(\"test_main\") {\n@@ -351,3 +348,2 @@ if (!build_with_chromium) {\n }\n-}\n \n\nAnd yes, these are all `testonly`, and I think we can assume Chromium skips those.",
+      "parentUuid": "7f099712_adbdb132",
+      "range": {
+        "startLine": 178,
+        "startChar": 0,
+        "endLine": 178,
+        "endChar": 27
+      },
+      "revId": "86021d9548d62b7a92f7f839607c3ae941e30a1d",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
