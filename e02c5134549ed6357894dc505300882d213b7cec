@@ -22,6 +22,30 @@
       "revId": "e02c5134549ed6357894dc505300882d213b7cec",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e247908f_6a20017e",
+        "filename": "sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-09-25T15:01:59Z",
+      "side": 1,
+      "message": "Unfortunately, this is not possible because we need pollLast in case queuing a frame fails.",
+      "parentUuid": "1faf65fe_9b31fd4d",
+      "range": {
+        "startLine": 74,
+        "startChar": 16,
+        "endLine": 74,
+        "endChar": 29
+      },
+      "revId": "e02c5134549ed6357894dc505300882d213b7cec",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
