@@ -139,6 +139,8 @@ class HardwareVideoEncoder implements VideoEncoder {
     this.forcedKeyFrameNs = TimeUnit.MILLISECONDS.toNanos(forceKeyFrameIntervalMs);
     this.bitrateAdjuster = bitrateAdjuster;
     this.textureContext = textureContext;
+
+    encodeThreadChecker.detachThread();
   }
 
   @Override

@@ -146,6 +146,8 @@ class HardwareVideoDecoder
     this.colorFormat = colorFormat;
     this.sharedContext = sharedContext;
     this.frameInfos = new LinkedBlockingDeque<>();
+
+    decoderThreadChecker.detachThread();
   }
 
   @Override
