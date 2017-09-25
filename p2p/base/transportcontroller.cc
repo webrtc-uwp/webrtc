@@ -310,9 +310,12 @@ void TransportController::DestroyDtlsTransport_n(
                     << ", which doesn't exist.";
     return;
   }
-  if ((*it)->Release() > 0) {
+  // TODO(nisse): What on earth is this about?
+  bool last_ref = (*it)->HasOneRef();
+  (*it)->Release();
+  if (!last_ref)
     return;
-  }
+
   channels_.erase(it);
 
   JsepTransport* t = GetJsepTransport(transport_name);
@@ -475,8 +478,10 @@ void TransportController::DestroyAllChannels_n() {
     // Even though these objects are normally ref-counted, if
     // TransportController is deleted while they still have references, just
     // remove all references.
-    while (channel->Release() > 0) {
+    while (!channel->HasOneRef()) {
+      channel->Release();
     }
+    channel->Release();
   }
   channels_.clear();
 }

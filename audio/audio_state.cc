@@ -61,17 +61,16 @@ bool AudioState::typing_noise_detected() const {
 }
 
 // Reference count; implementation copied from rtc::RefCountedObject.
-int AudioState::AddRef() const {
-  return rtc::AtomicOps::Increment(&ref_count_);
+void AudioState::AddRef() const {
+  rtc::AtomicOps::Increment(&ref_count_);
 }
 
 // Reference count; implementation copied from rtc::RefCountedObject.
-int AudioState::Release() const {
+void AudioState::Release() const {
   int count = rtc::AtomicOps::Decrement(&ref_count_);
   if (!count) {
     delete this;
   }
-  return count;
 }
 
 void AudioState::CallbackOnError(int channel_id, int err_code) {
