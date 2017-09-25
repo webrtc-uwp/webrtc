@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5898a92c_d403b291",
+        "filename": "api/BUILD.gn",
+        "patchSetId": 5
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-25T07:47:05Z",
+      "side": 1,
+      "message": "Tried changing \"sources\" to \"public\", without quite knowing what the implications are.\n\nThat gives me a presubmit error, \nHeader file /usr/local/google/home/nisse/hack/webrtc/src/api/refcountedbase.h is not listed in any GN target.\n  Please create a target or add it to an existing one in /usr/local/google/home/nisse/hack/webrtc/src/api/BUILD.gn\n\nSo either I\u0027m doing it wrong, or presubmit doesn\u0027t understand \"public\".",
+      "parentUuid": "ee19571d_7c1718fb",
+      "range": {
+        "startLine": 222,
+        "startChar": 2,
+        "endLine": 222,
+        "endChar": 9
+      },
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7debb2fa_2df6cb86",
         "filename": "api/refcountedbase.h",
         "patchSetId": 5
@@ -39,6 +63,24 @@
       "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3237057a_621e88d8",
+        "filename": "api/refcountedbase.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-25T07:47:05Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7debb2fa_2df6cb86",
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "780bdbee_0cb26fae",
+        "filename": "api/refcountedbase.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-25T07:47:05Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e4118693_5017cb72",
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "38d868df_94c37486",
         "filename": "api/refcountedbase.h",
         "patchSetId": 5
@@ -76,6 +136,24 @@
     },
     {
       "key": {
+        "uuid": "3469af9a_ee054db4",
+        "filename": "api/refcountedbase.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-25T07:47:05Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "38d868df_94c37486",
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "caab62f4_71e7ea1e",
         "filename": "modules/desktop_capture/mac/desktop_configuration_monitor.h",
         "patchSetId": 5
@@ -87,6 +165,30 @@
       "writtenOn": "2017-09-23T18:23:13Z",
       "side": 1,
       "message": "The destructor can be public, right? Because this class doesn\u0027t have subclasses? (Consider proving this by making the class final.)",
+      "range": {
+        "startLine": 42,
+        "startChar": 1,
+        "endLine": 42,
+        "endChar": 10
+      },
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76175fe4_e422c436",
+        "filename": "modules/desktop_capture/mac/desktop_configuration_monitor.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-25T07:47:05Z",
+      "side": 1,
+      "message": "The point of a non-public destructor is to rule out explicit delete, and force all destruction to go via Release.\n\nI don\u0027t want to use final lightly, since it rules out test subclasses which is a common pattern in webrtc (including gmock classes).",
+      "parentUuid": "caab62f4_71e7ea1e",
       "range": {
         "startLine": 42,
         "startChar": 1,
@@ -162,6 +264,24 @@
     },
     {
       "key": {
+        "uuid": "298ba52a_c76c8d3c",
+        "filename": "rtc_base/refcountedobject.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-25T07:47:05Z",
+      "side": 1,
+      "message": "I\u0027ll give it a try (and also tweak RefCounter return values accordingly).\n\nSome problems...\n\nThe test RefCountedObject.Basic uses return values, and fails to compile. Not sure if I should try to expose refcounts for testing. Or maybe I can rewrite the test to only have expectations on HasOneRef being true or false.\n\nMore interesting cases are TransportController::DestroyDtlsTransport_n, with the test\n\n  if ((*it)-\u003eRelease() \u003e 0) {\n    return;\n  }\n  channels_.erase(it);\n\nand TransportController::DestroyAllChannels_n,\n\n    // Even though these objects are normally ref-counted, if\n    // TransportController is deleted while they still have references, just\n    // remove all references.\n    while (channel-\u003eRelease() \u003e 0) {\n    }\n\nNo idea why we do this. I guess the latter loop could also be rewritten in terms of HasOneRef.\n\nAnd then there are tests setting up expectations for AddRef and Release, in particular, AdmSetupExpectations in webrtcvoiceengine_unittests.\n\nSo if we want to go through with this, maybe that should be yet another preparatory cl, and send out a webrtc PSA pretty soon.",
+      "parentUuid": "dc1a1a4b_2c223728",
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4e5f0ad4_72f310cc",
         "filename": "rtc_base/refcounter.h",
         "patchSetId": 5
@@ -182,6 +302,30 @@
       "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba448268_f47165c1",
+        "filename": "rtc_base/refcounter.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-25T07:47:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4e5f0ad4_72f310cc",
+      "range": {
+        "startLine": 21,
+        "startChar": 15,
+        "endLine": 21,
+        "endChar": 20
+      },
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -208,6 +352,30 @@
     },
     {
       "key": {
+        "uuid": "8d271dc7_d80209d1",
+        "filename": "rtc_base/refcounter.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-25T07:47:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "55dd3292_ea7ab7cc",
+      "range": {
+        "startLine": 26,
+        "startChar": 6,
+        "endLine": 26,
+        "endChar": 13
+      },
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f4e09d77_0c4b9961",
         "filename": "rtc_base/refcounter.h",
         "patchSetId": 5
@@ -231,6 +399,30 @@
     },
     {
       "key": {
+        "uuid": "2d282cf8_d175bc9b",
+        "filename": "rtc_base/refcounter.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-25T07:47:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f4e09d77_0c4b9961",
+      "range": {
+        "startLine": 32,
+        "startChar": 56,
+        "endLine": 32,
+        "endChar": 62
+      },
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5660e76d_1981937b",
         "filename": "rtc_base/refcounter.h",
         "patchSetId": 5
@@ -248,6 +440,24 @@
     },
     {
       "key": {
+        "uuid": "b14f750d_86830629",
+        "filename": "rtc_base/refcounter.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-25T07:47:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5660e76d_1981937b",
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "713223de_1fe4929b",
         "filename": "rtc_base/refcounter.h",
         "patchSetId": 5
@@ -259,6 +469,30 @@
       "writtenOn": "2017-09-23T18:23:13Z",
       "side": 1,
       "message": "Consider making the initial count a constructor argument, and forbidding default construction. As is, it was not obvious where this class was used if the reference counter started at 0 or 1.",
+      "range": {
+        "startLine": 40,
+        "startChar": 36,
+        "endLine": 40,
+        "endChar": 37
+      },
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d6df54b1_4b8e954c",
+        "filename": "rtc_base/refcounter.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-25T07:47:05Z",
+      "side": 1,
+      "message": "I\u0027m not 100% sure how it works currently, but I think objects are created with ref_count_ \u003d\u003d 0, which is incremented to 1 when the result is wrapped in a scoped_refptr.\n\nAnyway, changing as requested.",
+      "parentUuid": "713223de_1fe4929b",
       "range": {
         "startLine": 40,
         "startChar": 36,
