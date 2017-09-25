@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7e5ac4ae_e5c122cd",
+        "filename": "api/refcountedbase.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-25T09:14:50Z",
+      "side": 1,
+      "message": "Ah, that sounds nicer. But just\n\nmutable webrtc::webrtc_impl::RefCounter ref_count_(0);\n\non line 31 doesn\u0027t work. I have to write it as\n\n  mutable webrtc::webrtc_impl::RefCounter ref_count_ \u003d\n      webrtc::webrtc_impl::RefCounter(0);\n\n(and then I couldn\u0027t use RTC_DISALLOW_COPY_AND_ASSIGN). \n\nIs there any better way? I also tried \u003d { 0 }, but that also refuses to use the explicit constructor.",
+      "parentUuid": "6af4d1c5_da20335d",
+      "revId": "67848d58743f7a64ac7345705b71072e89965a96",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "266d0bae_f96ee5cf",
         "filename": "rtc_base/refcounter.h",
         "patchSetId": 6
@@ -39,6 +57,30 @@
       "revId": "67848d58743f7a64ac7345705b71072e89965a96",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "23f5dc60_0190677c",
+        "filename": "rtc_base/refcounter.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-25T09:14:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "266d0bae_f96ee5cf",
+      "range": {
+        "startLine": 40,
+        "startChar": 26,
+        "endLine": 40,
+        "endChar": 29
+      },
+      "revId": "67848d58743f7a64ac7345705b71072e89965a96",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }

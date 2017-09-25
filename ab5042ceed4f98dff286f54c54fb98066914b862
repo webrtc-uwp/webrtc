@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "ebad1218_a3721041",
+        "filename": "api/BUILD.gn",
+        "patchSetId": 5
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-25T09:14:50Z",
+      "side": 1,
+      "message": "Changing back to |sources| + TODO comment.",
+      "parentUuid": "abb90ec9_2ea08200",
+      "range": {
+        "startLine": 222,
+        "startChar": 2,
+        "endLine": 222,
+        "endChar": 9
+      },
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7debb2fa_2df6cb86",
         "filename": "api/refcountedbase.h",
         "patchSetId": 5
@@ -342,6 +366,24 @@
       "side": 1,
       "message": "I don\u0027t quite see what the first code snippet is doing---keeping a non-owning pointer to the object after releasing it unless we just dropped the last reference and destroyed it? That sounds very unsafe---if we have a non-owning pointer, we must know for sure that someone else is keeping it alive.\n\nSimilar for the second snippet. It looks like it\u0027s dropping references to the object repeatedly until the number of references goes to zero, but owning a variable number of references to an object seems like a sketchy thing to do, as does dropping references you don\u0027t own.\n\nMy guess is that both pieces of code are buggy, or bugs waiting to happen.",
       "parentUuid": "298ba52a_c76c8d3c",
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc708fd4_422268ff",
+        "filename": "rtc_base/refcountedobject.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-25T09:14:50Z",
+      "side": 1,
+      "message": "Both snippets look very fishy to me. Cleaning them up should also aid transition to std::shared_ptr, if we ever do that (btw, is the HasOneRef hack possible with shared_ptr?).\n\nFor the latter snippet, I would guess that the idea is that we own all references, indirectly via objects which are also being destroyed (and for some reason not dropping their references by themselves.).",
+      "parentUuid": "83d07e3c_3799062a",
       "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
