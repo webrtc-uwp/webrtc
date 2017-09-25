@@ -1948,7 +1948,8 @@ int NetEqImpl::ExtractPackets(size_t required_samples,
       assert(false);  // Should always be able to extract a packet here.
       return -1;
     }
-    stats_.StoreWaitingTime(packet->waiting_time->ElapsedMs());
+    uint64_t waiting_time_ms = packet->waiting_time->ElapsedMs();
+    stats_.StoreWaitingTime(waiting_time_ms);
     RTC_DCHECK(!packet->empty());
 
     if (first_packet) {
@@ -1987,6 +1988,8 @@ int NetEqImpl::ExtractPackets(size_t required_samples,
       packet_duration = decoder_frame_length_;
     }
     extracted_samples = packet->timestamp - first_timestamp + packet_duration;
+
+    stats_.JitterBufferDelay(extracted_samples, waiting_time_ms);
 
     packet_list->push_back(std::move(*packet));  // Store packet in list.
     packet = rtc::Optional<Packet>();  // Ensure it's never used after the move.

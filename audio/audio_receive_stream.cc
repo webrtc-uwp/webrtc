@@ -197,6 +197,8 @@ webrtc::AudioReceiveStream::Stats AudioReceiveStream::GetStats() const {
   stats.total_samples_received = ns.totalSamplesReceived;
   stats.concealed_samples = ns.concealedSamples;
   stats.concealment_events = ns.concealmentEvents;
+  stats.jitter_buffer_delay = static_cast<double>(ns.jitterBufferDelay) *
+                              0.001;  // Convert from ms to s
   stats.expand_rate = Q14ToFloat(ns.currentExpandRate);
   stats.speech_expand_rate = Q14ToFloat(ns.currentSpeechExpandRate);
   stats.secondary_decoded_rate = Q14ToFloat(ns.currentSecondaryDecodedRate);

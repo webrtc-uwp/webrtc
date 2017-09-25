@@ -1684,4 +1684,97 @@ TEST_F(NetEqDecodingTest, TestConcealmentEvents) {
   EXPECT_EQ(kNumConcealmentEvents, static_cast<int>(stats.concealment_events));
 }
 
+TEST_F(NetEqDecodingTestFaxMode, TestJitterBufferDelay) {
+  const int kNumPackets = 10;
+  const int kDelayInPackets = 2;
+  const int kPacketLenMs = 10;  // All packets are of 10 ms size.
+  const size_t kSamples = kPacketLenMs * 16;
+  const size_t kPayloadBytes = kSamples * 2;
+  int seq_no = 0;
+  RTPHeader rtp_info;
+  rtp_info.ssrc = 0x1234;     // Just an arbitrary SSRC.
+  rtp_info.payloadType = 94;  // PCM16b WB codec.
+  rtp_info.markerBit = 0;
+  const uint8_t payload[kPayloadBytes] = {0};
+  bool muted;
+
+  int i = 0;
+  int numPacketsLeft = kNumPackets;
+  int expected_delay = 0;
+  do {
+    // Insert packet.
+    if (i < kNumPackets) {
+      rtp_info.sequenceNumber = seq_no++;
+      rtp_info.timestamp = rtp_info.sequenceNumber * kSamples;
+      neteq_->InsertPacket(rtp_info, payload, 0);
+    }
+
+    // Get packet.
+    if (i >= kDelayInPackets) {
+      neteq_->GetAudio(&out_frame_, &muted);
+      numPacketsLeft--;
+
+      int numGet = i - kDelayInPackets + 1;
+      if (numGet <= kDelayInPackets) {
+        expected_delay += numGet * kSamples * kPacketLenMs;
+      } else {
+        expected_delay += (kDelayInPackets + 1) * kSamples * kPacketLenMs;
+      }
+    }
+    i++;
+  } while (numPacketsLeft > 0);
+
+  // Check jitter buffer delay.
+  NetEqLifetimeStatistics stats = neteq_->GetLifetimeStatistics();
+  EXPECT_EQ(expected_delay, static_cast<int>(stats.jitter_buffer_delay));
+}
+
+TEST_F(NetEqDecodingTestFaxMode, TestJitterBufferDelayWithLoss) {
+  const int kNumPackets = 10;
+  const int kDelayInPackets = 2;
+  const int kPacketLenMs = 10;  // All packets are of 10 ms size.
+  const size_t kSamples = kPacketLenMs * 16;
+  const size_t kPayloadBytes = kSamples * 2;
+  int seq_no = 0;
+  RTPHeader rtp_info;
+  rtp_info.ssrc = 0x1234;     // Just an arbitrary SSRC.
+  rtp_info.payloadType = 94;  // PCM16b WB codec.
+  rtp_info.markerBit = 0;
+  const uint8_t payload[kPayloadBytes] = {0};
+  bool muted;
+
+  int i = 0;
+  int numPacketsLeft = kNumPackets;
+  int expected_delay = 0;
+  do {
+    // Insert packet.
+    if (i < kNumPackets) {
+      rtp_info.sequenceNumber = seq_no++;
+      rtp_info.timestamp = rtp_info.sequenceNumber * kSamples;
+      neteq_->InsertPacket(rtp_info, payload, 0);
+    }
+
+    // Get packet.
+    if (i >= kDelayInPackets) {
+      neteq_->GetAudio(&out_frame_, &muted);
+      numPacketsLeft--;
+
+      int numGet = i - kDelayInPackets + 1;
+      if (numGet <= kDelayInPackets) {
+        expected_delay += numGet * kSamples * kPacketLenMs;
+      } else {
+        expected_delay += (kDelayInPackets + 1) * kSamples * kPacketLenMs;
+      }
+    }
+    i++;
+  } while (numPacketsLeft > 0);
+
+  // Extra call to get that will cause concealment.
+  neteq_->GetAudio(&out_frame_, &muted);
+
+  // Check jitter buffer delay.
+  NetEqLifetimeStatistics stats = neteq_->GetLifetimeStatistics();
+  EXPECT_EQ(expected_delay, static_cast<int>(stats.jitter_buffer_delay));
+}
+
 }  // namespace webrtc
