@@ -22,6 +22,30 @@
       "revId": "f26241007a1e62cfa959813faf85fba279dde48b",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1bca3a25_c75e1ef4",
+        "filename": "modules/remote_bitrate_estimator/remote_estimator_proxy_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-25T13:24:42Z",
+      "side": 1,
+      "message": "RemoteEstimatorProxy access PacketRouter through an interface now instead of directly\n\nI renamed the mock and updated CL description to make it clearer.",
+      "parentUuid": "5a9634c2_b515f4b7",
+      "range": {
+        "startLine": 53,
+        "startChar": 6,
+        "endLine": 53,
+        "endChar": 22
+      },
+      "revId": "f26241007a1e62cfa959813faf85fba279dde48b",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
