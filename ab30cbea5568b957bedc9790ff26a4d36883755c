@@ -93,6 +93,30 @@
       "revId": "ab30cbea5568b957bedc9790ff26a4d36883755c",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bf88f9a3_53f43bb5",
+        "filename": "sdk/android/instrumentationtests/src/org/webrtc/HardwareVideoEncoderTest.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-09-25T15:03:49Z",
+      "side": 1,
+      "message": "Resolved",
+      "parentUuid": "66cf4a4c_add30062",
+      "range": {
+        "startLine": 114,
+        "startChar": 32,
+        "endLine": 114,
+        "endChar": 46
+      },
+      "revId": "ab30cbea5568b957bedc9790ff26a4d36883755c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
