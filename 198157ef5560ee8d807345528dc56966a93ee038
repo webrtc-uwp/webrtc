@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "622f2439_7b5fc0e0",
+        "filename": "video/rtp_video_stream_receiver.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-25T11:38:41Z",
+      "side": 1,
+      "message": "Not quite sure. The constructor invoked here is for RtpHeaderExtensionMap, it implies a conversion, and it ignores (with a log message) both extension uris not in the list of known extensions, and out-of-range ids.\n\nWhat validation the caller does I don\u0027t know. |config| is populated from the sdp, I imagine?",
+      "parentUuid": "0bf23ca3_d7c8ba2c",
+      "range": {
+        "startLine": 100,
+        "startChar": 53,
+        "endLine": 100,
+        "endChar": 0
+      },
+      "revId": "198157ef5560ee8d807345528dc56966a93ee038",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4bfb4601_8b5e2f42",
         "filename": "video/rtp_video_stream_receiver.cc",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2017-09-25T11:23:40Z",
       "side": 1,
       "message": "It\u0027d be nice if we could propagate |packet| here, instead of |rtp_packet| and |header|.\nIs that maybe planned as an upcoming cl?",
+      "range": {
+        "startLine": 284,
+        "startChar": 65,
+        "endLine": 284,
+        "endChar": 0
+      },
+      "revId": "198157ef5560ee8d807345528dc56966a93ee038",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ee3e439_d9fc2331",
+        "filename": "video/rtp_video_stream_receiver.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-25T11:38:41Z",
+      "side": 1,
+      "message": "I intend to do that at some point. RTPHeader is deprecated.",
+      "parentUuid": "4bfb4601_8b5e2f42",
       "range": {
         "startLine": 284,
         "startChar": 65,
