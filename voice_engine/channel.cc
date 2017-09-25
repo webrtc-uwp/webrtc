@@ -1716,6 +1716,10 @@ void Channel::ProcessAndEncodeAudio(const AudioFrame& audio_input) {
   // either into pool of frames or into the task itself.
   audio_frame->CopyFrom(audio_input);
   audio_frame->id_ = ChannelId();
+  // Profile time between when the audio frame is added to the task queue (t0)
+  // and when the task is actually executed (t1). Goal is to keep track of
+  // unwanted extra latency added by the queue.
+  audio_frame->UpdateProfileTimeStamp();
   encoder_queue_->PostTask(std::unique_ptr<rtc::QueuedTask>(
       new ProcessAndEncodeAudioTask(std::move(audio_frame), this)));
 }
@@ -1754,6 +1758,14 @@ void Channel::ProcessAndEncodeAudioOnTaskQueue(AudioFrame* audio_input) {
   RTC_DCHECK_GT(audio_input->samples_per_channel_, 0);
   RTC_DCHECK_LE(audio_input->num_channels_, 2);
   RTC_DCHECK_EQ(audio_input->id_, ChannelId());
+
+  // TODO(henrika): add comment and histogram here...
+  // dT = t1 - t0.
+  // int64_t dT = audio_input->ElapsedProfileTimeMs();
+
+  if (channel_state_.Get().input_file_playing) {
+    MixOrReplaceAudioWithFile(audio_input);
+  }
 
   bool is_muted = InputMute();
   AudioFrameOperations::Mute(audio_input, previous_frame_muted_, is_muted);
