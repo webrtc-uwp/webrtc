@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7122e66a_70b1634e",
+        "filename": "media/engine/webrtcmediaengine.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-25T22:50:13Z",
+      "side": 1,
+      "message": "This is a breaking change; the CreatePeerConnectionFactory overload that takes an external encoder factory now transfers ownership (and in a hidden way), whereas previously it didn\u0027t.",
+      "revId": "cdea576e7d230e8f80bbd31864fb4190d0b5b40a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
