@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Deque;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import org.webrtc.ThreadUtils.ThreadChecker;
@@ -64,7 +64,7 @@ class HardwareVideoEncoder implements VideoEncoder {
   private final long forcedKeyFrameNs;
   private final BitrateAdjuster bitrateAdjuster;
   // EGL context shared with the application.  Used to access texture inputs.
-  private final EglBase14.Context sharedContext;
+  private final EglBase14.Context textureContext;
 
   // Drawer used to draw input textures onto the codec's input surface.
   private final GlRectDrawer textureDrawer = new GlRectDrawer();
@@ -118,8 +118,6 @@ class HardwareVideoEncoder implements VideoEncoder {
    *
    * @param codecName the hardware codec implementation to use
    * @param codecType the type of the given video codec (eg. VP8, VP9, or H264)
-   * @param surfaceColorFormat color format for surface mode or null if not available
-   * @param yuvColorFormat color format for bytebuffer mode
    * @param keyFrameIntervalSec interval in seconds between key frames; used to initialize the codec
    * @param forceKeyFrameIntervalMs interval at which to force a key frame if one is not requested;
    *     used to reduce distortion caused by some codec implementations
@@ -130,7 +128,7 @@ class HardwareVideoEncoder implements VideoEncoder {
   public HardwareVideoEncoder(String codecName, VideoCodecType codecType,
       Integer surfaceColorFormat, Integer yuvColorFormat, Map<String, String> params,
       int keyFrameIntervalSec, int forceKeyFrameIntervalMs, BitrateAdjuster bitrateAdjuster,
-      EglBase14.Context sharedContext) {
+      EglBase14.Context textureContext) {
     this.codecName = codecName;
     this.codecType = codecType;
     this.surfaceColorFormat = surfaceColorFormat;
@@ -140,7 +138,9 @@ class HardwareVideoEncoder implements VideoEncoder {
     this.keyFrameIntervalSec = keyFrameIntervalSec;
     this.forcedKeyFrameNs = TimeUnit.MILLISECONDS.toNanos(forceKeyFrameIntervalMs);
     this.bitrateAdjuster = bitrateAdjuster;
-    this.sharedContext = sharedContext;
+    this.textureContext = textureContext;
+
+    encodeThreadChecker.detachThread();
   }
 
   @Override
@@ -205,7 +205,7 @@ class HardwareVideoEncoder implements VideoEncoder {
           format, null /* surface */, null /* crypto */, MediaCodec.CONFIGURE_FLAG_ENCODE);
 
       if (useSurfaceMode) {
-        textureEglBase = new EglBase14(sharedContext, EglBase.CONFIG_RECORDABLE);
+        textureEglBase = new EglBase14(textureContext, EglBase.CONFIG_RECORDABLE);
         textureInputSurface = codec.createInputSurface();
         textureEglBase.createSurface(textureInputSurface);
         textureEglBase.makeCurrent();
@@ -556,7 +556,7 @@ class HardwareVideoEncoder implements VideoEncoder {
   }
 
   private boolean canUseSurface() {
-    return sharedContext != null && surfaceColorFormat != null;
+    return textureContext != null && surfaceColorFormat != null;
   }
 
   /**
