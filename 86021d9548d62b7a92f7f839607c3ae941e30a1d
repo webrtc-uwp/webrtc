@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f099712_adbdb132",
+        "filename": "test/BUILD.gn",
+        "patchSetId": 4
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 5017
+      },
+      "writtenOn": "2017-09-25T08:13:29Z",
+      "side": 0,
+      "message": "I assume everything in this condition is untouched?\n\nI spent some time analyzing if this would mean that we introduce more build targets in Chromium, but I don\u0027t think it does (Chromium gets rtc_include_tests \u003d false and test/BUILD.gn) shouldn\u0027t be processed from a Chromium build.",
+      "range": {
+        "startLine": 178,
+        "startChar": 0,
+        "endLine": 178,
+        "endChar": 27
+      },
+      "revId": "86021d9548d62b7a92f7f839607c3ae941e30a1d",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}

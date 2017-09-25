@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9bc04e96_35e4e00d",
+        "filename": ".gn",
+        "patchSetId": 4
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 5017
+      },
+      "writtenOn": "2017-09-25T08:13:29Z",
+      "side": 1,
+      "message": "Please add a comment like.\n\n# Needed to avoid errors during GN processing third_party/libyuv/BUILD.gn.",
+      "range": {
+        "startLine": 71,
+        "startChar": 2,
+        "endLine": 71,
+        "endChar": 19
+      },
+      "revId": "9b87ab014a294dd3dd3c5e648fb74005e79fb848",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
