@@ -12,32 +12,32 @@
 
 #include <utility>
 
-#include "rtc_base/atomicops.h"
+#include "rtc_base/refcounter.h"
 
 namespace rtc {
 
 template <class T>
 class RefCountedObject : public T {
  public:
-  RefCountedObject() {}
+  RefCountedObject() : ref_count_(0) {}
 
   template <class P0>
-  explicit RefCountedObject(P0&& p0) : T(std::forward<P0>(p0)) {}
+  explicit RefCountedObject(P0&& p0) : T(std::forward<P0>(p0)),
+                                       ref_count_(0) {}
 
   template <class P0, class P1, class... Args>
   RefCountedObject(P0&& p0, P1&& p1, Args&&... args)
       : T(std::forward<P0>(p0),
           std::forward<P1>(p1),
-          std::forward<Args>(args)...) {}
+          std::forward<Args>(args)...),
+        ref_count_(0) {}
 
-  virtual int AddRef() const { return AtomicOps::Increment(&ref_count_); }
+  virtual void AddRef() const { ref_count_.IncRef(); }
 
-  virtual int Release() const {
-    int count = AtomicOps::Decrement(&ref_count_);
-    if (!count) {
+  virtual void Release() const {
+    if (ref_count_.DecRef()) {
       delete this;
     }
-    return count;
   }
 
   // Return whether the reference count is one. If the reference count is used
@@ -46,14 +46,12 @@ class RefCountedObject : public T {
   // performs the test for a reference count of one, and performs the memory
   // barrier needed for the owning thread to act on the object, knowing that it
   // has exclusive access to the object.
-  virtual bool HasOneRef() const {
-    return AtomicOps::AcquireLoad(&ref_count_) == 1;
-  }
+  virtual bool HasOneRef() const { return ref_count_.HasOneRef(); }
 
  protected:
   virtual ~RefCountedObject() {}
 
-  mutable volatile int ref_count_ = 0;
+  mutable webrtc::webrtc_impl::RefCounter ref_count_;
 };
 
 }  // namespace rtc

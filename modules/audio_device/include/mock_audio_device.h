@@ -26,8 +26,8 @@ class MockAudioDeviceModule : public AudioDeviceModule {
   MOCK_METHOD0(Process, void());
   MOCK_METHOD1(ProcessThreadAttached, void(ProcessThread*));
   // RefCountedModule.
-  MOCK_CONST_METHOD0(AddRef, int32_t());
-  MOCK_CONST_METHOD0(Release, int32_t());
+  MOCK_CONST_METHOD0(AddRef, void());
+  MOCK_CONST_METHOD0(Release, void());
   // AudioDeviceModule.
   MOCK_CONST_METHOD1(ActiveAudioLayer, int32_t(AudioLayer* audioLayer));
   MOCK_CONST_METHOD0(LastError, ErrorCode());
