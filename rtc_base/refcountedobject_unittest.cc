@@ -64,8 +64,11 @@ TEST(RefCountedObject, Basic) {
   scoped_refptr<RefCountedObject<RefClass>> aref(
       new RefCountedObject<RefClass>());
   EXPECT_TRUE(aref->HasOneRef());
-  EXPECT_EQ(2, aref->AddRef());
-  EXPECT_EQ(1, aref->Release());
+  aref->AddRef();
+  EXPECT_FALSE(aref->HasOneRef());
+  EXPECT_FALSE(aref->Release());
+  EXPECT_TRUE(aref->HasOneRef());
+  EXPECT_TRUE(aref->Release());
 }
 
 TEST(RefCountedObject, SupportRValuesInCtor) {
