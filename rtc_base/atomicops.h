@@ -25,6 +25,8 @@ class AtomicOps {
  public:
 #if defined(WEBRTC_WIN)
   // Assumes sizeof(int) == sizeof(LONG), which it is on Win32 and Win64.
+  static_assert(sizeof(int) == sizeof(LONG));
+
   static int Increment(volatile int* i) {
     return ::InterlockedIncrement(reinterpret_cast<volatile LONG*>(i));
   }
@@ -46,6 +48,10 @@ class AtomicOps {
   template <typename T>
   static T* AcquireLoadPtr(T* volatile* ptr) {
     return *ptr;
+  }
+  template <typename T>
+  static void ReleaseStorePtr(T* volatile* ptr, T* value) {
+    *ptr = value;
   }
   template <typename T>
   static T* CompareAndSwapPtr(T* volatile* ptr, T* old_value, T* new_value) {
@@ -72,6 +78,10 @@ class AtomicOps {
   template <typename T>
   static T* AcquireLoadPtr(T* volatile* ptr) {
     return __atomic_load_n(ptr, __ATOMIC_ACQUIRE);
+  }
+  template <typename T>
+  static void ReleaseStorePtr(T* volatile* ptr, T* value) {
+    __atomic_store_n(ptr, value, __ATOMIC_RELEASE);
   }
   template <typename T>
   static T* CompareAndSwapPtr(T* volatile* ptr, T* old_value, T* new_value) {
