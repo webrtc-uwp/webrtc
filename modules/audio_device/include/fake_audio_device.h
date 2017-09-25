@@ -19,8 +19,10 @@ class FakeAudioDeviceModule : public AudioDeviceModule {
  public:
   FakeAudioDeviceModule() {}
   virtual ~FakeAudioDeviceModule() {}
-  virtual int32_t AddRef() const { return 0; }
-  virtual int32_t Release() const { return 0; }
+
+  // TODO(nisse): This intentionally disables ref counting. Why?
+  virtual void AddRef() const { }
+  virtual void Release() const { }
 
  private:
   virtual int32_t RegisterEventObserver(AudioDeviceObserver* eventCallback) {

@@ -17,8 +17,8 @@ namespace rtc {
 // Reference count interface.
 class RefCountInterface {
  public:
-  virtual int AddRef() const = 0;
-  virtual int Release() const = 0;
+  virtual void AddRef() const = 0;
+  virtual void Release() const = 0;
 
  protected:
   virtual ~RefCountInterface() {}

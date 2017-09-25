@@ -39,8 +39,8 @@ class AudioState final : public webrtc::AudioState,
 
  private:
   // rtc::RefCountInterface implementation.
-  int AddRef() const override;
-  int Release() const override;
+  void AddRef() const override;
+  void Release() const override;
 
   // webrtc::VoiceEngineObserver implementation.
   void CallbackOnError(int channel_id, int err_code) override;
@@ -58,6 +58,7 @@ class AudioState final : public webrtc::AudioState,
   bool typing_noise_detected_ RTC_GUARDED_BY(crit_sect_) = false;
 
   // Reference count; implementation copied from rtc::RefCountedObject.
+  // TODO(nisse): Use RefCountedObject or RefCountedBase instead.
   mutable volatile int ref_count_ = 0;
 
   // Transports mixed audio from the mixer to the audio device and
