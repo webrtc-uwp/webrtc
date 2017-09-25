@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "09c649c4_55e578d3",
+        "filename": "sdk/android/api/org/webrtc/VideoFrameDrawer.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-09-25T08:27:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9c598529_f2de36f7",
+      "range": {
+        "startLine": 193,
+        "startChar": 14,
+        "endLine": 193,
+        "endChar": 23
+      },
+      "revId": "ab30cbea5568b957bedc9790ff26a4d36883755c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fc4e6c7f_44b8aa29",
         "filename": "sdk/android/instrumentationtests/src/org/webrtc/HardwareVideoEncoderTest.java",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2017-09-23T15:04:55Z",
       "side": 1,
       "message": "Can\u0027t you use a mocking framework instead of creating these classes manually?",
+      "range": {
+        "startLine": 114,
+        "startChar": 32,
+        "endLine": 114,
+        "endChar": 46
+      },
+      "revId": "ab30cbea5568b957bedc9790ff26a4d36883755c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66cf4a4c_add30062",
+        "filename": "sdk/android/instrumentationtests/src/org/webrtc/HardwareVideoEncoderTest.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-09-25T08:27:19Z",
+      "side": 1,
+      "message": "Unfortunately, I don\u0027t think mockito is supported on Android yet. I tried to include it but it didn\u0027t seem to work and I found comments like this:\nhttps://cs.chromium.org/chromium/src/components/cronet/android/test/javatests/src/org/chromium/net/CronetEngineBuilderTest.java?\u0026l\u003d126",
+      "parentUuid": "fc4e6c7f_44b8aa29",
       "range": {
         "startLine": 114,
         "startChar": 32,
