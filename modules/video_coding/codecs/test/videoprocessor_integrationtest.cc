@@ -15,8 +15,9 @@
 
 #if defined(WEBRTC_ANDROID)
 #include "modules/video_coding/codecs/test/android_test_initializer.h"
-#include "sdk/android/src/jni/androidmediadecoder_jni.h"
-#include "sdk/android/src/jni/androidmediaencoder_jni.h"
+#include "sdk/android/src/jni/hardwarevideodecoderfactory.h"
+#include "sdk/android/src/jni/hardwarevideoencoderfactory.h"
+#include "sdk/android/src/jni/jni_helpers.h"
 #elif defined(WEBRTC_IOS)
 #include "modules/video_coding/codecs/test/objc_codec_h264_test.h"
 #endif
@@ -290,7 +291,10 @@ void VideoProcessorIntegrationTest::CreateEncoderAndDecoder() {
   std::unique_ptr<cricket::WebRtcVideoEncoderFactory> encoder_factory;
   if (config_.hw_encoder) {
 #if defined(WEBRTC_ANDROID)
-    encoder_factory.reset(new jni::MediaCodecVideoEncoderFactory());
+    JNIEnv* env = jni::AttachCurrentThreadIfNeeded();
+    jni::ScopedLocalRefFrame local_ref_frame(env);
+    encoder_factory.reset(jni::CreateHardwareVideoEncoderFactory(
+        env, nullptr /* shared_context */));
 #elif defined(WEBRTC_IOS)
     EXPECT_EQ(kVideoCodecH264, config_.codec_settings.codecType)
         << "iOS HW codecs only support H264.";
@@ -304,7 +308,10 @@ void VideoProcessorIntegrationTest::CreateEncoderAndDecoder() {
 
   if (config_.hw_decoder) {
 #if defined(WEBRTC_ANDROID)
-    decoder_factory_.reset(new jni::MediaCodecVideoDecoderFactory());
+    JNIEnv* env = jni::AttachCurrentThreadIfNeeded();
+    jni::ScopedLocalRefFrame local_ref_frame(env);
+    decoder_factory_.reset(jni::CreateHardwareVideoDecoderFactory(
+        env, nullptr /* shared_context */));
 #elif defined(WEBRTC_IOS)
     EXPECT_EQ(kVideoCodecH264, config_.codec_settings.codecType)
         << "iOS HW codecs only support H264.";
