@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "abb90ec9_2ea08200",
+        "filename": "api/BUILD.gn",
+        "patchSetId": 5
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-25T08:47:07Z",
+      "side": 1,
+      "message": "I\u0027m pretty sure this is a bug in the presubmit script: https://bugs.chromium.org/p/webrtc/issues/detail?id\u003d8277\n\nFor now, you can bypass the presubmit warning, or just go with \"sources\"---whichever you feel like. The former is more right, while the latter is more convenient. :-)",
+      "parentUuid": "5898a92c_d403b291",
+      "range": {
+        "startLine": 222,
+        "startChar": 2,
+        "endLine": 222,
+        "endChar": 9
+      },
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7debb2fa_2df6cb86",
         "filename": "api/refcountedbase.h",
         "patchSetId": 5
@@ -201,6 +225,30 @@
     },
     {
       "key": {
+        "uuid": "e2d05916_d4914516",
+        "filename": "modules/desktop_capture/mac/desktop_configuration_monitor.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-25T08:47:07Z",
+      "side": 1,
+      "message": "Ah, you\u0027re right about the forcing all destruction to go via Release() thing.\n\nRegarding `final`—my personal position is that one *should* be trigger-happy with `final`, since it\u0027s good for code readability and easy to revert—and since implementation inheritance is so often a bad idea anyway. But I\u0027m fine without `final` here too.",
+      "parentUuid": "76175fe4_e422c436",
+      "range": {
+        "startLine": 42,
+        "startChar": 1,
+        "endLine": 42,
+        "endChar": 10
+      },
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "81944f65_e54007e8",
         "filename": "modules/desktop_capture/mac/full_screen_chrome_window_detector.h",
         "patchSetId": 5
@@ -276,6 +324,24 @@
       "side": 1,
       "message": "I\u0027ll give it a try (and also tweak RefCounter return values accordingly).\n\nSome problems...\n\nThe test RefCountedObject.Basic uses return values, and fails to compile. Not sure if I should try to expose refcounts for testing. Or maybe I can rewrite the test to only have expectations on HasOneRef being true or false.\n\nMore interesting cases are TransportController::DestroyDtlsTransport_n, with the test\n\n  if ((*it)-\u003eRelease() \u003e 0) {\n    return;\n  }\n  channels_.erase(it);\n\nand TransportController::DestroyAllChannels_n,\n\n    // Even though these objects are normally ref-counted, if\n    // TransportController is deleted while they still have references, just\n    // remove all references.\n    while (channel-\u003eRelease() \u003e 0) {\n    }\n\nNo idea why we do this. I guess the latter loop could also be rewritten in terms of HasOneRef.\n\nAnd then there are tests setting up expectations for AddRef and Release, in particular, AdmSetupExpectations in webrtcvoiceengine_unittests.\n\nSo if we want to go through with this, maybe that should be yet another preparatory cl, and send out a webrtc PSA pretty soon.",
       "parentUuid": "dc1a1a4b_2c223728",
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83d07e3c_3799062a",
+        "filename": "rtc_base/refcountedobject.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-25T08:47:07Z",
+      "side": 1,
+      "message": "I don\u0027t quite see what the first code snippet is doing---keeping a non-owning pointer to the object after releasing it unless we just dropped the last reference and destroyed it? That sounds very unsafe---if we have a non-owning pointer, we must know for sure that someone else is keeping it alive.\n\nSimilar for the second snippet. It looks like it\u0027s dropping references to the object repeatedly until the number of references goes to zero, but owning a variable number of references to an object seems like a sketchy thing to do, as does dropping references you don\u0027t own.\n\nMy guess is that both pieces of code are buggy, or bugs waiting to happen.",
+      "parentUuid": "298ba52a_c76c8d3c",
       "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
@@ -493,6 +559,30 @@
       "side": 1,
       "message": "I\u0027m not 100% sure how it works currently, but I think objects are created with ref_count_ \u003d\u003d 0, which is incremented to 1 when the result is wrapped in a scoped_refptr.\n\nAnyway, changing as requested.",
       "parentUuid": "713223de_1fe4929b",
+      "range": {
+        "startLine": 40,
+        "startChar": 36,
+        "endLine": 40,
+        "endChar": 37
+      },
+      "revId": "ab5042ceed4f98dff286f54c54fb98066914b862",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d3817e0_414bc686",
+        "filename": "rtc_base/refcounter.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-25T08:47:07Z",
+      "side": 1,
+      "message": "Yes, that\u0027s my understanding as well. It takes some code-digging to get to that understanding, though, and the obvious thing (to my mind) would have been for the count to be initialized to 1, hence my suggestion to make this a little more transparent.",
+      "parentUuid": "d6df54b1_4b8e954c",
       "range": {
         "startLine": 40,
         "startChar": 36,

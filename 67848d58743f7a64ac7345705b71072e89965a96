@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6af4d1c5_da20335d",
+        "filename": "api/refcountedbase.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-25T08:47:07Z",
+      "side": 1,
+      "message": "I think you can make this constructor call down on line 31, in which case you could omit this line.",
+      "revId": "67848d58743f7a64ac7345705b71072e89965a96",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "266d0bae_f96ee5cf",
+        "filename": "rtc_base/refcounter.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-25T08:47:07Z",
+      "side": 1,
+      "message": "This default value should not be here---unless I\u0027m confused, it should never be used.",
+      "range": {
+        "startLine": 40,
+        "startChar": 26,
+        "endLine": 40,
+        "endChar": 29
+      },
+      "revId": "67848d58743f7a64ac7345705b71072e89965a96",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
