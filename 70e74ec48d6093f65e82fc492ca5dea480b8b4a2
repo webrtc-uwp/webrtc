@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b30685c3_832570da",
+        "filename": "sdk/android/src/java/org/webrtc/CalledByNative.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-09-25T12:37:39Z",
+      "side": 1,
+      "message": "Fix this to be correct javadoc.",
+      "range": {
+        "startLine": 28,
+        "startChar": 4,
+        "endLine": 28,
+        "endChar": 0
+      },
+      "revId": "70e74ec48d6093f65e82fc492ca5dea480b8b4a2",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
