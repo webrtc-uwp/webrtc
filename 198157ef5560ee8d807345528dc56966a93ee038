@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0bf23ca3_d7c8ba2c",
+        "filename": "video/rtp_video_stream_receiver.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 5524
+      },
+      "writtenOn": "2017-09-25T11:23:40Z",
+      "side": 1,
+      "message": "Do we do any validation of this config prior to saving it here? Looks like we\u0027re no longer checking the id range for instance.",
+      "range": {
+        "startLine": 100,
+        "startChar": 53,
+        "endLine": 100,
+        "endChar": 0
+      },
+      "revId": "198157ef5560ee8d807345528dc56966a93ee038",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4bfb4601_8b5e2f42",
+        "filename": "video/rtp_video_stream_receiver.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 5524
+      },
+      "writtenOn": "2017-09-25T11:23:40Z",
+      "side": 1,
+      "message": "It\u0027d be nice if we could propagate |packet| here, instead of |rtp_packet| and |header|.\nIs that maybe planned as an upcoming cl?",
+      "range": {
+        "startLine": 284,
+        "startChar": 65,
+        "endLine": 284,
+        "endChar": 0
+      },
+      "revId": "198157ef5560ee8d807345528dc56966a93ee038",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
