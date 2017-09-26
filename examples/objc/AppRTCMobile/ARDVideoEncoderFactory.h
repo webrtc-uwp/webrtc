@@ -13,4 +13,6 @@
 
 @interface ARDVideoEncoderFactory : NSObject<RTCVideoEncoderFactory>
 
+@property(nonatomic, retain) NSString* preferredCodecName;
+
 @end

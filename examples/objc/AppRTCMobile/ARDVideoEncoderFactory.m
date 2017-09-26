@@ -10,6 +10,7 @@
 
 #import "ARDVideoEncoderFactory.h"
 
+#import "ARDSettingsModel.h"
 #import "WebRTC/RTCVideoCodecH264.h"
 #import "WebRTC/RTCVideoCodecVP8.h"
 #import "WebRTC/RTCVideoCodecVP9.h"
@@ -18,6 +19,8 @@ static NSString *kLevel31ConstrainedHigh = @"640c1f";
 static NSString *kLevel31ConstrainedBaseline = @"42e01f";
 
 @implementation ARDVideoEncoderFactory
+
+@synthesize preferredCodecName;
 
 - (id<RTCVideoEncoder>)createEncoder:(RTCVideoCodecInfo *)info {
   if ([info.name isEqualToString:@"H264"]) {
@@ -52,13 +55,24 @@ static NSString *kLevel31ConstrainedBaseline = @"42e01f";
       [[RTCVideoCodecInfo alloc] initWithName:@"H264" parameters:constrainedBaselineParams];
   [codecs addObject:constrainedBaselineInfo];
 
-  RTCVideoCodecInfo *vp9Info = [[RTCVideoCodecInfo alloc] initWithName:@"VP9" parameters:nil];
-  [codecs addObject:vp9Info];
-
   RTCVideoCodecInfo *vp8Info = [[RTCVideoCodecInfo alloc] initWithName:@"VP8" parameters:nil];
   [codecs addObject:vp8Info];
 
-  return [codecs copy];
+  RTCVideoCodecInfo *vp9Info = [[RTCVideoCodecInfo alloc] initWithName:@"VP9" parameters:nil];
+  [codecs addObject:vp9Info];
+
+  NSMutableArray<RTCVideoCodecInfo *> *orderedCodecs = [NSMutableArray array];
+  NSUInteger index =
+      [codecs indexOfObjectPassingTest:^BOOL(id _Nonnull obj, NSUInteger idx, BOOL *_Nonnull stop) {
+        return [((RTCVideoCodecInfo *)obj).name isEqualToString:self.preferredCodecName];
+      }];
+  if (index != NSNotFound) {
+    [orderedCodecs addObject:[codecs objectAtIndex:index]];
+    [codecs removeObjectAtIndex:index];
+  }
+  [orderedCodecs addObjectsFromArray:codecs];
+
+  return [orderedCodecs copy];
 }
 
 @end
