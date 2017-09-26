@@ -348,6 +348,27 @@ if (!build_with_chromium) {
   }
 }
 
+config("absl_config") {
+  include_dirs = [
+    "third_party/absl",
+    "third_party/absl/third_party",
+  ]
+  defines = [ "ABSL_ALLOCATOR_NOTHROW=1" ]
+}
+
+rtc_static_library("absl") {
+  public = [
+    "third_party/absl/types/optional.h",
+    "third_party/absl/types/span.h",
+  ]
+
+  sources = [
+    "third_party/absl/third_party/absl/types/optional.cc",
+  ]
+
+  all_dependent_configs = [ ":absl_config" ]
+}
+
 rtc_static_library("webrtc_common") {
   # TODO(mbonadei): Remove (bugs.webrtc.org/7745)
   # Enabling GN check triggers cyclic dependency error:

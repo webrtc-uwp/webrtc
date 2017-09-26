@@ -67,8 +67,8 @@ TEST(TargetBitrateTest, FullPacket) {
   rtcp::ExtendedReports xr;
   EXPECT_TRUE(ParseSinglePacket(kRtcpPacket, &xr));
   EXPECT_EQ(kSsrc, xr.sender_ssrc());
-  const rtc::Optional<TargetBitrate>& target_bitrate = xr.target_bitrate();
-  ASSERT_TRUE(static_cast<bool>(target_bitrate));
+  const absl::optional<TargetBitrate>& target_bitrate = xr.target_bitrate();
+  ASSERT_TRUE(target_bitrate.has_value());
   CheckBitrateItems(target_bitrate->GetTargetBitrates());
 }
 
