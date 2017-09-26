@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10e97bb4_9571677a",
+        "filename": "rtc_base/callback_unittest.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-26T11:17:35Z",
+      "side": 1,
+      "message": "It\u0027s not usually a good idea to use pre-/post-increment/-decrement in a larger expression---too easy to misread. I\u0027d suggest\n\n  --count_;\n  return count_ \u003d\u003d 0;",
+      "revId": "25b63683377f5e26eac11434766bdaf3cab86fd4",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed076958_c91e6d4a",
+        "filename": "rtc_base/refcount.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-26T11:17:35Z",
+      "side": 1,
+      "message": "Consider righting an old wrong and documenting these, now that you make a change that would have forced you to update the docs had they been here. E.g.\n\n  // Creates a new reference to the object. The caller must already have a reference, or have borrowed one. (A newly created object is a special case: there, the code that creates the object should immediately call AddRef(), bringing the reference count from 0 to 1.)\n\nand\n\n  // Releases a reference to the object; the caller now has one less reference than before the call. Returns true if the number of references dropped to zero because of this (in which case the object destroys itself).\n  //\n  // Note that a false return value does *not* mean that it\u0027s fine for the caller to keep accessing the object. If it no longer owns or borrows a reference to the object, the object may go away at any time, e.g. if another thread releases what happens to be the last reference.",
+      "revId": "25b63683377f5e26eac11434766bdaf3cab86fd4",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
