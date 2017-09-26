@@ -281,6 +281,30 @@
       "revId": "bab4563a92fa0f0046b5bc4cdeab3b7d8bedc180",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "381d3f5c_5e31082a",
+        "filename": "webrtc/modules/audio_processing/test/fake_recording_device.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-09-26T13:55:37Z",
+      "side": 1,
+      "message": "What I mean is that in the wav-file case we don\u0027t even call this method. Therefore I don\u0027t see any reason for having the level as optional. I.e., it is never called with an unspecified value.",
+      "parentUuid": "9d7bd638_14d055c5",
+      "range": {
+        "startLine": 55,
+        "startChar": 48,
+        "endLine": 55,
+        "endChar": 53
+      },
+      "revId": "bab4563a92fa0f0046b5bc4cdeab3b7d8bedc180",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
