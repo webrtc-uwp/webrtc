@@ -22,6 +22,30 @@
       "revId": "0aed4391a3e870a53ece1e8754c8564bc79dab24",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "daaa5c4b_42745dd4",
+        "filename": "modules/desktop_capture/win/dxgi_duplicator_controller.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 5029
+      },
+      "writtenOn": "2017-09-26T03:11:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "831e6ff3_43a02b28",
+      "range": {
+        "startLine": 463,
+        "startChar": 75,
+        "endLine": 463,
+        "endChar": 0
+      },
+      "revId": "0aed4391a3e870a53ece1e8754c8564bc79dab24",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
