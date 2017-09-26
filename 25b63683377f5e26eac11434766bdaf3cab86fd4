@@ -33,6 +33,24 @@
       "revId": "25b63683377f5e26eac11434766bdaf3cab86fd4",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f441a82_b3c16592",
+        "filename": "rtc_base/refcount.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-26T11:19:02Z",
+      "side": 1,
+      "message": "Or put a big fat comment on the entire class, detailing the allowed sequence of AddRef() and Release() calls.",
+      "parentUuid": "ed076958_c91e6d4a",
+      "revId": "25b63683377f5e26eac11434766bdaf3cab86fd4",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
