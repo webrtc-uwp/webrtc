@@ -11,6 +11,9 @@
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
 #include "media/engine/webrtcmediaengine.h"
+#include "media/engine/webrtcvideodecoderfactory.h"
+#include "media/engine/webrtcvideoencoderfactory.h"
+#include "modules/audio_processing/include/audio_processing.h"
 #include "test/gtest.h"
 
 using webrtc::RtpExtension;
@@ -234,16 +237,13 @@ TEST(WebRtcMediaEngineTest, FilterRtpExtensions_RemoveRedundantBwe_3) {
   EXPECT_EQ(RtpExtension::kTimestampOffsetUri, filtered[0].uri);
 }
 
-TEST(WebRtcMediaEngineFactoryTest, CreateOldApi) {
-  std::unique_ptr<MediaEngineInterface> engine(
-      WebRtcMediaEngineFactory::Create(nullptr, nullptr, nullptr));
-  EXPECT_TRUE(engine);
-}
-
 TEST(WebRtcMediaEngineFactoryTest, CreateWithBuiltinDecoders) {
   std::unique_ptr<MediaEngineInterface> engine(WebRtcMediaEngineFactory::Create(
-      nullptr, webrtc::CreateBuiltinAudioEncoderFactory(),
-      webrtc::CreateBuiltinAudioDecoderFactory(), nullptr, nullptr));
+      nullptr /* adm */, webrtc::CreateBuiltinAudioEncoderFactory(),
+      webrtc::CreateBuiltinAudioDecoderFactory(),
+      std::unique_ptr<cricket::WebRtcVideoEncoderFactory>(),
+      std::unique_ptr<cricket::WebRtcVideoDecoderFactory>(),
+      nullptr /* audio_mixer */, webrtc::AudioProcessing::Create()));
   EXPECT_TRUE(engine);
 }
 

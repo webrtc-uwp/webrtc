@@ -22,6 +22,8 @@
 #include "api/videosourceproxy.h"
 #include "logging/rtc_event_log/rtc_event_log.h"
 #include "media/base/mediaconstants.h"
+#include "media/engine/webrtcvideodecoderfactory.h"
+#include "media/engine/webrtcvideoencoderfactory.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "ortc/ortcrtpreceiveradapter.h"
 #include "ortc/ortcrtpsenderadapter.h"
@@ -547,8 +549,10 @@ OrtcFactory::CreateMediaEngine_w() {
   // AudioDeviceModule will be used.
   return std::unique_ptr<cricket::MediaEngineInterface>(
       cricket::WebRtcMediaEngineFactory::Create(
-          adm_, audio_encoder_factory_, audio_decoder_factory_, nullptr,
-          nullptr, nullptr, webrtc::AudioProcessing::Create()));
+          adm_, audio_encoder_factory_, audio_decoder_factory_,
+          std::unique_ptr<cricket::WebRtcVideoEncoderFactory>(),
+          std::unique_ptr<cricket::WebRtcVideoDecoderFactory>(), nullptr,
+          webrtc::AudioProcessing::Create()));
 }
 
 }  // namespace webrtc

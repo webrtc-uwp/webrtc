@@ -38,36 +38,12 @@ class WebRtcMediaEngineFactory {
   // only expected to be used on one thread, internally called the "worker
   // thread". This is the thread Init must be called on.
 
-  // TODO(ossu): Backwards-compatible interface. Will be deprecated once the
-  // audio decoder factory is fully plumbed and used throughout WebRTC.
-  // See: crbug.com/webrtc/6000
-  static MediaEngineInterface* Create(
-      webrtc::AudioDeviceModule* adm,
-      WebRtcVideoEncoderFactory* video_encoder_factory,
-      WebRtcVideoDecoderFactory* video_decoder_factory);
-
   // TODO(deadbeef): Change these to return an std::unique_ptr<>, to indicate
   // that the caller owns the returned object.
+  // TODO(magjed): Deprecated. The video factories passed in here must be
+  // nullptr, otherwise it will crash.
   static MediaEngineInterface* Create(
       webrtc::AudioDeviceModule* adm,
-      const rtc::scoped_refptr<webrtc::AudioDecoderFactory>&
-          audio_decoder_factory,
-      WebRtcVideoEncoderFactory* video_encoder_factory,
-      WebRtcVideoDecoderFactory* video_decoder_factory);
-
-  static MediaEngineInterface* Create(
-      webrtc::AudioDeviceModule* adm,
-      const rtc::scoped_refptr<webrtc::AudioDecoderFactory>&
-          audio_decoder_factory,
-      WebRtcVideoEncoderFactory* video_encoder_factory,
-      WebRtcVideoDecoderFactory* video_decoder_factory,
-      rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer,
-      rtc::scoped_refptr<webrtc::AudioProcessing> apm);
-
-  static MediaEngineInterface* Create(
-      webrtc::AudioDeviceModule* adm,
-      const rtc::scoped_refptr<webrtc::AudioEncoderFactory>&
-          audio_encoder_factory,
       const rtc::scoped_refptr<webrtc::AudioDecoderFactory>&
           audio_decoder_factory,
       WebRtcVideoEncoderFactory* video_encoder_factory,
@@ -79,8 +55,8 @@ class WebRtcMediaEngineFactory {
           audio_encoder_factory,
       const rtc::scoped_refptr<webrtc::AudioDecoderFactory>&
           audio_decoder_factory,
-      WebRtcVideoEncoderFactory* video_encoder_factory,
-      WebRtcVideoDecoderFactory* video_decoder_factory,
+      std::unique_ptr<WebRtcVideoEncoderFactory> video_encoder_factory,
+      std::unique_ptr<WebRtcVideoDecoderFactory> video_decoder_factory,
       rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer,
       rtc::scoped_refptr<webrtc::AudioProcessing> apm);
 

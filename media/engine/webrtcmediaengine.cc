@@ -34,14 +34,16 @@ MediaEngineInterface* CreateWebRtcMediaEngine(
         audio_encoder_factory,
     const rtc::scoped_refptr<webrtc::AudioDecoderFactory>&
         audio_decoder_factory,
-    WebRtcVideoEncoderFactory* video_encoder_factory,
-    WebRtcVideoDecoderFactory* video_decoder_factory,
+    std::unique_ptr<WebRtcVideoEncoderFactory> video_encoder_factory,
+    std::unique_ptr<WebRtcVideoDecoderFactory> video_decoder_factory,
     rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer,
     rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing) {
 #ifdef HAVE_WEBRTC_VIDEO
   typedef WebRtcVideoEngine VideoEngine;
-  std::tuple<WebRtcVideoEncoderFactory*, WebRtcVideoDecoderFactory*> video_args(
-      video_encoder_factory, video_decoder_factory);
+  std::tuple<std::unique_ptr<WebRtcVideoEncoderFactory>,
+             std::unique_ptr<WebRtcVideoDecoderFactory>>
+      video_args((std::move(video_encoder_factory)),
+                 (std::move(video_decoder_factory)));
 #else
   typedef NullWebRtcVideoEngine VideoEngine;
   std::tuple<> video_args;
@@ -54,73 +56,36 @@ MediaEngineInterface* CreateWebRtcMediaEngine(
 
 }  // namespace
 
-// TODO(ossu): Backwards-compatible interface. Will be deprecated once the
-// audio decoder factory is fully plumbed and used throughout WebRTC.
-// See: crbug.com/webrtc/6000
-MediaEngineInterface* WebRtcMediaEngineFactory::Create(
-    webrtc::AudioDeviceModule* adm,
-    WebRtcVideoEncoderFactory* video_encoder_factory,
-    WebRtcVideoDecoderFactory* video_decoder_factory) {
-  return CreateWebRtcMediaEngine(
-      adm, webrtc::CreateBuiltinAudioEncoderFactory(),
-      webrtc::CreateBuiltinAudioDecoderFactory(), video_encoder_factory,
-      video_decoder_factory, nullptr, webrtc::AudioProcessing::Create());
-}
-
 MediaEngineInterface* WebRtcMediaEngineFactory::Create(
     webrtc::AudioDeviceModule* adm,
     const rtc::scoped_refptr<webrtc::AudioDecoderFactory>&
         audio_decoder_factory,
     WebRtcVideoEncoderFactory* video_encoder_factory,
     WebRtcVideoDecoderFactory* video_decoder_factory) {
+  RTC_CHECK(video_encoder_factory == nullptr);
+  RTC_CHECK(video_decoder_factory == nullptr);
   return CreateWebRtcMediaEngine(
       adm, webrtc::CreateBuiltinAudioEncoderFactory(), audio_decoder_factory,
-      video_encoder_factory, video_decoder_factory, nullptr,
-      webrtc::AudioProcessing::Create());
+      nullptr /* video_encoder_factory */, nullptr /* video_decoder_factory */,
+      nullptr, webrtc::AudioProcessing::Create());
 }
 
 // Used by PeerConnectionFactory to create a media engine passed into
 // ChannelManager.
 MediaEngineInterface* WebRtcMediaEngineFactory::Create(
     webrtc::AudioDeviceModule* adm,
-    const rtc::scoped_refptr<webrtc::AudioDecoderFactory>&
-        audio_decoder_factory,
-    WebRtcVideoEncoderFactory* video_encoder_factory,
-    WebRtcVideoDecoderFactory* video_decoder_factory,
-    rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer,
-    rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing) {
-  return CreateWebRtcMediaEngine(
-      adm, webrtc::CreateBuiltinAudioEncoderFactory(), audio_decoder_factory,
-      video_encoder_factory, video_decoder_factory, audio_mixer,
-      audio_processing);
-}
-
-MediaEngineInterface* WebRtcMediaEngineFactory::Create(
-    webrtc::AudioDeviceModule* adm,
     const rtc::scoped_refptr<webrtc::AudioEncoderFactory>&
         audio_encoder_factory,
     const rtc::scoped_refptr<webrtc::AudioDecoderFactory>&
         audio_decoder_factory,
-    WebRtcVideoEncoderFactory* video_encoder_factory,
-    WebRtcVideoDecoderFactory* video_decoder_factory) {
-  return CreateWebRtcMediaEngine(
-      adm, audio_encoder_factory, audio_decoder_factory, video_encoder_factory,
-      video_decoder_factory, nullptr, webrtc::AudioProcessing::Create());
-}
-
-MediaEngineInterface* WebRtcMediaEngineFactory::Create(
-    webrtc::AudioDeviceModule* adm,
-    const rtc::scoped_refptr<webrtc::AudioEncoderFactory>&
-        audio_encoder_factory,
-    const rtc::scoped_refptr<webrtc::AudioDecoderFactory>&
-        audio_decoder_factory,
-    WebRtcVideoEncoderFactory* video_encoder_factory,
-    WebRtcVideoDecoderFactory* video_decoder_factory,
+    std::unique_ptr<WebRtcVideoEncoderFactory> video_encoder_factory,
+    std::unique_ptr<WebRtcVideoDecoderFactory> video_decoder_factory,
     rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer,
     rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing) {
   return CreateWebRtcMediaEngine(
-      adm, audio_encoder_factory, audio_decoder_factory, video_encoder_factory,
-      video_decoder_factory, audio_mixer, audio_processing);
+      adm, audio_encoder_factory, audio_decoder_factory,
+      std::move(video_encoder_factory), std::move(video_decoder_factory),
+      audio_mixer, audio_processing);
 }
 
 std::unique_ptr<MediaEngineInterface> WebRtcMediaEngineFactory::Create(
