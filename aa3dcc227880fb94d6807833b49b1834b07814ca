@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0851e10b_fb299f55",
+        "filename": "sdk/android/src/jni/jni_generator_helper.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-26T08:52:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5c24c106_c3d5cee3",
+      "range": {
+        "startLine": 43,
+        "startChar": 37,
+        "endLine": 43,
+        "endChar": 41
+      },
+      "revId": "aa3dcc227880fb94d6807833b49b1834b07814ca",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "58239b33_8cb16382",
         "filename": "sdk/android/src/jni/jni_generator_helper.cc",
         "patchSetId": 1
@@ -45,6 +69,30 @@
       "revId": "aa3dcc227880fb94d6807833b49b1834b07814ca",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "660149ff_7092a556",
+        "filename": "sdk/android/src/jni/jni_generator_helper.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-26T08:52:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "58239b33_8cb16382",
+      "range": {
+        "startLine": 81,
+        "startChar": 49,
+        "endLine": 81,
+        "endChar": 53
+      },
+      "revId": "aa3dcc227880fb94d6807833b49b1834b07814ca",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "fd48dbc6_9f2b411d",
+        "filename": "sdk/android/src/jni/jni_generator_helper.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-26T08:52:01Z",
+      "side": 1,
+      "message": "Yes exactly, it\u0027s like this in Chromium. It will work to put it in an anonymous namespace.",
+      "parentUuid": "62a4408a_6128d5cd",
+      "range": {
+        "startLine": 32,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 1
+      },
+      "revId": "aa3dcc227880fb94d6807833b49b1834b07814ca",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "88dbb4d1_7e353208",
         "filename": "sdk/android/src/jni/jni_generator_helper.h",
         "patchSetId": 1
@@ -82,6 +154,30 @@
       "writtenOn": "2017-09-26T07:43:28Z",
       "side": 1,
       "message": "This looks very dangerous. Does the generated code work correctly With this fake ScopedJavaLocalRef?",
+      "range": {
+        "startLine": 67,
+        "startChar": 6,
+        "endLine": 67,
+        "endChar": 38
+      },
+      "revId": "aa3dcc227880fb94d6807833b49b1834b07814ca",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "70f671ee_548eaf6a",
+        "filename": "sdk/android/src/jni/jni_generator_helper.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-26T08:52:01Z",
+      "side": 1,
+      "message": "Yes, it will work correctly. It looks weird , but it is safe. We don\u0027t use DeleteLocalRef in WebRTC, we use ScopedLocalRefFrame instead. We should probably switch to using DeleteLocalRef though. I added a comment.",
+      "parentUuid": "88dbb4d1_7e353208",
       "range": {
         "startLine": 67,
         "startChar": 6,
