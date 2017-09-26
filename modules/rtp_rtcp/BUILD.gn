@@ -80,6 +80,7 @@ rtc_source_set("rtp_rtcp_format") {
 
   deps = [
     "..:module_api",
+    "../..:absl",
     "../..:webrtc_common",
     "../../api:array_view",
     "../../api:libjingle_peerconnection_api",

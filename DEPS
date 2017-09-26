@@ -5,6 +5,11 @@ vars = {
   'webrtc_git': 'https://webrtc.googlesource.com',
   'chromium_revision': '83821ae6fdc08f0ed0dbca13ad20d90fca7f3050',
   'boringssl_git': 'https://boringssl.googlesource.com',
+  'absl_git': 'https://github.com/abseil/abseil-cpp.git',
+  # Three lines of non-changing comments so that
+  # the commit queue can handle CLs rolling swarming_client
+  # and whatever else without interference from each other.
+  'absl_revision': '2a62fbdedf64673f7c858bc6487bd15bcd2ca180',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling swarming_client
   # and whatever else without interference from each other.
@@ -43,6 +48,7 @@ deps = {
     Var('chromium_git') + '/chromium/src/testing' + '@' + 'b069ea1fa4f54731e6ca152d1016fa88a2b8e5f7',
   'src/third_party':
     Var('chromium_git') + '/chromium/src/third_party' + '@' + '9c41100a0ddf086b7e345d5bb65c15cb3d0a1bdc',
+  'src/third_party/absl/third_party': Var('absl_git') + '@' + Var('absl_revision'),
   'src/third_party/boringssl/src':
    Var('boringssl_git') + '/boringssl.git' + '@' +  Var('boringssl_revision'),
   'src/third_party/catapult':
