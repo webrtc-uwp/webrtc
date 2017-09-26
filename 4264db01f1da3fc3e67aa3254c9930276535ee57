@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "915057a6_86f4d22b",
+        "filename": "pc/peerconnectionwrapper.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-26T19:36:54Z",
+      "side": 1,
+      "message": "nit: PeerConnectio",
+      "revId": "4264db01f1da3fc3e67aa3254c9930276535ee57",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a6e86787_1f9d068c",
+        "filename": "pc/peerconnectionwrapper.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-26T19:36:54Z",
+      "side": 1,
+      "message": "I thought you were going with having a factory method (\"Create\") to create this? So instead of:\n\nPeerConnectionWrapper wrapper(...);\nASSERT_NE(nullptr, wrapper.pc());\n\nIt\u0027s:\n\nauto wrapper \u003d PeerConnectionWrapper::Create(...);\nASSERT_NE(nullptr, wrapper);\n\nI think this will make it less likely for the caller to forget the ASSERT. Generally if you have a \"Create\" method it\u0027s natural to check the return value, whereas checking something after construction is less obvious.",
+      "revId": "4264db01f1da3fc3e67aa3254c9930276535ee57",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
