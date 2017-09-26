@@ -34,6 +34,24 @@
       "revId": "cdea576e7d230e8f80bbd31864fb4190d0b5b40a",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e24d4eb2_2ead9203",
+        "filename": "media/engine/webrtcmediaengine.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-26T17:02:00Z",
+      "side": 1,
+      "message": "Oh. I forgot about that, sorry. In that case, can you add comments in webrtcmediaengine.h clarifying this, or change them to use unique_ptr if possible?",
+      "parentUuid": "af1ba900_8c66e3bc",
+      "revId": "cdea576e7d230e8f80bbd31864fb4190d0b5b40a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
