@@ -33,6 +33,24 @@
       "revId": "4264db01f1da3fc3e67aa3254c9930276535ee57",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7a0f515_1997897d",
+        "filename": "pc/peerconnectionwrapper.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 5039
+      },
+      "writtenOn": "2017-09-26T23:23:03Z",
+      "side": 1,
+      "message": "I want to avoid a factory method because then it would have to be redefined for each subclass (or the class would need to be templated). Instead, I moved all the construction logic to the tests fixtures and now the PeerConnectionWrapper just takes in a factory, the already-constructed PeerConnection and the observer.",
+      "parentUuid": "a6e86787_1f9d068c",
+      "revId": "4264db01f1da3fc3e67aa3254c9930276535ee57",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
