@@ -76,7 +76,6 @@ class RtpReceiver {
                                  size_t payload_length,
                                  PayloadUnion payload_specific,
                                  bool in_order) = 0;
-
   // Gets the last received timestamp. Returns true if a packet has been
   // received, false otherwise.
   virtual bool Timestamp(uint32_t* timestamp) const = 0;
