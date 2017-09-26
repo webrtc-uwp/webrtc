@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "97ee8d14_d89a3c9c",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-26T10:25:00Z",
+      "side": 1,
+      "message": "\u003e This TODO seem not directly related to the CL, more like direction for one of next CLs.\n\nThat\u0027s right.\n\n\u003e It seems last  received timestamp is used, but there is no need to rely on \u0027in_order\u0027 flag to calculate it: different, equally good way to calculate it is to check \n\u003e last_received_sequence_number_.has_value() \u0026\u0026 IsNewerSequenceNumber(last_received_sequence_number_, rtp_header.sequence_number)\n\nI\u0027m not sure that\u0027s equally good. If we receive seqnos 5,3,4, should 4 be considered in order?\nProblem is, I don\u0027t understand the purpose of these variables. They are returned by the  Timestamp() and LastReceivedTimeMs, which seems to be used for audio/video sync.\n\nCurrent value comes from StreamStatisticianImpl::InOrderPacketInternal, which also keeps the state received_seq_max_ (which I guess will be 5 in the above example).\n\n\u003e Might be good to investigate what large jumps in sequence numbers mean (stream reset meaning rtp timestamp need to be reset too or something else?)\n\nIf we have more history than a single seqno, we need to decide if and how to reset it for large seqno jumps.\n\nSo what should we do? I don\u0027t want to delete in_order in this cl. But if we think last_received_sequence_number_ will be useful, I shouldn\u0027t delete that either.",
+      "parentUuid": "d3f545eb_9a5d7e5d",
+      "range": {
+        "startLine": 180,
+        "startChar": 12,
+        "endLine": 180,
+        "endChar": 17
+      },
+      "revId": "c637254fb0595855ddf737e6efd0bce008188fc2",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "17cb1c73_8516b14b",
         "filename": "modules/rtp_rtcp/source/rtp_receiver_video.cc",
         "patchSetId": 1
@@ -60,6 +84,30 @@
       "writtenOn": "2017-09-26T09:59:22Z",
       "side": 1,
       "message": "because of line#89, there is no need for reassigning this flag.\n(because of same line it is clear is_first_packet flag was practically ignored)",
+      "range": {
+        "startLine": 93,
+        "startChar": 51,
+        "endLine": 93,
+        "endChar": 0
+      },
+      "revId": "c637254fb0595855ddf737e6efd0bce008188fc2",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26329e7d_0cacea4c",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_video.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-26T10:25:00Z",
+      "side": 1,
+      "message": "Good catch. So I should update the cl description, value already comes from the depacketizer, and the value from the deleted logic was discarded.",
+      "parentUuid": "17cb1c73_8516b14b",
       "range": {
         "startLine": 93,
         "startChar": 51,
