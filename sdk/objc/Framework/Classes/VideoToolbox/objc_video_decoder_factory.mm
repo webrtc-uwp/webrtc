@@ -11,6 +11,7 @@
 #include "sdk/objc/Framework/Classes/VideoToolbox/objc_video_decoder_factory.h"
 
 #import "NSString+StdString.h"
+#import "RTCInternalSoftwareVideoDecoder+Private.h"
 #import "RTCVideoCodec+Private.h"
 #import "WebRTC/RTCVideoCodec.h"
 #import "WebRTC/RTCVideoCodecFactory.h"
@@ -18,6 +19,7 @@
 #import "WebRTC/RTCVideoFrame.h"
 #import "WebRTC/RTCVideoFrameBuffer.h"
 
+#include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_decoder.h"
 #include "modules/include/module_common_types.h"
 #include "modules/video_coding/include/video_codec_interface.h"
@@ -103,7 +105,37 @@ id<RTCVideoDecoderFactory> ObjCVideoDecoderFactory::wrapped_decoder_factory() co
   return decoder_factory_;
 }
 
-VideoDecoder *ObjCVideoDecoderFactory::CreateVideoDecoderWithParams(
+std::unique_ptr<VideoDecoder> ObjCVideoDecoderFactory::CreateVideoDecoder(
+    const SdpVideoFormat &format) {
+  NSString *codecName = [NSString stringWithUTF8String:format.name.c_str()];
+  for (RTCVideoCodecInfo *codecInfo in decoder_factory_.supportedCodecs) {
+    if ([codecName isEqualToString:codecInfo.name]) {
+      id<RTCVideoDecoder> decoder = [decoder_factory_ createDecoder:codecInfo];
+
+      if ([decoder isKindOfClass:[RTCInternalSoftwareVideoDecoder class]]) {
+        return [(RTCInternalSoftwareVideoDecoder *)decoder wrappedDecoder];
+      } else {
+        return std::unique_ptr<ObjCVideoDecoder>(new ObjCVideoDecoder(decoder));
+      }
+    }
+  }
+
+  return nullptr;
+}
+
+std::vector<SdpVideoFormat> ObjCVideoDecoderFactory::GetSupportedFormats() const {
+  supported_formats_.clear();
+  for (RTCVideoCodecInfo *supportedCodec in decoder_factory_.supportedCodecs) {
+    SdpVideoFormat format = [supportedCodec nativeSdpVideoFormat];
+    supported_formats_.push_back(format);
+  }
+
+  return supported_formats_;
+}
+
+// WebRtcVideoDecoderFactory
+
+webrtc::VideoDecoder *ObjCVideoDecoderFactory::CreateVideoDecoderWithParams(
     const cricket::VideoCodec &codec, cricket::VideoDecoderParams params) {
   NSString *codecName = [NSString stringWithUTF8String:codec.name.c_str()];
   for (RTCVideoCodecInfo *codecInfo in decoder_factory_.supportedCodecs) {
@@ -116,7 +148,13 @@ VideoDecoder *ObjCVideoDecoderFactory::CreateVideoDecoderWithParams(
   return nullptr;
 }
 
-void ObjCVideoDecoderFactory::DestroyVideoDecoder(VideoDecoder *decoder) {
+webrtc::VideoDecoder *ObjCVideoDecoderFactory::CreateVideoDecoder(webrtc::VideoCodecType type) {
+  // This is implemented to avoid hiding an overloaded virtual function
+  RTC_NOTREACHED();
+  return nullptr;
+}
+
+void ObjCVideoDecoderFactory::DestroyVideoDecoder(webrtc::VideoDecoder *decoder) {
   delete decoder;
   decoder = nullptr;
 }
