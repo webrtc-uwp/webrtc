@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "831e6ff3_43a02b28",
+        "filename": "modules/desktop_capture/win/dxgi_duplicator_controller.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 5166
+      },
+      "writtenOn": "2017-09-26T01:07:31Z",
+      "side": 1,
+      "message": "No need for a line-break here.",
+      "range": {
+        "startLine": 463,
+        "startChar": 75,
+        "endLine": 463,
+        "endChar": 0
+      },
+      "revId": "0aed4391a3e870a53ece1e8754c8564bc79dab24",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
