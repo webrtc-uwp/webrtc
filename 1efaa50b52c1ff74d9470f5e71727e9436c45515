@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65d39167_00293241",
+        "filename": "modules/audio_processing/test/fake_recording_device.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-09-26T21:25:46Z",
+      "side": 1,
+      "message": "Pleas make the input an ordinary int since this method is never called with an empty Optional.\n\nInstead make line 38\n undo_mic_level_ \u003d new Optional\u003cint\u003e(level);",
+      "range": {
+        "startLine": 37,
+        "startChar": 26,
+        "endLine": 37,
+        "endChar": 56
+      },
+      "revId": "1efaa50b52c1ff74d9470f5e71727e9436c45515",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76e8986c_2efd0e0d",
+        "filename": "modules/audio_processing/test/fake_recording_device.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-09-26T21:25:46Z",
+      "side": 1,
+      "message": "Thanks for changing the Optional input to the method. But please do the same for FakeRecordingDeviceWorker::set_undo_mic_level as now also that is never called with an empty optional.\n\nWhat you\u0027ll do is to move rtc::Optional\u003cint\u003e(level) to inside of set_undo_mic_level",
+      "range": {
+        "startLine": 140,
+        "startChar": 11,
+        "endLine": 140,
+        "endChar": 29
+      },
+      "revId": "1efaa50b52c1ff74d9470f5e71727e9436c45515",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
