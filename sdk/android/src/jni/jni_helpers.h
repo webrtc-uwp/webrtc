@@ -33,8 +33,7 @@
 
 // Helper that calls ptr->Release() and aborts the process with a useful
 // message if that didn't actually delete *ptr because of extra refcounts.
-#define CHECK_RELEASE(ptr) \
-  RTC_CHECK_EQ(0, (ptr)->Release()) << "Unexpected refcount."
+#define CHECK_RELEASE(ptr) RTC_CHECK((ptr)->Release()) << "Unexpected refcount."
 
 // Convenience macro defining JNI-accessible methods in the org.webrtc package.
 // Eliminates unnecessary boilerplate and line-wraps, reducing visual clutter.
