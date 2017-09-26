@@ -18,6 +18,7 @@
 #include "api/mediaconstraintsinterface.h"
 #include "api/mediastreaminterface.h"
 #include "api/mediatypes.h"
+#include "api/ortc/icetransportinterface.h"
 #include "api/ortc/ortcrtpreceiverinterface.h"
 #include "api/ortc/ortcrtpsenderinterface.h"
 #include "api/ortc/packettransportinterface.h"
@@ -193,6 +194,12 @@ class OrtcFactoryInterface {
       int family) {
     return CreateUdpTransport(family, 0, 0);
   }
+
+  // Create an ICE transport.
+  //
+  // Return an error if the transport wasn't successfully created.
+  virtual RTCErrorOr<std::unique_ptr<IceTransportInterface>>
+  CreateIceTransport() = 0;
 
   // NOTE: The methods below to create tracks/sources return scoped_refptrs
   // rather than unique_ptrs, because these interfaces are also used with

@@ -72,7 +72,7 @@ class P2PTransportChannel : public IceTransportInternal,
 
   // From TransportChannelImpl:
   IceTransportState GetState() const override;
-  const std::string& transport_name() const override { return transport_name_; }
+  std::string transport_name() const override { return transport_name_; }
   int component() const override { return component_; }
   bool writable() const override { return writable_; }
   bool receiving() const override { return receiving_; }

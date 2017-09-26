@@ -88,7 +88,7 @@ class FakeIceTransport : public IceTransportInternal {
   const Candidates& remote_candidates() const { return remote_candidates_; }
 
   // Fake IceTransportInternal implementation.
-  const std::string& transport_name() const override { return name_; }
+  std::string transport_name() const override { return name_; }
   int component() const override { return component_; }
   uint64_t IceTiebreaker() const { return tiebreaker_; }
   IceMode remote_ice_mode() const { return remote_ice_mode_; }

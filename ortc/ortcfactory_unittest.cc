@@ -196,6 +196,12 @@ TEST_F(OrtcFactoryTest, CreateUdpTransportWithInvalidPortRange) {
   EXPECT_EQ(RTCErrorType::INVALID_RANGE, result.error().type());
 }
 
+// Simple test for the successful case of CreateIceTransport.
+TEST_F(OrtcFactoryTest, CreateIceTransport) {
+  auto result = ortc_factory_->CreateIceTransport();
+  EXPECT_TRUE(result.ok());
+}
+
 // Just sanity check that each "GetCapabilities" method returns some codecs.
 TEST_F(OrtcFactoryTest, GetSenderAndReceiverCapabilities) {
   RtpCapabilities audio_send_caps =

@@ -577,6 +577,14 @@ class MethodCall5 : public rtc::Message,
     return call.Marshal(RTC_FROM_HERE, worker_thread_);                    \
   }
 
+#define PROXY_WORKER_METHOD4(r, method, t1, t2, t3, t4)                   \
+  r method(t1 a1, t2 a2, t3 a3, t4 a4) override {                         \
+    MethodCall4<C, r, t1, t2, t3, t4> call(c_, &C::method, std::move(a1), \
+                                           std::move(a2), std::move(a3),  \
+                                           std::move(a4));                \
+    return call.Marshal(RTC_FROM_HERE, worker_thread_);                   \
+  }
+
 }  // namespace webrtc
 
 #endif  //  API_PROXY_H_

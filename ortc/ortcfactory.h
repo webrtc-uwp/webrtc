@@ -17,6 +17,7 @@
 #include "api/ortc/ortcfactoryinterface.h"
 #include "media/base/mediaengine.h"
 #include "media/engine/webrtcmediaengine.h"
+#include "p2p/base/portallocator.h"
 #include "pc/channelmanager.h"
 #include "rtc_base/constructormagic.h"
 #include "rtc_base/scoped_ref_ptr.h"
@@ -76,6 +77,9 @@ class OrtcFactory : public OrtcFactoryInterface {
   RTCErrorOr<std::unique_ptr<UdpTransportInterface>>
   CreateUdpTransport(int family, uint16_t min_port, uint16_t max_port) override;
 
+  RTCErrorOr<std::unique_ptr<IceTransportInterface>> CreateIceTransport()
+      override;
+
   rtc::scoped_refptr<AudioSourceInterface> CreateAudioSource(
       const cricket::AudioOptions& options) override;
 
@@ -127,6 +131,7 @@ class OrtcFactory : public OrtcFactoryInterface {
   rtc::Thread* signaling_thread_;
   rtc::NetworkManager* network_manager_;
   rtc::PacketSocketFactory* socket_factory_;
+  std::unique_ptr<cricket::PortAllocator> owned_port_allocator_;
   AudioDeviceModule* adm_;
   // If we created/own the objects above, these will be non-null and thus will
   // be released automatically upon destruction.

@@ -29,7 +29,9 @@
 #include "ortc/rtptransportadapter.h"
 #include "ortc/rtptransportcontrolleradapter.h"
 #include "p2p/base/basicpacketsocketfactory.h"
+#include "p2p/base/p2ptransportchannel.h"
 #include "p2p/base/udptransport.h"
+#include "p2p/client/basicportallocator.h"
 #include "pc/audiotrack.h"
 #include "pc/channelmanager.h"
 #include "pc/localaudiosource.h"
@@ -44,6 +46,9 @@
 namespace {
 
 const int kDefaultRtcpCnameLength = 16;
+
+const char kIceTransportName[] = "ICE";
+const int kIceComponent = 0;
 
 // Asserts that all of the built-in capabilities can be converted to
 // RtpCapabilities. If they can't, something's wrong (for example, maybe a new
@@ -111,6 +116,8 @@ PROXY_WORKER_METHOD3(RTCErrorOr<std::unique_ptr<UdpTransportInterface>>,
                      int,
                      uint16_t,
                      uint16_t)
+PROXY_METHOD0(RTCErrorOr<std::unique_ptr<IceTransportInterface>>,
+              CreateIceTransport)
 PROXY_METHOD1(rtc::scoped_refptr<AudioSourceInterface>,
               CreateAudioSource,
               const cricket::AudioOptions&)
@@ -207,6 +214,8 @@ OrtcFactory::OrtcFactory(rtc::Thread* network_thread,
         new rtc::BasicPacketSocketFactory(network_thread_));
     socket_factory_ = owned_socket_factory_.get();
   }
+  owned_port_allocator_.reset(
+      new cricket::BasicPortAllocator(network_manager_, socket_factory_));
 }
 
 OrtcFactory::~OrtcFactory() {
@@ -455,6 +464,57 @@ OrtcFactory::CreateUdpTransport(int family,
       signaling_thread_, network_thread_,
       std::unique_ptr<cricket::UdpTransport>(
           new cricket::UdpTransport(oss.str(), std::move(socket))));
+}
+
+BEGIN_OWNED_PROXY_MAP(IceTransport)
+PROXY_WORKER_THREAD_DESTRUCTOR()
+PROXY_WORKER_CONSTMETHOD0(cricket::IceTransportState, GetState)
+PROXY_WORKER_CONSTMETHOD0(std::string, transport_name)
+PROXY_WORKER_CONSTMETHOD0(int, component)
+PROXY_WORKER_CONSTMETHOD0(cricket::IceRole, GetIceRole)
+PROXY_WORKER_METHOD1(void, SetIceRole, cricket::IceRole)
+PROXY_WORKER_METHOD1(void, SetIceTiebreaker, uint64_t)
+PROXY_WORKER_METHOD2(void,
+                     SetIceCredentials,
+                     const std::string&,
+                     const std::string&)
+PROXY_WORKER_METHOD2(void,
+                     SetRemoteIceCredentials,
+                     const std::string&,
+                     const std::string&)
+PROXY_WORKER_METHOD1(void, SetIceParameters, const cricket::IceParameters&)
+PROXY_WORKER_METHOD1(void,
+                     SetRemoteIceParameters,
+                     const cricket::IceParameters&)
+PROXY_WORKER_METHOD1(void, SetRemoteIceMode, cricket::IceMode)
+PROXY_WORKER_METHOD1(void, SetIceConfig, const cricket::IceConfig&)
+PROXY_WORKER_METHOD0(void, MaybeStartGathering)
+PROXY_WORKER_METHOD1(void, SetMetricsObserver, MetricsObserverInterface*)
+PROXY_WORKER_METHOD1(void, AddRemoteCandidate, const cricket::Candidate&)
+PROXY_WORKER_METHOD1(void, RemoveRemoteCandidate, const cricket::Candidate&)
+PROXY_WORKER_CONSTMETHOD0(cricket::IceGatheringState, gathering_state)
+PROXY_WORKER_METHOD1(bool, GetStats, cricket::ConnectionInfos*)
+PROXY_WORKER_METHOD0(rtc::Optional<int>, GetRttEstimate)
+PROXY_WORKER_CONSTMETHOD0(bool, writable)
+PROXY_WORKER_CONSTMETHOD0(bool, receiving)
+PROXY_WORKER_METHOD4(int,
+                     SendPacket,
+                     const char*,
+                     size_t,
+                     const rtc::PacketOptions&,
+                     int)
+PROXY_WORKER_METHOD2(int, SetOption, rtc::Socket::Option, int)
+PROXY_WORKER_METHOD0(int, GetError)
+END_PROXY_MAP()
+
+RTCErrorOr<std::unique_ptr<IceTransportInterface>>
+OrtcFactory::CreateIceTransport() {
+  RTC_DCHECK_RUN_ON(network_thread_);
+  return IceTransportProxyWithInternal<cricket::P2PTransportChannel>::Create(
+      signaling_thread_, network_thread_,
+      std::unique_ptr<cricket::P2PTransportChannel>(
+          new cricket::P2PTransportChannel(kIceTransportName, kIceComponent,
+                                           owned_port_allocator_.get())));
 }
 
 rtc::scoped_refptr<AudioSourceInterface> OrtcFactory::CreateAudioSource(

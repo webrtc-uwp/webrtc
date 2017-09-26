@@ -47,7 +47,7 @@ class MockIceTransport : public IceTransportInternal {
   IceTransportState GetState() const override {
     return IceTransportState::STATE_INIT;
   }
-  const std::string& transport_name() const override { return transport_name_; }
+  std::string transport_name() const override { return transport_name_; }
   int component() const override { return 0; }
   void SetIceRole(IceRole role) override {}
   void SetIceTiebreaker(uint64_t tiebreaker) override {}
