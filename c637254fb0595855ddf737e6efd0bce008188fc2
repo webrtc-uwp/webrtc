@@ -22,6 +22,53 @@
       "revId": "c637254fb0595855ddf737e6efd0bce008188fc2",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d3f545eb_9a5d7e5d",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-26T09:59:22Z",
+      "side": 1,
+      "message": "This TODO seem not directly related to the CL, more like direction for one of next CLs.\nIt seems last received timestamp is used, but there is no need to rely on \u0027in_order\u0027 flag to calculate it: different, equally good way to calculate it is to check \nlast_received_sequence_number_.has_value() \u0026\u0026 IsNewerSequenceNumber(last_received_sequence_number_, rtp_header.sequence_number)\n\nMight be good to investigate what large jumps in sequence numbers mean (stream reset meaning rtp timestamp need to be reset too or something else?)",
+      "parentUuid": "9c2f28d5_5bd93044",
+      "range": {
+        "startLine": 180,
+        "startChar": 12,
+        "endLine": 180,
+        "endChar": 17
+      },
+      "revId": "c637254fb0595855ddf737e6efd0bce008188fc2",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "17cb1c73_8516b14b",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_video.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-26T09:59:22Z",
+      "side": 1,
+      "message": "because of line#89, there is no need for reassigning this flag.\n(because of same line it is clear is_first_packet flag was practically ignored)",
+      "range": {
+        "startLine": 93,
+        "startChar": 51,
+        "endLine": 93,
+        "endChar": 0
+      },
+      "revId": "c637254fb0595855ddf737e6efd0bce008188fc2",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
