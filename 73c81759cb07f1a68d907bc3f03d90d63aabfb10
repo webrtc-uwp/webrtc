@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1494faff_4c97c586",
+        "filename": "p2p/base/fakeicetransport.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 5080
+      },
+      "writtenOn": "2017-09-26T22:13:23Z",
+      "side": 0,
+      "message": "Change this to use the proxy template.",
+      "range": {
+        "startLine": 91,
+        "startChar": 13,
+        "endLine": 91,
+        "endChar": 19
+      },
+      "revId": "73c81759cb07f1a68d907bc3f03d90d63aabfb10",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
