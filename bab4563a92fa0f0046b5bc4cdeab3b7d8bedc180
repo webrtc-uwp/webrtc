@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1bb0aae6_19165b2a",
+        "filename": "webrtc/modules/audio_processing/test/aec_dump_based_simulator.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-09-26T11:57:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "584bb009_eca5acdf",
+      "range": {
+        "startLine": 70,
+        "startChar": 51,
+        "endLine": 70,
+        "endChar": 56
+      },
+      "revId": "bab4563a92fa0f0046b5bc4cdeab3b7d8bedc180",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8aa7f8a2_d1a5404c",
         "filename": "webrtc/modules/audio_processing/test/fake_recording_device.cc",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "f083fbdf_9e9f03d4",
+        "filename": "webrtc/modules/audio_processing/test/fake_recording_device.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-09-26T11:57:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8aa7f8a2_d1a5404c",
+      "range": {
+        "startLine": 76,
+        "startChar": 10,
+        "endLine": 76,
+        "endChar": 25
+      },
+      "revId": "bab4563a92fa0f0046b5bc4cdeab3b7d8bedc180",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "efe771cb_1b82860e",
         "filename": "webrtc/modules/audio_processing/test/fake_recording_device.cc",
         "patchSetId": 3
@@ -59,6 +107,30 @@
       "writtenOn": "2017-09-24T20:19:05Z",
       "side": 1,
       "message": "I know that we discussed it before, but since the handling of the case *undo_mic_level_ is a bit strange, I think that it warrants a comment.",
+      "range": {
+        "startLine": 89,
+        "startChar": 64,
+        "endLine": 89,
+        "endChar": 70
+      },
+      "revId": "bab4563a92fa0f0046b5bc4cdeab3b7d8bedc180",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f2edee4_ced03025",
+        "filename": "webrtc/modules/audio_processing/test/fake_recording_device.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-09-26T11:57:57Z",
+      "side": 1,
+      "message": "Sure. I added a comment just before |divisor| is defined.",
+      "parentUuid": "efe771cb_1b82860e",
       "range": {
         "startLine": 89,
         "startChar": 64,
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "53256733_b74a29ca",
+        "filename": "webrtc/modules/audio_processing/test/fake_recording_device.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-09-26T11:57:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5dd7cea8_7a49e195",
+      "range": {
+        "startLine": 96,
+        "startChar": 12,
+        "endLine": 96,
+        "endChar": 27
+      },
+      "revId": "bab4563a92fa0f0046b5bc4cdeab3b7d8bedc180",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8160a06e_15966aca",
         "filename": "webrtc/modules/audio_processing/test/fake_recording_device.cc",
         "patchSetId": 3
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "75a5a1a0_32d9c48c",
+        "filename": "webrtc/modules/audio_processing/test/fake_recording_device.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-09-26T11:57:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8160a06e_15966aca",
+      "range": {
+        "startLine": 107,
+        "startChar": 66,
+        "endLine": 107,
+        "endChar": 72
+      },
+      "revId": "bab4563a92fa0f0046b5bc4cdeab3b7d8bedc180",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3e5d3a9d_0c33400d",
         "filename": "webrtc/modules/audio_processing/test/fake_recording_device.h",
         "patchSetId": 3
@@ -128,6 +248,30 @@
       "writtenOn": "2017-09-24T20:19:05Z",
       "side": 1,
       "message": "Please change level to be an int.\n\nFrom the implementation of this method it is clear that level must be specified.\nFurthermore from the usage of this method it is clear that it cannot be called with level unspecified.\n\nTherefore, it should be changed to not take an Optional.",
+      "range": {
+        "startLine": 55,
+        "startChar": 48,
+        "endLine": 55,
+        "endChar": 53
+      },
+      "revId": "bab4563a92fa0f0046b5bc4cdeab3b7d8bedc180",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9d7bd638_14d055c5",
+        "filename": "webrtc/modules/audio_processing/test/fake_recording_device.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-09-26T11:57:57Z",
+      "side": 1,
+      "message": "Nope. The undo level is only used in the AEC dump case. When an wav file is used as input, we don\u0027t know which analog gain was used, therefore there is no level to undo. Maybe I can keep the undo level optional in FakeRecordingDeviceWorker, switch to void SetUndoMicLevel(const int level) as you suggested and then add void ClearUndoMicLevel().\n\nWDYT?",
+      "parentUuid": "3e5d3a9d_0c33400d",
       "range": {
         "startLine": 55,
         "startChar": 48,
