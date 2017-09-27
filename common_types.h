@@ -379,6 +379,9 @@ struct NetworkStatistics {
   // sample.
   // https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamtrackstats-concealmentevents
   uint64_t concealmentEvents;
+  // Jitter buffer delay as described at
+  // https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamtrackstats-jitterbufferdelay
+  uint64_t jitterBufferDelayMilliSeconds;
   // Loss rate (network + late); fraction between 0 and 1, scaled to Q14.
   uint16_t currentPacketLossRate;
   // Late loss rate; fraction between 0 and 1, scaled to Q14.
