@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66120ea4_fafaabeb",
+        "filename": "common_types.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 5100
+      },
+      "writtenOn": "2017-09-27T15:29:38Z",
+      "side": 1,
+      "message": "Use Ms instead to shorten the name somewhat.",
+      "range": {
+        "startLine": 384,
+        "startChar": 11,
+        "endLine": 384,
+        "endChar": 40
+      },
+      "revId": "5df9fc26a6dc350c891ffebb32ed3d99c5d55db9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
