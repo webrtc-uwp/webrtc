@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "dd5abf21_fa45e3f7",
+        "filename": "examples/objc/AppRTCMobile/ARDVideoDecoderFactory.m",
+        "patchSetId": 2
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T13:04:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "137dc75a_df634992",
+      "range": {
+        "startLine": 34,
+        "startChar": 46,
+        "endLine": 34,
+        "endChar": 49
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0602d67f_23edbd1b",
         "filename": "examples/objc/AppRTCMobile/ARDVideoEncoderFactory.m",
         "patchSetId": 2
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "de251f3c_a5aba9e1",
+        "filename": "examples/objc/AppRTCMobile/ARDVideoEncoderFactory.m",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T13:04:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0602d67f_23edbd1b",
+      "range": {
+        "startLine": 55,
+        "startChar": 73,
+        "endLine": 55,
+        "endChar": 76
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "873be883_edb71472",
         "filename": "sdk/BUILD.gn",
         "patchSetId": 2
@@ -59,6 +107,30 @@
       "writtenOn": "2017-09-27T11:22:06Z",
       "side": 1,
       "message": "Is this sorted?",
+      "range": {
+        "startLine": 501,
+        "startChar": 8,
+        "endLine": 501,
+        "endChar": 47
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f80d26a8_352e9b15",
+        "filename": "sdk/BUILD.gn",
+        "patchSetId": 2
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T13:04:14Z",
+      "side": 1,
+      "message": "This is how `git cl format` orders it if I try to change it. I guess it sorts `:` before `/`.",
+      "parentUuid": "873be883_edb71472",
       "range": {
         "startLine": 501,
         "startChar": 8,
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "38946019_d5143941",
+        "filename": "sdk/BUILD.gn",
+        "patchSetId": 2
+      },
+      "lineNbr": 636,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T13:04:14Z",
+      "side": 1,
+      "message": "Strange, seems like auto-formatting didn\u0027t take care of this one. I have now ordered them manually.",
+      "parentUuid": "3fc15c2e_b47c5433",
+      "range": {
+        "startLine": 636,
+        "startChar": 41,
+        "endLine": 636,
+        "endChar": 70
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3f148285_92052ec0",
         "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCInternalSoftwareVideoDecoder+Private.h",
         "patchSetId": 2
@@ -105,6 +201,30 @@
       "writtenOn": "2017-09-27T11:22:06Z",
       "side": 1,
       "message": "I would like to change the name of this class to WrappedNativeDecoder, and the constructor should take a native decoder, i.e. std::unique_ptr\u003cwebrtc::VideoDecoder\u003e. Same for the encoder. This removes the hardcoded dependency to the internal SW codecs and makes the class more composable and reusable. We might need this class for e.g. SoftwareFallbackWrappers and similar as well, so I think it\u0027s cleaner to only depend on the C++ decoder interface.",
+      "range": {
+        "startLine": 20,
+        "startChar": 36,
+        "endLine": 20,
+        "endChar": 58
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "03bf8e6b_27cbfbdb",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCInternalSoftwareVideoDecoder+Private.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T13:04:14Z",
+      "side": 1,
+      "message": "I actually named it WrappedVideoEncoder at first, but since RTCVideoEncoderVP8 and RTCVideoEncoderVP9, which are public classes in the API, need to inherit from this class, this class must also be in the public API. And I figured that \"Wrapped\" was weird to have in the API as it does not actually wrap anything else that is public, and users can\u0027t use it to wrap things, so the wrapping is an implementation detail hidden in the private header.\n\nThat said, the InternalSoftware name is not great either but perhaps better describes what it does in the terminology of the public ObjC API? What do you think?",
+      "parentUuid": "3f148285_92052ec0",
       "range": {
         "startLine": 20,
         "startChar": 36,
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "6c8dce19_3d53f924",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCInternalSoftwareVideoDecoder.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T13:04:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7587393a_485dae09",
+      "range": {
+        "startLine": 29,
+        "startChar": 4,
+        "endLine": 29,
+        "endChar": 18
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d615943d_57efca0c",
         "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCInternalSoftwareVideoDecoder.mm",
         "patchSetId": 2
@@ -160,6 +304,30 @@
       "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "10f64a93_53669c8c",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCInternalSoftwareVideoDecoder.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T13:04:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d615943d_57efca0c",
+      "range": {
+        "startLine": 48,
+        "startChar": 2,
+        "endLine": 48,
+        "endChar": 31
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -186,6 +354,30 @@
     },
     {
       "key": {
+        "uuid": "1866d449_e61d6393",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCInternalSoftwareVideoDecoder.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T13:04:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5de36da5_5a530d60",
+      "range": {
+        "startLine": 98,
+        "startChar": 18,
+        "endLine": 98,
+        "endChar": 22
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b9ce8ea_a5433f2e",
         "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
         "patchSetId": 2
@@ -197,6 +389,30 @@
       "writtenOn": "2017-09-27T11:22:06Z",
       "side": 1,
       "message": "Is it necessary to have \u0027WrappedEncodedImageCallback\u0027 here? Can you try removing it and see if it compiles?",
+      "range": {
+        "startLine": 74,
+        "startChar": 6,
+        "endLine": 74,
+        "endChar": 50
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "40b4ad51_bc301601",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T13:04:14Z",
+      "side": 1,
+      "message": "If I try to remove the highlighted line I get:\nNo viable conversion from \u0027webrtc::ObjCVideoEncoderFactory *\u0027 to \u0027std::unique_ptr\u003cwebrtc::VideoEncoderFactory\u003e\u0027",
+      "parentUuid": "4b9ce8ea_a5433f2e",
       "range": {
         "startLine": 74,
         "startChar": 6,
@@ -232,6 +448,30 @@
     },
     {
       "key": {
+        "uuid": "3c6a4ccc_52613b47",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T13:04:14Z",
+      "side": 1,
+      "message": "This `initNative` is the designated initializer, so all initializers must call this one. All initializers that are called when HAVE_NO_MEDIA is false needs to initialize their own _nativeFactory (with media), but for the case when HAVE_NO_MEDIA is true we only call this one.\n\nWhen we get rid of the HAVE_NO_MEDIA and the cricket::WebRtcVideoEncoderFactory this can be cleaned up to only have two initializers.",
+      "parentUuid": "216dadd2_0f27d045",
+      "range": {
+        "startLine": 101,
+        "startChar": 1,
+        "endLine": 101,
+        "endChar": 20
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d06f78b8_b6219aad",
         "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
         "patchSetId": 2
@@ -255,6 +495,30 @@
     },
     {
       "key": {
+        "uuid": "95525e1a_ab9c92dc",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T13:04:14Z",
+      "side": 1,
+      "message": "We need to have one initializer that is always called by the others because of how designated initializers work. I think it makes sense to put the shared logic in a shared initNative method, since the nativeFactory_ needs to be initialized with different overrides of CreatePeerConnectionFactory methods for the different configurations as it is now. It\u0027s a common pattern to call one shared designated initializer, and then initialize the rest of the ivars that are specific to this initializer.\n\nOne improvement could be to have a initWithNoMedia initializer that calls the initNative and then initializes the nativeFactory_ to the one in the #ifdef HAVE_NO_MEDIA block. And then call that only when HAVE_NO_MEDIA is true in the plain -init method. That might be more clear.",
+      "parentUuid": "d06f78b8_b6219aad",
+      "range": {
+        "startLine": 125,
+        "startChar": 0,
+        "endLine": 126,
+        "endChar": 21
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cef9c058_e24be859",
         "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
         "patchSetId": 2
@@ -266,6 +530,30 @@
       "writtenOn": "2017-09-27T11:22:06Z",
       "side": 1,
       "message": "Same here, I would like to see this instead (i.e. not use initNative always):\n#ifdef HAVE_NO_MEDIA\n  return [self initNative];\n#else\n  ...",
+      "range": {
+        "startLine": 151,
+        "startChar": 0,
+        "endLine": 152,
+        "endChar": 21
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b0c5e5f_fbbca726",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T13:04:14Z",
+      "side": 1,
+      "message": "See above",
+      "parentUuid": "cef9c058_e24be859",
       "range": {
         "startLine": 151,
         "startChar": 0,
@@ -324,6 +612,30 @@
     },
     {
       "key": {
+        "uuid": "0b02376f_2a22711e",
+        "filename": "sdk/objc/Framework/Classes/VideoToolbox/objc_video_decoder_factory.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T13:04:14Z",
+      "side": 1,
+      "message": "I tried removing it, but got some compiler error about a stack variable going out of scope when returning it. I\u0027ll try again harder.",
+      "parentUuid": "3bc9cf09_2bca45b4",
+      "range": {
+        "startLine": 46,
+        "startChar": 2,
+        "endLine": 46,
+        "endChar": 57
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "55c36672_155587d5",
         "filename": "sdk/objc/Framework/Classes/VideoToolbox/objc_video_decoder_factory.mm",
         "patchSetId": 2
@@ -358,6 +670,30 @@
       "writtenOn": "2017-09-27T11:22:06Z",
       "side": 1,
       "message": "Do you think it would be better to convert the cricket::VideoCodec to an SdpVideoFormat and delegate to the other method?",
+      "range": {
+        "startLine": 140,
+        "startChar": 0,
+        "endLine": 147,
+        "endChar": 0
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "53e67f08_5714319f",
+        "filename": "sdk/objc/Framework/Classes/VideoToolbox/objc_video_decoder_factory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T13:04:14Z",
+      "side": 1,
+      "message": "Yes that makes sense. These functions should be removed as soon as we don\u0027t need the cricket encoder factories anymore, and then maybe we don\u0027t need to support the cricket::VideoCodec conversions in the Obj-C layer at all anymore?",
+      "parentUuid": "4a37af24_6fae62d6",
       "range": {
         "startLine": 140,
         "startChar": 0,
@@ -439,6 +775,30 @@
     },
     {
       "key": {
+        "uuid": "e614d0c0_b2bcc29d",
+        "filename": "sdk/objc/Framework/Classes/VideoToolbox/objc_video_encoder_factory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T13:04:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "473dfcec_c9581b7d",
+      "range": {
+        "startLine": 160,
+        "startChar": 79,
+        "endLine": 160,
+        "endChar": 87
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d602942c_c8f55df5",
         "filename": "sdk/objc/Framework/Classes/VideoToolbox/objc_video_encoder_factory.mm",
         "patchSetId": 2
@@ -450,6 +810,30 @@
       "writtenOn": "2017-09-27T11:22:06Z",
       "side": 1,
       "message": "Maybe just compare against \"VP8\" and \"VP9\" here. It\u0027s a hack for sure.",
+      "range": {
+        "startLine": 165,
+        "startChar": 6,
+        "endLine": 165,
+        "endChar": 86
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b96c722_5a84db01",
+        "filename": "sdk/objc/Framework/Classes/VideoToolbox/objc_video_encoder_factory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T13:04:14Z",
+      "side": 1,
+      "message": "That\u0027s what it does. Just figured it\u0027d be slightly nicer to have that list in the RTCInternalSoftwareVideoEncoder?",
+      "parentUuid": "d602942c_c8f55df5",
       "range": {
         "startLine": 165,
         "startChar": 6,
@@ -485,6 +869,30 @@
     },
     {
       "key": {
+        "uuid": "d76cfa3c_07e6f3b1",
+        "filename": "sdk/objc/Framework/Classes/VideoToolbox/objc_video_encoder_factory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T13:04:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "af6c924b_0b1b54d9",
+      "range": {
+        "startLine": 183,
+        "startChar": 0,
+        "endLine": 183,
+        "endChar": 6
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2ee7cd73_d35e4f0d",
         "filename": "sdk/objc/Framework/Headers/WebRTC/RTCVideoCodecVP8.h",
         "patchSetId": 2
@@ -505,6 +913,30 @@
       "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c77c3de_bcaf86e7",
+        "filename": "sdk/objc/Framework/Headers/WebRTC/RTCVideoCodecVP8.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T13:04:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2ee7cd73_d35e4f0d",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 4
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
