@@ -384,7 +384,8 @@ WEBRTC_RTCSTATS_IMPL(RTCMediaStreamTrackStats, RTCStats, "track",
                      &total_samples_received,
                      &total_samples_duration,
                      &concealed_samples,
-                     &concealment_events);
+                     &concealment_events,
+                     &jitter_buffer_delay);
 // clang-format on
 
 RTCMediaStreamTrackStats::RTCMediaStreamTrackStats(
@@ -411,6 +412,7 @@ RTCMediaStreamTrackStats::RTCMediaStreamTrackStats(std::string&& id,
       frames_corrupted("framesCorrupted"),
       partial_frames_lost("partialFramesLost"),
       full_frames_lost("fullFramesLost"),
+      jitter_buffer_delay("jitterBufferDelay"),
       audio_level("audioLevel"),
       total_audio_energy("totalAudioEnergy"),
       echo_return_loss("echoReturnLoss"),
@@ -441,6 +443,7 @@ RTCMediaStreamTrackStats::RTCMediaStreamTrackStats(
       frames_corrupted(other.frames_corrupted),
       partial_frames_lost(other.partial_frames_lost),
       full_frames_lost(other.full_frames_lost),
+      jitter_buffer_delay(other.jitter_buffer_delay),
       audio_level(other.audio_level),
       total_audio_energy(other.total_audio_energy),
       echo_return_loss(other.echo_return_loss),

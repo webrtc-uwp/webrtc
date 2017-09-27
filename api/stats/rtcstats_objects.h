@@ -270,6 +270,7 @@ class RTCMediaStreamTrackStats final : public RTCStats {
   RTCStatsMember<uint32_t> partial_frames_lost;
   // TODO(hbos): Not collected by |RTCStatsCollector|. crbug.com/659137
   RTCStatsMember<uint32_t> full_frames_lost;
+  RTCStatsMember<double> jitter_buffer_delay;
   // Audio-only members
   RTCStatsMember<double> audio_level;
   RTCStatsMember<double> total_audio_energy;
