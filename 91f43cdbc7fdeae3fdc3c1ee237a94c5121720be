@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "102720ad_2776618f",
+        "filename": "modules/audio_device/ios/voice_processing_audio_unit.mm",
+        "patchSetId": 3
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 5091
+      },
+      "writtenOn": "2017-09-27T13:19:44Z",
+      "side": 1,
+      "message": "I am using another label. Get vs. Set. OK?",
+      "parentUuid": "77cd9353_8a1c94eb",
+      "range": {
+        "startLine": 279,
+        "startChar": 48,
+        "endLine": 279,
+        "endChar": 68
+      },
+      "revId": "91f43cdbc7fdeae3fdc3c1ee237a94c5121720be",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6008cc89_9689a870",
         "filename": "modules/audio_device/ios/voice_processing_audio_unit.mm",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2017-09-27T13:14:50Z",
       "side": 1,
       "message": "This feels a bit hacky. \nQuestions:\n\n1) Why not use two histograms.\n2) Why distinguish this histogram, when the ones on 263 and 279 are not distinguished separately.\n3) Are you sure that only negative error codes are returned?",
+      "range": {
+        "startLine": 290,
+        "startChar": 24,
+        "endLine": 290,
+        "endChar": 44
+      },
+      "revId": "91f43cdbc7fdeae3fdc3c1ee237a94c5121720be",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9c630c3_8a6c1357",
+        "filename": "modules/audio_device/ios/voice_processing_audio_unit.mm",
+        "patchSetId": 3
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 5091
+      },
+      "writtenOn": "2017-09-27T13:19:44Z",
+      "side": 1,
+      "message": "It will be three histograms then in total. OK?\n263 and 279 are unique\nYes, all codes are negative.\n\nCan you assist in what type of histogram to use? We can expect codes in this range:\n\nhttps://uma.googleplex.com/histograms/?endDate\u003d20170925\u0026dayCount\u003d1\u0026histograms\u003dMedia.AudioInputCbErrorMac\u0026fixupData\u003dtrue\u0026showMax\u003dtrue\u0026filters\u003dplatform%2Ceq%2CM%2Cchannel%2Ceq%2C4%2Cisofficial%2Ceq%2CTrue\u0026implicitFilters\u003disofficial\n\nNote that negative values are OK in Chrome at least.",
+      "parentUuid": "6008cc89_9689a870",
       "range": {
         "startLine": 290,
         "startChar": 24,
