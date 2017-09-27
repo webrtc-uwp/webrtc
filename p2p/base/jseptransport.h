@@ -17,7 +17,7 @@
 #include <vector>
 
 #include "api/optional.h"
-#include "p2p/base/candidate.h"
+#include "api/candidate.h"
 #include "p2p/base/p2pconstants.h"
 #include "p2p/base/sessiondescription.h"
 #include "p2p/base/transportinfo.h"

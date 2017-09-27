@@ -19,7 +19,7 @@
 #include <vector>
 
 #include "api/jsep.h"
-#include "p2p/base/candidate.h"
+#include "api/candidate.h"
 #include "rtc_base/constructormagic.h"
 
 namespace webrtc {
