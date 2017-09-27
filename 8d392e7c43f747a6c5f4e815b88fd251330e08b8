@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1b8f306_a3679379",
+        "filename": "sdk/android/api/org/webrtc/VideoEncoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-09-27T07:41:25Z",
+      "side": 1,
+      "message": "Should/can we also annotate the constructors? Would this allow us to replace the NewObject calls?",
+      "range": {
+        "startLine": 27,
+        "startChar": 11,
+        "endLine": 27,
+        "endChar": 19
+      },
+      "revId": "8d392e7c43f747a6c5f4e815b88fd251330e08b8",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
