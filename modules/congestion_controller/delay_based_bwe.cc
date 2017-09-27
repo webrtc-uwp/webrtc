@@ -249,16 +249,17 @@ DelayBasedBwe::Result DelayBasedBwe::MaybeUpdateEstimate(
       result.recovered_from_overuse = recovered_from_overuse;
     }
   }
-  if (result.updated) {
-    BWE_TEST_LOGGING_PLOT(1, "target_bitrate_bps", now_ms,
-                          result.target_bitrate_bps);
-    if (event_log_ && (result.target_bitrate_bps != last_logged_bitrate_ ||
-                       detector_.State() != last_logged_state_)) {
-      event_log_->LogDelayBasedBweUpdate(result.target_bitrate_bps,
-                                         detector_.State());
-      last_logged_bitrate_ = result.target_bitrate_bps;
-      last_logged_state_ = detector_.State();
-    }
+  if (result.updated || detector_.State() != last_logged_state_) {
+    uint32_t bitrate_bps =
+        result.updated ? result.target_bitrate_bps : last_logged_bitrate_;
+
+    BWE_TEST_LOGGING_PLOT(1, "target_bitrate_bps", now_ms, bitrate_bps);
+
+    if (event_log_)
+      event_log_->LogDelayBasedBweUpdate(bitrate_bps, detector_.State());
+
+    last_logged_bitrate_ = bitrate_bps;
+    last_logged_state_ = detector_.State();
   }
   return result;
 }
