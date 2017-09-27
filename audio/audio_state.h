@@ -39,8 +39,8 @@ class AudioState final : public webrtc::AudioState,
 
  private:
   // rtc::RefCountInterface implementation.
-  int AddRef() const override;
-  int Release() const override;
+  void AddRef() const override;
+  bool Release() const override;
 
   // webrtc::VoiceEngineObserver implementation.
   void CallbackOnError(int channel_id, int err_code) override;

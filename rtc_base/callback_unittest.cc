@@ -31,11 +31,12 @@ struct BindTester {
 class RefCountedBindTester : public RefCountInterface {
  public:
   RefCountedBindTester() : count_(0) {}
-  int AddRef() const override {
-    return ++count_;
+  void AddRef() const override {
+    ++count_;
   }
-  int Release() const override {
-    return --count_;
+  bool Release() const override {
+    --count;
+    return count_ == 0;
   }
   int RefCount() const { return count_; }
 
