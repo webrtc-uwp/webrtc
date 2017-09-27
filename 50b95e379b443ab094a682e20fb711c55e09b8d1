@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c23732d2_85dbd17a",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-27T10:29:07Z",
+      "side": 1,
+      "message": "may be it should be\nRTPPayloadRegistry* const rtp_payload_registry_ RTC_PT_GUARDED_BY(critical_section)\n\ni.e. pointer itself is set in constructor and never change.\naccessing the class behind pointer is guarded by the critical section.",
+      "range": {
+        "startLine": 90,
+        "startChar": 53,
+        "endLine": 90,
+        "endChar": 0
+      },
+      "revId": "50b95e379b443ab094a682e20fb711c55e09b8d1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
