@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "422ae1e9_58f17ca6",
+        "filename": "audio/audio_receive_stream.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-27T18:19:30Z",
+      "side": 1,
+      "message": "nit: \"/ kNumMillisecsPerSec\"? If we use the constants it reduces the chance of this being broken if the units are ever refactored (which I\u0027ve seen happen).",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e8494b5_51865b1b",
+        "filename": "audio/audio_receive_stream_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-27T18:19:30Z",
+      "side": 1,
+      "message": "nit: Why not \"EXPECT_EQ(0.456, stats.jitter_buffer_delay_seconds)\"? When the test just copies the same calculation as the code under test, that means a bug in the calculation won\u0027t be caught by the test. Having to come up with the expected value manually using a different process provides an extra assurance that the code under test is correct. See: https://engdoc.corp.google.com/eng/doc/devguide/coding/testing/unit-testing-best-practices.md?cl\u003dhead#control-structures-examples",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91d9a348_4014b8ea",
+        "filename": "common_types.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-27T18:19:30Z",
+      "side": 1,
+      "message": "Can we switch these comments to do something like this: https://cs.chromium.org/chromium/src/third_party/webrtc/call/audio_receive_stream.h?dr\u003dCSs\u0026l\u003d54",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b92971ec_999d13a6",
+        "filename": "media/engine/webrtcvoiceengine_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 667,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-27T18:19:30Z",
+      "side": 1,
+      "message": "Same comment about test expectations as in other file.",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d17d5550_ce43309b",
+        "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 1687,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-27T18:19:30Z",
+      "side": 1,
+      "message": "nit: Comment describing the test?",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90e21c2f_b830eab7",
+        "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 1705,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-27T18:19:30Z",
+      "side": 1,
+      "message": "I think this would be a lot simpler as:\n\nint packets_sent \u003d 0;\nint packets_received \u003d 0;\nwhile (packets_sent \u003c kNumPackets || packets_received \u003c kNumPackets) {\n  if (packets_sent \u003c kNumPackets) {\n     // Insert packet, increment packets_sent...\n  }\n  if (neteq_-\u003eGetAudio(\u0026out_frame_, \u0026muted) \u003d\u003d kOK) {\n    ++packets_received;\n  } else {\n    // Should only fail to get audio at the start; if we\u0027ve sent all packets but aren\u0027t\n    // receiving anything something is wrong.\n    ASSERT_LT(packets_sent, kNumPackets);\n  }\n}",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb4f85c3_fae7c531",
+        "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 1735,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-27T18:19:30Z",
+      "side": 1,
+      "message": "Similar comment about test expectations as in other file. Can\u0027t the expected delay be determined in advance, with a comment explaining how it was calculated?",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7def1377_e16e5945",
+        "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 1738,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-27T18:19:30Z",
+      "side": 1,
+      "message": "Candidate for TEST_P?",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
