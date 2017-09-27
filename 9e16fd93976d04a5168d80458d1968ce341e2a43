@@ -16,6 +16,24 @@
       "revId": "9e16fd93976d04a5168d80458d1968ce341e2a43",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "af148a39_daffc67b",
+        "filename": "pc/peerconnectionwrapper.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 5039
+      },
+      "writtenOn": "2017-09-27T16:11:49Z",
+      "side": 1,
+      "message": "The observer is required in the CreatePeerConnection method on the PeerConnectionFactory, so it needs to be created before the PeerConnection which needs to be created before the PeerConnectionWrapper.",
+      "parentUuid": "ecde7788_8b98ab6d",
+      "revId": "9e16fd93976d04a5168d80458d1968ce341e2a43",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
