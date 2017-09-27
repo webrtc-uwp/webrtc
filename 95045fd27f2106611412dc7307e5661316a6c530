@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "016f7e32_71826b4d",
+        "filename": "api/BUILD.gn",
+        "patchSetId": 4
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-27T17:23:33Z",
+      "side": 1,
+      "message": "Is there a bug about these headers going away which you can refer to?",
+      "revId": "95045fd27f2106611412dc7307e5661316a6c530",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7809db5e_fac38912",
+        "filename": "api/candidate.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-27T17:23:33Z",
+      "side": 1,
+      "message": "Looks like we only need \u003cstdint.h\u003e and \u003cstring\u003e among the system includes.",
+      "revId": "95045fd27f2106611412dc7307e5661316a6c530",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa5fecb1_5159f885",
+        "filename": "api/candidate.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-27T17:23:33Z",
+      "side": 1,
+      "message": "not needed",
+      "revId": "95045fd27f2106611412dc7307e5661316a6c530",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5516d850_1cc46b62",
+        "filename": "api/candidate.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-27T17:23:33Z",
+      "side": 1,
+      "message": "Not needed, but rtc_base/networkmonitor.h is, for AdapterType. Can you pull that enum out into its own file and put it in api/?",
+      "revId": "95045fd27f2106611412dc7307e5661316a6c530",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
