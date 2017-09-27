@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a975e51_f10166b9",
+        "filename": "ortc/ortcfactory_integrationtest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 474,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-27T13:07:56Z",
+      "side": 1,
+      "message": "nit: Should have a comment explaining why this is disabled and what will need to be done to fix it, also linking to the bug.",
+      "revId": "a354e269bf9e8d17b1bd78340b0939e3ddbef1c7",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
