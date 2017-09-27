@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f82dc28_997f9361",
+        "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-27T12:06:10Z",
+      "side": 1,
+      "message": "I would prefer to make this a nested class. Also, we should comment what this means.",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 43
+      },
+      "revId": "a30c007609ea64fffcaa03513f4a1a56b02c37d3",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e330527_87d48e09",
+        "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-27T12:06:10Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be T*? Same for a lot of other places.",
+      "range": {
+        "startLine": 24,
+        "startChar": 27,
+        "endLine": 24,
+        "endChar": 28
+      },
+      "revId": "a30c007609ea64fffcaa03513f4a1a56b02c37d3",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7a50f67_1fc91264",
+        "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-27T12:06:10Z",
+      "side": 1,
+      "message": "This is wrong. You will have to do move semantics for this.",
+      "range": {
+        "startLine": 49,
+        "startChar": 1,
+        "endLine": 49,
+        "endChar": 61
+      },
+      "revId": "a30c007609ea64fffcaa03513f4a1a56b02c37d3",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce331e7b_372cdd93",
+        "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-27T12:06:10Z",
+      "side": 1,
+      "message": "I don\u0027t think we should have a default.",
+      "range": {
+        "startLine": 61,
+        "startChar": 20,
+        "endLine": 61,
+        "endChar": 62
+      },
+      "revId": "a30c007609ea64fffcaa03513f4a1a56b02c37d3",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fef61c78_6e73a1f9",
+        "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-27T12:06:10Z",
+      "side": 1,
+      "message": "If this isn\u0027t necessary to suppress compile warnings or what not - remove it.",
+      "range": {
+        "startLine": 70,
+        "startChar": 2,
+        "endLine": 70,
+        "endChar": 21
+      },
+      "revId": "a30c007609ea64fffcaa03513f4a1a56b02c37d3",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
