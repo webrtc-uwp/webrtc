@@ -355,7 +355,7 @@ rtc_static_library("webrtc_common") {
   # api:video_frame_api ->
   # system_wrappers:system_wrappers ->
   # webrtc_common
-  check_includes = false
+  # check_includes = false
   sources = [
     "common_types.cc",
     "common_types.h",
