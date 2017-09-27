@@ -45,6 +45,30 @@
       "revId": "4bb3d961a80d1c5b85671929eeb5cfdb1e5a9e14",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d1b28b3_ddf3bf97",
+        "filename": "rtc_base/BUILD.gn",
+        "patchSetId": 1
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-27T09:29:25Z",
+      "side": 1,
+      "message": "\u003e We should probably do the same for things like this, but that\u0027s a separate effort.\n\ntask_queue is a bit special with link-time override. A few things may need compile-time options, while most other things applications want to replace should be injectable at runtime. My view is that the build_with_chromium flag ought to be deleted.\n\nAbout win32socketinit.cc, are WSAStartup and WSACleanup still needed on windows? Seems like extremely arcane requirement for a core operating system feature.",
+      "parentUuid": "49ee64f8_c43ff130",
+      "range": {
+        "startLine": 588,
+        "startChar": 2,
+        "endLine": 594,
+        "endChar": 3
+      },
+      "revId": "4bb3d961a80d1c5b85671929eeb5cfdb1e5a9e14",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
