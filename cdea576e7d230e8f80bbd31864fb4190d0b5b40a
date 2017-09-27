@@ -52,6 +52,24 @@
       "revId": "cdea576e7d230e8f80bbd31864fb4190d0b5b40a",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b187ecae_8c958846",
+        "filename": "media/engine/webrtcmediaengine.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-27T14:06:25Z",
+      "side": 1,
+      "message": "I started doing this, but the scope increased quite a bit. I\u0027ll just add a comment in this CL, and start with a follow-up CL.",
+      "parentUuid": "e24d4eb2_2ead9203",
+      "revId": "cdea576e7d230e8f80bbd31864fb4190d0b5b40a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
