@@ -253,17 +253,19 @@ bool VoiceProcessingAudioUnit::Initialize(Float64 sample_rate) {
   // to be absolutely sure that the AGC is enabled since we have seen cases
   // where only zeros are recorded and a disabled AGC could be one of the
   // reasons why it happens.
-  int agc_was_enabled_by_default = 1;
+  int agc_was_enabled_by_default = 0;
   UInt32 agc_is_enabled = 0;
   result = GetAGCState(vpio_unit_, &agc_is_enabled);
   if (result != noErr) {
     RTCLogError(@"Failed to get AGC state (1st attempt). "
                  "Error=%ld.",
                 (long)result);
-  } else if (!agc_is_enabled) {
-    // Remember that the AGC was disabled by default. Will be used in UMA.
-    agc_was_enabled_by_default = 0;
-    // Try to enable the AGC.
+    UMA_HISTOGRAM_SPARSE_SLOWLY("WebRTC.Audio.GetAGCStateErrorCode", result);
+  } else if (agc_is_enabled) {
+    // Remember that the AGC was enabled by default. Will be used in UMA.
+    agc_was_enabled_by_default = 1;
+  } else {
+    // AGC was initially disabled => try to enable it explicitly.
     UInt32 enable_agc = 1;
     result =
         AudioUnitSetProperty(vpio_unit_,
@@ -274,12 +276,18 @@ bool VoiceProcessingAudioUnit::Initialize(Float64 sample_rate) {
       RTCLogError(@"Failed to enable the built-in AGC. "
                    "Error=%ld.",
                   (long)result);
+      UMA_HISTOGRAM_SPARSE_SLOWLY("WebRTC.Audio.SetAGCStateErrorCode", result);
     }
     result = GetAGCState(vpio_unit_, &agc_is_enabled);
     if (result != noErr) {
       RTCLogError(@"Failed to get AGC state (2nd attempt). "
                    "Error=%ld.",
                   (long)result);
+      // Use same histogram as earlier but multiply error code with -1 to
+      // make each case unique. Example: kAudioUnitErr_NoConnection (-10876)
+      // will be converted to +10876 here.
+      UMA_HISTOGRAM_SPARSE_SLOWLY(
+          "WebRTC.Audio.GetAGCStateErrorCode", (-1) * result);
     }
   }
 
