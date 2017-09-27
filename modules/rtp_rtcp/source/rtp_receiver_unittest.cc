@@ -34,7 +34,6 @@ const uint32_t kSsrc1 = 123;
 const uint32_t kSsrc2 = 124;
 const uint32_t kCsrc1 = 111;
 const uint32_t kCsrc2 = 222;
-const bool kInOrder = true;
 
 static uint32_t rtp_timestamp(int64_t time_ms) {
   return static_cast<uint32_t>(time_ms * kTestRate / 1000);
@@ -93,7 +92,7 @@ TEST_F(RtpReceiverTest, GetSources) {
   PayloadUnion payload_specific = {AudioPayload()};
 
   EXPECT_TRUE(rtp_receiver_->IncomingRtpPacket(
-      header, kTestPayload, sizeof(kTestPayload), payload_specific, !kInOrder));
+      header, kTestPayload, sizeof(kTestPayload), payload_specific));
   auto sources = rtp_receiver_->GetSources();
   // One SSRC source and two CSRC sources.
   EXPECT_THAT(sources, UnorderedElementsAre(
@@ -105,7 +104,7 @@ TEST_F(RtpReceiverTest, GetSources) {
   // contributing source object with same source id and updated timestamp.
   fake_clock_.AdvanceTimeMilliseconds(1);
   EXPECT_TRUE(rtp_receiver_->IncomingRtpPacket(
-      header, kTestPayload, sizeof(kTestPayload), payload_specific, !kInOrder));
+      header, kTestPayload, sizeof(kTestPayload), payload_specific));
   sources = rtp_receiver_->GetSources();
   now_ms = fake_clock_.TimeInMilliseconds();
   EXPECT_THAT(sources, UnorderedElementsAre(
@@ -143,7 +142,7 @@ TEST_F(RtpReceiverTest, GetSourcesChangeSSRC) {
   PayloadUnion payload_specific = {AudioPayload()};
 
   EXPECT_TRUE(rtp_receiver_->IncomingRtpPacket(
-      header, kTestPayload, sizeof(kTestPayload), payload_specific, !kInOrder));
+      header, kTestPayload, sizeof(kTestPayload), payload_specific));
   auto sources = rtp_receiver_->GetSources();
   EXPECT_THAT(sources, UnorderedElementsAre(
                            RtpSource(now_ms, kSsrc1, RtpSourceType::SSRC)));
@@ -155,7 +154,7 @@ TEST_F(RtpReceiverTest, GetSourcesChangeSSRC) {
   header.ssrc = kSsrc2;
   header.timestamp = rtp_timestamp(now_ms);
   EXPECT_TRUE(rtp_receiver_->IncomingRtpPacket(
-      header, kTestPayload, sizeof(kTestPayload), payload_specific, !kInOrder));
+      header, kTestPayload, sizeof(kTestPayload), payload_specific));
   sources = rtp_receiver_->GetSources();
   EXPECT_THAT(sources, UnorderedElementsAre(
                            RtpSource(prev_time_ms, kSsrc1, RtpSourceType::SSRC),
@@ -169,7 +168,7 @@ TEST_F(RtpReceiverTest, GetSourcesChangeSSRC) {
   prev_time_ms = now_ms;
   now_ms = fake_clock_.TimeInMilliseconds();
   EXPECT_TRUE(rtp_receiver_->IncomingRtpPacket(
-      header, kTestPayload, sizeof(kTestPayload), payload_specific, !kInOrder));
+      header, kTestPayload, sizeof(kTestPayload), payload_specific));
   sources = rtp_receiver_->GetSources();
   EXPECT_THAT(sources, UnorderedElementsAre(
                            RtpSource(prev_time_ms, kSsrc2, RtpSourceType::SSRC),
@@ -179,7 +178,7 @@ TEST_F(RtpReceiverTest, GetSourcesChangeSSRC) {
   fake_clock_.AdvanceTimeMilliseconds(kGetSourcesTimeoutMs);
   now_ms = fake_clock_.TimeInMilliseconds();
   EXPECT_TRUE(rtp_receiver_->IncomingRtpPacket(
-      header, kTestPayload, sizeof(kTestPayload), payload_specific, !kInOrder));
+      header, kTestPayload, sizeof(kTestPayload), payload_specific));
   sources = rtp_receiver_->GetSources();
   EXPECT_THAT(sources, UnorderedElementsAre(
                            RtpSource(now_ms, kSsrc1, RtpSourceType::SSRC)));
@@ -198,9 +197,8 @@ TEST_F(RtpReceiverTest, GetSourcesRemoveOutdatedSource) {
   for (size_t i = 0; i < kSourceListSize; ++i) {
     header.ssrc = i;
     header.arrOfCSRCs[0] = (i + 1);
-    EXPECT_TRUE(rtp_receiver_->IncomingRtpPacket(header, kTestPayload,
-                                                 sizeof(kTestPayload),
-                                                 payload_specific, !kInOrder));
+    EXPECT_TRUE(rtp_receiver_->IncomingRtpPacket(
+        header, kTestPayload, sizeof(kTestPayload), payload_specific));
   }
 
   RtpSource source(0, 0, RtpSourceType::SSRC);
@@ -238,7 +236,7 @@ TEST_F(RtpReceiverTest, GetSourcesRemoveOutdatedSource) {
   header.ssrc = kSsrc1;
   header.arrOfCSRCs[0] = kCsrc1;
   EXPECT_TRUE(rtp_receiver_->IncomingRtpPacket(
-      header, kTestPayload, sizeof(kTestPayload), payload_specific, !kInOrder));
+      header, kTestPayload, sizeof(kTestPayload), payload_specific));
   auto rtp_receiver_impl = static_cast<RtpReceiverImpl*>(rtp_receiver_.get());
   auto ssrc_sources = rtp_receiver_impl->ssrc_sources_for_testing();
   ASSERT_EQ(1u, ssrc_sources.size());
@@ -268,7 +266,7 @@ TEST_F(RtpReceiverTest, GetSourcesContainsAudioLevelExtension) {
   PayloadUnion payload_specific = {AudioPayload()};
 
   EXPECT_TRUE(rtp_receiver_->IncomingRtpPacket(
-      header, kTestPayload, sizeof(kTestPayload), payload_specific, !kInOrder));
+      header, kTestPayload, sizeof(kTestPayload), payload_specific));
   auto sources = rtp_receiver_->GetSources();
   EXPECT_THAT(sources, UnorderedElementsAre(RtpSource(
                            time1_ms, kSsrc1, RtpSourceType::SSRC, 10)));
@@ -283,7 +281,7 @@ TEST_F(RtpReceiverTest, GetSourcesContainsAudioLevelExtension) {
   header.extension.audioLevel = 20;
 
   EXPECT_TRUE(rtp_receiver_->IncomingRtpPacket(
-      header, kTestPayload, sizeof(kTestPayload), payload_specific, !kInOrder));
+      header, kTestPayload, sizeof(kTestPayload), payload_specific));
   sources = rtp_receiver_->GetSources();
   EXPECT_THAT(sources,
               UnorderedElementsAre(
@@ -300,7 +298,7 @@ TEST_F(RtpReceiverTest, GetSourcesContainsAudioLevelExtension) {
   header.extension.audioLevel = 30;
 
   EXPECT_TRUE(rtp_receiver_->IncomingRtpPacket(
-      header, kTestPayload, sizeof(kTestPayload), payload_specific, !kInOrder));
+      header, kTestPayload, sizeof(kTestPayload), payload_specific));
   sources = rtp_receiver_->GetSources();
   EXPECT_THAT(sources,
               UnorderedElementsAre(
@@ -320,7 +318,7 @@ TEST_F(RtpReceiverTest,
   PayloadUnion payload_specific = {AudioPayload()};
 
   EXPECT_TRUE(rtp_receiver_->IncomingRtpPacket(
-      header, kTestPayload, sizeof(kTestPayload), payload_specific, !kInOrder));
+      header, kTestPayload, sizeof(kTestPayload), payload_specific));
   auto sources = rtp_receiver_->GetSources();
   EXPECT_THAT(sources, UnorderedElementsAre(RtpSource(
                            time1_ms, kSsrc1, RtpSourceType::SSRC, 10)));
@@ -333,7 +331,7 @@ TEST_F(RtpReceiverTest,
   header.extension.hasAudioLevel = false;
 
   EXPECT_TRUE(rtp_receiver_->IncomingRtpPacket(
-      header, kTestPayload, sizeof(kTestPayload), payload_specific, !kInOrder));
+      header, kTestPayload, sizeof(kTestPayload), payload_specific));
   sources = rtp_receiver_->GetSources();
   EXPECT_THAT(sources, UnorderedElementsAre(
                            RtpSource(time2_ms, kSsrc1, RtpSourceType::SSRC)));

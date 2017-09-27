@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "api/optional.h"
 #include "modules/rtp_rtcp/include/rtp_receiver.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtp_receiver_strategy.h"
@@ -44,12 +45,13 @@ class RtpReceiverImpl : public RtpReceiver {
   bool IncomingRtpPacket(const RTPHeader& rtp_header,
                          const uint8_t* payload,
                          size_t payload_length,
-                         PayloadUnion payload_specific,
-                         bool in_order) override;
+                         PayloadUnion payload_specific) override;
 
-  // Returns the last received timestamp.
-  bool Timestamp(uint32_t* timestamp) const override;
-  bool LastReceivedTimeMs(int64_t* receive_time_ms) const override;
+  // Gets the RTP timestamp and the corresponding monotonic system
+  // time for the most recent in-order packet. Returns true on
+  // success, false if no packet has been received.
+  bool GetLatestTimestamps(uint32_t* timestamp,
+                           int64_t* receive_time_ms) const override;
 
   uint32_t SSRC() const override;
 
@@ -70,9 +72,6 @@ class RtpReceiverImpl : public RtpReceiver {
   }
 
  private:
-  bool HaveReceivedFrame() const
-      RTC_EXCLUSIVE_LOCKS_REQUIRED(critical_section_rtp_receiver_);
-
   void CheckSSRCChanged(const RTPHeader& rtp_header);
   void CheckCSRC(const WebRtcRTPHeader& rtp_header);
   int32_t CheckPayloadChanged(const RTPHeader& rtp_header,
@@ -98,6 +97,9 @@ class RtpReceiverImpl : public RtpReceiver {
   uint32_t current_remote_csrc_[kRtpCsrcSize] RTC_GUARDED_BY(
       critical_section_rtp_receiver_);
 
+  // Sequence number and timestamps for the latest in-order packet.
+  rtc::Optional<uint16_t> last_received_seqno_
+      RTC_GUARDED_BY(critical_section_rtp_receiver_);
   uint32_t last_received_timestamp_
       RTC_GUARDED_BY(critical_section_rtp_receiver_);
   int64_t last_received_frame_time_ms_
