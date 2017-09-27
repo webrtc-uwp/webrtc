@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "a634782a_6d1630bf",
+        "filename": "api/candidate.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 5027
+      },
+      "writtenOn": "2017-09-27T15:07:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "015337a7_cc700620",
+      "revId": "084fa0354e2902314ff3e77a84a13381da3e470f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "33c95ad4_848119db",
         "filename": "api/candidate.h",
         "patchSetId": 2
@@ -47,6 +65,24 @@
       "writtenOn": "2017-09-22T12:12:46Z",
       "side": 1,
       "message": "Is this used by the public API? If not, (re)move it.",
+      "revId": "084fa0354e2902314ff3e77a84a13381da3e470f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "15458223_e8782790",
+        "filename": "api/candidate.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 5027
+      },
+      "writtenOn": "2017-09-27T15:07:06Z",
+      "side": 1,
+      "message": "It appears to be unused downstream, so I\u0027ll just remove it.",
+      "parentUuid": "33c95ad4_848119db",
       "revId": "084fa0354e2902314ff3e77a84a13381da3e470f",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true

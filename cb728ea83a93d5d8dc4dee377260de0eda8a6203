@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "84852541_fc579e3d",
+        "filename": "api/p2pconstants.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 5027
+      },
+      "writtenOn": "2017-09-27T15:07:06Z",
+      "side": 0,
+      "message": "You\u0027re right, it\u0027s not. I guess I can move p2pconstants back, then...",
+      "parentUuid": "03355fc2_2c58a586",
+      "revId": "cb728ea83a93d5d8dc4dee377260de0eda8a6203",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b950f373_2a4f8d2a",
         "filename": "api/streamparams.h",
         "patchSetId": 2
