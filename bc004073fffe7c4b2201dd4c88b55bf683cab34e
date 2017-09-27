@@ -143,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "e2aadc7c_dfac73f7",
+        "filename": "sdk/BUILD.gn",
+        "patchSetId": 2
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T15:05:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f80d26a8_352e9b15",
+      "range": {
+        "startLine": 501,
+        "startChar": 8,
+        "endLine": 501,
+        "endChar": 47
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3fc15c2e_b47c5433",
         "filename": "sdk/BUILD.gn",
         "patchSetId": 2
@@ -187,6 +211,30 @@
       "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16175071_f6a365a6",
+        "filename": "sdk/BUILD.gn",
+        "patchSetId": 2
+      },
+      "lineNbr": 636,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T15:05:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "38946019_d5143941",
+      "range": {
+        "startLine": 636,
+        "startChar": 41,
+        "endLine": 636,
+        "endChar": 70
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -258,6 +306,30 @@
       "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "051886cc_1fa94862",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCInternalSoftwareVideoDecoder+Private.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T15:05:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "75be8228_73667744",
+      "range": {
+        "startLine": 20,
+        "startChar": 36,
+        "endLine": 20,
+        "endChar": 58
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -780,6 +852,30 @@
     },
     {
       "key": {
+        "uuid": "1cfa5fc4_02322d19",
+        "filename": "sdk/objc/Framework/Classes/VideoToolbox/objc_video_decoder_factory.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T15:05:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "90bb894e_44e48ffa",
+      "range": {
+        "startLine": 46,
+        "startChar": 2,
+        "endLine": 46,
+        "endChar": 57
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "55c36672_155587d5",
         "filename": "sdk/objc/Framework/Classes/VideoToolbox/objc_video_decoder_factory.mm",
         "patchSetId": 2
@@ -800,6 +896,30 @@
       "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e11898e_342841a7",
+        "filename": "sdk/objc/Framework/Classes/VideoToolbox/objc_video_decoder_factory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T15:05:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "55c36672_155587d5",
+      "range": {
+        "startLine": 127,
+        "startChar": 2,
+        "endLine": 127,
+        "endChar": 20
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -874,6 +994,30 @@
     },
     {
       "key": {
+        "uuid": "9196316e_abfcac92",
+        "filename": "sdk/objc/Framework/Classes/VideoToolbox/objc_video_decoder_factory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T15:05:18Z",
+      "side": 1,
+      "message": "Method fixed in patchset 3",
+      "parentUuid": "1b2debbb_d63c8133",
+      "range": {
+        "startLine": 140,
+        "startChar": 0,
+        "endLine": 147,
+        "endChar": 0
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ed0dff89_2c10bc01",
         "filename": "sdk/objc/Framework/Classes/VideoToolbox/objc_video_encoder_factory.h",
         "patchSetId": 2
@@ -941,6 +1085,30 @@
       "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b1dbcb88_a12c3847",
+        "filename": "sdk/objc/Framework/Classes/VideoToolbox/objc_video_encoder_factory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-27T15:05:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "740f0c4b_0bbbe65d",
+      "range": {
+        "startLine": 149,
+        "startChar": 2,
+        "endLine": 149,
+        "endChar": 29
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
