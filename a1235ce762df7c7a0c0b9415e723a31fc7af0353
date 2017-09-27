@@ -16,6 +16,24 @@
       "revId": "a1235ce762df7c7a0c0b9415e723a31fc7af0353",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b2207b2_f61c6fe5",
+        "filename": "common_types.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-27T12:32:21Z",
+      "side": 1,
+      "message": "Spec is currently unclear about unit, but will be updated to seconds.\nInternally, I update the stat with milliseconds to avoid using floating point values. It is then converted in audio_receive_stream.cc to seconds (and type double).\nI added units to the variable names by request from hlundin@, which makes it easier to track when ms and s are used respectively.",
+      "parentUuid": "80a9fa8b_03f4982e",
+      "revId": "a1235ce762df7c7a0c0b9415e723a31fc7af0353",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
