@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96e70c0e_8ba425ec",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-27T16:54:37Z",
+      "side": 1,
+      "message": "I don\u0027t like the mix of using Optional and a pointer to a uint to tell whether the value exists. Either send in the Optional to this function, or just do the computations directly in the scope you have in IncomingRtpPacket().",
+      "revId": "f76ea6ac78320d59f16fef6bfd93f8749c980b3d",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d1faf4d_5e4cbc68",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-27T16:54:37Z",
+      "side": 1,
+      "message": "Do you need to add a test for this code path? I could easily see this being messed up by someone who\u0027s not wary of the detail.",
+      "revId": "f76ea6ac78320d59f16fef6bfd93f8749c980b3d",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f5d2701_9dd94648",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-27T16:54:37Z",
+      "side": 1,
+      "message": "Remove use of ?: here.",
+      "revId": "f76ea6ac78320d59f16fef6bfd93f8749c980b3d",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cbad9e1a_0f5f40bc",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-27T16:54:37Z",
+      "side": 1,
+      "message": "nit: rename last_received_seqno_ to last_received_sequence_number_",
+      "revId": "f76ea6ac78320d59f16fef6bfd93f8749c980b3d",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f617c01_9825f406",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-27T16:54:37Z",
+      "side": 1,
+      "message": "No need to repeat comment in interface implementation.",
+      "revId": "f76ea6ac78320d59f16fef6bfd93f8749c980b3d",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e96e2dbd_3b3de386",
+        "filename": "modules/rtp_rtcp/test/testAPI/test_api_audio.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-27T16:54:37Z",
+      "side": 1,
+      "message": "EXPECT_EQ(..., receive_time_ms)?",
+      "revId": "f76ea6ac78320d59f16fef6bfd93f8749c980b3d",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30fd4d6a_df565575",
+        "filename": "modules/rtp_rtcp/test/testAPI/test_api_audio.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-27T16:54:37Z",
+      "side": 1,
+      "message": "and here, and below",
+      "revId": "f76ea6ac78320d59f16fef6bfd93f8749c980b3d",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
