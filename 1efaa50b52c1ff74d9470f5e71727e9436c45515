@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3efc218c_a78ce342",
+        "filename": "modules/audio_processing/test/fake_recording_device.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-09-27T08:19:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "65d39167_00293241",
+      "range": {
+        "startLine": 37,
+        "startChar": 26,
+        "endLine": 37,
+        "endChar": 56
+      },
+      "revId": "1efaa50b52c1ff74d9470f5e71727e9436c45515",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "76e8986c_2efd0e0d",
         "filename": "modules/audio_processing/test/fake_recording_device.cc",
         "patchSetId": 7
@@ -45,6 +69,30 @@
       "revId": "1efaa50b52c1ff74d9470f5e71727e9436c45515",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eb5b6004_e3283fed",
+        "filename": "modules/audio_processing/test/fake_recording_device.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-09-27T08:19:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "76e8986c_2efd0e0d",
+      "range": {
+        "startLine": 140,
+        "startChar": 11,
+        "endLine": 140,
+        "endChar": 29
+      },
+      "revId": "1efaa50b52c1ff74d9470f5e71727e9436c45515",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
