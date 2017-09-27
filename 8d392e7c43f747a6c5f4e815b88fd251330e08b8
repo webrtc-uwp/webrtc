@@ -22,6 +22,30 @@
       "revId": "8d392e7c43f747a6c5f4e815b88fd251330e08b8",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b2d747e_57444798",
+        "filename": "sdk/android/api/org/webrtc/VideoEncoder.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-27T10:53:33Z",
+      "side": 1,
+      "message": "I think so. I haven\u0027t tried it for VideoEncoder or VideoSink since they are interfaces and not instantiated. I guess we will find out when we migrate more classes. I don\u0027t want to do migrate more classes in this CL.",
+      "parentUuid": "a1b8f306_a3679379",
+      "range": {
+        "startLine": 27,
+        "startChar": 11,
+        "endLine": 27,
+        "endChar": 19
+      },
+      "revId": "8d392e7c43f747a6c5f4e815b88fd251330e08b8",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
