@@ -237,6 +237,30 @@
     },
     {
       "key": {
+        "uuid": "75be8228_73667744",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCInternalSoftwareVideoDecoder+Private.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-27T14:38:02Z",
+      "side": 1,
+      "message": "Discussed offline, but we can hide implementation details if we just expose functions like:\nid\u003cRTCVideoEncoder\u003e CreateVp8Encoder();",
+      "parentUuid": "03bf8e6b_27cbfbdb",
+      "range": {
+        "startLine": 20,
+        "startChar": 36,
+        "endLine": 20,
+        "endChar": 58
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7587393a_485dae09",
         "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCInternalSoftwareVideoDecoder.mm",
         "patchSetId": 2
@@ -425,6 +449,30 @@
     },
     {
       "key": {
+        "uuid": "63c7e101_181b5cc0",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-27T14:38:02Z",
+      "side": 1,
+      "message": "Ok, strange. Maybe we should write it like this then:\nstd::unique_ptr\u003cwebrtc::VideoEncoderFactory\u003e native_encoder_factory;\nif (encoderFactory)\n  native_encoder_factory.reset(new webrtc::ObjCVideoEncoderFactory(encoderFactory));",
+      "parentUuid": "40b4ad51_bc301601",
+      "range": {
+        "startLine": 74,
+        "startChar": 6,
+        "endLine": 74,
+        "endChar": 50
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "216dadd2_0f27d045",
         "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
         "patchSetId": 2
@@ -472,6 +520,30 @@
     },
     {
       "key": {
+        "uuid": "19fc7429_22341487",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-27T14:38:02Z",
+      "side": 1,
+      "message": "I\u0027ll reply on the comment below.",
+      "parentUuid": "3c6a4ccc_52613b47",
+      "range": {
+        "startLine": 101,
+        "startChar": 1,
+        "endLine": 101,
+        "endChar": 20
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d06f78b8_b6219aad",
         "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
         "patchSetId": 2
@@ -507,6 +579,30 @@
       "side": 1,
       "message": "We need to have one initializer that is always called by the others because of how designated initializers work. I think it makes sense to put the shared logic in a shared initNative method, since the nativeFactory_ needs to be initialized with different overrides of CreatePeerConnectionFactory methods for the different configurations as it is now. It\u0027s a common pattern to call one shared designated initializer, and then initialize the rest of the ivars that are specific to this initializer.\n\nOne improvement could be to have a initWithNoMedia initializer that calls the initNative and then initializes the nativeFactory_ to the one in the #ifdef HAVE_NO_MEDIA block. And then call that only when HAVE_NO_MEDIA is true in the plain -init method. That might be more clear.",
       "parentUuid": "d06f78b8_b6219aad",
+      "range": {
+        "startLine": 125,
+        "startChar": 0,
+        "endLine": 126,
+        "endChar": 21
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d472866_df0b89fa",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-27T14:38:02Z",
+      "side": 1,
+      "message": "It\u0027s possible to have multiple designated initializers, right?\n\nI\u0027m happy with your suggestion to use initNative to only set up the threads, and use this as a base init functions. Then we add initWithNoMedia to set up the no-media nativeFactory.",
+      "parentUuid": "95525e1a_ab9c92dc",
       "range": {
         "startLine": 125,
         "startChar": 0,
@@ -742,6 +838,30 @@
       "side": 1,
       "message": "Yes that makes sense. These functions should be removed as soon as we don\u0027t need the cricket encoder factories anymore, and then maybe we don\u0027t need to support the cricket::VideoCodec conversions in the Obj-C layer at all anymore?",
       "parentUuid": "4a37af24_6fae62d6",
+      "range": {
+        "startLine": 140,
+        "startChar": 0,
+        "endLine": 147,
+        "endChar": 0
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b2debbb_d63c8133",
+        "filename": "sdk/objc/Framework/Classes/VideoToolbox/objc_video_decoder_factory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-27T14:38:02Z",
+      "side": 1,
+      "message": "Yes. We could add a helper function to convert between cricket::VideoCodec and SdpVideoFormat. It feels like we are already doing it in a lot of places.",
+      "parentUuid": "53e67f08_5714319f",
       "range": {
         "startLine": 140,
         "startChar": 0,
