@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "59ac1b58_6ecc6815",
+        "filename": "rtc_base/BUILD.gn",
+        "patchSetId": 1
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 5017
+      },
+      "writtenOn": "2017-09-27T09:20:58Z",
+      "side": 1,
+      "message": "Same here...",
+      "range": {
+        "startLine": 207,
+        "startChar": 2,
+        "endLine": 214,
+        "endChar": 3
+      },
+      "revId": "4bb3d961a80d1c5b85671929eeb5cfdb1e5a9e14",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49ee64f8_c43ff130",
+        "filename": "rtc_base/BUILD.gn",
+        "patchSetId": 1
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 5017
+      },
+      "writtenOn": "2017-09-27T09:20:58Z",
+      "side": 1,
+      "message": "We should probably do the same for things like this, but that\u0027s a separate effort.",
+      "range": {
+        "startLine": 588,
+        "startChar": 2,
+        "endLine": 594,
+        "endChar": 3
+      },
+      "revId": "4bb3d961a80d1c5b85671929eeb5cfdb1e5a9e14",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    }
+  ]
+}
