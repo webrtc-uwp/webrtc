@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "1042956f_405f58a2",
+        "filename": "p2p/base/transportcontroller.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-27T08:51:29Z",
+      "side": 1,
+      "message": "I can delete or rephrase this TODO item if you like. But I really think this code looks strange, and that cleanup should be done in some other way, using scoped_refptr.",
+      "range": {
+        "startLine": 477,
+        "startChar": 0,
+        "endLine": 477,
+        "endChar": 67
+      },
+      "revId": "25b63683377f5e26eac11434766bdaf3cab86fd4",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "10e97bb4_9571677a",
         "filename": "rtc_base/callback_unittest.cc",
         "patchSetId": 5
