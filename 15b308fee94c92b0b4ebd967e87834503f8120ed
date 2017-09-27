@@ -22,6 +22,30 @@
       "revId": "15b308fee94c92b0b4ebd967e87834503f8120ed",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fde847a_02429671",
+        "filename": "modules/desktop_capture/mapping_device_desktop_capturer_wrapper.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 5029
+      },
+      "writtenOn": "2017-09-27T23:57:49Z",
+      "side": 1,
+      "message": "This is a webrtc::Source with name field. I should add comments.",
+      "parentUuid": "2d2cd09f_b1aaa70c",
+      "range": {
+        "startLine": 46,
+        "startChar": 22,
+        "endLine": 46,
+        "endChar": 0
+      },
+      "revId": "15b308fee94c92b0b4ebd967e87834503f8120ed",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
