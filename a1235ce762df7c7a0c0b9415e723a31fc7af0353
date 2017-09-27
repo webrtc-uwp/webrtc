@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "80a9fa8b_03f4982e",
+        "filename": "common_types.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 5091
+      },
+      "writtenOn": "2017-09-27T12:17:44Z",
+      "side": 1,
+      "message": "Spec says \"jitterBufferDelay\" without MilliSeconds prefix. Why?",
+      "revId": "a1235ce762df7c7a0c0b9415e723a31fc7af0353",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
