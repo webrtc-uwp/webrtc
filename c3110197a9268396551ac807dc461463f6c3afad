@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c15cc504_ca78f36b",
+        "filename": "voice_engine/channel.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1692,
+      "author": {
+        "id": 5100
+      },
+      "writtenOn": "2017-09-27T15:41:41Z",
+      "side": 1,
+      "message": "Do you need this local variable?",
+      "range": {
+        "startLine": 1692,
+        "startChar": 10,
+        "endLine": 1692,
+        "endChar": 36
+      },
+      "revId": "c3110197a9268396551ac807dc461463f6c3afad",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ae9b7b5_5f3cad1e",
+        "filename": "voice_engine/channel.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1694,
+      "author": {
+        "id": 5100
+      },
+      "writtenOn": "2017-09-27T15:41:41Z",
+      "side": 1,
+      "message": "Suggestion: TimeSinceEncodingTaskWasPostedMs -\u003e EncodingTaskQueueLatencyMs",
+      "range": {
+        "startLine": 1694,
+        "startChar": 20,
+        "endLine": 1694,
+        "endChar": 52
+      },
+      "revId": "c3110197a9268396551ac807dc461463f6c3afad",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
