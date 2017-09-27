@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "783b98c7_c7d4dfc5",
+        "filename": "test/testsupport/test_artifacts.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 5117
+      },
+      "writtenOn": "2017-09-27T12:36:34Z",
+      "side": 1,
+      "message": "You should rename this to DefaultArtifactPath.",
+      "range": {
+        "startLine": 22,
+        "startChar": 19,
+        "endLine": 22,
+        "endChar": 36
+      },
+      "revId": "41406f8029541057c1936aac7cee98f99bdbee41",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
