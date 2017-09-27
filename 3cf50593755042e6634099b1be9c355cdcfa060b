@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b19de4a9_7127fafe",
+        "filename": "modules/congestion_controller/delay_based_bwe.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-09-27T14:55:12Z",
+      "side": 1,
+      "message": "This would make the BWE_TEST_LOGGING version print the bitrate even if only the detector state has changed. We\u0027re now also checking detector_.State() !\u003d last_logged_state_ twice and result.updated twice. It is also reading a potentially uninitialized value (result.target_bitrate_bps).\n\nHow about:\nif (result.updated) {\n  BWE_TEST_LOGGING_PLOT(1, \"target_bitrate_bps\", now_ms, result.target_bitrate_bps);\n  LogDelayBasedBwe(result.target_bitrate_bps, detector_.State())\n} else if (detector_.State() !\u003d last_logged_state_) {\n  LogDelayBasedBwe(last_logged_bitrate_, detector_.State())\n}\n\nThe helper function can check that the event_log exists, that the values are not identical to what was logged before and update the (last_logged_bitrate_, last_logged_state_).",
+      "range": {
+        "startLine": 253,
+        "startChar": 0,
+        "endLine": 253,
+        "endChar": 58
+      },
+      "revId": "3cf50593755042e6634099b1be9c355cdcfa060b",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
