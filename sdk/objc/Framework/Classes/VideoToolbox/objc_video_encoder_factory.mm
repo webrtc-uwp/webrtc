@@ -14,6 +14,7 @@
 
 #import "NSString+StdString.h"
 #import "RTCI420Buffer+Private.h"
+#import "RTCInternalSoftwareVideoEncoder+Private.h"
 #import "RTCVideoCodec+Private.h"
 #import "WebRTC/RTCVideoCodec.h"
 #import "WebRTC/RTCVideoCodecFactory.h"
@@ -22,6 +23,7 @@
 #import "WebRTC/RTCVideoFrameBuffer.h"
 
 #include "api/video/video_frame.h"
+#include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_encoder.h"
 #include "modules/include/module_common_types.h"
 #include "modules/video_coding/include/video_codec_interface.h"
@@ -69,7 +71,7 @@ class ObjCVideoEncoder : public VideoEncoder {
                                 RTCRtpFragmentationHeader *_Nonnull header) {
       EncodedImage encodedImage = [frame nativeEncodedImage];
 
-      // Handle types than can be converted into one of CodecSpecificInfo's hard coded cases.
+      // Handle types that can be converted into one of CodecSpecificInfo's hard coded cases.
       CodecSpecificInfo codecSpecificInfo;
       if ([info isKindOfClass:[RTCCodecSpecificInfoH264 class]]) {
         codecSpecificInfo = [(RTCCodecSpecificInfoH264 *)info nativeCodecSpecificInfo];
@@ -142,6 +144,41 @@ ObjCVideoEncoderFactory::~ObjCVideoEncoderFactory() {}
 id<RTCVideoEncoderFactory> ObjCVideoEncoderFactory::wrapped_encoder_factory() const {
   return encoder_factory_;
 }
+
+std::vector<SdpVideoFormat> ObjCVideoEncoderFactory::GetSupportedFormats() const {
+  std::vector<SdpVideoFormat> supported_formats;
+  for (RTCVideoCodecInfo *supportedCodec in encoder_factory_.supportedCodecs) {
+    SdpVideoFormat format = [supportedCodec nativeSdpVideoFormat];
+    supported_formats.push_back(format);
+  }
+
+  return supported_formats;
+}
+
+VideoEncoderFactory::CodecInfo ObjCVideoEncoderFactory::QueryVideoEncoder(
+    const SdpVideoFormat &format) const {
+  // TODO(andersc): This is a hack until we figure out how this should be done properly.
+  NSString *formatName = [NSString stringForStdString:format.name];
+
+  CodecInfo codec_info;
+  codec_info.is_hardware_accelerated =
+      ![[RTCInternalSoftwareVideoEncoder supportedFormats] containsObject:formatName];
+  codec_info.has_internal_source = false;
+  return codec_info;
+}
+
+std::unique_ptr<VideoEncoder> ObjCVideoEncoderFactory::CreateVideoEncoder(
+    const SdpVideoFormat &format) {
+  RTCVideoCodecInfo *info = [[RTCVideoCodecInfo alloc] initWithNativeSdpVideoFormat:format];
+  id<RTCVideoEncoder> encoder = [encoder_factory_ createEncoder:info];
+  if ([encoder isKindOfClass:[RTCInternalSoftwareVideoEncoder class]]) {
+    return [(RTCInternalSoftwareVideoEncoder *)encoder wrappedEncoder];
+  } else {
+    return std::unique_ptr<ObjCVideoEncoder>(new ObjCVideoEncoder(encoder));
+  }
+}
+
+// WebRtcVideoEncoderFactory
 
 VideoEncoder *ObjCVideoEncoderFactory::CreateVideoEncoder(const cricket::VideoCodec &codec) {
   RTCVideoCodecInfo *info = [[RTCVideoCodecInfo alloc] initWithNativeVideoCodec:codec];
