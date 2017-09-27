@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d2cd09f_b1aaa70c",
+        "filename": "modules/desktop_capture/mapping_device_desktop_capturer_wrapper.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 5166
+      },
+      "writtenOn": "2017-09-27T21:05:13Z",
+      "side": 1,
+      "message": "What is this field? It\u0027s not mentioned in the class description, which refers to a single string (\"internal\") id, and the only other mentions in the header say that it is ignored. I think you need more details of both of these fields, perhaps with examples of what values they might take in a typical environment.",
+      "range": {
+        "startLine": 46,
+        "startChar": 22,
+        "endLine": 46,
+        "endChar": 0
+      },
+      "revId": "15b308fee94c92b0b4ebd967e87834503f8120ed",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
