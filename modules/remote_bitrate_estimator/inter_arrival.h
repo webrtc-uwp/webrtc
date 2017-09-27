@@ -51,6 +51,8 @@ class InterArrival {
                      int64_t* arrival_time_delta_ms,
                      int* packet_size_delta);
 
+  void Reset();
+
  private:
   struct TimestampGroup {
     TimestampGroup()
@@ -78,8 +80,6 @@ class InterArrival {
   bool NewTimestampGroup(int64_t arrival_time_ms, uint32_t timestamp) const;
 
   bool BelongsToBurst(int64_t arrival_time_ms, uint32_t timestamp) const;
-
-  void Reset();
 
   const uint32_t kTimestampGroupLengthTicks;
   TimestampGroup current_timestamp_group_;

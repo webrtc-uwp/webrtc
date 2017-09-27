@@ -88,6 +88,7 @@ class DelayBasedBwe {
   uint32_t last_logged_bitrate_;
   BandwidthUsage last_logged_state_;
   bool in_sparse_update_experiment_;
+  bool last_packet_probe_packet_ = false;
 
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(DelayBasedBwe);
 };

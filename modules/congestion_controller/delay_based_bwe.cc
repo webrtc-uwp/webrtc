@@ -193,15 +193,25 @@ void DelayBasedBwe::IncomingPacketFeedback(
   uint32_t ts_delta = 0;
   int64_t t_delta = 0;
   int size_delta = 0;
-  if (inter_arrival_->ComputeDeltas(timestamp, packet_feedback.arrival_time_ms,
-                                    now_ms, packet_feedback.payload_size,
-                                    &ts_delta, &t_delta, &size_delta)) {
-    double ts_delta_ms = (1000.0 * ts_delta) / (1 << kInterArrivalShift);
-    trendline_estimator_->Update(t_delta, ts_delta_ms,
-                                 packet_feedback.arrival_time_ms);
-    detector_.Detect(trendline_estimator_->trendline_slope(), ts_delta_ms,
-                     trendline_estimator_->num_of_deltas(),
-                     packet_feedback.arrival_time_ms);
+  bool is_probe = packet_feedback.pacing_info.probe_cluster_id !=
+                  PacedPacketInfo::kNotAProbe;
+  if (is_probe) {
+    last_packet_probe_packet_ = true;
+  } else if (!is_probe && last_packet_probe_packet_) {
+    inter_arrival_->Reset();
+    last_packet_probe_packet_ = false;
+  }
+  if (!is_probe) {
+    if (inter_arrival_->ComputeDeltas(
+            timestamp, packet_feedback.arrival_time_ms, now_ms,
+            packet_feedback.payload_size, &ts_delta, &t_delta, &size_delta)) {
+      double ts_delta_ms = (1000.0 * ts_delta) / (1 << kInterArrivalShift);
+      trendline_estimator_->Update(t_delta, ts_delta_ms,
+                                   packet_feedback.arrival_time_ms);
+      detector_.Detect(trendline_estimator_->trendline_slope(), ts_delta_ms,
+                       trendline_estimator_->num_of_deltas(),
+                       packet_feedback.arrival_time_ms);
+    }
   }
   if (packet_feedback.pacing_info.probe_cluster_id !=
       PacedPacketInfo::kNotAProbe) {
