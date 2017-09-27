@@ -61,7 +61,7 @@ class RTCPReceiver {
 
   void IncomingPacket(const uint8_t* packet, size_t packet_size);
 
-  int64_t LastReceivedReceiverReport() const;
+  int64_t LastReceivedReportBlockMs() const;
 
   void SetSsrcs(uint32_t main_ssrc, const std::set<uint32_t>& registered_ssrcs);
   void SetRemoteSSRC(uint32_t ssrc);
@@ -246,7 +246,7 @@ class RTCPReceiver {
       RTC_GUARDED_BY(rtcp_receiver_lock_);
 
   // The last time we received an RTCP RR.
-  int64_t last_received_rr_ms_ RTC_GUARDED_BY(rtcp_receiver_lock_);
+  int64_t last_received_rb_ms_ RTC_GUARDED_BY(rtcp_receiver_lock_);
 
   // The time we last received an RTCP RR telling we have successfully
   // delivered RTP packet to the remote side.
