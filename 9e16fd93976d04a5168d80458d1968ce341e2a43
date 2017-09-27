@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ecde7788_8b98ab6d",
+        "filename": "pc/peerconnectionwrapper.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-27T12:51:36Z",
+      "side": 1,
+      "message": "nit: I don\u0027t see why the observer needs to be a parameter; it can be managed by this class. Can you mention the reasoning in a comment?",
+      "revId": "9e16fd93976d04a5168d80458d1968ce341e2a43",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
