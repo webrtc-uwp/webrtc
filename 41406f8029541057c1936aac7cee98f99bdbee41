@@ -22,6 +22,30 @@
       "revId": "41406f8029541057c1936aac7cee98f99bdbee41",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "471239bb_a68dc23f",
+        "filename": "test/testsupport/test_artifacts.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 5028
+      },
+      "writtenOn": "2017-09-27T12:47:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "783b98c7_c7d4dfc5",
+      "range": {
+        "startLine": 22,
+        "startChar": 19,
+        "endLine": 22,
+        "endChar": 36
+      },
+      "revId": "41406f8029541057c1936aac7cee98f99bdbee41",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
