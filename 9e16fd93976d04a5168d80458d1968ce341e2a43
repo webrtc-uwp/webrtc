@@ -34,6 +34,24 @@
       "revId": "9e16fd93976d04a5168d80458d1968ce341e2a43",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e7d3f59_4fa12fc2",
+        "filename": "pc/peerconnectionwrapper.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-27T16:29:59Z",
+      "side": 1,
+      "message": "Oh right, I was thinking of the [Create|Set]SessionDescriptionObservers. Sorry I keep forgetting details of the PC API, I\u0027ll be more careful in future code reviews.",
+      "parentUuid": "af148a39_daffc67b",
+      "revId": "9e16fd93976d04a5168d80458d1968ce341e2a43",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
