@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8dc5e14e_8135eb31",
+        "filename": "rtc_base/refcount.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-27T10:47:02Z",
+      "side": 1,
+      "message": "Excellent. But I realize that the \"you need to own a reference\" restriction applies not only to AddRef and Release, but to all other methods and members too. So maybe something like this at the very top:\n\n  You may access members of a reference-counted object *only* if you already own a reference to it, or if you\u0027re borrowing someone else\u0027s reference.\n\n  AddRef() creates a new reference to the object. As a special exception to the \"you need to own a reference\" rule above, you are allowed (and required) to call AddRef() on a newly constructed object to bring its reference count up from 0 to 1.\n\n...and then the same text from line 25 onwards.",
+      "revId": "561c41c96d9765955ef444e381ffdff655449b0c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ecf46f63_736be2c2",
+        "filename": "rtc_base/refcount.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-27T10:47:02Z",
+      "side": 1,
+      "message": "A comment that the destructor is non-public because it should never be called directly, only by Release?",
+      "revId": "561c41c96d9765955ef444e381ffdff655449b0c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
