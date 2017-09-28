@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c4c3abd0_c0aacb40",
+        "filename": "rtc_base/java/src/org/webrtc/ContextUtils.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-28T15:31:49Z",
+      "side": 1,
+      "message": "IllegalArgumentException instead?",
+      "range": {
+        "startLine": 31,
+        "startChar": 16,
+        "endLine": 31,
+        "endChar": 32
+      },
+      "revId": "dda96589af6b0ae722ae1c28fc88fdc9e4222273",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b6c82ccb_0caf05fb",
+        "filename": "rtc_base/java/src/org/webrtc/Logging.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-28T15:31:49Z",
+      "side": 1,
+      "message": "This behavior is changed. Either throw an exception now, or remove the whole if-statement.",
+      "range": {
+        "startLine": 68,
+        "startChar": 9,
+        "endLine": 68,
+        "endChar": 33
+      },
+      "revId": "dda96589af6b0ae722ae1c28fc88fdc9e4222273",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "24fa0c1e_2cdc34ac",
+        "filename": "sdk/android/api/org/webrtc/PeerConnectionFactory.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-28T15:31:49Z",
+      "side": 1,
+      "message": "Comment that clients should call PeerConnectionFactory.initialize() instead. Same for the other deprecations.",
+      "range": {
+        "startLine": 132,
+        "startChar": 3,
+        "endLine": 132,
+        "endChar": 13
+      },
+      "revId": "dda96589af6b0ae722ae1c28fc88fdc9e4222273",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
