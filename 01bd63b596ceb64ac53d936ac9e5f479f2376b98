@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bdd08209_0f619a0d",
+        "filename": "api/stats/rtcstats_objects.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-28T09:22:52Z",
+      "side": 1,
+      "message": "Oh, yes I missed the \"video-only\" comment.\nThanks, fixed.",
+      "parentUuid": "73f91517_91fd9973",
+      "revId": "01bd63b596ceb64ac53d936ac9e5f479f2376b98",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5ff1aa60_75daaa72",
         "filename": "pc/rtcstatscollector.cc",
         "patchSetId": 7
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "af3fe390_6ad29580",
+        "filename": "pc/rtcstatscollector.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-28T09:22:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5ff1aa60_75daaa72",
+      "revId": "01bd63b596ceb64ac53d936ac9e5f479f2376b98",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3842a0fe_c7f5ca39",
         "filename": "stats/rtcstats_objects.cc",
         "patchSetId": 7
@@ -50,6 +86,24 @@
       "revId": "01bd63b596ceb64ac53d936ac9e5f479f2376b98",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9dad05b6_7baefcf4",
+        "filename": "stats/rtcstats_objects.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-28T09:22:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3842a0fe_c7f5ca39",
+      "revId": "01bd63b596ceb64ac53d936ac9e5f479f2376b98",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
