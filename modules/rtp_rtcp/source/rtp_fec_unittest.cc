@@ -350,6 +350,60 @@ TYPED_TEST(RtpFecTest, FecRecoveryWithSeqNumGapTwoFrames) {
   EXPECT_TRUE(this->recovered_packets_.size() != this->media_packets_.size());
 }
 
+// Identical test to above, but without seqno wrap-araound.
+TYPED_TEST(RtpFecTest, FecRecoveryWithSeqNumGapTwoFramesNoWrap) {
+  constexpr int kNumImportantPackets = 0;
+  constexpr bool kUseUnequalProtection = false;
+  constexpr uint8_t kProtectionFactor = 20;
+
+  // Two frames: first frame (old) with two media packets and 1 FEC packet.
+  // Second frame (new) with 3 media packets, and no FEC packets.
+  //       ---Frame 1----                     ----Frame 2------
+  //  #1(media) #2(media) #3(FEC)     #0(media) #1(media) #2(media).
+  // If we lose either packet 0 or 1 of second frame, FEC decoding should not
+  // try to decode using "old" FEC packet #3.
+
+  // Construct media packets for first frame, starting at sequence number 1.
+  this->media_packets_ =
+      this->media_packet_generator_.ConstructMediaPackets(2, 1);
+
+  EXPECT_EQ(
+      0, this->fec_.EncodeFec(this->media_packets_, kProtectionFactor,
+                              kNumImportantPackets, kUseUnequalProtection,
+                              kFecMaskBursty, &this->generated_fec_packets_));
+  // Expect 1 FEC packet.
+  EXPECT_EQ(1u, this->generated_fec_packets_.size());
+  // Add FEC packet (seq#2) of this first frame to received list (i.e., assume
+  // the two media packet were lost).
+  memset(this->fec_loss_mask_, 0, sizeof(this->fec_loss_mask_));
+  this->ReceivedPackets(this->generated_fec_packets_, this->fec_loss_mask_,
+                        true);
+
+  // Construct media packets for second frame, with sequence number 0.
+  this->media_packets_ =
+      this->media_packet_generator_.ConstructMediaPackets(3, 0);
+
+  // Expect 3 media packets for this frame.
+  EXPECT_EQ(3u, this->media_packets_.size());
+
+  // Second media packet lost (seq#0).
+  memset(this->media_loss_mask_, 0, sizeof(this->media_loss_mask_));
+  this->media_loss_mask_[1] = 1;
+  // Add packets #0, and #2 to received list.
+  this->ReceivedPackets(this->media_packets_, this->media_loss_mask_, false);
+
+  for (const auto& received_packet : this->received_packets_) {
+    this->fec_.DecodeFec(*received_packet,
+                         &this->recovered_packets_);
+  }
+
+  // Expect that no decoding is done to get missing packet (seq#1) of second
+  // frame, using old FEC packet (seq#3) from first (old) frame. So number of
+  // recovered packets is 2, and not equal to number of media packets (=3).
+  EXPECT_EQ(2u, this->recovered_packets_.size());
+  EXPECT_TRUE(this->recovered_packets_.size() != this->media_packets_.size());
+}
+
 // Verify we can still recover frame if sequence number wrap occurs within
 // the frame and FEC packet following wrap is received after media packets.
 TYPED_TEST(RtpFecTest, FecRecoveryWithSeqNumGapOneFrameRecovery) {
