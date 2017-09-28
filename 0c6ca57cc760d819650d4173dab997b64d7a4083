@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c2e6c90_4daeaa6a",
+        "filename": "sdk/objc/Framework/Classes/VideoToolbox/RTCVideoEncoderH264.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-28T13:14:35Z",
+      "side": 1,
+      "message": "Should we use a std::unique_ptr instead? We already do for some other C++ variables in this class.",
+      "revId": "0c6ca57cc760d819650d4173dab997b64d7a4083",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
