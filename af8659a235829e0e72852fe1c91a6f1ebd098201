@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "860f8f8c_33c7e020",
+        "filename": "api/BUILD.gn",
+        "patchSetId": 4
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-28T06:46:42Z",
+      "side": 0,
+      "message": "So the files deleted from this list are all deprecated? \n\nShould they be deleted real soon, or added to some other target, or is it ok to just leave them in the tree without including them in any target?",
+      "range": {
+        "startLine": 42,
+        "startChar": 5,
+        "endLine": 42,
+        "endChar": 16
+      },
+      "revId": "af8659a235829e0e72852fe1c91a6f1ebd098201",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
