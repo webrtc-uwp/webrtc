@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03ff8761_5691cdca",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-28T14:42:42Z",
+      "side": 1,
+      "message": "We need to do:\n#ifdef HAVE_NO_MEDIA\n  return [self initWithNoMedia];\n#else\n  if (self \u003d [self initNative]) {\n    ...\n  }\n  return self;\n#endif",
+      "range": {
+        "startLine": 129,
+        "startChar": 2,
+        "endLine": 129,
+        "endChar": 4
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5ae7bff_0c6bccd0",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-28T14:42:42Z",
+      "side": 1,
+      "message": "Same here, we should handle the HAVE_NO_MEDIA case.",
+      "range": {
+        "startLine": 155,
+        "startChar": 5,
+        "endLine": 155,
+        "endChar": 6
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d22839bf_cd83f4fe",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCVideoCodec.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-28T14:42:42Z",
+      "side": 1,
+      "message": "Unrelated to this CL, but we should remove payload from RTCVideoCodecInfo. It shouldn\u0027t be needed.",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 31
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6fd57767_88520594",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCVideoCodec.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-28T14:42:42Z",
+      "side": 1,
+      "message": "Let\u0027s add a common function for converting cricket::VideoCodec to SdpVideoFormat, so we don\u0027t have to duplicate logic like this.",
+      "range": {
+        "startLine": 34,
+        "startChar": 16,
+        "endLine": 34,
+        "endChar": 40
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c13d7e3_b386c832",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCVideoCodecVP9.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-28T14:42:42Z",
+      "side": 1,
+      "message": "Let\u0027s split these into separate files and targets.",
+      "range": {
+        "startLine": 34,
+        "startChar": 16,
+        "endLine": 34,
+        "endChar": 34
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7647ac7_28164e4d",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCWrappedNativeVideoDecoder.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-28T14:42:42Z",
+      "side": 1,
+      "message": "We should change the name and comment that this function actually extracts and moves ownership of the wrapped native decoder.",
+      "range": {
+        "startLine": 20,
+        "startChar": 41,
+        "endLine": 20,
+        "endChar": 55
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25bb2168_79ed502c",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCWrappedNativeVideoDecoder.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-28T14:42:42Z",
+      "side": 1,
+      "message": "Let\u0027s reuse the helper function nativeToRtcFrame in objc_video_encoder_factory.mm (we need to move it somewhere common), and use that from here. Please also update the conversion in RTCVideoRendererAdapter.mm even though it\u0027s unrelated to the goal in this CL.",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 75
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a86e086e_ea54186a",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCWrappedNativeVideoDecoder.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-28T14:42:42Z",
+      "side": 1,
+      "message": "I think we need to add subclasses for VP8 and VP9 now.",
+      "range": {
+        "startLine": 88,
+        "startChar": 27,
+        "endLine": 88,
+        "endChar": 51
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "841f89eb_08bd9352",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCWrappedNativeVideoEncoder.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-28T14:42:42Z",
+      "side": 1,
+      "message": "I think we should remove it now and have the list directly in QueryVideoEncoder instead.",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 21
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b436237_0c430411",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCWrappedNativeVideoEncoder.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-28T14:42:42Z",
+      "side": 1,
+      "message": "We should add a helper function for going from RTCVideoFrame -\u003e webrtc::VideoFrame as well.",
+      "range": {
+        "startLine": 87,
+        "startChar": 0,
+        "endLine": 91,
+        "endChar": 82
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
