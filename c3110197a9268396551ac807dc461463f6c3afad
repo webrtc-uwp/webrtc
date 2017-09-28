@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "06d69345_37b11edf",
+        "filename": "voice_engine/channel.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1692,
+      "author": {
+        "id": 5091
+      },
+      "writtenOn": "2017-09-28T07:39:58Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "c15cc504_ca78f36b",
+      "range": {
+        "startLine": 1692,
+        "startChar": 10,
+        "endLine": 1692,
+        "endChar": 36
+      },
+      "revId": "c3110197a9268396551ac807dc461463f6c3afad",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4ae9b7b5_5f3cad1e",
         "filename": "voice_engine/channel.cc",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2017-09-27T15:41:41Z",
       "side": 1,
       "message": "Suggestion: TimeSinceEncodingTaskWasPostedMs -\u003e EncodingTaskQueueLatencyMs",
+      "range": {
+        "startLine": 1694,
+        "startChar": 20,
+        "endLine": 1694,
+        "endChar": 52
+      },
+      "revId": "c3110197a9268396551ac807dc461463f6c3afad",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75fd5c00_ae817fce",
+        "filename": "voice_engine/channel.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1694,
+      "author": {
+        "id": 5091
+      },
+      "writtenOn": "2017-09-28T07:39:58Z",
+      "side": 1,
+      "message": "Thanks!",
+      "parentUuid": "4ae9b7b5_5f3cad1e",
       "range": {
         "startLine": 1694,
         "startChar": 20,
