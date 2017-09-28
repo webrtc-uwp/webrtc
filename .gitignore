@@ -49,7 +49,9 @@
 /tools_webrtc/android/profiling/flamegraph
 /tools_webrtc/android/profiling/simpleperf
 /tools_webrtc/audio_quality/linux/pesq
+/tools_webrtc/audio_quality/linux/PolqaOem64
 /tools_webrtc/audio_quality/mac/pesq
+/tools_webrtc/audio_quality/mac/PolqaOem64
 /tools_webrtc/audio_quality/win/*.exe
 /tools_webrtc/video_quality_toolchain/linux/ffmpeg
 /tools_webrtc/video_quality_toolchain/linux/zxing

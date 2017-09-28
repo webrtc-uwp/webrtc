@@ -157,7 +157,26 @@ if (rtc_include_tests) {
         "../resources/voice_engine/audio_tiny16.wav",
         "../resources/voice_engine/audio_tiny48.wav",
         "../resources/voice_engine/audio_dtx16.wav",
+        "test/low_bandwidth_audio_test.py",
       ]
+      if (is_linux) {
+        data += [
+          "../tools_webrtc/audio_quality/linux/pesq",
+          "../tools_webrtc/audio_quality/linux/PolqaOem64",
+        ]
+      }
+      if (is_win) {
+        data += [
+          "../tools_webrtc/audio_quality/win/pesq",
+          "../tools_webrtc/audio_quality/win/PolqaOem64",
+        ]
+      }
+      if (is_mac) {
+        data += [
+          "../tools_webrtc/audio_quality/mac/pesq",
+          "../tools_webrtc/audio_quality/mac/PolqaOem64",
+        ]
+      }
 
       if (!build_with_chromium && is_clang) {
         # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163)
