@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9df1b85b_363d4641",
+        "filename": "api/BUILD.gn",
+        "patchSetId": 7
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 5027
+      },
+      "writtenOn": "2017-09-28T09:55:32Z",
+      "side": 1,
+      "message": "peerconnectioninterface.h still part of the interface since I add this source set using public_deps above. Clients of libjingle_peerconnection_api will not notice any difference. This new target is just here so I can turn on check_includes for everything else in the api target.\n\nI think we all agree it should not include anything from call, but it does, as you can see in the comment above. There\u0027s a separate effort to try to fix this call dependency; see Karl\u0027s Config Structs document shared to the webrtc-core mailing list.",
+      "parentUuid": "88485673_5691d3f2",
+      "range": {
+        "startLine": 105,
+        "startChar": 5,
+        "endLine": 105,
+        "endChar": 28
+      },
+      "revId": "495e96274d425b346fde82ffabf410f5a2c72d38",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b13dba21_f02d5411",
         "filename": "api/BUILD.gn",
         "patchSetId": 7
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "730765cf_866467ba",
+        "filename": "api/BUILD.gn",
+        "patchSetId": 7
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 5027
+      },
+      "writtenOn": "2017-09-28T09:55:32Z",
+      "side": 1,
+      "message": "Absolutely. This is why they are deprecated (look in the .h files and you will see this stated there).",
+      "parentUuid": "b13dba21_f02d5411",
+      "range": {
+        "startLine": 115,
+        "startChar": 5,
+        "endLine": 115,
+        "endChar": 16
+      },
+      "revId": "495e96274d425b346fde82ffabf410f5a2c72d38",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dd5a8de8_eed1df6d",
         "filename": "api/candidate.h",
         "patchSetId": 7
@@ -68,6 +116,30 @@
       "revId": "495e96274d425b346fde82ffabf410f5a2c72d38",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eacb33ee_4ec7a351",
+        "filename": "api/candidate.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 5027
+      },
+      "writtenOn": "2017-09-28T09:55:32Z",
+      "side": 1,
+      "message": "Maybe, solenberg wanted me to add this TODO. I think he meant that parts of the Candidate class can be removed or PIMPL\u0027d.",
+      "parentUuid": "dd5a8de8_eed1df6d",
+      "range": {
+        "startLine": 28,
+        "startChar": 8,
+        "endLine": 28,
+        "endChar": 16
+      },
+      "revId": "495e96274d425b346fde82ffabf410f5a2c72d38",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
