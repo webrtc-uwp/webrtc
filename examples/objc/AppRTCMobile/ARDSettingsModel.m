@@ -10,14 +10,12 @@
 
 #import "ARDSettingsModel+Private.h"
 #import "ARDSettingsStore.h"
+#import "ARDVideoEncoderFactory.h"
+#import "RTCVideoCodecInfo+Fullname.h"
 #import "WebRTC/RTCCameraVideoCapturer.h"
 #import "WebRTC/RTCMediaConstraints.h"
 
 NS_ASSUME_NONNULL_BEGIN
-
-static NSArray<NSString *> *videoCodecsStaticValues() {
-  return @[ @"H264", @"VP8", @"VP9" ];
-}
 
 @interface ARDSettingsModel () {
   ARDSettingsStore *_settingsStore;
@@ -69,7 +67,9 @@ static NSArray<NSString *> *videoCodecsStaticValues() {
 }
 
 - (NSArray<NSString *> *)availableVideoCodecs {
-  return videoCodecsStaticValues();
+  NSArray<RTCVideoCodecInfo *> *supportedCodecs =
+      [[[ARDVideoEncoderFactory alloc] init] supportedCodecs];
+  return [supportedCodecs valueForKey:@"fullName"];
 }
 
 - (NSString *)currentVideoCodecSettingFromStore {
@@ -154,7 +154,7 @@ static NSArray<NSString *> *videoCodecsStaticValues() {
 }
 
 - (NSString *)defaultVideoCodecSetting {
-  return videoCodecsStaticValues()[0];
+  return [self availableVideoCodecs][0];
 }
 
 - (int)videoResolutionComponentAtIndex:(int)index inString:(NSString *)resolution {
