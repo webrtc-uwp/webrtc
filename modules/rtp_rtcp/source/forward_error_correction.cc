@@ -29,6 +29,16 @@ namespace webrtc {
 namespace {
 // Transport header size in bytes. Assume UDP/IPv4 as a reasonable minimum.
 constexpr size_t kTransportOverhead = 28;
+
+inline uint16_t AbsSequenceNumberDifference(uint16_t a, uint16_t b) {
+  // The static cast interprets high bit as two's complement sign,
+  // which does the right thing with respect to wrap-around.
+  int diff = static_cast<int16_t>(a - b);
+  // TODO(nisse): We should have a SafaAbs which can take a signed value as
+  // input and produce the result as the unsigned type of the same size.
+  return static_cast<uint16_t>(std::abs(diff));
+}
+
 }  // namespace
 
 ForwardErrorCorrection::Packet::Packet() : length(0), data(), ref_count_(0) {}
@@ -500,11 +510,9 @@ void ForwardErrorCorrection::InsertPacket(
     // RED+ULPFEC is used.
     auto it = received_fec_packets_.begin();
     while (it != received_fec_packets_.end()) {
-      // TODO(nisse): This handling of wraparound appears broken, should be
-      // static_cast<int16_t>(
-      //      received_packet.seq_num - back_recovered_packet->seq_num)
-      uint16_t seq_num_diff = abs(static_cast<int>(received_packet.seq_num) -
-                                  static_cast<int>((*it)->seq_num));
+      uint16_t seq_num_diff =
+          AbsSequenceNumberDifference(received_packet.seq_num,
+                                      (*it)->seq_num);
       if (seq_num_diff > 0x3fff) {
         it = received_fec_packets_.erase(it);
       } else {
@@ -720,12 +728,9 @@ void ForwardErrorCorrection::DecodeFec(const ReceivedPacket& received_packet,
         recovered_packets->back().get();
 
     if (received_packet.ssrc == back_recovered_packet->ssrc) {
-      // TODO(nisse): This handling of wraparound appears broken, should be
-      // static_cast<int16_t>(
-      //      received_packet.seq_num - back_recovered_packet->seq_num)
       const unsigned int seq_num_diff =
-          abs(static_cast<int>(received_packet.seq_num) -
-              static_cast<int>(back_recovered_packet->seq_num));
+          AbsSequenceNumberDifference(received_packet.seq_num,
+                                      back_recovered_packet->seq_num);
       if (seq_num_diff > max_media_packets) {
         // A big gap in sequence numbers. The old recovered packets
         // are now useless, so it's safe to do a reset.
