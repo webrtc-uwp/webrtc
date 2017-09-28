@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "569a5ccd_a1cea596",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-28T09:00:50Z",
+      "side": 1,
+      "message": "I thought pointers were recommended over optionals for function arguments (as if there were a .get() method, analogous to std::unique_ptr). But I agree it\u0027s a bit awkward here.\n\nI\u0027m changing to optional, passed by value. I\u0027d expect the function will be inlined, so value or const\u0026 shouldn\u0027t matter. \n\nI broke this out to a separate function mainly because early return made the logic easier. For a moment I considered instead using the pattern\n\n  do {\n    if (...) break;  // Corresponds to return true in current ps\n    if (...) return; // Corresponds to return false\n  } while (0)\n\n  ...update the timestamps...\n\nbut that would not have been so nice to the reader. ;-)",
+      "parentUuid": "96e70c0e_8ba425ec",
+      "revId": "f76ea6ac78320d59f16fef6bfd93f8749c980b3d",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1d1faf4d_5e4cbc68",
         "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-27T16:54:37Z",
       "side": 1,
       "message": "Do you need to add a test for this code path? I could easily see this being messed up by someone who\u0027s not wary of the detail.",
+      "revId": "f76ea6ac78320d59f16fef6bfd93f8749c980b3d",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e68b6194_62e33d45",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-28T09:00:50Z",
+      "side": 1,
+      "message": "Makes sense, I\u0027ll see what I can do.",
+      "parentUuid": "1d1faf4d_5e4cbc68",
       "revId": "f76ea6ac78320d59f16fef6bfd93f8749c980b3d",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "73c27709_0dbd710b",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-28T09:00:50Z",
+      "side": 1,
+      "message": "It makes sense to switch to optional argument here, but I think in general, ?: is the way to do it. Quoting api/optional.h,\n\n//   When you want to pass a value of a\n//   type T that can fail to be there, const T* is almost always both fastest\n//   and cleanest.\n\nThe string \"? \u0026*\" occurs in two other places in our code, one added by me, one by kwiberg. Both simulate the missing method rtc::Optional::get(), just like here.",
+      "parentUuid": "9f5d2701_9dd94648",
+      "revId": "f76ea6ac78320d59f16fef6bfd93f8749c980b3d",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cbad9e1a_0f5f40bc",
         "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
         "patchSetId": 1
@@ -67,6 +121,24 @@
       "revId": "f76ea6ac78320d59f16fef6bfd93f8749c980b3d",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "085ae3f1_1ea6d840",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-28T09:00:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cbad9e1a_0f5f40bc",
+      "revId": "f76ea6ac78320d59f16fef6bfd93f8749c980b3d",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "20e6f619_724bb1e0",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-28T09:00:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9f617c01_9825f406",
+      "revId": "f76ea6ac78320d59f16fef6bfd93f8749c980b3d",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e96e2dbd_3b3de386",
         "filename": "modules/rtp_rtcp/test/testAPI/test_api_audio.cc",
         "patchSetId": 1
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "ca67571c_a86e60fa",
+        "filename": "modules/rtp_rtcp/test/testAPI/test_api_audio.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-28T09:00:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e96e2dbd_3b3de386",
+      "revId": "f76ea6ac78320d59f16fef6bfd93f8749c980b3d",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "30fd4d6a_df565575",
         "filename": "modules/rtp_rtcp/test/testAPI/test_api_audio.cc",
         "patchSetId": 1
@@ -118,6 +226,24 @@
       "revId": "f76ea6ac78320d59f16fef6bfd93f8749c980b3d",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b4b51ba_07b208f7",
+        "filename": "modules/rtp_rtcp/test/testAPI/test_api_audio.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-28T09:00:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "30fd4d6a_df565575",
+      "revId": "f76ea6ac78320d59f16fef6bfd93f8749c980b3d",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
