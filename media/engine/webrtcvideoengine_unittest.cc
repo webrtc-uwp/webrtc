@@ -1021,10 +1021,13 @@ TEST_F(WebRtcVideoEngineTest, StreamParamsIdPassedToDecoderFactory) {
   EXPECT_EQ(sp.id, params[0].receive_stream_id);
 }
 
-TEST_F(WebRtcVideoEngineTest, DISABLED_RecreatesEncoderOnContentTypeChange) {
+TEST_F(WebRtcVideoEngineTest, ReconfiguresEncoderOnContentTypeChange) {
+  // This test uses actual webrtc streams, and verifies end-to-end that the
+  // encoder is updated with the new content type.
+  // The RecreatesEncoderOnContentTypeChange test below is similar but uses
+  // fake streams and verifies that new encoder instances are actually
+  // created.
   encoder_factory_.AddSupportedVideoCodecType("VP8");
-  std::unique_ptr<FakeCall> fake_call(
-      new FakeCall(webrtc::Call::Config(&event_log_)));
   std::unique_ptr<VideoMediaChannel> channel(SetUpForExternalEncoderFactory());
   ASSERT_TRUE(
       channel->AddSendStream(cricket::StreamParams::CreateLegacy(kSsrc)));
@@ -1043,28 +1046,18 @@ TEST_F(WebRtcVideoEngineTest, DISABLED_RecreatesEncoderOnContentTypeChange) {
             capturer.Start(capturer.GetSupportedFormats()->front()));
   EXPECT_TRUE(capturer.CaptureFrame());
   ASSERT_TRUE(encoder_factory_.WaitForCreatedVideoEncoders(1));
+  EXPECT_TRUE(encoder_factory_.encoders().back()->WaitForInitEncode());
   EXPECT_EQ(webrtc::kRealtimeVideo,
             encoder_factory_.encoders().back()->GetCodecSettings().mode);
-
-  EXPECT_TRUE(channel->SetVideoSend(kSsrc, true, &options, &capturer));
-  EXPECT_TRUE(capturer.CaptureFrame());
-  // No change in content type, keep current encoder.
-  EXPECT_EQ(1, encoder_factory_.GetNumCreatedEncoders());
 
   options.is_screencast.emplace(true);
   EXPECT_TRUE(channel->SetVideoSend(kSsrc, true, &options, &capturer));
   EXPECT_TRUE(capturer.CaptureFrame());
-  // Change to screen content, recreate encoder. For the simulcast encoder
-  // adapter case, this will result in two calls since InitEncode triggers a
-  // a new instance.
+  // Change to screen content.
   ASSERT_TRUE(encoder_factory_.WaitForCreatedVideoEncoders(2));
+  EXPECT_TRUE(encoder_factory_.encoders().back()->WaitForInitEncode());
   EXPECT_EQ(webrtc::kScreensharing,
             encoder_factory_.encoders().back()->GetCodecSettings().mode);
-
-  EXPECT_TRUE(channel->SetVideoSend(kSsrc, true, &options, &capturer));
-  EXPECT_TRUE(capturer.CaptureFrame());
-  // Still screen content, no need to update encoder.
-  EXPECT_EQ(2, encoder_factory_.GetNumCreatedEncoders());
 
   options.is_screencast.emplace(false);
   options.video_noise_reduction.emplace(false);
@@ -1073,12 +1066,113 @@ TEST_F(WebRtcVideoEngineTest, DISABLED_RecreatesEncoderOnContentTypeChange) {
   // a non |is_screencast| option just to verify it doesn't affect recreation.
   EXPECT_TRUE(capturer.CaptureFrame());
   ASSERT_TRUE(encoder_factory_.WaitForCreatedVideoEncoders(3));
+  EXPECT_TRUE(encoder_factory_.encoders().back()->WaitForInitEncode());
   EXPECT_EQ(webrtc::kRealtimeVideo,
             encoder_factory_.encoders().back()->GetCodecSettings().mode);
 
   // Remove stream previously added to free the external encoder instance.
   EXPECT_TRUE(channel->RemoveSendStream(kSsrc));
   EXPECT_EQ(0u, encoder_factory_.encoders().size());
+}
+
+TEST_F(WebRtcVideoEngineTest, RecreatesEncoderOnContentTypeChange) {
+  cricket::FakeWebRtcVideoEncoderFactory encoder_factory;
+  // Set another codec than VP8, so that the encoder factory won't be wrapped
+  // in a WebRtcSimulcastEncoderFactory, which prevents us from properly
+  // detecting the codec be recreated (encoder_factory won't be called until
+  // InitEncode in that case, and will be indistinguishable from just calling
+  // ReconfigureEncoder).
+  encoder_factory_.AddSupportedVideoCodecType("VP9");
+  FakeCall fake_call((webrtc::Call::Config(&event_log_)));
+  call_.reset(&fake_call);
+  std::unique_ptr<VideoMediaChannel> channel(SetUpForExternalEncoderFactory());
+  ASSERT_TRUE(
+      channel->AddSendStream(cricket::StreamParams::CreateLegacy(kSsrc)));
+  cricket::VideoCodec codec = GetEngineCodec("VP9");
+  cricket::VideoSendParameters parameters;
+  parameters.codecs.push_back(codec);
+  channel->OnReadyToSend(true);
+  channel->SetSend(true);
+  ASSERT_TRUE(channel->SetSendParameters(parameters));
+
+  cricket::FakeVideoCapturer capturer;
+  VideoOptions options;
+  EXPECT_TRUE(channel->SetVideoSend(kSsrc, true, &options, &capturer));
+  EXPECT_EQ(cricket::CS_RUNNING,
+            capturer.Start(capturer.GetSupportedFormats()->front()));
+  EXPECT_TRUE(capturer.CaptureFrame());
+  ASSERT_TRUE(encoder_factory_.WaitForCreatedVideoEncoders(1));
+  ASSERT_EQ(1, fake_call.GetNumCreatedSendStreams());
+  EXPECT_EQ(
+      1,
+      fake_call.GetVideoSendStreams().back()->num_encoder_reconfigurations());
+  EXPECT_EQ(
+      webrtc::VideoEncoderConfig::ContentType::kRealtimeVideo,
+      fake_call.GetVideoSendStreams().back()->GetEncoderConfig().content_type);
+  webrtc::VideoCodecVP9 vp9_settings;
+  EXPECT_TRUE(
+      fake_call.GetVideoSendStreams().back()->GetVp9Settings(&vp9_settings));
+  EXPECT_TRUE(vp9_settings.denoisingOn);
+
+  // No change in content type, keep current encoder, but reinitialize it
+  // because of option change.
+  options.video_noise_reduction.emplace(false);
+  EXPECT_TRUE(channel->SetVideoSend(kSsrc, true, &options, &capturer));
+  EXPECT_TRUE(capturer.CaptureFrame());
+  EXPECT_EQ(1, encoder_factory_.GetNumCreatedEncoders());
+  ASSERT_EQ(1, fake_call.GetNumCreatedSendStreams());
+  EXPECT_EQ(
+      2,
+      fake_call.GetVideoSendStreams().back()->num_encoder_reconfigurations());
+  EXPECT_EQ(
+      webrtc::VideoEncoderConfig::ContentType::kRealtimeVideo,
+      fake_call.GetVideoSendStreams().back()->GetEncoderConfig().content_type);
+  EXPECT_TRUE(
+      fake_call.GetVideoSendStreams().back()->GetVp9Settings(&vp9_settings));
+  EXPECT_FALSE(vp9_settings.denoisingOn);
+
+  // Change to screen content, recreate encoder, and update denoiser option.
+  options.is_screencast.emplace(true);
+  options.video_noise_reduction.emplace(true);
+  EXPECT_TRUE(channel->SetVideoSend(kSsrc, true, &options, &capturer));
+  EXPECT_TRUE(capturer.CaptureFrame());
+  ASSERT_TRUE(encoder_factory_.WaitForCreatedVideoEncoders(2));
+  EXPECT_EQ(2, encoder_factory_.GetNumCreatedEncoders());
+  ASSERT_EQ(2, fake_call.GetNumCreatedSendStreams());
+  // Encoder will get configured twice, once when recreating, and again when
+  // applying the changed options (video_noise_reduction).
+  EXPECT_EQ(
+      2,
+      fake_call.GetVideoSendStreams().back()->num_encoder_reconfigurations());
+  EXPECT_EQ(
+      webrtc::VideoEncoderConfig::ContentType::kScreen,
+      fake_call.GetVideoSendStreams().back()->GetEncoderConfig().content_type);
+  EXPECT_TRUE(
+      fake_call.GetVideoSendStreams().back()->GetVp9Settings(&vp9_settings));
+  EXPECT_FALSE(vp9_settings.denoisingOn);  // Overriden by content type.
+
+  // Change back to regular video content, update encoder. Don't change
+  // denoiser option.
+  options.is_screencast.emplace(false);
+  EXPECT_TRUE(channel->SetVideoSend(kSsrc, true, &options, &capturer));
+  EXPECT_TRUE(capturer.CaptureFrame());
+  ASSERT_TRUE(encoder_factory_.WaitForCreatedVideoEncoders(3));
+  EXPECT_EQ(3, encoder_factory_.GetNumCreatedEncoders());
+  ASSERT_EQ(3, fake_call.GetNumCreatedSendStreams());
+  EXPECT_EQ(
+      1,
+      fake_call.GetVideoSendStreams().back()->num_encoder_reconfigurations());
+  EXPECT_EQ(
+      webrtc::VideoEncoderConfig::ContentType::kRealtimeVideo,
+      fake_call.GetVideoSendStreams().back()->GetEncoderConfig().content_type);
+  EXPECT_TRUE(
+      fake_call.GetVideoSendStreams().back()->GetVp9Settings(&vp9_settings));
+  EXPECT_TRUE(vp9_settings.denoisingOn);  // True again because of content type.
+
+  // Remove stream previously added to free the external encoder instance.
+  EXPECT_TRUE(channel->RemoveSendStream(kSsrc));
+  EXPECT_EQ(0u, encoder_factory_.encoders().size());
+  call_.release();
 }
 
 #define WEBRTC_BASE_TEST(test) \
