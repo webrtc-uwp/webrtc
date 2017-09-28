@@ -22,6 +22,30 @@
       "revId": "ec083eccecc067323f2eaad9196bf468443121c0",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3892011f_c0bd3ac3",
+        "filename": "modules/rtp_rtcp/source/rtp_payload_registry.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-28T18:18:19Z",
+      "side": 0,
+      "message": "No, because although RtpUtility isn\u0027t in an API directory, it was #included by a file that is, and a client was using this field. IIRC.\n\nI\u0027m removing it in CL #3.",
+      "parentUuid": "16ac6023_e764cfe5",
+      "range": {
+        "startLine": 27,
+        "startChar": 7,
+        "endLine": 27,
+        "endChar": 20
+      },
+      "revId": "ec083eccecc067323f2eaad9196bf468443121c0",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
