@@ -1643,6 +1643,9 @@ bool WebRtcVideoChannel::WebRtcVideoSendStream::SetVideoSend(
       SetCodec(*parameters_.codec_settings, force_encoder_allocation);
       // Mark screenshare parameter as being updated, then test for any other
       // changes that may require codec reconfiguration.
+      // TODO(sprang): Refactor code to guarantee that ReconfigureEncoder is a
+      // subset SetCodec instead, so that we don't unnecessarily reconfigure
+      // the encoder twice.
       old_options.is_screencast = options->is_screencast;
     }
     if (parameters_.options != old_options) {
