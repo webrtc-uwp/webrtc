@@ -173,7 +173,7 @@ class OpenSSLStreamAdapter : public SSLStreamAdapter {
   // the openssl library. Returns an int interpreted as a boolean in
   // the C style: zero means verification failure, non-zero means
   // passed.
-  static int SSLVerifyCallback(int ok, X509_STORE_CTX* store);
+  static int SSLVerifyCallback(X509_STORE_CTX* store, void* arg);
 
   bool waiting_to_verify_peer_certificate() const {
     return client_auth_enabled() && !peer_certificate_verified_;
