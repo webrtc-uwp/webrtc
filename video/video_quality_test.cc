@@ -46,6 +46,7 @@
 #include "system_wrappers/include/field_trial.h"
 #include "test/gtest.h"
 #include "test/layer_filtering_transport.h"
+#include "test/rtp_file_writer.h"
 #include "test/run_loop.h"
 #include "test/statistics.h"
 #include "test/testsupport/fileutils.h"
@@ -54,8 +55,6 @@
 #include "test/vcm_capturer.h"
 #include "test/video_renderer.h"
 #include "voice_engine/include/voe_base.h"
-
-#include "test/rtp_file_writer.h"
 
 DEFINE_bool(save_worst_frame,
             false,
@@ -162,8 +161,7 @@ class VideoAnalyzer : public PacketReceiver,
                 int selected_sl,
                 int selected_tl,
                 bool is_quick_test_enabled,
-                Clock* clock,
-                std::string rtp_dump_name)
+                Clock* clock)
       : transport_(transport),
         receiver_(nullptr),
         call_(nullptr),
@@ -199,9 +197,7 @@ class VideoAnalyzer : public PacketReceiver,
         is_quick_test_enabled_(is_quick_test_enabled),
         stats_polling_thread_(&PollStatsThread, this, "StatsPoller"),
         comparison_available_event_(false, false),
-        done_(true, false),
-        clock_(clock),
-        start_ms_(clock->TimeInMilliseconds()) {
+        done_(true, false) {
     // Create thread pool for CPU-expensive PSNR/SSIM calculations.
 
     // Try to use about as many threads as cores, but leave kMinCoresLeft alone,
@@ -226,12 +222,6 @@ class VideoAnalyzer : public PacketReceiver,
           new rtc::PlatformThread(&FrameComparisonThread, this, "Analyzer");
       thread->Start();
       comparison_thread_pool_.push_back(thread);
-    }
-
-    if (!rtp_dump_name.empty()) {
-      fprintf(stdout, "Writing rtp dump to %s\n", rtp_dump_name.c_str());
-      rtp_file_writer_.reset(test::RtpFileWriter::Create(
-          test::RtpFileWriter::kRtpDump, rtp_dump_name));
     }
   }
 
@@ -284,15 +274,6 @@ class VideoAnalyzer : public PacketReceiver,
     // RTP packet timestamps and so they would confuse wrap_handler_.
     if (RtpHeaderParser::IsRtcp(packet, length)) {
       return receiver_->DeliverPacket(media_type, packet, length, packet_time);
-    }
-
-    if (rtp_file_writer_) {
-      test::RtpPacket p;
-      memcpy(p.data, packet, length);
-      p.length = length;
-      p.original_length = length;
-      p.time_ms = clock_->TimeInMilliseconds() - start_ms_;
-      rtp_file_writer_->WritePacket(&p);
     }
 
     RtpUtility::RtpHeaderParser parser(packet, length);
@@ -1122,10 +1103,6 @@ class VideoAnalyzer : public PacketReceiver,
   rtc::Event comparison_available_event_;
   std::deque<FrameComparison> comparisons_ RTC_GUARDED_BY(comparison_lock_);
   rtc::Event done_;
-
-  std::unique_ptr<test::RtpFileWriter> rtp_file_writer_;
-  Clock* const clock_;
-  const int64_t start_ms_;
 };
 
 class Vp8EncoderFactory : public cricket::WebRtcVideoEncoderFactory {
@@ -1835,13 +1812,21 @@ void VideoQualityTest::RunWithAnalyzer(const Params& params) {
                         &recv_transport]() {
     CreateCalls(call_config, call_config);
 
+    std::unique_ptr<test::RtpFileWriter> rtp_file_writer;
+    if (!params_.logging.rtp_dump_name.empty()) {
+      LOG(LS_INFO) << "Writing rtp dump to " << params_.logging.rtp_dump_name;
+      rtp_file_writer.reset(test::RtpFileWriter::Create(
+          test::RtpFileWriter::kRtpDump, params_.logging.rtp_dump_name));
+    }
+
     send_transport = rtc::MakeUnique<test::LayerFilteringTransport>(
         &task_queue_, params_.pipe, sender_call_.get(), kPayloadTypeVP8,
         kPayloadTypeVP9, params_.video.selected_tl, params_.ss.selected_sl,
-        payload_type_map_);
+        payload_type_map_, std::move(rtp_file_writer));
 
     recv_transport = rtc::MakeUnique<test::DirectTransport>(
-        &task_queue_, params_.pipe, receiver_call_.get(), payload_type_map_);
+        &task_queue_, params_.pipe, receiver_call_.get(), payload_type_map_,
+        std::unique_ptr<test::RtpFileWriter>());
   });
 
   std::string graph_title = params_.analyzer.graph_title;
@@ -1858,8 +1843,7 @@ void VideoQualityTest::RunWithAnalyzer(const Params& params) {
       kVideoSendSsrcs[params_.ss.selected_stream],
       kSendRtxSsrcs[params_.ss.selected_stream],
       static_cast<size_t>(params_.ss.selected_stream), params.ss.selected_sl,
-      params_.video.selected_tl, is_quick_test_enabled, clock_,
-      params_.logging.rtp_dump_name);
+      params_.video.selected_tl, is_quick_test_enabled, clock_);
 
   task_queue_.SendTask([&]() {
     analyzer->SetCall(sender_call_.get());
@@ -2021,15 +2005,23 @@ void VideoQualityTest::RunWithRenderers(const Params& params) {
 
     CreateCalls(call_config, call_config);
 
+    std::unique_ptr<test::RtpFileWriter> rtp_file_writer;
+    if (!params_.logging.rtp_dump_name.empty()) {
+      LOG(LS_INFO) << "Writing rtp dump to " << params_.logging.rtp_dump_name;
+      rtp_file_writer.reset(test::RtpFileWriter::Create(
+          test::RtpFileWriter::kRtpDump, params_.logging.rtp_dump_name));
+    }
+
     // TODO(minyue): consider if this is a good transport even for audio only
     // calls.
     send_transport = rtc::MakeUnique<test::LayerFilteringTransport>(
         &task_queue_, params.pipe, sender_call_.get(), kPayloadTypeVP8,
         kPayloadTypeVP9, params.video.selected_tl, params_.ss.selected_sl,
-        payload_type_map_);
+        payload_type_map_, std::move(rtp_file_writer));
 
     recv_transport = rtc::MakeUnique<test::DirectTransport>(
-        &task_queue_, params_.pipe, receiver_call_.get(), payload_type_map_);
+        &task_queue_, params_.pipe, receiver_call_.get(), payload_type_map_,
+        std::unique_ptr<test::RtpFileWriter>());
 
     // TODO(ivica): Use two calls to be able to merge with RunWithAnalyzer or at
     // least share as much code as possible. That way this test would also match

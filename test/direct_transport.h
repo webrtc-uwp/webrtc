@@ -10,8 +10,7 @@
 #ifndef TEST_DIRECT_TRANSPORT_H_
 #define TEST_DIRECT_TRANSPORT_H_
 
-#include <assert.h>
-
+#include <map>
 #include <memory>
 
 #include "api/call/transport.h"
@@ -28,9 +27,11 @@ class PacketReceiver;
 
 namespace test {
 
-// Objects of this class are expected to be allocated and destroyed  on the
+class RtpFileWriter;
+
+// Objects of this class are expected to be allocated and destroyed on the
 // same task-queue - the one that's passed in via the constructor.
-class DirectTransport : public Transport {
+class DirectTransport : public Transport, private PacketReceiver {
  public:
   DirectTransport(SingleThreadedTaskQueueForTesting* task_queue,
                   Call* send_call,
@@ -39,12 +40,14 @@ class DirectTransport : public Transport {
   DirectTransport(SingleThreadedTaskQueueForTesting* task_queue,
                   const FakeNetworkPipe::Config& config,
                   Call* send_call,
-                  const std::map<uint8_t, MediaType>& payload_type_map);
+                  const std::map<uint8_t, MediaType>& payload_type_map,
+                  std::unique_ptr<test::RtpFileWriter> rtp_file_writer);
 
   DirectTransport(SingleThreadedTaskQueueForTesting* task_queue,
                   const FakeNetworkPipe::Config& config,
                   Call* send_call,
-                  std::unique_ptr<Demuxer> demuxer);
+                  std::unique_ptr<Demuxer> demuxer,
+                  std::unique_ptr<test::RtpFileWriter> rtp_file_writer);
 
   ~DirectTransport() override;
 
@@ -63,6 +66,11 @@ class DirectTransport : public Transport {
   int GetAverageDelayMs();
 
  private:
+  DeliveryStatus DeliverPacket(MediaType media_type,
+                               const uint8_t* packet,
+                               size_t length,
+                               const PacketTime& packet_time) override;
+
   void SendPackets();
 
   Call* const send_call_;
@@ -75,6 +83,10 @@ class DirectTransport : public Transport {
   FakeNetworkPipe fake_network_;
 
   rtc::SequencedTaskChecker sequence_checker_;
+
+  PacketReceiver* receiver_;
+  const int64_t start_ms_;
+  std::unique_ptr<test::RtpFileWriter> rtp_file_writer_;
 };
 }  // namespace test
 }  // namespace webrtc

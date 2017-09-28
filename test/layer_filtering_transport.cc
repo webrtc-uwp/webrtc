@@ -28,8 +28,13 @@ LayerFilteringTransport::LayerFilteringTransport(
     uint8_t vp9_video_payload_type,
     int selected_tl,
     int selected_sl,
-    const std::map<uint8_t, MediaType>& payload_type_map)
-    : DirectTransport(task_queue, config, send_call, payload_type_map),
+    const std::map<uint8_t, MediaType>& payload_type_map,
+    std::unique_ptr<test::RtpFileWriter> rtp_file_writer)
+    : DirectTransport(task_queue,
+                      config,
+                      send_call,
+                      payload_type_map,
+                      std::move(rtp_file_writer)),
       vp8_video_payload_type_(vp8_video_payload_type),
       vp9_video_payload_type_(vp9_video_payload_type),
       selected_tl_(selected_tl),
@@ -52,7 +57,6 @@ bool LayerFilteringTransport::SendRtp(const uint8_t* packet,
   RtpUtility::RtpHeaderParser parser(packet, length);
   RTPHeader header;
   parser.Parse(&header);
-
   RTC_DCHECK_LE(length, IP_PACKET_SIZE);
   uint8_t temp_buffer[IP_PACKET_SIZE];
   memcpy(temp_buffer, packet, length);

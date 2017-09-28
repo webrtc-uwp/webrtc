@@ -285,8 +285,8 @@ void Loopback() {
                   flags::GetCaptureDevice()};
   params.audio = {flags::FLAG_audio, flags::FLAG_audio_video_sync,
                   flags::FLAG_audio_dtx};
-  params.logging = {flags::FLAG_logs, flags::FLAG_rtc_event_log_name,
-                    flags::FLAG_rtp_dump_name, flags::FLAG_encoded_frame_path};
+  params.logging = {flags::FLAG_logs, flags::RtcEventLogName(),
+                    flags::RtpDumpName(), flags::EncodedFramePath()};
   params.screenshare.enabled = false;
   params.analyzer = {"video", 0.0, 0.0, flags::DurationSecs(),
       flags::OutputFilename(), flags::GraphTitle()};
@@ -318,8 +318,8 @@ void Loopback() {
 
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
-  rtc::FlagList::SetFlagsFromCommandLine(&argc, argv, true);
-  if (webrtc::flags::FLAG_help) {
+  int flags_status = rtc::FlagList::SetFlagsFromCommandLine(&argc, argv, true);
+  if (webrtc::flags::FLAG_help || flags_status > 0) {
     rtc::FlagList::Print(nullptr, false);
     return 0;
   }
