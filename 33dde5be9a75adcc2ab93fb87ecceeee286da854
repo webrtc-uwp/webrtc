@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f087d0f7_c27f3eb8",
+        "filename": "sdk/objc/Framework/Classes/VideoToolbox/RTCVideoEncoderH264.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-28T14:54:58Z",
+      "side": 1,
+      "message": "C++ nit: It\u0027s common to do reset() in these cases, i.e.:\n_bitrateAdjuster.reset(new webrtc::BitrateAdjuster(webrtc::Clock::GetRealTimeClock(), .5, .95));",
+      "range": {
+        "startLine": 302,
+        "startChar": 0,
+        "endLine": 303,
+        "endChar": 81
+      },
+      "revId": "33dde5be9a75adcc2ab93fb87ecceeee286da854",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
