@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b307973_502f0bc5",
+        "filename": "audio/audio_receive_stream.cc",
+        "patchSetId": 8
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 5100
+      },
+      "writtenOn": "2017-09-28T09:28:09Z",
+      "side": 1,
+      "message": "Nit: constexpr is generally preferred.",
+      "range": {
+        "startLine": 200,
+        "startChar": 2,
+        "endLine": 200,
+        "endChar": 7
+      },
+      "revId": "50534029880b5dc16ce74ea8cd5e21d8f60ef1a9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
