@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10c20035_046bd010",
+        "filename": "modules/rtp_rtcp/include/rtp_rtcp_defines.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-28T18:54:31Z",
+      "side": 1,
+      "message": "Optional already has DCHECK in the operator*\nyou sure want to duplicate it?",
+      "range": {
+        "startLine": 68,
+        "startChar": 31,
+        "endLine": 68,
+        "endChar": 0
+      },
+      "revId": "020351ba6c214b3af19d0d380f43c91662e59b40",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    }
+  ]
+}
