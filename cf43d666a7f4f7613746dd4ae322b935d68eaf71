@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa429e8c_4cbc100d",
+        "filename": "media/engine/simulcast_encoder_adapter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 5023
+      },
+      "writtenOn": "2017-09-28T11:49:32Z",
+      "side": 1,
+      "message": "We need to call the methods in this order, to not attach the task checker on the call to RegisterEncodeCompleteCallback.",
+      "revId": "cf43d666a7f4f7613746dd4ae322b935d68eaf71",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
