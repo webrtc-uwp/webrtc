@@ -25,6 +25,7 @@
 
 #if defined(WEBRTC_IOS)
 #import "Common/RTCUIApplicationStatusObserver.h"
+#import "WebRTC/UIDevice+RTCDevice.h"
 #endif
 
 // Struct that we pass to the decoder per frame to decode. We receive it again
@@ -236,7 +237,15 @@ void decompressionOutputCallback(void *decoder,
 
 - (void)destroyDecompressionSession {
   if (_decompressionSession) {
-    VTDecompressionSessionInvalidate(_decompressionSession);
+#if defined(WEBRTC_IOS)
+    if ([UIDevice isIOS11OrLater]) {
+      VTDecompressionSessionWaitForAsynchronousFrames(_decompressionSession);
+    } else {
+#endif
+      VTDecompressionSessionInvalidate(_decompressionSession);
+#if defined(WEBRTC_IOS)
+    }
+#endif
     CFRelease(_decompressionSession);
     _decompressionSession = nullptr;
   }
