@@ -55,6 +55,8 @@ rtc_static_library("rtc_pc_base") {
     "srtpsession.h",
     "srtptransport.cc",
     "srtptransport.h",
+    "transportcontroller.cc",
+    "transportcontroller.h",
     "voicechannel.h",
   ]
 
@@ -269,6 +271,7 @@ if (rtc_include_tests) {
       "srtpsession_unittest.cc",
       "srtptestutil.h",
       "srtptransport_unittest.cc",
+      "transportcontroller_unittest.cc",
     ]
 
     include_dirs = [ "//third_party/libsrtp/srtp" ]
@@ -318,6 +321,7 @@ if (rtc_include_tests) {
       "test/fakedatachannelprovider.h",
       "test/fakeperiodicvideocapturer.h",
       "test/fakertccertificategenerator.h",
+      "test/faketransportcontroller.h",
       "test/fakevideotrackrenderer.h",
       "test/fakevideotracksource.h",
       "test/mock_datachannel.h",

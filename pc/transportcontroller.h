@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef P2P_BASE_TRANSPORTCONTROLLER_H_
-#define P2P_BASE_TRANSPORTCONTROLLER_H_
+#ifndef PC_TRANSPORTCONTROLLER_H_
+#define PC_TRANSPORTCONTROLLER_H_
 
 #include <map>
 #include <memory>
@@ -29,7 +29,7 @@
 namespace rtc {
 class Thread;
 class PacketTransportInternal;
-}
+}  // namespace rtc
 namespace webrtc {
 class MetricsObserverInterface;
 }
@@ -276,4 +276,4 @@ class TransportController : public sigslot::has_slots<>,
 
 }  // namespace cricket
 
-#endif  // P2P_BASE_TRANSPORTCONTROLLER_H_
+#endif  // PC_TRANSPORTCONTROLLER_H_
