@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "df5061af_fd298423",
+        "filename": "audio/audio_receive_stream.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-28T22:25:47Z",
+      "side": 1,
+      "message": "The issue occurs if \"jitterBufferDelayMs\" changes to \"jitterBufferDelayNs\", and the person making the change adds more zeros, but the wrong number. Still a pretty minor risk, admittedly, but might as well avoid it if we can.",
+      "parentUuid": "77a773e7_ebbaeecb",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7e8494b5_51865b1b",
         "filename": "audio/audio_receive_stream_unittest.cc",
         "patchSetId": 6
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "Well, the purpose of the test is to test the copying. This particular line does what all the other lines of the test do (plus the trivial conversion from ms to s). Hard coding a value here should not be done without changing the whole test. Hard coded values would also make the test harder to read. Here it is very clear that we test the copying of struct members.",
       "parentUuid": "7e8494b5_51865b1b",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0831f80_9d5404e7",
+        "filename": "audio/audio_receive_stream_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-28T22:25:47Z",
+      "side": 1,
+      "message": "\u003e This particular line does what all the other lines of the test do\n\nMost of our test code goes against best practices, but that doesn\u0027t mean it should stay that way.\n\n\u003e Hard coding a value here should not be done without changing the whole test\n\nThen can you add a TODO and/or bug to change the whole test?\n\n\u003e Hard coded values would also make the test harder to read.\n\nThere are solutions to that. For example,\n\nconstexpr kJitterBufferDelayMs \u003d 456;\nconstexpr kJitterBufferDelaySeconds \u003d 0.456;\nconst NetworkStatistics kNetworkStats \u003d { ..., kJitterBufferDelayMs, ...};\n...\nEXPECT_EQ(kJitterBufferDelaySeconds, stats.jitter_buffer_delay_seconds);",
+      "parentUuid": "0d4d509f_864e2034",
       "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
@@ -212,6 +248,24 @@
     },
     {
       "key": {
+        "uuid": "cd6f27bf_575013e9",
+        "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 1705,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-28T22:25:47Z",
+      "side": 1,
+      "message": "Oh, is the delay built based on when GetAudio is called? Then it could be:\n\nif (packets_sent \u003e\u003d kDelayInPackets) {\n  neteq_-\u003eGetAudio(...);\n}\n\nWhich I still think would be more readable.",
+      "parentUuid": "44809b58_3693e9c6",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fb4f85c3_fae7c531",
         "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
         "patchSetId": 6
@@ -247,6 +301,24 @@
     },
     {
       "key": {
+        "uuid": "0b408898_ad60ccc1",
+        "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 1735,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-28T22:25:47Z",
+      "side": 1,
+      "message": "What I meant was, at the top of the test, do:\n\n// Explain why it\u0027s \"1 + 2 + 8 * 3\" here. I don\u0027t understand myself. Is it that the last\n// two frames are only delayed by 1 and 2 frames, because GetAudio is called 3 times in\n// a row?\nconstexpr int kExpectedDelay \u003d (kSamples * kPacketLenMs) * (1 + 2 + 8 * 3)\n\nSee: https://engdoc.corp.google.com/eng/doc/devguide/coding/testing/unit-testing-best-practices.md?cl\u003dhead#control-structures-examples",
+      "parentUuid": "8d9db20e_4a5d5dc2",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7def1377_e16e5945",
         "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
         "patchSetId": 6
@@ -279,6 +351,24 @@
       "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eae8af14_e1872408",
+        "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 1738,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-28T22:25:47Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "72b44e7e_37563b74",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
