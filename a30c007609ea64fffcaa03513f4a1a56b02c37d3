@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0bf6b108_531d091b",
+        "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 5520
+      },
+      "writtenOn": "2017-09-28T14:13:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9f82dc28_997f9361",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 43
+      },
+      "revId": "a30c007609ea64fffcaa03513f4a1a56b02c37d3",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3e330527_87d48e09",
         "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
         "patchSetId": 1
@@ -45,6 +69,30 @@
       "revId": "a30c007609ea64fffcaa03513f4a1a56b02c37d3",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e320e684_c7568a32",
+        "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 5520
+      },
+      "writtenOn": "2017-09-28T14:13:09Z",
+      "side": 1,
+      "message": "No, T should always be an instance of a CFTypeRef, which is already a pointer.",
+      "parentUuid": "3e330527_87d48e09",
+      "range": {
+        "startLine": 24,
+        "startChar": 27,
+        "endLine": 24,
+        "endChar": 28
+      },
+      "revId": "a30c007609ea64fffcaa03513f4a1a56b02c37d3",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "2be4fbb8_ee837e83",
+        "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 5520
+      },
+      "writtenOn": "2017-09-28T14:13:09Z",
+      "side": 1,
+      "message": "This is taken directly from the chromium impl here (https://cs.chromium.org/chromium/src/base/mac/scoped_typeref.h?sq\u003dpackage:chromium\u0026l\u003d87)\n\nBut you\u0027re right, this makes no sense.",
+      "parentUuid": "a7a50f67_1fc91264",
+      "range": {
+        "startLine": 49,
+        "startChar": 1,
+        "endLine": 49,
+        "endChar": 61
+      },
+      "revId": "a30c007609ea64fffcaa03513f4a1a56b02c37d3",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ce331e7b_372cdd93",
         "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
         "patchSetId": 1
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "e3ef4fca_54d42c91",
+        "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 5520
+      },
+      "writtenOn": "2017-09-28T14:13:09Z",
+      "side": 1,
+      "message": "This gets very tedious to use without a default. I also think this is by far the most common case. It\u0027s also safer as a default, as it won\u0027t cause leaks.",
+      "parentUuid": "ce331e7b_372cdd93",
+      "range": {
+        "startLine": 61,
+        "startChar": 20,
+        "endLine": 61,
+        "endChar": 62
+      },
+      "revId": "a30c007609ea64fffcaa03513f4a1a56b02c37d3",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fef61c78_6e73a1f9",
         "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
         "patchSetId": 1
@@ -114,6 +210,30 @@
       "revId": "a30c007609ea64fffcaa03513f4a1a56b02c37d3",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9aaee5d9_fce5b43d",
+        "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 5520
+      },
+      "writtenOn": "2017-09-28T14:13:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fef61c78_6e73a1f9",
+      "range": {
+        "startLine": 70,
+        "startChar": 2,
+        "endLine": 70,
+        "endChar": 21
+      },
+      "revId": "a30c007609ea64fffcaa03513f4a1a56b02c37d3",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
