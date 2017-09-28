@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "ee413420_2c427190",
+        "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-28T14:51:55Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e320e684_c7568a32",
+      "range": {
+        "startLine": 24,
+        "startChar": 27,
+        "endLine": 24,
+        "endChar": 28
+      },
+      "revId": "a30c007609ea64fffcaa03513f4a1a56b02c37d3",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a7a50f67_1fc91264",
         "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
         "patchSetId": 1
@@ -143,6 +167,30 @@
     },
     {
       "key": {
+        "uuid": "63ed62c4_27c139ff",
+        "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-28T14:51:55Z",
+      "side": 1,
+      "message": "Ah, I thought ScopedCFTypeRef was like std::unique_ptr which is not copyable, but it\u0027s actually refcounted. Then it makes sense to be able to copy it.",
+      "parentUuid": "2be4fbb8_ee837e83",
+      "range": {
+        "startLine": 49,
+        "startChar": 1,
+        "endLine": 49,
+        "endChar": 61
+      },
+      "revId": "a30c007609ea64fffcaa03513f4a1a56b02c37d3",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ce331e7b_372cdd93",
         "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
         "patchSetId": 1
@@ -178,6 +226,30 @@
       "side": 1,
       "message": "This gets very tedious to use without a default. I also think this is by far the most common case. It\u0027s also safer as a default, as it won\u0027t cause leaks.",
       "parentUuid": "ce331e7b_372cdd93",
+      "range": {
+        "startLine": 61,
+        "startChar": 20,
+        "endLine": 61,
+        "endChar": 62
+      },
+      "revId": "a30c007609ea64fffcaa03513f4a1a56b02c37d3",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5c646c5_47b50d24",
+        "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-28T14:51:55Z",
+      "side": 1,
+      "message": "Ok, if it\u0027s far the most common case, let\u0027s keep it.",
+      "parentUuid": "e3ef4fca_54d42c91",
       "range": {
         "startLine": 61,
         "startChar": 20,
