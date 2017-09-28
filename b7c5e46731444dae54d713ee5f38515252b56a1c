@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b2e0b31a_575483cb",
+        "filename": "modules/desktop_capture/blank_detector_desktop_capturer_wrapper.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 5166
+      },
+      "writtenOn": "2017-09-28T23:34:42Z",
+      "side": 1,
+      "message": "I see no other references in this file to ERROR_PERMANENT; is this comment still accurate?",
+      "range": {
+        "startLine": 25,
+        "startChar": 52,
+        "endLine": 25,
+        "endChar": 0
+      },
+      "revId": "b7c5e46731444dae54d713ee5f38515252b56a1c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
