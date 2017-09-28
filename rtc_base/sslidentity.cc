@@ -13,11 +13,13 @@
 
 #include <ctime>
 #include <string>
+#include <utility>
 
 #include "rtc_base/base64.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/opensslidentity.h"
+#include "rtc_base/ptr_util.h"
 #include "rtc_base/sslfingerprint.h"
 
 namespace rtc {
@@ -196,15 +198,30 @@ std::string SSLIdentity::DerToPem(const std::string& pem_type,
 SSLCertChain::SSLCertChain(const std::vector<SSLCertificate*>& certs) {
   RTC_DCHECK(!certs.empty());
   certs_.resize(certs.size());
-  std::transform(certs.begin(), certs.end(), certs_.begin(), DupCert);
+  std::transform(
+      certs.begin(), certs.end(), certs_.begin(),
+      [](const SSLCertificate* cert) -> std::unique_ptr<SSLCertificate> {
+        return WrapUnique(cert->GetReference());
+      });
 }
 
 SSLCertChain::SSLCertChain(const SSLCertificate* cert) {
-  certs_.push_back(cert->GetReference());
+  certs_.push_back(WrapUnique(cert->GetReference()));
 }
 
-SSLCertChain::~SSLCertChain() {
-  std::for_each(certs_.begin(), certs_.end(), DeleteCert);
+SSLCertChain::SSLCertChain(std::vector<std::unique_ptr<SSLCertificate>> certs)
+    : certs_(std::move(certs)) {}
+
+SSLCertChain::~SSLCertChain() {}
+
+SSLCertChain* SSLCertChain::Copy() const {
+  std::vector<std::unique_ptr<SSLCertificate>> new_certs(certs_.size());
+  std::transform(certs_.begin(), certs_.end(), new_certs.begin(),
+                 [](const std::unique_ptr<SSLCertificate>& cert)
+                     -> std::unique_ptr<SSLCertificate> {
+                   return WrapUnique(cert->GetReference());
+                 });
+  return new SSLCertChain(std::move(new_certs));
 }
 
 // static
