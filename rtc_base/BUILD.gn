@@ -1116,6 +1116,7 @@ if (is_android) {
     java_files = [
       "java/src/org/webrtc/ContextUtils.java",
       "java/src/org/webrtc/Logging.java",
+      "java/src/org/webrtc/NativeLibrary.java",
       "java/src/org/webrtc/Size.java",
       "java/src/org/webrtc/ThreadUtils.java",
     ]
