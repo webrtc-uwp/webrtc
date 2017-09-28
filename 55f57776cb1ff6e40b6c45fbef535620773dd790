@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "db017d76_5161de86",
+        "filename": ".gitignore",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 5114
+      },
+      "writtenOn": "2017-09-28T12:40:02Z",
+      "side": 1,
+      "message": "There is no POLQA binary on Mac.\nHaving this line doesn\u0027t hurt but probably better to remove it.",
+      "revId": "55f57776cb1ff6e40b6c45fbef535620773dd790",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "797b7e3c_5feae3fd",
+        "filename": ".gitignore",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 5114
+      },
+      "writtenOn": "2017-09-28T12:40:02Z",
+      "side": 1,
+      "message": "While you\u0027re adding POLQA ignores, please also add win/*.dll",
+      "revId": "55f57776cb1ff6e40b6c45fbef535620773dd790",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3ba976ac_228b9695",
         "filename": "audio/BUILD.gn",
         "patchSetId": 2
@@ -17,6 +51,52 @@
         "startLine": 171,
         "startChar": 45,
         "endLine": 171,
+        "endChar": 55
+      },
+      "revId": "55f57776cb1ff6e40b6c45fbef535620773dd790",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1677547c_e28145e9",
+        "filename": "audio/BUILD.gn",
+        "patchSetId": 2
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 5114
+      },
+      "writtenOn": "2017-09-28T12:40:02Z",
+      "side": 1,
+      "message": "It will also need all the DLLs from that folder",
+      "range": {
+        "startLine": 171,
+        "startChar": 45,
+        "endLine": 171,
+        "endChar": 55
+      },
+      "revId": "55f57776cb1ff6e40b6c45fbef535620773dd790",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d54f7c1e_13263a67",
+        "filename": "audio/BUILD.gn",
+        "patchSetId": 2
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 5114
+      },
+      "writtenOn": "2017-09-28T12:40:02Z",
+      "side": 1,
+      "message": "No POLQA on Mac",
+      "range": {
+        "startLine": 177,
+        "startChar": 45,
+        "endLine": 177,
         "endChar": 55
       },
       "revId": "55f57776cb1ff6e40b6c45fbef535620773dd790",
