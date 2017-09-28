@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "88485673_5691d3f2",
+        "filename": "api/BUILD.gn",
+        "patchSetId": 7
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 5578
+      },
+      "writtenOn": "2017-09-28T09:32:02Z",
+      "side": 1,
+      "message": "This is a bit weird. peerconnectioninterface.h is what should be the main API and it should never have included anything from call.",
+      "range": {
+        "startLine": 105,
+        "startChar": 5,
+        "endLine": 105,
+        "endChar": 28
+      },
+      "revId": "495e96274d425b346fde82ffabf410f5a2c72d38",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b13dba21_f02d5411",
+        "filename": "api/BUILD.gn",
+        "patchSetId": 7
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 5578
+      },
+      "writtenOn": "2017-09-28T09:32:02Z",
+      "side": 1,
+      "message": "And all of these should be implementation - not API.",
+      "range": {
+        "startLine": 115,
+        "startChar": 5,
+        "endLine": 115,
+        "endChar": 16
+      },
+      "revId": "495e96274d425b346fde82ffabf410f5a2c72d38",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd5a8de8_eed1df6d",
+        "filename": "api/candidate.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 5578
+      },
+      "writtenOn": "2017-09-28T09:32:02Z",
+      "side": 1,
+      "message": "Looks like there are just a few things that should be moved from the h to the cc file.",
+      "range": {
+        "startLine": 28,
+        "startChar": 8,
+        "endLine": 28,
+        "endChar": 16
+      },
+      "revId": "495e96274d425b346fde82ffabf410f5a2c72d38",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
