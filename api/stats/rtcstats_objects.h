@@ -255,6 +255,9 @@ class RTCMediaStreamTrackStats final : public RTCStats {
   RTCStatsMember<bool> detached;
   // See |RTCMediaStreamTrackKind| for valid values.
   RTCStatsMember<std::string> kind;
+  // TODO(gustaf): Implement jitter_buffer_delay for video (currently
+  // implemented for audio only).
+  RTCStatsMember<double> jitter_buffer_delay;
   // Video-only members
   RTCStatsMember<uint32_t> frame_width;
   RTCStatsMember<uint32_t> frame_height;
