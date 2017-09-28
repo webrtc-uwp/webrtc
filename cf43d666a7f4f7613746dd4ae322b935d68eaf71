@@ -16,6 +16,24 @@
       "revId": "cf43d666a7f4f7613746dd4ae322b935d68eaf71",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "267dcca5_544832ca",
+        "filename": "media/engine/simulcast_encoder_adapter.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 5524
+      },
+      "writtenOn": "2017-09-28T13:29:30Z",
+      "side": 1,
+      "message": "Sounds reasonable to me. I\u0027m not aware of any instance where this would cause issues.",
+      "parentUuid": "aa429e8c_4cbc100d",
+      "revId": "cf43d666a7f4f7613746dd4ae322b935d68eaf71",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
