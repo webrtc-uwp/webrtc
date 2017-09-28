@@ -64,32 +64,28 @@ class PayloadUnion {
   PayloadUnion& operator=(PayloadUnion&&);
   friend void swap(PayloadUnion& a, PayloadUnion& b);
 
-  bool is_audio() const { return is_audio_; }
-  bool is_video() const { return !is_audio_; }
+  bool is_audio() const { return bool{audio_payload_}; }
+  bool is_video() const { return bool{video_payload_}; }
   const AudioPayload& audio_payload() const {
-    RTC_DCHECK(is_audio_);
-    return Audio;
+    RTC_DCHECK(audio_payload_);
+    return *audio_payload_;
   }
   const VideoPayload& video_payload() const {
-    RTC_DCHECK(!is_audio_);
-    return Video;
+    RTC_DCHECK(video_payload_);
+    return *video_payload_;
   }
   AudioPayload& audio_payload() {
-    RTC_DCHECK(is_audio_);
-    return Audio;
+    RTC_DCHECK(audio_payload_);
+    return *audio_payload_;
   }
   VideoPayload& video_payload() {
-    RTC_DCHECK(!is_audio_);
-    return Video;
+    RTC_DCHECK(video_payload_);
+    return *video_payload_;
   }
 
- public:
-  // These two are public for backwards compatibilty. They'll go private soon.
-  AudioPayload Audio;
-  VideoPayload Video;
-
  private:
-  bool is_audio_;
+  rtc::Optional<AudioPayload> audio_payload_;
+  rtc::Optional<VideoPayload> video_payload_;
 };
 
 enum RTPAliveType { kRtpDead = 0, kRtpNoRtp = 1, kRtpAlive = 2 };

@@ -13,9 +13,9 @@
 namespace webrtc {
 
 PayloadUnion::PayloadUnion(const AudioPayload& payload)
-    : Audio(payload), is_audio_(true) {}
+    : audio_payload_(payload) {}
 PayloadUnion::PayloadUnion(const VideoPayload& payload)
-    : Video(payload), is_audio_(false) {}
+    : video_payload_(payload) {}
 PayloadUnion::PayloadUnion(const PayloadUnion&) = default;
 PayloadUnion::PayloadUnion(PayloadUnion&&) = default;
 PayloadUnion::~PayloadUnion() = default;
@@ -24,9 +24,8 @@ PayloadUnion& PayloadUnion::operator=(const PayloadUnion&) = default;
 PayloadUnion& PayloadUnion::operator=(PayloadUnion&&) = default;
 void swap(PayloadUnion& a, PayloadUnion& b) {
   using std::swap;
-  swap(a.Audio, b.Audio);
-  swap(a.Video, b.Video);
-  swap(a.is_audio_, b.is_audio_);
+  swap(a.audio_payload_, b.audio_payload_);
+  swap(a.video_payload_, b.video_payload_);
 }
 
 }  // namespace webrtc
