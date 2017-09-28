@@ -26,6 +26,38 @@
 
 namespace webrtc {
 
+namespace {
+bool PacketIsLatest(rtc::Optional<uint16_t> latest_seqno, uint16_t seqno) {
+  if (!latest_seqno)
+    return true;
+  // Unsigned subtract and cast to signed takes care of wrap-around.
+  int16_t seqno_diff = static_cast<int16_t>(seqno - *latest_seqno);
+  if (seqno_diff > 0)
+    return true;
+
+  // We need to distinguish between a late or retransmitted packet,
+  // and a sequence number discontinuity.
+
+  // TODO(nisse): What's a reasonable threshold? Can a valid RTP stream have
+  // discontinuities in sequence number? If not, we should probably be stricter
+  // and use a pretty large threshold, with the modest aim to recover in a few
+  // seconds time on incorrect streams. And should we expect a timestamp
+  // discontinuity to occur together with the sequence number discontinuity? If
+  // so, maybe we should propagate that information in some way, to reset
+  // estimators keeping timestamp history.
+  const int kMaxReorder = kDefaultMaxReorderingThreshold;
+  if (seqno_diff < -kMaxReorder) {
+    // Sequence number far off from expected, consider it a reset of the
+    // sequence.
+    return true;
+  }
+
+  // Packet is only slightly late, probably a retransmitted packet,
+  return false;
+}
+
+}  // namespace
+
 using RtpUtility::Payload;
 
 // Only return the sources in the last 10 seconds.
@@ -133,12 +165,10 @@ int32_t RtpReceiverImpl::Energy(
   return rtp_media_receiver_->Energy(array_of_energy);
 }
 
-bool RtpReceiverImpl::IncomingRtpPacket(
-  const RTPHeader& rtp_header,
-  const uint8_t* payload,
-  size_t payload_length,
-  PayloadUnion payload_specific,
-  bool in_order) {
+bool RtpReceiverImpl::IncomingRtpPacket(const RTPHeader& rtp_header,
+                                        const uint8_t* payload,
+                                        size_t payload_length,
+                                        PayloadUnion payload_specific) {
   // Trigger our callbacks.
   CheckSSRCChanged(rtp_header);
 
@@ -177,13 +207,16 @@ bool RtpReceiverImpl::IncomingRtpPacket(
   {
     rtc::CritScope lock(&critical_section_rtp_receiver_);
 
-    if (in_order) {
-      if (last_received_timestamp_ != rtp_header.timestamp) {
-        last_received_timestamp_ = rtp_header.timestamp;
-        last_received_frame_time_ms_ = clock_->TimeInMilliseconds();
-      }
+    // TODO(nisse): Take an RtpPacketReceived as argument, and examine
+    // the |recovered()| flag.
+    if (PacketIsLatest(last_received_sequence_number_,
+                       rtp_header.sequenceNumber)) {
+      last_received_sequence_number_.emplace(rtp_header.sequenceNumber);
+      last_received_timestamp_ = rtp_header.timestamp;
+      last_received_frame_time_ms_ = clock_->TimeInMilliseconds();
     }
   }
+
   return true;
 }
 
@@ -225,24 +258,16 @@ std::vector<RtpSource> RtpReceiverImpl::GetSources() const {
   return sources;
 }
 
-bool RtpReceiverImpl::Timestamp(uint32_t* timestamp) const {
+bool RtpReceiverImpl::GetLatestTimestamps(uint32_t* timestamp,
+                                          int64_t* receive_time_ms) const {
   rtc::CritScope lock(&critical_section_rtp_receiver_);
-  if (!HaveReceivedFrame())
+  if (!last_received_sequence_number_)
     return false;
+
   *timestamp = last_received_timestamp_;
-  return true;
-}
-
-bool RtpReceiverImpl::LastReceivedTimeMs(int64_t* receive_time_ms) const {
-  rtc::CritScope lock(&critical_section_rtp_receiver_);
-  if (!HaveReceivedFrame())
-    return false;
   *receive_time_ms = last_received_frame_time_ms_;
-  return true;
-}
 
-bool RtpReceiverImpl::HaveReceivedFrame() const {
-  return last_received_frame_time_ms_ >= 0;
+  return true;
 }
 
 // Implementation note: must not hold critsect when called.
