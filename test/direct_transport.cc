@@ -24,30 +24,42 @@ DirectTransport::DirectTransport(
     : DirectTransport(task_queue,
                       FakeNetworkPipe::Config(),
                       send_call,
-                      payload_type_map) {
-}
+                      payload_type_map,
+                      std::unique_ptr<test::RtpFileWriter>()) {}
 
 DirectTransport::DirectTransport(
     SingleThreadedTaskQueueForTesting* task_queue,
     const FakeNetworkPipe::Config& config,
     Call* send_call,
-    const std::map<uint8_t, MediaType>& payload_type_map)
+    const std::map<uint8_t, MediaType>& payload_type_map,
+    std::unique_ptr<test::RtpFileWriter> rtp_file_writer)
     : DirectTransport(
           task_queue,
           config,
           send_call,
-          std::unique_ptr<Demuxer>(new DemuxerImpl(payload_type_map))) {
-}
+          std::unique_ptr<Demuxer>(new DemuxerImpl(payload_type_map)),
+          std::move(rtp_file_writer)) {}
 
-DirectTransport::DirectTransport(SingleThreadedTaskQueueForTesting* task_queue,
-                                 const FakeNetworkPipe::Config& config,
-                                 Call* send_call,
-                                 std::unique_ptr<Demuxer> demuxer)
+DirectTransport::DirectTransport(
+    SingleThreadedTaskQueueForTesting* task_queue,
+    const FakeNetworkPipe::Config& config,
+    Call* send_call,
+    std::unique_ptr<Demuxer> demuxer,
+    std::unique_ptr<test::RtpFileWriter> rtp_file_writer)
     : send_call_(send_call),
       clock_(Clock::GetRealTimeClock()),
       task_queue_(task_queue),
-      fake_network_(clock_, config, std::move(demuxer)) {
+      fake_network_(clock_, config, std::move(demuxer)),
+      receiver_(nullptr),
+      start_ms_(rtc::TimeMillis()),
+      rtp_file_writer_(std::move(rtp_file_writer)) {
   RTC_DCHECK(task_queue);
+
+  if (rtp_file_writer_.get()) {
+    // Set us up as proxy receiver so that we can dump rtp packets.
+    fake_network_.SetReceiver(this);
+  }
+
   if (send_call_) {
     send_call_->SignalChannelNetworkState(MediaType::AUDIO, kNetworkUp);
     send_call_->SignalChannelNetworkState(MediaType::VIDEO, kNetworkUp);
@@ -73,7 +85,12 @@ void DirectTransport::StopSending() {
 
 void DirectTransport::SetReceiver(PacketReceiver* receiver) {
   RTC_DCHECK_CALLED_SEQUENTIALLY(&sequence_checker_);
-  fake_network_.SetReceiver(receiver);
+  if (rtp_file_writer_.get()) {
+    // Will be called from DeliverPacket() in this instance instead.
+    receiver_ = receiver;
+  } else {
+    fake_network_.SetReceiver(receiver);
+  }
 }
 
 bool DirectTransport::SendRtp(const uint8_t* data,
@@ -95,6 +112,25 @@ bool DirectTransport::SendRtcp(const uint8_t* data, size_t length) {
 
 int DirectTransport::GetAverageDelayMs() {
   return fake_network_.AverageDelay();
+}
+
+PacketReceiver::DeliveryStatus DirectTransport::DeliverPacket(
+    MediaType media_type,
+    const uint8_t* packet,
+    size_t length,
+    const PacketTime& packet_time) {
+  if (rtp_file_writer_.get()) {
+    RtpPacket rtp_packet;
+    memcpy(rtp_packet.data, packet, length);
+    rtp_packet.length = length;
+    rtp_packet.original_length = length;
+    rtp_packet.time_ms = rtc::TimeMillis() - start_ms_;
+    rtp_file_writer_->WritePacket(&rtp_packet);
+  }
+
+  if (!receiver_)
+    return PacketReceiver::DELIVERY_PACKET_ERROR;
+  return receiver_->DeliverPacket(media_type, packet, length, packet_time);
 }
 
 void DirectTransport::SendPackets() {

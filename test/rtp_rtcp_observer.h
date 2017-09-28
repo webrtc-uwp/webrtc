@@ -101,7 +101,8 @@ class PacketTransport : public test::DirectTransport {
       : test::DirectTransport(task_queue,
                               configuration,
                               send_call,
-                              payload_type_map),
+                              payload_type_map,
+                              std::unique_ptr<test::RtpFileWriter>()),
         observer_(observer),
         transport_type_(transport_type) {}
 

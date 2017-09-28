@@ -320,8 +320,8 @@ void Loopback() {
 
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
-  rtc::FlagList::SetFlagsFromCommandLine(&argc, argv, true);
-  if (webrtc::flags::FLAG_help) {
+  int flag_status = rtc::FlagList::SetFlagsFromCommandLine(&argc, argv, true);
+  if (webrtc::flags::FLAG_help || flag_status > 0) {
     rtc::FlagList::Print(nullptr, false);
     return 0;
   }

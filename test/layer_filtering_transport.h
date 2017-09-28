@@ -30,7 +30,8 @@ class LayerFilteringTransport : public test::DirectTransport {
                           uint8_t vp9_video_payload_type,
                           int selected_tl,
                           int selected_sl,
-                          const std::map<uint8_t, MediaType>& payload_type_map);
+                          const std::map<uint8_t, MediaType>& payload_type_map,
+                          std::unique_ptr<test::RtpFileWriter> rtp_file_writer);
   bool DiscardedLastPacket() const;
   bool SendRtp(const uint8_t* data,
                size_t length,

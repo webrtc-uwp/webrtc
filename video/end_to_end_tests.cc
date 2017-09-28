@@ -4621,10 +4621,12 @@ TEST_F(EndToEndTest, CallReportsRttForSender) {
     config.queue_delay_ms = kSendDelayMs;
     CreateCalls(Call::Config(event_log_.get()), Call::Config(event_log_.get()));
     sender_transport = rtc::MakeUnique<test::DirectTransport>(
-        &task_queue_, config, sender_call_.get(), payload_type_map_);
+        &task_queue_, config, sender_call_.get(), payload_type_map_,
+        std::unique_ptr<test::RtpFileWriter>());
     config.queue_delay_ms = kReceiveDelayMs;
     receiver_transport = rtc::MakeUnique<test::DirectTransport>(
-        &task_queue_, config, receiver_call_.get(), payload_type_map_);
+        &task_queue_, config, receiver_call_.get(), payload_type_map_,
+        std::unique_ptr<test::RtpFileWriter>());
     sender_transport->SetReceiver(receiver_call_->Receiver());
     receiver_transport->SetReceiver(sender_call_->Receiver());
 
