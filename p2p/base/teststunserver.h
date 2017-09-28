@@ -35,6 +35,8 @@ class TestStunServer : StunServer {
     fake_stun_addr_ = addr;
   }
 
+  rtc::SocketAddress address() { return socket_->GetLocalAddress(); }
+
  private:
   explicit TestStunServer(rtc::AsyncUDPSocket* socket) : StunServer(socket) {}
 

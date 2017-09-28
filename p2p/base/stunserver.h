@@ -58,7 +58,6 @@ class StunServer : public sigslot::has_slots<> {
                            const rtc::SocketAddress& remote_addr,
                            StunMessage* response) const;
 
- private:
   std::unique_ptr<rtc::AsyncUDPSocket> socket_;
 };
 

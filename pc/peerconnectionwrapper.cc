@@ -18,6 +18,7 @@
 #include "media/base/fakevideocapturer.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/ptr_util.h"
+#include "rtc_base/virtualsocketserver.h"
 
 namespace webrtc {
 
@@ -173,6 +174,10 @@ void PeerConnectionWrapper::AddAudioVideoStream(
   EXPECT_TRUE(pc()->AddTrack(video_track, {stream}));
   EXPECT_TRUE_WAIT(observer()->renegotiation_needed_, kWaitTimeout);
   observer()->renegotiation_needed_ = false;
+}
+
+bool PeerConnectionWrapper::IsIceGatheringDone() {
+  return observer()->ice_complete_;
 }
 
 }  // namespace webrtc
