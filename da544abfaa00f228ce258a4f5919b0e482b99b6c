@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7881784e_4c905f1a",
+        "filename": "modules/congestion_controller/delay_based_bwe.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-09-28T09:02:57Z",
+      "side": 1,
+      "message": "What\u0027s the probability that result.updated is true, but the new bitrate is the same as the old one? E.g. in ALR?",
+      "range": {
+        "startLine": 258,
+        "startChar": 8,
+        "endLine": 258,
+        "endChar": 18
+      },
+      "revId": "da544abfaa00f228ce258a4f5919b0e482b99b6c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "057a7f53_697eddf1",
+        "filename": "modules/congestion_controller/delay_based_bwe.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-09-28T09:02:57Z",
+      "side": 1,
+      "message": "It looks a bit strange to update last_logged_foo outside the conditional block that actually does log something. Maybe they should be renamed to prev_bitrate_bps and prev_detector_state?",
+      "range": {
+        "startLine": 261,
+        "startChar": 4,
+        "endLine": 261,
+        "endChar": 24
+      },
+      "revId": "da544abfaa00f228ce258a4f5919b0e482b99b6c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
