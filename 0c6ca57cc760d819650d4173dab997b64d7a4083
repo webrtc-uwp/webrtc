@@ -34,6 +34,24 @@
       "revId": "0c6ca57cc760d819650d4173dab997b64d7a4083",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ae4a5d4_69d128dc",
+        "filename": "sdk/objc/Framework/Classes/VideoToolbox/RTCVideoEncoderH264.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 5254
+      },
+      "writtenOn": "2017-09-28T14:38:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4a6b98c3_544f41b3",
+      "revId": "0c6ca57cc760d819650d4173dab997b64d7a4083",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
