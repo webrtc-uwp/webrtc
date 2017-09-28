@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d76b3aa_2f3f8378",
+        "filename": "modules/rtp_rtcp/BUILD.gn",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-28T13:22:39Z",
+      "side": 1,
+      "message": "why put .cc in include instead of source?",
+      "range": {
+        "startLine": 48,
+        "startChar": 5,
+        "endLine": 48,
+        "endChar": 12
+      },
+      "revId": "ec083eccecc067323f2eaad9196bf468443121c0",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e11e761b_2822fe58",
+        "filename": "modules/rtp_rtcp/include/rtp_rtcp_defines.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-28T13:22:39Z",
+      "side": 1,
+      "message": "I guess you need default constructor for backward compatibility",
+      "range": {
+        "startLine": 55,
+        "startChar": 20,
+        "endLine": 55,
+        "endChar": 0
+      },
+      "revId": "ec083eccecc067323f2eaad9196bf468443121c0",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92acb703_cdd0cc01",
+        "filename": "modules/rtp_rtcp/include/rtp_rtcp_defines.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-28T13:22:39Z",
+      "side": 1,
+      "message": "what is benefit of explicit move when move is as expensive as copy?",
+      "range": {
+        "startLine": 60,
+        "startChar": 31,
+        "endLine": 60,
+        "endChar": 0
+      },
+      "revId": "ec083eccecc067323f2eaad9196bf468443121c0",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d983e5eb_bec4f76b",
+        "filename": "modules/rtp_rtcp/include/rtp_rtcp_defines.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-28T13:22:39Z",
+      "side": 1,
+      "message": "do you need to declare trivial destructor?",
+      "range": {
+        "startLine": 61,
+        "startChar": 18,
+        "endLine": 61,
+        "endChar": 0
+      },
+      "revId": "ec083eccecc067323f2eaad9196bf468443121c0",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c9c53e9_081377d4",
+        "filename": "modules/rtp_rtcp/include/rtp_rtcp_defines.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-28T13:22:39Z",
+      "side": 1,
+      "message": "same question as for move - why add swap when it doesn\u0027t anything over default version?",
+      "range": {
+        "startLine": 65,
+        "startChar": 53,
+        "endLine": 65,
+        "endChar": 0
+      },
+      "revId": "ec083eccecc067323f2eaad9196bf468443121c0",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "22b59f72_8c8e5fae",
+        "filename": "modules/rtp_rtcp/source/rtp_payload_registry.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-28T13:22:39Z",
+      "side": 1,
+      "message": "emplace is slighly nicer:\nauto insert_status \u003d payload_type_map_.emplace(audio_codec.pltype, CreatePayloadType(audio_codec));",
+      "range": {
+        "startLine": 167,
+        "startChar": 54,
+        "endLine": 167,
+        "endChar": 0
+      },
+      "revId": "ec083eccecc067323f2eaad9196bf468443121c0",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3734c041_534e14dc",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_strategy.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-28T13:22:39Z",
+      "side": 1,
+      "message": "why not \nlast_payload_.emplace(payload) ?",
+      "range": {
+        "startLine": 31,
+        "startChar": 55,
+        "endLine": 31,
+        "endChar": 0
+      },
+      "revId": "ec083eccecc067323f2eaad9196bf468443121c0",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5a8b45b_2b255375",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_unittest.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-28T13:22:39Z",
+      "side": 1,
+      "message": "may be use regular () to stress regular constructor is used:\n... payload_specific(AudioPayload());",
+      "range": {
+        "startLine": 143,
+        "startChar": 54,
+        "endLine": 143,
+        "endChar": 0
+      },
+      "revId": "ec083eccecc067323f2eaad9196bf468443121c0",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    }
+  ]
+}
