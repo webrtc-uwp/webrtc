@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "73f91517_91fd9973",
+        "filename": "api/stats/rtcstats_objects.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 5142
+      },
+      "writtenOn": "2017-09-28T08:48:29Z",
+      "side": 1,
+      "message": "I would say put this member in the same order as in the spec but maybe the spec order should change? There\u0027s this pattern of video-only and audio-only stuff and then there\u0027s jitterBufferDelay which should be for both audio and video. Doesn\u0027t match the comments I made. Can you move it to before \"// Video-only members\"? Make the .cc file match the order of this file.\n\nAdd a TODO documenting the fact that this is currently only collected for audio, but that it should be collected for video too.",
+      "revId": "01bd63b596ceb64ac53d936ac9e5f479f2376b98",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ff1aa60_75daaa72",
+        "filename": "pc/rtcstatscollector.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 5142
+      },
+      "writtenOn": "2017-09-28T08:48:29Z",
+      "side": 1,
+      "message": "nit: Make the order as similar to the rtcstats_objects.h as possible.",
+      "revId": "01bd63b596ceb64ac53d936ac9e5f479f2376b98",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3842a0fe_c7f5ca39",
+        "filename": "stats/rtcstats_objects.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 5142
+      },
+      "writtenOn": "2017-09-28T08:48:29Z",
+      "side": 1,
+      "message": "Order must match rtcstats_objects.h",
+      "revId": "01bd63b596ceb64ac53d936ac9e5f479f2376b98",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
