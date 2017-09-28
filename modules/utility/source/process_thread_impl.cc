@@ -15,6 +15,7 @@
 #include "rtc_base/task_queue.h"
 #include "rtc_base/timeutils.h"
 #include "rtc_base/trace_event.h"
+#include "rtc_base/logging.h"
 
 namespace webrtc {
 namespace {
@@ -192,6 +193,9 @@ bool ProcessThreadImpl::Process() {
           TRACE_EVENT2("webrtc", "ModuleProcess", "function",
                        m.location.function_name(), "file",
                        m.location.file_and_line());
+
+          LOG(LS_ERROR) << "[PROCESS MODULE] " << thread_name_ << " "
+                        << m.location.file_and_line();
           m.module->Process();
         }
         // Use a new 'now' reference to calculate when the next callback
@@ -207,6 +211,7 @@ bool ProcessThreadImpl::Process() {
 
     while (!queue_.empty()) {
       rtc::QueuedTask* task = queue_.front();
+      LOG(LS_ERROR) << "[PROCESS TASK] " << thread_name_;
       queue_.pop();
       lock_.Leave();
       task->Run();
@@ -214,6 +219,8 @@ bool ProcessThreadImpl::Process() {
       lock_.Enter();
     }
   }
+
+  LOG(LS_ERROR) << "[PROCESS WAIT] " << thread_name_;
 
   int64_t time_to_wait = next_checkpoint - rtc::TimeMillis();
   if (time_to_wait > 0)

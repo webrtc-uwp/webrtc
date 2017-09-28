@@ -14,6 +14,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/timeutils.h"
 #include "rtc_base/trace_event.h"
+#include "rtc_base/logging.h"
 
 #if defined(WEBRTC_LINUX)
 #include <sys/prctl.h>
@@ -246,6 +247,7 @@ void PlatformThread::Run() {
 #if RTC_DCHECK_IS_ON
     auto id = sequence_nr % kMaxLoopCount;
     loop_stamps[id] = rtc::TimeMillis();
+    LOG(LS_ERROR) << "[PLATFORM THREAD] thread: " << name_ << " seqnr: " << sequence_nr;
     if (sequence_nr > kMaxLoopCount) {
       auto compare_id = (id + 1) % kMaxLoopCount;
       auto diff = loop_stamps[id] - loop_stamps[compare_id];
