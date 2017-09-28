@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "f8a723ec_97dee743",
+        "filename": "api/BUILD.gn",
+        "patchSetId": 4
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-28T14:11:01Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6702ca11_572b32e4",
+      "revId": "95045fd27f2106611412dc7307e5661316a6c530",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7809db5e_fac38912",
         "filename": "api/candidate.h",
         "patchSetId": 4
@@ -84,6 +102,24 @@
       "side": 1,
       "message": "...And \u003climits\u003e for UINT_MAX on line 109",
       "parentUuid": "a1d774d6_9e0d828e",
+      "revId": "95045fd27f2106611412dc7307e5661316a6c530",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62ae9f1e_027517e2",
+        "filename": "api/candidate.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-28T14:11:01Z",
+      "side": 1,
+      "message": "Ah, didn\u0027t spot those. :)",
+      "parentUuid": "51a7d393_89cc925d",
       "revId": "95045fd27f2106611412dc7307e5661316a6c530",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": false
@@ -154,6 +190,24 @@
       "side": 1,
       "message": "It also uses rtc::kNetworkCostMax from network.h in CHECK in this file.\n\nI tried pulling out a new file to limit the exposure of network.h, but unfortunately the api target depends on base, so it\u0027s not possible for base to depend on a new header in api/. api appears to fundamentally depend on base, I\u0027m not sure if that\u0027s how it should be?\n\nEither way, I suggest we either leave it as is or maybe pull out the enum and constant to a network_constants.h in rtc_base and include that from here. That at least exposes as little as possible. I implemented the latter solution in the new patch set since it\u0027s the one I believe in myself. Maybe network_constants.h should move to API later, but in that case in the scope of an larger effort to decouple api/ from base/.",
       "parentUuid": "5516d850_1cc46b62",
+      "revId": "95045fd27f2106611412dc7307e5661316a6c530",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3bb3d51_4775aa63",
+        "filename": "api/candidate.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-28T14:11:01Z",
+      "side": 1,
+      "message": "Going forwards we want api/ to be self contained. So rtc_base/ can depend on api/ but not vice versa.",
+      "parentUuid": "931e1553_de09143a",
       "revId": "95045fd27f2106611412dc7307e5661316a6c530",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": false

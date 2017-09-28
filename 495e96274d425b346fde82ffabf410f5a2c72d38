@@ -140,6 +140,30 @@
       "revId": "495e96274d425b346fde82ffabf410f5a2c72d38",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1de83929_8b459f1a",
+        "filename": "api/candidate.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-28T14:11:01Z",
+      "side": 1,
+      "message": "Sorry - I should have been more clear. I was referring to this class being rather bloated to be in api/. For one thing, it shouldn\u0027t all be inline. For another, utility functions such as \"MatchesForRemoval\" and \"ToSensitiveString\" could likely be removed.\n\nThe API should be as small as possible. Also: http://www.drdobbs.com/cpp/how-non-member-functions-improve-encapsu/184401197",
+      "parentUuid": "eacb33ee_4ec7a351",
+      "range": {
+        "startLine": 28,
+        "startChar": 8,
+        "endLine": 28,
+        "endChar": 16
+      },
+      "revId": "495e96274d425b346fde82ffabf410f5a2c72d38",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }

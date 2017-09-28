@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8be5bcfb_bd395caa",
+        "filename": "rtc_base/network_constants.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-09-28T14:11:01Z",
+      "side": 1,
+      "message": "nit: I believe copyright year should be 2017 since this is a new file.",
+      "revId": "1c4874f536e4e3d15d620d90efd3542f2e73c536",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
