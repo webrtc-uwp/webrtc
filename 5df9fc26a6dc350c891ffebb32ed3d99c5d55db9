@@ -22,6 +22,30 @@
       "revId": "5df9fc26a6dc350c891ffebb32ed3d99c5d55db9",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf988ae2_c29f53e3",
+        "filename": "common_types.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-28T08:47:37Z",
+      "side": 1,
+      "message": "Yes, sir!",
+      "parentUuid": "66120ea4_fafaabeb",
+      "range": {
+        "startLine": 384,
+        "startChar": 11,
+        "endLine": 384,
+        "endChar": 40
+      },
+      "revId": "5df9fc26a6dc350c891ffebb32ed3d99c5d55db9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }

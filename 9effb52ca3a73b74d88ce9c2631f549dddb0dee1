@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "77a773e7_ebbaeecb",
+        "filename": "audio/audio_receive_stream.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-28T08:47:37Z",
+      "side": 1,
+      "message": "As the variables are suffixed \u0027Ms\u0027 and \u0027seconds\u0027, and the calculation is so trivial, I personally don\u0027t think it makes it much more clear. But I\u0027ll change it.",
+      "parentUuid": "422ae1e9_58f17ca6",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7e8494b5_51865b1b",
         "filename": "audio/audio_receive_stream_unittest.cc",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-27T18:19:30Z",
       "side": 1,
       "message": "nit: Why not \"EXPECT_EQ(0.456, stats.jitter_buffer_delay_seconds)\"? When the test just copies the same calculation as the code under test, that means a bug in the calculation won\u0027t be caught by the test. Having to come up with the expected value manually using a different process provides an extra assurance that the code under test is correct. See: https://engdoc.corp.google.com/eng/doc/devguide/coding/testing/unit-testing-best-practices.md?cl\u003dhead#control-structures-examples",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d4d509f_864e2034",
+        "filename": "audio/audio_receive_stream_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-28T08:47:37Z",
+      "side": 1,
+      "message": "Well, the purpose of the test is to test the copying. This particular line does what all the other lines of the test do (plus the trivial conversion from ms to s). Hard coding a value here should not be done without changing the whole test. Hard coded values would also make the test harder to read. Here it is very clear that we test the copying of struct members.",
+      "parentUuid": "7e8494b5_51865b1b",
       "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "ff6a95b3_cf10dbf8",
+        "filename": "common_types.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-28T08:47:37Z",
+      "side": 1,
+      "message": "Makes sense. Done.",
+      "parentUuid": "91d9a348_4014b8ea",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b92971ec_999d13a6",
         "filename": "media/engine/webrtcvoiceengine_unittest.cc",
         "patchSetId": 6
@@ -67,6 +121,24 @@
       "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91e2edc5_5af59e2a",
+        "filename": "media/engine/webrtcvoiceengine_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 667,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-28T08:47:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b92971ec_999d13a6",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "812c8f3a_ea63915b",
+        "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 1687,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-28T08:47:37Z",
+      "side": 1,
+      "message": "Good point! Fixed",
+      "parentUuid": "d17d5550_ce43309b",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "90e21c2f_b830eab7",
         "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
         "patchSetId": 6
@@ -98,6 +188,24 @@
       "writtenOn": "2017-09-27T18:19:30Z",
       "side": 1,
       "message": "I think this would be a lot simpler as:\n\nint packets_sent \u003d 0;\nint packets_received \u003d 0;\nwhile (packets_sent \u003c kNumPackets || packets_received \u003c kNumPackets) {\n  if (packets_sent \u003c kNumPackets) {\n     // Insert packet, increment packets_sent...\n  }\n  if (neteq_-\u003eGetAudio(\u0026out_frame_, \u0026muted) \u003d\u003d kOK) {\n    ++packets_received;\n  } else {\n    // Should only fail to get audio at the start; if we\u0027ve sent all packets but aren\u0027t\n    // receiving anything something is wrong.\n    ASSERT_LT(packets_sent, kNumPackets);\n  }\n}",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "44809b58_3693e9c6",
+        "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 1705,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-28T08:47:37Z",
+      "side": 1,
+      "message": "No, the idea is to build up a known delay in the jitter buffer and test that the jitter buffer delay is computed correctly. In your suggestion there is no jitter buffer delay, so the test would be less valuable.",
+      "parentUuid": "90e21c2f_b830eab7",
       "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "8d9db20e_4a5d5dc2",
+        "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 1735,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-28T08:47:37Z",
+      "side": 1,
+      "message": "Adding a comment on how the expected delay is computed.",
+      "parentUuid": "fb4f85c3_fae7c531",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7def1377_e16e5945",
         "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
         "patchSetId": 6
@@ -132,6 +258,24 @@
       "writtenOn": "2017-09-27T18:19:30Z",
       "side": 1,
       "message": "Candidate for TEST_P?",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72b44e7e_37563b74",
+        "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 1738,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-28T08:47:37Z",
+      "side": 1,
+      "message": "Yes, that\u0027s a possibility.\nHowever in this case, I think this is more clear and more easily debugged. With a bigger test matrix TEST_P would probably be a better choice.",
+      "parentUuid": "7def1377_e16e5945",
       "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
