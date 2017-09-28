@@ -74,15 +74,13 @@ class RtpReceiver {
   virtual bool IncomingRtpPacket(const RTPHeader& rtp_header,
                                  const uint8_t* payload,
                                  size_t payload_length,
-                                 PayloadUnion payload_specific,
-                                 bool in_order) = 0;
+                                 PayloadUnion payload_specific) = 0;
 
-  // Gets the last received timestamp. Returns true if a packet has been
-  // received, false otherwise.
-  virtual bool Timestamp(uint32_t* timestamp) const = 0;
-  // Gets the time in milliseconds when the last timestamp was received.
-  // Returns true if a packet has been received, false otherwise.
-  virtual bool LastReceivedTimeMs(int64_t* receive_time_ms) const = 0;
+  // Gets the RTP timestamp and the corresponding monotonic system
+  // time for the most recent in-order packet. Returns true on
+  // success, false if no packet has been received.
+  virtual bool GetLatestTimestamps(uint32_t* timestamp,
+                                   int64_t* receive_time_ms) const = 0;
 
   // Returns the remote SSRC of the currently received RTP stream.
   virtual uint32_t SSRC() const = 0;
