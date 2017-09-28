@@ -313,6 +313,7 @@ CFStringRef ExtractProfile(const cricket::VideoCodec &codec) {
 }
 
 - (void)dealloc {
+  delete _bitrateAdjuster;
   [self destroyCompressionSession];
 }
 
