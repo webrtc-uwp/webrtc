@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6702ca11_572b32e4",
+        "filename": "api/BUILD.gn",
+        "patchSetId": 4
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 5027
+      },
+      "writtenOn": "2017-09-28T07:57:33Z",
+      "side": 1,
+      "message": "Yes, http://bugs.webrtc.org/5883.",
+      "parentUuid": "016f7e32_71826b4d",
+      "revId": "95045fd27f2106611412dc7307e5661316a6c530",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7809db5e_fac38912",
         "filename": "api/candidate.h",
         "patchSetId": 4
@@ -33,6 +51,24 @@
       "revId": "95045fd27f2106611412dc7307e5661316a6c530",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1d774d6_9e0d828e",
+        "filename": "api/candidate.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 5027
+      },
+      "writtenOn": "2017-09-28T07:57:33Z",
+      "side": 1,
+      "message": "Also \u003calgoritm\u003e, I think for the std::min on line 108.",
+      "parentUuid": "7809db5e_fac38912",
+      "revId": "95045fd27f2106611412dc7307e5661316a6c530",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "e9c1d185_ecad00c8",
+        "filename": "api/candidate.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 5027
+      },
+      "writtenOn": "2017-09-28T07:57:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fa5fecb1_5159f885",
+      "revId": "95045fd27f2106611412dc7307e5661316a6c530",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5516d850_1cc46b62",
         "filename": "api/candidate.h",
         "patchSetId": 4
@@ -67,6 +121,24 @@
       "revId": "95045fd27f2106611412dc7307e5661316a6c530",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "931e1553_de09143a",
+        "filename": "api/candidate.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 5027
+      },
+      "writtenOn": "2017-09-28T07:57:33Z",
+      "side": 1,
+      "message": "It also uses rtc::kNetworkCostMax from network.h in CHECK in this file.\n\nI tried pulling out a new file to limit the exposure of network.h, but unfortunately the api target depends on base, so it\u0027s not possible for base to depend on a new header in api/. api appears to fundamentally depend on base, I\u0027m not sure if that\u0027s how it should be?\n\nEither way, I suggest we either leave it as is or maybe pull out the enum and constant to a network_constants.h in rtc_base and include that from here. That at least exposes as little as possible. I implemented the latter solution in the new patch set since it\u0027s the one I believe in myself. Maybe network_constants.h should move to API later, but in that case in the scope of an larger effort to decouple api/ from base/.",
+      "parentUuid": "5516d850_1cc46b62",
+      "revId": "95045fd27f2106611412dc7307e5661316a6c530",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
