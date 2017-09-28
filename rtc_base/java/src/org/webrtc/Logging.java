@@ -30,26 +30,11 @@ public class Logging {
   private static final Logger fallbackLogger = createFallbackLogger();
   private static volatile boolean tracingEnabled;
   private static volatile boolean loggingEnabled;
-  private static enum NativeLibStatus { UNINITIALIZED, LOADED, FAILED }
-  private static volatile NativeLibStatus nativeLibStatus = NativeLibStatus.UNINITIALIZED;
 
   private static Logger createFallbackLogger() {
     final Logger fallbackLogger = Logger.getLogger("org.webrtc.Logging");
     fallbackLogger.setLevel(Level.ALL);
     return fallbackLogger;
-  }
-
-  private static boolean loadNativeLibrary() {
-    if (nativeLibStatus == NativeLibStatus.UNINITIALIZED) {
-      try {
-        System.loadLibrary("jingle_peerconnection_so");
-        nativeLibStatus = NativeLibStatus.LOADED;
-      } catch (UnsatisfiedLinkError t) {
-        nativeLibStatus = NativeLibStatus.FAILED;
-        fallbackLogger.log(Level.WARNING, "Failed to load jingle_peerconnection_so: ", t);
-      }
-    }
-    return nativeLibStatus == NativeLibStatus.LOADED;
   }
 
   // Keep in sync with webrtc/common_types.h:TraceLevel.
@@ -80,7 +65,7 @@ public class Logging {
   public enum Severity { LS_SENSITIVE, LS_VERBOSE, LS_INFO, LS_WARNING, LS_ERROR, LS_NONE }
 
   public static void enableLogThreads() {
-    if (!loadNativeLibrary()) {
+    if (!NativeLibrary.isLoaded()) {
       fallbackLogger.log(Level.WARNING, "Cannot enable log thread because native lib not loaded.");
       return;
     }
@@ -88,7 +73,7 @@ public class Logging {
   }
 
   public static void enableLogTimeStamps() {
-    if (!loadNativeLibrary()) {
+    if (!NativeLibrary.isLoaded()) {
       fallbackLogger.log(
           Level.WARNING, "Cannot enable log timestamps because native lib not loaded.");
       return;
@@ -100,7 +85,7 @@ public class Logging {
   // On Android, use "logcat:" for |path| to send output there.
   // Note: this function controls the output of the WEBRTC_TRACE() macros.
   public static synchronized void enableTracing(String path, EnumSet<TraceLevel> levels) {
-    if (!loadNativeLibrary()) {
+    if (!NativeLibrary.isLoaded()) {
       fallbackLogger.log(Level.WARNING, "Cannot enable tracing because native lib not loaded.");
       return;
     }
@@ -120,7 +105,7 @@ public class Logging {
   // output. On Android, the output will be directed to Logcat.
   // Note: this function starts collecting the output of the LOG() macros.
   public static synchronized void enableLogToDebugOutput(Severity severity) {
-    if (!loadNativeLibrary()) {
+    if (!NativeLibrary.isLoaded()) {
       fallbackLogger.log(Level.WARNING, "Cannot enable logging because native lib not loaded.");
       return;
     }
