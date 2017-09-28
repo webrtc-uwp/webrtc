@@ -545,6 +545,30 @@
     },
     {
       "key": {
+        "uuid": "9e40d028_9213b56d",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-28T07:51:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "63c7e101_181b5cc0",
+      "range": {
+        "startLine": 74,
+        "startChar": 6,
+        "endLine": 74,
+        "endChar": 50
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "216dadd2_0f27d045",
         "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
         "patchSetId": 2
@@ -613,6 +637,30 @@
       "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29ea1425_27bfee5a",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-28T07:51:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "19fc7429_22341487",
+      "range": {
+        "startLine": 101,
+        "startChar": 1,
+        "endLine": 101,
+        "endChar": 20
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -687,6 +735,30 @@
     },
     {
       "key": {
+        "uuid": "b792c096_5974e548",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-28T07:51:39Z",
+      "side": 1,
+      "message": "No, if you have a designated initializer you can only have one. This is the only initializer allowed to call [super init]. The other initializers are convenience initializers, and should call another initializer on self, and in the end of that chain the designated initializer must be called.\n\nI have now added the initWithNoMedia initializer. I think that makes the different initialization paths more obvious.",
+      "parentUuid": "7d472866_df0b89fa",
+      "range": {
+        "startLine": 125,
+        "startChar": 0,
+        "endLine": 126,
+        "endChar": 21
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cef9c058_e24be859",
         "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
         "patchSetId": 2
@@ -731,6 +803,30 @@
       "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ced0f1a4_c2e17a86",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
+        "patchSetId": 2
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-09-28T07:51:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1b0c5e5f_fbbca726",
+      "range": {
+        "startLine": 151,
+        "startChar": 0,
+        "endLine": 152,
+        "endChar": 21
+      },
+      "revId": "bc004073fffe7c4b2201dd4c88b55bf683cab34e",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
