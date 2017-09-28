@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7487d474_e60fad06",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-28T10:48:36Z",
+      "side": 1,
+      "message": "Makes sense, I guess. Done.",
+      "parentUuid": "e781e93b_a4dcfbec",
+      "range": {
+        "startLine": 30,
+        "startChar": 75,
+        "endLine": 30,
+        "endChar": 0
+      },
+      "revId": "5fad053d13be047b0eaa74105e51043cdde740da",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7356c8e9_9b46bb8c",
         "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
         "patchSetId": 2
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "3c20148e_f9c1e886",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-28T10:48:36Z",
+      "side": 1,
+      "message": "Personally, I\u0027m not sure I like this style. When I read IsNewer(x,y) in the code, I won\u0027t remember which arg is supposed to be newer than the other, and no idea if it does wraparound logic in the way I need. So I would have to look up the implementation to make any sense of it.\n\nHaving an expression with - and \u003c operators in it makes it clearer at local inspection.\n\nBesides IsNewerSequenceNumber, there are also a bunch of related functions in video_coding/sequence_number_util.h. My gut feeling is that all this except the unwrapping class(es) is overengineered, and that plain subtract-and-cast everywhere it\u0027s needed would make things more readable.\n\nAs for the cast, I\u0027m pretty sure that a cast in this case is well defined and portable in plain C. Not sure which C++ cast operator is most appropriate, though.\n\nAnyway, for now, I\u0027ll copy logic from InOrderPacketInternal, for consistency, even though I find it a bit hard to read.",
+      "parentUuid": "7356c8e9_9b46bb8c",
+      "range": {
+        "startLine": 34,
+        "startChar": 67,
+        "endLine": 34,
+        "endChar": 0
+      },
+      "revId": "5fad053d13be047b0eaa74105e51043cdde740da",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "984feb19_acae63d4",
         "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
         "patchSetId": 2
@@ -59,6 +107,30 @@
       "writtenOn": "2017-09-28T09:21:01Z",
       "side": 1,
       "message": "kDefaultMaxReorderingThreshold is reasonable value, \n(specially that due to a bug in ReceiveStatistics, that value is always used, ignoring what is set with SetMaxReorderingThreshold)\nbut later might be good to allow to set this value from outside, like ReceiveStatistics pretend to do.",
+      "range": {
+        "startLine": 41,
+        "startChar": 76,
+        "endLine": 41,
+        "endChar": 0
+      },
+      "revId": "5fad053d13be047b0eaa74105e51043cdde740da",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "184e651f_f84696f6",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-28T10:48:36Z",
+      "side": 1,
+      "message": "Under what circumstances can we have a seqno discontinuity in an RTP stream?",
+      "parentUuid": "984feb19_acae63d4",
       "range": {
         "startLine": 41,
         "startChar": 76,
