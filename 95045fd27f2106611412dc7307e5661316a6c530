@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "51a7d393_89cc925d",
+        "filename": "api/candidate.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 5027
+      },
+      "writtenOn": "2017-09-28T08:22:28Z",
+      "side": 1,
+      "message": "...And \u003climits\u003e for UINT_MAX on line 109",
+      "parentUuid": "a1d774d6_9e0d828e",
+      "revId": "95045fd27f2106611412dc7307e5661316a6c530",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fa5fecb1_5159f885",
         "filename": "api/candidate.h",
         "patchSetId": 4
