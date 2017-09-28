@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16ac6023_e764cfe5",
+        "filename": "modules/rtp_rtcp/source/rtp_payload_registry.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-28T13:36:01Z",
+      "side": 0,
+      "message": "will it make sense to also delete the RtpUtility::Payload::audio flag in this CL?",
+      "range": {
+        "startLine": 27,
+        "startChar": 7,
+        "endLine": 27,
+        "endChar": 20
+      },
+      "revId": "ec083eccecc067323f2eaad9196bf468443121c0",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
