@@ -22,6 +22,30 @@
       "revId": "020351ba6c214b3af19d0d380f43c91662e59b40",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ae51f5a_4a5b6776",
+        "filename": "modules/rtp_rtcp/include/rtp_rtcp_defines.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-09-28T18:57:43Z",
+      "side": 1,
+      "message": "I did it deliberately, because it\u0027s bad form to rely on other classes\u0027 implementation details. For example, can we be sure that absl::optional has a corresponding DCHECK or similar?",
+      "parentUuid": "10c20035_046bd010",
+      "range": {
+        "startLine": 68,
+        "startChar": 31,
+        "endLine": 68,
+        "endChar": 0
+      },
+      "revId": "020351ba6c214b3af19d0d380f43c91662e59b40",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
