@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9e06e7e_7040947a",
+        "filename": "modules/rtp_rtcp/include/rtp_rtcp_defines.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-28T13:52:31Z",
+      "side": 1,
+      "message": "return audio_payload_.has_value();\nprobably more readable.",
+      "revId": "bce6f13983cecaf21ea832b2d50de08bbb3cce81",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
