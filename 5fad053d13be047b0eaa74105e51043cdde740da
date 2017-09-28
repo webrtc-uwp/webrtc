@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e781e93b_a4dcfbec",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-28T09:21:01Z",
+      "side": 1,
+      "message": "May be, to make this change clearer, copy the StreamStatistisianImpl::InOrderPacketInternal function,\nin particualar use similar name, e.g. InOrderPacket",
+      "range": {
+        "startLine": 30,
+        "startChar": 75,
+        "endLine": 30,
+        "endChar": 0
+      },
+      "revId": "5fad053d13be047b0eaa74105e51043cdde740da",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7356c8e9_9b46bb8c",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-28T09:21:01Z",
+      "side": 1,
+      "message": "do not code for wrap around manually, rely on IsNewerSequenceNumber for that.\n(e.g. I have doubts static_cast is safe way to bitwise_cast from unsigned to same-size signed int)",
+      "range": {
+        "startLine": 34,
+        "startChar": 67,
+        "endLine": 34,
+        "endChar": 0
+      },
+      "revId": "5fad053d13be047b0eaa74105e51043cdde740da",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "984feb19_acae63d4",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-28T09:21:01Z",
+      "side": 1,
+      "message": "kDefaultMaxReorderingThreshold is reasonable value, \n(specially that due to a bug in ReceiveStatistics, that value is always used, ignoring what is set with SetMaxReorderingThreshold)\nbut later might be good to allow to set this value from outside, like ReceiveStatistics pretend to do.",
+      "range": {
+        "startLine": 41,
+        "startChar": 76,
+        "endLine": 41,
+        "endChar": 0
+      },
+      "revId": "5fad053d13be047b0eaa74105e51043cdde740da",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
