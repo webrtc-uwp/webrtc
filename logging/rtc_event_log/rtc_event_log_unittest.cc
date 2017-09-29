@@ -15,6 +15,23 @@
 #include <vector>
 
 #include "call/call.h"
+#include "logging/rtc_event_log/events/rtc_event_audio_network_adaptation.h"
+#include "logging/rtc_event_log/events/rtc_event_audio_playout.h"
+#include "logging/rtc_event_log/events/rtc_event_audio_receive_stream_config.h"
+#include "logging/rtc_event_log/events/rtc_event_audio_send_stream_config.h"
+#include "logging/rtc_event_log/events/rtc_event_bwe_update_delay_based.h"
+#include "logging/rtc_event_log/events/rtc_event_bwe_update_loss_based.h"
+#include "logging/rtc_event_log/events/rtc_event_logging_started.h"
+#include "logging/rtc_event_log/events/rtc_event_logging_stopped.h"
+#include "logging/rtc_event_log/events/rtc_event_probe_cluster_created.h"
+#include "logging/rtc_event_log/events/rtc_event_probe_result_failure.h"
+#include "logging/rtc_event_log/events/rtc_event_probe_result_success.h"
+#include "logging/rtc_event_log/events/rtc_event_rtcp_packet_incoming.h"
+#include "logging/rtc_event_log/events/rtc_event_rtcp_packet_outgoing.h"
+#include "logging/rtc_event_log/events/rtc_event_rtp_packet_incoming.h"
+#include "logging/rtc_event_log/events/rtc_event_rtp_packet_outgoing.h"
+#include "logging/rtc_event_log/events/rtc_event_video_receive_stream_config.h"
+#include "logging/rtc_event_log/events/rtc_event_video_send_stream_config.h"
 #include "logging/rtc_event_log/rtc_event_log.h"
 #include "logging/rtc_event_log/rtc_event_log_parser.h"
 #include "logging/rtc_event_log/rtc_event_log_unittest_helper.h"
@@ -356,7 +373,8 @@ void SessionDescription::WriteSession() {
 
   // When log_dumper goes out of scope, it causes the log file to be flushed
   // to disk.
-  std::unique_ptr<RtcEventLog> log_dumper(RtcEventLog::Create());
+  std::unique_ptr<RtcEventLog> log_dumper(
+      RtcEventLog::Create(RtcEventLog::EncodingType::Legacy));
 
   size_t incoming_rtp_written = 0;
   size_t outgoing_rtp_written = 0;
@@ -374,45 +392,49 @@ void SessionDescription::WriteSession() {
       log_dumper->StartLogging(temp_filename, 10000000);
     switch (event_types[i]) {
       case EventType::INCOMING_RTP:
-        log_dumper->LogIncomingRtpHeader(
-            incoming_rtp_packets[incoming_rtp_written++]);
+        log_dumper->Log(rtc::MakeUnique<RtcEventRtpPacketIncoming>(
+            incoming_rtp_packets[incoming_rtp_written++]));
         break;
-      case EventType::OUTGOING_RTP:
-        log_dumper->LogOutgoingRtpHeader(
-            outgoing_rtp_packets[outgoing_rtp_written++],
-            PacedPacketInfo::kNotAProbe);
+      case EventType::OUTGOING_RTP: {
+        constexpr int kNotAProble = PacedPacketInfo::kNotAProbe;  // Compiler...
+        log_dumper->Log(rtc::MakeUnique<RtcEventRtpPacketOutgoing>(
+            outgoing_rtp_packets[outgoing_rtp_written++], kNotAProble));
         break;
+      }
       case EventType::INCOMING_RTCP:
-        log_dumper->LogIncomingRtcpPacket(
-            incoming_rtcp_packets[incoming_rtcp_written++]);
+        log_dumper->Log(rtc::MakeUnique<RtcEventRtcpPacketIncoming>(
+            incoming_rtcp_packets[incoming_rtcp_written++]));
         break;
       case EventType::OUTGOING_RTCP:
-        log_dumper->LogOutgoingRtcpPacket(
-            outgoing_rtcp_packets[outgoing_rtcp_written++]);
+        log_dumper->Log(rtc::MakeUnique<RtcEventRtcpPacketOutgoing>(
+            outgoing_rtcp_packets[outgoing_rtcp_written++]));
         break;
       case EventType::AUDIO_PLAYOUT:
-        log_dumper->LogAudioPlayout(playout_ssrcs[playouts_written++]);
+        log_dumper->Log(rtc::MakeUnique<RtcEventAudioPlayout>(
+            playout_ssrcs[playouts_written++]));
         break;
       case EventType::BWE_LOSS_UPDATE:
-        log_dumper->LogLossBasedBweUpdate(
+        log_dumper->Log(rtc::MakeUnique<RtcEventBweUpdateLossBased>(
             bwe_loss_updates[bwe_loss_written].bitrate_bps,
             bwe_loss_updates[bwe_loss_written].fraction_loss,
-            bwe_loss_updates[bwe_loss_written].total_packets);
+            bwe_loss_updates[bwe_loss_written].total_packets));
         bwe_loss_written++;
         break;
       case EventType::BWE_DELAY_UPDATE:
-        log_dumper->LogDelayBasedBweUpdate(
+        log_dumper->Log(rtc::MakeUnique<RtcEventBweUpdateDelayBased>(
             bwe_delay_updates[bwe_delay_written].first,
-            bwe_delay_updates[bwe_delay_written].second);
+            bwe_delay_updates[bwe_delay_written].second));
         bwe_delay_written++;
         break;
       case EventType::VIDEO_RECV_CONFIG:
-        log_dumper->LogVideoReceiveStreamConfig(
-            receiver_configs[recv_configs_written++]);
+        log_dumper->Log(rtc::MakeUnique<RtcEventVideoReceiveStreamConfig>(
+            rtc::MakeUnique<rtclog::StreamConfig>(
+                receiver_configs[recv_configs_written++])));
         break;
       case EventType::VIDEO_SEND_CONFIG:
-        log_dumper->LogVideoSendStreamConfig(
-            sender_configs[send_configs_written++]);
+        log_dumper->Log(rtc::MakeUnique<RtcEventVideoSendStreamConfig>(
+            rtc::MakeUnique<rtclog::StreamConfig>(
+                sender_configs[send_configs_written++])));
         break;
       case EventType::AUDIO_RECV_CONFIG:
         // Not implemented
@@ -738,15 +760,16 @@ TEST(RtcEventLogTest, LogEventAndReadBack) {
   // Add RTP, start logging, add RTCP and then stop logging
   rtc::ScopedFakeClock fake_clock;
   fake_clock.SetTimeMicros(prng.Rand<uint32_t>());
-  std::unique_ptr<RtcEventLog> log_dumper(RtcEventLog::Create());
+  std::unique_ptr<RtcEventLog> log_dumper(
+      RtcEventLog::Create(RtcEventLog::EncodingType::Legacy));
 
-  log_dumper->LogIncomingRtpHeader(rtp_packet);
+  log_dumper->Log(rtc::MakeUnique<RtcEventRtpPacketIncoming>(rtp_packet));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
 
   log_dumper->StartLogging(temp_filename, 10000000);
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
 
-  log_dumper->LogOutgoingRtcpPacket(rtcp_packet);
+  log_dumper->Log(rtc::MakeUnique<RtcEventRtcpPacketOutgoing>(rtcp_packet));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
 
   log_dumper->StopLogging();
@@ -790,10 +813,12 @@ TEST(RtcEventLogTest, LogLossBasedBweUpdateAndReadBack) {
   // Start logging, add the packet loss event and then stop logging.
   rtc::ScopedFakeClock fake_clock;
   fake_clock.SetTimeMicros(prng.Rand<uint32_t>());
-  std::unique_ptr<RtcEventLog> log_dumper(RtcEventLog::Create());
+  std::unique_ptr<RtcEventLog> log_dumper(
+      RtcEventLog::Create(RtcEventLog::EncodingType::Legacy));
   log_dumper->StartLogging(temp_filename, 10000000);
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
-  log_dumper->LogLossBasedBweUpdate(bitrate, fraction_lost, total_packets);
+  log_dumper->Log(rtc::MakeUnique<RtcEventBweUpdateLossBased>(
+      bitrate, fraction_lost, total_packets));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
   log_dumper->StopLogging();
 
@@ -830,14 +855,18 @@ TEST(RtcEventLogTest, LogDelayBasedBweUpdateAndReadBack) {
   // Start logging, add the packet delay events and then stop logging.
   rtc::ScopedFakeClock fake_clock;
   fake_clock.SetTimeMicros(prng.Rand<uint32_t>());
-  std::unique_ptr<RtcEventLog> log_dumper(RtcEventLog::Create());
+  std::unique_ptr<RtcEventLog> log_dumper(
+      RtcEventLog::Create(RtcEventLog::EncodingType::Legacy));
   log_dumper->StartLogging(temp_filename, 10000000);
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
-  log_dumper->LogDelayBasedBweUpdate(bitrate1, BandwidthUsage::kBwNormal);
+  log_dumper->Log(rtc::MakeUnique<RtcEventBweUpdateDelayBased>(
+      bitrate1, BandwidthUsage::kBwNormal));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
-  log_dumper->LogDelayBasedBweUpdate(bitrate2, BandwidthUsage::kBwOverusing);
+  log_dumper->Log(rtc::MakeUnique<RtcEventBweUpdateDelayBased>(
+      bitrate2, BandwidthUsage::kBwOverusing));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
-  log_dumper->LogDelayBasedBweUpdate(bitrate3, BandwidthUsage::kBwUnderusing);
+  log_dumper->Log(rtc::MakeUnique<RtcEventBweUpdateDelayBased>(
+      bitrate3, BandwidthUsage::kBwUnderusing));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
   log_dumper->StopLogging();
 
@@ -882,14 +911,18 @@ TEST(RtcEventLogTest, LogProbeClusterCreatedAndReadBack) {
 
   rtc::ScopedFakeClock fake_clock;
   fake_clock.SetTimeMicros(prng.Rand<uint32_t>());
-  std::unique_ptr<RtcEventLog> log_dumper(RtcEventLog::Create());
+  std::unique_ptr<RtcEventLog> log_dumper(
+      RtcEventLog::Create(RtcEventLog::EncodingType::Legacy));
 
   log_dumper->StartLogging(temp_filename, 10000000);
-  log_dumper->LogProbeClusterCreated(0, bitrate_bps0, min_probes0, min_bytes0);
+  log_dumper->Log(rtc::MakeUnique<RtcEventProbeClusterCreated>(
+      0, bitrate_bps0, min_probes0, min_bytes0));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
-  log_dumper->LogProbeClusterCreated(1, bitrate_bps1, min_probes1, min_bytes1);
+  log_dumper->Log(rtc::MakeUnique<RtcEventProbeClusterCreated>(
+      1, bitrate_bps1, min_probes1, min_bytes1));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
-  log_dumper->LogProbeClusterCreated(2, bitrate_bps2, min_probes2, min_bytes2);
+  log_dumper->Log(rtc::MakeUnique<RtcEventProbeClusterCreated>(
+      2, bitrate_bps2, min_probes2, min_bytes2));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
   log_dumper->StopLogging();
 
@@ -928,14 +961,15 @@ TEST(RtcEventLogTest, LogProbeResultSuccessAndReadBack) {
 
   rtc::ScopedFakeClock fake_clock;
   fake_clock.SetTimeMicros(prng.Rand<uint32_t>());
-  std::unique_ptr<RtcEventLog> log_dumper(RtcEventLog::Create());
+  std::unique_ptr<RtcEventLog> log_dumper(
+      RtcEventLog::Create(RtcEventLog::EncodingType::Legacy));
 
   log_dumper->StartLogging(temp_filename, 10000000);
-  log_dumper->LogProbeResultSuccess(0, bitrate_bps0);
+  log_dumper->Log(rtc::MakeUnique<RtcEventProbeResultSuccess>(0, bitrate_bps0));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
-  log_dumper->LogProbeResultSuccess(1, bitrate_bps1);
+  log_dumper->Log(rtc::MakeUnique<RtcEventProbeResultSuccess>(1, bitrate_bps1));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
-  log_dumper->LogProbeResultSuccess(2, bitrate_bps2);
+  log_dumper->Log(rtc::MakeUnique<RtcEventProbeResultSuccess>(2, bitrate_bps2));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
   log_dumper->StopLogging();
 
@@ -970,16 +1004,18 @@ TEST(RtcEventLogTest, LogProbeResultFailureAndReadBack) {
 
   rtc::ScopedFakeClock fake_clock;
   fake_clock.SetTimeMicros(prng.Rand<uint32_t>());
-  std::unique_ptr<RtcEventLog> log_dumper(RtcEventLog::Create());
+  std::unique_ptr<RtcEventLog> log_dumper(
+      RtcEventLog::Create(RtcEventLog::EncodingType::Legacy));
 
   log_dumper->StartLogging(temp_filename, 10000000);
-  log_dumper->LogProbeResultFailure(
-      0, ProbeFailureReason::kInvalidSendReceiveInterval);
+  log_dumper->Log(rtc::MakeUnique<RtcEventProbeResultFailure>(
+      0, ProbeFailureReason::kInvalidSendReceiveInterval));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
-  log_dumper->LogProbeResultFailure(
-      1, ProbeFailureReason::kInvalidSendReceiveRatio);
+  log_dumper->Log(rtc::MakeUnique<RtcEventProbeResultFailure>(
+      1, ProbeFailureReason::kInvalidSendReceiveRatio));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
-  log_dumper->LogProbeResultFailure(2, ProbeFailureReason::kTimeout);
+  log_dumper->Log(rtc::MakeUnique<RtcEventProbeResultFailure>(
+      2, ProbeFailureReason::kTimeout));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
   log_dumper->StopLogging();
 
@@ -1029,7 +1065,8 @@ class ConfigReadWriteTest {
     // Log a single config event and stop logging.
     rtc::ScopedFakeClock fake_clock;
     fake_clock.SetTimeMicros(prng.Rand<uint32_t>());
-    std::unique_ptr<RtcEventLog> log_dumper(RtcEventLog::Create());
+    std::unique_ptr<RtcEventLog> log_dumper(
+        RtcEventLog::Create(RtcEventLog::EncodingType::Legacy));
 
     log_dumper->StartLogging(temp_filename, 10000000);
     LogConfig(log_dumper.get());
@@ -1061,7 +1098,8 @@ class AudioReceiveConfigReadWriteTest : public ConfigReadWriteTest {
     GenerateAudioReceiveConfig(extensions, &config, &prng);
   }
   void LogConfig(RtcEventLog* event_log) override {
-    event_log->LogAudioReceiveStreamConfig(config);
+    event_log->Log(rtc::MakeUnique<RtcEventAudioReceiveStreamConfig>(
+        rtc::MakeUnique<rtclog::StreamConfig>(config)));
   }
   void VerifyConfig(const ParsedRtcEventLog& parsed_log,
                     size_t index) override {
@@ -1078,7 +1116,8 @@ class AudioSendConfigReadWriteTest : public ConfigReadWriteTest {
     GenerateAudioSendConfig(extensions, &config, &prng);
   }
   void LogConfig(RtcEventLog* event_log) override {
-    event_log->LogAudioSendStreamConfig(config);
+    event_log->Log(rtc::MakeUnique<RtcEventAudioSendStreamConfig>(
+        rtc::MakeUnique<rtclog::StreamConfig>(config)));
   }
   void VerifyConfig(const ParsedRtcEventLog& parsed_log,
                     size_t index) override {
@@ -1095,7 +1134,8 @@ class VideoReceiveConfigReadWriteTest : public ConfigReadWriteTest {
     GenerateVideoReceiveConfig(extensions, &config, &prng);
   }
   void LogConfig(RtcEventLog* event_log) override {
-    event_log->LogVideoReceiveStreamConfig(config);
+    event_log->Log(rtc::MakeUnique<RtcEventVideoReceiveStreamConfig>(
+        rtc::MakeUnique<rtclog::StreamConfig>(config)));
   }
   void VerifyConfig(const ParsedRtcEventLog& parsed_log,
                     size_t index) override {
@@ -1112,7 +1152,8 @@ class VideoSendConfigReadWriteTest : public ConfigReadWriteTest {
     GenerateVideoSendConfig(extensions, &config, &prng);
   }
   void LogConfig(RtcEventLog* event_log) override {
-    event_log->LogVideoSendStreamConfig(config);
+    event_log->Log(rtc::MakeUnique<RtcEventVideoSendStreamConfig>(
+        rtc::MakeUnique<rtclog::StreamConfig>(config)));
   }
   void VerifyConfig(const ParsedRtcEventLog& parsed_log,
                     size_t index) override {
@@ -1128,7 +1169,8 @@ class AudioNetworkAdaptationReadWriteTest : public ConfigReadWriteTest {
     GenerateAudioNetworkAdaptation(extensions, &config, &prng);
   }
   void LogConfig(RtcEventLog* event_log) override {
-    event_log->LogAudioNetworkAdaptation(config);
+    event_log->Log(rtc::MakeUnique<RtcEventAudioNetworkAdaptation>(
+        rtc::MakeUnique<AudioEncoderRuntimeConfig>(config)));
   }
   void VerifyConfig(const ParsedRtcEventLog& parsed_log,
                     size_t index) override {
