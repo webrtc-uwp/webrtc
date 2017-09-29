@@ -22,6 +22,30 @@
       "revId": "51357505373200288e3accb0e9c111edb7e43a68",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7df82299_872f290c",
+        "filename": "rtc_base/java/src/org/webrtc/NativeLibrary.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-09-29T10:54:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "74ba518e_5421906b",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 16,
+        "endChar": 27
+      },
+      "revId": "51357505373200288e3accb0e9c111edb7e43a68",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
