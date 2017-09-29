@@ -1285,6 +1285,19 @@ RTCError PeerConnection::SetBitrate(const BitrateParameters& bitrate) {
   return RTCError::OK();
 }
 
+RTCError PeerConnection::SetBitrateAllocationStrategy(
+    rtc::BitrateAllocationStrategy* bitrate_allocation_strategy) {
+  rtc::Thread* worker_thread = factory_->worker_thread();
+  if (!worker_thread->IsCurrent()) {
+    return worker_thread->Invoke<RTCError>(
+        RTC_FROM_HERE, rtc::Bind(&PeerConnection::SetBitrateAllocationStrategy,
+                                 this, bitrate_allocation_strategy));
+  }
+  RTC_DCHECK(call_.get());
+  call_->SetBitrateAllocationStrategy(bitrate_allocation_strategy);
+  return RTCError::OK();
+}
+
 bool PeerConnection::StartRtcEventLog(rtc::PlatformFile file,
                                       int64_t max_size_bytes) {
   return factory_->worker_thread()->Invoke<bool>(

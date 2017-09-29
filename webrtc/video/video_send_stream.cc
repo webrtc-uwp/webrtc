@@ -958,7 +958,7 @@ void VideoSendStreamImpl::Start() {
   bitrate_allocator_->AddObserver(
       this, encoder_min_bitrate_bps_, encoder_max_bitrate_bps_,
       max_padding_bitrate_, !config_->suspend_below_min_bitrate,
-                                  config_->track_id);
+      config_->track_id);
 
   // Start monitoring encoder activity.
   {
@@ -1012,7 +1012,7 @@ void VideoSendStreamImpl::SignalEncoderActive() {
   bitrate_allocator_->AddObserver(
       this, encoder_min_bitrate_bps_, encoder_max_bitrate_bps_,
       max_padding_bitrate_, !config_->suspend_below_min_bitrate,
-                                  config_->track_id);
+      config_->track_id);
 }
 
 void VideoSendStreamImpl::OnEncoderConfigurationChanged(
@@ -1055,7 +1055,7 @@ void VideoSendStreamImpl::OnEncoderConfigurationChanged(
     bitrate_allocator_->AddObserver(
         this, encoder_min_bitrate_bps_, encoder_max_bitrate_bps_,
         max_padding_bitrate_, !config_->suspend_below_min_bitrate,
-                                    config_->track_id);
+        config_->track_id);
   }
 }
 

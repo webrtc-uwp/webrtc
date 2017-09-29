@@ -470,6 +470,12 @@ class RtpPacketSender {
                             int64_t capture_time_ms,
                             size_t bytes,
                             bool retransmission) = 0;
+
+  // Currently audio traffic is not accounted by pacer and passed through.
+  // With the introduction of audio BWE audio traffic will be accounted for
+  // the pacer budget calculation. The audio traffic still will be injected
+  // at high priority.
+  virtual void SetAccountForAudioPackets(bool account_for_audio) = 0;
 };
 
 class TransportSequenceNumberAllocator {

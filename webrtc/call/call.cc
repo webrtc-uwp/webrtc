@@ -202,6 +202,9 @@ class Call : public webrtc::Call,
   void SetBitrateConfigMask(
       const webrtc::Call::Config::BitrateConfigMask& bitrate_config) override;
 
+  void SetBitrateAllocationStrategy(
+      rtc::BitrateAllocationStrategy* bitrate_allocation_strategy) override;
+
   void SignalChannelNetworkState(MediaType media, NetworkState state) override;
 
   void OnTransportOverheadChanged(MediaType media,
@@ -1009,6 +1012,18 @@ void Call::UpdateCurrentBitrateConfig(const rtc::Optional<int>& new_start) {
     updated.start_bitrate_bps = config_.bitrate_config.start_bitrate_bps;
   }
   config_.bitrate_config = updated;
+}
+
+void Call::SetBitrateAllocationStrategy(
+    rtc::BitrateAllocationStrategy* bitrate_allocation_strategy) {
+  if (!worker_queue_.IsCurrent()) {
+    worker_queue_.PostTask([this, bitrate_allocation_strategy] {
+      SetBitrateAllocationStrategy(std::move(bitrate_allocation_strategy));
+    });
+    return;
+  }
+  RTC_DCHECK_RUN_ON(&worker_queue_);
+  bitrate_allocator_->SetBitrateAllocationStrategy(bitrate_allocation_strategy);
 }
 
 void Call::SignalChannelNetworkState(MediaType media, NetworkState state) {

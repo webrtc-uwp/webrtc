@@ -89,6 +89,7 @@
 #include "webrtc/media/base/mediachannel.h"
 #include "webrtc/media/base/videocapturer.h"
 #include "webrtc/p2p/base/portallocator.h"
+#include "webrtc/rtc_base/bitrateallocationstrategy.h"
 #include "webrtc/rtc_base/fileutils.h"
 #include "webrtc/rtc_base/network.h"
 #include "webrtc/rtc_base/rtccertificate.h"
@@ -770,6 +771,16 @@ class PeerConnectionInterface : public rtc::RefCountInterface {
   // Setting |current_bitrate_bps| will reset the current bitrate estimate
   // to the provided value.
   virtual RTCError SetBitrate(const BitrateParameters& bitrate) = 0;
+
+  // SetBitrateAllocationStrategy sets current strategy. If not set default
+  // WebRTC allocator will be used. May be changed during an active session.
+  // Should be set to null before the strategy is destroyed. The strategy is
+  // owned by application and it is responsible for keeping it alive as long as
+  // any of its peerconnections are using it.
+  virtual RTCError SetBitrateAllocationStrategy(
+      rtc::BitrateAllocationStrategy* bitrate_allocation_strategy) {
+    return RTCError(RTCErrorType::UNSUPPORTED_OPERATION);
+  }
 
   // Returns the current SignalingState.
   virtual SignalingState signaling_state() = 0;

@@ -114,6 +114,12 @@ class PacedSender : public Module, public RtpPacketSender {
                     size_t bytes,
                     bool retransmission) override;
 
+  // Currently audio traffic is not accounted by pacer and passed through.
+  // With the introduction of audio BWE audio traffic will be accounted for
+  // the pacer budget calculation. The audio traffic still will be injected
+  // at high priority.
+  void SetAccountForAudioPackets(bool account_for_audio) override;
+
   // Returns the time since the oldest queued packet was enqueued.
   virtual int64_t QueueInMs() const;
 
@@ -198,6 +204,7 @@ class PacedSender : public Module, public RtpPacketSender {
 
   float pacing_factor_ GUARDED_BY(critsect_);
   int64_t queue_time_limit GUARDED_BY(critsect_);
+  bool account_for_audio_ GUARDED_BY(critsect_);
 };
 }  // namespace webrtc
 #endif  // WEBRTC_MODULES_PACING_PACED_SENDER_H_

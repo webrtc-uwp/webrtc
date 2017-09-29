@@ -107,6 +107,8 @@ rtc_static_library("rtc_base_approved") {
     "bind.h",
     "bitbuffer.cc",
     "bitbuffer.h",
+    "bitrateallocationstrategy.cc",
+    "bitrateallocationstrategy.h",
     "buffer.h",
     "bufferqueue.cc",
     "bufferqueue.h",

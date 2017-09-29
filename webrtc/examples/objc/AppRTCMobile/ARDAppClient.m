@@ -25,6 +25,7 @@
 #import "WebRTC/RTCVideoTrack.h"
 
 #import "ARDAppEngineClient.h"
+#import "ARDBitrateAllocationStrategy.h"
 #import "ARDJoinResponse.h"
 #import "ARDMessageResponse.h"
 #import "ARDSDPUtils.h"
@@ -103,6 +104,7 @@ static int const kKbpsMultiplier = 1000;
   ARDTimerProxy *_statsTimer;
   ARDSettingsModel *_settings;
   RTCVideoTrack *_localVideoTrack;
+  ARDBitrateAllocationStrategy *_bitrateAllocationStrategy;
 }
 
 @synthesize shouldGetStats = _shouldGetStats;
@@ -300,6 +302,8 @@ static int const kKbpsMultiplier = 1000;
   _hasReceivedSdp = NO;
   _messageQueue = [NSMutableArray array];
   _localVideoTrack = nil;
+  _bitrateAllocationStrategy = nil;
+
 #if defined(WEBRTC_IOS)
   [_factory stopAecDump];
   [_peerConnection stopRtcEventLog];
@@ -532,8 +536,15 @@ static int const kKbpsMultiplier = 1000;
   _peerConnection = [_factory peerConnectionWithConfiguration:config
                                                   constraints:constraints
                                                      delegate:self];
+
+  // Create bitrate allocation strategy
+  _bitrateAllocationStrategy = [ARDBitrateAllocationStrategy new];
+  [_bitrateAllocationStrategy setAudioPriorityStrategy:_peerConnection
+                                          audioTrackId:kARDAudioTrackId];
+
   // Create AV senders.
   [self createMediaSenders];
+
   if (_isInitiator) {
     // Send offer.
     __weak ARDAppClient *weakSelf = self;
@@ -687,7 +698,7 @@ static int const kKbpsMultiplier = 1000;
   RTCMediaStream *stream = [_factory mediaStreamWithStreamId:kARDMediaStreamId];
   [stream addAudioTrack:track];
   _localVideoTrack = [self createLocalVideoTrack];
-  if(_localVideoTrack) {
+  if (_localVideoTrack) {
     [stream addVideoTrack:_localVideoTrack];
   }
   [_peerConnection addStream:stream];

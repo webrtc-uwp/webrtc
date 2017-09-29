@@ -22,6 +22,7 @@
 #include "webrtc/call/flexfec_receive_stream.h"
 #include "webrtc/call/rtp_transport_controller_send_interface.h"
 #include "webrtc/common_types.h"
+#include "webrtc/rtc_base/bitrateallocationstrategy.h"
 #include "webrtc/rtc_base/networkroute.h"
 #include "webrtc/rtc_base/platform_file.h"
 #include "webrtc/rtc_base/socket.h"
@@ -182,6 +183,9 @@ class Call {
   // Assumes 0 <= min <= start <= max holds for set parameters.
   virtual void SetBitrateConfigMask(
       const Config::BitrateConfigMask& bitrate_mask) = 0;
+
+  virtual void SetBitrateAllocationStrategy(
+      rtc::BitrateAllocationStrategy* bitrate_allocation_strategy) = 0;
 
   // TODO(skvlad): When the unbundled case with multiple streams for the same
   // media type going over different networks is supported, track the state

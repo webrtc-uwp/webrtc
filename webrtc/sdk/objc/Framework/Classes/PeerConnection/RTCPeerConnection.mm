@@ -21,6 +21,7 @@
 #import "RTCRtpReceiver+Private.h"
 #import "RTCRtpSender+Private.h"
 #import "RTCSessionDescription+Private.h"
+#import "WebRTC/RTCBitrateAllocationStrategy.h"
 #import "WebRTC/RTCLogging.h"
 
 #include <memory>
@@ -408,6 +409,14 @@ void PeerConnectionDelegateAdapter::OnIceCandidatesRemoved(
 - (void)stopRtcEventLog {
   _peerConnection->StopRtcEventLog();
   _hasStartedRtcEventLog = NO;
+}
+
+- (void)setBitrateAllocationStrategy:
+        (RTCBitrateAllocationStrategy *_Nullable)bitrateAllocationStrategy {
+  if (bitrateAllocationStrategy)
+    _peerConnection->SetBitrateAllocationStrategy(bitrateAllocationStrategy.strategy);
+  else
+    _peerConnection->SetBitrateAllocationStrategy(nullptr);
 }
 
 - (RTCRtpSender *)senderWithKind:(NSString *)kind

@@ -165,6 +165,7 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
     if (is_ios) {
       deps = [
         ":AppRTCMobile_ios_frameworks",
+        "../rtc_base:rtc_base",
       ]
     } else {
       deps = [
@@ -195,6 +196,8 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
       "objc/AppRTCMobile/ARDAppClient.m",
       "objc/AppRTCMobile/ARDAppEngineClient.h",
       "objc/AppRTCMobile/ARDAppEngineClient.m",
+      "objc/AppRTCMobile/ARDBitrateAllocationStrategy.h",
+      "objc/AppRTCMobile/ARDBitrateAllocationStrategy.mm",
       "objc/AppRTCMobile/ARDBitrateTracker.h",
       "objc/AppRTCMobile/ARDBitrateTracker.m",
       "objc/AppRTCMobile/ARDCaptureController.h",

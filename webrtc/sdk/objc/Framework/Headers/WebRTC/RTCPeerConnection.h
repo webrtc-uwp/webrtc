@@ -24,6 +24,7 @@
 @class RTCRtpSender;
 @class RTCSessionDescription;
 @class RTCLegacyStatsReport;
+@class RTCBitrateAllocationStrategy;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -195,6 +196,9 @@ RTC_EXPORT
 - (BOOL)startRtcEventLogWithFilePath:(NSString *)filePath
                       maxSizeInBytes:(int64_t)maxSizeInBytes;
 - (void)stopRtcEventLog;
+
+- (void)setBitrateAllocationStrategy:
+        (RTCBitrateAllocationStrategy *_Nullable)bitrateAllocationStrategy;
 
 @end
 
