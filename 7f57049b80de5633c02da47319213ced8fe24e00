@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "bef621ba_c910b432",
+        "filename": "logging/rtc_event_log/rtc_event_log_unittest_helper.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-09-29T19:07:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3ef68bc6_aab1356a",
+      "range": {
+        "startLine": 362,
+        "startChar": 41,
+        "endLine": 362,
+        "endChar": 0
+      },
+      "revId": "7f57049b80de5633c02da47319213ced8fe24e00",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c8cb84fa_a6cd890a",
         "filename": "logging/rtc_event_log/rtc_event_log_unittest_helper.cc",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "23b6af2d_f62d485a",
+        "filename": "logging/rtc_event_log/rtc_event_log_unittest_helper.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-09-29T19:07:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c8cb84fa_a6cd890a",
+      "range": {
+        "startLine": 392,
+        "startChar": 42,
+        "endLine": 392,
+        "endChar": 0
+      },
+      "revId": "7f57049b80de5633c02da47319213ced8fe24e00",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eb72821e_15a7dffe",
         "filename": "modules/rtp_rtcp/source/rtcp_sender.cc",
         "patchSetId": 3
@@ -59,6 +107,30 @@
       "writtenOn": "2017-09-29T18:26:14Z",
       "side": 1,
       "message": "may be rtc::MakeArrayView(data, length)",
+      "range": {
+        "startLine": 103,
+        "startChar": 57,
+        "endLine": 103,
+        "endChar": 0
+      },
+      "revId": "7f57049b80de5633c02da47319213ced8fe24e00",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "042eca00_1ccb4cd5",
+        "filename": "modules/rtp_rtcp/source/rtcp_sender.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-09-29T19:07:55Z",
+      "side": 1,
+      "message": "This does not seem to work:\nerror: no viable conversion from \u0027ArrayView\u003cunsigned char\u003e\u0027 to \u0027ArrayView\u003cconst uint8_t\u003e\u0027\n\nIf I need to do the const cast anyway, is there a reason for preferring the MakeArrayView version?",
+      "parentUuid": "eb72821e_15a7dffe",
       "range": {
         "startLine": 103,
         "startChar": 57,
