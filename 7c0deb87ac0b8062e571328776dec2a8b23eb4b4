@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "aa3ca1ec_420e2d2e",
+        "filename": "rtc_base/sslidentity.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 5602
+      },
+      "writtenOn": "2017-09-29T16:27:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "574021ee_2f686e3c",
+      "revId": "7c0deb87ac0b8062e571328776dec2a8b23eb4b4",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "139d7462_9edf9c01",
         "filename": "rtc_base/sslidentity.h",
         "patchSetId": 1
@@ -33,6 +51,24 @@
       "revId": "7c0deb87ac0b8062e571328776dec2a8b23eb4b4",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e7384a5b_5e5546b9",
+        "filename": "rtc_base/sslidentity.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 5602
+      },
+      "writtenOn": "2017-09-29T16:27:51Z",
+      "side": 1,
+      "message": "Removed and reordered. I added the comment because otherwise the comment above is confusing.",
+      "parentUuid": "139d7462_9edf9c01",
+      "revId": "7c0deb87ac0b8062e571328776dec2a8b23eb4b4",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
