@@ -1213,6 +1213,8 @@ bool PeerConnection::AddIceCandidate(
 bool PeerConnection::RemoveIceCandidates(
     const std::vector<cricket::Candidate>& candidates) {
   TRACE_EVENT0("webrtc", "PeerConnection::RemoveIceCandidates");
+  // TODO(steveanton): This should check that all candidates have transport_name
+  // or else a DCHECK will be hit in transportcontroller.cc .
   return session_->RemoveRemoteIceCandidates(candidates);
 }
 
