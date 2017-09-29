@@ -22,6 +22,30 @@
       "revId": "8f27a1e0d070ace4e6081a6943191bd2ac67a2f8",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "016a1a4f_b49ccebe",
+        "filename": "logging/rtc_event_log/events/rtc_event.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 5147
+      },
+      "writtenOn": "2017-09-29T22:10:54Z",
+      "side": 1,
+      "message": "I\u0027m not sure how expensive it is, but it seems like good practice, don\u0027t you think? (This is an edge case, where it\u0027s too little code to create a .cc file, imho.)",
+      "parentUuid": "e177e176_ee0889ea",
+      "range": {
+        "startLine": 17,
+        "startChar": 8,
+        "endLine": 17,
+        "endChar": 18
+      },
+      "revId": "8f27a1e0d070ace4e6081a6943191bd2ac67a2f8",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
