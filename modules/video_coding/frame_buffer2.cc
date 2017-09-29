@@ -148,7 +148,8 @@ FrameBuffer::ReturnReason FrameBuffer::NextFrame(
         timing_->SetJitterDelay(jitter_estimator_->GetJitterEstimate(rtt_mult));
         timing_->UpdateCurrentDelay(frame->RenderTime(), now_ms);
       } else {
-        jitter_estimator_->FrameNacked();
+        if (webrtc::field_trial::IsEnabled("WebRTC-AddRttToPlayoutDelay"))
+          jitter_estimator_->FrameNacked();
       }
 
       // Gracefully handle bad RTP timestamps and render time issues.
