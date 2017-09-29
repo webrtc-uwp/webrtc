@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ecbf8124_b7dfe6fd",
+        "filename": "modules/video_coding/codecs/vp8/default_temporal_layers.cc",
+        "patchSetId": 8
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 5117
+      },
+      "writtenOn": "2017-09-29T15:34:47Z",
+      "side": 1,
+      "message": "Checking of equality is not possible, as dependencies to key frames may be out of pattern. \n\nUsing set, as you suggested, simplifies code a little and removes sorting condition. Done it.",
+      "parentUuid": "d99ba98f_1b851f1b",
+      "range": {
+        "startLine": 443,
+        "startChar": 58,
+        "endLine": 443,
+        "endChar": 0
+      },
+      "revId": "258f83b3467bbe20c5a7e1596b0ced554d4c25fe",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f1d4ff37_b1cdedc5",
         "filename": "modules/video_coding/codecs/vp8/default_temporal_layers.cc",
         "patchSetId": 8
@@ -45,6 +69,30 @@
       "revId": "258f83b3467bbe20c5a7e1596b0ced554d4c25fe",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8a32aaaf_fba739c5",
+        "filename": "modules/video_coding/codecs/vp8/default_temporal_layers.cc",
+        "patchSetId": 8
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 5117
+      },
+      "writtenOn": "2017-09-29T15:34:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f1d4ff37_b1cdedc5",
+      "range": {
+        "startLine": 463,
+        "startChar": 12,
+        "endLine": 463,
+        "endChar": 0
+      },
+      "revId": "258f83b3467bbe20c5a7e1596b0ced554d4c25fe",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "ec3680f6_96d849b7",
+        "filename": "modules/video_coding/codecs/vp8/default_temporal_layers.cc",
+        "patchSetId": 8
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 5117
+      },
+      "writtenOn": "2017-09-29T15:34:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cf591f16_345e62fe",
+      "range": {
+        "startLine": 487,
+        "startChar": 13,
+        "endLine": 487,
+        "endChar": 14
+      },
+      "revId": "258f83b3467bbe20c5a7e1596b0ced554d4c25fe",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d55aa287_5eaeb427",
         "filename": "modules/video_coding/codecs/vp8/temporal_layers.h",
         "patchSetId": 8
@@ -91,6 +163,30 @@
       "revId": "258f83b3467bbe20c5a7e1596b0ced554d4c25fe",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe1a2703_723ee3c9",
+        "filename": "modules/video_coding/codecs/vp8/temporal_layers.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 5117
+      },
+      "writtenOn": "2017-09-29T15:34:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d55aa287_5eaeb427",
+      "range": {
+        "startLine": 127,
+        "startChar": 2,
+        "endLine": 127,
+        "endChar": 10
+      },
+      "revId": "258f83b3467bbe20c5a7e1596b0ced554d4c25fe",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
