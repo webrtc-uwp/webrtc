@@ -96,9 +96,6 @@ class PacketQueue {
   std::priority_queue<Packet*, std::vector<Packet*>, Comparator> prio_queue_;
   // Total number of bytes in the queue.
   uint64_t bytes_;
-  // Map<ssrc, std::set<seq_no> >, for checking duplicates.
-  typedef std::map<uint32_t, std::set<uint16_t> > SsrcSeqNoMap;
-  SsrcSeqNoMap dupe_map_;
   const Clock* const clock_;
   int64_t queue_time_sum_;
   int64_t time_last_updated_;
