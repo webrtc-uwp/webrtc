@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d674c02_2e6fc9b1",
+        "filename": "api/stats/rtcstats_objects.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 5142
+      },
+      "writtenOn": "2017-09-29T14:43:42Z",
+      "side": 1,
+      "message": "Can you link to a bug that tracks the implementation of video bits.",
+      "revId": "0f6a210175d6562fcd20b42b2cae2059f4f3309a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32b89b4b_6b260381",
+        "filename": "audio/audio_receive_stream.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 5142
+      },
+      "writtenOn": "2017-09-29T14:43:42Z",
+      "side": 1,
+      "message": "Prefer existing constants, e.g. divide by static_cast\u003cdouble\u003e(rtc::kNumMillisecsPerSec) from webrtc/rtc_base/timeutils.h",
+      "revId": "0f6a210175d6562fcd20b42b2cae2059f4f3309a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1c6773f_bf4c2d23",
+        "filename": "audio/audio_receive_stream_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 5142
+      },
+      "writtenOn": "2017-09-29T14:43:42Z",
+      "side": 1,
+      "message": "kNumMillisecsPerSec",
+      "revId": "0f6a210175d6562fcd20b42b2cae2059f4f3309a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4318919_70649252",
+        "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 1723,
+      "author": {
+        "id": 5142
+      },
+      "writtenOn": "2017-09-29T14:43:42Z",
+      "side": 1,
+      "message": "This might seem like a silly request, but can you clarify that kDelayInPackets is the maximum delay measured in number of packets, maybe call it kMaxDelayInNumPackets? I read it as \"the delay (time) per packet\" and got confused. The maximum delay being +1 though maybe this should be called kJitterBufferCapacityInPackets? And also num_packets_delay or jitter_buffer_num_packets as to not confuse it with delay (time) of the packets.",
+      "revId": "0f6a210175d6562fcd20b42b2cae2059f4f3309a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a83b218_77c318e0",
+        "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 1724,
+      "author": {
+        "id": 5142
+      },
+      "writtenOn": "2017-09-29T14:43:42Z",
+      "side": 1,
+      "message": "I\u0027m a big confused, isn\u0027t a packet something containing a number of samples. So the length of a packet is the length of a sample * number of samples per packet? I would expect this to be something like packets_delay * kPacketLenMs.\n\nkSamples is defined as kPacketLenMs * 16? Is it the total length of all samples (all packets), with 16 samples per packet?\nWe end up with 16*kPacketLenMs^2 for the increase in expected delay. I\u0027m lost.",
+      "revId": "0f6a210175d6562fcd20b42b2cae2059f4f3309a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6712552e_3775d3cf",
+        "filename": "pc/rtcstats_integrationtest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 5142
+      },
+      "writtenOn": "2017-09-29T14:43:42Z",
+      "side": 1,
+      "message": "nit: Link bug here too.",
+      "revId": "0f6a210175d6562fcd20b42b2cae2059f4f3309a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
