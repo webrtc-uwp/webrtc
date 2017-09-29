@@ -409,6 +409,24 @@
     },
     {
       "key": {
+        "uuid": "7a82128f_f709c822",
+        "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 1735,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-29T18:00:07Z",
+      "side": 1,
+      "message": "I still think having a pre-determined expected value is preferable, for the reasons described in the guidelines I linked. It sounds like we\u0027re balancing ease of debugging the test vs. the ability to verify the \"correctness\" of the test on quick inspection. And I\u0027d argue that the latter is more frequently needed than the former. But then again, I don\u0027t maintain this code so the owners may know better than me. It would also be possible to put the expected delay increments of each iteration in a constant:\n\nstatic const int[] kExpectedDelays \u003d { 1600, 3200, 4800, ...}\n\nI still don\u0027t understand why the first is 1600, though. Can you explain?",
+      "parentUuid": "deedb80c_206cdc46",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7def1377_e16e5945",
         "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
         "patchSetId": 6
