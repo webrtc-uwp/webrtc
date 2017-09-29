@@ -16,6 +16,24 @@
       "revId": "1e77676d15da4d10846dce4e873cc1c90d7d4989",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47387c9a_9574f567",
+        "filename": "rtc_base/opensslstreamadapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1058,
+      "author": {
+        "id": 5602
+      },
+      "writtenOn": "2017-09-29T16:14:24Z",
+      "side": 1,
+      "message": "I added a short one. This is all covered by existing documentation for these APIs, so I don\u0027t think more than a quick clarification makes sense.",
+      "parentUuid": "11d3d458_e3ff37f0",
+      "revId": "1e77676d15da4d10846dce4e873cc1c90d7d4989",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
