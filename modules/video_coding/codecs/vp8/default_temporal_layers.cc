@@ -481,6 +481,9 @@ DefaultTemporalLayersChecker::DefaultTemporalLayersChecker(
 bool DefaultTemporalLayersChecker::CheckTemporalConfig(
     bool frame_is_keyframe,
     const TemporalLayers::FrameConfig& frame_config) {
+  if (frame_config.drop_frame) {
+    return true;
+  }
   ++pattern_idx_;
   if (pattern_idx_ == temporal_ids_.size()) {
     // All non key-frame buffers should be updated each pattern cycle.
