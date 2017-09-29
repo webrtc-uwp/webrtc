@@ -1873,9 +1873,11 @@ TEST_F(EndToEndTest, AssignsTransportSequenceNumbers) {
         size_t stream_index,
         VideoReceiveStream::Config* receive_config) override {
       receive_config->rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
+#if 0
       receive_config->rtp.extensions.clear();
       receive_config->rtp.extensions.push_back(RtpExtension(
           RtpExtension::kTransportSequenceNumberUri, kExtensionId));
+#endif
       receive_config->renderer = &fake_renderer_;
     }
 
@@ -3644,11 +3646,13 @@ TEST_F(EndToEndTest, TimingFramesAreReported) {
       send_config->rtp.extensions.clear();
       send_config->rtp.extensions.push_back(
           RtpExtension(RtpExtension::kVideoTimingUri, kExtensionId));
+#if 0
       for (size_t i = 0; i < receive_configs->size(); ++i) {
         (*receive_configs)[i].rtp.extensions.clear();
         (*receive_configs)[i].rtp.extensions.push_back(
             RtpExtension(RtpExtension::kVideoTimingUri, kExtensionId));
       }
+#endif
     }
 
     void OnVideoStreamsCreated(
@@ -4344,9 +4348,11 @@ TEST_F(EndToEndTest, MAYBE_TestFlexfecRtpStatePreservation) {
         video_send_config_.rtp.flexfec.protected_media_ssrcs;
     flexfec_receive_config.local_ssrc = kReceiverLocalVideoSsrc;
     flexfec_receive_config.transport_cc = true;
+#if 0
     flexfec_receive_config.rtp_header_extensions.emplace_back(
         RtpExtension::kTransportSequenceNumberUri,
         test::kTransportSequenceNumberExtensionId);
+#endif
     flexfec_receive_configs_.push_back(flexfec_receive_config);
 
     CreateFlexfecStreams();
@@ -4832,9 +4838,10 @@ TEST_F(EndToEndTest, VerifyDefaultVideoReceiveConfigParameters) {
       << "Enabling RTX requires ssrc-group: FID negotiation";
   EXPECT_TRUE(default_receive_config.rtp.rtx_associated_payload_types.empty())
       << "Enabling RTX requires rtpmap: rtx negotiation.";
+#if 0
   EXPECT_TRUE(default_receive_config.rtp.extensions.empty())
       << "Enabling RTP extensions require negotiation.";
-
+#endif
   VerifyEmptyNackConfig(default_receive_config.rtp.nack);
   EXPECT_EQ(-1, default_receive_config.rtp.ulpfec_payload_type)
       << "Enabling ULPFEC requires rtpmap: ulpfec negotiation.";

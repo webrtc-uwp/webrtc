@@ -196,8 +196,10 @@ void RampUpTester::ModifyVideoConfigs(
   for (VideoReceiveStream::Config& recv_config : *receive_configs) {
     recv_config.rtp.remb = remb;
     recv_config.rtp.transport_cc = transport_cc;
+#if 0
+    // TODO(nisse): Configured for Call instead
     recv_config.rtp.extensions = send_config->rtp.extensions;
-
+#endif
     recv_config.rtp.remote_ssrc = video_ssrcs_[i];
     recv_config.rtp.nack.rtp_history_ms = send_config->rtp.nack.rtp_history_ms;
 
@@ -272,12 +274,16 @@ void RampUpTester::ModifyFlexfecConfigs(
   (*receive_configs)[0].local_ssrc = video_ssrcs_[0];
   if (extension_type_ == RtpExtension::kAbsSendTimeUri) {
     (*receive_configs)[0].transport_cc = false;
+#if 0
     (*receive_configs)[0].rtp_header_extensions.push_back(
         RtpExtension(extension_type_.c_str(), kAbsSendTimeExtensionId));
+#endif
   } else if (extension_type_ == RtpExtension::kTransportSequenceNumberUri) {
     (*receive_configs)[0].transport_cc = true;
+#if 0
     (*receive_configs)[0].rtp_header_extensions.push_back(RtpExtension(
         extension_type_.c_str(), kTransportSequenceNumberExtensionId));
+#endif
   }
 }
 

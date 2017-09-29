@@ -72,9 +72,6 @@ class FlexfecReceiveStream : public RtpPacketSinkInterface {
     // |transport_cc| is true whenever the send-side BWE RTCP feedback message
     // has been negotiated. This is a prerequisite for enabling send-side BWE.
     bool transport_cc = false;
-
-    // RTP header extensions that have been negotiated for this track.
-    std::vector<RtpExtension> rtp_header_extensions;
   };
 
   virtual Stats GetStats() const = 0;

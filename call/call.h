@@ -131,6 +131,11 @@ class Call {
       const Call::Config& config,
       std::unique_ptr<RtpTransportControllerSendInterface> transport_send);
 
+  // TODO(nisse): Should move to RtpTransportController.
+  // Rtp header extensions can be renegotiated mid-call.
+  virtual void SetVideoReceiveRtpHeaderExtensions(
+      const std::vector<RtpExtension>& extensions) = 0;
+
   virtual AudioSendStream* CreateAudioSendStream(
       const AudioSendStream::Config& config) = 0;
   virtual void DestroyAudioSendStream(AudioSendStream* send_stream) = 0;

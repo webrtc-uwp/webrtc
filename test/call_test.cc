@@ -243,8 +243,10 @@ void CallTest::CreateMatchingReceiveConfigs(Transport* rtcp_send_transport) {
     video_config.rtp.remb = false;
     video_config.rtp.transport_cc = true;
     video_config.rtp.local_ssrc = kReceiverLocalVideoSsrc;
+#if 0
     for (const RtpExtension& extension : video_send_config_.rtp.extensions)
       video_config.rtp.extensions.push_back(extension);
+#endif
     video_config.renderer = &fake_renderer_;
     for (size_t i = 0; i < video_send_config_.rtp.ssrcs.size(); ++i) {
       VideoReceiveStream::Decoder decoder =
@@ -281,8 +283,10 @@ void CallTest::CreateMatchingReceiveConfigs(Transport* rtcp_send_transport) {
     config.remote_ssrc = kFlexfecSendSsrc;
     config.protected_media_ssrcs = {kVideoSendSsrcs[0]};
     config.local_ssrc = kReceiverLocalVideoSsrc;
+#if 0
     for (const RtpExtension& extension : video_send_config_.rtp.extensions)
       config.rtp_header_extensions.push_back(extension);
+#endif
     flexfec_receive_configs_.push_back(config);
   }
 }

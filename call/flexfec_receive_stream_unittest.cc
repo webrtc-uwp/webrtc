@@ -63,7 +63,9 @@ TEST(FlexfecReceiveStreamConfigTest, IsCompleteAndEnabled) {
   config.local_ssrc = 18374743;
   config.rtcp_mode = RtcpMode::kCompound;
   config.transport_cc = true;
+#if 0
   config.rtp_header_extensions.emplace_back(TransportSequenceNumber::kUri, 7);
+#endif
   EXPECT_FALSE(config.IsCompleteAndEnabled());
 
   config.payload_type = 123;

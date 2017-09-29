@@ -184,9 +184,6 @@ class VideoReceiveStream {
       void AddRtxBinding(int rtx_payload_type, int media_payload_type) {
         rtx_associated_payload_types[rtx_payload_type] = media_payload_type;
       }
-
-      // RTP header extensions used for the received stream.
-      std::vector<RtpExtension> extensions;
     } rtp;
 
     // Transport for outgoing packets (RTCP).

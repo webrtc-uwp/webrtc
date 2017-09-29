@@ -428,6 +428,9 @@ webrtc::NetworkState FakeCall::GetNetworkState(webrtc::MediaType media) const {
   return webrtc::kNetworkDown;
 }
 
+void FakeCall::SetVideoReceiveRtpHeaderExtensions(
+    const std::vector<webrtc::RtpExtension>& extensions) {}
+
 webrtc::AudioSendStream* FakeCall::CreateAudioSendStream(
     const webrtc::AudioSendStream::Config& config) {
   FakeAudioSendStream* fake_stream = new FakeAudioSendStream(next_stream_id_++,

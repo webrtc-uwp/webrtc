@@ -984,6 +984,25 @@ bool WebRtcSession::PushdownMediaDescription(
       (source == cricket::CS_LOCAL ? local_description() : remote_description())
           ->description();
   RTC_DCHECK(sdesc);
+
+  // Extract rtp header extensions, and tell Call.
+  // TODO(nisse): Eventually, pass to the corresponding
+  // RtpReceiveStreamController instead, which should be responsible for parsing
+  // extensions.
+  if (source == cricket::CS_LOCAL) {
+    const ContentInfo* content_info =
+        GetFirstMediaContent(sdesc->contents(), cricket::MEDIA_TYPE_VIDEO);
+    if (content_info) {
+      RTC_DCHECK(IsVideoContent(content_info));
+      const cricket::VideoContentDescription* content_desc =
+          static_cast<const cricket::VideoContentDescription*>(
+              content_info->description);
+      // TODO(nisse): Should we use rtp_header_extensions_set() ?
+      call_->SetVideoReceiveRtpHeaderExtensions(
+          content_desc->rtp_header_extensions());
+    }
+  }
+
   bool all_success = true;
   for (auto* channel : Channels()) {
     // TODO(steveanton): Add support for multiple channels of the same type.

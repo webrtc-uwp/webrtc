@@ -166,6 +166,7 @@ void GenerateVideoReceiveConfig(uint32_t extensions_bitvector,
   config->rtx_ssrc = prng->Rand<uint32_t>();
   config->codecs.emplace_back(prng->Rand<bool>() ? "VP8" : "H264",
                               prng->Rand(1, 127), prng->Rand(1, 127));
+#if 0
   // Add header extensions.
   for (unsigned i = 0; i < kNumExtensions; i++) {
     if (extensions_bitvector & (1u << i)) {
@@ -173,6 +174,7 @@ void GenerateVideoReceiveConfig(uint32_t extensions_bitvector,
                                           prng->Rand<int>());
     }
   }
+#endif
 }
 
 void GenerateVideoSendConfig(uint32_t extensions_bitvector,

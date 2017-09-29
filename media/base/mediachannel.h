@@ -928,6 +928,8 @@ struct RtpParameters {
   }
 
   std::vector<Codec> codecs;
+  // TODO(nisse): Delete, RTP extensions are really per-transport, not
+  // per stream. Now unused for video receive streams.
   std::vector<webrtc::RtpExtension> extensions;
   // TODO(pthatcher): Add streams.
   RtcpParameters rtcp;

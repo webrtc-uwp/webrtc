@@ -97,7 +97,9 @@ RtpVideoStreamReceiver::RtpVideoStreamReceiver(
       packet_router_(packet_router),
       process_thread_(process_thread),
       ntp_estimator_(clock_),
+#if 0
       rtp_header_extensions_(config_.rtp.extensions),
+#endif
       rtp_receiver_(RtpReceiver::CreateVideoReceiver(clock_,
                                                      this,
                                                      this,

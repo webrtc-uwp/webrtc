@@ -1520,7 +1520,9 @@ TEST_F(VideoSendStreamTest, ChangingNetworkRoute) {
       send_config->rtp.extensions.clear();
       send_config->rtp.extensions.push_back(RtpExtension(
           RtpExtension::kTransportSequenceNumberUri, kExtensionId));
+#if 0
       (*receive_configs)[0].rtp.extensions = send_config->rtp.extensions;
+#endif
       (*receive_configs)[0].rtp.transport_cc = true;
     }
 

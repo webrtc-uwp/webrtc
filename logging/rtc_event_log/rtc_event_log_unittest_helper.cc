@@ -214,6 +214,7 @@ void RtcEventLogTestHelper::VerifyVideoReceiveStreamConfig(
     ASSERT_TRUE(codec_found != config.codecs.end());
     EXPECT_EQ(rtx_config.rtx_payload_type(), codec_found->rtx_payload_type);
   }
+#if 0
   // Check header extensions.
   ASSERT_EQ(static_cast<int>(config.rtp_extensions.size()),
             receiver_config.header_extensions_size());
@@ -225,6 +226,7 @@ void RtcEventLogTestHelper::VerifyVideoReceiveStreamConfig(
     EXPECT_EQ(config.rtp_extensions[i].id, id);
     EXPECT_EQ(config.rtp_extensions[i].uri, name);
   }
+#endif
   // Check decoders.
   ASSERT_EQ(static_cast<int>(config.codecs.size()),
             receiver_config.decoders_size());

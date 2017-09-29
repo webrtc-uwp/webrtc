@@ -1530,6 +1530,7 @@ void VideoQualityTest::SetupVideo(Transport* send_transport,
         video_send_config_.rtp.flexfec.protected_media_ssrcs;
     flexfec_receive_config.local_ssrc = kReceiverLocalVideoSsrc;
     flexfec_receive_config.transport_cc = params_.call.send_side_bwe;
+#if 0
     if (params_.call.send_side_bwe) {
       flexfec_receive_config.rtp_header_extensions.push_back(
           RtpExtension(RtpExtension::kTransportSequenceNumberUri,
@@ -1538,6 +1539,7 @@ void VideoQualityTest::SetupVideo(Transport* send_transport,
       flexfec_receive_config.rtp_header_extensions.push_back(RtpExtension(
           RtpExtension::kAbsSendTimeUri, test::kAbsSendTimeExtensionId));
     }
+#endif
     flexfec_receive_configs_.push_back(flexfec_receive_config);
     if (num_video_streams > 0) {
       video_receive_configs_[0].rtp.protected_by_flexfec = true;
@@ -1621,8 +1623,10 @@ void VideoQualityTest::SetupThumbnails(Transport* send_transport,
     thumbnail_receive_config.rtp.remb = false;
     thumbnail_receive_config.rtp.transport_cc = true;
     thumbnail_receive_config.rtp.local_ssrc = kReceiverLocalVideoSsrc;
+#if 0
     for (const RtpExtension& extension : thumbnail_send_config.rtp.extensions)
       thumbnail_receive_config.rtp.extensions.push_back(extension);
+#endif
     thumbnail_receive_config.renderer = &fake_renderer_;
 
     VideoReceiveStream::Decoder decoder =

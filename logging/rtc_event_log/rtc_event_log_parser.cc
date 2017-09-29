@@ -386,10 +386,11 @@ rtclog::StreamConfig ParsedRtcEventLog::GetVideoReceiveConfig(
     RTC_CHECK(map.config().has_rtx_payload_type());
     rtx_map.insert(std::make_pair(map.payload_type(), map.config()));
   }
-
+#if 0
   // Get header extensions.
   GetHeaderExtensions(&config.rtp_extensions,
                       receiver_config.header_extensions());
+#endif
   // Get decoders.
   config.codecs.clear();
   for (int i = 0; i < receiver_config.decoders_size(); i++) {
