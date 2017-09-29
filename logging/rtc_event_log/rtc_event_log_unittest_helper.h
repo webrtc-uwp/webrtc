@@ -13,6 +13,7 @@
 
 #include "call/call.h"
 #include "logging/rtc_event_log/rtc_event_log_parser.h"
+#include "modules/rtp_rtcp/source/rtp_packet.h"
 
 namespace webrtc {
 
@@ -35,9 +36,7 @@ class RtcEventLogTestHelper {
   static void VerifyRtpEvent(const ParsedRtcEventLog& parsed_log,
                              size_t index,
                              PacketDirection direction,
-                             const uint8_t* header,
-                             size_t header_size,
-                             size_t total_size);
+                             const RtpPacket& expected_packet);
   static void VerifyRtcpEvent(const ParsedRtcEventLog& parsed_log,
                               size_t index,
                               PacketDirection direction,
