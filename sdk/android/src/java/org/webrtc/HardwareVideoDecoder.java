@@ -424,12 +424,19 @@ class HardwareVideoDecoder
       height = this.height;
     }
 
+    synchronized (activeOutputBuffersLock) {
+      activeOutputBuffers++;
+    }
     surfaceTextureHelper.getHandler().post(new Runnable() {
       @Override
       public void run() {
         renderedTextureMetadata = new DecodedTextureMetadata(
             width, height, rotation, info.presentationTimeUs, decodeTimeMs);
         codec.releaseOutputBuffer(index, true);
+        synchronized (activeOutputBuffersLock) {
+          activeOutputBuffers--;
+          activeOutputBuffersLock.notifyAll();
+        }
       }
     });
   }
