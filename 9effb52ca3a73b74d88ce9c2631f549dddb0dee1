@@ -108,6 +108,24 @@
     },
     {
       "key": {
+        "uuid": "81d21c3b_503f3d38",
+        "filename": "audio/audio_receive_stream_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 5100
+      },
+      "writtenOn": "2017-09-29T07:03:01Z",
+      "side": 1,
+      "message": "I don\u0027t think that changing the test would add enough value to motivate the extra code. This test would be really valuable if it would help pinpoint the case when you add a member to one struct, but forget to add it to the other _and_ to the test. This is not what the test does (and I\u0027m not sure such a test can be written for general structs). So, given this, I would say that it is good enough as it is. Ship it.",
+      "parentUuid": "a0831f80_9d5404e7",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "91d9a348_4014b8ea",
         "filename": "common_types.h",
         "patchSetId": 6
