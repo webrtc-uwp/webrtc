@@ -264,7 +264,7 @@ class TurnPortTest : public testing::Test,
     turn_port_.reset(TurnPort::Create(
         &main_, &socket_factory_, network, 0, 0, kIceUfrag1, kIcePwd1,
         server_address, credentials, 0, origin, std::vector<std::string>(),
-        std::vector<std::string>()));
+        std::vector<std::string>(), nullptr));
     // This TURN port will be the controlling.
     turn_port_->SetIceRole(ICEROLE_CONTROLLING);
     ConnectSignals();
@@ -294,7 +294,8 @@ class TurnPortTest : public testing::Test,
     RelayCredentials credentials(username, password);
     turn_port_.reset(TurnPort::Create(
         &main_, &socket_factory_, MakeNetwork(kLocalAddr1), socket_.get(),
-        kIceUfrag1, kIcePwd1, server_address, credentials, 0, std::string()));
+        kIceUfrag1, kIcePwd1, server_address, credentials, 0, std::string(),
+        nullptr));
     // This TURN port will be the controlling.
     turn_port_->SetIceRole(ICEROLE_CONTROLLING);
     ConnectSignals();

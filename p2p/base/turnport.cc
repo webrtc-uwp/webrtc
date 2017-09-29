@@ -190,7 +190,8 @@ TurnPort::TurnPort(rtc::Thread* thread,
                    const ProtocolAddress& server_address,
                    const RelayCredentials& credentials,
                    int server_priority,
-                   const std::string& origin)
+                   const std::string& origin,
+                   webrtc::TurnCustomizer* customizer)
     : Port(thread,
            RELAY_PORT_TYPE,
            factory,
@@ -206,7 +207,8 @@ TurnPort::TurnPort(rtc::Thread* thread,
       next_channel_number_(TURN_CHANNEL_NUMBER_START),
       state_(STATE_CONNECTING),
       server_priority_(server_priority),
-      allocate_mismatch_retries_(0) {
+      allocate_mismatch_retries_(0),
+      turn_customizer_(customizer) {
   request_manager_.SignalSendPacket.connect(this, &TurnPort::OnSendStunPacket);
   request_manager_.set_origin(origin);
 }
@@ -223,7 +225,8 @@ TurnPort::TurnPort(rtc::Thread* thread,
                    int server_priority,
                    const std::string& origin,
                    const std::vector<std::string>& tls_alpn_protocols,
-                   const std::vector<std::string>& tls_elliptic_curves)
+                   const std::vector<std::string>& tls_elliptic_curves,
+                   webrtc::TurnCustomizer* customizer)
     : Port(thread,
            RELAY_PORT_TYPE,
            factory,
@@ -243,7 +246,8 @@ TurnPort::TurnPort(rtc::Thread* thread,
       next_channel_number_(TURN_CHANNEL_NUMBER_START),
       state_(STATE_CONNECTING),
       server_priority_(server_priority),
-      allocate_mismatch_retries_(0) {
+      allocate_mismatch_retries_(0),
+      turn_customizer_(customizer) {
   request_manager_.SignalSendPacket.connect(this, &TurnPort::OnSendStunPacket);
   request_manager_.set_origin(origin);
 }
@@ -946,6 +950,7 @@ bool TurnPort::ScheduleRefresh(int lifetime) {
 }
 
 void TurnPort::SendRequest(StunRequest* req, int delay) {
+  TurnCustomizerMaybeModifyOutgoingStunMessage(req->mutable_msg());
   request_manager_.SendDelayed(req, delay);
 }
 
@@ -1123,6 +1128,24 @@ std::string TurnPort::ReconstructedServerUrl() {
   url << scheme << ":" << server_address_.address.ipaddr().ToString() << ":"
       << server_address_.address.port() << "?transport=" << transport;
   return url.str();
+}
+
+void TurnPort::TurnCustomizerMaybeModifyOutgoingStunMessage(
+    StunMessage* message) {
+  if (turn_customizer_ == nullptr) {
+    return;
+  }
+
+  turn_customizer_->MaybeModifyOutgoingStunMessage(this, message);
+}
+
+bool TurnPort::TurnCustomizerAllowChannelData(
+    const void* data, size_t size, bool payload) {
+  if (turn_customizer_ == nullptr) {
+    return true;
+  }
+
+  return turn_customizer_->AllowChannelData(this, data, size, payload);
 }
 
 TurnAllocateRequest::TurnAllocateRequest(TurnPort* port)
@@ -1516,8 +1539,10 @@ void TurnEntry::SendChannelBindRequest(int delay) {
 int TurnEntry::Send(const void* data, size_t size, bool payload,
                     const rtc::PacketOptions& options) {
   rtc::ByteBufferWriter buf;
-  if (state_ != STATE_BOUND) {
+  if (state_ != STATE_BOUND ||
+      !port_->TurnCustomizerAllowChannelData(data, size, payload)) {
     // If we haven't bound the channel yet, we have to use a Send Indication.
+    // The turn_customizer_ can also make us use Send Indication.
     TurnMessage msg;
     msg.SetType(TURN_SEND_INDICATION);
     msg.SetTransactionID(
@@ -1526,6 +1551,9 @@ int TurnEntry::Send(const void* data, size_t size, bool payload,
         STUN_ATTR_XOR_PEER_ADDRESS, ext_addr_));
     msg.AddAttribute(
         rtc::MakeUnique<StunByteStringAttribute>(STUN_ATTR_DATA, data, size));
+
+    port_->TurnCustomizerMaybeModifyOutgoingStunMessage(&msg);
+
     const bool success = msg.Write(&buf);
     RTC_DCHECK(success);
 
