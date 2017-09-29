@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "11d3d458_e3ff37f0",
+        "filename": "rtc_base/opensslstreamadapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1058,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-29T01:24:17Z",
+      "side": 1,
+      "message": "Can you add some comments, with the relevant information from the CL description?",
+      "revId": "1e77676d15da4d10846dce4e873cc1c90d7d4989",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
