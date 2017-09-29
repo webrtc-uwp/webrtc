@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d158f60_5bd9c873",
+        "filename": "webrtc/api/peerconnectioninterface.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 781,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-29T21:35:32Z",
+      "side": 1,
+      "message": "Can we add this to RTCConfiguration instead of having a standalone method for it? Based on discussion here (https://bugs.chromium.org/p/webrtc/issues/detail?id\u003d7913), and this CL (https://webrtc-review.googlesource.com/c/src/+/4781), I think this is the approach we\u0027re settling on.",
+      "revId": "56dcf70e32980dbd060af100b0b75571eeec7257",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
