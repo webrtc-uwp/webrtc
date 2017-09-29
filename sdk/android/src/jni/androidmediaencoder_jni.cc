@@ -118,10 +118,13 @@ class MediaCodecVideoEncoder : public VideoEncoder {
   bool FillInputBuffer(JNIEnv* jni,
                        int input_buffer_index,
                        uint8_t const* buffer_y,
+                       size_t size_y,
                        int stride_y,
                        uint8_t const* buffer_u,
+                       size_t size_u,
                        int stride_u,
                        uint8_t const* buffer_v,
+                       size_t size_v,
                        int stride_v);
 
  private:
@@ -902,9 +905,12 @@ bool MediaCodecVideoEncoder::EncodeByteBuffer(JNIEnv* jni,
 
   rtc::scoped_refptr<I420BufferInterface> i420_buffer =
       frame.video_frame_buffer()->ToI420();
-  if (!FillInputBuffer(jni, input_buffer_index, i420_buffer->DataY(),
-                       i420_buffer->StrideY(), i420_buffer->DataU(),
-                       i420_buffer->StrideU(), i420_buffer->DataV(),
+  const size_t size_y = i420_buffer->StrideY() * i420_buffer->height();
+  const size_t size_u = i420_buffer->StrideU() * i420_buffer->ChromaHeight();
+  const size_t size_v = i420_buffer->StrideV() * i420_buffer->ChromaHeight();
+  if (!FillInputBuffer(jni, input_buffer_index, i420_buffer->DataY(), size_y,
+                       i420_buffer->StrideY(), i420_buffer->DataU(), size_u,
+                       i420_buffer->StrideU(), i420_buffer->DataV(), size_v,
                        i420_buffer->StrideV())) {
     return false;
   }
@@ -922,11 +928,21 @@ bool MediaCodecVideoEncoder::EncodeByteBuffer(JNIEnv* jni,
 bool MediaCodecVideoEncoder::FillInputBuffer(JNIEnv* jni,
                                              int input_buffer_index,
                                              uint8_t const* buffer_y,
+                                             size_t size_y,
                                              int stride_y,
                                              uint8_t const* buffer_u,
+                                             size_t size_u,
                                              int stride_u,
                                              uint8_t const* buffer_v,
+                                             size_t size_v,
                                              int stride_v) {
+  const int chroma_height = (height_ + 1) / 2;
+  RTC_DCHECK_GE(size_y, height_ * stride_y) << "Y-plane buffer is too small.";
+  RTC_DCHECK_GE(size_u, chroma_height * stride_u)
+      << "U-plane buffer is too small.";
+  RTC_DCHECK_GE(size_v, chroma_height * stride_v)
+      << "V-plane buffer is too small.";
+
   jobject j_input_buffer = input_buffers_[input_buffer_index];
   uint8_t* yuv_buffer =
       reinterpret_cast<uint8_t*>(jni->GetDirectBufferAddress(j_input_buffer));
@@ -1477,10 +1493,20 @@ JNI_FUNCTION_DECLARATION(void,
       static_cast<uint8_t*>(jni->GetDirectBufferAddress(j_buffer_u));
   uint8_t* buffer_v =
       static_cast<uint8_t*>(jni->GetDirectBufferAddress(j_buffer_v));
+  const size_t size_y = jni->GetDirectBufferCapacity(j_buffer_y);
+  const size_t size_u = jni->GetDirectBufferCapacity(j_buffer_u);
+  const size_t size_v = jni->GetDirectBufferCapacity(j_buffer_v);
+
+  RTC_DCHECK(buffer_y) << "GetDirectBufferAddress returned null. Ensure that "
+                          "getDataY returns a direct ByteBuffer.";
+  RTC_DCHECK(buffer_u) << "GetDirectBufferAddress returned null. Ensure that "
+                          "getDataU returns a direct ByteBuffer.";
+  RTC_DCHECK(buffer_v) << "GetDirectBufferAddress returned null. Ensure that "
+                          "getDataV returns a direct ByteBuffer.";
 
   reinterpret_cast<MediaCodecVideoEncoder*>(native_encoder)
-      ->FillInputBuffer(jni, input_buffer, buffer_y, stride_y, buffer_u,
-                        stride_u, buffer_v, stride_v);
+      ->FillInputBuffer(jni, input_buffer, buffer_y, size_y, stride_y, buffer_u,
+                        size_u, stride_u, buffer_v, size_v, stride_v);
 }
 
 }  // namespace jni
