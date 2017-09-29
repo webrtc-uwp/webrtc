@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e177e176_ee0889ea",
+        "filename": "logging/rtc_event_log/events/rtc_event.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-09-29T18:04:54Z",
+      "side": 1,
+      "message": "Why do we have to do forward declaration here? Is it really too expensive to just include the header?",
+      "range": {
+        "startLine": 17,
+        "startChar": 8,
+        "endLine": 17,
+        "endChar": 18
+      },
+      "revId": "8f27a1e0d070ace4e6081a6943191bd2ac67a2f8",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
