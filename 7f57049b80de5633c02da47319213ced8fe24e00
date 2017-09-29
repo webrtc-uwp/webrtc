@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ef68bc6_aab1356a",
+        "filename": "logging/rtc_event_log/rtc_event_log_unittest_helper.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-29T18:26:14Z",
+      "side": 1,
+      "message": "may be EXPECT_TRUE instead",
+      "range": {
+        "startLine": 362,
+        "startChar": 41,
+        "endLine": 362,
+        "endChar": 0
+      },
+      "revId": "7f57049b80de5633c02da47319213ced8fe24e00",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8cb84fa_a6cd890a",
+        "filename": "logging/rtc_event_log/rtc_event_log_unittest_helper.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-29T18:26:14Z",
+      "side": 1,
+      "message": "may be EXPECT_FALSE",
+      "range": {
+        "startLine": 392,
+        "startChar": 42,
+        "endLine": 392,
+        "endChar": 0
+      },
+      "revId": "7f57049b80de5633c02da47319213ced8fe24e00",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eb72821e_15a7dffe",
+        "filename": "modules/rtp_rtcp/source/rtcp_sender.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-29T18:26:14Z",
+      "side": 1,
+      "message": "may be rtc::MakeArrayView(data, length)",
+      "range": {
+        "startLine": 103,
+        "startChar": 57,
+        "endLine": 103,
+        "endChar": 0
+      },
+      "revId": "7f57049b80de5633c02da47319213ced8fe24e00",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c2292de_6d25e948",
+        "filename": "modules/rtp_rtcp/source/rtcp_sender.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 967,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-09-29T18:26:14Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 967,
+        "startChar": 49,
+        "endLine": 967,
+        "endChar": 50
+      },
+      "revId": "7f57049b80de5633c02da47319213ced8fe24e00",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
