@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d99ba98f_1b851f1b",
+        "filename": "modules/video_coding/codecs/vp8/default_temporal_layers.cc",
+        "patchSetId": 8
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 5524
+      },
+      "writtenOn": "2017-09-29T12:45:25Z",
+      "side": 1,
+      "message": "Maybe you can use a std::vector\u003cstd::set\u003cuint8_t\u003e\u003e instead?\nThe order of dependencies isn\u0027t important and double-referencing should be fine. Also, you should be able to just use the operator\u003d\u003d() function instead of actually having to sort and loop.",
+      "range": {
+        "startLine": 443,
+        "startChar": 58,
+        "endLine": 443,
+        "endChar": 0
+      },
+      "revId": "258f83b3467bbe20c5a7e1596b0ced554d4c25fe",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1d4ff37_b1cdedc5",
+        "filename": "modules/video_coding/codecs/vp8/default_temporal_layers.cc",
+        "patchSetId": 8
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 5524
+      },
+      "writtenOn": "2017-09-29T12:45:25Z",
+      "side": 1,
+      "message": "nit: just return {}; here end skip the code after the switch-block",
+      "range": {
+        "startLine": 463,
+        "startChar": 12,
+        "endLine": 463,
+        "endChar": 0
+      },
+      "revId": "258f83b3467bbe20c5a7e1596b0ced554d4c25fe",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf591f16_345e62fe",
+        "filename": "modules/video_coding/codecs/vp8/default_temporal_layers.cc",
+        "patchSetId": 8
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 5524
+      },
+      "writtenOn": "2017-09-29T12:45:25Z",
+      "side": 1,
+      "message": "nit: ...non key-frame buffers should...",
+      "range": {
+        "startLine": 487,
+        "startChar": 13,
+        "endLine": 487,
+        "endChar": 14
+      },
+      "revId": "258f83b3467bbe20c5a7e1596b0ced554d4c25fe",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d55aa287_5eaeb427",
+        "filename": "modules/video_coding/codecs/vp8/temporal_layers.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 5524
+      },
+      "writtenOn": "2017-09-29T12:45:25Z",
+      "side": 1,
+      "message": "Add a comment describing what this is, and that it\u0027s only used with dchecks on.",
+      "range": {
+        "startLine": 127,
+        "startChar": 2,
+        "endLine": 127,
+        "endChar": 10
+      },
+      "revId": "258f83b3467bbe20c5a7e1596b0ced554d4c25fe",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
