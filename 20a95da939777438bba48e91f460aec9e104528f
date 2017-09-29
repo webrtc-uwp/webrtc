@@ -16,6 +16,24 @@
       "revId": "20a95da939777438bba48e91f460aec9e104528f",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a5c2d11_b839b8f0",
+        "filename": "modules/rtp_rtcp/source/forward_error_correction.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-09-29T06:12:14Z",
+      "side": 1,
+      "message": "It seems it has a MinDiff function which does the same thing.\n\nWe have way too many different helper methods to deal with short sequence numbers. :-(",
+      "parentUuid": "5a4d28a2_b7ff23e3",
+      "revId": "20a95da939777438bba48e91f460aec9e104528f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
