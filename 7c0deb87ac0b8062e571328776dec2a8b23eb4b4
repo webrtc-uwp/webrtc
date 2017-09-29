@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "574021ee_2f686e3c",
+        "filename": "rtc_base/sslidentity.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-29T00:49:36Z",
+      "side": 1,
+      "message": "Would it make sense to have a GetUniqueReference method? I guess that name is a little bit of an oxymoron, but you get the point.",
+      "revId": "7c0deb87ac0b8062e571328776dec2a8b23eb4b4",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "139d7462_9edf9c01",
+        "filename": "rtc_base/sslidentity.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-29T00:49:36Z",
+      "side": 1,
+      "message": "nit: This comment isn\u0027t necessary since it\u0027s implied by the unique_ptr type",
+      "revId": "7c0deb87ac0b8062e571328776dec2a8b23eb4b4",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
