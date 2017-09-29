@@ -34,6 +34,24 @@
       "revId": "1e77676d15da4d10846dce4e873cc1c90d7d4989",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86c14135_3af85581",
+        "filename": "rtc_base/opensslstreamadapter.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1058,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-29T18:51:35Z",
+      "side": 1,
+      "message": "Agreed; your comment is just the level of detail I\u0027d want.",
+      "parentUuid": "47387c9a_9574f567",
+      "revId": "1e77676d15da4d10846dce4e873cc1c90d7d4989",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
