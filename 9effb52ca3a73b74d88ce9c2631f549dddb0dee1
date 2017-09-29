@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "c4259cd7_24bc38a2",
+        "filename": "audio/audio_receive_stream.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-29T08:57:42Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "df5061af_fd298423",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7e8494b5_51865b1b",
         "filename": "audio/audio_receive_stream_unittest.cc",
         "patchSetId": 6
@@ -123,6 +141,24 @@
       "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5dd0667c_797b90a6",
+        "filename": "audio/audio_receive_stream_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-29T08:57:42Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "81d21c3b_503f3d38",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -284,6 +320,24 @@
     },
     {
       "key": {
+        "uuid": "81043b4b_6e2bee31",
+        "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 1705,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-29T08:57:42Z",
+      "side": 1,
+      "message": "I agree that using \u0027packets_sent\u0027 and \u0027packets_received\u0027 make it more readable. I added those and got rid of \u0027i\u0027 and \u0027packets_left\u0027. Also comparing \u0027packets_sent\u0027 to \u0027kDelayInPackets\u0027 now. Thanks.",
+      "parentUuid": "cd6f27bf_575013e9",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fb4f85c3_fae7c531",
         "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
         "patchSetId": 6
@@ -331,6 +385,24 @@
       "side": 1,
       "message": "What I meant was, at the top of the test, do:\n\n// Explain why it\u0027s \"1 + 2 + 8 * 3\" here. I don\u0027t understand myself. Is it that the last\n// two frames are only delayed by 1 and 2 frames, because GetAudio is called 3 times in\n// a row?\nconstexpr int kExpectedDelay \u003d (kSamples * kPacketLenMs) * (1 + 2 + 8 * 3)\n\nSee: https://engdoc.corp.google.com/eng/doc/devguide/coding/testing/unit-testing-best-practices.md?cl\u003dhead#control-structures-examples",
       "parentUuid": "8d9db20e_4a5d5dc2",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "deedb80c_206cdc46",
+        "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 1735,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-09-29T08:57:42Z",
+      "side": 1,
+      "message": "Here I prefer to increment the expected delay at each call to GetAudio rather than computing it at the top.\nIt can be done at the top, but it becomes a bit messy as the reported delay will differ for the first packets (the computation would have to include the sum of an arithmetic series). I added a code comment now to explain why.\nI also think incrementing it in this way makes debugging easier as one can check the expected delay in each iteration and compare it to the delay reported by the jitter buffer. In this way pin-pointing a problem in one of the iterations is easy.\nI also did some minor clean-up of the test.",
+      "parentUuid": "0b408898_ad60ccc1",
       "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
