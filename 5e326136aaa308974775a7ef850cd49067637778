@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4050e7ce_18e9f6d2",
+        "filename": "sdk/android/src/jni/androidmediaencoder_jni.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 1507,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-29T11:51:49Z",
+      "side": 1,
+      "message": "I think it should be the responsibility of the caller of FillInputBuffer() to verify the size of the buffers. Either expose width() and height() of MediaCodecVideoEncoder and do the check here, or move the check to Java land.",
+      "range": {
+        "startLine": 1507,
+        "startChar": 19,
+        "endLine": 1507,
+        "endChar": 41
+      },
+      "revId": "5e326136aaa308974775a7ef850cd49067637778",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
