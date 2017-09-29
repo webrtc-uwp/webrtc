@@ -1030,7 +1030,6 @@ void EventLogAnalyzer::CreateTotalBitrateGraph(
       plot->AppendIntervalSeries(std::move(normal_series));
     }
 
-    plot->AppendTimeSeries(std::move(bitrate_series));
     plot->AppendTimeSeries(std::move(loss_series));
     plot->AppendTimeSeries(std::move(delay_series));
     plot->AppendTimeSeries(std::move(created_series));
