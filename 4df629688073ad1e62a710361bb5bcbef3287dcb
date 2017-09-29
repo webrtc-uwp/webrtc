@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2961fdf7_cf047d34",
+        "filename": "api/peerconnectioninterface.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-29T20:52:18Z",
+      "side": 1,
+      "message": "I didn\u0027t think we\u0027d need a new event for this. I assumed the new streams would just be announced via OnAddStream, and changes to existing streams via OnChanged (on the stream itself). Maybe that makes it more difficult for the chromium code though.",
+      "revId": "4df629688073ad1e62a710361bb5bcbef3287dcb",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96c957f3_68e1fed3",
+        "filename": "api/peerconnectioninterface.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 890,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-29T20:52:18Z",
+      "side": 1,
+      "message": "I\u0027d want to clarify a bit further what the switch to unified plan SDP will mean for this API. Since receivers are never truly removed, will this never be called? That seems reasonable to me; the application can just inspect the \"direction\" attribute, listen for stream change events or \"mute\" events, so there are other ways to get the information.\n\nIn other words: I\u0027m suggesting we define this to be something that\u0027s *only* called when a Plan B RtpReceiver is completely removed.",
+      "revId": "4df629688073ad1e62a710361bb5bcbef3287dcb",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
