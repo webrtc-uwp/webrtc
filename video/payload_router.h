@@ -13,6 +13,8 @@
 
 #include <vector>
 
+// Dummy comment!
+
 #include "api/video_codecs/video_encoder.h"
 #include "common_types.h"  // NOLINT(build/include)
 #include "rtc_base/constructormagic.h"
