@@ -16,7 +16,6 @@
 #include "rtc_base/buffer.h"
 #include "rtc_base/fileutils.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/pathutils.h"
 #include "test/gtest.h"
 
 namespace webrtc {
