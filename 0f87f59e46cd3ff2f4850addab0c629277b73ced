@@ -22,6 +22,30 @@
       "revId": "0f87f59e46cd3ff2f4850addab0c629277b73ced",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "40af904c_165ea6da",
+        "filename": "logging/rtc_event_log/events/rtc_event_audio_network_adaptation.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 5147
+      },
+      "writtenOn": "2017-09-29T19:12:06Z",
+      "side": 1,
+      "message": "How about we do it in a separate CL at the end of the stack?",
+      "parentUuid": "cf867856_81c3c308",
+      "range": {
+        "startLine": 18,
+        "startChar": 6,
+        "endLine": 18,
+        "endChar": 36
+      },
+      "revId": "0f87f59e46cd3ff2f4850addab0c629277b73ced",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
