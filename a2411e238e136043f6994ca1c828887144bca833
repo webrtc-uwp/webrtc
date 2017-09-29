@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d7b3cad2_de0b6d17",
+        "filename": "logging/rtc_event_log/rtc_event_log.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 5147
+      },
+      "writtenOn": "2017-09-29T17:02:26Z",
+      "side": 1,
+      "message": "nit: Please update this - remove the \"webrtc/\" prefix.",
+      "revId": "a2411e238e136043f6994ca1c828887144bca833",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
