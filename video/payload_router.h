@@ -57,6 +57,7 @@ class PayloadRouter : public EncodedImageCallback {
   // Rtp modules are assumed to be sorted in simulcast index order. Not owned.
   const std::vector<RtpRtcp*> rtp_modules_;
   const int payload_type_;
+  bool forced_fallback_possible_ RTC_GUARDED_BY(crit_);
 
   RTC_DISALLOW_COPY_AND_ASSIGN(PayloadRouter);
 };
