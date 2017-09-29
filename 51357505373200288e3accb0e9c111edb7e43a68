@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74ba518e_5421906b",
+        "filename": "rtc_base/java/src/org/webrtc/NativeLibrary.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-29T09:40:50Z",
+      "side": 1,
+      "message": "This is the only thing we need to expose in api. Let\u0027s rename it to NativeLibraryLoader and put it under sdk/android/api. The rest of the class NativeLibrary can go under sdk/android/src.",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 16,
+        "endChar": 27
+      },
+      "revId": "51357505373200288e3accb0e9c111edb7e43a68",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
