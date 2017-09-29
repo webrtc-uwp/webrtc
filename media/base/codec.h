@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "api/rtpparameters.h"
+#include "api/video_codecs/sdp_video_format.h"
 #include "common_types.h"  // NOLINT(build/include)
 #include "media/base/mediaconstants.h"
 
@@ -175,6 +176,7 @@ struct VideoCodec : public Codec {
   // Creates an empty codec.
   VideoCodec();
   VideoCodec(const VideoCodec& c);
+  explicit VideoCodec(const webrtc::SdpVideoFormat& c);
   VideoCodec(VideoCodec&& c);
   virtual ~VideoCodec() = default;
 
