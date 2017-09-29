@@ -14,6 +14,7 @@
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "rtc_base/checks.h"
+#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 
@@ -87,14 +88,36 @@ void CopyCodecSpecific(const CodecSpecificInfo* info, RTPVideoHeader* rtp) {
   }
 }
 
+// If forced encoder fallback is enabled, do not set picture id to not cause
+// sequence discontinuities at encoder changes.
+bool IsVp8ForcedFallbackPossible(const RTPVideoHeader& rtp) {
+  return rtp.codec == kRtpVideoVp8 && rtp.simulcastIdx == 0 &&
+         (rtp.codecHeader.VP8.temporalIdx == 0 ||
+          rtp.codecHeader.VP8.temporalIdx == kNoTemporalIdx);
+}
+
+void MaybeModifyHeaderInfo(bool* fallback_possible,
+                           RTPVideoHeader* rtp_video_header) {
+  if (!(*fallback_possible)) {
+    return;
+  }
+  if (!IsVp8ForcedFallbackPossible(*rtp_video_header)) {
+    *fallback_possible = false;
+    return;
+  }
+  rtp_video_header->codecHeader.VP8.pictureId = kNoPictureId;
+}
+
 }  // namespace
 
 PayloadRouter::PayloadRouter(const std::vector<RtpRtcp*>& rtp_modules,
                              int payload_type)
     : active_(false),
       rtp_modules_(rtp_modules),
-      payload_type_(payload_type) {
-}
+      payload_type_(payload_type),
+      forced_fallback_possible_(webrtc::field_trial::IsEnabled(
+                                    "WebRTC-VP8-Forced-Fallback-Encoder") &&
+                                rtp_modules.size() == 1) {}
 
 PayloadRouter::~PayloadRouter() {}
 
@@ -128,6 +151,9 @@ EncodedImageCallback::Result PayloadRouter::OnEncodedImage(
   memset(&rtp_video_header, 0, sizeof(RTPVideoHeader));
   if (codec_specific_info)
     CopyCodecSpecific(codec_specific_info, &rtp_video_header);
+
+  MaybeModifyHeaderInfo(&forced_fallback_possible_, &rtp_video_header);
+
   rtp_video_header.rotation = encoded_image.rotation_;
   rtp_video_header.content_type = encoded_image.content_type_;
   if (encoded_image.timing_.flags != TimingFrameFlags::kInvalid) {
