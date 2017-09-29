@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b29c2a2_4640d8ab",
+        "filename": "sdk/android/api/org/webrtc/MediaCodecVideoEncoder.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-09-29T13:39:31Z",
+      "side": 1,
+      "message": "Use capacity instead. Also, we should document in the I420 interface that we ignore the ByteBuffer position (or we actually take position into account and slice the ByteBuffer before sending to native code, you decide).",
+      "range": {
+        "startLine": 631,
+        "startChar": 18,
+        "endLine": 631,
+        "endChar": 27
+      },
+      "revId": "855fcd209cfcb667cc841c38273f4947ff8a2c94",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
