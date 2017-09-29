@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a30cc521_128c85ab",
+        "filename": "webrtc/call/call_perf_tests.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 784,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-29T21:22:01Z",
+      "side": 1,
+      "message": "Maybe I misunderstand ScopedFieldTrials, but doesn\u0027t this mean the field trial will be unset immediately after this if {} block? If so, you could fix this by storing it in a unique_ptr.\n\nstd::unique_ptr\u003cwebrtc::test::ScopedFieldTrials\u003e send_side_bwe;\nif (use_bitrate_allocation_strategy) {\n  send_side_bwe \u003d MakeUnique\u003cwebrtc::test::ScopedFieldTrials\u003e(\"WebRTC-Audio-SendSideBwe/Enabled/\");\n}",
+      "range": {
+        "startLine": 784,
+        "startChar": 45,
+        "endLine": 784,
+        "endChar": 0
+      },
+      "revId": "afc36778eeeb6269d929c0dd5b82d3cfeb8e5abe",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "134c20e3_0c090c69",
+        "filename": "webrtc/rtc_base/bitrateallocationstrategy_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-29T21:22:01Z",
+      "side": 1,
+      "message": "If an empty track ID for \"other\" is allowed, may want to mention that in the header file.",
+      "revId": "afc36778eeeb6269d929c0dd5b82d3cfeb8e5abe",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f9ec966_9a670f09",
+        "filename": "webrtc/rtc_base/bitrateallocationstrategy_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-09-29T21:22:01Z",
+      "side": 1,
+      "message": "A brief comment describing each test would be helpful. For example:\n\n\"Test that when the available bitrate is less than the sum of the minimum bitrates, the minimum bitrate is allocated for each track.\"",
+      "revId": "afc36778eeeb6269d929c0dd5b82d3cfeb8e5abe",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
