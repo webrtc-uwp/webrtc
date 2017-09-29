@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <map>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -83,16 +84,18 @@ class RtcEventLogProxy final : public webrtc::RtcEventLog {
  public:
   RtcEventLogProxy() : event_log_(nullptr) {}
 
+  bool StartLogging(std::unique_ptr<RtcEventLogOutput> output) override {
+    RTC_NOTREACHED();
+  }
+
   bool StartLogging(const std::string& file_name,
                     int64_t max_size_bytes) override {
     RTC_NOTREACHED();
-    return false;
   }
 
   bool StartLogging(rtc::PlatformFile log_file,
                     int64_t max_size_bytes) override {
     RTC_NOTREACHED();
-    return false;
   }
 
   void StopLogging() override { RTC_NOTREACHED(); }
