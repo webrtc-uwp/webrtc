@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cf867856_81c3c308",
+        "filename": "logging/rtc_event_log/events/rtc_event_audio_network_adaptation.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-09-29T17:47:18Z",
+      "side": 1,
+      "message": "Maybe place the RtcEvents in a separate namespace (e.g. webrtc::rtcevent) and drop the RtcEvent prefix from the types? Wdyt?",
+      "range": {
+        "startLine": 18,
+        "startChar": 6,
+        "endLine": 18,
+        "endChar": 36
+      },
+      "revId": "0f87f59e46cd3ff2f4850addab0c629277b73ced",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
