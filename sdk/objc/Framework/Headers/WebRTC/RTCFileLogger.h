@@ -67,11 +67,12 @@ RTC_EXPORT
 // Stops writing WebRTC logs to disk. This method is also called on dealloc.
 - (void)stop;
 
+#if 0
 // Returns the current contents of the logs, or nil if start has been called
 // without a stop.
 - (NSData *)logData;
+#endif
 
 @end
 
 NS_ASSUME_NONNULL_END
-

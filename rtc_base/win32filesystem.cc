@@ -36,7 +36,6 @@ namespace rtc {
 bool Win32Filesystem::DeleteFile(const Pathname &filename) {
   LOG(LS_INFO) << "Deleting file " << filename.pathname();
   if (!IsFile(filename)) {
-    RTC_DCHECK(IsFile(filename));
     return false;
   }
   return ::DeleteFile(ToUtf16(filename.pathname()).c_str()) != 0;

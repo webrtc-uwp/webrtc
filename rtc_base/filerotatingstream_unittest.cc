@@ -29,6 +29,68 @@ void CleanupLogDirectory(const FileRotatingStream& stream) {
   }
 }
 
+// Read the log files produced by a FileRotatingStream.
+rtc::Optional<std::string> ReadLogDirectory(const std::string& dir_path,
+                                            const char* file_prefix) {
+  FileStream stream;
+
+  std::string file_name(file_prefix);
+  file_name.append("_0");
+
+  // Find number of digits.
+  size_t kMaxNumDigits = 5;
+  size_t num_digits;
+  for (num_digits = 1;; num_digits++) {
+    if (num_digits > kMaxNumDigits) {
+      return rtc::Optional<std::string>();
+    }
+    rtc::Pathname file_path(dir_path, file_name);
+    if (stream.Open(file_path.pathname(), "r", nullptr)) {
+      break;
+    }
+    num_digits++;
+    file_name.push_back('0');
+  }
+
+  std::string data;
+  int file_index = 0;
+
+  while (true) {
+    size_t pos = 0;
+
+    while (true) {
+      const size_t kBufSize = 8192;
+      char buf[kBufSize];
+      size_t size_read;
+      switch (stream.Read(buf, kBufSize, &size_read, nullptr)) {
+        case SR_BLOCK:
+          // Wanted to put an RTC_NOTREACHED() here, but then some
+          // builds produce warnigns on missing FALLTHROUGH(). And if
+          // that is added, other builds produce warnings about
+          // FALLTHROUGH() being used in unreachable code.
+        case SR_ERROR:
+          return rtc::Optional<std::string>();
+        case SR_EOS:
+          goto next_file;
+        case SR_SUCCESS:
+          data.insert(pos, buf, size_read);
+          pos += size_read;
+      }
+    }
+  next_file:  // Open next file.
+    std::ostringstream ss;
+    ss << file_prefix << "_";
+    ss << std::setw(num_digits) << std::setfill('0') << ++file_index;
+
+    rtc::Pathname file_path(dir_path, ss.str());
+    stream.Close();
+    if (!stream.Open(file_path.pathname(), "r", nullptr)) {
+      break;
+    }
+  }
+  return rtc::Optional<std::string>(std::move(data));
+}
+
 }  // namespace
 
 #if defined (WEBRTC_ANDROID)
@@ -78,18 +140,12 @@ class MAYBE_FileRotatingStreamTest : public ::testing::Test {
                         const size_t expected_length,
                         const std::string& dir_path,
                         const char* file_prefix) {
-    std::unique_ptr<FileRotatingStream> stream;
-    stream.reset(new FileRotatingStream(dir_path, file_prefix));
-    ASSERT_TRUE(stream->Open());
-    size_t read = 0;
-    size_t stream_size = 0;
-    EXPECT_TRUE(stream->GetSize(&stream_size));
-    std::unique_ptr<uint8_t[]> buffer(new uint8_t[expected_length]);
-    EXPECT_EQ(SR_SUCCESS,
-              stream->ReadAll(buffer.get(), expected_length, &read, nullptr));
-    EXPECT_EQ(0, memcmp(expected_contents, buffer.get(), expected_length));
-    EXPECT_EQ(SR_EOS, stream->ReadAll(buffer.get(), 1, nullptr, nullptr));
-    EXPECT_EQ(stream_size, read);
+    rtc::Optional<std::string> contents =
+        ReadLogDirectory(dir_path, file_prefix);
+    EXPECT_TRUE(contents);
+    EXPECT_EQ(contents->size(), expected_length);
+    EXPECT_EQ(0, memcmp(contents->data(), expected_contents,
+                        std::min(expected_length, contents->size())));
   }
 
   void VerifyFileContents(const char* expected_contents,
@@ -98,9 +154,12 @@ class MAYBE_FileRotatingStreamTest : public ::testing::Test {
     std::unique_ptr<uint8_t[]> buffer(new uint8_t[expected_length]);
     FileStream stream;
     ASSERT_TRUE(stream.Open(file_path, "r", nullptr));
-    EXPECT_EQ(rtc::SR_SUCCESS,
-              stream.ReadAll(buffer.get(), expected_length, nullptr, nullptr));
-    EXPECT_EQ(0, memcmp(expected_contents, buffer.get(), expected_length));
+    size_t size_read = 0;
+    EXPECT_EQ(rtc::SR_SUCCESS, stream.ReadAll(buffer.get(), expected_length,
+                                              &size_read, nullptr));
+    EXPECT_EQ(size_read, expected_length);
+    EXPECT_EQ(0, memcmp(expected_contents, buffer.get(),
+                        std::min(expected_length, size_read)));
     size_t file_size = 0;
     EXPECT_TRUE(stream.GetSize(&file_size));
     EXPECT_EQ(file_size, expected_length);
@@ -244,18 +303,12 @@ class MAYBE_CallSessionFileRotatingStreamTest : public ::testing::Test {
   void VerifyStreamRead(const char* expected_contents,
                         const size_t expected_length,
                         const std::string& dir_path) {
-    std::unique_ptr<CallSessionFileRotatingStream> stream(
-        new CallSessionFileRotatingStream(dir_path));
-    ASSERT_TRUE(stream->Open());
-    size_t read = 0;
-    size_t stream_size = 0;
-    EXPECT_TRUE(stream->GetSize(&stream_size));
-    std::unique_ptr<uint8_t[]> buffer(new uint8_t[expected_length]);
-    EXPECT_EQ(SR_SUCCESS,
-              stream->ReadAll(buffer.get(), expected_length, &read, nullptr));
-    EXPECT_EQ(0, memcmp(expected_contents, buffer.get(), expected_length));
-    EXPECT_EQ(SR_EOS, stream->ReadAll(buffer.get(), 1, nullptr, nullptr));
-    EXPECT_EQ(stream_size, read);
+    rtc::Optional<std::string> contents =
+        ReadLogDirectory(dir_path, "webrtc_log");
+    EXPECT_TRUE(contents);
+    EXPECT_EQ(contents->size(), expected_length);
+    EXPECT_EQ(0, memcmp(contents->data(), expected_contents,
+                        std::min(expected_length, contents->size())));
   }
 
   std::unique_ptr<CallSessionFileRotatingStream> stream_;
@@ -302,17 +355,23 @@ TEST_F(MAYBE_CallSessionFileRotatingStreamTest, WriteAndReadLarge) {
               stream_->WriteAll(buffer.get(), buffer_size, nullptr, nullptr));
   }
 
-  stream_.reset(new CallSessionFileRotatingStream(dir_path_));
-  ASSERT_TRUE(stream_->Open());
-  std::unique_ptr<uint8_t[]> expected_buffer(new uint8_t[buffer_size]);
+  rtc::Optional<std::string> contents =
+      ReadLogDirectory(dir_path_, "webrtc_log");
   int expected_vals[] = {0, 1, 2, 6, 7};
+  ASSERT_EQ(contents->size(), buffer_size * arraysize(expected_vals));
+
   for (size_t i = 0; i < arraysize(expected_vals); ++i) {
-    memset(expected_buffer.get(), expected_vals[i], buffer_size);
-    EXPECT_EQ(SR_SUCCESS,
-              stream_->ReadAll(buffer.get(), buffer_size, nullptr, nullptr));
-    EXPECT_EQ(0, memcmp(buffer.get(), expected_buffer.get(), buffer_size));
+    const char* block = contents->data() + i * buffer_size;
+    bool match = true;
+    for (size_t j = 0; j < buffer_size; j++) {
+      if (block[j] != expected_vals[i]) {
+        match = false;
+        break;
+      }
+    }
+    // EXPECT call at end of loop, to limit the number of messages on failure.
+    EXPECT_TRUE(match);
   }
-  EXPECT_EQ(SR_EOS, stream_->ReadAll(buffer.get(), 1, nullptr, nullptr));
 }
 
 // Tests that writing and reading to a stream where only the first file is
@@ -329,17 +388,24 @@ TEST_F(MAYBE_CallSessionFileRotatingStreamTest, WriteAndReadFirstHalf) {
               stream_->WriteAll(buffer.get(), buffer_size, nullptr, nullptr));
   }
 
-  stream_.reset(new CallSessionFileRotatingStream(dir_path_));
-  ASSERT_TRUE(stream_->Open());
+  rtc::Optional<std::string> contents =
+      ReadLogDirectory(dir_path_, "webrtc_log");
   std::unique_ptr<uint8_t[]> expected_buffer(new uint8_t[buffer_size]);
   int expected_vals[] = {0, 1};
+  ASSERT_EQ(contents->size(), buffer_size * arraysize(expected_vals));
+
   for (size_t i = 0; i < arraysize(expected_vals); ++i) {
-    memset(expected_buffer.get(), expected_vals[i], buffer_size);
-    EXPECT_EQ(SR_SUCCESS,
-              stream_->ReadAll(buffer.get(), buffer_size, nullptr, nullptr));
-    EXPECT_EQ(0, memcmp(buffer.get(), expected_buffer.get(), buffer_size));
+    const char* block = contents->data() + i * buffer_size;
+    bool match = true;
+    for (size_t j = 0; j < buffer_size; j++) {
+      if (block[j] != expected_vals[i]) {
+        match = false;
+        break;
+      }
+    }
+    // EXPECT call at end of loop, to limit the number of messages on failure.
+    EXPECT_TRUE(match);
   }
-  EXPECT_EQ(SR_EOS, stream_->ReadAll(buffer.get(), 1, nullptr, nullptr));
 }
 
 }  // namespace rtc

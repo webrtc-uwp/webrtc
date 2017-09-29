@@ -61,7 +61,6 @@ bool UnixFilesystem::DeleteFile(const Pathname &filename) {
   LOG(LS_INFO) << "Deleting file:" << filename.pathname();
 
   if (!IsFile(filename)) {
-    RTC_DCHECK(IsFile(filename));
     return false;
   }
   return ::unlink(filename.pathname().c_str()) == 0;

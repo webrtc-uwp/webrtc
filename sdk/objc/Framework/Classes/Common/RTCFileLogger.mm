@@ -125,6 +125,7 @@ const char *kRTCFileLoggerRotatingLogPrefix = "rotating_log";
   _logSink.reset();
 }
 
+#if 0
 - (NSData *)logData {
   if (_hasStarted) {
     return nil;
@@ -157,6 +158,7 @@ const char *kRTCFileLoggerRotatingLogPrefix = "rotating_log";
                                                 length:read];
   return logData;
 }
+#endif
 
 #pragma mark - Private
 

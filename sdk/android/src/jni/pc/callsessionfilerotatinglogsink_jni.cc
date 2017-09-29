@@ -47,35 +47,5 @@ JNI_FUNCTION_DECLARATION(void,
   delete sink;
 }
 
-JNI_FUNCTION_DECLARATION(jbyteArray,
-                         CallSessionFileRotatingLogSink_nativeGetLogData,
-                         JNIEnv* jni,
-                         jclass,
-                         jstring j_dirPath) {
-  std::string dir_path = JavaToStdString(jni, j_dirPath);
-  std::unique_ptr<rtc::CallSessionFileRotatingStream> stream(
-      new rtc::CallSessionFileRotatingStream(dir_path));
-  if (!stream->Open()) {
-    LOG_V(rtc::LoggingSeverity::LS_WARNING)
-        << "Failed to open CallSessionFileRotatingStream for path " << dir_path;
-    return jni->NewByteArray(0);
-  }
-  size_t log_size = 0;
-  if (!stream->GetSize(&log_size) || log_size == 0) {
-    LOG_V(rtc::LoggingSeverity::LS_WARNING)
-        << "CallSessionFileRotatingStream returns 0 size for path " << dir_path;
-    return jni->NewByteArray(0);
-  }
-
-  size_t read = 0;
-  std::unique_ptr<jbyte> buffer(static_cast<jbyte*>(malloc(log_size)));
-  stream->ReadAll(buffer.get(), log_size, &read, nullptr);
-
-  jbyteArray result = jni->NewByteArray(read);
-  jni->SetByteArrayRegion(result, 0, read, buffer.get());
-
-  return result;
-}
-
 }  // namespace jni
 }  // namespace webrtc

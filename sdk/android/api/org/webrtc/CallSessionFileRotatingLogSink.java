@@ -17,10 +17,11 @@ public class CallSessionFileRotatingLogSink {
 
   private long nativeSink;
 
-  public static byte[] getLogData(String dirPath) {
-    return nativeGetLogData(dirPath);
-  }
-
+  /* TODO(nisse): Reimplement in plain java.
+    public static byte[] getLogData(String dirPath) {
+      return nativeGetLogData(dirPath);
+    }
+  */
   public CallSessionFileRotatingLogSink(
       String dirPath, int maxFileSize, Logging.Severity severity) {
     nativeSink = nativeAddSink(dirPath, maxFileSize, severity.ordinal());
@@ -35,5 +36,4 @@ public class CallSessionFileRotatingLogSink {
 
   private static native long nativeAddSink(String dirPath, int maxFileSize, int severity);
   private static native void nativeDeleteSink(long nativeSink);
-  private static native byte[] nativeGetLogData(String dirPath);
 }

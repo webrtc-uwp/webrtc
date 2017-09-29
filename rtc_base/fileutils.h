@@ -27,52 +27,7 @@
 
 namespace rtc {
 
-class FileStream;
 class Pathname;
-
-//////////////////////////
-// Directory Iterator   //
-//////////////////////////
-
-// A DirectoryIterator is created with a given directory. It originally points
-// to the first file in the directory, and can be advanecd with Next(). This
-// allows you to get information about each file.
-
-class DirectoryIterator {
-  friend class Filesystem;
- public:
-  // Constructor
-  DirectoryIterator();
-  // Destructor
-  virtual ~DirectoryIterator();
-
-  // Starts traversing a directory
-  // dir is the directory to traverse
-  // returns true if the directory exists and is valid
-  // The iterator will point to the first entry in the directory
-  virtual bool Iterate(const Pathname &path);
-
-  // Advances to the next file
-  // returns true if there were more files in the directory.
-  virtual bool Next();
-
-  // returns true if the file currently pointed to is a directory
-  virtual bool IsDirectory() const;
-
-  // returns the name of the file currently pointed to
-  virtual std::string Name() const;
-
- private:
-  std::string directory_;
-#if defined(WEBRTC_WIN)
-  WIN32_FIND_DATA data_;
-  HANDLE handle_;
-#else
-  DIR *dir_;
-  struct dirent *dirent_;
-  struct stat stat_;
-#endif
-};
 
 class FilesystemInterface {
  public:
