@@ -868,12 +868,29 @@ class PeerConnectionObserver {
   // Called when the ICE connection receiving status changes.
   virtual void OnIceConnectionReceivingChange(bool receiving) {}
 
-  // Called when a track is added to streams.
-  // TODO(zhihuang) Make this a pure virtual method when all its subclasses
-  // implement it.
+  // Called when processing the addition of a remote track. This is called when
+  // a receiver is created.
+  // https://w3c.github.io/webrtc-pc/#process-remote-track-addition
+  // TODO(zhihuang): Make this pure virtual when all subclasses implement it.
   virtual void OnAddTrack(
       rtc::scoped_refptr<RtpReceiverInterface> receiver,
       const std::vector<rtc::scoped_refptr<MediaStreamInterface>>& streams) {}
+
+  // TODO(hbos,deadbeef): Add |OnAssociatedStreamsUpdated| with |receiver| and
+  // |streams| as arguments. This should be called when an existing receiver its
+  // associated streams updated. https://crbug.com/webrtc/8315
+  // This may be blocked on supporting multiple streams per sender or else
+  // this may count as the removal and addition of a track?
+  // https://crbug.com/webrtc/7932
+
+  // Called when processing the removal of a remote track. This is called when
+  // the receiver is removed and the track is muted.
+  // https://w3c.github.io/webrtc-pc/#process-remote-track-removal
+  // TODO(hbos,deadbeef): When transceivers are supported the transceiver is
+  // stopped but receivers are never removed, only the track is muted.
+  // TODO(hbos,deadbeef): Make pure virtual when all subclasses implement it.
+  virtual void OnRemoveTrack(
+      rtc::scoped_refptr<RtpReceiverInterface> receiver) {}
 
  protected:
   // Dtor protected as objects shouldn't be deleted via this interface.
