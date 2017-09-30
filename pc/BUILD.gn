@@ -38,6 +38,7 @@ rtc_static_library("rtc_pc_base") {
     "channelmanager.h",
     "currentspeakermonitor.cc",
     "currentspeakermonitor.h",
+    "dtlssrtptransport.h",
     "externalhmac.cc",
     "externalhmac.h",
     "mediamonitor.cc",

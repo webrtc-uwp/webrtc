@@ -20,6 +20,9 @@
 #include "p2p/base/dtlstransport.h"
 #include "p2p/base/jseptransport.h"
 #include "p2p/base/p2ptransportchannel.h"
+#include "pc/dtlssrtptransport.h"
+#include "pc/rtptransport.h"
+#include "pc/srtptransport.h"
 #include "rtc_base/asyncinvoker.h"
 #include "rtc_base/constructormagic.h"
 #include "rtc_base/refcountedobject.h"
@@ -127,6 +130,27 @@ class TransportController : public sigslot::has_slots<>,
   virtual void DestroyDtlsTransport_n(const std::string& transport_name,
                                       int component);
 
+  // Create an RtpTransport if it doesn't exist. Otherwise, increments a
+  // reference count and returns the existing one.
+  webrtc::RtpTransportInternal* CreateRtpTransport(
+      const std::string& transport_name,
+      bool rtcp_mux_enabled);
+
+  // Create an SrtpTransport if it doesn't exist. Otherwise, increments a
+  // reference count and returns the existing one.
+  webrtc::SrtpTransport* CreateSrtpTransport(const std::string& transport_name,
+                                             bool rtcp_mux_enabled);
+
+  // Create a DtlsSrtpTransport if it doesn't exist. Otherwise, increments a
+  // reference count and returns the existing one.
+  webrtc::DtlsSrtpTransport* CreateDtlsSrtpTransport(
+      const std::string& transport_name,
+      bool rtcp_mux_enabled);
+
+  // Destroy an RTP level transport which can be an RtpTransport, an
+  // SrtpTransport or a DtlsSrtpTransport.
+  void DestroyTransport(const std::string& transport_name);
+
   void use_quic() { quic_ = true; }
   bool quic() const { return quic_; }
 
@@ -182,6 +206,11 @@ class TransportController : public sigslot::has_slots<>,
 
   class ChannelPair;
   typedef rtc::RefCountedObject<ChannelPair> RefCountedChannel;
+
+  typedef rtc::RefCountedObject<webrtc::RtpTransport> RefCountedRtpTransport;
+  typedef rtc::RefCountedObject<webrtc::SrtpTransport> RefCountedSrtpTransport;
+  typedef rtc::RefCountedObject<webrtc::DtlsSrtpTransport>
+      RefCountedDtlsSrtpTransport;
 
   // Helper functions to get a channel or transport, or iterator to it (in case
   // it needs to be erased).
@@ -247,12 +276,30 @@ class TransportController : public sigslot::has_slots<>,
 
   void OnDtlsHandshakeError(rtc::SSLHandshakeError error);
 
+  webrtc::RtpTransportInternal* CreateRtpTransport_n(
+      const std::string& transport_name,
+      bool rtcp_mux_enabled);
+
+  webrtc::SrtpTransport* CreateSrtpTransport_n(
+      const std::string& transport_name,
+      bool rtcp_mux_enabled);
+
+  webrtc::DtlsSrtpTransport* CreateDtlsSrtpTransport_n(
+      const std::string& transport_name,
+      bool rtcp_mux_enabled);
+
+  void DestroyTransport_n(const std::string& transport_name);
+
   rtc::Thread* const signaling_thread_ = nullptr;
   rtc::Thread* const network_thread_ = nullptr;
   PortAllocator* const port_allocator_ = nullptr;
 
   std::map<std::string, std::unique_ptr<JsepTransport>> transports_;
   std::vector<RefCountedChannel*> channels_;
+
+  std::map<std::string, RefCountedRtpTransport*> rtp_transports_;
+  std::map<std::string, RefCountedSrtpTransport*> srtp_transports_;
+  std::map<std::string, RefCountedDtlsSrtpTransport*> dtls_srtp_transports_;
 
   // Aggregate state for TransportChannelImpls.
   IceConnectionState connection_state_ = kIceConnectionConnecting;
