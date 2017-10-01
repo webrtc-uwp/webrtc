@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "70abe928_5c1f08e4",
+        "filename": "logging/rtc_event_log/encoder/rtc_event_log_encoder_legacy.cc",
+        "patchSetId": 8
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-10-01T21:43:28Z",
+      "side": 1,
+      "message": "If we are going to serialize the events one at a time, then we could use SerializeToString or SerializeAsString instead.",
+      "range": {
+        "startLine": 561,
+        "startChar": 15,
+        "endLine": 561,
+        "endChar": 29
+      },
+      "revId": "2eb16908e93ecd041986bf61b1194b01ad774740",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3301ac35_5d96c89a",
+        "filename": "logging/rtc_event_log/encoder/rtc_event_log_encoder_legacy_unittest.cc",
+        "patchSetId": 8
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-10-01T21:43:28Z",
+      "side": 1,
+      "message": "Is there any test case that actually tests multiple values in the struct?",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 15
+      },
+      "revId": "2eb16908e93ecd041986bf61b1194b01ad774740",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "037d04d1_f52df52e",
+        "filename": "logging/rtc_event_log/encoder/rtc_event_log_encoder_legacy_unittest.cc",
+        "patchSetId": 8
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-10-01T21:43:28Z",
+      "side": 1,
+      "message": "If int is less than 32 bits then most of the randomness will be removed by the saturated cast. If you want to randomize an int, then it seems better to\nprng_.Rand(0, rtc::saturated_cast\u003cint32_t\u003e(std::numeric_limits\u003cint\u003e::max()));",
+      "range": {
+        "startLine": 70,
+        "startChar": 16,
+        "endLine": 70,
+        "endChar": 30
+      },
+      "revId": "2eb16908e93ecd041986bf61b1194b01ad774740",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85591a05_8528375d",
+        "filename": "logging/rtc_event_log/encoder/rtc_event_log_encoder_legacy_unittest.cc",
+        "patchSetId": 8
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-10-01T21:43:28Z",
+      "side": 1,
+      "message": "We should be able to parameterize the test by encoding type too, once we have multiple encodings.",
+      "range": {
+        "startLine": 89,
+        "startChar": 2,
+        "endLine": 89,
+        "endChar": 26
+      },
+      "revId": "2eb16908e93ecd041986bf61b1194b01ad774740",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8cc444b4_a38ffb4d",
+        "filename": "logging/rtc_event_log/encoder/rtc_event_log_encoder_legacy_unittest.cc",
+        "patchSetId": 8
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-10-01T21:43:28Z",
+      "side": 1,
+      "message": "Shouldn\u0027t you be setting the timestamp to a random value? Same in the rest of the code.",
+      "range": {
+        "startLine": 169,
+        "startChar": 38,
+        "endLine": 169,
+        "endChar": 51
+      },
+      "revId": "2eb16908e93ecd041986bf61b1194b01ad774740",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b4f516b_b127887e",
+        "filename": "logging/rtc_event_log/encoder/rtc_event_log_encoder_legacy_unittest.cc",
+        "patchSetId": 8
+      },
+      "lineNbr": 512,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-10-01T21:43:28Z",
+      "side": 1,
+      "message": "Aren\u0027t these the seeds? Shouldn\u0027t they be a bit more \"random\"?",
+      "range": {
+        "startLine": 512,
+        "startChar": 0,
+        "endLine": 512,
+        "endChar": 58
+      },
+      "revId": "2eb16908e93ecd041986bf61b1194b01ad774740",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
