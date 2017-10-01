@@ -46,6 +46,30 @@
       "revId": "8f27a1e0d070ace4e6081a6943191bd2ac67a2f8",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "10844e77_bb6defac",
+        "filename": "logging/rtc_event_log/events/rtc_event.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-10-01T13:57:31Z",
+      "side": 1,
+      "message": "TimeMicros() is declared in rtc_base/timeutils.h, isn\u0027t it? What I meant is; why don\u0027t we just include that file? Cf. https://google.github.io/styleguide/cppguide.html#Forward_Declarations",
+      "parentUuid": "016a1a4f_b49ccebe",
+      "range": {
+        "startLine": 17,
+        "startChar": 8,
+        "endLine": 17,
+        "endChar": 18
+      },
+      "revId": "8f27a1e0d070ace4e6081a6943191bd2ac67a2f8",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
