@@ -280,8 +280,8 @@ class AudioProcessing : public rtc::RefCountInterface {
 
         struct EpStrength {
           float lf = 100.f;
-          float mf = 1000.f;
-          float hf = 5000.f;
+          float mf = 100.f;
+          float hf = 100.f;
           float default_len = 0.f;
         } ep_strength;
 
@@ -289,7 +289,7 @@ class AudioProcessing : public rtc::RefCountInterface {
           float m1 = 0.01f;
           float m2 = 0.001f;
           float m3 = 0.01f;
-          float m4 = 0.1f;
+          float m4 = 0.2f;
         } gain_mask;
 
         struct EchoAudibility {
@@ -314,7 +314,7 @@ class AudioProcessing : public rtc::RefCountInterface {
           };
 
           GainChanges low_noise = {8.f, 8.f, 2.f, 2.f, 4.f, 4.f};
-          GainChanges normal = {4.f, 4.f, 2.f, 2.f, 1.2f, 2.f};
+          GainChanges normal = {4.f, 10.f, 1.5f, 4.f, 2.f, 4.f};
           GainChanges saturation = {1.2f, 1.2f, 1.5f, 1.5f, 1.f, 1.f};
 
           float floor_first_increase = 0.001f;

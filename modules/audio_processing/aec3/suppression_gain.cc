@@ -270,6 +270,16 @@ void SuppressionGain::LowerBandGain(
     }
   }
 
+  float mid_attenuation = 0.f;
+  for (size_t k = 20; k < 30; ++k) {
+    mid_attenuation += (*gain)[k];
+  }
+  mid_attenuation = mid_attenuation / static_cast<float>(30 - 20);
+
+  for (size_t k = 30; k < gain->size(); ++k) {
+    (*gain)[k] = std::min(mid_attenuation, (*gain)[k]);
+  }
+
   // Update the allowed maximum gain increase.
   UpdateMaxGainIncrease(config_, no_saturation_counter_, low_noise_render,
                         last_echo_, echo, last_gain_, *gain, &gain_increase_);
