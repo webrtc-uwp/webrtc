@@ -30,6 +30,7 @@
 #include "rtc_base/gunit.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/ptr_util.h"
 #include "rtc_base/socketadapters.h"
 #include "rtc_base/socketaddress.h"
 #include "rtc_base/ssladapter.h"
@@ -264,7 +265,7 @@ class TurnPortTest : public testing::Test,
     turn_port_.reset(TurnPort::Create(
         &main_, &socket_factory_, network, 0, 0, kIceUfrag1, kIcePwd1,
         server_address, credentials, 0, origin, std::vector<std::string>(),
-        std::vector<std::string>()));
+        std::vector<std::string>(), turn_customizer_));
     // This TURN port will be the controlling.
     turn_port_->SetIceRole(ICEROLE_CONTROLLING);
     ConnectSignals();
@@ -294,7 +295,8 @@ class TurnPortTest : public testing::Test,
     RelayCredentials credentials(username, password);
     turn_port_.reset(TurnPort::Create(
         &main_, &socket_factory_, MakeNetwork(kLocalAddr1), socket_.get(),
-        kIceUfrag1, kIcePwd1, server_address, credentials, 0, std::string()));
+        kIceUfrag1, kIcePwd1, server_address, credentials, 0, std::string(),
+        nullptr));
     // This TURN port will be the controlling.
     turn_port_->SetIceRole(ICEROLE_CONTROLLING);
     ConnectSignals();
@@ -695,6 +697,7 @@ class TurnPortTest : public testing::Test,
   std::vector<rtc::Buffer> turn_packets_;
   std::vector<rtc::Buffer> udp_packets_;
   rtc::PacketOptions options;
+  webrtc::TurnCustomizer* turn_customizer_ = nullptr;
 };
 
 TEST_F(TurnPortTest, TestTurnPortType) {
@@ -1444,5 +1447,123 @@ TEST_F(TurnPortTest, TestResolverShutdown) {
   EXPECT_EQ(last_fd_count, GetFDCount());
 }
 #endif
+
+class TestTurnCustomizer : public webrtc::TurnCustomizer {
+ public:
+  TestTurnCustomizer() {}
+  virtual ~TestTurnCustomizer() {}
+
+  enum TestTurnAttributeExtensions {
+    // Test only attribute
+    STUN_ATTR_COUNTER                     = 0xFF02   // Number
+  };
+
+  void MaybeModifyOutgoingStunMessage(
+      cricket::PortInterface* port,
+      cricket::StunMessage* message) override {
+    maybemodifyoutgoingstunmessage_cnt_ ++;
+
+    if (add_counter_) {
+      message->AddAttribute(rtc::MakeUnique<cricket::StunUInt32Attribute>(
+          STUN_ATTR_COUNTER, maybemodifyoutgoingstunmessage_cnt_));
+    }
+    return;
+  }
+
+  bool AllowChannelData(cricket::PortInterface* port,
+                        const void* data,
+                        size_t size,
+                        bool payload) override {
+    allowchanneldata_cnt_++;
+    return allow_channel_data_;
+  }
+
+  bool add_counter_ = false;
+  bool allow_channel_data_ = true;
+  unsigned int maybemodifyoutgoingstunmessage_cnt_ = 0;
+  unsigned int allowchanneldata_cnt_ = 0;
+};
+
+class MessageValidator : public StunMessageValidator{
+ public:
+  MessageValidator(unsigned int *counter) : counter_(counter) {}
+  virtual ~MessageValidator() {}
+  virtual void CheckMessage(const TurnMessage* msg) {
+    // Implementation defined attributes are returned as ByteString
+    const StunByteStringAttribute* attr = msg->GetByteString(
+        TestTurnCustomizer::STUN_ATTR_COUNTER);
+    if (attr != nullptr && counter_ != nullptr) {
+      rtc::ByteBufferReader buf(attr->bytes(), attr->length());
+      unsigned int val = ~0u;
+      buf.ReadUInt32(&val);
+      (*counter_)++;
+    }
+  }
+
+  unsigned int* counter_ = nullptr;
+};
+
+
+// Do a TURN allocation, establish a TLS connection, and send some data.
+// Add a customizer
+TEST_F(TurnPortTest, TestTurnCustomizerCount) {
+  unsigned int validator_counter = 1;
+  TestTurnCustomizer* customizer = new TestTurnCustomizer();
+  std::unique_ptr<MessageValidator> validator(new MessageValidator(
+      &validator_counter));
+
+  turn_server_.AddInternalSocket(kTurnTcpIntAddr, PROTO_TLS);
+  turn_customizer_ = customizer;
+  turn_server_.server()->SetStunMessageValidator(std::move(validator));
+
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnTlsProtoAddr);
+  TestTurnSendData(PROTO_TLS);
+  EXPECT_EQ(TLS_PROTOCOL_NAME, turn_port_->Candidates()[0].relay_protocol());
+  // There should have been atleast turn_packets_.size() calls to Customizer
+  EXPECT_GE(customizer->maybemodifyoutgoingstunmessage_cnt_ +
+            customizer->allowchanneldata_cnt_, turn_packets_.size());
+}
+
+TEST_F(TurnPortTest, TestTurnCustomizerDisallowChannelData) {
+  unsigned int validator_counter = 1;
+  TestTurnCustomizer* customizer = new TestTurnCustomizer();
+  std::unique_ptr<MessageValidator> validator(new MessageValidator(
+      &validator_counter));
+  customizer->allow_channel_data_ = false;
+  turn_server_.AddInternalSocket(kTurnTcpIntAddr, PROTO_TLS);
+  turn_customizer_ = customizer;
+  turn_server_.server()->SetStunMessageValidator(std::move(validator));
+
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnTlsProtoAddr);
+  TestTurnSendData(PROTO_TLS);
+  EXPECT_EQ(TLS_PROTOCOL_NAME, turn_port_->Candidates()[0].relay_protocol());
+
+  // There should have been atleast turn_packets_.size() calls to Customizer
+  EXPECT_GE(customizer->maybemodifyoutgoingstunmessage_cnt_,
+            turn_packets_.size());
+}
+
+TEST_F(TurnPortTest, TestTurnCustomizerAddAttribute) {
+  unsigned int validator_counter = 1;
+  TestTurnCustomizer* customizer = new TestTurnCustomizer();
+  std::unique_ptr<MessageValidator> validator(new MessageValidator(
+      &validator_counter));
+  customizer->allow_channel_data_ = false;
+  customizer->add_counter_ = true;
+  turn_server_.AddInternalSocket(kTurnTcpIntAddr, PROTO_TLS);
+  turn_customizer_ = customizer;
+  turn_server_.server()->SetStunMessageValidator(std::move(validator));
+
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnTlsProtoAddr);
+  TestTurnSendData(PROTO_TLS);
+  EXPECT_EQ(TLS_PROTOCOL_NAME, turn_port_->Candidates()[0].relay_protocol());
+
+  // There should have been atleast turn_packets_.size() calls to Customizer
+  EXPECT_GE(customizer->maybemodifyoutgoingstunmessage_cnt_,
+            turn_packets_.size());
+
+  EXPECT_GE(customizer->maybemodifyoutgoingstunmessage_cnt_,
+            validator_counter);
+}
 
 }  // namespace cricket
