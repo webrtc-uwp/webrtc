@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f0f3bb2_9010744b",
+        "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 5520
+      },
+      "writtenOn": "2017-10-02T13:29:00Z",
+      "side": 1,
+      "message": "I moved this back outside the class. Otherwise we have to refer to is as ScopedCFTypeRef\u003cSomeType\u003e::RetainPolicy and that\u0027s just unreasonable!\n\nAlso, it means more binary size bloat.",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 22,
+        "endChar": 43
+      },
+      "revId": "dd882e0984ff996de3e3cc127c44a8df0331d974",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
