@@ -427,6 +427,24 @@
     },
     {
       "key": {
+        "uuid": "ff221e09_a68ae5d9",
+        "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 1735,
+      "author": {
+        "id": 5116
+      },
+      "writtenOn": "2017-10-02T10:01:27Z",
+      "side": 1,
+      "message": "That the delay is 1600 after the first packet is related with how the jitter buffer perceives time.\n\nI thinks it works like this, but debugging might give deeper insights:\nTime starts at zero and every call to GetAudio increments time with 10 ms.\nAfter one call to GetAudio, time is 10 ms. Since time is 10 ms, the delay cannot be greater than 10 ms (even though there are three packets in the jitter buffer and the delay should be 30 ms).\n\nAccording to the stat the delay is to be multiplied by the number of samples of the frame (160). 10 * 160 \u003d 1600.",
+      "parentUuid": "7a82128f_f709c822",
+      "revId": "9effb52ca3a73b74d88ce9c2631f549dddb0dee1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7def1377_e16e5945",
         "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
         "patchSetId": 6
