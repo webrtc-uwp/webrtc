@@ -3,7 +3,7 @@
 vars = {
   'chromium_git': 'https://chromium.googlesource.com',
   'webrtc_git': 'https://webrtc.googlesource.com',
-  'chromium_revision': '100b0a8b637d52d28a49980059330d42e01e1480',
+  'chromium_revision': 'b999cd773e8246b2f9fda4d145051fb508a2a198',
   'boringssl_git': 'https://boringssl.googlesource.com',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling swarming_client
@@ -40,9 +40,9 @@ deps = {
   'src/buildtools':
     Var('chromium_git') + '/chromium/buildtools.git' + '@' + 'f6d165d9d842ddd29056c127a5f3a3c5d8e0d2e3',
   'src/testing':
-    Var('chromium_git') + '/chromium/src/testing' + '@' + '855f7caaae045381f5d1b3c7cabc227f1fbc87ed',
+    Var('chromium_git') + '/chromium/src/testing' + '@' + '0961e091b8965bcbcc4f0dcd2daf1051b55fe1d2',
   'src/third_party':
-    Var('chromium_git') + '/chromium/src/third_party' + '@' + 'bd13e6479e40917fc182cb289cb6ce2ee574bf45',
+    Var('chromium_git') + '/chromium/src/third_party' + '@' + '311420fdcc0c3c6ddf8abf4fdd30df09e18ff17f',
   'src/third_party/boringssl/src':
    Var('boringssl_git') + '/boringssl.git' + '@' +  Var('boringssl_revision'),
   'src/third_party/catapult':
@@ -77,7 +77,7 @@ deps = {
   'src/third_party/yasm/source/patched-yasm':
     Var('chromium_git') + '/chromium/deps/yasm/patched-yasm.git' + '@' + 'b98114e18d8b9b84586b10d24353ab8616d4c5fc',
   'src/tools':
-    Var('chromium_git') + '/chromium/src/tools' + '@' + 'ff9f82e6fff97540a956ac8685fdc6775299febf',
+    Var('chromium_git') + '/chromium/src/tools' + '@' + '9123762ac9ac5dbeff7a050a88df1adaf158c3f1',
   'src/tools/gyp':
     Var('chromium_git') + '/external/gyp.git' + '@' + 'd61a9397e668fa9843c4aa7da9e79460fe590bfb',
   'src/tools/swarming_client':
@@ -137,7 +137,7 @@ deps_os = {
   },
   'ios': {
     'src/ios':
-      Var('chromium_git') + '/chromium/src/ios' + '@' + '6f96696ac81b67d66ee12da4f78b2ef49cd3c8bd',
+      Var('chromium_git') + '/chromium/src/ios' + '@' + 'aa64a03e54f7df62536818f2c195061e408e3ca3',
   },
   'unix': {
     'src/third_party/lss':
