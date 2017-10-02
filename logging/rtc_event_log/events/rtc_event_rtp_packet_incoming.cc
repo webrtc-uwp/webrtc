@@ -12,6 +12,14 @@
 
 namespace webrtc {
 
+RtcEventRtpPacketIncoming::RtcEventRtpPacketIncoming(
+    const RtpPacketReceived& packet)
+    : packet_length_(packet.size()) {
+  header_.CopyHeaderFrom(packet);
+}
+
+RtcEventRtpPacketIncoming::~RtcEventRtpPacketIncoming() = default;
+
 RtcEvent::Type RtcEventRtpPacketIncoming::GetType() const {
   return RtcEvent::Type::RtpPacketIncoming;
 }

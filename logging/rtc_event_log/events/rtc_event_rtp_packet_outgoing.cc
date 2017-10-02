@@ -12,6 +12,15 @@
 
 namespace webrtc {
 
+RtcEventRtpPacketOutgoing::RtcEventRtpPacketOutgoing(
+    const RtpPacketToSend& packet,
+    int probe_cluster_id)
+    : packet_length_(packet.size()), probe_cluster_id_(probe_cluster_id) {
+  header_.CopyHeaderFrom(packet);
+}
+
+RtcEventRtpPacketOutgoing::~RtcEventRtpPacketOutgoing() = default;
+
 RtcEvent::Type RtcEventRtpPacketOutgoing::GetType() const {
   return RtcEvent::Type::RtpPacketOutgoing;
 }
