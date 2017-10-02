@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "6cf623ed_1fd999b4",
+        "filename": "api/stats/rtcstats_objects.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 5142
+      },
+      "writtenOn": "2017-10-02T08:44:35Z",
+      "side": 1,
+      "message": "nit: You can use crbug.com for a shorter link (it redirects): https://crbug.com/webrtc/8318",
+      "parentUuid": "025d9e9f_b57267fe",
+      "revId": "0f6a210175d6562fcd20b42b2cae2059f4f3309a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "32b89b4b_6b260381",
         "filename": "audio/audio_receive_stream.cc",
         "patchSetId": 10
@@ -171,6 +189,24 @@
       "side": 1,
       "message": "Oh, yes the metric is a bit confusing.\nIn this metric, the delay is multiplied with the number of samples of the packet in question.\nWhen dividing this accumulative metric with the number of samples received, one get the average delay.\n\nSo:\npackets_delay * kPacketLenMs is the current delay of the jitter buffer.\nkSamples is the number of samples in the packet (look at it as a weighting of how much this packet affects the stat).\n\nBut you are right that one could consider the stat to have a \u0027unit\u0027 of samples^2. And it means nothing until you divide with the total number of samples received.",
       "parentUuid": "1a83b218_77c318e0",
+      "revId": "0f6a210175d6562fcd20b42b2cae2059f4f3309a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9226c314_4f431dc3",
+        "filename": "modules/audio_coding/neteq/neteq_unittest.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 1724,
+      "author": {
+        "id": 5142
+      },
+      "writtenOn": "2017-10-02T08:44:35Z",
+      "side": 1,
+      "message": "Gotcha. How about renaming expected_delay to expected_delay_times_samples or split up the calculation into current_delay \u003d packets_delay * kPacketLenMs and then to expected_delay +\u003d current_delay * kSamples. And/or a brief comment explaining this.",
+      "parentUuid": "882b8b4a_2a0f0030",
       "revId": "0f6a210175d6562fcd20b42b2cae2059f4f3309a",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
