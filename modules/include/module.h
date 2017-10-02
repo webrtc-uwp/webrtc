@@ -63,14 +63,12 @@ class Module {
 class RefCountedModule : public Module {
  public:
   // Increase the reference count by one.
-  // Returns the incremented reference count.
-  virtual int32_t AddRef() const = 0;
+  virtual void AddRef() const = 0;
 
   // Decrease the reference count by one.
-  // Returns the decreased reference count.
-  // Returns 0 if the last reference was just released.
-  // When the reference count reaches 0 the object will self-destruct.
-  virtual int32_t Release() const = 0;
+  // When the reference count reaches 0 the object will self-destruct,
+  // returns true in this case, otherwise false.
+  virtual bool Release() const = 0;
 
  protected:
   ~RefCountedModule() override = default;

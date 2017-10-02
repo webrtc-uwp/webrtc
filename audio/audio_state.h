@@ -38,8 +38,8 @@ class AudioState final : public webrtc::AudioState {
 
  private:
   // rtc::RefCountInterface implementation.
-  int AddRef() const override;
-  int Release() const override;
+  void AddRef() const override;
+  bool Release() const override;
 
   rtc::ThreadChecker thread_checker_;
   rtc::ThreadChecker process_thread_checker_;
