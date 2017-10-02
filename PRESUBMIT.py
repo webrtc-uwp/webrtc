@@ -9,6 +9,7 @@
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from collections import defaultdict
@@ -103,8 +104,11 @@ TARGET_RE = re.compile(r'(?P<indent>\s*)\w+\("(?P<target_name>\w+)"\) {'
 SOURCES_RE = re.compile(r'sources \+?= \[(?P<sources>.*?)\]',
                         re.MULTILINE | re.DOTALL)
 
-# FILE_PATH_RE matchies a file path.
+# FILE_PATH_RE matches a file path.
 FILE_PATH_RE = re.compile(r'"(?P<file_path>(\w|\/)+)(?P<extension>\.\w+)"')
+
+# GN_ERROR_RE matches the summary of an error output by `gn check`.
+GN_ERROR_RE = re.compile(r'^ERROR at .+\n.*$', re.MULTILINE)
 
 
 def _RunCommand(command, cwd):
@@ -406,6 +410,26 @@ def CheckGnChanges(input_api, output_api):
                                                    output_api))
   return result
 
+def CheckGNCheck(input_api, output_api):
+  """Runs `gn gen --check` with default args to detect mismatches between
+  #includes and dependencies in the BUILD.gn files.
+  """
+  out_dir = input_api.tempfile.mkdtemp('gn')
+  try:
+    command = ['gn', 'gen', '--check', out_dir]
+    returncode, stdout, _ = _RunCommand(command, input_api.PresubmitLocalPath())
+
+    if returncode:
+      errors = GN_ERROR_RE.findall(stdout)
+      return [output_api.PresubmitError(
+        'Some #includes do not match the build dependency graph. Please run:\n'
+        '  gn gen --check <out_dir>',
+        long_text='\n\n'.join(errors)
+      )]
+  finally:
+    shutil.rmtree(out_dir, ignore_errors=True)
+  return []
+
 def CheckUnwantedDependencies(input_api, output_api):
   """Runs checkdeps on #include statements added in this
   change. Breaking - rules is an error, breaking ! rules is a
@@ -680,6 +704,7 @@ def CheckChangeOnUpload(input_api, output_api):
   results.extend(CommonChecks(input_api, output_api))
   results.extend(
       input_api.canned_checks.CheckGNFormatted(input_api, output_api))
+  results.extend(CheckGNCheck(input_api, output_api))
   return results
 
 
