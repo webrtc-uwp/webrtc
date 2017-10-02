@@ -2986,6 +2986,122 @@ TEST_F(PeerConnectionIntegrationTest, EndToEndConnectionTimeWithTurnTurnPair) {
   delete SetCalleePcWrapperAndReturnCurrent(nullptr);
 }
 
+class TestTurnCustomizer : public webrtc::TurnCustomizer {
+ public:
+  TestTurnCustomizer() {}
+  virtual ~TestTurnCustomizer() {}
+
+  void MaybeModifyOutgoingStunMessage(
+      cricket::PortInterface* port,
+      cricket::StunMessage* message) override {
+    maybemodifyoutgoingstunmessage_cnt_ ++;
+    return;
+  }
+
+  bool AllowChannelData(cricket::PortInterface* port,
+                        const void* data,
+                        size_t size,
+                        bool payload) override {
+    allowchanneldata_cnt_++;
+    return true;
+  }
+
+  unsigned int maybemodifyoutgoingstunmessage_cnt_ = 0;
+  unsigned int allowchanneldata_cnt_ = 0;
+};
+
+// Same as above, except with TurnCustomizer
+TEST_F(PeerConnectionIntegrationTest, \
+       EndToEndConnectionTimeWithTurnTurnPairAndCustomizer) {
+  rtc::ScopedFakeClock fake_clock;
+  // Some things use a time of "0" as a special value, so we need to start out
+  // the fake clock at a nonzero time.
+  // TODO(deadbeef): Fix this.
+  fake_clock.AdvanceTime(rtc::TimeDelta::FromSeconds(1));
+
+  static constexpr int media_hop_delay_ms = 50;
+  static constexpr int signaling_trip_delay_ms = 500;
+  // For explanation of these values, see comment above.
+  static constexpr int required_media_hops = 9;
+  static constexpr int required_signaling_trips = 2;
+  // For internal delays (such as posting an event asychronously).
+  static constexpr int allowed_internal_delay_ms = 20;
+  static constexpr int total_connection_time_ms =
+      media_hop_delay_ms * required_media_hops +
+      signaling_trip_delay_ms * required_signaling_trips +
+      allowed_internal_delay_ms;
+
+  static const rtc::SocketAddress turn_server_1_internal_address{"88.88.88.0",
+                                                                 3478};
+  static const rtc::SocketAddress turn_server_1_external_address{"88.88.88.1",
+                                                                 0};
+  static const rtc::SocketAddress turn_server_2_internal_address{"99.99.99.0",
+                                                                 3478};
+  static const rtc::SocketAddress turn_server_2_external_address{"99.99.99.1",
+                                                                 0};
+  cricket::TestTurnServer turn_server_1(network_thread(),
+                                        turn_server_1_internal_address,
+                                        turn_server_1_external_address);
+  cricket::TestTurnServer turn_server_2(network_thread(),
+                                        turn_server_2_internal_address,
+                                        turn_server_2_external_address);
+  // Bypass permission check on received packets so media can be sent before
+  // the candidate is signaled.
+  turn_server_1.set_enable_permission_checks(false);
+  turn_server_2.set_enable_permission_checks(false);
+
+  PeerConnectionInterface::RTCConfiguration client_1_config;
+  webrtc::PeerConnectionInterface::IceServer ice_server_1;
+  ice_server_1.urls.push_back("turn:88.88.88.0:3478");
+  ice_server_1.username = "test";
+  ice_server_1.password = "test";
+  client_1_config.servers.push_back(ice_server_1);
+  client_1_config.type = webrtc::PeerConnectionInterface::kRelay;
+  client_1_config.presume_writable_when_fully_relayed = true;
+  TestTurnCustomizer *customizer1 = new TestTurnCustomizer();
+  client_1_config.turn_customizer = customizer1;
+
+  PeerConnectionInterface::RTCConfiguration client_2_config;
+  webrtc::PeerConnectionInterface::IceServer ice_server_2;
+  ice_server_2.urls.push_back("turn:99.99.99.0:3478");
+  ice_server_2.username = "test";
+  ice_server_2.password = "test";
+  client_2_config.servers.push_back(ice_server_2);
+  client_2_config.type = webrtc::PeerConnectionInterface::kRelay;
+  client_2_config.presume_writable_when_fully_relayed = true;
+  TestTurnCustomizer *customizer2 = new TestTurnCustomizer();
+  client_2_config.turn_customizer = customizer2;
+
+  ASSERT_TRUE(
+      CreatePeerConnectionWrappersWithConfig(client_1_config, client_2_config));
+  // Set up the simulated delays.
+  SetSignalingDelayMs(signaling_trip_delay_ms);
+  ConnectFakeSignaling();
+  virtual_socket_server()->set_delay_mean(media_hop_delay_ms);
+  virtual_socket_server()->UpdateDelayDistribution();
+
+  // Set "offer to receive audio/video" without adding any tracks, so we just
+  // set up ICE/DTLS with no media.
+  PeerConnectionInterface::RTCOfferAnswerOptions options;
+  options.offer_to_receive_audio = 1;
+  options.offer_to_receive_video = 1;
+  caller()->SetOfferAnswerOptions(options);
+  caller()->CreateAndSetAndSignalOffer();
+  EXPECT_TRUE_SIMULATED_WAIT(DtlsConnected(), total_connection_time_ms,
+                             fake_clock);
+
+  ASSERT_GT(customizer1->allowchanneldata_cnt_, 0u);
+  ASSERT_GT(customizer1->maybemodifyoutgoingstunmessage_cnt_, 0u);
+
+  ASSERT_GT(customizer2->allowchanneldata_cnt_, 0u);
+  ASSERT_GT(customizer2->maybemodifyoutgoingstunmessage_cnt_, 0u);
+
+  // Need to free the clients here since they're using things we created on
+  // the stack.
+  delete SetCallerPcWrapperAndReturnCurrent(nullptr);
+  delete SetCalleePcWrapperAndReturnCurrent(nullptr);
+}
+
 // Test that audio and video flow end-to-end when codec names don't use the
 // expected casing, given that they're supposed to be case insensitive. To test
 // this, all but one codec is removed from each media description, and its
