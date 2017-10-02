@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69e190cb_bd1b5621",
+        "filename": "audio/audio_state.cc",
+        "patchSetId": 11
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 5508
+      },
+      "writtenOn": "2017-10-02T09:00:48Z",
+      "side": 1,
+      "message": "|bool| is so easy to misunderstand that I\u0027m thinking it might be better to return a class scope enum value instead, e.g. ALIVE, DELETED.\n\nJust to clarify what I think is ambiguous: \u0027true\u0027 could be understood to mean \u0027deleted\u0027, \u0027still alive\u0027 or that the Release() operation succeeded.",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 4
+      },
+      "revId": "1bde42927a85d2efd5318a5058e4c49edf0a64e2",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b58b95c_c350e275",
+        "filename": "modules/audio_device/include/fake_audio_device.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 5508
+      },
+      "writtenOn": "2017-10-02T09:00:48Z",
+      "side": 1,
+      "message": "could there be an instance of this class on the stack somewhere?",
+      "range": {
+        "startLine": 23,
+        "startChar": 60,
+        "endLine": 23,
+        "endChar": 63
+      },
+      "revId": "1bde42927a85d2efd5318a5058e4c49edf0a64e2",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
