@@ -1290,6 +1290,49 @@ TEST_F(PeerConnectionIntegrationTest, EndToEndCallWithSdes) {
       kMaxWaitForFramesMs);
 }
 
+// Tests that the GetRemoteAudioSSLCertificate method returns the remote DTLS
+// certificate once the DTLS handshake has finished.
+TEST_F(PeerConnectionIntegrationTest,
+       GetRemoteAudioSSLCertificateReturnsExchangedCertificate) {
+  auto caller_cert = rtc::RTCCertificate::FromPEM(kRsaPems[0]);
+  auto callee_cert = rtc::RTCCertificate::FromPEM(kRsaPems[1]);
+
+  // Configure each side with a known certificate so they can be compared later.
+  PeerConnectionInterface::RTCConfiguration caller_config;
+  caller_config.enable_dtls_srtp.emplace(true);
+  caller_config.certificates.push_back(caller_cert);
+  PeerConnectionInterface::RTCConfiguration callee_config;
+  callee_config.enable_dtls_srtp.emplace(true);
+  callee_config.certificates.push_back(callee_cert);
+  ASSERT_TRUE(
+      CreatePeerConnectionWrappersWithConfig(caller_config, callee_config));
+  ConnectFakeSignaling();
+
+  // When first initialized, there should not be a remote SSL certificate (and
+  // calling this method should not crash).
+  EXPECT_EQ(nullptr, caller()->pc()->GetRemoteAudioSSLCertificate());
+  EXPECT_EQ(nullptr, callee()->pc()->GetRemoteAudioSSLCertificate());
+
+  caller()->AddAudioOnlyMediaStream();
+  callee()->AddAudioOnlyMediaStream();
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  ASSERT_TRUE_WAIT(DtlsConnected(), kDefaultTimeout);
+
+  // Once DTLS has been connected, each side should return the other's SSL
+  // certificate when calling GetRemoteAudioSSLCertificate.
+
+  auto caller_remote_cert = caller()->pc()->GetRemoteAudioSSLCertificate();
+  ASSERT_TRUE(caller_remote_cert);
+  EXPECT_EQ(callee_cert->ssl_certificate().ToPEMString(),
+            caller_remote_cert->ToPEMString());
+
+  auto callee_remote_cert = callee()->pc()->GetRemoteAudioSSLCertificate();
+  ASSERT_TRUE(callee_remote_cert);
+  EXPECT_EQ(caller_cert->ssl_certificate().ToPEMString(),
+            callee_remote_cert->ToPEMString());
+}
+
 // This test sets up a call between two parties (using DTLS) and tests that we
 // can get a video aspect ratio of 16:9.
 TEST_F(PeerConnectionIntegrationTest, SendAndReceive16To9AspectRatio) {

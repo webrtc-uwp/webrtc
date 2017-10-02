@@ -778,6 +778,17 @@ class PeerConnectionInterface : public rtc::RefCountInterface {
   // to the provided value.
   virtual RTCError SetBitrate(const BitrateParameters& bitrate) = 0;
 
+  // Gets the DTLS SSL certificate associated with the audio transport on the
+  // remote side. This will become populated once the DTLS connection with the
+  // peer has been completed, as indicated by the ICE connection state
+  // transitioning to kIceConnectionCompleted.
+  // Note that this will be deprecated once we implement RTCDtlsTransport which
+  // has standardized method for getting this information.
+  // See https://www.w3.org/TR/webrtc/#rtcdtlstransport-interface
+  virtual std::unique_ptr<rtc::SSLCertificate> GetRemoteAudioSSLCertificate() {
+    return nullptr;
+  }
+
   // Returns the current SignalingState.
   virtual SignalingState signaling_state() = 0;
   virtual IceConnectionState ice_connection_state() = 0;

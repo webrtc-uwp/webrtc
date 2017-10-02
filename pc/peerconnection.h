@@ -135,6 +135,8 @@ class PeerConnection : public PeerConnectionInterface,
 
   RTCError SetBitrate(const BitrateParameters& bitrate) override;
 
+  std::unique_ptr<rtc::SSLCertificate> GetRemoteAudioSSLCertificate() override;
+
   bool StartRtcEventLog(rtc::PlatformFile file,
                         int64_t max_size_bytes) override;
   void StopRtcEventLog() override;
