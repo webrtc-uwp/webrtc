@@ -15,6 +15,7 @@
 
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h"
 
 // Copies characters from a CFStringRef into a std::string.
 std::string CFStringToString(const CFStringRef cf_string) {
@@ -38,10 +39,9 @@ std::string CFStringToString(const CFStringRef cf_string) {
 void SetVTSessionProperty(VTSessionRef session,
                           CFStringRef key,
                           int32_t value) {
-  CFNumberRef cfNum =
-      CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &value);
-  OSStatus status = VTSessionSetProperty(session, key, cfNum);
-  CFRelease(cfNum);
+  rtc::ScopedCFTypeRef<CFNumberRef> cfNum = rtc::ScopedCF(
+      CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &value));
+  OSStatus status = VTSessionSetProperty(session, key, cfNum.get());
   if (status != noErr) {
     std::string key_string = CFStringToString(key);
     LOG(LS_ERROR) << "VTSessionSetProperty failed to set: " << key_string
@@ -54,10 +54,9 @@ void SetVTSessionProperty(VTSessionRef session,
                           CFStringRef key,
                           uint32_t value) {
   int64_t value_64 = value;
-  CFNumberRef cfNum =
-      CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &value_64);
-  OSStatus status = VTSessionSetProperty(session, key, cfNum);
-  CFRelease(cfNum);
+  rtc::ScopedCFTypeRef<CFNumberRef> cfNum = rtc::ScopedCF(
+      CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &value_64));
+  OSStatus status = VTSessionSetProperty(session, key, cfNum.get());
   if (status != noErr) {
     std::string key_string = CFStringToString(key);
     LOG(LS_ERROR) << "VTSessionSetProperty failed to set: " << key_string
