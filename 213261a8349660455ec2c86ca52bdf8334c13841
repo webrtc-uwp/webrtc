@@ -16,6 +16,24 @@
       "revId": "213261a8349660455ec2c86ca52bdf8334c13841",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff7f8f9d_d9c0ba30",
+        "filename": "modules/rtp_rtcp/include/rtp_receiver.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-02T08:42:43Z",
+      "side": 1,
+      "message": "\u003e See comment in your other CL: https://webrtc-review.googlesource.com/c/src/+/4141/4/modules/rtp_rtcp/include/rtp_receiver.h\n\nThe suggestion was to group the two timestamps in a struct and change to\n\n  rtc::Optional\u003cTimestamps\u003e GetLatestTimestamps() const;\n\nThe typical use is like\n\n  Syncable::Info info;\n  ...\n  if (!rtp_receiver-\u003eGetLatestTimestamps(\n          \u0026info.latest_received_capture_timestamp,\n          \u0026info.latest_receive_time_ms)) {\n    return rtc::Optional\u003cSyncable::Info\u003e();\n\nSo this method is used to fill out two of the fields in that struct. I\u0027m afraid introducing\nyet another struct to group these timestamps will just make this use more cluttered.\n\nThe problem is that info is collected from two places. It would make sense to move the logic of the GetInfo method from AudioReceiveStream and VideoReceiveStream to RtpStreamReceiver, but we\u0027re not there yet.",
+      "parentUuid": "e9196817_d9d54aaf",
+      "revId": "213261a8349660455ec2c86ca52bdf8334c13841",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
