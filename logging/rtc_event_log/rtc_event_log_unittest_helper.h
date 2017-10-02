@@ -13,8 +13,6 @@
 
 #include "call/call.h"
 #include "logging/rtc_event_log/rtc_event_log_parser.h"
-#include "modules/rtp_rtcp/source/rtp_packet_received.h"
-#include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
 
 namespace webrtc {
 
@@ -34,12 +32,12 @@ class RtcEventLogTestHelper {
   static void VerifyAudioSendStreamConfig(const ParsedRtcEventLog& parsed_log,
                                           size_t index,
                                           const rtclog::StreamConfig& config);
-  static void VerifyIncomingRtpEvent(const ParsedRtcEventLog& parsed_log,
-                                     size_t index,
-                                     const RtpPacketReceived& expected_packet);
-  static void VerifyOutgoingRtpEvent(const ParsedRtcEventLog& parsed_log,
-                                     size_t index,
-                                     const RtpPacketToSend& expected_packet);
+  static void VerifyRtpEvent(const ParsedRtcEventLog& parsed_log,
+                             size_t index,
+                             PacketDirection direction,
+                             const uint8_t* header,
+                             size_t header_size,
+                             size_t total_size);
   static void VerifyRtcpEvent(const ParsedRtcEventLog& parsed_log,
                               size_t index,
                               PacketDirection direction,
