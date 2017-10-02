@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "cc3c30f0_79456843",
+        "filename": "modules/congestion_controller/delay_based_bwe.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 5527
+      },
+      "writtenOn": "2017-10-02T11:20:12Z",
+      "side": 1,
+      "message": "Changed (result.updated) to (result.updated \u0026\u0026 prev_logged_bitrate_ !\u003d result.target_bitrate_bps)",
+      "parentUuid": "7881784e_4c905f1a",
+      "range": {
+        "startLine": 258,
+        "startChar": 8,
+        "endLine": 258,
+        "endChar": 18
+      },
+      "revId": "da544abfaa00f228ce258a4f5919b0e482b99b6c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "057a7f53_697eddf1",
         "filename": "modules/congestion_controller/delay_based_bwe.cc",
         "patchSetId": 2
@@ -45,6 +69,30 @@
       "revId": "da544abfaa00f228ce258a4f5919b0e482b99b6c",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "08ca593c_828add8a",
+        "filename": "modules/congestion_controller/delay_based_bwe.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 5527
+      },
+      "writtenOn": "2017-10-02T11:20:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "057a7f53_697eddf1",
+      "range": {
+        "startLine": 261,
+        "startChar": 4,
+        "endLine": 261,
+        "endChar": 24
+      },
+      "revId": "da544abfaa00f228ce258a4f5919b0e482b99b6c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
