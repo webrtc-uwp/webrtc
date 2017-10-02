@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9924fe5c_61f3a33c",
+        "filename": "audio/test/low_bandwidth_audio_test.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 5017
+      },
+      "writtenOn": "2017-10-02T18:14:04Z",
+      "side": 0,
+      "message": "For the sake of the non-bot user, we need to have a check in this script that clearly tells the user what to do (run download_tools.py) when the binary is missing from disk.\nIt will be annoyingly hard to figure out why the test is failing without that, IMO.",
+      "range": {
+        "startLine": 63,
+        "startChar": 2,
+        "endLine": 63,
+        "endChar": 62
+      },
+      "revId": "978b876fd251a8ec5dbe970365a3ce85d5741a60",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
