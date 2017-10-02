@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e9196817_d9d54aaf",
+        "filename": "modules/rtp_rtcp/include/rtp_receiver.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-10-02T08:28:32Z",
+      "side": 1,
+      "message": "See comment in your other CL: https://webrtc-review.googlesource.com/c/src/+/4141/4/modules/rtp_rtcp/include/rtp_receiver.h",
+      "revId": "213261a8349660455ec2c86ca52bdf8334c13841",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
