@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "963f3d34_988ce417",
+        "filename": "modules/rtp_rtcp/include/rtp_receiver.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-10-02T08:26:38Z",
+      "side": 1,
+      "message": "It might be even better to change the interface like so:\n\nrtc::Optional\u003cTimestamps\u003e GetLatestTimestamps() const;\n\nI\u0027m not sure that a Timestamps struct makes sense though. Perhaps a better name?",
+      "revId": "17822beeb2036f17ac22be187b8566952dfc40b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4d0df4d_06b750ec",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-10-02T08:26:38Z",
+      "side": 1,
+      "message": "Remove this local constant - it is not needed. The comment above appears to explain what the constant is, when it really talks about the logic below.",
+      "revId": "17822beeb2036f17ac22be187b8566952dfc40b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
