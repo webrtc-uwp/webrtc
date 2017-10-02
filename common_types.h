@@ -974,6 +974,10 @@ struct RtpKeepAliveConfig final {
   bool operator!=(const RtpKeepAliveConfig& o) const { return !(*this == o); }
 };
 
+struct RtpPayloadState {
+  int16_t picture_id = -1;
+};
+
 }  // namespace webrtc
 
 #endif  // COMMON_TYPES_H_
