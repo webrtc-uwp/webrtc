@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "7010e3d3_1707f0a3",
+        "filename": "audio/audio_state.cc",
+        "patchSetId": 11
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-10-02T11:21:39Z",
+      "side": 1,
+      "message": "It\u0027s a good idea to make it an enum class, I guess, with no implicit conversion to bool or anything else---but +1 for *not* calling it ALIVE. Maybe kDroppedLastRef and kOtherRefsRemained (note the past tense in the second name)?",
+      "parentUuid": "5cec49d5_ace7362e",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 4
+      },
+      "revId": "1bde42927a85d2efd5318a5058e4c49edf0a64e2",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6b58b95c_c350e275",
         "filename": "modules/audio_device/include/fake_audio_device.h",
         "patchSetId": 11
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "\u003e could there be an instance of this class on the stack somewhere?\n\nThere\u0027s one use as a direct member variable in voe_base_unittest.cc. There\u0027s also a subclass FakeAudioDevice, which seems to be handled via a std::unique_ptr in several tests.\n\nThis all looks a bit confused to me. We should either do refcounting, and use scoped_refptr for all instances, or make the base class AudioDeviceModule not inherit RefCountedModule. But not in this cl.\n\nDo you want me to delete or expand the TODO item?",
       "parentUuid": "6b58b95c_c350e275",
+      "range": {
+        "startLine": 23,
+        "startChar": 60,
+        "endLine": 23,
+        "endChar": 63
+      },
+      "revId": "1bde42927a85d2efd5318a5058e4c49edf0a64e2",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d94e71d9_2a973c16",
+        "filename": "modules/audio_device/include/fake_audio_device.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-10-02T11:21:39Z",
+      "side": 1,
+      "message": "Yes, I\u0027d say we want to do refcounting always. So the TODO should probably say something about fixing users that don\u0027t use refcounting.",
+      "parentUuid": "54bf18ae_381b63d8",
       "range": {
         "startLine": 23,
         "startChar": 60,
