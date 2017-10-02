@@ -1793,28 +1793,23 @@ void Channel::RegisterReceiveCodecsToRTPModule() {
   WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, _channelId),
                "Channel::RegisterReceiveCodecsToRTPModule()");
 
-  CodecInst codec;
-  const uint8_t nSupportedCodecs = AudioCodingModule::NumberOfCodecs();
-
+  // TODO(kwiberg): Iterate over the factory's supported codecs instead?
+  const int nSupportedCodecs = AudioCodingModule::NumberOfCodecs();
   for (int idx = 0; idx < nSupportedCodecs; idx++) {
-    // Open up the RTP/RTCP receiver for all supported codecs
-    if ((audio_coding_->Codec(idx, &codec) == -1) ||
-        (rtp_receiver_->RegisterReceivePayload(codec) == -1)) {
-      WEBRTC_TRACE(kTraceWarning, kTraceVoice, VoEId(_instanceId, _channelId),
-                   "Channel::RegisterReceiveCodecsToRTPModule() unable"
-                   " to register %s (%d/%d/%" PRIuS
-                   "/%d) to RTP/RTCP "
-                   "receiver",
-                   codec.plname, codec.pltype, codec.plfreq, codec.channels,
-                   codec.rate);
+    CodecInst codec;
+    if (audio_coding_->Codec(idx, &codec) == -1) {
+      LOG(LS_WARNING) << "Unable to register codec #" << idx
+                      << " for RTP/RTCP receiver of channel " << ChannelId();
     } else {
-      WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, _channelId),
-                   "Channel::RegisterReceiveCodecsToRTPModule() %s "
-                   "(%d/%d/%" PRIuS
-                   "/%d) has been added to the RTP/RTCP "
-                   "receiver",
-                   codec.plname, codec.pltype, codec.plfreq, codec.channels,
-                   codec.rate);
+      const SdpAudioFormat format = CodecInstToSdp(codec);
+      if (!decoder_factory_->IsSupportedDecoder(format) ||
+          rtp_receiver_->RegisterReceivePayload(codec.pltype, format) == -1) {
+        LOG(LS_WARNING) << "Unable to register " << format
+                        << " for RTP/RTCP receiver of channel " << ChannelId();
+      } else {
+        LOG(LS_INFO) << "Registered " << format
+                     << " with RTP/RTCP receiver of channel " << ChannelId();
+      }
     }
   }
 }
