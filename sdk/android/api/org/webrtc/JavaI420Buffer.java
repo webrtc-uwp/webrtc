@@ -13,8 +13,8 @@ package org.webrtc;
 import java.nio.ByteBuffer;
 import org.webrtc.VideoFrame.I420Buffer;
 
-/** Implementation of an I420 VideoFrame buffer. */
-class I420BufferImpl implements VideoFrame.I420Buffer {
+/** Implementation of VideoFrame.I420Buffer backed by Java direct byte buffers. */
+class JavaI420Buffer implements VideoFrame.I420Buffer {
   private final int width;
   private final int height;
   private final ByteBuffer dataY;
@@ -28,24 +28,45 @@ class I420BufferImpl implements VideoFrame.I420Buffer {
 
   private int refCount;
 
-  /** Constructs an I420Buffer backed by existing data. */
-  I420BufferImpl(int width, int height, ByteBuffer dataY, int strideY, ByteBuffer dataU,
+  /** Constructs an I420Buffer backed by existing direct byte buffers. */
+  public JavaI420Buffer(int width, int height, ByteBuffer dataY, int strideY, ByteBuffer dataU,
       int strideU, ByteBuffer dataV, int strideV, Runnable releaseCallback) {
     this.width = width;
     this.height = height;
-    this.dataY = dataY;
-    this.dataU = dataU;
-    this.dataV = dataV;
+    // Slice the buffers to protect from external modification.
+    this.dataY = dataY.slice();
+    this.dataU = dataU.slice();
+    this.dataV = dataV.slice();
     this.strideY = strideY;
     this.strideU = strideU;
     this.strideV = strideV;
     this.releaseCallback = releaseCallback;
 
     this.refCount = 1;
+
+    if (dataY == null || dataU == null || dataV == null) {
+      throw new IllegalArgumentException("Data buffers cannot be null.");
+    }
+    if (!dataY.isDirect() || !dataU.isDirect() || !dataV.isDirect()) {
+      throw new IllegalArgumentException("Data buffers must be direct byte buffers.");
+    }
+    final int chromeHeight = (height + 1) / 2;
+    final int minCapacityY = strideY * height;
+    final int minCapacityU = strideU * chromeHeight;
+    final int minCapacityV = strideV * chromeHeight;
+    if (this.dataY.capacity() < minCapacityY) {
+      throw new IllegalArgumentException("Y-buffer must be at least " + minCapacityY + " bytes.");
+    }
+    if (this.dataU.capacity() < minCapacityU) {
+      throw new IllegalArgumentException("U-buffer must be at least " + minCapacityU + " bytes.");
+    }
+    if (this.dataV.capacity() < minCapacityV) {
+      throw new IllegalArgumentException("V-buffer must be at least " + minCapacityV + " bytes.");
+    }
   }
 
   /** Allocates an empty I420Buffer suitable for an image of the given dimensions. */
-  static I420BufferImpl allocate(int width, int height) {
+  public static JavaI420Buffer allocate(int width, int height) {
     int chromaHeight = (height + 1) / 2;
     int strideUV = (width + 1) / 2;
     int yPos = 0;
@@ -66,7 +87,7 @@ class I420BufferImpl implements VideoFrame.I420Buffer {
     buffer.limit(vPos + strideUV * chromaHeight);
     ByteBuffer dataV = buffer.slice();
 
-    return new I420BufferImpl(width, height, dataY, width, dataU, strideUV, dataV, strideUV, null);
+    return new JavaI420Buffer(width, height, dataY, width, dataU, strideUV, dataV, strideUV, null);
   }
 
   @Override
