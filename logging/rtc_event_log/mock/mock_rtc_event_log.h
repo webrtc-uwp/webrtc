@@ -44,6 +44,16 @@ class MockRtcEventLog : public RtcEventLog {
   MOCK_METHOD1(LogAudioSendStreamConfig,
                void(const rtclog::StreamConfig& config));
 
+  MOCK_METHOD3(LogRtpHeader,
+               void(PacketDirection direction,
+                    const uint8_t* header,
+                    size_t packet_length));
+
+  MOCK_METHOD4(LogRtpHeader,
+               void(PacketDirection direction,
+                    const uint8_t* header,
+                    size_t packet_length,
+                    int probe_cluster_id));
   MOCK_METHOD1(LogIncomingRtpHeader, void(const RtpPacketReceived& packet));
 
   MOCK_METHOD2(LogOutgoingRtpHeader,
