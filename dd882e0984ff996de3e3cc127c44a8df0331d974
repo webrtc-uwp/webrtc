@@ -22,6 +22,76 @@
       "revId": "dd882e0984ff996de3e3cc127c44a8df0331d974",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "572e2a85_0783d226",
+        "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-02T14:25:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2f0f3bb2_9010744b",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 22,
+        "endChar": 43
+      },
+      "revId": "dd882e0984ff996de3e3cc127c44a8df0331d974",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "865aeeb6_7b652cd0",
+        "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-02T14:25:39Z",
+      "side": 1,
+      "message": "Maybe it would be nice to make a base class that works on CFTypeRef directly, i.e. not a template. Then we inherit from that class with a template and just add the \u0027T get() const\u0027 method. The benefit is that we would be able to move almost all code to a cc file.",
+      "range": {
+        "startLine": 25,
+        "startChar": 6,
+        "endLine": 25,
+        "endChar": 21
+      },
+      "revId": "dd882e0984ff996de3e3cc127c44a8df0331d974",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4383dca7_45188f56",
+        "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-02T14:25:39Z",
+      "side": 1,
+      "message": "One way to test this class if it\u0027s impossible to use CFRelease and CFRetain directly is to make them injectable through a Traits class like the Chromium implementation does. In the test, you can pass in some retain and release functions that you control completely. I think our current testing standard in this code base is too low, so I feel sad about adding new classes without tests. I know we have discussed this before, but it just hit me that we could test this by making the release and retain functions injectable.",
+      "range": {
+        "startLine": 38,
+        "startChar": 6,
+        "endLine": 38,
+        "endChar": 15
+      },
+      "revId": "dd882e0984ff996de3e3cc127c44a8df0331d974",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
