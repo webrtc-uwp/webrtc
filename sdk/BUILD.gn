@@ -713,6 +713,7 @@ if (is_ios || is_mac) {
         "objc/Framework/Classes/VideoToolbox/nalu_rewriter.h",
       ]
       deps = [
+        ":common_objc",
         "../common_video",
         "../modules:module_api",
         "../modules/video_coding:webrtc_h264",

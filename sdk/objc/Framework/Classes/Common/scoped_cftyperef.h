@@ -15,18 +15,20 @@
 #include <CoreFoundation/CoreFoundation.h>
 namespace rtc {
 
+// RETAIN: ScopedCFTypeRef should retain the object when it takes
+// ownership.
+// ASSUME: Assume the object already has already been retained.
+// ScopedCFTypeRef takes over ownership.
+enum class RetainPolicy { RETAIN, ASSUME };
+
 template <typename T>
 class ScopedCFTypeRef {
  public:
-  // RETAIN: ScopedCFTypeRef should retain the object when it takes
-  // ownership.
-  // ASSUME: Assume the object already has already been retained.
-  // ScopedCFTypeRef takes over ownership.
-  enum class RetainPolicy { RETAIN, ASSUME };
 
   ScopedCFTypeRef() : ptr_(nullptr) {}
   explicit ScopedCFTypeRef(T ptr) : ptr_(ptr) {}
-  ScopedCFTypeRef(T ptr, RetainPolicy policy) : ScopedCFTypeRef(ptr) {
+  ScopedCFTypeRef(T ptr, RetainPolicy policy) :
+      ScopedCFTypeRef(ptr) {
     if (ptr_ && policy == RetainPolicy::RETAIN)
       CFRetain(ptr_);
   }
