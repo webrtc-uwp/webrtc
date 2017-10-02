@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c207bc8_8683861e",
+        "filename": "audio/test/low_bandwidth_audio_test.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 5017
+      },
+      "writtenOn": "2017-10-02T18:34:37Z",
+      "side": 1,
+      "message": "This is good, but also please add something like this as:\nNote that these tools are Google-internal due to licensing, so in order to use them you will have to get your own license and manually put them in the right location.\n\nSee https://cs.chromium.org/chromium/src/third_party/webrtc/tools_webrtc/download_tools.py?rcl\u003dbbceb76f540159e2dba0701ac03c514f01624130\u0026l\u003d13",
+      "range": {
+        "startLine": 68,
+        "startChar": 18,
+        "endLine": 68,
+        "endChar": 35
+      },
+      "revId": "9e7842e1559165a16adbf31080c1d7dd07214ed9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
