@@ -33,6 +33,7 @@
 #include "logging/rtc_event_log/events/rtc_event_rtp_packet_outgoing.h"
 #include "logging/rtc_event_log/events/rtc_event_video_receive_stream_config.h"
 #include "logging/rtc_event_log/events/rtc_event_video_send_stream_config.h"
+#include "logging/rtc_event_log/output/rtc_event_log_output_file.h"
 #include "logging/rtc_event_log/rtc_event_log.h"
 #include "logging/rtc_event_log/rtc_event_log_parser.h"
 #include "logging/rtc_event_log/rtc_event_log_unittest_helper.h"
@@ -437,7 +438,8 @@ void RtcEventLogSessionDescription::WriteSession() {
   for (size_t i = 0; i < event_types.size(); i++) {
     fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
     if (i == event_types.size() / 2)
-      log_dumper->StartLogging(temp_filename, 10000000);
+      log_dumper->StartLogging(
+          rtc::MakeUnique<RtcEventLogOutputFile>(temp_filename, 10000000));
     switch (event_types[i]) {
       case EventType::kIncomingRtp:
         RTC_CHECK(incoming_rtp_written < incoming_rtp_packets.size());
@@ -746,7 +748,8 @@ TEST(RtcEventLogTest, LogEventAndReadBack) {
   log_dumper->Log(rtc::MakeUnique<RtcEventRtpPacketIncoming>(rtp_packet));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
 
-  log_dumper->StartLogging(temp_filename, 10000000);
+  log_dumper->StartLogging(
+      rtc::MakeUnique<RtcEventLogOutputFile>(temp_filename, 10000000));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
 
   log_dumper->Log(rtc::MakeUnique<RtcEventRtcpPacketOutgoing>(rtcp_packet));
@@ -794,7 +797,8 @@ TEST(RtcEventLogTest, LogLossBasedBweUpdateAndReadBack) {
   fake_clock.SetTimeMicros(prng.Rand<uint32_t>());
   std::unique_ptr<RtcEventLog> log_dumper(
       RtcEventLog::Create(RtcEventLog::EncodingType::Legacy));
-  log_dumper->StartLogging(temp_filename, 10000000);
+  log_dumper->StartLogging(
+      rtc::MakeUnique<RtcEventLogOutputFile>(temp_filename, 10000000));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
   log_dumper->Log(rtc::MakeUnique<RtcEventBweUpdateLossBased>(
       bitrate, fraction_lost, total_packets));
@@ -836,7 +840,8 @@ TEST(RtcEventLogTest, LogDelayBasedBweUpdateAndReadBack) {
   fake_clock.SetTimeMicros(prng.Rand<uint32_t>());
   std::unique_ptr<RtcEventLog> log_dumper(
       RtcEventLog::Create(RtcEventLog::EncodingType::Legacy));
-  log_dumper->StartLogging(temp_filename, 10000000);
+  log_dumper->StartLogging(
+      rtc::MakeUnique<RtcEventLogOutputFile>(temp_filename, 10000000));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
   log_dumper->Log(rtc::MakeUnique<RtcEventBweUpdateDelayBased>(
       bitrate1, BandwidthUsage::kBwNormal));
@@ -893,7 +898,8 @@ TEST(RtcEventLogTest, LogProbeClusterCreatedAndReadBack) {
   std::unique_ptr<RtcEventLog> log_dumper(
       RtcEventLog::Create(RtcEventLog::EncodingType::Legacy));
 
-  log_dumper->StartLogging(temp_filename, 10000000);
+  log_dumper->StartLogging(
+      rtc::MakeUnique<RtcEventLogOutputFile>(temp_filename, 10000000));
   log_dumper->Log(rtc::MakeUnique<RtcEventProbeClusterCreated>(
       0, bitrate_bps0, min_probes0, min_bytes0));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
@@ -943,7 +949,8 @@ TEST(RtcEventLogTest, LogProbeResultSuccessAndReadBack) {
   std::unique_ptr<RtcEventLog> log_dumper(
       RtcEventLog::Create(RtcEventLog::EncodingType::Legacy));
 
-  log_dumper->StartLogging(temp_filename, 10000000);
+  log_dumper->StartLogging(
+      rtc::MakeUnique<RtcEventLogOutputFile>(temp_filename, 10000000));
   log_dumper->Log(rtc::MakeUnique<RtcEventProbeResultSuccess>(0, bitrate_bps0));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
   log_dumper->Log(rtc::MakeUnique<RtcEventProbeResultSuccess>(1, bitrate_bps1));
@@ -986,7 +993,8 @@ TEST(RtcEventLogTest, LogProbeResultFailureAndReadBack) {
   std::unique_ptr<RtcEventLog> log_dumper(
       RtcEventLog::Create(RtcEventLog::EncodingType::Legacy));
 
-  log_dumper->StartLogging(temp_filename, 10000000);
+  log_dumper->StartLogging(
+      rtc::MakeUnique<RtcEventLogOutputFile>(temp_filename, 10000000));
   log_dumper->Log(rtc::MakeUnique<RtcEventProbeResultFailure>(
       0, ProbeFailureReason::kInvalidSendReceiveInterval));
   fake_clock.AdvanceTimeMicros(prng.Rand(1, 1000));
@@ -1047,7 +1055,8 @@ class ConfigReadWriteTest {
     std::unique_ptr<RtcEventLog> log_dumper(
         RtcEventLog::Create(RtcEventLog::EncodingType::Legacy));
 
-    log_dumper->StartLogging(temp_filename, 10000000);
+    log_dumper->StartLogging(
+        rtc::MakeUnique<RtcEventLogOutputFile>(temp_filename, 10000000));
     LogConfig(log_dumper.get());
     log_dumper->StopLogging();
 
