@@ -22,7 +22,7 @@
     {
       "include": "real_device_tests.json",
       "device type": "iPhone 6s",
-      "os": "10.0.1"
+      "os": "10.3.3"
     }
   ]
 }
