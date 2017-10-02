@@ -157,6 +157,12 @@ class TurnRedirectInterface {
   virtual ~TurnRedirectInterface() {}
 };
 
+class StunMessageValidator {
+ public:
+  virtual void CheckMessage(const TurnMessage* msg) = 0;
+  virtual ~StunMessageValidator() {}
+};
+
 // The core TURN server class. Give it a socket to listen on via
 // AddInternalServerSocket, and a factory to create external sockets via
 // SetExternalSocketFactory, and it's ready to go.
@@ -212,6 +218,11 @@ class TurnServer : public sigslot::has_slots<> {
   std::string SetTimestampForNextNonce(int64_t timestamp) {
     ts_for_next_nonce_ = timestamp;
     return GenerateNonce(timestamp);
+  }
+
+  void SetStunMessageValidator(
+      std::unique_ptr<StunMessageValidator> validator) {
+    stun_message_validator_ = std::move(validator);
   }
 
  private:
@@ -295,6 +306,10 @@ class TurnServer : public sigslot::has_slots<> {
   // For testing only. If this is non-zero, the next NONCE will be generated
   // from this value, and it will be reset to 0 after generating the NONCE.
   int64_t ts_for_next_nonce_ = 0;
+
+  // For testing only. Used to check that stun message received
+  // are good.
+  std::unique_ptr<StunMessageValidator> stun_message_validator_;
 
   friend class TurnServerAllocation;
 };
