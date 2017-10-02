@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "938bac97_109eaa59",
+        "filename": "audio/audio_state.cc",
+        "patchSetId": 11
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 5508
+      },
+      "writtenOn": "2017-10-02T12:59:25Z",
+      "side": 1,
+      "message": "Those names sgtm. My main concern was around using bool.",
+      "parentUuid": "7010e3d3_1707f0a3",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 4
+      },
+      "revId": "1bde42927a85d2efd5318a5058e4c49edf0a64e2",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6b58b95c_c350e275",
         "filename": "modules/audio_device/include/fake_audio_device.h",
         "patchSetId": 11
@@ -132,6 +156,30 @@
       "side": 1,
       "message": "Yes, I\u0027d say we want to do refcounting always. So the TODO should probably say something about fixing users that don\u0027t use refcounting.",
       "parentUuid": "54bf18ae_381b63d8",
+      "range": {
+        "startLine": 23,
+        "startChar": 60,
+        "endLine": 23,
+        "endChar": 63
+      },
+      "revId": "1bde42927a85d2efd5318a5058e4c49edf0a64e2",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eca99092_06f50807",
+        "filename": "modules/audio_device/include/fake_audio_device.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 5508
+      },
+      "writtenOn": "2017-10-02T12:59:25Z",
+      "side": 1,
+      "message": "Agree",
+      "parentUuid": "d94e71d9_2a973c16",
       "range": {
         "startLine": 23,
         "startChar": 60,
