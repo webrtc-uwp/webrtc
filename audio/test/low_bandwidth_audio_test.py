@@ -55,17 +55,22 @@ def _GetPlatform():
     return 'linux'
 
 
-def _DownloadTools():
+def _GetPathToTools():
   tools_dir = os.path.join(SRC_DIR, 'tools_webrtc')
   toolchain_dir = os.path.join(tools_dir, 'audio_quality')
 
-  # Download PESQ and POLQA.
-  download_script = os.path.join(tools_dir, 'download_tools.py')
-  command = [sys.executable, download_script, toolchain_dir]
-  subprocess.check_call(_LogCommand(command))
-
   pesq_path = os.path.join(toolchain_dir, _GetPlatform(), 'pesq')
   polqa_path = os.path.join(toolchain_dir, _GetPlatform(), 'PolqaOem64')
+
+  if not os.path.isfile(pesq_path) or not os.path.isfile(polqa_path):
+    logging.error('Could not find PESQ or POLQA at %s.\n'
+                  'To fix this run:\n'
+                  '  python %s %s',
+                  toolchain_dir,
+                  os.path.join(tools_dir, 'download_tools.py'),
+                  toolchain_dir)
+    return None, None
+
   return pesq_path, polqa_path
 
 
@@ -176,7 +181,9 @@ def main():
 
   args = _ParseArgs()
 
-  pesq_path, polqa_path = _DownloadTools()
+  pesq_path, polqa_path = _GetPathToTools()
+  if pesq_path is None:
+    return 1
 
   out_dir = os.path.join(args.build_dir, '..')
   if args.android:
