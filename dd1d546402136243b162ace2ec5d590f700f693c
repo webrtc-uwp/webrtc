@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96a53042_9ebee09b",
+        "filename": "sdk/android/src/java/org/webrtc/HardwareVideoDecoder.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-02T14:40:01Z",
+      "side": 1,
+      "message": "I think the function name is misleading, it sounds like we will return an NV12 buffer. How about nv12ToI420?",
+      "range": {
+        "startLine": 492,
+        "startChar": 28,
+        "endLine": 492,
+        "endChar": 42
+      },
+      "revId": "dd1d546402136243b162ace2ec5d590f700f693c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
