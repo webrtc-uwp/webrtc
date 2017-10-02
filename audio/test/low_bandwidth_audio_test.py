@@ -59,11 +59,6 @@ def _DownloadTools():
   tools_dir = os.path.join(SRC_DIR, 'tools_webrtc')
   toolchain_dir = os.path.join(tools_dir, 'audio_quality')
 
-  # Download PESQ and POLQA.
-  download_script = os.path.join(tools_dir, 'download_tools.py')
-  command = [sys.executable, download_script, toolchain_dir]
-  subprocess.check_call(_LogCommand(command))
-
   pesq_path = os.path.join(toolchain_dir, _GetPlatform(), 'pesq')
   polqa_path = os.path.join(toolchain_dir, _GetPlatform(), 'PolqaOem64')
   return pesq_path, polqa_path
