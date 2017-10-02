@@ -17,7 +17,6 @@
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "system_wrappers/include/event_wrapper.h"
-#include "system_wrappers/include/trace.h"
 #include "voice_engine/channel.h"
 #include "voice_engine/channel_manager.h"
 #include "voice_engine/utility.h"

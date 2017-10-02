@@ -16,9 +16,10 @@
 
 #include "modules/audio_coding/include/audio_coding_module.h"
 #include "rtc_base/checks.h"
-#include "system_wrappers/include/trace.h"
 #include "voice_engine/channel_proxy.h"
 #include "voice_engine/voice_engine_impl.h"
+
+#define WEBRTC_TRACE(a,b,c,d,e)
 
 namespace webrtc {
 

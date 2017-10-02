@@ -39,8 +39,9 @@
 #include "rtc_base/timeutils.h"
 #include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/metrics.h"
-#include "system_wrappers/include/trace.h"
 #include "voice_engine/utility.h"
+
+#define WEBRTC_TRACE(a,b,c)
 
 namespace webrtc {
 namespace voe {
