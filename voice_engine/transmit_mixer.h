@@ -39,59 +39,57 @@ class MixedAudio;
 
 class TransmitMixer {
 public:
-    static int32_t Create(TransmitMixer*& mixer, uint32_t instanceId);
+ static int32_t Create(TransmitMixer*& mixer);
 
-    static void Destroy(TransmitMixer*& mixer);
+ static void Destroy(TransmitMixer*& mixer);
 
-    void SetEngineInformation(ChannelManager* channelManager);
+ void SetEngineInformation(ChannelManager* channelManager);
 
-    int32_t SetAudioProcessingModule(AudioProcessing* audioProcessingModule);
+ int32_t SetAudioProcessingModule(AudioProcessing* audioProcessingModule);
 
-    int32_t PrepareDemux(const void* audioSamples,
-                         size_t nSamples,
-                         size_t nChannels,
-                         uint32_t samplesPerSec,
-                         uint16_t totalDelayMS,
-                         int32_t  clockDrift,
-                         uint16_t currentMicLevel,
-                         bool keyPressed);
+ int32_t PrepareDemux(const void* audioSamples,
+                      size_t nSamples,
+                      size_t nChannels,
+                      uint32_t samplesPerSec,
+                      uint16_t totalDelayMS,
+                      int32_t clockDrift,
+                      uint16_t currentMicLevel,
+                      bool keyPressed);
 
-    void ProcessAndEncodeAudio();
+ void ProcessAndEncodeAudio();
 
-    // Must be called on the same thread as PrepareDemux().
-    uint32_t CaptureLevel() const;
+ // Must be called on the same thread as PrepareDemux().
+ uint32_t CaptureLevel() const;
 
-    int32_t StopSend();
+ int32_t StopSend();
 
-    // TODO(solenberg): Remove, once AudioMonitor is gone.
-    int8_t AudioLevel() const;
+ // TODO(solenberg): Remove, once AudioMonitor is gone.
+ int8_t AudioLevel() const;
 
-    // 'virtual' to allow mocking.
-    virtual int16_t AudioLevelFullRange() const;
+ // 'virtual' to allow mocking.
+ virtual int16_t AudioLevelFullRange() const;
 
-    // See description of "totalAudioEnergy" in the WebRTC stats spec:
-    // https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamtrackstats-totalaudioenergy
-    // 'virtual' to allow mocking.
-    virtual double GetTotalInputEnergy() const;
+ // See description of "totalAudioEnergy" in the WebRTC stats spec:
+ // https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamtrackstats-totalaudioenergy
+ // 'virtual' to allow mocking.
+ virtual double GetTotalInputEnergy() const;
 
-    // 'virtual' to allow mocking.
-    virtual double GetTotalInputDuration() const;
+ // 'virtual' to allow mocking.
+ virtual double GetTotalInputDuration() const;
 
-    virtual ~TransmitMixer();
+ virtual ~TransmitMixer();
 
-  // Virtual to allow mocking.
-  virtual void EnableStereoChannelSwapping(bool enable);
-  bool IsStereoChannelSwappingEnabled();
+ // Virtual to allow mocking.
+ virtual void EnableStereoChannelSwapping(bool enable);
+ bool IsStereoChannelSwappingEnabled();
 
-  // Virtual to allow mocking.
-  virtual bool typing_noise_detected() const;
+ // Virtual to allow mocking.
+ virtual bool typing_noise_detected() const;
 
 protected:
     TransmitMixer() = default;
 
 private:
-    TransmitMixer(uint32_t instanceId);
-
     // Gets the maximum sample rate and number of channels over all currently
     // sending codecs.
     void GetSendCodecInfo(int* max_sample_rate, size_t* max_channels);
@@ -124,7 +122,6 @@ private:
     rtc::CriticalSection lock_;
     bool typing_noise_detected_ RTC_GUARDED_BY(lock_) = false;
 
-    int _instanceId = 0;
     uint32_t _captureLevel = 0;
     bool stereo_codec_ = false;
     bool swap_stereo_channels_ = false;

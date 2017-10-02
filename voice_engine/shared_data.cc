@@ -28,7 +28,7 @@ SharedData::SharedData()
       _moduleProcessThreadPtr(ProcessThread::Create("VoiceProcessThread")),
       encoder_queue_("AudioEncoderQueue") {
   Trace::CreateTrace();
-  if (TransmitMixer::Create(_transmitMixerPtr, _gInstanceCounter) == 0) {
+  if (TransmitMixer::Create(_transmitMixerPtr) == 0) {
     _transmitMixerPtr->SetEngineInformation(&_channelManager);
   }
 }
