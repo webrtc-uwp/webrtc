@@ -14,6 +14,9 @@
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/random.h"
+#include "rtc_base/timeutils.h"
+#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 
@@ -89,11 +92,53 @@ void CopyCodecSpecific(const CodecSpecificInfo* info, RTPVideoHeader* rtp) {
 
 }  // namespace
 
+// Currently only used if forced fallback is enabled.
+class PayloadRouter::RtpPayloadParams final {
+ public:
+  explicit RtpPayloadParams(const uint32_t ssrc) : ssrc_(ssrc) {
+    Random random(rtc::TimeMicros());
+    picture_id_ = random.Rand<int16_t>() & 0x7FFF;
+  }
+  ~RtpPayloadParams() {}
+
+  void Set(RTPVideoHeader* rtp_video_header) {
+    if (rtp_video_header->codec == kRtpVideoVp8 &&
+        rtp_video_header->codecHeader.VP8.pictureId != kNoPictureId) {
+      rtp_video_header->codecHeader.VP8.pictureId = picture_id_;
+      picture_id_ = (picture_id_ + 1) & 0x7FFF;
+    }
+  }
+
+  void SetState(const RtpPayloadState& state) {
+    picture_id_ = state.picture_id;
+  }
+
+  RtpPayloadState GetState() const {
+    RtpPayloadState state;
+    state.picture_id = picture_id_;
+    return state;
+  }
+
+  uint32_t ssrc() const { return ssrc_; }
+
+ private:
+  const uint32_t ssrc_;
+  int16_t picture_id_;
+};
+
 PayloadRouter::PayloadRouter(const std::vector<RtpRtcp*>& rtp_modules,
+                             const std::vector<uint32_t>& ssrcs,
                              int payload_type)
     : active_(false),
       rtp_modules_(rtp_modules),
-      payload_type_(payload_type) {
+      payload_type_(payload_type),
+      forced_fallback_enabled_((webrtc::field_trial::IsEnabled(
+          "WebRTC-VP8-Forced-Fallback-Encoder"))) {
+  RTC_DCHECK_EQ(ssrcs.size(), rtp_modules.size());
+  for (uint32_t ssrc : ssrcs) {
+    params_.push_back(
+        std::unique_ptr<RtpPayloadParams>(new RtpPayloadParams(ssrc)));
+  }
 }
 
 PayloadRouter::~PayloadRouter() {}
@@ -113,6 +158,26 @@ void PayloadRouter::SetActive(bool active) {
 bool PayloadRouter::IsActive() {
   rtc::CritScope lock(&crit_);
   return active_ && !rtp_modules_.empty();
+}
+
+std::map<uint32_t, RtpPayloadState> PayloadRouter::GetRtpPayloadStates() const {
+  rtc::CritScope lock(&crit_);
+  std::map<uint32_t, RtpPayloadState> payload_states;
+  for (const auto& param : params_) {
+    payload_states[param->ssrc()] = param->GetState();
+  }
+  return payload_states;
+}
+
+void PayloadRouter::SetRtpPayloadStates(
+    std::map<uint32_t, RtpPayloadState> states) {
+  rtc::CritScope lock(&crit_);
+  for (const auto& state : states) {
+    for (const auto& param : params_) {
+      if (param->ssrc() == state.first)
+        param->SetState(state.second);
+    }
+  }
 }
 
 EncodedImageCallback::Result PayloadRouter::OnEncodedImage(
@@ -149,6 +214,9 @@ EncodedImageCallback::Result PayloadRouter::OnEncodedImage(
 
   int stream_index = rtp_video_header.simulcastIdx;
   RTC_DCHECK_LT(stream_index, rtp_modules_.size());
+  if (forced_fallback_enabled_) {
+    params_[stream_index]->Set(&rtp_video_header);
+  }
   uint32_t frame_id;
   bool send_result = rtp_modules_[stream_index]->SendOutgoingData(
       encoded_image._frameType, payload_type_, encoded_image._timeStamp,
