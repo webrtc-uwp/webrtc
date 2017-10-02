@@ -93,6 +93,30 @@
       "revId": "da544abfaa00f228ce258a4f5919b0e482b99b6c",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e4a7f9d_dfbb7a85",
+        "filename": "modules/congestion_controller/delay_based_bwe.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-10-02T11:55:23Z",
+      "side": 1,
+      "message": "Nit: I meant dropping the \"logged\" part, since we seem to be updating whether we log or not. Your call though.",
+      "parentUuid": "08ca593c_828add8a",
+      "range": {
+        "startLine": 261,
+        "startChar": 4,
+        "endLine": 261,
+        "endChar": 24
+      },
+      "revId": "da544abfaa00f228ce258a4f5919b0e482b99b6c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
