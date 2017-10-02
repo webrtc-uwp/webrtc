@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8c191c4_88bc70e6",
+        "filename": "sdk/android/api/org/webrtc/JavaI420Buffer.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-02T11:39:24Z",
+      "side": 1,
+      "message": "Change this into a static create function as well. Maybe call it \u0027wrap\u0027, and explain that it will wrap the arguments without making a copy.",
+      "range": {
+        "startLine": 32,
+        "startChar": 9,
+        "endLine": 32,
+        "endChar": 23
+      },
+      "revId": "fdd7fa3a626937967958eff9296c3d892a0a56a9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f263ba11_2cfa5144",
+        "filename": "sdk/android/api/org/webrtc/JavaI420Buffer.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-02T11:39:24Z",
+      "side": 1,
+      "message": "Update the comment to clarify we can only protect against changing the position in the ByteBuffer.",
+      "range": {
+        "startLine": 36,
+        "startChar": 4,
+        "endLine": 36,
+        "endChar": 63
+      },
+      "revId": "fdd7fa3a626937967958eff9296c3d892a0a56a9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
