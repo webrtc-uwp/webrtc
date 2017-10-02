@@ -70,6 +70,30 @@
       "revId": "8f27a1e0d070ace4e6081a6943191bd2ac67a2f8",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e000b59_0131597d",
+        "filename": "logging/rtc_event_log/events/rtc_event.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 5147
+      },
+      "writtenOn": "2017-10-02T07:34:37Z",
+      "side": 1,
+      "message": "I wanted to avoid header file proliferation. I see in the link that you\u0027ve provided that forward declaration of functions is explicitly discouraged, so let me get rid of it, then.",
+      "parentUuid": "10844e77_bb6defac",
+      "range": {
+        "startLine": 17,
+        "startChar": 8,
+        "endLine": 17,
+        "endChar": 18
+      },
+      "revId": "8f27a1e0d070ace4e6081a6943191bd2ac67a2f8",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
