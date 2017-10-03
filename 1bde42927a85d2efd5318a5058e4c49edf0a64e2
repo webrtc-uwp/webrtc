@@ -97,6 +97,30 @@
     },
     {
       "key": {
+        "uuid": "5a6a6a96_496dc8ef",
+        "filename": "audio/audio_state.cc",
+        "patchSetId": 11
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-03T06:38:50Z",
+      "side": 1,
+      "message": "Ok. Question remains, where to add this enum. We\u0027ll have a fair amount of classes:\n\nRefCountInterface: Abstract interface with virtual AddRef/Release\n\nRefCountedObject: Template class implementing that interface\n\nRefCountBase: Concrete base class with non-virtual AddRef/Release\n\nRefCounter: Internal class implementing refcount ops, used by the two above classes.\n\nRandom other classes implementing AddRef/Release. Later to be converted to use either RefCountedObject or RefCountBase, but not in this cl.\n\nscoped_refptr: Hopefully not involved, since it doesn\u0027t use AddRef/Release return values.\n\nI think RefCountInterface is perhaps the least unnatural place. And we also need a name for the enum type.",
+      "parentUuid": "938bac97_109eaa59",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 4
+      },
+      "revId": "1bde42927a85d2efd5318a5058e4c49edf0a64e2",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6b58b95c_c350e275",
         "filename": "modules/audio_device/include/fake_audio_device.h",
         "patchSetId": 11
