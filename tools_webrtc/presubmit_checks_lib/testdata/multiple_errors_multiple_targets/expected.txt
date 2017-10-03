@@ -1,0 +1,15 @@
+BUILD.gn:18 in target 'error_1':
+  Source file 'subpackage1/dummy_subpackage1.cc'
+  crosses boundary of package 'subpackage1'.
+
+BUILD.gn:19 in target 'error_1':
+  Source file 'subpackage1/dummy_subpackage1.h'
+  crosses boundary of package 'subpackage1'.
+
+BUILD.gn:25 in target 'error_2':
+  Source file 'subpackage1/dummy_subpackage2.cc'
+  crosses boundary of package 'subpackage1'.
+
+BUILD.gn:26 in target 'error_2':
+  Source file 'subpackage1/dummy_subpackage2.h'
+  crosses boundary of package 'subpackage1'.

@@ -63,6 +63,16 @@ class UnitTest(unittest.TestCase):
   def testAllBuildFiles(self):
     self.RunTest(os.path.join(TESTDATA_DIR, 'all_build_files'), True)
 
+  def testSanitizeFilename(self):
+    # Check that regex error is not raised.
+    self.RunTest(os.path.join(TESTDATA_DIR, 'dangerous_filename'), True)
+
+  def testRelativeFilename(self):
+    test_dir = os.path.join(TESTDATA_DIR, 'all_build_files')
+    logger = Logger(test_dir)
+    with self.assertRaises(AssertionError):
+      CheckPackageBoundaries(test_dir, logger, ["BUILD.gn"])
+
 
 if __name__ == '__main__':
   unittest.main()
