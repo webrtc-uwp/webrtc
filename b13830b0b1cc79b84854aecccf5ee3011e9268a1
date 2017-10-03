@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8b49e54b_7de8b901",
+        "filename": "sdk/android/api/org/webrtc/GlShader.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-03T08:16:15Z",
+      "side": 1,
+      "message": "nit: Comment this literal like this:\n0 /* stride */",
+      "range": {
+        "startLine": 85,
+        "startChar": 43,
+        "endLine": 85,
+        "endChar": 44
+      },
+      "revId": "b13830b0b1cc79b84854aecccf5ee3011e9268a1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
