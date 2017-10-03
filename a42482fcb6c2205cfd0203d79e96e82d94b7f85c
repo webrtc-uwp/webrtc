@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b94bab91_21e8986c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-10-03T13:00:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "327dd221_7ad82b59",
+      "range": {
+        "startLine": 9,
+        "startChar": 31,
+        "endLine": 9,
+        "endChar": 38
+      },
+      "revId": "a42482fcb6c2205cfd0203d79e96e82d94b7f85c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b4992b17_b351526c",
         "filename": "audio/audio_send_stream.cc",
         "patchSetId": 2
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "5a35777e_33f5d63c",
+        "filename": "audio/audio_send_stream.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-10-03T13:00:30Z",
+      "side": 1,
+      "message": "oops, confused with function that call OnPacketAdded.\nfixed, thank you.",
+      "parentUuid": "b4992b17_b351526c",
+      "range": {
+        "startLine": 116,
+        "startChar": 59,
+        "endLine": 116,
+        "endChar": 68
+      },
+      "revId": "a42482fcb6c2205cfd0203d79e96e82d94b7f85c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c8dcbc49_36718851",
         "filename": "audio/audio_send_stream.cc",
         "patchSetId": 2
@@ -68,6 +116,30 @@
       "revId": "a42482fcb6c2205cfd0203d79e96e82d94b7f85c",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9f57008_f633b2fd",
+        "filename": "audio/audio_send_stream.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-10-03T13:00:30Z",
+      "side": 1,
+      "message": "Reading 12.6.2 16 Initializing bases and members of the c++ spec:\n\"Member functions (including virtual member functions, 10.3) can be called for an object under construction. However, if these operations are performed in a ctor-initializer (or in a function called directly or indirectly from a ctor-initializer) before all the mem-initializers for base classes have completed, the result of the operation is undefined\"\n\nhere it is called after ctor-initiaizer.",
+      "parentUuid": "c8dcbc49_36718851",
+      "range": {
+        "startLine": 117,
+        "startChar": 2,
+        "endLine": 117,
+        "endChar": 12
+      },
+      "revId": "a42482fcb6c2205cfd0203d79e96e82d94b7f85c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
