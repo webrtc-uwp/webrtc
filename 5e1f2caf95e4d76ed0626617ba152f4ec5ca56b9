@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b1633ec9_63586a40",
+        "filename": "pc/webrtcsession.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 991,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-10-03T04:12:24Z",
+      "side": 1,
+      "message": "Is there a reason this isn\u0027t this happening in WebRtcVideoEngine when recv_rtp_extensions_ is changed? That\u0027s typically where interactions with Call and processing of parameters happens.",
+      "revId": "5e1f2caf95e4d76ed0626617ba152f4ec5ca56b9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
