@@ -783,9 +783,9 @@ static bool ReferencedCodecsMatch(const std::vector<C>& codecs1,
 }
 
 template <class C>
-static void NegotiateCodecs(const std::vector<C>& local_codecs,
-                            const std::vector<C>& offered_codecs,
-                            std::vector<C>* negotiated_codecs) {
+static std::vector<C> NegotiateCodecs(const std::vector<C>& local_codecs,
+                                      const std::vector<C>& offered_codecs) {
+  std::vector<C> negotiated_codecs;
   for (const C& ours : local_codecs) {
     C theirs;
     // Note that we intentionally only find one matching codec for each of our
@@ -806,7 +806,7 @@ static void NegotiateCodecs(const std::vector<C>& local_codecs,
       }
       negotiated.id = theirs.id;
       negotiated.name = theirs.name;
-      negotiated_codecs->push_back(std::move(negotiated));
+      negotiated_codecs.push_back(std::move(negotiated));
     }
   }
   // RFC3264: Although the answerer MAY list the formats in their desired
@@ -818,11 +818,18 @@ static void NegotiateCodecs(const std::vector<C>& local_codecs,
   for (const C& codec : offered_codecs) {
     payload_type_preferences[codec.id] = preference--;
   }
-  std::sort(negotiated_codecs->begin(), negotiated_codecs->end(),
+  std::sort(negotiated_codecs.begin(), negotiated_codecs.end(),
             [&payload_type_preferences](const C& a, const C& b) {
               return payload_type_preferences[a.id] >
                      payload_type_preferences[b.id];
             });
+  return negotiated_codecs;
+}
+
+std::vector<VideoCodec> NegotiateVideoCodecs(
+    const std::vector<VideoCodec>& local_codecs,
+    const std::vector<VideoCodec>& offered_codec) {
+  return NegotiateCodecs<VideoCodec>(local_codecs, offered_codec);
 }
 
 // Finds a codec in |codecs2| that matches |codec_to_match|, which is
@@ -1112,8 +1119,8 @@ static bool CreateMediaContentAnswer(
     StreamParamsVec* current_streams,
     bool bundle_enabled,
     MediaContentDescriptionImpl<C>* answer) {
-  std::vector<C> negotiated_codecs;
-  NegotiateCodecs(local_codecs, offer->codecs(), &negotiated_codecs);
+  const std::vector<C> negotiated_codecs =
+      NegotiateCodecs(local_codecs, offer->codecs());
   answer->AddCodecs(negotiated_codecs);
   answer->set_protocol(offer->protocol());
   RtpHeaderExtensions negotiated_rtp_extensions;
@@ -2305,7 +2312,6 @@ bool MediaSessionDescriptionFactory::AddDataContentForAnswer(
 }
 
 void MediaSessionDescriptionFactory::ComputeAudioCodecsIntersectionAndUnion() {
-  audio_sendrecv_codecs_.clear();
   all_audio_codecs_.clear();
   // Compute the audio codecs union.
   for (const AudioCodec& send : audio_send_codecs_) {
@@ -2328,8 +2334,8 @@ void MediaSessionDescriptionFactory::ComputeAudioCodecsIntersectionAndUnion() {
   // order we'd like to follow. The reasoning is that encoding is usually more
   // expensive than decoding, and prioritizing a codec in the send list probably
   // means it's a codec we can handle efficiently.
-  NegotiateCodecs(audio_recv_codecs_, audio_send_codecs_,
-                  &audio_sendrecv_codecs_);
+  audio_sendrecv_codecs_ =
+      NegotiateCodecs(audio_recv_codecs_, audio_send_codecs_);
 }
 
 bool IsMediaContent(const ContentInfo* content) {
