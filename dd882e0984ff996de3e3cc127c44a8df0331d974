@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "853172d5_843c80aa",
+        "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-03T08:27:13Z",
+      "side": 1,
+      "message": "Yes, you can\u0027t move a template to a cc file since the code will be generated for every type so it needs to be available in the header. I think we can skip this now because it will be very tricky with the changes you made in the CL adding tests. Let\u0027s keep it as a template in the header file.",
+      "parentUuid": "d8cee620_4bc9a559",
+      "range": {
+        "startLine": 25,
+        "startChar": 6,
+        "endLine": 25,
+        "endChar": 21
+      },
+      "revId": "dd882e0984ff996de3e3cc127c44a8df0331d974",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4383dca7_45188f56",
         "filename": "sdk/objc/Framework/Classes/Common/scoped_cftyperef.h",
         "patchSetId": 1
