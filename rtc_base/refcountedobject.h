@@ -13,8 +13,11 @@
 #include <utility>
 
 #include "rtc_base/atomicops.h"
+#include "rtc_base/refcount.h"
 
 namespace rtc {
+
+enum class RefCountReleaseStatus;
 
 template <class T>
 class RefCountedObject : public T {
@@ -30,14 +33,15 @@ class RefCountedObject : public T {
           std::forward<P1>(p1),
           std::forward<Args>(args)...) {}
 
-  virtual int AddRef() const { return AtomicOps::Increment(&ref_count_); }
+  virtual void AddRef() const { AtomicOps::Increment(&ref_count_); }
 
-  virtual int Release() const {
-    int count = AtomicOps::Decrement(&ref_count_);
-    if (!count) {
+  virtual RefCountReleaseStatus Release() const {
+    bool is_last_ref = (AtomicOps::Decrement(&ref_count_) == 0);
+    if (is_last_ref) {
       delete this;
     }
-    return count;
+    return is_last_ref ? RefCountReleaseStatus::kDroppedLastRef
+                       : RefCountReleaseStatus::kOtherRefsRemained;
   }
 
   // Return whether the reference count is one. If the reference count is used
