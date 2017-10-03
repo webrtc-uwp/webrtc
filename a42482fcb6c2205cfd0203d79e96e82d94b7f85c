@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "327dd221_7ad82b59",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-03T11:25:50Z",
+      "side": 1,
+      "message": "Spelling",
+      "range": {
+        "startLine": 9,
+        "startChar": 31,
+        "endLine": 9,
+        "endChar": 38
+      },
+      "revId": "a42482fcb6c2205cfd0203d79e96e82d94b7f85c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4992b17_b351526c",
+        "filename": "audio/audio_send_stream.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-03T11:25:50Z",
+      "side": 1,
+      "message": "There\u0027s no |AddPacket| method here. Better to either give the methods by name (OnPacketAdded and OnPacketFeedbackVector?), or just refer to the implemented interface.",
+      "range": {
+        "startLine": 116,
+        "startChar": 59,
+        "endLine": 116,
+        "endChar": 68
+      },
+      "revId": "a42482fcb6c2205cfd0203d79e96e82d94b7f85c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8dcbc49_36718851",
+        "filename": "audio/audio_send_stream.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-03T11:25:50Z",
+      "side": 1,
+      "message": "I think moving this call last is an improvement, but it doesn\u0027t quite eliminate the race. \n\nThe vtable entry for OnAddPacket are likely not assigned yet by the time this runs (if I\u0027ve understood correctly, calling virtual methods from within the constructor will get the superclass implementation). For testing, you could try adding a call to OnPacketAdded here and see what happens, it may well jump to nullptr.\n\nSome different ways to really solve the problem are\n\n* Register some other object than |this|, packet_loss_tracker_ is close to usable, but not quite.\n\n* Postpone registration until after construction, with some kind of Init method.\n\n* Hold some lock in the caller of the constructor, to prevent the callbacks from being called concurrently with the constructor. I did it like that in the FlexfecReceiveStreamImpl, which uses |this| in the same risky way.\n\nIf you can\u0027t solve the problem completely in this cl, at least add a TODO item.",
+      "range": {
+        "startLine": 117,
+        "startChar": 2,
+        "endLine": 117,
+        "endChar": 12
+      },
+      "revId": "a42482fcb6c2205cfd0203d79e96e82d94b7f85c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
