@@ -100,6 +100,7 @@ static void CodecSettings(VideoCodecType codec_type, VideoCodec* settings) {
     case kVideoCodecULPFEC:
     case kVideoCodecFlexfec:
     case kVideoCodecGeneric:
+    case kVideoCodecStereo:
     case kVideoCodecUnknown:
       RTC_NOTREACHED();
       return;

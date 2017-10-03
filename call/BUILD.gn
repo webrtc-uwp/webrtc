@@ -143,6 +143,12 @@ rtc_source_set("video_stream_api") {
     "video_send_stream.cc",
     "video_send_stream.h",
   ]
+
+  if (!build_with_chromium && is_clang) {
+    # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+  }
+
   deps = [
     ":rtp_interfaces",
     "../:webrtc_common",

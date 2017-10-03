@@ -263,6 +263,19 @@ VideoCodec VideoCodec::CreateRtxCodec(int rtx_payload_type,
   return rtx_codec;
 }
 
+// static
+VideoCodec VideoCodec::CreateStereoCodec(int stereo_payload_type,
+                                         const VideoCodec& codec) {
+  VideoCodec stereo_codec(stereo_payload_type, kStereoCodecName);
+  stereo_codec.SetParam(kCodecParamAssociatedPayloadType, codec.id);
+  return stereo_codec;
+}
+
+// static
+bool VideoCodec::IsStereoCodec(const VideoCodec& codec) {
+  return CodecNamesEq(codec.name.c_str(), kStereoCodecName);
+}
+
 VideoCodec::CodecType VideoCodec::GetCodecType() const {
   const char* payload_name = name.c_str();
   if (_stricmp(payload_name, kRedCodecName) == 0) {

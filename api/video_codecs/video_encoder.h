@@ -179,5 +179,13 @@ class VideoEncoder {
   virtual bool SupportsNativeHandle() const;
   virtual const char* ImplementationName() const;
 };
+
+class VideoEncoderFactoryEx {
+ public:
+  virtual VideoEncoder* Create() = 0;
+  virtual void Destroy(VideoEncoder* encoder) = 0;
+  virtual ~VideoEncoderFactoryEx() {}
+};
+
 }  // namespace webrtc
 #endif  // API_VIDEO_CODECS_VIDEO_ENCODER_H_

@@ -349,8 +349,8 @@ int32_t RTPSender::CheckPayloadType(int8_t payload_type,
   std::map<int8_t, RtpUtility::Payload*>::iterator it =
       payload_type_map_.find(payload_type);
   if (it == payload_type_map_.end()) {
-    LOG(LS_WARNING) << "Payload type " << static_cast<int>(payload_type)
-                    << " not registered.";
+    LOG(LS_ERROR) << "Payload type " << static_cast<int>(payload_type)
+                  << " not registered.";
     return -1;
   }
   SetSendPayloadType(payload_type);

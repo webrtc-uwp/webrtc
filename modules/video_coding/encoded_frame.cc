@@ -8,10 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/encoded_frame.h"
 #include "modules/video_coding/generic_encoder.h"
+#include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/jitter_buffer_common.h"
+#include "rtc_base/logging.h"
 
 namespace webrtc {
 
@@ -193,7 +194,22 @@ void VCMEncodedFrame::CopyCodecSpecific(const RTPVideoHeader* header) {
         _codecSpecificInfo.codecType = kVideoCodecH264;
         break;
       }
+      case kRtpVideoStereo: {
+        RTPVideoHeader modified_header = *header;
+        modified_header.codec = kRtpVideoVp9;
+        CopyCodecSpecific(&modified_header);
+        _codecSpecificInfo.codecType = kVideoCodecStereo;
+        _codecSpecificInfo.stereoInfo.stereoCodecType = kVideoCodecVP9;
+        _codecSpecificInfo.stereoInfo.frameIndex =
+            header->stereoInfo.frameIndex;
+        _codecSpecificInfo.stereoInfo.frameCount =
+            header->stereoInfo.frameCount;
+        _codecSpecificInfo.stereoInfo.pictureIndex =
+            header->stereoInfo.pictureIndex;
+        break;
+      }
       default: {
+        RTC_NOTREACHED();
         _codecSpecificInfo.codecType = kVideoCodecUnknown;
         break;
       }

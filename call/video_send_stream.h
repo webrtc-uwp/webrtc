@@ -115,6 +115,8 @@ class VideoSendStream {
       std::string payload_name;
       int payload_type = -1;
 
+      std::string stereo_associated_payload_name;
+
       // TODO(sophiechang): Delete this field when no one is using internal
       // sources anymore.
       bool internal_source = false;

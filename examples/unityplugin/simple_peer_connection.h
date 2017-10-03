@@ -34,7 +34,8 @@ class SimplePeerConnection : public webrtc::PeerConnectionObserver,
                                 const int no_of_urls,
                                 const char* username,
                                 const char* credential,
-                                bool is_receiver);
+                                bool mandatory_receive_video,
+                                bool audio_spatialization);
   void DeletePeerConnection();
   void AddStreams(bool audio_only);
   bool CreateDataChannel();
@@ -42,6 +43,10 @@ class SimplePeerConnection : public webrtc::PeerConnectionObserver,
   bool CreateAnswer();
   bool SendDataViaDataChannel(const std::string& data);
   void SetAudioControl(bool is_mute, bool is_record);
+  bool SetRemoteDescription(const char* type, const char* sdp);
+  bool AddIceCandidate(const char* sdp,
+                       const int sdp_mlineindex,
+                       const char* sdp_mid);
 
   // Register callback functions.
   void RegisterOnLocalI420FrameReady(I420FRAMEREADY_CALLBACK callback);
@@ -54,10 +59,12 @@ class SimplePeerConnection : public webrtc::PeerConnectionObserver,
   void RegisterOnLocalSdpReadytoSend(LOCALSDPREADYTOSEND_CALLBACK callback);
   void RegisterOnIceCandiateReadytoSend(
       ICECANDIDATEREADYTOSEND_CALLBACK callback);
-  bool SetRemoteDescription(const char* type, const char* sdp);
-  bool AddIceCandidate(const char* sdp,
-                       const int sdp_mlineindex,
-                       const char* sdp_mid);
+
+  // Spatial audio API functions.
+  bool SetHeadPosition(float x, float y, float z);
+  bool SetHeadRotation(float rx, float ry, float rz, float rw);
+  bool SetRemoteAudioPosition(float x, float y, float z);
+  bool SetRemoteAudioRotation(float rx, float ry, float rz, float rw);
 
  protected:
   // create a peerconneciton and add the turn servers info to the configuration.
@@ -65,7 +72,7 @@ class SimplePeerConnection : public webrtc::PeerConnectionObserver,
                             const int no_of_urls,
                             const char* username,
                             const char* credential,
-                            bool is_receiver);
+                            bool mandatory_receive_video);
   void CloseDataChannel();
   std::unique_ptr<cricket::VideoCapturer> OpenVideoCaptureDevice();
   void SetAudioControl();

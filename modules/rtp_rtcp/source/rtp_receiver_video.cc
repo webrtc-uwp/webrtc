@@ -70,7 +70,7 @@ int32_t RTPReceiverVideo::ParseRtpPacket(WebRtcRTPHeader* rtp_header,
   }
 
   if (first_packet_received_()) {
-    LOG(LS_INFO) << "Received first video RTP packet";
+    LOG(LS_ERROR) << "Received first video RTP packet";
   }
 
   // We are not allowed to hold a critical section when calling below functions.

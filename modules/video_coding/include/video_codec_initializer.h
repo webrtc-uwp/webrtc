@@ -53,6 +53,7 @@ class VideoCodecInitializer {
       const std::vector<VideoStream>& streams,
       const std::string& payload_name,
       int payload_type,
+      const std::string& stereo_associated_payload_name,
       bool nack_enabled);
 };
 

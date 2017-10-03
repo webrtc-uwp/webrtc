@@ -82,6 +82,13 @@ class VideoDecoder {
   virtual const char* ImplementationName() const { return "unknown"; }
 };
 
+class VideoDecoderFactoryEx {
+ public:
+  virtual VideoDecoder* Create() = 0;
+  virtual void Destroy(VideoDecoder* decoder) = 0;
+  virtual ~VideoDecoderFactoryEx() {}
+};
+
 }  // namespace webrtc
 
 #endif  // API_VIDEO_CODECS_VIDEO_DECODER_H_

@@ -1,3 +1,6 @@
 include_rules = [
+  "+audio/utility",
+  "+modules/audio_coding/neteq",
+  "+modules/audio_processing",
   "+sdk",
 ]
