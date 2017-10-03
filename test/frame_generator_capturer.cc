@@ -88,9 +88,11 @@ class FrameGeneratorCapturer::InsertFrameTask : public rtc::QueuedTask {
 FrameGeneratorCapturer* FrameGeneratorCapturer::Create(int width,
                                                        int height,
                                                        int target_fps,
-                                                       Clock* clock) {
+                                                       Clock* clock,
+                                                       int square_num) {
   std::unique_ptr<FrameGeneratorCapturer> capturer(new FrameGeneratorCapturer(
-      clock, FrameGenerator::CreateSquareGenerator(width, height), target_fps));
+      clock, FrameGenerator::CreateSquareGenerator(width, height, square_num),
+      target_fps));
   if (!capturer->Init())
     return nullptr;
 

@@ -43,7 +43,8 @@ class FrameGeneratorCapturer : public VideoCapturer {
   static FrameGeneratorCapturer* Create(int width,
                                         int height,
                                         int target_fps,
-                                        Clock* clock);
+                                        Clock* clock,
+                                        int square_num = 10);
 
   static FrameGeneratorCapturer* CreateFromYuvFile(const std::string& file_name,
                                                    size_t width,
