@@ -12,8 +12,8 @@
 
 #import "WebRTC/RTCVideoCodecH264.h"
 
+#include "api/video_codecs/sdp_video_format.h"
 #include "common_video/include/video_frame.h"
-#include "media/base/codec.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -29,6 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface RTCVideoEncoderSettings ()
 
 - (instancetype)initWithNativeVideoCodec:(const webrtc::VideoCodec *__nullable)videoCodec;
+- (webrtc::VideoCodec)nativeVideoCodec;
 
 @end
 
@@ -48,11 +49,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface RTCVideoCodecInfo ()
 
-- (instancetype)initWithNativeVideoCodec:(cricket::VideoCodec)videoCodec;
-- (instancetype)initWithPayload:(NSInteger)payload
-                           name:(NSString *)name
-                     parameters:(NSDictionary<NSString *, NSString *> *)parameters;
-- (cricket::VideoCodec)nativeVideoCodec;
+- (instancetype)initWithNativeSdpVideoFormat:(webrtc::SdpVideoFormat)format;
+- (webrtc::SdpVideoFormat)nativeSdpVideoFormat;
 
 @end
 
