@@ -34,6 +34,24 @@
       "revId": "5e1f2caf95e4d76ed0626617ba152f4ec5ca56b9",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "008269e5_08a0f653",
+        "filename": "pc/webrtcsession.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 991,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-10-03T14:16:07Z",
+      "side": 1,
+      "message": "Ok, then this should ultimately go in the RtpTransport class (which we\u0027re still working on breaking out of BaseChannel). But for now, since that work isn\u0027t complete yet, this code would the most sense in BaseChannel. WebRtcSession/PeerConnection aren\u0027t planned to be DIRECTLY responsible for applying things to Call based on SDP (and also, given what I understand about RtpStreamReceiverController, they don\u0027t make sense as its owner). The idea is that BaseChannel will become \"RtpTransceiver\" and will be responsible for applying the SDP of each m\u003d section, TransportController would apply the transport-layer parts of SDP (including RTP, which currently happens in BaseChannel), and the RtpTransport set of classes would handle the actual interactions with Call (and libsrtp). Maybe we need to coordinate our plans more.\n\nI\u0027m with you with regards to taking WebRtcVideoEngine out of the per-packet receive path, though.",
+      "parentUuid": "b75a0ebf_56a09eaf",
+      "revId": "5e1f2caf95e4d76ed0626617ba152f4ec5ca56b9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
