@@ -102,6 +102,10 @@ RtpTransceiverDirection
 NegotiateRtpTransceiverDirection(RtpTransceiverDirection offer,
                                  RtpTransceiverDirection wants);
 
+std::vector<VideoCodec> NegotiateVideoCodecs(
+    const std::vector<VideoCodec>& local_codecs,
+    const std::vector<VideoCodec>& offered_codec);
+
 // Options for an RtpSender contained with an media description/"m=" section.
 struct SenderOptions {
   std::string track_id;

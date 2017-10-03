@@ -3713,3 +3713,30 @@ INSTANTIATE_TEST_CASE_P(
                                          cricket::MD_SENDRECV,
                                          cricket::MD_INACTIVE),
                        ::testing::Bool()));
+
+TEST(NegotiateVideoCodecs, MultipleRtxH264Profiles) {
+  const char* kH264ProfileLevelHigh = "640c1f";
+  VideoCodec h264_hp(96 /* payload_type */, cricket::kH264CodecName);
+  h264_hp.SetParam(cricket::kH264FmtpProfileLevelId, kH264ProfileLevelHigh);
+
+  VideoCodec h264_cbp(97 /* payload_type */, cricket::kH264CodecName);
+  h264_cbp.SetParam(cricket::kH264FmtpProfileLevelId,
+                    cricket::kH264ProfileLevelConstrainedBaseline);
+
+  const std::vector<VideoCodec> local_codecs = {
+      h264_hp,
+      VideoCodec::CreateRtxCodec(98 /* rtx_payload_type */, h264_hp.id),
+      h264_cbp,
+      VideoCodec::CreateRtxCodec(99 /* rtx_payload_type */, h264_cbp.id)};
+
+  const std::vector<VideoCodec> offered_codecs = {
+      h264_cbp,
+      VideoCodec::CreateRtxCodec(99 /* rtx_payload_type */, h264_cbp.id)};
+
+  const std::vector<VideoCodec> expected_negotiated_codecs = {
+      h264_cbp,
+      VideoCodec::CreateRtxCodec(99 /* rtx_payload_type */, h264_cbp.id)};
+
+  EXPECT_EQ(expected_negotiated_codecs,
+            NegotiateVideoCodecs(local_codecs, offered_codecs));
+}
