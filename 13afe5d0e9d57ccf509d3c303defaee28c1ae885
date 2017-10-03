@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d632bc85_a4a42395",
+        "filename": "sdk/android/api/org/webrtc/SurfaceEglRenderer.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-10-03T09:27:57Z",
+      "side": 1,
+      "message": "This is not a view?",
+      "range": {
+        "startLine": 38,
+        "startChar": 5,
+        "endLine": 38,
+        "endChar": 30
+      },
+      "revId": "13afe5d0e9d57ccf509d3c303defaee28c1ae885",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3fbc7f7e_3a0f10e2",
+        "filename": "sdk/android/api/org/webrtc/SurfaceEglRenderer.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-10-03T09:27:57Z",
+      "side": 1,
+      "message": "add a comment for literal: /* rendererEvents */",
+      "range": {
+        "startLine": 75,
+        "startChar": 24,
+        "endLine": 75,
+        "endChar": 28
+      },
+      "revId": "13afe5d0e9d57ccf509d3c303defaee28c1ae885",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd9293e2_bf8fbbff",
+        "filename": "sdk/android/api/org/webrtc/SurfaceEglRenderer.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-10-03T09:27:57Z",
+      "side": 1,
+      "message": "We can use completionLatch::countDown here",
+      "range": {
+        "startLine": 130,
+        "startChar": 26,
+        "endLine": 130,
+        "endChar": 34
+      },
+      "revId": "13afe5d0e9d57ccf509d3c303defaee28c1ae885",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "829fe148_80189ac1",
+        "filename": "sdk/android/api/org/webrtc/SurfaceViewRenderer.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-10-03T09:27:57Z",
+      "side": 1,
+      "message": "comment parameter name",
+      "range": {
+        "startLine": 74,
+        "startChar": 36,
+        "endLine": 74,
+        "endChar": 40
+      },
+      "revId": "13afe5d0e9d57ccf509d3c303defaee28c1ae885",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33979726_5631ed4f",
+        "filename": "sdk/android/api/org/webrtc/SurfaceViewRenderer.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-10-03T09:27:57Z",
+      "side": 1,
+      "message": "comment parameter name",
+      "range": {
+        "startLine": 87,
+        "startChar": 36,
+        "endLine": 87,
+        "endChar": 40
+      },
+      "revId": "13afe5d0e9d57ccf509d3c303defaee28c1ae885",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e852960_415761fb",
+        "filename": "sdk/android/api/org/webrtc/SurfaceViewRenderer.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-10-03T09:27:57Z",
+      "side": 1,
+      "message": "Can you refactor the resource name not to include \": \" while we are at it?",
+      "range": {
+        "startLine": 288,
+        "startChar": 13,
+        "endLine": 288,
+        "endChar": 65
+      },
+      "revId": "13afe5d0e9d57ccf509d3c303defaee28c1ae885",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
