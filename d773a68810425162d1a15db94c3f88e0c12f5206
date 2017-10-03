@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f49aa8f7_5334169a",
+        "filename": "modules/audio_processing/test/py_quality_assessment/quality_assessment/signal_processing_unittest.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 5124
+      },
+      "writtenOn": "2017-10-03T15:33:14Z",
+      "side": 1,
+      "message": "I\u0027d like an explanatory comment\n\nmix_fft[m] contains abs(sum[k\u003d0..n-1] x[k] * exp(-sqrt(-1)*m*k* 2*pi/n))\nwhere n \u003d 0.064 * 8000 \u003d 512 is the length of the signal\nit corresponds to the frequency 4000 * m / 256, which for 16 and 192 is 250 and 3000 respectively.",
+      "range": {
+        "startLine": 156,
+        "startChar": 21,
+        "endLine": 156,
+        "endChar": 23
+      },
+      "revId": "d773a68810425162d1a15db94c3f88e0c12f5206",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
