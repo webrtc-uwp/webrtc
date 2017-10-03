@@ -81,7 +81,9 @@ RtpReceiverImpl::~RtpReceiverImpl() {
   }
 }
 
-int32_t RtpReceiverImpl::RegisterReceivePayload(const CodecInst& audio_codec) {
+int32_t RtpReceiverImpl::RegisterReceivePayload(
+    int payload_type,
+    const SdpAudioFormat& audio_format) {
   rtc::CritScope lock(&critical_section_rtp_receiver_);
 
   // TODO(phoglund): Try to streamline handling of the RED codec and some other
@@ -89,11 +91,12 @@ int32_t RtpReceiverImpl::RegisterReceivePayload(const CodecInst& audio_codec) {
   // payload or not.
   bool created_new_payload = false;
   int32_t result = rtp_payload_registry_->RegisterReceivePayload(
-      audio_codec, &created_new_payload);
+      payload_type, audio_format, &created_new_payload);
   if (created_new_payload) {
-    if (rtp_media_receiver_->OnNewPayloadTypeCreated(audio_codec) != 0) {
-      LOG(LS_ERROR) << "Failed to register payload: " << audio_codec.plname
-                    << "/" << static_cast<int>(audio_codec.pltype);
+    if (rtp_media_receiver_->OnNewPayloadTypeCreated(payload_type,
+                                                     audio_format) != 0) {
+      LOG(LS_ERROR) << "Failed to register payload: " << audio_format.name
+                    << "/" << payload_type;
       return -1;
     }
   }
@@ -280,7 +283,8 @@ void RtpReceiverImpl::CheckSSRCChanged(const RTPHeader& rtp_header) {
           payload_name[RTP_PAYLOAD_NAME_SIZE - 1] = 0;
           strncpy(payload_name, payload->name, RTP_PAYLOAD_NAME_SIZE - 1);
           if (payload->typeSpecific.is_audio()) {
-            channels = payload->typeSpecific.audio_payload().channels;
+            channels =
+                payload->typeSpecific.audio_payload().format.num_channels;
             rate = payload->typeSpecific.audio_payload().rate;
           }
         }

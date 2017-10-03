@@ -1703,17 +1703,20 @@ void Channel::UpdatePlayoutTimestamp(bool rtcp) {
 }
 
 void Channel::RegisterReceiveCodecsToRTPModule() {
-  CodecInst codec;
-  const uint8_t nSupportedCodecs = AudioCodingModule::NumberOfCodecs();
-
+  // TODO(kwiberg): Iterate over the factory's supported codecs instead?
+  const int nSupportedCodecs = AudioCodingModule::NumberOfCodecs();
   for (int idx = 0; idx < nSupportedCodecs; idx++) {
-    // Open up the RTP/RTCP receiver for all supported codecs
-    if ((audio_coding_->Codec(idx, &codec) == -1) ||
-        (rtp_receiver_->RegisterReceivePayload(codec) == -1)) {
-      LOG(LS_WARNING) << "Channel::RegisterReceiveCodecsToRTPModule() unable"
-                      << " to register " << codec.plname << " (" << codec.pltype
-                      << "/" << codec.plfreq << "/" << codec.channels << "/"
-                      << codec.rate << ") to RTP/RTCP receiver";
+    CodecInst codec;
+    if (audio_coding_->Codec(idx, &codec) == -1) {
+      LOG(LS_WARNING) << "Unable to register codec #" << idx
+                      << " for RTP/RTCP receiver.";
+    } else {
+      const SdpAudioFormat format = CodecInstToSdp(codec);
+      if (!decoder_factory_->IsSupportedDecoder(format) ||
+          rtp_receiver_->RegisterReceivePayload(codec.pltype, format) == -1) {
+        LOG(LS_WARNING) << "Unable to register " << format
+                        << " for RTP/RTCP receiver.";
+      }
     }
   }
 }

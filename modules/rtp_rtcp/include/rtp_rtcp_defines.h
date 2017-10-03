@@ -15,6 +15,7 @@
 #include <list>
 #include <vector>
 
+#include "api/audio_codecs/audio_format.h"
 #include "common_types.h"  // NOLINT(build/include)
 #include "modules/include/module_common_types.h"
 #include "rtc_base/deprecation.h"
@@ -40,9 +41,8 @@ const int kBogusRtpRateForAudioRtcp = 8000;
 const uint8_t kRtpHeaderSize = 12;
 
 struct AudioPayload {
-    uint32_t    frequency;
-    size_t      channels;
-    uint32_t    rate;
+  SdpAudioFormat format;
+  uint32_t rate;
 };
 
 struct VideoPayload {

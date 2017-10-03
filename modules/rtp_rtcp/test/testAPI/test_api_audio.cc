@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "common_types.h"  // NOLINT(build/include)
+#include "modules/audio_coding/codecs/audio_format_conversion.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtp_receiver_audio.h"
@@ -129,9 +130,11 @@ class RtpRtcpAudioTest : public ::testing::Test {
 
   void RegisterPayload(const CodecInst& codec) {
     EXPECT_EQ(0, module1->RegisterSendPayload(codec));
-    EXPECT_EQ(0, rtp_receiver1_->RegisterReceivePayload(codec));
+    EXPECT_EQ(0, rtp_receiver1_->RegisterReceivePayload(codec.pltype,
+                                                        CodecInstToSdp(codec)));
     EXPECT_EQ(0, module2->RegisterSendPayload(codec));
-    EXPECT_EQ(0, rtp_receiver2_->RegisterReceivePayload(codec));
+    EXPECT_EQ(0, rtp_receiver2_->RegisterReceivePayload(codec.pltype,
+                                                        CodecInstToSdp(codec)));
   }
 
   VerifyingAudioReceiver data_receiver1;
@@ -207,7 +210,8 @@ TEST_F(RtpRtcpAudioTest, DTMF) {
   memcpy(voice_codec.plname, "telephone-event", 16);
 
   EXPECT_EQ(0, module1->RegisterSendPayload(voice_codec));
-  EXPECT_EQ(0, rtp_receiver2_->RegisterReceivePayload(voice_codec));
+  EXPECT_EQ(0, rtp_receiver2_->RegisterReceivePayload(
+                   voice_codec.pltype, CodecInstToSdp(voice_codec)));
 
   // Start DTMF test.
   int timeStamp = 160;
