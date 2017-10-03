@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "bf95aab9_893386d5",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-03T09:29:32Z",
+      "side": 1,
+      "message": "Ok, keep the operator bool() then, but the the ctor and |has_value| is still unused.",
+      "parentUuid": "f724da4a_73455f86",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 17
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aacc2f9a_2e6c202f",
         "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
         "patchSetId": 1
@@ -190,6 +214,30 @@
     },
     {
       "key": {
+        "uuid": "ddf20dfb_ede26f68",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-03T09:29:32Z",
+      "side": 1,
+      "message": "Hmm, I see, interesting use case. I don\u0027t know the best way to handle this, but suppressing warnings looks ugly. Can you ask kwiberg@ or someone else in the core team if this is ok, or else how to deal with it?",
+      "parentUuid": "2892a294_b7ad8d3e",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 52
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "abe8dc04_be2289f0",
         "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
         "patchSetId": 1
@@ -319,6 +367,30 @@
       "side": 1,
       "message": "https://en.wikipedia.org/wiki/Truthiness",
       "parentUuid": "d548d8ab_3198440a",
+      "range": {
+        "startLine": 85,
+        "startChar": 43,
+        "endLine": 85,
+        "endChar": 53
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d58c59c_649641b6",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-03T09:29:32Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ce161d77_8599b032",
       "range": {
         "startLine": 85,
         "startChar": 43,
