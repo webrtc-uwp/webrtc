@@ -71,15 +71,21 @@ def _GetPathToTools():
   tools_dir = os.path.join(SRC_DIR, 'tools_webrtc')
   toolchain_dir = os.path.join(tools_dir, 'audio_quality')
 
-  pesq_path = os.path.join(toolchain_dir, _GetPlatform(), 'pesq')
-  polqa_path = os.path.join(toolchain_dir, _GetPlatform(), 'PolqaOem64')
+  platform = _GetPlatform()
 
-  if not os.path.isfile(pesq_path) or not os.path.isfile(polqa_path):
+  pesq_path = os.path.join(toolchain_dir, platform, 'pesq')
+  if not os.path.isfile(pesq_path):
+    pesq_path = None
+
+  polqa_path = os.path.join(toolchain_dir, platform, 'PolqaOem64')
+  if not os.path.isfile(polqa_path):
+    polqa_path = None
+
+  if (platform != 'mac' and not polqa_path) or not pesq_path:
     logging.error(NO_TOOLS_ERROR_MESSAGE,
                   toolchain_dir,
                   os.path.join(tools_dir, 'download_tools.py'),
                   toolchain_dir)
-    return None, None
 
   return pesq_path, polqa_path
 
@@ -199,7 +205,7 @@ def main():
   # Check if POLQA can run at all, or skip the 48 kHz tests entirely.
   example_path = os.path.join(SRC_DIR, 'resources',
                               'voice_engine', 'audio_tiny48.wav')
-  if _RunPolqa(polqa_path, example_path, example_path):
+  if polqa_path and _RunPolqa(polqa_path, example_path, example_path):
     analyzers.append(Analyzer(_RunPolqa, polqa_path, 48000))
 
   for analyzer in analyzers:
