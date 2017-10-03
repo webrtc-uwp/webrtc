@@ -121,6 +121,30 @@
     },
     {
       "key": {
+        "uuid": "27d07bc7_12de3bb5",
+        "filename": "audio/audio_state.cc",
+        "patchSetId": 11
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-10-03T07:25:49Z",
+      "side": 1,
+      "message": "(nisse@ and I discussed this offline, and agreed that putting it in the same file as RefCountInterface makes sense, but to make it free-standing and not part of that interface.)",
+      "parentUuid": "5a6a6a96_496dc8ef",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 4
+      },
+      "revId": "1bde42927a85d2efd5318a5058e4c49edf0a64e2",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6b58b95c_c350e275",
         "filename": "modules/audio_device/include/fake_audio_device.h",
         "patchSetId": 11
