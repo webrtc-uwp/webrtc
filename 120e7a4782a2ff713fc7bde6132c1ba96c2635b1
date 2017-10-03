@@ -1,0 +1,222 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb76001b_63db35ff",
+        "filename": "modules/audio_processing/agc2/gain_controller2.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-10-03T20:59:22Z",
+      "side": 1,
+      "message": "why do you need to tread 0.f as a special case? Does not pow produce 1.f in that case?",
+      "range": {
+        "startLine": 57,
+        "startChar": 23,
+        "endLine": 57,
+        "endChar": 36
+      },
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fbfd87e6_b1371694",
+        "filename": "modules/audio_processing/agc2/gain_controller2.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-10-03T20:59:22Z",
+      "side": 1,
+      "message": "Why is this getter needed?",
+      "range": {
+        "startLine": 34,
+        "startChar": 32,
+        "endLine": 34,
+        "endChar": 47
+      },
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20826820_b9e95d61",
+        "filename": "modules/audio_processing/agc2/gain_controller2.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-10-03T20:59:22Z",
+      "side": 1,
+      "message": "Why is this getter needed?",
+      "range": {
+        "startLine": 35,
+        "startChar": 8,
+        "endLine": 35,
+        "endChar": 18
+      },
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4259abac_b552420c",
+        "filename": "modules/audio_processing/agc2/gain_controller2_unittest.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-10-03T20:59:22Z",
+      "side": 1,
+      "message": "Please add a short comment explaining what the method does.",
+      "range": {
+        "startLine": 25,
+        "startChar": 5,
+        "endLine": 25,
+        "endChar": 26
+      },
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "180802cb_5c23d831",
+        "filename": "modules/audio_processing/agc2/gain_controller2_unittest.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-10-03T20:59:22Z",
+      "side": 1,
+      "message": "Even though it is nice with for-each loops, I think it is preferrable to use a standard loop instead of creating an array-view just for the purpose of being able to use a for-each loop.\n\nI think you should also be able to use std::fill in this case, right?",
+      "range": {
+        "startLine": 27,
+        "startChar": 9,
+        "endLine": 27,
+        "endChar": 16
+      },
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a549f0d3_d229eda6",
+        "filename": "modules/audio_processing/agc2/gain_controller2_unittest.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-10-03T20:59:22Z",
+      "side": 1,
+      "message": "Please add a short comment explaining what the test does.",
+      "range": {
+        "startLine": 34,
+        "startChar": 5,
+        "endLine": 34,
+        "endChar": 20
+      },
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f9d51e6_f8c5e224",
+        "filename": "modules/audio_processing/agc2/gain_controller2_unittest.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-10-03T20:59:22Z",
+      "side": 1,
+      "message": "Please add a short comment explaining what the test does.",
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7769ac80_42bdf501",
+        "filename": "modules/audio_processing/agc2/gain_controller2_unittest.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-10-03T20:59:22Z",
+      "side": 1,
+      "message": "If this is the only place where sample_rate_hz() is used, I don\u0027t think that motivates the implementation of that. The test already knows the sample rate, and using the getter for that in the test does not add anything for the test.",
+      "range": {
+        "startLine": 75,
+        "startChar": 49,
+        "endLine": 76,
+        "endChar": 46
+      },
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8bd875ee_8dcaaafa",
+        "filename": "modules/audio_processing/audio_processing_impl.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-10-03T20:59:22Z",
+      "side": 1,
+      "message": "What was the motivation for removing the conditional initialization?",
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "15d544f3_0401014c",
+        "filename": "modules/audio_processing/include/audio_processing.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 5125
+      },
+      "writtenOn": "2017-10-03T20:59:22Z",
+      "side": 1,
+      "message": "-\u003e // Fixed digital gain.\n(This is only one parameter.)",
+      "range": {
+        "startLine": 332,
+        "startChar": 28,
+        "endLine": 332,
+        "endChar": 34
+      },
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
