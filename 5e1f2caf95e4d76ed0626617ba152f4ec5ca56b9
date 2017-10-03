@@ -16,6 +16,24 @@
       "revId": "5e1f2caf95e4d76ed0626617ba152f4ec5ca56b9",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b75a0ebf_56a09eaf",
+        "filename": "pc/webrtcsession.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 991,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-03T06:24:28Z",
+      "side": 1,
+      "message": "The goal here is to take out WebRtcVideoEngine and Call from the loop. I\u0027d like to move parsing, including extensions, to RtpStreamReceiverController (the object which also owns the new demuxer). WebRtcSession/PeerConnection is responsible for translating SDP to the set of RTP extensions to process on the receive path, and it will also be the owner of RtpStreamReceiverController, so I think that should work out nicely.\n\nAs far as I understand, the only reason Call and WebRtcVideoEngine currently need to be on the per-packet receive path is for the handling of unsignalled ssrcs. If we can find a different way to register unsignalled callbacks in the demuxer, that shouldn\u0027t be needed. For the bundled case, unsignalled callback needs to be registered per payload-type, while with unbundled, a catch-all callback would do. \n\nSo moving configuration of extensions is only one step in a long process.",
+      "parentUuid": "b1633ec9_63586a40",
+      "revId": "5e1f2caf95e4d76ed0626617ba152f4ec5ca56b9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
