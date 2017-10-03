@@ -18,6 +18,7 @@
 #include "p2p/base/p2pconstants.h"
 #include "p2p/base/portallocator.h"
 #include "p2p/base/tcpport.h"
+#include "p2p/base/testturncustomizer.h"
 #include "p2p/base/testturnserver.h"
 #include "p2p/base/turnport.h"
 #include "p2p/base/udpport.h"
@@ -30,6 +31,7 @@
 #include "rtc_base/gunit.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/ptr_util.h"
 #include "rtc_base/socketadapters.h"
 #include "rtc_base/socketaddress.h"
 #include "rtc_base/ssladapter.h"
@@ -264,7 +266,7 @@ class TurnPortTest : public testing::Test,
     turn_port_.reset(TurnPort::Create(
         &main_, &socket_factory_, network, 0, 0, kIceUfrag1, kIcePwd1,
         server_address, credentials, 0, origin, std::vector<std::string>(),
-        std::vector<std::string>()));
+        std::vector<std::string>(), turn_customizer_.get()));
     // This TURN port will be the controlling.
     turn_port_->SetIceRole(ICEROLE_CONTROLLING);
     ConnectSignals();
@@ -294,7 +296,8 @@ class TurnPortTest : public testing::Test,
     RelayCredentials credentials(username, password);
     turn_port_.reset(TurnPort::Create(
         &main_, &socket_factory_, MakeNetwork(kLocalAddr1), socket_.get(),
-        kIceUfrag1, kIcePwd1, server_address, credentials, 0, std::string()));
+        kIceUfrag1, kIcePwd1, server_address, credentials, 0, std::string(),
+        nullptr));
     // This TURN port will be the controlling.
     turn_port_->SetIceRole(ICEROLE_CONTROLLING);
     ConnectSignals();
@@ -673,6 +676,10 @@ class TurnPortTest : public testing::Test,
   }
 
  protected:
+  // Note this must be above turn_server_ so that object
+  // is destroyed after turn_port_.
+  std::unique_ptr<webrtc::TurnCustomizer> turn_customizer_;
+
   rtc::ScopedFakeClock fake_clock_;
   // When a "create port" helper method is called with an IP, we create a
   // Network with that IP and add it to this list. Using a list instead of a
@@ -1444,5 +1451,99 @@ TEST_F(TurnPortTest, TestResolverShutdown) {
   EXPECT_EQ(last_fd_count, GetFDCount());
 }
 #endif
+
+class MessageObserver : public StunMessageObserver{
+ public:
+  MessageObserver(unsigned int *message_counter, unsigned int *attr_counter)
+      : message_counter_(message_counter), attr_counter_(attr_counter) {}
+  virtual ~MessageObserver() {}
+  virtual void ReceivedMessage(const TurnMessage* msg) {
+    if (message_counter_ != nullptr) {
+      (*message_counter_)++;
+    }
+    // Implementation defined attributes are returned as ByteString
+    const StunByteStringAttribute* attr = msg->GetByteString(
+        TestTurnCustomizer::STUN_ATTR_COUNTER);
+    if (attr != nullptr && attr_counter_ != nullptr) {
+      rtc::ByteBufferReader buf(attr->bytes(), attr->length());
+      unsigned int val = ~0u;
+      buf.ReadUInt32(&val);
+      (*attr_counter_)++;
+    }
+  }
+
+  // No of TurnMessages observered.
+  unsigned int* message_counter_ = nullptr;
+
+  // No of TurnMessages that had STUN_ATTR_COUNTER.
+  unsigned int* attr_counter_ = nullptr;
+};
+
+// Do a TURN allocation, establish a TLS connection, and send some data.
+// Add customizer and check that it get called.
+TEST_F(TurnPortTest, TestTurnCustomizerCount) {
+  unsigned int observer_message_counter = 0;
+  unsigned int observer_attr_counter = 0;
+  TestTurnCustomizer* customizer = new TestTurnCustomizer();
+  std::unique_ptr<MessageObserver> validator(new MessageObserver(
+      &observer_message_counter, &observer_attr_counter));
+
+  turn_server_.AddInternalSocket(kTurnTcpIntAddr, PROTO_TLS);
+  turn_customizer_.reset(customizer);
+  turn_server_.server()->SetStunMessageObserver(std::move(validator));
+
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnTlsProtoAddr);
+  TestTurnSendData(PROTO_TLS);
+  EXPECT_EQ(TLS_PROTOCOL_NAME, turn_port_->Candidates()[0].relay_protocol());
+
+  // There should have been at least turn_packets_.size() calls to |customizer|.
+  EXPECT_GE(customizer->modify_cnt_ + customizer->allow_channel_data_cnt_,
+            turn_packets_.size());
+}
+
+// Do a TURN allocation, establish a TLS connection, and send some data.
+// Add customizer and check that it can can prevent usage of channel data.
+TEST_F(TurnPortTest, TestTurnCustomizerDisallowChannelData) {
+  unsigned int observer_message_counter = 0;
+  unsigned int observer_attr_counter = 0;
+  TestTurnCustomizer* customizer = new TestTurnCustomizer();
+  std::unique_ptr<MessageObserver> validator(new MessageObserver(
+      &observer_message_counter, &observer_attr_counter));
+  customizer->allow_channel_data_ = false;
+  turn_server_.AddInternalSocket(kTurnTcpIntAddr, PROTO_TLS);
+  turn_customizer_.reset(customizer);
+  turn_server_.server()->SetStunMessageObserver(std::move(validator));
+
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnTlsProtoAddr);
+  TestTurnSendData(PROTO_TLS);
+  EXPECT_EQ(TLS_PROTOCOL_NAME, turn_port_->Candidates()[0].relay_protocol());
+
+  // There should have been at least turn_packets_.size() calls to |customizer|.
+  EXPECT_GE(customizer->modify_cnt_, turn_packets_.size());
+}
+
+// Do a TURN allocation, establish a TLS connection, and send some data.
+// Add customizer and check that it can add attribute to messages.
+TEST_F(TurnPortTest, TestTurnCustomizerAddAttribute) {
+  unsigned int observer_message_counter = 0;
+  unsigned int observer_attr_counter = 0;
+  TestTurnCustomizer* customizer = new TestTurnCustomizer();
+  std::unique_ptr<MessageObserver> validator(new MessageObserver(
+      &observer_message_counter, &observer_attr_counter));
+  customizer->allow_channel_data_ = false;
+  customizer->add_counter_ = true;
+  turn_server_.AddInternalSocket(kTurnTcpIntAddr, PROTO_TLS);
+  turn_customizer_.reset(customizer);
+  turn_server_.server()->SetStunMessageObserver(std::move(validator));
+
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnTlsProtoAddr);
+  TestTurnSendData(PROTO_TLS);
+  EXPECT_EQ(TLS_PROTOCOL_NAME, turn_port_->Candidates()[0].relay_protocol());
+
+  // There should have been at least turn_packets_.size() calls to |customizer|.
+  EXPECT_GE(customizer->modify_cnt_, turn_packets_.size());
+
+  EXPECT_GE(customizer->modify_cnt_, observer_message_counter);
+}
 
 }  // namespace cricket

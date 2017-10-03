@@ -70,6 +70,7 @@ rtc_static_library("libjingle_peerconnection_api") {
     "statstypes.cc",
     "statstypes.h",
     "streamcollection.h",
+    "turncustomizer.h",
     "umametrics.h",
     "videosourceproxy.h",
     "videotracksource.h",

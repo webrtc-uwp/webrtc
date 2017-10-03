@@ -223,6 +223,10 @@ void TurnServer::HandleStunMessage(TurnServerConnection* conn, const char* data,
     return;
   }
 
+  if (stun_message_observer_ != nullptr) {
+    stun_message_observer_->ReceivedMessage(&msg);
+  }
+
   // If it's a STUN binding request, handle that specially.
   if (msg.type() == STUN_BINDING_REQUEST) {
     HandleBindingRequest(conn, &msg);
