@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "126b9245_3c69ba1d",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-10-03T13:14:04Z",
+      "side": 1,
+      "message": "This initializer is a private method and is only called by the public initializers in the case where HAVE_NO_MEDIA is not set.\n\nOnly `-init` and `-initWithEncoderFactory:decoderFactory:` are exposed in the public API.",
+      "parentUuid": "03ff8761_5691cdca",
+      "range": {
+        "startLine": 129,
+        "startChar": 2,
+        "endLine": 129,
+        "endChar": 4
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e5ae7bff_0c6bccd0",
         "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
         "patchSetId": 8
@@ -36,6 +60,30 @@
       "writtenOn": "2017-09-28T14:42:42Z",
       "side": 1,
       "message": "Same here, we should handle the HAVE_NO_MEDIA case.",
+      "range": {
+        "startLine": 155,
+        "startChar": 5,
+        "endLine": 155,
+        "endChar": 6
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "23a09dc0_638a7675",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-10-03T13:14:04Z",
+      "side": 1,
+      "message": "Same as above",
+      "parentUuid": "e5ae7bff_0c6bccd0",
       "range": {
         "startLine": 155,
         "startChar": 5,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "44dadd72_f3bfd699",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCVideoCodec.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-10-03T13:14:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d22839bf_cd83f4fe",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 31
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6fd57767_88520594",
         "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCVideoCodec.mm",
         "patchSetId": 8
@@ -91,6 +163,30 @@
       "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "53acbee3_dc9dd929",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCVideoCodec.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-10-03T13:14:04Z",
+      "side": 1,
+      "message": "Moved this to do a `SdpVideoFormat(codec.name, codec.params)` at the call site. Right now we have this construct in three places, maybe worth adding a convenience function somewhere but not sure where since it\u0027s used also in webrtcvideoengine.cc",
+      "parentUuid": "6fd57767_88520594",
+      "range": {
+        "startLine": 34,
+        "startChar": 16,
+        "endLine": 34,
+        "endChar": 40
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "b3999689_dcb2108a",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCVideoCodecVP9.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-10-03T13:14:04Z",
+      "side": 1,
+      "message": "The dependency for both targets would still wind up being \"../modules/video_coding:webrtc_vp9\" in the build file as far as I can tell, let me know if you think it still makes sense to split them up.",
+      "parentUuid": "1c13d7e3_b386c832",
+      "range": {
+        "startLine": 34,
+        "startChar": 16,
+        "endLine": 34,
+        "endChar": 34
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b7647ac7_28164e4d",
         "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCWrappedNativeVideoDecoder.h",
         "patchSetId": 8
@@ -137,6 +257,30 @@
       "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8a989bfe_0fab296f",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCWrappedNativeVideoDecoder.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-10-03T13:14:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b7647ac7_28164e4d",
+      "range": {
+        "startLine": 20,
+        "startChar": 41,
+        "endLine": 20,
+        "endChar": 55
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "1643f0a8_b84b6aa8",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCWrappedNativeVideoDecoder.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-10-03T13:14:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "25bb2168_79ed502c",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 75
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a86e086e_ea54186a",
         "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCWrappedNativeVideoDecoder.mm",
         "patchSetId": 8
@@ -174,6 +342,30 @@
       "writtenOn": "2017-09-28T14:42:42Z",
       "side": 1,
       "message": "I think we need to add subclasses for VP8 and VP9 now.",
+      "range": {
+        "startLine": 88,
+        "startChar": 27,
+        "endLine": 88,
+        "endChar": 51
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b82e7559_56ae9f74",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCWrappedNativeVideoDecoder.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-10-03T13:14:04Z",
+      "side": 1,
+      "message": "Sort of. We don\u0027t actually go through this path since we use the shortcut and just inject the wrapped encoder pointers directly for VP8 and VP9, and I\u0027m not sure whether wrapping the CodecSpecificInfoVP8 and VP9 structs could be useful in any other context? They contain a lot of fields so if it\u0027s just dead code it seems a little unnecessary.\n\nCurrently, if we remove the shortcut, the InitDecode call fails when called from `startEncodeWithSettings`. I think it is because we drop some information there, we\u0027d need to support more fields in RTCVideoEncoderSettings since the corresponding C++ type webrtc::VideoCodec has a codec_specific_ field that holds VP8/VP9/H264 specific parameters. Not sure how much effort should be put into supporting the case of actually going through these code paths vs. just implementing what is needed to conform to the RTCVideoDecoder/RTCVideoDecoder protocols. Another option could be just calling some RTC_NOTREACHED in the implementation I guess since these are now not public anymore.",
+      "parentUuid": "a86e086e_ea54186a",
       "range": {
         "startLine": 88,
         "startChar": 27,
@@ -209,6 +401,30 @@
     },
     {
       "key": {
+        "uuid": "ae815d70_daec72c6",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCWrappedNativeVideoEncoder.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-10-03T13:14:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "841f89eb_08bd9352",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 21
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9b436237_0c430411",
         "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCWrappedNativeVideoEncoder.mm",
         "patchSetId": 8
@@ -229,6 +445,30 @@
       "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a6d8814_131f766e",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCWrappedNativeVideoEncoder.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 5249
+      },
+      "writtenOn": "2017-10-03T13:14:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9b436237_0c430411",
+      "range": {
+        "startLine": 87,
+        "startChar": 0,
+        "endLine": 91,
+        "endChar": 82
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
