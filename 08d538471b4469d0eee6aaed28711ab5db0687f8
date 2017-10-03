@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34b8cda2_e38af00b",
+        "filename": "pc/transportcontroller.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-10-03T04:07:43Z",
+      "side": 1,
+      "message": "Do you plan to have this create the whole stack of transports (DTLS/ICE)? And switch WebRtcSession to use this API? Or would that be in a separate CL? It may be easier to do all at once (just a thought).",
+      "revId": "08d538471b4469d0eee6aaed28711ab5db0687f8",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d299bd1_3aea7125",
+        "filename": "pc/transportcontroller.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-10-03T04:07:43Z",
+      "side": 1,
+      "message": "nit: These comments are repetitive; could just have one comment above the group of 3 mehtods.",
+      "revId": "08d538471b4469d0eee6aaed28711ab5db0687f8",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "935d1b24_f6d2c11e",
+        "filename": "pc/transportcontroller.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-10-03T04:07:43Z",
+      "side": 1,
+      "message": "Does this need to return the DtlsSrtpTransport interface, or just RtpTransportInternal? I thought one of the advantages of having a DtlsSrtpTransport object would be that it handles all DTLS/SRTP stuff internally, meaning the client could use the same interface.",
+      "revId": "08d538471b4469d0eee6aaed28711ab5db0687f8",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37744c07_4981ed5c",
+        "filename": "pc/transportcontroller.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-10-03T04:07:43Z",
+      "side": 1,
+      "message": "It shouldn\u0027t be possible to have different types of transport with the same \"name\" (key to map), so I think it would be ideal to just have one map.\n\nAlso, I think the code would be simpler if we avoided the \"RefCountedObject\" altogether. Maybe just have our own struct like this:\n\nstruct RtpTransportWrapper {\n  std::unique_ptr\u003cRtpTransportInternal\u003e rtp_transport;\n  // Non-null if interface available.\n  SrtpTransport* srtp_transport \u003d nullptr;\n  int ref_count \u003d 0;\n};\n\nWhere TransportController would handle the ref count directly.",
+      "revId": "08d538471b4469d0eee6aaed28711ab5db0687f8",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
