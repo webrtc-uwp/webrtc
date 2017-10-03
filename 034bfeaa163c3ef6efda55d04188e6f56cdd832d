@@ -22,6 +22,30 @@
       "revId": "034bfeaa163c3ef6efda55d04188e6f56cdd832d",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f15a6594_f7fd2f3d",
+        "filename": "rtc_base/java/src/org/webrtc/Logging.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 5077
+      },
+      "writtenOn": "2017-10-03T09:10:00Z",
+      "side": 0,
+      "message": "Yes, good point. I leave it here, marked as @Deprecated for now.",
+      "parentUuid": "c2e3d596_92ea3361",
+      "range": {
+        "startLine": 78,
+        "startChar": 34,
+        "endLine": 78,
+        "endChar": 47
+      },
+      "revId": "034bfeaa163c3ef6efda55d04188e6f56cdd832d",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
