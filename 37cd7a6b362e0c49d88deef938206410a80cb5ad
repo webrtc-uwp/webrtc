@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "92591397_a561c4f3",
+        "filename": "logging/rtc_event_log/rtc_event_log_factory.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-10-03T12:11:52Z",
+      "side": 1,
+      "message": "Should this have a default encoding type? We don\u0027t want to break code that uses the old interface. Or have you checked that we don\u0027t have any other downstream dependencies on the old interface?",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 56
+      },
+      "revId": "37cd7a6b362e0c49d88deef938206410a80cb5ad",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "56e735fc_a6160c99",
+        "filename": "modules/audio_coding/audio_network_adaptor/audio_network_adaptor_config.cc",
+        "patchSetId": 11
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-10-03T12:11:52Z",
+      "side": 1,
+      "message": "We generally prefer to have all constructors together. https://google.github.io/styleguide/cppguide.html#Declaration_Order",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 66
+      },
+      "revId": "37cd7a6b362e0c49d88deef938206410a80cb5ad",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5940ee45_b76adb93",
+        "filename": "modules/audio_coding/audio_network_adaptor/include/audio_network_adaptor_config.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 5150
+      },
+      "writtenOn": "2017-10-03T12:11:52Z",
+      "side": 1,
+      "message": "Nit: I\u0027m not sure, but I think the destructor would normally go before the equality comparison.",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 31
+      },
+      "revId": "37cd7a6b362e0c49d88deef938206410a80cb5ad",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
