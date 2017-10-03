@@ -21,13 +21,20 @@ public class RtpReceiver {
   final long nativeRtpReceiver;
   private long nativeObserver;
 
-  private MediaStreamTrack cachedTrack;
+  private final MediaStreamTrack cachedTrack;
 
   public RtpReceiver(long nativeRtpReceiver) {
     this.nativeRtpReceiver = nativeRtpReceiver;
-    long track = nativeGetTrack(nativeRtpReceiver);
     // We can assume that an RtpReceiver always has an associated track.
-    cachedTrack = new MediaStreamTrack(track);
+    long track = nativeGetTrack(nativeRtpReceiver);
+    String kind = MediaStreamTrack.nativeKind(track);
+    if (kind.equals("audio")) {
+      cachedTrack = new AudioTrack(track);
+    } else if (kind.equals("video")) {
+      cachedTrack = new VideoTrack(track);
+    } else {
+      throw new IllegalStateException("unexpected kind " + kind);
+    }
   }
 
   public MediaStreamTrack track() {

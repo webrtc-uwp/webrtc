@@ -11,6 +11,7 @@
 #ifndef SDK_ANDROID_SRC_JNI_PC_PEERCONNECTIONOBSERVER_JNI_H_
 #define SDK_ANDROID_SRC_JNI_PC_PEERCONNECTIONOBSERVER_JNI_H_
 
+#include <pc/mediastreamobserver.h>
 #include <map>
 #include <memory>
 #include <vector>
@@ -25,7 +26,8 @@ namespace jni {
 // Adapter between the C++ PeerConnectionObserver interface and the Java
 // PeerConnection.Observer interface.  Wraps an instance of the Java interface
 // and dispatches C++ callbacks to Java.
-class PeerConnectionObserverJni : public PeerConnectionObserver {
+class PeerConnectionObserverJni : public PeerConnectionObserver,
+                                  public sigslot::has_slots<> {
  public:
   PeerConnectionObserverJni(JNIEnv* jni, jobject j_observer);
   virtual ~PeerConnectionObserverJni();
@@ -56,9 +58,14 @@ class PeerConnectionObserverJni : public PeerConnectionObserver {
  private:
   typedef std::map<MediaStreamInterface*, jobject> NativeToJavaStreamsMap;
   typedef std::map<RtpReceiverInterface*, jobject> NativeToJavaRtpReceiverMap;
+  typedef std::map<MediaStreamTrackInterface*, jobject>
+      NativeToJavaMediaTrackMap;
+  typedef std::map<MediaStreamTrackInterface*, RtpReceiverInterface*>
+      NativeMediaStreamTrackToNativeRtpReceiver;
 
   void DisposeRemoteStream(const NativeToJavaStreamsMap::iterator& it);
   void DisposeRtpReceiver(const NativeToJavaRtpReceiverMap::iterator& it);
+  void DisposeRemoteTrack(const NativeToJavaMediaTrackMap::iterator& it);
 
   // If the NativeToJavaStreamsMap contains the stream, return it.
   // Otherwise, create a new Java MediaStream.
@@ -69,6 +76,15 @@ class PeerConnectionObserverJni : public PeerConnectionObserver {
   jobjectArray NativeToJavaMediaStreamArray(
       JNIEnv* jni,
       const std::vector<rtc::scoped_refptr<MediaStreamInterface>>& streams);
+
+  void OnAudioTrackAdded(AudioTrackInterface* track,
+                         MediaStreamInterface* stream);
+  void OnVideoTrackAdded(VideoTrackInterface* track,
+                         MediaStreamInterface* stream);
+  void OnAudioTrackRemoved(AudioTrackInterface* track,
+                           MediaStreamInterface* stream);
+  void OnVideoTrackRemoved(VideoTrackInterface* track,
+                           MediaStreamInterface* stream);
 
   const ScopedGlobalRef<jobject> j_observer_global_;
   const ScopedGlobalRef<jclass> j_observer_class_;
@@ -82,11 +98,15 @@ class PeerConnectionObserverJni : public PeerConnectionObserver {
   const jmethodID j_data_channel_ctor_;
   const ScopedGlobalRef<jclass> j_rtp_receiver_class_;
   const jmethodID j_rtp_receiver_ctor_;
+
   // C++ -> Java remote streams. The stored jobects are global refs and must be
   // manually deleted upon removal. Use DisposeRemoteStream().
   NativeToJavaStreamsMap remote_streams_;
-  NativeToJavaRtpReceiverMap rtp_receivers_;
   std::unique_ptr<MediaConstraintsJni> constraints_;
+  NativeToJavaRtpReceiverMap rtp_receivers_;
+  NativeMediaStreamTrackToNativeRtpReceiver track_to_receiver_;
+  std::vector<std::unique_ptr<webrtc::MediaStreamObserver>> stream_observers_;
+  NativeToJavaMediaTrackMap remote_tracks_;
 };
 
 }  // namespace jni

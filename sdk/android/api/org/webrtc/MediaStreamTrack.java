@@ -52,7 +52,7 @@ public class MediaStreamTrack {
 
   private static native String nativeId(long nativeTrack);
 
-  private static native String nativeKind(long nativeTrack);
+  static native String nativeKind(long nativeTrack);
 
   private static native boolean nativeEnabled(long nativeTrack);
 

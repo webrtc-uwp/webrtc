@@ -92,6 +92,13 @@ public class PeerConnection {
      * setRemoteDescription.
      */
     public void onAddTrack(RtpReceiver receiver, MediaStream[] mediaStreams);
+
+    /**
+     * Triggered when a previously added remote track is removed by the remote peer,
+     * as a result of setRemoteDescription.
+     */
+    public default void
+      onRemoveTrack(RtpReceiver receiver, MediaStream[] mediaStreams) {}
   }
 
   /** Java version of PeerConnectionInterface.IceServer. */

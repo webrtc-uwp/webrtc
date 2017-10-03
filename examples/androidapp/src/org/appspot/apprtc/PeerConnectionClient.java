@@ -40,6 +40,7 @@ import org.webrtc.IceCandidate;
 import org.webrtc.Logging;
 import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
+import org.webrtc.MediaStreamTrack;
 import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnection.IceConnectionState;
 import org.webrtc.PeerConnectionFactory;
@@ -1287,6 +1288,9 @@ public class PeerConnectionClient {
 
     @Override
     public void onAddTrack(final RtpReceiver receiver, final MediaStream[] mediaStreams) {}
+
+    @Override
+    public void onRemoveTrack(final RtpReceiver receiver, final MediaStream[] mediaStreams) {}
   }
 
   // Implementation detail: handle offer creation/signaling and answer setting,
