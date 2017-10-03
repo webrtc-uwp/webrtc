@@ -140,6 +140,30 @@
       "revId": "a42482fcb6c2205cfd0203d79e96e82d94b7f85c",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07c11df3_bafc0f0b",
+        "filename": "audio/audio_send_stream.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-03T13:11:40Z",
+      "side": 1,
+      "message": "\u003e Reading 12.6.2 16 Initializing bases and members of the c++ spec:\n\u003e \"Member functions (including virtual member functions, 10.3) can be called for an object under construction. However, if these operations are performed in a ctor-initializer (or in a function called directly or indirectly from a ctor-initializer) before all the mem-initializers for base classes have completed, the result of the operation is undefined\"\n\u003e \n\u003e here it is called after ctor-initiaizer.\n\nHmm.\n\nSo it appears safe in this case. But if one would try to subclass this method and override the OnPacket* methods, we get a race where the wrong implementation might be called?\n\nI think this is subtle, and a pattern one should try to avoid. If you can formulate some brief comment, that would be nice.",
+      "parentUuid": "e9f57008_f633b2fd",
+      "range": {
+        "startLine": 117,
+        "startChar": 2,
+        "endLine": 117,
+        "endChar": 12
+      },
+      "revId": "a42482fcb6c2205cfd0203d79e96e82d94b7f85c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
