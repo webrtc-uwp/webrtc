@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "ed2f5174_d66f9cc9",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 5520
+      },
+      "writtenOn": "2017-10-03T12:38:56Z",
+      "side": 1,
+      "message": "Ack. Added use of this stuff to one of the tests. It\u0027s kind of important to get coverage of the paths that deal with Traits::InvalidValue()",
+      "parentUuid": "bf95aab9_893386d5",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 17
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aacc2f9a_2e6c202f",
         "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
         "patchSetId": 1
@@ -226,6 +250,30 @@
       "side": 1,
       "message": "Hmm, I see, interesting use case. I don\u0027t know the best way to handle this, but suppressing warnings looks ugly. Can you ask kwiberg@ or someone else in the core team if this is ok, or else how to deal with it?",
       "parentUuid": "2892a294_b7ad8d3e",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 52
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c28a01f6_cdddcba3",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 5520
+      },
+      "writtenOn": "2017-10-03T12:38:56Z",
+      "side": 1,
+      "message": "I agree it\u0027s not ideal. I think it\u0027s better to do it inline with the source and scoped to a single block than to do suppress the warning in the build file. One suggestion is to do it even more fine-grained and only add this specifically around the code in question.\n\nSince this is just a test I don\u0027t think it\u0027s a big deal, but I can ask on webrtc-core@.",
+      "parentUuid": "ddf20dfb_ede26f68",
       "range": {
         "startLine": 38,
         "startChar": 0,
