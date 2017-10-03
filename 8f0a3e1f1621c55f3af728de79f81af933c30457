@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f724da4a_73455f86",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 5520
+      },
+      "writtenOn": "2017-10-03T08:31:14Z",
+      "side": 1,
+      "message": "Any type wrapped by ScopedTypeRef has to be convertible to bool so the operator is needed.",
+      "parentUuid": "c7fbbe81_920bae18",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 17
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aacc2f9a_2e6c202f",
         "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
         "patchSetId": 1
@@ -45,6 +69,30 @@
       "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "189c1aac_c987a6a6",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 5520
+      },
+      "writtenOn": "2017-10-03T08:31:14Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "aacc2f9a_2e6c202f",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 0
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "7430b6d4_9dfdcb14",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 5520
+      },
+      "writtenOn": "2017-10-03T08:31:14Z",
+      "side": 1,
+      "message": "Sure. Since this is a test I didn\u0027t think it\u0027s a big deal, but it\u0027s also easy to type the extra three chars.",
+      "parentUuid": "bc55bc22_7e9e8c28",
+      "range": {
+        "startLine": 35,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 24
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "08d3635d_6e99ee35",
         "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
         "patchSetId": 1
@@ -91,6 +163,30 @@
       "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2892a294_b7ad8d3e",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 5520
+      },
+      "writtenOn": "2017-10-03T08:31:14Z",
+      "side": 1,
+      "message": "Some of the tests create a thing to observe side-effects (i.e. ref2 in ShouldBeCopyable). It is confusing to add a usage of the variable just to silence this warning. I wouldn\u0027t do this in production code but I think the test is clearer like this.",
+      "parentUuid": "08d3635d_6e99ee35",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 52
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "2ffd9c7b_ab899791",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 5520
+      },
+      "writtenOn": "2017-10-03T08:31:14Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "abe8dc04_be2289f0",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 32
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "88c2f905_a3ab1249",
         "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
         "patchSetId": 1
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "1c0f6de7_e262ae48",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 5520
+      },
+      "writtenOn": "2017-10-03T08:31:14Z",
+      "side": 1,
+      "message": "Sorry, shows how long it\u0027s been since I\u0027ve written a unit test!",
+      "parentUuid": "88c2f905_a3ab1249",
+      "range": {
+        "startLine": 49,
+        "startChar": 2,
+        "endLine": 49,
+        "endChar": 11
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d548d8ab_3198440a",
         "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
         "patchSetId": 1
@@ -160,6 +304,30 @@
       "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce161d77_8599b032",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 5520
+      },
+      "writtenOn": "2017-10-03T08:31:14Z",
+      "side": 1,
+      "message": "https://en.wikipedia.org/wiki/Truthiness",
+      "parentUuid": "d548d8ab_3198440a",
+      "range": {
+        "startLine": 85,
+        "startChar": 43,
+        "endLine": 85,
+        "endChar": 53
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
