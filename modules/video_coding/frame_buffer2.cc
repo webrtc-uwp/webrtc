@@ -66,14 +66,14 @@ FrameBuffer::ReturnReason FrameBuffer::NextFrame(
       clock_->TimeInMilliseconds() + max_wait_time_ms;
   int64_t wait_ms = max_wait_time_ms;
   int64_t now_ms = 0;
-
   do {
     now_ms = clock_->TimeInMilliseconds();
     {
       rtc::CritScope lock(&crit_);
       new_continuous_frame_event_.Reset();
-      if (stopped_)
+      if (stopped_) {
         return kStopped;
+      }
 
       wait_ms = max_wait_time_ms;
 
@@ -172,7 +172,7 @@ FrameBuffer::ReturnReason FrameBuffer::NextFrame(
             last_decoded_frame_key.picture_id == frame_key.picture_id &&
             last_decoded_frame_key.spatial_layer < frame_key.spatial_layer;
 
-        if (AheadOrAt(last_decoded_frame_timestamp_, frame->timestamp) &&
+        if (AheadOf(last_decoded_frame_timestamp_, frame->timestamp) &&
             !frame_is_higher_spatial_layer_of_last_decoded_frame) {
           // TODO(brandtr): Consider clearing the entire buffer when we hit
           // these conditions.
@@ -349,7 +349,6 @@ int FrameBuffer::InsertFrame(std::unique_ptr<FrameObject> frame) {
     ClearFramesAndHistory();
     last_continuous_picture_id = -1;
   }
-
   auto info = frames_.insert(std::make_pair(key, FrameInfo())).first;
 
   if (info->second.frame) {
@@ -422,7 +421,7 @@ void FrameBuffer::PropagateDecodability(const FrameInfo& info) {
     RTC_DCHECK(ref_info != frames_.end());
     // TODO(philipel): Look into why we've seen this happen.
     if (ref_info != frames_.end()) {
-      RTC_DCHECK_GT(ref_info->second.num_missing_decodable, 0U);
+      // RTC_DCHECK_GT(ref_info->second.num_missing_decodable, 0U);
       --ref_info->second.num_missing_decodable;
     }
   }

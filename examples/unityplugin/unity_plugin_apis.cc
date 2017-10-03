@@ -24,12 +24,15 @@ static std::map<int, rtc::scoped_refptr<SimplePeerConnection>>
 int CreatePeerConnection(const char** turn_urls,
                          const int no_of_urls,
                          const char* username,
-                         const char* credential) {
+                         const char* credential,
+                         bool mandatory_receive_video,
+                         bool audio_spatialization) {
   g_peer_connection_map[g_peer_connection_id] =
       new rtc::RefCountedObject<SimplePeerConnection>();
 
   if (!g_peer_connection_map[g_peer_connection_id]->InitializePeerConnection(
-          turn_urls, no_of_urls, username, credential, false))
+          turn_urls, no_of_urls, username, credential, mandatory_receive_video,
+          audio_spatialization))
     return -1;
 
   return g_peer_connection_id++;
@@ -192,4 +195,43 @@ bool RegisterOnIceCandiateReadytoSend(
   g_peer_connection_map[peer_connection_id]->RegisterOnIceCandiateReadytoSend(
       callback);
   return true;
+}
+
+bool SetHeadPosition(int peer_connection_id, float x, float y, float z) {
+  if (!g_peer_connection_map.count(peer_connection_id))
+    return false;
+
+  return g_peer_connection_map[peer_connection_id]->SetHeadPosition(x, y, z);
+}
+
+bool SetHeadRotation(int peer_connection_id,
+                     float rx,
+                     float ry,
+                     float rz,
+                     float rw) {
+  if (!g_peer_connection_map.count(peer_connection_id))
+    return false;
+
+  return g_peer_connection_map[peer_connection_id]->SetHeadRotation(rx, ry, rz,
+                                                                    rw);
+}
+
+bool SetRemoteAudioPosition(int peer_connection_id, float x, float y, float z) {
+  if (!g_peer_connection_map.count(peer_connection_id))
+    return false;
+
+  return g_peer_connection_map[peer_connection_id]->SetRemoteAudioPosition(x, y,
+                                                                           z);
+}
+
+bool SetRemoteAudioRotation(int peer_connection_id,
+                            float rx,
+                            float ry,
+                            float rz,
+                            float rw) {
+  if (!g_peer_connection_map.count(peer_connection_id))
+    return false;
+
+  return g_peer_connection_map[peer_connection_id]->SetRemoteAudioRotation(
+      rx, ry, rz, rw);
 }

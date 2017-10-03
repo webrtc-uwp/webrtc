@@ -133,6 +133,18 @@ void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
       }
       codec = kVideoCodecH264;
       return;
+    case kRtpVideoStereo:
+      if (is_first_packet_in_frame && markerBit)
+        completeNALU = kNaluComplete;
+      else if (is_first_packet_in_frame)
+        completeNALU = kNaluStart;
+      else if (markerBit)
+        completeNALU = kNaluEnd;
+      else
+        completeNALU = kNaluIncomplete;
+
+      codec = kVideoCodecStereo;
+      return;
     case kRtpVideoGeneric:
       codec = kVideoCodecGeneric;
       return;

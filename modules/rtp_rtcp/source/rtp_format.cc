@@ -14,14 +14,17 @@
 
 #include "modules/rtp_rtcp/source/rtp_format_h264.h"
 #include "modules/rtp_rtcp/source/rtp_format_video_generic.h"
+#include "modules/rtp_rtcp/source/rtp_format_video_stereo.h"
 #include "modules/rtp_rtcp/source/rtp_format_vp8.h"
 #include "modules/rtp_rtcp/source/rtp_format_vp9.h"
+#include "rtc_base/logging.h"
 
 namespace webrtc {
 RtpPacketizer* RtpPacketizer::Create(RtpVideoCodecTypes type,
                                      size_t max_payload_len,
                                      size_t last_packet_reduction_len,
                                      const RTPVideoTypeHeader* rtp_type_header,
+                                     const RTPVideoStereoInfo* stereoInfo,
                                      FrameType frame_type) {
   switch (type) {
     case kRtpVideoH264:
@@ -39,6 +42,9 @@ RtpPacketizer* RtpPacketizer::Create(RtpVideoCodecTypes type,
     case kRtpVideoGeneric:
       return new RtpPacketizerGeneric(frame_type, max_payload_len,
                                       last_packet_reduction_len);
+    case kRtpVideoStereo:
+      return new RtpPacketizerStereo(max_payload_len, last_packet_reduction_len,
+                                     rtp_type_header, stereoInfo);
     case kRtpVideoNone:
       RTC_NOTREACHED();
   }
@@ -55,6 +61,8 @@ RtpDepacketizer* RtpDepacketizer::Create(RtpVideoCodecTypes type) {
       return new RtpDepacketizerVp9();
     case kRtpVideoGeneric:
       return new RtpDepacketizerGeneric();
+    case kRtpVideoStereo:
+      return new RtpDepacketizerStereo();
     case kRtpVideoNone:
       assert(false);
   }

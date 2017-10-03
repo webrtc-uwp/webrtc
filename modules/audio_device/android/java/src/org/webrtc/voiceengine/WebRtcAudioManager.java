@@ -197,7 +197,7 @@ public class WebRtcAudioManager {
   private boolean isDeviceBlacklistedForOpenSLESUsage() {
     boolean blacklisted = blacklistDeviceForOpenSLESUsageIsOverridden
         ? blacklistDeviceForOpenSLESUsage
-        : WebRtcAudioUtils.deviceIsBlacklistedForOpenSLESUsage();
+        : (WebRtcAudioUtils.deviceIsBlacklistedForOpenSLESUsage() || useStereoOutput);
     if (blacklisted) {
       Logging.d(TAG, Build.MODEL + " is blacklisted for OpenSL ES usage!");
     }

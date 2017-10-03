@@ -14,6 +14,7 @@
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
 
 namespace webrtc {
 
@@ -82,6 +83,18 @@ void CopyCodecSpecific(const CodecSpecificInfo* info, RTPVideoHeader* rtp) {
       rtp->codec = kRtpVideoGeneric;
       rtp->simulcastIdx = info->codecSpecific.generic.simulcast_idx;
       return;
+    case kVideoCodecStereo: {
+      CodecSpecificInfo* codec_specific_info =
+          const_cast<CodecSpecificInfo*>(info);
+      codec_specific_info->codecType = info->stereoInfo.stereoCodecType;
+      CopyCodecSpecific(codec_specific_info, rtp);
+      rtp->stereoInfo.stereoCodecType = rtp->codec;
+      rtp->codec = kRtpVideoStereo;
+      rtp->stereoInfo.frameIndex = info->stereoInfo.frameIndex;
+      rtp->stereoInfo.frameCount = info->stereoInfo.frameCount;
+      rtp->stereoInfo.pictureIndex = info->stereoInfo.pictureIndex;
+      return;
+    }
     default:
       return;
   }

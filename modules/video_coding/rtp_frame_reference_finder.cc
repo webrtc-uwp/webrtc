@@ -100,6 +100,8 @@ RtpFrameReferenceFinder::ManageFrameInternal(RtpFrameObject* frame) {
     case kVideoCodecI420:
     case kVideoCodecGeneric:
       return ManageFrameGeneric(frame, kNoPictureId);
+    case kVideoCodecStereo:
+      return ManageFrameVp9(frame);
   }
 
   // If not all code paths return a value it makes the win compiler sad.
@@ -405,13 +407,12 @@ RtpFrameReferenceFinder::FrameDecision RtpFrameReferenceFinder::ManageFrameVp9(
 
   if (codec_header.picture_id == kNoPictureId ||
       codec_header.temporal_idx == kNoTemporalIdx) {
-    return ManageFrameGeneric(std::move(frame), codec_header.picture_id);
+    return ManageFrameGeneric(std::move(frame), kNoPictureId);
   }
 
   frame->spatial_layer = codec_header.spatial_idx;
   frame->inter_layer_predicted = codec_header.inter_layer_predicted;
   frame->picture_id = codec_header.picture_id % kPicIdLength;
-
   if (last_unwrap_ == -1)
     last_unwrap_ = codec_header.picture_id;
 

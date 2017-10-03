@@ -17,11 +17,12 @@ void VideoObserver::SetVideoCallback(I420FRAMEREADY_CALLBACK callback) {
 
 void VideoObserver::OnFrame(const webrtc::VideoFrame& frame) {
   std::unique_lock<std::mutex> lock(mutex);
-  rtc::scoped_refptr<webrtc::PlanarYuvBuffer> buffer(
+  rtc::scoped_refptr<webrtc::I420BufferInterface> buffer(
       frame.video_frame_buffer()->ToI420());
   if (OnI420FrameReady) {
     OnI420FrameReady(buffer->DataY(), buffer->DataU(), buffer->DataV(),
-                     buffer->StrideY(), buffer->StrideU(), buffer->StrideV(),
-                     frame.width(), frame.height());
+                     buffer->DataA(), buffer->StrideY(), buffer->StrideU(),
+                     buffer->StrideV(), buffer->StrideA(), frame.width(),
+                     frame.height());
   }
 }

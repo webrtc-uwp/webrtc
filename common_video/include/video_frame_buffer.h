@@ -56,6 +56,35 @@ class WrappedI420Buffer : public I420BufferInterface {
   rtc::Callback0<void> no_longer_used_cb_;
 };
 
+class WrappedI420ABuffer : public I420BufferInterface {
+ public:
+  WrappedI420ABuffer(rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
+                     const uint8_t* a_plane,
+                     int a_stride,
+                     const rtc::Callback0<void>& alpha_no_longer_used_cb);
+  int width() const override;
+  int height() const override;
+
+  const uint8_t* DataY() const override;
+  const uint8_t* DataU() const override;
+  const uint8_t* DataV() const override;
+  const uint8_t* DataA() const override;
+  int StrideY() const override;
+  int StrideU() const override;
+  int StrideV() const override;
+  int StrideA() const override;
+
+ private:
+  friend class rtc::RefCountedObject<WrappedI420ABuffer>;
+  ~WrappedI420ABuffer() override;
+
+  rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer_;
+  rtc::scoped_refptr<webrtc::I420BufferInterface> i420_buffer_;
+  const uint8_t* const a_plane_;
+  const int a_stride_;
+  rtc::Callback0<void> alpha_no_longer_used_cb_;
+};
+
 rtc::scoped_refptr<I420BufferInterface> WrapI420Buffer(
     int width,
     int height,

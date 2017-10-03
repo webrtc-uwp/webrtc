@@ -68,7 +68,7 @@ RtpPacketizer* CreateH264Packetizer(H264PacketizationMode mode,
   RTPVideoTypeHeader type_header;
   type_header.H264.packetization_mode = mode;
   return RtpPacketizer::Create(kRtpVideoH264, max_payload_size,
-                               last_packet_reduction, &type_header,
+                               last_packet_reduction, &type_header, nullptr,
                                kEmptyFrame);
 }
 

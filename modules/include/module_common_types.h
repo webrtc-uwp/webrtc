@@ -38,18 +38,26 @@ struct RTPAudioHeader {
   size_t channel;                     // number of channels 2 = stereo
 };
 
+enum RtpVideoCodecTypes {
+  kRtpVideoNone,
+  kRtpVideoGeneric,
+  kRtpVideoStereo,
+  kRtpVideoVp8,
+  kRtpVideoVp9,
+  kRtpVideoH264
+};
+
+struct RTPVideoStereoInfo {
+  RtpVideoCodecTypes stereoCodecType;
+  uint8_t frameIndex;
+  uint8_t frameCount;
+  uint64_t pictureIndex;
+};
+
 union RTPVideoTypeHeader {
   RTPVideoHeaderVP8 VP8;
   RTPVideoHeaderVP9 VP9;
   RTPVideoHeaderH264 H264;
-};
-
-enum RtpVideoCodecTypes {
-  kRtpVideoNone,
-  kRtpVideoGeneric,
-  kRtpVideoVp8,
-  kRtpVideoVp9,
-  kRtpVideoH264
 };
 // Since RTPVideoHeader is used as a member of a union, it can't have a
 // non-trivial default constructor.
@@ -69,7 +77,9 @@ struct RTPVideoHeader {
                          // this frame, 0 if not using simulcast.
   RtpVideoCodecTypes codec;
   RTPVideoTypeHeader codecHeader;
+  RTPVideoStereoInfo stereoInfo;
 };
+
 union RTPTypeHeader {
   RTPAudioHeader Audio;
   RTPVideoHeader Video;

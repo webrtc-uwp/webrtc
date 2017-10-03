@@ -128,6 +128,54 @@ class WrappedYuvBuffer : public Base {
   rtc::Callback0<void> no_longer_used_cb_;
 };
 
+WrappedI420ABuffer::WrappedI420ABuffer(
+    rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
+    const uint8_t* a_plane,
+    int a_stride,
+    const rtc::Callback0<void>& alpha_no_longer_used_cb)
+    : buffer_(buffer),
+      i420_buffer_(buffer->ToI420()),
+      a_plane_(a_plane),
+      a_stride_(a_stride),
+      alpha_no_longer_used_cb_(alpha_no_longer_used_cb) {}
+
+WrappedI420ABuffer::~WrappedI420ABuffer() {
+  alpha_no_longer_used_cb_();
+}
+
+int WrappedI420ABuffer::width() const {
+  return buffer_->width();
+}
+int WrappedI420ABuffer::height() const {
+  return buffer_->height();
+}
+
+const uint8_t* WrappedI420ABuffer::DataY() const {
+  return i420_buffer_->DataY();
+}
+const uint8_t* WrappedI420ABuffer::DataU() const {
+  return i420_buffer_->DataU();
+}
+const uint8_t* WrappedI420ABuffer::DataV() const {
+  return i420_buffer_->DataV();
+}
+const uint8_t* WrappedI420ABuffer::DataA() const {
+  return a_plane_;
+}
+
+int WrappedI420ABuffer::StrideY() const {
+  return i420_buffer_->StrideY();
+}
+int WrappedI420ABuffer::StrideU() const {
+  return i420_buffer_->StrideU();
+}
+int WrappedI420ABuffer::StrideV() const {
+  return i420_buffer_->StrideV();
+}
+int WrappedI420ABuffer::StrideA() const {
+  return a_stride_;
+}
+
 rtc::scoped_refptr<I420BufferInterface> WrapI420Buffer(
     int width,
     int height,

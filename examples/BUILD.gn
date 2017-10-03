@@ -637,6 +637,9 @@ if (is_win || is_android) {
       "unityplugin/unity_plugin_apis.h",
       "unityplugin/video_observer.cc",
       "unityplugin/video_observer.h",
+      "unityplugin/vraudio/vraudio_api.h",
+      "unityplugin/vraudio/vraudio_wrap.cc",
+      "unityplugin/vraudio/vraudio_wrap.h",
     ]
 
     if (is_android) {
@@ -671,6 +674,17 @@ if (is_win || is_android) {
     ]
     if (is_android) {
       deps += [ "../sdk/android:libjingle_peerconnection_jni" ]
+    }
+    if (is_win) {
+      ldflags = [ "/ignore:4099" ]
+      if (is_debug) {
+        libs = [ "unityplugin/vraudio/vraudiod.lib" ]
+      } else {
+        libs = [ "unityplugin/vraudio/vraudio.lib" ]
+      }
+    }
+    if (is_android) {
+      libs = [ "unityplugin/vraudio/libvraudio.a" ]
     }
   }
 }

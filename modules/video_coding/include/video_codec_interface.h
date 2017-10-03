@@ -80,6 +80,13 @@ union CodecSpecificInfoUnion {
   CodecSpecificInfoH264 H264;
 };
 
+struct StereoInfo {
+  VideoCodecType stereoCodecType;
+  uint8_t frameIndex;
+  uint8_t frameCount;
+  uint64_t pictureIndex;
+};
+
 // Note: if any pointers are added to this struct or its sub-structs, it
 // must be fitted with a copy-constructor. This is because it is copied
 // in the copy-constructor of VCMEncodedFrame.
@@ -88,6 +95,7 @@ struct CodecSpecificInfo {
   VideoCodecType codecType;
   const char* codec_name;
   CodecSpecificInfoUnion codecSpecific;
+  StereoInfo stereoInfo;
 };
 
 }  // namespace webrtc

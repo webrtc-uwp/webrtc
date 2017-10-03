@@ -257,6 +257,7 @@ bool VCMCodecDataBase::RequiresEncoderReset(const VideoCodec& new_send_codec) {
       break;
     // Unknown codec type, reset just to be sure.
     case kVideoCodecUnknown:
+    case kVideoCodecStereo:
       return true;
   }
 

@@ -49,6 +49,18 @@ int I420BufferInterface::ChromaHeight() const {
   return (height() + 1) / 2;
 }
 
+bool I420BufferInterface::HasAlpha() const {
+  return DataA() != nullptr && StrideA() != 0;
+}
+
+const uint8_t* I420BufferInterface::DataA() const {
+  return nullptr;
+}
+
+int I420BufferInterface::StrideA() const {
+  return 0;
+}
+
 rtc::scoped_refptr<I420BufferInterface> I420BufferInterface::ToI420() {
   return this;
 }

@@ -89,6 +89,8 @@ RtpUtility::Payload* RTPSenderVideo::CreateVideoPayload(
     video_type = kRtpVideoH264;
   } else if (RtpUtility::StringCompare(payload_name, "I420", 4)) {
     video_type = kRtpVideoGeneric;
+  } else if (RtpUtility::StringCompare(payload_name, "stereo", 6)) {
+    video_type = kRtpVideoStereo;
   } else {
     video_type = kRtpVideoGeneric;
   }
@@ -365,7 +367,8 @@ bool RTPSenderVideo::SendVideo(RtpVideoCodecTypes video_type,
 
   std::unique_ptr<RtpPacketizer> packetizer(RtpPacketizer::Create(
       video_type, max_data_payload_length, last_packet_reduction_len,
-      video_header ? &(video_header->codecHeader) : nullptr, frame_type));
+      video_header ? &(video_header->codecHeader) : nullptr,
+      video_header ? &(video_header->stereoInfo) : nullptr, frame_type));
 
   const uint8_t temporal_id =
       video_header ? GetTemporalId(*video_header) : kNoTemporalIdx;

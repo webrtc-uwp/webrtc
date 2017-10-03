@@ -39,9 +39,9 @@ bool VideoCodecInitializer::SetupCodec(
     bool nack_enabled,
     VideoCodec* codec,
     std::unique_ptr<VideoBitrateAllocator>* bitrate_allocator) {
-  *codec =
-      VideoEncoderConfigToVideoCodec(config, streams, settings.payload_name,
-                                     settings.payload_type, nack_enabled);
+  *codec = VideoEncoderConfigToVideoCodec(
+      config, streams, settings.payload_name, settings.payload_type,
+      settings.stereo_associated_payload_name, nack_enabled);
 
   std::unique_ptr<TemporalLayersFactory> tl_factory;
   switch (codec->codecType) {
@@ -97,6 +97,7 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
     const std::vector<VideoStream>& streams,
     const std::string& payload_name,
     int payload_type,
+    const std::string& stereo_associated_payload_name,
     bool nack_enabled) {
   static const int kEncoderMinBitrateKbps = 30;
   RTC_DCHECK(!streams.empty());
@@ -105,6 +106,12 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
   VideoCodec video_codec;
   memset(&video_codec, 0, sizeof(video_codec));
   video_codec.codecType = PayloadStringToCodecType(payload_name);
+
+  const bool is_stereo_codec = video_codec.codecType == kVideoCodecStereo;
+  if (is_stereo_codec) {
+    video_codec.codecType =
+        PayloadStringToCodecType(stereo_associated_payload_name);
+  }
 
   switch (config.content_type) {
     case VideoEncoderConfig::ContentType::kRealtimeVideo:
@@ -238,6 +245,10 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
 
   RTC_DCHECK_GT(streams[0].max_framerate, 0);
   video_codec.maxFramerate = streams[0].max_framerate;
+
+  if (is_stereo_codec)
+    video_codec.codecType = kVideoCodecStereo;
+
   return video_codec;
 }
 
