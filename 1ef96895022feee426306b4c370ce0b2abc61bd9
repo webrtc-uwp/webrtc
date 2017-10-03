@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ceba07e_006e17d6",
+        "filename": "pc/mediasession.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-10-03T22:45:14Z",
+      "side": 1,
+      "message": "This shouldn\u0027t be exposed in the header file.",
+      "revId": "1ef96895022feee426306b4c370ce0b2abc61bd9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "349710b0_039c67bf",
+        "filename": "pc/mediasession_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 3717,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-10-03T22:45:14Z",
+      "side": 1,
+      "message": "This test should just go through the CreateOffer/CreateAnswer interfaces. The mediasession.cc code is very likely to be restructured in the future, so any tests around implementation-specific methods like \"NegotiateVideoCodecs\" would need to be rewritten.\n\nThis test should also go in the same location in the file as the rest of the RTX tests.\n\nThough, what is this test covering that another test doesn\u0027t cover already? RespondentCreatesOfferAfterCreatingAnswerWithRtx seems equivalent.",
+      "revId": "1ef96895022feee426306b4c370ce0b2abc61bd9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
