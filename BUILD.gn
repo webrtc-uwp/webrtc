@@ -22,8 +22,6 @@ if (!build_with_chromium) {
       ":webrtc",
       "examples",
       "rtc_tools",
-      "//a:dummy_target",
-      "//a/subpackage:dummy_supbackage",
     ]
     if (rtc_include_tests) {
       deps += [ ":webrtc_tests" ]
