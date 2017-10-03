@@ -22,6 +22,30 @@
       "revId": "30b7a1b5c196b418358a31e0042635410939a817",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5aadd7db_235ed1c1",
+        "filename": "logging/rtc_event_log/rtc_event_log.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 5147
+      },
+      "writtenOn": "2017-10-03T18:53:00Z",
+      "side": 1,
+      "message": "Silly me; thanks for catching.",
+      "parentUuid": "62a3677d_8c0e9d6f",
+      "range": {
+        "startLine": 193,
+        "startChar": 11,
+        "endLine": 193,
+        "endChar": 15
+      },
+      "revId": "30b7a1b5c196b418358a31e0042635410939a817",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
