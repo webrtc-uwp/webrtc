@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5bda5661_6f3b8be2",
+        "filename": "test/frame_generator.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 5652
+      },
+      "writtenOn": "2017-10-03T14:29:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f344d1dd_2f83678e",
+      "range": {
+        "startLine": 64,
+        "startChar": 46,
+        "endLine": 64,
+        "endChar": 48
+      },
+      "revId": "c1a185fd01b0ff2080e282056972e54f6805fdf8",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a1d09a63_8d2fa7a1",
         "filename": "test/frame_generator_capturer.h",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2017-10-03T14:12:42Z",
       "side": 1,
       "message": "ditto",
+      "range": {
+        "startLine": 47,
+        "startChar": 61,
+        "endLine": 47,
+        "endChar": 0
+      },
+      "revId": "c1a185fd01b0ff2080e282056972e54f6805fdf8",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ed3b372_44cfee8b",
+        "filename": "test/frame_generator_capturer.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 5652
+      },
+      "writtenOn": "2017-10-03T14:29:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a1d09a63_8d2fa7a1",
       "range": {
         "startLine": 47,
         "startChar": 61,
