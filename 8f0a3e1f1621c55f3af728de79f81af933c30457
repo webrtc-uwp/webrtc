@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7fbbe81_920bae18",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-03T08:15:03Z",
+      "side": 1,
+      "message": "You never use this logic.",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 17
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aacc2f9a_2e6c202f",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-03T08:15:03Z",
+      "side": 1,
+      "message": "Put this in an anonymous namespace.",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 0
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc55bc22_7e9e8c28",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-03T08:15:03Z",
+      "side": 1,
+      "message": "Removing namespaces like this is discouraged, and in this case it\u0027s not even long. Use the fully qualified rtc::RetainPolicy in the code. The using declaration above is ok, because it\u0027s a typedef, and it\u0027s also very cluttered.",
+      "range": {
+        "startLine": 35,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 24
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "08d3635d_6e99ee35",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-03T08:15:03Z",
+      "side": 1,
+      "message": "What variable is unused? We should fix that instead.",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 52
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "abe8dc04_be2289f0",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-03T08:15:03Z",
+      "side": 1,
+      "message": "You are leaking memory here, we should fix that. Since ScopedTestType is never deleting the pointer, you don\u0027t have to do heap allocations, you can use the stack and take the address of the stack variable.",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 32
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "88c2f905_a3ab1249",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-03T08:15:03Z",
+      "side": 1,
+      "message": "You should use EXPECT instead of ASSERT in these cases. In general you should use EXPECT. Only use ASSERT if it doesn\u0027t make sense to continue after that, i.e. if all other tests will fail as a consequence.",
+      "range": {
+        "startLine": 49,
+        "startChar": 2,
+        "endLine": 49,
+        "endChar": 11
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d548d8ab_3198440a",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-03T08:15:03Z",
+      "side": 1,
+      "message": "Truthiness, is that a word? :P",
+      "range": {
+        "startLine": 85,
+        "startChar": 43,
+        "endLine": 85,
+        "endChar": 53
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
