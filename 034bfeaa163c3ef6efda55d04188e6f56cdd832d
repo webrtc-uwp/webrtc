@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2e3d596_92ea3361",
+        "filename": "rtc_base/java/src/org/webrtc/Logging.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-03T08:35:42Z",
+      "side": 0,
+      "message": "I would expect you to either have to update downstream apps first, or keep this method as a nop for the time being.",
+      "range": {
+        "startLine": 78,
+        "startChar": 34,
+        "endLine": 78,
+        "endChar": 47
+      },
+      "revId": "034bfeaa163c3ef6efda55d04188e6f56cdd832d",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
