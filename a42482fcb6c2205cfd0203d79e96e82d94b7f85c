@@ -164,6 +164,30 @@
       "revId": "a42482fcb6c2205cfd0203d79e96e82d94b7f85c",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a06bdce_c6fbced1",
+        "filename": "audio/audio_send_stream.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-10-03T13:17:15Z",
+      "side": 1,
+      "message": "AudioSendStream is final",
+      "parentUuid": "07c11df3_bafc0f0b",
+      "range": {
+        "startLine": 117,
+        "startChar": 2,
+        "endLine": 117,
+        "endChar": 12
+      },
+      "revId": "a42482fcb6c2205cfd0203d79e96e82d94b7f85c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
