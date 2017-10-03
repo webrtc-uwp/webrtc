@@ -22,6 +22,30 @@
       "revId": "75d5242025454cdf62fa5649845e8288e2d636b3",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "badc8e7f_77998a92",
+        "filename": "test/frame_generator.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 5652
+      },
+      "writtenOn": "2017-10-03T14:36:21Z",
+      "side": 1,
+      "message": "Oops, didn\u0027t notice that. Done.",
+      "parentUuid": "bba49840_e0e925d3",
+      "range": {
+        "startLine": 65,
+        "startChar": 65,
+        "endLine": 65,
+        "endChar": 0
+      },
+      "revId": "75d5242025454cdf62fa5649845e8288e2d636b3",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
