@@ -16,6 +16,24 @@
       "revId": "db5d016202aab336946b9ca0feadde7c5c171f3f",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27c1b248_8638dcd6",
+        "filename": "rtc_base/java/src/org/webrtc/Logging.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-10-04T19:53:07Z",
+      "side": 1,
+      "message": "Somehow I didn\u0027t notice that method; so is it going to be the new standard way for WebRTC to be initialized? If so, I can change this comment to refer to it.",
+      "parentUuid": "4f639641_896aa3a3",
+      "revId": "db5d016202aab336946b9ca0feadde7c5c171f3f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
