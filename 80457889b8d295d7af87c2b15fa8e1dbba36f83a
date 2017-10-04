@@ -22,6 +22,30 @@
       "revId": "80457889b8d295d7af87c2b15fa8e1dbba36f83a",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad8f37e0_23e3e528",
+        "filename": "sdk/android/api/org/webrtc/PeerConnection.java",
+        "patchSetId": 10
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 5613
+      },
+      "writtenOn": "2017-10-04T12:17:16Z",
+      "side": 1,
+      "message": "Hi,\nI discussed with extensively with @deadbeaf...and this was his suggestion.\nI\u0027m fine either way...\n/Jonas",
+      "parentUuid": "99ee5377_f9df2e5f",
+      "range": {
+        "startLine": 308,
+        "startChar": 16,
+        "endLine": 308,
+        "endChar": 36
+      },
+      "revId": "80457889b8d295d7af87c2b15fa8e1dbba36f83a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
