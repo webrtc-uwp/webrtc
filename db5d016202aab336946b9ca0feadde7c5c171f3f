@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4f639641_896aa3a3",
+        "filename": "rtc_base/java/src/org/webrtc/Logging.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-10-04T07:26:31Z",
+      "side": 1,
+      "message": "The native library is loaded on PeerConnectionFactory.initialize call. (Also temporarily in static initializer of PeerConnectionFactory for now.)",
+      "revId": "db5d016202aab336946b9ca0feadde7c5c171f3f",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
