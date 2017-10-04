@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a6036e77_2ad2c6a5",
+        "filename": "rtc_base/refcount.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-04T10:53:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6e1c209a_26a12a11",
+      "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a7f6a4f7_2edbef2b",
         "filename": "rtc_base/refcount.h",
         "patchSetId": 13
@@ -30,6 +48,30 @@
       "writtenOn": "2017-10-04T09:36:13Z",
       "side": 1,
       "message": "Drop the comma?",
+      "range": {
+        "startLine": 25,
+        "startChar": 31,
+        "endLine": 25,
+        "endChar": 32
+      },
+      "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa827e1f_fd148c80",
+        "filename": "rtc_base/refcount.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-04T10:53:02Z",
+      "side": 1,
+      "message": "No, I think comma after \"e.g.\" is the recommended American English style, and I try to stick to that. Or should we add something to the coding style to prefer British English in docs and comments? ;-)",
+      "parentUuid": "a7f6a4f7_2edbef2b",
       "range": {
         "startLine": 25,
         "startChar": 31,
@@ -56,6 +98,24 @@
       "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c5e6cb6_53c54224",
+        "filename": "rtc_base/refcount.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-04T10:53:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "33cda4da_755cdb30",
+      "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -105,6 +165,30 @@
     },
     {
       "key": {
+        "uuid": "629d3086_5be50901",
+        "filename": "rtc_base/refcount.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-04T10:53:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "00e6adf0_a2be1dd0",
+      "range": {
+        "startLine": 40,
+        "startChar": 34,
+        "endLine": 40,
+        "endChar": 44
+      },
+      "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6328ac23_e11df6d2",
         "filename": "rtc_base/refcount.h",
         "patchSetId": 13
@@ -119,6 +203,24 @@
       "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cac73434_f7bc312b",
+        "filename": "rtc_base/refcount.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-04T10:53:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6328ac23_e11df6d2",
+      "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -156,6 +258,24 @@
     },
     {
       "key": {
+        "uuid": "3470c23f_fec653b7",
+        "filename": "rtc_base/refcountedobject.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-04T10:53:02Z",
+      "side": 1,
+      "message": "Done. Also deleted the is_last_ref local.",
+      "parentUuid": "fd248cc1_77f96467",
+      "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1958e983_a79883cd",
         "filename": "sdk/android/src/jni/jni_helpers.h",
         "patchSetId": 13
@@ -170,6 +290,24 @@
       "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ddd9d0f_9f3b2163",
+        "filename": "sdk/android/src/jni/jni_helpers.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-04T10:53:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1958e983_a79883cd",
+      "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
