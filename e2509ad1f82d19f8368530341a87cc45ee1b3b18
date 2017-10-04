@@ -1,0 +1,153 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd9cc188_2cadd0bf",
+        "filename": "call/call.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 796,
+      "author": {
+        "id": 5023
+      },
+      "writtenOn": "2017-10-04T08:09:14Z",
+      "side": 1,
+      "message": "Let |rtp_state| be an output parameter too, for consistency.",
+      "range": {
+        "startLine": 796,
+        "startChar": 56,
+        "endLine": 796,
+        "endChar": 74
+      },
+      "revId": "e2509ad1f82d19f8368530341a87cc45ee1b3b18",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a36025c7_12c4dac8",
+        "filename": "call/call.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 798,
+      "author": {
+        "id": 5023
+      },
+      "writtenOn": "2017-10-04T08:09:14Z",
+      "side": 1,
+      "message": "Update this to use a range-based for too, to be consistent with newly added for below?",
+      "revId": "e2509ad1f82d19f8368530341a87cc45ee1b3b18",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7baee380_0b086453",
+        "filename": "common_types.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 978,
+      "author": {
+        "id": 5023
+      },
+      "writtenOn": "2017-10-04T08:09:14Z",
+      "side": 1,
+      "message": "Add a comment that this struct currently is VP8/VP9 specific, and that the struct needs to be generalized if we want to support other codecs in the future.",
+      "range": {
+        "startLine": 978,
+        "startChar": 10,
+        "endLine": 978,
+        "endChar": 20
+      },
+      "revId": "e2509ad1f82d19f8368530341a87cc45ee1b3b18",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b3936ce3_07b130c1",
+        "filename": "video/payload_router.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 5023
+      },
+      "writtenOn": "2017-10-04T08:09:14Z",
+      "side": 1,
+      "message": "I think this could also be moved to be a ctor argument?",
+      "range": {
+        "startLine": 113,
+        "startChar": 7,
+        "endLine": 113,
+        "endChar": 15
+      },
+      "revId": "e2509ad1f82d19f8368530341a87cc45ee1b3b18",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4e5bedd_96bf3b8e",
+        "filename": "video/payload_router.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 5023
+      },
+      "writtenOn": "2017-10-04T08:09:14Z",
+      "side": 1,
+      "message": "I think you can use emplace_back here.",
+      "range": {
+        "startLine": 140,
+        "startChar": 12,
+        "endLine": 140,
+        "endChar": 21
+      },
+      "revId": "e2509ad1f82d19f8368530341a87cc45ee1b3b18",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97f8e46f_c5eec62d",
+        "filename": "video/payload_router.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 5023
+      },
+      "writtenOn": "2017-10-04T08:09:14Z",
+      "side": 1,
+      "message": "Add {} here too? :)",
+      "revId": "e2509ad1f82d19f8368530341a87cc45ee1b3b18",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f633f37_5265d46c",
+        "filename": "video/video_send_stream.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 5023
+      },
+      "writtenOn": "2017-10-04T08:09:14Z",
+      "side": 1,
+      "message": "Could this method be replaced by a ctor argument instead? Like this: https://cs.chromium.org/chromium/src/third_party/webrtc/modules/rtp_rtcp/include/flexfec_sender.h?l\u003d43\u0026rcl\u003da9a277185ece36414a85881dfbfcacf01175993d",
+      "range": {
+        "startLine": 740,
+        "startChar": 18,
+        "endLine": 740,
+        "endChar": 37
+      },
+      "revId": "e2509ad1f82d19f8368530341a87cc45ee1b3b18",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
