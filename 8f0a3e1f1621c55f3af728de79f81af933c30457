@@ -286,6 +286,30 @@
     },
     {
       "key": {
+        "uuid": "98e96580_67c3d8a4",
+        "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-04T10:37:29Z",
+      "side": 1,
+      "message": "Ok, add a comment before this pragma why we want to have unused variables in the tests, then I think we can land it. Still, asking on webrtc-core@ might be good because they might have some smart solution.",
+      "parentUuid": "c28a01f6_cdddcba3",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 52
+      },
+      "revId": "8f0a3e1f1621c55f3af728de79f81af933c30457",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "abe8dc04_be2289f0",
         "filename": "sdk/objc/Framework/UnitTests/scoped_cftyperef_tests.mm",
         "patchSetId": 1
