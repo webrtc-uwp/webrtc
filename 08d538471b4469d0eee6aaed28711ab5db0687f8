@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "05776acd_289be669",
+        "filename": "pc/transportcontroller.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 5080
+      },
+      "writtenOn": "2017-10-04T04:08:12Z",
+      "side": 1,
+      "message": "Done\n\nI think it make sense to switch WebRtcSession to use this API when changing the ctor of BaseChannel and the ChannelManager.",
+      "parentUuid": "34b8cda2_e38af00b",
+      "revId": "08d538471b4469d0eee6aaed28711ab5db0687f8",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d299bd1_3aea7125",
         "filename": "pc/transportcontroller.h",
         "patchSetId": 1
@@ -33,6 +51,24 @@
       "revId": "08d538471b4469d0eee6aaed28711ab5db0687f8",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99663811_dc9b53a1",
+        "filename": "pc/transportcontroller.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 5080
+      },
+      "writtenOn": "2017-10-04T04:08:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1d299bd1_3aea7125",
+      "revId": "08d538471b4469d0eee6aaed28711ab5db0687f8",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "556c3ee7_d4ec14a6",
+        "filename": "pc/transportcontroller.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 5080
+      },
+      "writtenOn": "2017-10-04T04:08:12Z",
+      "side": 1,
+      "message": "These methods didn\u0027t return RtpTransportInternal because I think it would be eaiser if the BaseChannel knows the RtpTransport type (srtp, dtlssrtp or plain rtp) and I also want to avoid downcasting.\n\nBaseChannel needs to call SRTP-specific methods like SrtpTransport::IsExternalAuthactive(), DtlsSrtpTransport::SetupDtlsSrtp() etc.\n\nMy original plan is passing three raw pointers and only one of them is non-null. Does it make sense? \n\nAnother options would be moving all the methods that BaseChannel would use to RtpTransportInternal.",
+      "parentUuid": "935d1b24_f6d2c11e",
+      "revId": "08d538471b4469d0eee6aaed28711ab5db0687f8",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "37744c07_4981ed5c",
         "filename": "pc/transportcontroller.h",
         "patchSetId": 1
@@ -67,6 +121,24 @@
       "revId": "08d538471b4469d0eee6aaed28711ab5db0687f8",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2509c4a7_fa81447e",
+        "filename": "pc/transportcontroller.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 5080
+      },
+      "writtenOn": "2017-10-04T04:08:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "37744c07_4981ed5c",
+      "revId": "08d538471b4469d0eee6aaed28711ab5db0687f8",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
