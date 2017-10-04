@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "b26d68bd_718720c8",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-04T13:52:35Z",
+      "side": 1,
+      "message": "Ok, but can\u0027t we make this change anyway to make the method more self contained and robust? Especially since we already have an ifdef inside it.",
+      "parentUuid": "126b9245_3c69ba1d",
+      "range": {
+        "startLine": 129,
+        "startChar": 2,
+        "endLine": 129,
+        "endChar": 4
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e5ae7bff_0c6bccd0",
         "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory.mm",
         "patchSetId": 8
@@ -237,6 +261,30 @@
     },
     {
       "key": {
+        "uuid": "59e51096_505c0a09",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCVideoCodecVP9.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-04T13:52:35Z",
+      "side": 1,
+      "message": "True, let\u0027s keep it in the same file (at least for now) then.",
+      "parentUuid": "b3999689_dcb2108a",
+      "range": {
+        "startLine": 34,
+        "startChar": 16,
+        "endLine": 34,
+        "endChar": 34
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b7647ac7_28164e4d",
         "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCWrappedNativeVideoDecoder.h",
         "patchSetId": 8
@@ -366,6 +414,30 @@
       "side": 1,
       "message": "Sort of. We don\u0027t actually go through this path since we use the shortcut and just inject the wrapped encoder pointers directly for VP8 and VP9, and I\u0027m not sure whether wrapping the CodecSpecificInfoVP8 and VP9 structs could be useful in any other context? They contain a lot of fields so if it\u0027s just dead code it seems a little unnecessary.\n\nCurrently, if we remove the shortcut, the InitDecode call fails when called from `startEncodeWithSettings`. I think it is because we drop some information there, we\u0027d need to support more fields in RTCVideoEncoderSettings since the corresponding C++ type webrtc::VideoCodec has a codec_specific_ field that holds VP8/VP9/H264 specific parameters. Not sure how much effort should be put into supporting the case of actually going through these code paths vs. just implementing what is needed to conform to the RTCVideoDecoder/RTCVideoDecoder protocols. Another option could be just calling some RTC_NOTREACHED in the implementation I guess since these are now not public anymore.",
       "parentUuid": "a86e086e_ea54186a",
+      "range": {
+        "startLine": 88,
+        "startChar": 27,
+        "endLine": 88,
+        "endChar": 51
+      },
+      "revId": "958d25dd549f34190380d7ab21f4e6d7d5f45560",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e3a28b8_423c6406",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCWrappedNativeVideoDecoder.mm",
+        "patchSetId": 8
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-04T13:52:35Z",
+      "side": 1,
+      "message": "Ok, maybe we should start with \"RTC_NOTREACHED; return nil;\" implementations, and comment for the VP8 create functions that they are not implementing the ObjC interface and only can be injected.",
+      "parentUuid": "b82e7559_56ae9f74",
       "range": {
         "startLine": 88,
         "startChar": 27,
