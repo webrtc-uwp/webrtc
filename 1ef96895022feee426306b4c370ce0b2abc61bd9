@@ -33,6 +33,24 @@
       "revId": "1ef96895022feee426306b4c370ce0b2abc61bd9",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f920b0ad_2f3c401d",
+        "filename": "pc/mediasession_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 3717,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-04T13:36:38Z",
+      "side": 1,
+      "message": "Ok, I get the feeling that you don\u0027t want to land this, and that\u0027s ok. I totally agree that we should strive for testing public interfaces and not implementation details. That said, I think the current tests here are too complex and involve too much state. The specific function NegotiateCodecs\u003cVideoCodec\u003e was under investigation and it was not clear to me from looking at the existing tests how it would be exercised, that\u0027s why I targeted it directly. I think it\u0027s ok to test functions that are not exposed directly in a public interface if they are complicated enough to warrant independent unit testing, but we should structure it differently than just exposing them in pc/mediasession.h, I agree with that. If you are already planning on refactoring mediasession.cc, that\u0027s great, and I don\u0027t want to interfere with that.\n\nMaybe RespondentCreatesOfferAfterCreatingAnswerWithRtx covers something similar. It doesn\u0027t test different H264 profiles though. If you hare happy with the test coverage, we can drop this CL.",
+      "parentUuid": "349710b0_039c67bf",
+      "revId": "1ef96895022feee426306b4c370ce0b2abc61bd9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
