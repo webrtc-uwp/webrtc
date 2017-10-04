@@ -1,0 +1,124 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7792510_433e8e1a",
+        "filename": "modules/audio_processing/test/py_quality_assessment/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-10-04T13:08:51Z",
+      "side": 1,
+      "message": "According to the recent changes, the tool is now more generic, so I suggest that we use APM simulator instead on audioproc_f. I have already started doing so (see the first lines for instance).",
+      "range": {
+        "startLine": 94,
+        "startChar": 8,
+        "endLine": 94,
+        "endChar": 19
+      },
+      "revId": "43ac1e0b3bdd63b24322bbf4ea1dc4527b94bd94",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a10cdb49_e2f835e1",
+        "filename": "modules/audio_processing/test/py_quality_assessment/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-10-04T13:08:51Z",
+      "side": 1,
+      "message": "to can go at the end of the previous line",
+      "range": {
+        "startLine": 96,
+        "startChar": 2,
+        "endLine": 96,
+        "endChar": 0
+      },
+      "revId": "43ac1e0b3bdd63b24322bbf4ea1dc4527b94bd94",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6315bfc6_dc84faa4",
+        "filename": "modules/audio_processing/test/py_quality_assessment/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-10-04T13:08:51Z",
+      "side": 1,
+      "message": "Just FYI. The setup you described is not very intuitive, though possible.\nThe fact is that POLQA scores require a comparison with a reference, and when I read your example I immediately wonder what the reference is (which depends on the used test data generators).\n\nMaybe this example is not the most straightforward, but I\u0027m perfectly fine with leaving it as it is. Just wanted to make sure that we are aware of what I said above.",
+      "range": {
+        "startLine": 99,
+        "startChar": 0,
+        "endLine": 101,
+        "endChar": 21
+      },
+      "revId": "43ac1e0b3bdd63b24322bbf4ea1dc4527b94bd94",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05de0744_8456a563",
+        "filename": "modules/audio_processing/test/py_quality_assessment/apm_quality_assessment_boxplot.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-10-04T13:08:51Z",
+      "side": 1,
+      "message": "Remove empty line",
+      "revId": "43ac1e0b3bdd63b24322bbf4ea1dc4527b94bd94",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0975d74c_3ed56b57",
+        "filename": "modules/audio_processing/test/py_quality_assessment/apm_quality_assessment_boxplot.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-10-04T13:08:51Z",
+      "side": 1,
+      "message": "Remove empty line",
+      "revId": "43ac1e0b3bdd63b24322bbf4ea1dc4527b94bd94",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a243acb2_55579d17",
+        "filename": "modules/audio_processing/test/py_quality_assessment/apm_quality_assessment_export.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-10-04T13:08:51Z",
+      "side": 1,
+      "message": "Strange... This shouldn\u0027t be a change, look: https://webrtc.googlesource.com/src/+/master/modules/audio_processing/test/py_quality_assessment/apm_quality_assessment_export.py\n\nAny idea why these are shown as additional lines?",
+      "revId": "43ac1e0b3bdd63b24322bbf4ea1dc4527b94bd94",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
