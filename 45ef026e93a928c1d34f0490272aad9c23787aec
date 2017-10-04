@@ -1,0 +1,159 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6db63893_1956675d",
+        "filename": "p2p/base/turnport_unittest.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 681,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-10-04T00:07:53Z",
+      "side": 1,
+      "message": "nit: I think it would be simpler to do this in the test:\n\nTestTurnCustomizer customizer;\nCreateTurnPortWithCustomizer(..., \u0026customizer);\n// Do test.\n// ...\n// Need to release TURN port before the customizer.\nturn_port_.reset(nullptr);\n\nMay be a matter of opinion though.",
+      "revId": "45ef026e93a928c1d34f0490272aad9c23787aec",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d70c640_49a41c87",
+        "filename": "p2p/base/turnport_unittest.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 1485,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-10-04T00:07:53Z",
+      "side": 1,
+      "message": "nit: \"Number of\" (some people may be unfamiliar with the abbreviation \"No\"). Also, \"observered\".",
+      "range": {
+        "startLine": 1485,
+        "startChar": 5,
+        "endLine": 1485,
+        "endChar": 7
+      },
+      "revId": "45ef026e93a928c1d34f0490272aad9c23787aec",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0a94d75_786e3f3e",
+        "filename": "p2p/base/turnserver.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-10-04T00:07:53Z",
+      "side": 1,
+      "message": "nit: \"Used to observe\". Observe is the verb, \"observer\" is a noun meaning \"a thing that observes\".",
+      "range": {
+        "startLine": 311,
+        "startChar": 31,
+        "endLine": 311,
+        "endChar": 39
+      },
+      "revId": "45ef026e93a928c1d34f0490272aad9c23787aec",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee119898_c8a95a81",
+        "filename": "pc/peerconnection_integrationtest.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 2992,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-10-04T00:07:53Z",
+      "side": 1,
+      "message": "nit: Should fix test name and comment. I\u0027d recommend a name like \"TurnCustomizerUsedForTurnConnections\" and a comment like:\n\n\"Verify that a TurnCustomizer passed in through RTCConfiguration is actually used by the underlying TURN candidate pair. Note that turnport_unittest.cc contains more detailed, lower-level tests.\"",
+      "range": {
+        "startLine": 2990,
+        "startChar": 0,
+        "endLine": 2992,
+        "endChar": 61
+      },
+      "revId": "45ef026e93a928c1d34f0490272aad9c23787aec",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "875cb413_4959ac54",
+        "filename": "pc/peerconnection_integrationtest.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 3010,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-10-04T00:07:53Z",
+      "side": 1,
+      "message": "nit: Don\u0027t need this.",
+      "range": {
+        "startLine": 3007,
+        "startChar": 0,
+        "endLine": 3010,
+        "endChar": 52
+      },
+      "revId": "45ef026e93a928c1d34f0490272aad9c23787aec",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9591319d_8c936541",
+        "filename": "pc/peerconnection_integrationtest.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 3019,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-10-04T00:07:53Z",
+      "side": 1,
+      "message": "nit: Don\u0027t need this (happens below with client_1_config too).",
+      "range": {
+        "startLine": 3019,
+        "startChar": 1,
+        "endLine": 3019,
+        "endChar": 61
+      },
+      "revId": "45ef026e93a928c1d34f0490272aad9c23787aec",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a2776c7_52c8b84c",
+        "filename": "pc/peerconnection_integrationtest.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 3047,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-10-04T00:07:53Z",
+      "side": 1,
+      "message": "nit: Use \"EXPECT_GT\" to emphasize that this is the main thing the test is testing.",
+      "range": {
+        "startLine": 3047,
+        "startChar": 2,
+        "endLine": 3047,
+        "endChar": 11
+      },
+      "revId": "45ef026e93a928c1d34f0490272aad9c23787aec",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
