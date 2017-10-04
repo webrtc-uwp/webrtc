@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "77ea4c24_1eeb2fdc",
+        "filename": "modules/video_coding/codecs/vp8/screenshare_layers.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 5524
+      },
+      "writtenOn": "2017-10-04T10:28:31Z",
+      "side": 1,
+      "message": "That\u0027s not quite what I meant. Discussed offline.",
+      "parentUuid": "362bf574_046ce675",
+      "revId": "cc989d3806829ee850318b2b6f5f1eab3a6bc74b",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9fbe1ba7_4cbcda96",
         "filename": "modules/video_coding/codecs/vp8/screenshare_layers.cc",
         "patchSetId": 2

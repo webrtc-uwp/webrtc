@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f49e39f_ab6a634e",
+        "filename": "modules/video_coding/codecs/vp8/default_temporal_layers.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 5524
+      },
+      "writtenOn": "2017-10-04T10:28:31Z",
+      "side": 1,
+      "message": "Capture return value and if false return so either here or at end of this method?",
+      "range": {
+        "startLine": 486,
+        "startChar": 78,
+        "endLine": 486,
+        "endChar": 0
+      },
+      "revId": "ddcd62e9afbf9d55b3079a748e18700c740c7fd7",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
