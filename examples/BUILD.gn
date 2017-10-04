@@ -233,6 +233,10 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
       "objc/AppRTCMobile/ARDTURNClient+Internal.h",
       "objc/AppRTCMobile/ARDTURNClient.h",
       "objc/AppRTCMobile/ARDTURNClient.m",
+      "objc/AppRTCMobile/ARDVideoDecoderFactory.h",
+      "objc/AppRTCMobile/ARDVideoDecoderFactory.m",
+      "objc/AppRTCMobile/ARDVideoEncoderFactory.h",
+      "objc/AppRTCMobile/ARDVideoEncoderFactory.m",
       "objc/AppRTCMobile/ARDWebSocketChannel.h",
       "objc/AppRTCMobile/ARDWebSocketChannel.m",
       "objc/AppRTCMobile/RTCIceCandidate+JSON.h",
@@ -252,6 +256,10 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
     if (is_ios) {
       deps += [ ":AppRTCMobile_ios_frameworks" ]
     } else {
+      deps += [
+        "../sdk:vp8_objc",
+        "../sdk:vp9_objc",
+      ]
       public_deps = [
         "../sdk:peerconnection_objc",
       ]
