@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a4380ccd_c71cbbf0",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_unittest.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 459,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-10-04T11:49:36Z",
+      "side": 1,
+      "message": "prefer to avoid cast to same-size signed integer, it doesn\u0027t have a well-defined behaviour:\n\n\"If the destination type is signed, the value does not change if the source integer can be represented in the destination type. Otherwise the result is implementation-defined.\"\n\nif you want to avoid confusing IsNewerSequenceNumber, may be it will be enough to rely on well-defined unsigned behaviour:\nEXPECT_LT(seqno_1 - seqno_2, 0x8000);  // i.e. expect seqno_1 \u003e seqno_2.",
+      "range": {
+        "startLine": 459,
+        "startChar": 12,
+        "endLine": 459,
+        "endChar": 51
+      },
+      "revId": "5767c7fa07d7c18de7f2f81795356031e6a097f9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
