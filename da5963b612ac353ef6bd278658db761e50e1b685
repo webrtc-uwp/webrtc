@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "d5dd64e2_7405a422",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-04T09:28:50Z",
+      "side": 1,
+      "message": "My point with the TODO is a reminder that when we change this method to accept an RtpPacketReceived, it makes sense to update this check to also take the recovered flag into account.\n\nDo you think that can be clarified, or do you still want me to delete the TODO?\n\nI think the purpose of the timestamp recording here is to derive a relation between rtp time and system time, for a/v sync. And we\u0027d want to do that only for the original transmission of an RTP packet; system arrival time of recovered or retransmitted packets add undesired noise.",
+      "parentUuid": "2a51b261_6fa048da",
+      "range": {
+        "startLine": 200,
+        "startChar": 30,
+        "endLine": 200,
+        "endChar": 0
+      },
+      "revId": "da5963b612ac353ef6bd278658db761e50e1b685",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ade73939_2ce8f6e7",
         "filename": "modules/rtp_rtcp/source/rtp_receiver_unittest.cc",
         "patchSetId": 7
@@ -156,6 +180,30 @@
       "side": 1,
       "message": "Would be nice to reflect that in test names",
       "parentUuid": "9ab1c6e2_8f46d8d7",
+      "range": {
+        "startLine": 340,
+        "startChar": 44,
+        "endLine": 340,
+        "endChar": 0
+      },
+      "revId": "da5963b612ac353ef6bd278658db761e50e1b685",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87fa8cb5_31785284",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_unittest.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-04T09:28:50Z",
+      "side": 1,
+      "message": "Any name suggestions? \"RecordsInOrderTimestamps\", \"RecordsTimestampAtSeqnoJump\"?",
+      "parentUuid": "5fda242f_b07958dd",
       "range": {
         "startLine": 340,
         "startChar": 44,
