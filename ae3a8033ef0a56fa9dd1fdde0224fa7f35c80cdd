@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81a933b1_ffa8c473",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCVideoCodecH264.mm",
+        "patchSetId": 12
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-04T17:48:23Z",
+      "side": 1,
+      "message": "Is this needed?",
+      "range": {
+        "startLine": 18,
+        "startChar": 9,
+        "endLine": 18,
+        "endChar": 29
+      },
+      "revId": "ae3a8033ef0a56fa9dd1fdde0224fa7f35c80cdd",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61663c19_25b52122",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCVideoFrame+Private.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-04T17:48:23Z",
+      "side": 1,
+      "message": "The return type should be webrtc::VideoFrame.",
+      "range": {
+        "startLine": 23,
+        "startChar": 3,
+        "endLine": 23,
+        "endChar": 29
+      },
+      "revId": "ae3a8033ef0a56fa9dd1fdde0224fa7f35c80cdd",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a6b7e7a3_1b1327b2",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCVideoFrame.mm",
+        "patchSetId": 12
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-04T17:48:23Z",
+      "side": 1,
+      "message": "The return type should be webrtc::VideoFrame.",
+      "range": {
+        "startLine": 105,
+        "startChar": 3,
+        "endLine": 105,
+        "endChar": 29
+      },
+      "revId": "ae3a8033ef0a56fa9dd1fdde0224fa7f35c80cdd",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5b4723c_4061c297",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCVideoFrame.mm",
+        "patchSetId": 12
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-04T17:48:23Z",
+      "side": 1,
+      "message": "This move is not needed.",
+      "range": {
+        "startLine": 112,
+        "startChar": 9,
+        "endLine": 112,
+        "endChar": 18
+      },
+      "revId": "ae3a8033ef0a56fa9dd1fdde0224fa7f35c80cdd",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "181f2811_4ad4b576",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCWrappedNativeVideoDecoder.mm",
+        "patchSetId": 12
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-04T17:48:23Z",
+      "side": 1,
+      "message": "Let\u0027s do RTC_NOTREACHED(); here as well for consistency.",
+      "range": {
+        "startLine": 45,
+        "startChar": 2,
+        "endLine": 45,
+        "endChar": 36
+      },
+      "revId": "ae3a8033ef0a56fa9dd1fdde0224fa7f35c80cdd",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "332456eb_5d3db14b",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCWrappedNativeVideoDecoder.mm",
+        "patchSetId": 12
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-04T17:48:23Z",
+      "side": 1,
+      "message": "Let\u0027s do RTC_NOTREACHED() here as well.",
+      "range": {
+        "startLine": 58,
+        "startChar": 2,
+        "endLine": 58,
+        "endChar": 77
+      },
+      "revId": "ae3a8033ef0a56fa9dd1fdde0224fa7f35c80cdd",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da7f2185_3087d443",
+        "filename": "sdk/objc/Framework/Classes/PeerConnection/RTCWrappedNativeVideoEncoder.mm",
+        "patchSetId": 12
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-04T17:48:23Z",
+      "side": 1,
+      "message": "RTC_NOTREACHED();",
+      "range": {
+        "startLine": 45,
+        "startChar": 2,
+        "endLine": 45,
+        "endChar": 36
+      },
+      "revId": "ae3a8033ef0a56fa9dd1fdde0224fa7f35c80cdd",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cbb64942_f374664a",
+        "filename": "sdk/objc/Framework/Classes/VideoToolbox/objc_video_encoder_factory.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 5098
+      },
+      "writtenOn": "2017-10-04T17:48:23Z",
+      "side": 1,
+      "message": "nit: Write a full sentence here, e.g. \"Needed for WebRtcVideoEncoderFactory interface.\"",
+      "range": {
+        "startLine": 47,
+        "startChar": 5,
+        "endLine": 47,
+        "endChar": 30
+      },
+      "revId": "ae3a8033ef0a56fa9dd1fdde0224fa7f35c80cdd",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
