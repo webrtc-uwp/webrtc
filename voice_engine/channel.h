@@ -263,7 +263,6 @@ class Channel
                               size_t channels,
                               uint32_t rate) override;
   void OnIncomingSSRCChanged(uint32_t ssrc) override;
-  void OnIncomingCSRCChanged(uint32_t CSRC, bool added) override;
 
   // From Transport (called by the RTP/RTCP module)
   bool SendRtp(const uint8_t* data,

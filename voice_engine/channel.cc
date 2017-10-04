@@ -533,10 +533,6 @@ void Channel::OnIncomingSSRCChanged(uint32_t ssrc) {
   _rtpRtcpModule->SetRemoteSSRC(ssrc);
 }
 
-void Channel::OnIncomingCSRCChanged(uint32_t CSRC, bool added) {
-  // TODO(saza): remove.
-}
-
 int32_t Channel::OnInitializeDecoder(
     int8_t payloadType,
     const char payloadName[RTP_PAYLOAD_NAME_SIZE],
