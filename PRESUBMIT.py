@@ -381,8 +381,8 @@ def CheckNoPackageBoundaryViolations(input_api, gn_files, output_api):
   cwd = input_api.PresubmitLocalPath()
   script_path = os.path.join('tools_webrtc', 'presubmit_checks_lib',
                              'check_package_boundaries.py')
-  command = [sys.executable, script_path]
-  command += [gn_file.LocalPath() for gn_file in gn_files]
+  command = [sys.executable, script_path, cwd]
+  command += [os.path.join(cwd, gn_file.LocalPath()) for gn_file in gn_files]
   returncode, _, stderr = _RunCommand(command, cwd)
   if returncode:
     return [output_api.PresubmitError(
