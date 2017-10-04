@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e7835850_53f196e5",
+        "filename": "tools_webrtc/android/build_aar.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-10-04T10:58:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d9aaef3e_40e4f9f6",
+      "range": {
+        "startLine": 176,
+        "startChar": 2,
+        "endLine": 177,
+        "endChar": 22
+      },
+      "revId": "b17d27b710ebadfec2cd7062bff04ffb4ea3a14c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "77ad5f4f_64e4e32d",
         "filename": "tools_webrtc/android/release_aar.py",
         "patchSetId": 4
@@ -45,6 +69,30 @@
       "revId": "b17d27b710ebadfec2cd7062bff04ffb4ea3a14c",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "532582dc_024b844f",
+        "filename": "tools_webrtc/android/release_aar.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-10-04T10:58:12Z",
+      "side": 1,
+      "message": "I updated the code to my best match style I found in chromium, for example:\nhttps://cs.chromium.org/chromium/src/tools/android/loading/sandwich.py?type\u003dcs\u0026q\u003dsys.path.append\u0026sq\u003dpackage:chromium\u0026l\u003d28\n\nIf you prefer some other style, can you point at which lines you want the extra line-breaks?",
+      "parentUuid": "77ad5f4f_64e4e32d",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 10
+      },
+      "revId": "b17d27b710ebadfec2cd7062bff04ffb4ea3a14c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "c9143b02_f9f6e0d3",
+        "filename": "tools_webrtc/android/release_aar.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-10-04T10:58:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2fff8af7_812cc926",
+      "range": {
+        "startLine": 87,
+        "startChar": 2,
+        "endLine": 87,
+        "endChar": 32
+      },
+      "revId": "b17d27b710ebadfec2cd7062bff04ffb4ea3a14c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48a0d3fb_1b1b084b",
         "filename": "tools_webrtc/android/release_aar.py",
         "patchSetId": 4
@@ -82,6 +154,30 @@
       "writtenOn": "2017-10-04T09:55:48Z",
       "side": 1,
       "message": "Why environment variables and not parameters to the script?",
+      "range": {
+        "startLine": 117,
+        "startChar": 12,
+        "endLine": 117,
+        "endChar": 19
+      },
+      "revId": "b17d27b710ebadfec2cd7062bff04ffb4ea3a14c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5475491_6cb5a87e",
+        "filename": "tools_webrtc/android/release_aar.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-10-04T10:58:12Z",
+      "side": 1,
+      "message": "I made these environment variables because these are \"secret\" and in general I think it is a bad idea to have secret values on command line.\n\nThis script will be also run on the bots at some point. Aren\u0027t the commands run on the bots visible in the logs and would include the API keys?",
+      "parentUuid": "48a0d3fb_1b1b084b",
       "range": {
         "startLine": 117,
         "startChar": 12,
