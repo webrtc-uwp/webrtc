@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99ee5377_f9df2e5f",
+        "filename": "sdk/android/api/org/webrtc/PeerConnection.java",
+        "patchSetId": 10
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 5112
+      },
+      "writtenOn": "2017-10-04T11:34:46Z",
+      "side": 1,
+      "message": "I don\u0027t like exposing a native pointer as part of public interface. Can we instead implement a class that clearly owns the pointer and for example deletes it in dispose?\n\nSee for example MediaStreamTrack:\nhttps://cs.chromium.org/chromium/src/third_party/webrtc/sdk/android/api/org/webrtc/MediaStreamTrack.java",
+      "range": {
+        "startLine": 308,
+        "startChar": 16,
+        "endLine": 308,
+        "endChar": 36
+      },
+      "revId": "80457889b8d295d7af87c2b15fa8e1dbba36f83a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
