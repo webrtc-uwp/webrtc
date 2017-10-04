@@ -22,6 +22,30 @@
       "revId": "5767c7fa07d7c18de7f2f81795356031e6a097f9",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "31baedb4_9efa3260",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_unittest.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 459,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-04T13:29:45Z",
+      "side": 1,
+      "message": "Ouch, cast to unsigned is well defined, but cast to signed isn\u0027t.\nI\u0027ll rewrite as unsigned expression. I think there\u0027s a point in not using IsNewerSequenceNumber here, since that function is an important dependency of the code under test.",
+      "parentUuid": "a4380ccd_c71cbbf0",
+      "range": {
+        "startLine": 459,
+        "startChar": 12,
+        "endLine": 459,
+        "endChar": 51
+      },
+      "revId": "5767c7fa07d7c18de7f2f81795356031e6a097f9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
