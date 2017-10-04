@@ -147,17 +147,6 @@ TEST_F(RtcEventLogOutputFileTest, WritingToInactiveFileForbidden) {
   EXPECT_DEATH(output_file->Write("abc"), "");
 }
 
-TEST_F(RtcEventLogOutputFileTest, DisallowUnreasonableFileSizeLimits) {
-  const size_t unreasonable_size =
-      RtcEventLogOutputFile::kMaxReasonableFileSize + 1;
-  // Keeping in a temporary unique_ptr to make it clearer that the death is
-  // triggered by construction, not destruction.
-  std::unique_ptr<RtcEventLogOutputFile> output_file;
-  EXPECT_DEATH(output_file = rtc::MakeUnique<RtcEventLogOutputFile>(
-                   output_file_name_, unreasonable_size),
-               "");
-}
-
 #endif
 
 }  // namespace webrtc
