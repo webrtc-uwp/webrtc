@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "37964967_105a2cf8",
+        "filename": "modules/audio_processing/agc2/gain_controller2.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-10-04T08:36:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cb76001b_63db35ff",
+      "range": {
+        "startLine": 57,
+        "startChar": 23,
+        "endLine": 57,
+        "endChar": 36
+      },
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fbfd87e6_b1371694",
         "filename": "modules/audio_processing/agc2/gain_controller2.h",
         "patchSetId": 5
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "67cb2582_065301be",
+        "filename": "modules/audio_processing/agc2/gain_controller2.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-10-04T08:36:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fbfd87e6_b1371694",
+      "range": {
+        "startLine": 34,
+        "startChar": 32,
+        "endLine": 34,
+        "endChar": 47
+      },
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "20826820_b9e95d61",
         "filename": "modules/audio_processing/agc2/gain_controller2.h",
         "patchSetId": 5
@@ -59,6 +107,30 @@
       "writtenOn": "2017-10-03T20:59:22Z",
       "side": 1,
       "message": "Why is this getter needed?",
+      "range": {
+        "startLine": 35,
+        "startChar": 8,
+        "endLine": 35,
+        "endChar": 18
+      },
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0cc36ae9_02abf144",
+        "filename": "modules/audio_processing/agc2/gain_controller2.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-10-04T08:36:19Z",
+      "side": 1,
+      "message": "The two getters were only used in the unit test.\nI removed the getters and adapted the UTs.",
+      "parentUuid": "20826820_b9e95d61",
       "range": {
         "startLine": 35,
         "startChar": 8,
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "8c549b23_de31f929",
+        "filename": "modules/audio_processing/agc2/gain_controller2_unittest.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-10-04T08:36:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4259abac_b552420c",
+      "range": {
+        "startLine": 25,
+        "startChar": 5,
+        "endLine": 25,
+        "endChar": 26
+      },
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "180802cb_5c23d831",
         "filename": "modules/audio_processing/agc2/gain_controller2_unittest.cc",
         "patchSetId": 5
@@ -114,6 +210,30 @@
       "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d332120_63b9ab09",
+        "filename": "modules/audio_processing/agc2/gain_controller2_unittest.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-10-04T08:36:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "180802cb_5c23d831",
+      "range": {
+        "startLine": 27,
+        "startChar": 9,
+        "endLine": 27,
+        "endChar": 16
+      },
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "a302223f_5efd23ea",
+        "filename": "modules/audio_processing/agc2/gain_controller2_unittest.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-10-04T08:36:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a549f0d3_d229eda6",
+      "range": {
+        "startLine": 34,
+        "startChar": 5,
+        "endLine": 34,
+        "endChar": 20
+      },
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9f9d51e6_f8c5e224",
         "filename": "modules/audio_processing/agc2/gain_controller2_unittest.cc",
         "patchSetId": 5
@@ -154,6 +298,24 @@
       "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1488ff1_886c95b3",
+        "filename": "modules/audio_processing/agc2/gain_controller2_unittest.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-10-04T08:36:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9f9d51e6_f8c5e224",
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     },
     {
       "key": {
@@ -180,6 +342,30 @@
     },
     {
       "key": {
+        "uuid": "4c433d33_7623f0b0",
+        "filename": "modules/audio_processing/agc2/gain_controller2_unittest.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-10-04T08:36:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7769ac80_42bdf501",
+      "range": {
+        "startLine": 75,
+        "startChar": 49,
+        "endLine": 76,
+        "endChar": 46
+      },
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8bd875ee_8dcaaafa",
         "filename": "modules/audio_processing/audio_processing_impl.cc",
         "patchSetId": 5
@@ -197,6 +383,24 @@
     },
     {
       "key": {
+        "uuid": "c9f91b81_37b27bd2",
+        "filename": "modules/audio_processing/audio_processing_impl.cc",
+        "patchSetId": 5
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-10-04T08:36:19Z",
+      "side": 1,
+      "message": "Thanks for asking, this is not a single line answer.\n\nTwo facts first:\n1. the enabled flag for AGC2 is stored in config_.gain_controller2.enabled and there is no counterpart in capture_nonlocked_ (differently from LC, for which there is capture_nonlocked_.level_controller_enabled)\n2. note that for LC Initialize() is called only if the enabled flag toggles, but ApplyConfig is always called(), even if the LC config has not changed and/or LC is disabled\n\nRelated to the second point, let me also quote a comment from a previous patch set on Rietveld:  \n\u003e \u003e @Per: every time that we call AudioProcessingImpl::ApplyConfig we both call\n\u003e \u003e Initialize() and ApplyConfig() on the active APM sub-modules. But when we call\n\u003e \u003e AudioProcessingImpl::Initialize() we only call Initialize() on the active APM\n\u003e \u003e sub-modules. is this right in general?\n\u003e I think so.\n\nHence, by looking at the existing code and considering what I reported above, I decided to follow the same logic for the existing sub-modules and then thought we should always call Initialize(). But now I have some questions:\n- wouldn\u0027t it be better if we call both ApplyConfig() and InitializeGainController2() only when AGC2 was previously disabled and it\u0027s then activated? this would require that we add a corresponding flag before the first line of AudioProcessingImpl::ApplyConfig(), otherwise we can\u0027t compare to the previous state\n- the first line of AudioProcessingImpl::ApplyConfig() is config_ \u003d config, and the only way to check which sub-modules have been disabled is comparing capture_nonlocked_ to config_; this however cannot work for AGC2 since, as explained above, it doesn\u0027t need a counterpart in capture_nonlocked_; I wonder why we need the enabled flags both in config_ and capture_nonlocked_\n- shall we move the AGC2 block before rtc::CritScope cs_render/cs_capture?\n\nMaybe let\u0027s discuss this point offline.",
+      "parentUuid": "8bd875ee_8dcaaafa",
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "15d544f3_0401014c",
         "filename": "modules/audio_processing/include/audio_processing.h",
         "patchSetId": 5
@@ -208,6 +412,30 @@
       "writtenOn": "2017-10-03T20:59:22Z",
       "side": 1,
       "message": "-\u003e // Fixed digital gain.\n(This is only one parameter.)",
+      "range": {
+        "startLine": 332,
+        "startChar": 28,
+        "endLine": 332,
+        "endChar": 34
+      },
+      "revId": "120e7a4782a2ff713fc7bde6132c1ba96c2635b1",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1cf5b46_92f1e438",
+        "filename": "modules/audio_processing/include/audio_processing.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 5122
+      },
+      "writtenOn": "2017-10-04T08:36:19Z",
+      "side": 1,
+      "message": "I removed the comment and take care of organizing into sections for different AGC modes when the time comes.",
+      "parentUuid": "15d544f3_0401014c",
       "range": {
         "startLine": 332,
         "startChar": 28,
