@@ -30,6 +30,7 @@ static const char kIceUfrag2[] = "TESTICEUFRAG0002";
 static const char kIcePwd2[] = "TESTICEPWD00000000000002";
 static const char kIceUfrag3[] = "TESTICEUFRAG0003";
 static const char kIcePwd3[] = "TESTICEPWD00000000000003";
+static const bool kRtcpMuxEnabled = true;
 
 namespace cricket {
 
@@ -904,6 +905,48 @@ TEST_F(TransportControllerTest, NeedsIceRestart) {
   // NeedsIceRestart should still be true for video.
   EXPECT_FALSE(transport_controller_->NeedsIceRestart("audio"));
   EXPECT_TRUE(transport_controller_->NeedsIceRestart("video"));
+}
+
+// Tests that the RtpTransport objects can be correctly created and destroyed.
+TEST_F(TransportControllerTest, CreateAndDestroyRtpTransport) {
+  const std::string transport_name = "transport";
+  // Create a new RtpTransport.
+  auto rtp_transport1 = transport_controller_->CreateRtpTransport(
+      transport_name, kRtcpMuxEnabled);
+  // Return the existing RtpTransport.
+  auto rtp_transport2 = transport_controller_->CreateRtpTransport(
+      transport_name, kRtcpMuxEnabled);
+  EXPECT_NE(nullptr, rtp_transport1);
+  EXPECT_EQ(rtp_transport1, rtp_transport2);
+
+  transport_controller_->DestroyTransport(transport_name);
+  EXPECT_NE(nullptr, rtp_transport1->rtp_packet_transport());
+  EXPECT_EQ(nullptr, rtp_transport1->rtcp_packet_transport());
+
+  transport_controller_->DestroyTransport(transport_name);
+  // |rtp_transport1| become invalid.
+  EXPECT_DEATH(rtp_transport1->IsWritable(false), "");
+}
+
+// Tests that the SrtpTransport objects can be correctly created and destroyed.
+TEST_F(TransportControllerTest, CreateAndDestroySrtpTransport) {
+  const std::string transport_name = "transport";
+  // Create a new SrtpTransport.
+  auto srtp_transport1 = transport_controller_->CreateSrtpTransport(
+      transport_name, kRtcpMuxEnabled);
+  // Return the existing SrtpTransport.
+  auto srtp_transport2 = transport_controller_->CreateSrtpTransport(
+      transport_name, kRtcpMuxEnabled);
+  EXPECT_NE(nullptr, srtp_transport1);
+  EXPECT_EQ(srtp_transport1, srtp_transport2);
+
+  transport_controller_->DestroyTransport(transport_name);
+  EXPECT_NE(nullptr, srtp_transport1->rtp_packet_transport());
+  EXPECT_EQ(nullptr, srtp_transport1->rtcp_packet_transport());
+
+  transport_controller_->DestroyTransport(transport_name);
+  // |srtp_transport1| become invalid.
+  EXPECT_DEATH(srtp_transport1->IsWritable(false), "");
 }
 
 }  // namespace cricket
