@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "28167b7c_749ff15d",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-04T08:55:22Z",
+      "side": 1,
+      "message": "If you look at Stefan\u0027s comment, the thing is that for recovered packets, we used to call this function with in_order \u003d\u003d false, and hence never update these last_received_* variables.\n\nThat\u0027s a change in behavior in case our InOrderPacket ever happens to return true for a recovered packet. Not clear to me how likely that is, but checking the recoverd flag should be more reliable.",
+      "parentUuid": "a7979e75_4ea8b58e",
+      "range": {
+        "startLine": 200,
+        "startChar": 30,
+        "endLine": 200,
+        "endChar": 0
+      },
+      "revId": "da5963b612ac353ef6bd278658db761e50e1b685",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ade73939_2ce8f6e7",
         "filename": "modules/rtp_rtcp/source/rtp_receiver_unittest.cc",
         "patchSetId": 7
@@ -36,6 +60,30 @@
       "writtenOn": "2017-10-04T07:59:33Z",
       "side": 1,
       "message": "These two tests look like should have be landed in previous CL.\nMind landing them independently to changes to \u0027in_order\u0027?",
+      "range": {
+        "startLine": 340,
+        "startChar": 44,
+        "endLine": 340,
+        "endChar": 0
+      },
+      "revId": "da5963b612ac353ef6bd278658db761e50e1b685",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c51701e8_67e5f1c2",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_unittest.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-04T08:55:22Z",
+      "side": 1,
+      "message": "You\u0027re right, will do.",
+      "parentUuid": "ade73939_2ce8f6e7",
       "range": {
         "startLine": 340,
         "startChar": 44,
