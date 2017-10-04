@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "362bf574_046ce675",
+        "filename": "modules/video_coding/codecs/vp8/screenshare_layers.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 5117
+      },
+      "writtenOn": "2017-10-04T10:08:43Z",
+      "side": 1,
+      "message": "The check for higher temporal layer is done at the line 495",
+      "parentUuid": "3619424f_e219a8c3",
+      "revId": "cc989d3806829ee850318b2b6f5f1eab3a6bc74b",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9fbe1ba7_4cbcda96",
         "filename": "modules/video_coding/codecs/vp8/screenshare_layers.cc",
         "patchSetId": 2
@@ -39,6 +57,30 @@
       "revId": "cc989d3806829ee850318b2b6f5f1eab3a6bc74b",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0ba85fa_f18e43e3",
+        "filename": "modules/video_coding/codecs/vp8/screenshare_layers.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 500,
+      "author": {
+        "id": 5117
+      },
+      "writtenOn": "2017-10-04T10:08:43Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "9fbe1ba7_4cbcda96",
+      "range": {
+        "startLine": 500,
+        "startChar": 53,
+        "endLine": 500,
+        "endChar": 0
+      },
+      "revId": "cc989d3806829ee850318b2b6f5f1eab3a6bc74b",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
