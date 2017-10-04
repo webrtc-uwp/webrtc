@@ -46,6 +46,30 @@
       "revId": "80457889b8d295d7af87c2b15fa8e1dbba36f83a",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bcb3268e_2b84f0f0",
+        "filename": "sdk/android/api/org/webrtc/PeerConnection.java",
+        "patchSetId": 10
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-10-04T17:03:41Z",
+      "side": 1,
+      "message": "Well, the decision in the \"webrtc-core\" group was to pass raw pointers into PeerConnection for injectable functionality.\n\nSure, this still could be wrapped by a Java object for safety; one that holds a raw pointer and has a \"dispose\" method which *the application* would call to release it. But that just seemed like overkill. If the application needs their own code to construct the object, might as well make them write their own code to destroy it.\n\nI guess another alternative would be fully providing the TurnCustomizer API in Java (letting people write a Java class that overrides \"MaybeModifyOutgoingStunMessage\"). But that would be a lot of work and code to maintain; not sure it\u0027s worth the benefit.",
+      "parentUuid": "ad8f37e0_23e3e528",
+      "range": {
+        "startLine": 308,
+        "startChar": 16,
+        "endLine": 308,
+        "endChar": 36
+      },
+      "revId": "80457889b8d295d7af87c2b15fa8e1dbba36f83a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
