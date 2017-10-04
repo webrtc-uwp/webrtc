@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d9aaef3e_40e4f9f6",
+        "filename": "tools_webrtc/android/build_aar.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 5027
+      },
+      "writtenOn": "2017-10-04T09:55:48Z",
+      "side": 1,
+      "message": "extra_gn_args \u003d extra_gn_args or []",
+      "range": {
+        "startLine": 176,
+        "startChar": 2,
+        "endLine": 177,
+        "endChar": 22
+      },
+      "revId": "b17d27b710ebadfec2cd7062bff04ffb4ea3a14c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "77ad5f4f_64e4e32d",
+        "filename": "tools_webrtc/android/release_aar.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 5027
+      },
+      "writtenOn": "2017-10-04T09:55:48Z",
+      "side": 1,
+      "message": "Nit: two blank lines before top-level class or constant",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 10
+      },
+      "revId": "b17d27b710ebadfec2cd7062bff04ffb4ea3a14c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fff8af7_812cc926",
+        "filename": "tools_webrtc/android/release_aar.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 5027
+      },
+      "writtenOn": "2017-10-04T09:55:48Z",
+      "side": 1,
+      "message": "It\u0027s customary to do exponential backoff in retries like this, e.g. \n\nfor attempt in xrange(UPLOAD_TRIES):\n  ...\n  time.sleep(2 ** attempt)\n\n, so consider that.",
+      "range": {
+        "startLine": 87,
+        "startChar": 2,
+        "endLine": 87,
+        "endChar": 32
+      },
+      "revId": "b17d27b710ebadfec2cd7062bff04ffb4ea3a14c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48a0d3fb_1b1b084b",
+        "filename": "tools_webrtc/android/release_aar.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 5027
+      },
+      "writtenOn": "2017-10-04T09:55:48Z",
+      "side": 1,
+      "message": "Why environment variables and not parameters to the script?",
+      "range": {
+        "startLine": 117,
+        "startChar": 12,
+        "endLine": 117,
+        "endChar": 19
+      },
+      "revId": "b17d27b710ebadfec2cd7062bff04ffb4ea3a14c",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
