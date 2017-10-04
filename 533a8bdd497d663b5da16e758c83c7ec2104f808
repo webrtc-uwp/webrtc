@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c279ac40_f8b59239",
+        "filename": "webrtc/video/video_send_stream.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 961,
+      "author": {
+        "id": 5525
+      },
+      "writtenOn": "2017-10-04T11:34:33Z",
+      "side": 1,
+      "message": "This doesn\u0027t look properly aligned. Have you run git cl format?",
+      "revId": "533a8bdd497d663b5da16e758c83c7ec2104f808",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
