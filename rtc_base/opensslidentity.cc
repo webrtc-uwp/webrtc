@@ -278,6 +278,19 @@ static void PrintCert(X509* x509) {
 }
 #endif
 
+OpenSSLCertificate::OpenSSLCertificate(X509* x509) : x509_(x509) {
+  AddReference(x509_);
+}
+
+OpenSSLCertificate::OpenSSLCertificate(STACK_OF(X509) * chain) {
+  x509_ = sk_X509_value(chain, 0);
+  AddReference(x509_);
+  for (size_t i = 1; i < sk_X509_num(chain); ++i) {
+    X509* x509 = sk_X509_value(chain, i);
+    cert_chain_.push_back(new OpenSSLCertificate(x509));
+  }
+}
+
 OpenSSLCertificate* OpenSSLCertificate::Generate(
     OpenSSLKeyPair* key_pair, const SSLIdentityParams& params) {
   SSLIdentityParams actual_params(params);
@@ -306,13 +319,18 @@ OpenSSLCertificate* OpenSSLCertificate::FromPEMString(
   BIO_set_mem_eof_return(bio, 0);
   X509* x509 =
       PEM_read_bio_X509(bio, nullptr, nullptr, const_cast<char*>("\0"));
+  STACK_OF(X509)* x509s = sk_X509_new_null();
+  while (x509 != nullptr) {
+    sk_X509_push(x509s, x509);
+    x509 = PEM_read_bio_X509(bio, nullptr, nullptr, const_cast<char*>("\0"));
+  }
   BIO_free(bio);  // Frees the BIO, but not the pointed-to string.
 
-  if (!x509)
+  if (sk_X509_num(x509s) == 0)
     return nullptr;
 
-  OpenSSLCertificate* ret = new OpenSSLCertificate(x509);
-  X509_free(x509);
+  OpenSSLCertificate* ret = new OpenSSLCertificate(x509s);
+  sk_X509_pop_free(x509s, X509_free);
   return ret;
 }
 
@@ -362,10 +380,11 @@ bool OpenSSLCertificate::GetSignatureDigestAlgorithm(
 }
 
 std::unique_ptr<SSLCertChain> OpenSSLCertificate::GetChain() const {
-  // Chains are not yet supported when using OpenSSL.
-  // OpenSSLStreamAdapter::SSLVerifyCallback currently requires the remote
-  // certificate to be self-signed.
-  return nullptr;
+  if (cert_chain_.empty()) {
+    return nullptr;
+  }
+  std::unique_ptr<SSLCertChain> chain(new SSLCertChain(cert_chain_));
+  return chain;
 }
 
 bool OpenSSLCertificate::ComputeDigest(const std::string& algorithm,
@@ -398,10 +417,27 @@ bool OpenSSLCertificate::ComputeDigest(const X509* x509,
 
 OpenSSLCertificate::~OpenSSLCertificate() {
   X509_free(x509_);
+  for (SSLCertificate* cert : cert_chain_) {
+    delete cert;
+  }
+}
+
+X509* OpenSSLCertificate::GetX509Reference() const {
+  if (x509_ != nullptr) {
+    AddReference(x509_);
+  }
+  return x509_;
 }
 
 OpenSSLCertificate* OpenSSLCertificate::GetReference() const {
-  return new OpenSSLCertificate(x509_);
+  STACK_OF(X509)* stack_x509 = sk_X509_new_null();
+  sk_X509_push(stack_x509, x509_);
+  for (auto cert_it = cert_chain_.begin(); cert_it != cert_chain_.end();
+       ++cert_it) {
+    OpenSSLCertificate* cert = reinterpret_cast<OpenSSLCertificate*>(*cert_it);
+    sk_X509_push(stack_x509, cert->x509());
+  }
+  return new OpenSSLCertificate(stack_x509);
 }
 
 std::string OpenSSLCertificate::ToPEMString() const {
@@ -418,6 +454,11 @@ std::string OpenSSLCertificate::ToPEMString() const {
   BIO_get_mem_data(bio, &buffer);
   std::string ret(buffer);
   BIO_free(bio);
+  for (size_t i = 0; i < cert_chain_.size(); ++i) {
+    OpenSSLCertificate* cert =
+        reinterpret_cast<OpenSSLCertificate*>(cert_chain_[i]);
+    ret += cert->ToPEMString();
+  }
   return ret;
 }
 
@@ -440,16 +481,28 @@ void OpenSSLCertificate::ToDER(Buffer* der_buffer) const {
   BIO_free(bio);
 }
 
-void OpenSSLCertificate::AddReference() const {
-  RTC_DCHECK(x509_ != nullptr);
+void OpenSSLCertificate::AddReference(X509* x509) const {
+  RTC_DCHECK(x509 != nullptr);
 #if defined(OPENSSL_IS_BORINGSSL)
-  X509_up_ref(x509_);
+  X509_up_ref(x509);
 #else
-  CRYPTO_add(&x509_->references, 1, CRYPTO_LOCK_X509);
+  CRYPTO_add(&x509->references, 1, CRYPTO_LOCK_X509);
 #endif
 }
 
 bool OpenSSLCertificate::operator==(const OpenSSLCertificate& other) const {
+  if (this->cert_chain_.size() != other.cert_chain_.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < cert_chain_.size(); ++i) {
+    OpenSSLCertificate* cert =
+        reinterpret_cast<OpenSSLCertificate*>(cert_chain_[i]);
+    OpenSSLCertificate* other_cert =
+        reinterpret_cast<OpenSSLCertificate*>(other.cert_chain_[i]);
+    if (*cert != *other_cert) {
+      return false;
+    }
+  }
   return X509_cmp(this->x509_, other.x509_) == 0;
 }
 
@@ -552,6 +605,16 @@ bool OpenSSLIdentity::ConfigureIdentity(SSL_CTX* ctx) {
      SSL_CTX_use_PrivateKey(ctx, key_pair_->pkey()) != 1) {
     LogSSLErrors("Configuring key and certificate");
     return false;
+  }
+  // If Chains are available, use it.
+  std::unique_ptr<SSLCertChain> cert_chain = certificate_->GetChain();
+  for (size_t i = 0; cert_chain != nullptr && i < cert_chain->GetSize(); ++i) {
+    const OpenSSLCertificate* cert =
+        reinterpret_cast<const OpenSSLCertificate*>(&cert_chain->Get(i));
+    if (!SSL_CTX_add_extra_chain_cert(ctx, cert->GetX509Reference())) {
+      LogSSLErrors("Configuring intermediate certificate");
+      return false;
+    }
   }
   return true;
 }

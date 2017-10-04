@@ -38,6 +38,7 @@
 
 namespace {
   bool g_use_time_callback_for_testing = false;
+  const int kMaxSupportedCertChainDepth = 3;
 }
 
 namespace rtc {
@@ -1109,10 +1110,22 @@ int OpenSSLStreamAdapter::SSLVerifyCallback(X509_STORE_CTX* store, void* arg) {
   OpenSSLStreamAdapter* stream =
       reinterpret_cast<OpenSSLStreamAdapter*>(SSL_get_app_data(ssl));
 
+#if defined(OPENSSL_IS_BORINGSSL)
   // Record the peer's certificate.
+  STACK_OF(X509)* chain = SSL_get_peer_full_cert_chain(ssl);
+  if (sk_X509_num(chain) >= kMaxSupportedCertChainDepth) {
+    LOG(LS_INFO) << "Ignore chained certificate with depth "
+                 << sk_X509_num(chain);
+    return 1;
+  }
+
+  stream->peer_certificate_.reset(new OpenSSLCertificate(chain));
+#else
+    // Record the peer's certificate.
   X509* cert = SSL_get_peer_certificate(ssl);
   stream->peer_certificate_.reset(new OpenSSLCertificate(cert));
   X509_free(cert);
+#endif
 
   // If the peer certificate digest isn't known yet, we'll wait to verify
   // until it's known, and for now just return a success status.
