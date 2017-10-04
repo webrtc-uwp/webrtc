@@ -16,6 +16,24 @@
       "revId": "60577d17b6304e684354b761ee7b6540f04aeb29",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42394200_5a20fa59",
+        "filename": "pc/mediasession_unittest.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 2135,
+      "author": {
+        "id": 5053
+      },
+      "writtenOn": "2017-10-04T02:27:56Z",
+      "side": 1,
+      "message": "No, good catch...",
+      "parentUuid": "46114b43_4950f214",
+      "revId": "60577d17b6304e684354b761ee7b6540f04aeb29",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
