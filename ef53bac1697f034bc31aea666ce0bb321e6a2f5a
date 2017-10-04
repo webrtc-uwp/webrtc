@@ -1,0 +1,175 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e1c209a_26a12a11",
+        "filename": "rtc_base/refcount.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-10-04T09:36:13Z",
+      "side": 1,
+      "message": "const on those two?",
+      "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7f6a4f7_2edbef2b",
+        "filename": "rtc_base/refcount.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-10-04T09:36:13Z",
+      "side": 1,
+      "message": "Drop the comma?",
+      "range": {
+        "startLine": 25,
+        "startChar": 31,
+        "endLine": 25,
+        "endChar": 32
+      },
+      "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33cda4da_755cdb30",
+        "filename": "rtc_base/refcount.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-10-04T09:36:13Z",
+      "side": 1,
+      "message": "\"Otherwise, returns kOtherRefsRemained, to signal that at the precise time the caller\u0027s reference was dropped, other references still remained (but if other threads own references, this may of course have changed by the time Release() returns).\"",
+      "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d20acfaa_15cba452",
+        "filename": "rtc_base/refcount.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-10-04T09:36:13Z",
+      "side": 1,
+      "message": "Drop the comma?",
+      "range": {
+        "startLine": 37,
+        "startChar": 68,
+        "endLine": 37,
+        "endChar": 69
+      },
+      "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00e6adf0_a2be1dd0",
+        "filename": "rtc_base/refcount.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-10-04T09:36:13Z",
+      "side": 1,
+      "message": "\"manually\"?",
+      "range": {
+        "startLine": 40,
+        "startChar": 34,
+        "endLine": 40,
+        "endChar": 44
+      },
+      "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6328ac23_e11df6d2",
+        "filename": "rtc_base/refcount.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-10-04T09:36:13Z",
+      "side": 1,
+      "message": "\"compile-time duck-typing\"",
+      "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cceafa12_210c77fd",
+        "filename": "rtc_base/refcountedobject.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-10-04T09:36:13Z",
+      "side": 1,
+      "message": "Is this a left-over from a refactoring?",
+      "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd248cc1_77f96467",
+        "filename": "rtc_base/refcountedobject.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-10-04T09:36:13Z",
+      "side": 1,
+      "message": "Rather than using both if and ?: with the same condition, put one return in each if branch?",
+      "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1958e983_a79883cd",
+        "filename": "sdk/android/src/jni/jni_helpers.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-10-04T09:36:13Z",
+      "side": 1,
+      "message": "I would have expected a comparison with kDroppedLastRef here...",
+      "revId": "ef53bac1697f034bc31aea666ce0bb321e6a2f5a",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
