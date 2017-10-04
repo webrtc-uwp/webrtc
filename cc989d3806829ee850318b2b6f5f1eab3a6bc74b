@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3619424f_e219a8c3",
+        "filename": "modules/video_coding/codecs/vp8/screenshare_layers.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 5524
+      },
+      "writtenOn": "2017-10-04T09:17:47Z",
+      "side": 1,
+      "message": "On thing we\u0027re not checking here is that we don\u0027t reference any higher-layer frame past the previous sync-frame. Is that because we only have two layers so it can\u0027t really happen?\n\nI\u0027m thinking that if we add that, all of this could be a valid base class.",
+      "revId": "cc989d3806829ee850318b2b6f5f1eab3a6bc74b",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9fbe1ba7_4cbcda96",
+        "filename": "modules/video_coding/codecs/vp8/screenshare_layers.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 500,
+      "author": {
+        "id": 5524
+      },
+      "writtenOn": "2017-10-04T09:17:47Z",
+      "side": 1,
+      "message": "I think this should be\nif (flags \u0026 TemporalLayers::BufferFlags::kUpdate || frame_is_keyframe) { ... }\nSince if it\u0027s a key-frame, all buffers will be updated.",
+      "range": {
+        "startLine": 500,
+        "startChar": 53,
+        "endLine": 500,
+        "endChar": 0
+      },
+      "revId": "cc989d3806829ee850318b2b6f5f1eab3a6bc74b",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
