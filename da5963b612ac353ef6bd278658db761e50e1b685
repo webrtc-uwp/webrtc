@@ -97,6 +97,30 @@
     },
     {
       "key": {
+        "uuid": "57e6a0f2_ac8d9a5b",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-10-04T10:32:23Z",
+      "side": 1,
+      "message": "clarification would be nice, something like\nDo not calculate InOrder for recovered packets when packet passed as RtpPacketReceived and that information is available.",
+      "parentUuid": "d5dd64e2_7405a422",
+      "range": {
+        "startLine": 200,
+        "startChar": 30,
+        "endLine": 200,
+        "endChar": 0
+      },
+      "revId": "da5963b612ac353ef6bd278658db761e50e1b685",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ade73939_2ce8f6e7",
         "filename": "modules/rtp_rtcp/source/rtp_receiver_unittest.cc",
         "patchSetId": 7
@@ -204,6 +228,30 @@
       "side": 1,
       "message": "Any name suggestions? \"RecordsInOrderTimestamps\", \"RecordsTimestampAtSeqnoJump\"?",
       "parentUuid": "5fda242f_b07958dd",
+      "range": {
+        "startLine": 340,
+        "startChar": 44,
+        "endLine": 340,
+        "endChar": 0
+      },
+      "revId": "da5963b612ac353ef6bd278658db761e50e1b685",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5292094d_f2de738d",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_unittest.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-10-04T10:32:23Z",
+      "side": 1,
+      "message": "using guidance of the\nhttps://testing.googleblog.com/2014/10/testing-on-toilet-writing-descriptive.html\nCan suggest \nUpdatesTimestampsWhenPacketArrivesInOrder\nUpdatesTimestampsWhenStreamResets\nDoesntUpdateTimestampsWhenPacketArrivesSlightlyOutOfOrder",
+      "parentUuid": "87fa8cb5_31785284",
       "range": {
         "startLine": 340,
         "startChar": 44,
