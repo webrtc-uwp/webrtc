@@ -1,0 +1,182 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f2ce5592_d97505af",
+        "filename": "call/call.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 795,
+      "author": {
+        "id": 5023
+      },
+      "writtenOn": "2017-10-04T14:35:33Z",
+      "side": 1,
+      "message": "nit: Change order of definitions.",
+      "range": {
+        "startLine": 794,
+        "startChar": 0,
+        "endLine": 795,
+        "endChar": 42
+      },
+      "revId": "8cfc1b08d85df83cea0e8fb0fbde799cad8879c9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8560f812_682cd8fb",
+        "filename": "video/payload_router.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 5023
+      },
+      "writtenOn": "2017-10-04T14:35:33Z",
+      "side": 1,
+      "message": "Here we are implicitly assuming that |ssrcs| is sorted in simulcast order. That should be fine with the current implementation, since |ssrcs| is set from the VideoSendStream::Config::Rtp struct. But can we add some test here, to avoid having a bad surprise in the future?\n\nI guess we can\u0027t get the SSRCs from the |rtp_modules|, since they are set later in the VideoSendStreamImpl ctor... :(",
+      "range": {
+        "startLine": 137,
+        "startChar": 2,
+        "endLine": 137,
+        "endChar": 29
+      },
+      "revId": "8cfc1b08d85df83cea0e8fb0fbde799cad8879c9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6332281d_25958506",
+        "filename": "video/payload_router.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 5023
+      },
+      "writtenOn": "2017-10-04T14:35:33Z",
+      "side": 1,
+      "message": "Do we need to use a unique_ptr here, or could we use just a regular object?",
+      "range": {
+        "startLine": 145,
+        "startChar": 8,
+        "endLine": 145,
+        "endChar": 23
+      },
+      "revId": "8cfc1b08d85df83cea0e8fb0fbde799cad8879c9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b26d0aff_5ab4d9fd",
+        "filename": "video/payload_router.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 5023
+      },
+      "writtenOn": "2017-10-04T14:35:33Z",
+      "side": 1,
+      "message": "Maybe add RTC_DCHECK_LT(stream_index, params_.size());",
+      "range": {
+        "startLine": 210,
+        "startChar": 2,
+        "endLine": 210,
+        "endChar": 51
+      },
+      "revId": "8cfc1b08d85df83cea0e8fb0fbde799cad8879c9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f0e3b3c_cb0f0474",
+        "filename": "video/payload_router.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 5023
+      },
+      "writtenOn": "2017-10-04T14:35:33Z",
+      "side": 1,
+      "message": "Maybe add a comment what this does, and why?",
+      "range": {
+        "startLine": 211,
+        "startChar": 2,
+        "endLine": 211,
+        "endChar": 33
+      },
+      "revId": "8cfc1b08d85df83cea0e8fb0fbde799cad8879c9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32a5496d_5f7fa425",
+        "filename": "video/payload_router.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 5023
+      },
+      "writtenOn": "2017-10-04T14:35:33Z",
+      "side": 1,
+      "message": "See comment below.",
+      "range": {
+        "startLine": 70,
+        "startChar": 2,
+        "endLine": 70,
+        "endChar": 29
+      },
+      "revId": "8cfc1b08d85df83cea0e8fb0fbde799cad8879c9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce7d2ab5_f01127da",
+        "filename": "video/picture_id_tests.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 5023
+      },
+      "writtenOn": "2017-10-04T14:35:33Z",
+      "side": 1,
+      "message": "Nice!",
+      "revId": "8cfc1b08d85df83cea0e8fb0fbde799cad8879c9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6628c1dd_9bf80c21",
+        "filename": "video/video_send_stream.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 5023
+      },
+      "writtenOn": "2017-10-04T14:35:33Z",
+      "side": 1,
+      "message": "Might as well replace these with a \u0027using\u0027 clause instead.",
+      "range": {
+        "startLine": 80,
+        "startChar": 2,
+        "endLine": 80,
+        "endChar": 51
+      },
+      "revId": "8cfc1b08d85df83cea0e8fb0fbde799cad8879c9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
