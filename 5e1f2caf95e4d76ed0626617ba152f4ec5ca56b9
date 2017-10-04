@@ -52,6 +52,24 @@
       "revId": "5e1f2caf95e4d76ed0626617ba152f4ec5ca56b9",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55d1cbdf_dba91877",
+        "filename": "pc/webrtcsession.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 991,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-04T13:06:51Z",
+      "side": 1,
+      "message": "Thanks for the explanation, I\u0027m not up-to-date regarding the BaseChannel work.\n\nAt my end, the short-term objective is to get rtp extensions out of VideoReceiveStream and AudioReceiveStream, and move parsing from Call to RtpReceiveStreamController, which I hope should align well with BaseChannel/TransportController work. Adding a SetVideoReceiveHeaderExtensions method to Call seemed like a reasonable intermediate step, but I\u0027m happy go some other route if you can suggest one.\n\nWhen we get to injecting RtpStreamReceiverController and RtpTransportControllerSend into Call, who should be owning those objects?",
+      "parentUuid": "008269e5_08a0f653",
+      "revId": "5e1f2caf95e4d76ed0626617ba152f4ec5ca56b9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
