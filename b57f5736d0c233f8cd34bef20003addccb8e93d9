@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eeab78c6_cab53652",
+        "filename": "PRESUBMIT.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 5017
+      },
+      "writtenOn": "2017-10-04T08:55:29Z",
+      "side": 1,
+      "message": "Replace with \"download all the DEPS entries?\".\nThe old error message was outdated and referred to the ugly days when we were symlinking into a Chromium checkout.",
+      "range": {
+        "startLine": 423,
+        "startChar": 9,
+        "endLine": 423,
+        "endChar": 50
+      },
+      "revId": "b57f5736d0c233f8cd34bef20003addccb8e93d9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
