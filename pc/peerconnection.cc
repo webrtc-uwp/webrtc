@@ -2526,12 +2526,11 @@ bool PeerConnection::StartRtcEventLog_w(rtc::PlatformFile file,
   }
 
   // TODO(eladalon): It would be better to not allow negative values into PC.
-  const size_t max_size = (max_size_bytes < 0)
-                              ? RtcEventLog::kUnlimitedOutput
-                              : rtc::saturated_cast<size_t>(max_size_bytes);
+  max_size_bytes =
+      (max_size_bytes < 0) ? 0 : rtc::saturated_cast<size_t>(max_size_bytes);
 
   return event_log_->StartLogging(
-      rtc::MakeUnique<RtcEventLogOutputFile>(file, max_size));
+      rtc::MakeUnique<RtcEventLogOutputFile>(file, max_size_bytes));
 }
 
 void PeerConnection::StopRtcEventLog_w() {
