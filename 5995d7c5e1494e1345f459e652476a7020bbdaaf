@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da2a7d11_1554c720",
+        "filename": "modules/rtp_rtcp/include/rtp_payload_registry.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-10-04T08:33:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7607440d_9784483d",
+      "range": {
+        "startLine": 24,
+        "startChar": 17,
+        "endLine": 24,
+        "endChar": 0
+      },
+      "revId": "5995d7c5e1494e1345f459e652476a7020bbdaaf",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "61645059_3da87681",
         "filename": "modules/rtp_rtcp/include/rtp_receiver.h",
         "patchSetId": 4
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "456e9951_f821bea8",
+        "filename": "modules/rtp_rtcp/include/rtp_receiver.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-10-04T08:33:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "61645059_3da87681",
+      "range": {
+        "startLine": 22,
+        "startChar": 17,
+        "endLine": 22,
+        "endChar": 0
+      },
+      "revId": "5995d7c5e1494e1345f459e652476a7020bbdaaf",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d328cea0_78fd7135",
         "filename": "modules/rtp_rtcp/source/rtp_payload_registry.cc",
         "patchSetId": 4
@@ -59,6 +107,30 @@
       "writtenOn": "2017-10-03T13:58:53Z",
       "side": 1,
       "message": "may be ...is_audio() \u0026\u0026 audio_format.Matches(..)\ninstead of ? : false;",
+      "range": {
+        "startLine": 27,
+        "startChar": 40,
+        "endLine": 27,
+        "endChar": 0
+      },
+      "revId": "5995d7c5e1494e1345f459e652476a7020bbdaaf",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7bf7ae2e_6839f4e9",
+        "filename": "modules/rtp_rtcp/source/rtp_payload_registry.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-10-04T08:33:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d328cea0_78fd7135",
       "range": {
         "startLine": 27,
         "startChar": 40,
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "0db1de8e_2a176611",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-10-04T08:33:46Z",
+      "side": 1,
+      "message": "I actually find this sort of construction more readable in circumstances where the reader might reasonably suspect that both the if and the else branch should actually do something, because it makes it clear that the author has really considered that case and explicitly chosen to do nothing.\n\nOne can do the same thing with just a comment like you suggest, of course, but that means taking out a bit of C++ flow control syntax and replacing it with English. This is contrary to the usual advice of adding comments only when the code can\u0027t reasonably be made self-documenting.",
+      "parentUuid": "72853d0c_13bf14af",
+      "range": {
+        "startLine": 281,
+        "startChar": 18,
+        "endLine": 281,
+        "endChar": 0
+      },
+      "revId": "5995d7c5e1494e1345f459e652476a7020bbdaaf",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1f81ee47_dbd9a8d6",
         "filename": "voice_engine/channel.cc",
         "patchSetId": 4
@@ -105,6 +201,30 @@
       "writtenOn": "2017-10-03T13:58:53Z",
       "side": 1,
       "message": "may use less indentations or rather same indentation for all checks:\nif (!audio_codec_-\u003eCodec(idx, \u0026code) \u003d\u003d -1 ) {\n  LOG(WARNING);\n  continue;\n}\nif (!decoded_factory_-\u003eIsSupported()) {\n  LOG(WARNING);\n  continue;\n}\nif (rtp_receiver_-\u003eRegisterPayload() \u003d\u003d -1) {\n  LOG(WARNING);\n  continue; //just for consistency.\n}",
+      "range": {
+        "startLine": 1691,
+        "startChar": 20,
+        "endLine": 1691,
+        "endChar": 0
+      },
+      "revId": "5995d7c5e1494e1345f459e652476a7020bbdaaf",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a2d7abb_8288ddfb",
+        "filename": "voice_engine/channel.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 1691,
+      "author": {
+        "id": 5126
+      },
+      "writtenOn": "2017-10-04T08:33:46Z",
+      "side": 1,
+      "message": "I reduced the indentation a bit by using one `continue`, but I didn\u0027t want to duplicate the second logging call like you suggested, and I skipped adding a no-op `continue` just for consistency.",
+      "parentUuid": "1f81ee47_dbd9a8d6",
       "range": {
         "startLine": 1691,
         "startChar": 20,
