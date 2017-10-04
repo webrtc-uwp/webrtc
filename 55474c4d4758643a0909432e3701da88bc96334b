@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7c21c2a_f6404aa1",
+        "filename": "PRESUBMIT.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 5017
+      },
+      "writtenOn": "2017-10-04T11:55:30Z",
+      "side": 1,
+      "message": "Force submitting the CL is just going to bite us the next time a .gn file is changed in the tools_webrtc/presubmit_checks_lib/testdata tree.\n\nTo fix it properly, just filter out the entries in gn_files that are located in the tools_webrtc/presubmit_checks_lib/testdata/ tree.",
+      "range": {
+        "startLine": 385,
+        "startChar": 13,
+        "endLine": 385,
+        "endChar": 77
+      },
+      "revId": "55474c4d4758643a0909432e3701da88bc96334b",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
