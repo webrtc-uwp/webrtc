@@ -1,0 +1,284 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0121a15d_94be4b66",
+        "filename": "rtc_base/opensslidentity.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 5602
+      },
+      "writtenOn": "2017-10-04T18:44:21Z",
+      "side": 1,
+      "message": "This doesn\u0027t correctly handle parse errors. Reading PEM in a loop is kind of annoying with OpenSSL\u0027s APIs. What you need to do is consider it an error unless it fails with ERR_LIB_PEM/PEM_R_NO_START_LINE. See https://cs.chromium.org/chromium/src/third_party/boringssl/src/ssl/ssl_file.cc?rcl\u003de9c7b1c8ae85e5625e9d24d9e20ccedeaaeb0d0a\u0026l\u003d55",
+      "revId": "dc0fc739e28fa2ec94fb88ef0907d0b82f07fdb6",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29f9b854_99234aa4",
+        "filename": "rtc_base/opensslidentity.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 5602
+      },
+      "writtenOn": "2017-10-04T18:44:21Z",
+      "side": 1,
+      "message": "Note this is slightly changing semantics to WebRTC\u0027s public API. What used to return one certificate not returns a certificate with a chain. I defer to WebRTC folks on whether this is an acceptable behavior change or requires a separate function.",
+      "revId": "dc0fc739e28fa2ec94fb88ef0907d0b82f07fdb6",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b66210ab_e7926e2f",
+        "filename": "rtc_base/opensslidentity.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 5602
+      },
+      "writtenOn": "2017-10-04T18:44:21Z",
+      "side": 1,
+      "message": "This leaks the x509s array.",
+      "revId": "dc0fc739e28fa2ec94fb88ef0907d0b82f07fdb6",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ec37edc_b3768602",
+        "filename": "rtc_base/opensslidentity.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 5602
+      },
+      "writtenOn": "2017-10-04T18:44:21Z",
+      "side": 1,
+      "message": "This leaks stack_x509.\n\nAlso see comment in previous CL. What might be cleaner is if OpenSSLCertificate stored a STACK_OF(X509) so you only have to convert representations in one direction. This also avoids all the downcasts you\u0027re doing.\n\n(In ToPEMString, what you can do then is just call PEM_write_bio_X509 on each X509 in the chain. Your current implementation does a lot more allocations than necessary.)",
+      "revId": "dc0fc739e28fa2ec94fb88ef0907d0b82f07fdb6",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d941fba6_830d4360",
+        "filename": "rtc_base/opensslidentity.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 459,
+      "author": {
+        "id": 5602
+      },
+      "writtenOn": "2017-10-04T18:44:21Z",
+      "side": 1,
+      "message": "All of your reinterpret_cast\u003cOpenSSLCertificate*\u003e must be static_casts. Downcasts change pointers in C++ when multiple inheritance or interfaces are involved. If OpenSSLCertificate ever implemented a second interface, you would end up introducing a memory error (security bug).",
+      "range": {
+        "startLine": 459,
+        "startChar": 8,
+        "endLine": 459,
+        "endChar": 24
+      },
+      "revId": "dc0fc739e28fa2ec94fb88ef0907d0b82f07fdb6",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "122c6492_9b66fd12",
+        "filename": "rtc_base/opensslidentity.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 609,
+      "author": {
+        "id": 5602
+      },
+      "writtenOn": "2017-10-04T18:44:21Z",
+      "side": 1,
+      "message": "a chain is",
+      "range": {
+        "startLine": 609,
+        "startChar": 8,
+        "endLine": 609,
+        "endChar": 18
+      },
+      "revId": "dc0fc739e28fa2ec94fb88ef0907d0b82f07fdb6",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4b5f5da0_e6c9eb50",
+        "filename": "rtc_base/opensslidentity.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 611,
+      "author": {
+        "id": 5602
+      },
+      "writtenOn": "2017-10-04T18:44:21Z",
+      "side": 1,
+      "message": "Rather than checking this at every iteration, it probably makes more sense to wrap the whole thing in an if.",
+      "range": {
+        "startLine": 611,
+        "startChar": 21,
+        "endLine": 611,
+        "endChar": 42
+      },
+      "revId": "dc0fc739e28fa2ec94fb88ef0907d0b82f07fdb6",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71ef2117_a18be4dd",
+        "filename": "rtc_base/opensslidentity.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 614,
+      "author": {
+        "id": 5602
+      },
+      "writtenOn": "2017-10-04T18:44:21Z",
+      "side": 1,
+      "message": "Since this cares about OpenSSL support, always check errors with !\u003d 1, not just plain !. BoringSSL will only return 0 and 1, but OpenSSL likes to return -1 too.",
+      "revId": "dc0fc739e28fa2ec94fb88ef0907d0b82f07fdb6",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a3b684d_ce4aa4e1",
+        "filename": "rtc_base/opensslidentity.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 5602
+      },
+      "writtenOn": "2017-10-04T18:44:21Z",
+      "side": 1,
+      "message": "std::vector\u003cstd::unique_ptr\u003cSSLCertificate\u003e\u003e cert_chain_;",
+      "revId": "dc0fc739e28fa2ec94fb88ef0907d0b82f07fdb6",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da631994_19502572",
+        "filename": "rtc_base/opensslidentity_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 5602
+      },
+      "writtenOn": "2017-10-04T18:44:21Z",
+      "side": 1,
+      "message": "2u\n\n(Without (size_t). In C++, you also should write static_cast\u003csize_t\u003e(foo) rather than (size_t)foo anyway, but it\u0027s not necessary here.)",
+      "range": {
+        "startLine": 113,
+        "startChar": 30,
+        "endLine": 113,
+        "endChar": 39
+      },
+      "revId": "dc0fc739e28fa2ec94fb88ef0907d0b82f07fdb6",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5d0ba80_d57a847e",
+        "filename": "rtc_base/opensslidentity_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 5602
+      },
+      "writtenOn": "2017-10-04T18:44:21Z",
+      "side": 1,
+      "message": "1u",
+      "range": {
+        "startLine": 144,
+        "startChar": 48,
+        "endLine": 144,
+        "endChar": 57
+      },
+      "revId": "dc0fc739e28fa2ec94fb88ef0907d0b82f07fdb6",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e7372987_f80140ce",
+        "filename": "rtc_base/opensslstreamadapter.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 1116,
+      "author": {
+        "id": 5602
+      },
+      "writtenOn": "2017-10-04T18:44:21Z",
+      "side": 1,
+      "message": "Per the previous CL, where did 3 come from? This also seems far too short, especially with the \u003e\u003d. Why are you adding a length check here to begin with? Note that the SSL object is retaining the chain anyway and there is a limit internally on the total amount of certificate data that may be sent from the server.\n\nEspecially considering the bug below, it seems to me you should delete this check altogether.",
+      "range": {
+        "startLine": 1116,
+        "startChar": 25,
+        "endLine": 1116,
+        "endChar": 55
+      },
+      "revId": "dc0fc739e28fa2ec94fb88ef0907d0b82f07fdb6",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf968e7c_226bca05",
+        "filename": "rtc_base/opensslstreamadapter.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 1119,
+      "author": {
+        "id": 5602
+      },
+      "writtenOn": "2017-10-04T18:44:21Z",
+      "side": 1,
+      "message": "Did you add any tests for this case? This breaks all sorts of invariants since you are returning success from the callback and not filling in the peer_certificate_.",
+      "revId": "dc0fc739e28fa2ec94fb88ef0907d0b82f07fdb6",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d24e0b44_bf8f2728",
+        "filename": "rtc_base/sslstreamadapter_unittest.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 985,
+      "author": {
+        "id": 5602
+      },
+      "writtenOn": "2017-10-04T18:44:21Z",
+      "side": 1,
+      "message": "This can just be 1u",
+      "range": {
+        "startLine": 985,
+        "startChar": 46,
+        "endLine": 985,
+        "endChar": 55
+      },
+      "revId": "dc0fc739e28fa2ec94fb88ef0907d0b82f07fdb6",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    }
+  ]
+}
