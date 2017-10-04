@@ -22,6 +22,30 @@
       "revId": "b57f5736d0c233f8cd34bef20003addccb8e93d9",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87cf44b7_5c7dcfae",
+        "filename": "PRESUBMIT.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 5114
+      },
+      "writtenOn": "2017-10-04T18:18:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eeab78c6_cab53652",
+      "range": {
+        "startLine": 423,
+        "startChar": 9,
+        "endLine": 423,
+        "endChar": 50
+      },
+      "revId": "b57f5736d0c233f8cd34bef20003addccb8e93d9",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": false
     }
   ]
 }
