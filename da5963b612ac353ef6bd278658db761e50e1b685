@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "2a51b261_6fa048da",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 5019
+      },
+      "writtenOn": "2017-10-04T09:02:09Z",
+      "side": 1,
+      "message": "One way to deal with it - pass recovered flag as a boolean (but not as last parameter to break IncomingRtpPacket signature)\n\nAnother way - accept that though it is unlikely recovered packet happen to be in order, it still can be and then it is valid to update sequence_number/timestamps.\n\nEither way I suggest to resolve TODO comment in this CL instead of keeping it as is.",
+      "parentUuid": "28167b7c_749ff15d",
+      "range": {
+        "startLine": 200,
+        "startChar": 30,
+        "endLine": 200,
+        "endChar": 0
+      },
+      "revId": "da5963b612ac353ef6bd278658db761e50e1b685",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ade73939_2ce8f6e7",
         "filename": "modules/rtp_rtcp/source/rtp_receiver_unittest.cc",
         "patchSetId": 7
