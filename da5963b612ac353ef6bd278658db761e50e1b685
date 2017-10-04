@@ -117,6 +117,30 @@
       "revId": "da5963b612ac353ef6bd278658db761e50e1b685",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ab1c6e2_8f46d8d7",
+        "filename": "modules/rtp_rtcp/source/rtp_receiver_unittest.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 5234
+      },
+      "writtenOn": "2017-10-04T09:08:07Z",
+      "side": 1,
+      "message": "But on second thought, tests make little sense before this change. The tests would have to be updated with a true or false in_order argument on each call to IncomingRtpPacket, to tell the code whether or not the timestamp should be recorded.\n\nSo the point of the tests is to exercise the new logic involving the local InOrderPacket function.",
+      "parentUuid": "c51701e8_67e5f1c2",
+      "range": {
+        "startLine": 340,
+        "startChar": 44,
+        "endLine": 340,
+        "endChar": 0
+      },
+      "revId": "da5963b612ac353ef6bd278658db761e50e1b685",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
