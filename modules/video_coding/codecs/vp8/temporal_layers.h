@@ -171,12 +171,28 @@ class TemporalLayersListener {
 // each UpdateLayersConfig() of a corresponding TemporalLayers class.
 class TemporalLayersChecker {
  public:
-  TemporalLayersChecker() {}
+  TemporalLayersChecker(int num_temporal_layers, uint8_t initial_tl0_pic_idx);
   virtual ~TemporalLayersChecker() {}
 
   virtual bool CheckTemporalConfig(
       bool frame_is_keyframe,
-      const TemporalLayers::FrameConfig& frame_config) = 0;
+      const TemporalLayers::FrameConfig& frame_config);
+
+ private:
+  struct BufferState {
+    BufferState() : is_keyframe(true), temporal_layer(0) {}
+    bool is_keyframe;
+    uint8_t temporal_layer;
+  };
+  bool CheckAndUpdateBufferState(BufferState* state,
+                                 bool* need_sync,
+                                 bool frame_is_keyframe,
+                                 uint8_t temporal_layer,
+                                 webrtc::TemporalLayers::BufferFlags flags);
+  BufferState last_;
+  BufferState arf_;
+  BufferState golden_;
+  int num_temporal_layers_;
 };
 
 }  // namespace webrtc
