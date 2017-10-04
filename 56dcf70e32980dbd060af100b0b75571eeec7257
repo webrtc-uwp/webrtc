@@ -16,6 +16,254 @@
       "revId": "56dcf70e32980dbd060af100b0b75571eeec7257",
       "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb4dd937_6c09ab04",
+        "filename": "webrtc/api/peerconnectioninterface.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 781,
+      "author": {
+        "id": 5525
+      },
+      "writtenOn": "2017-10-04T12:15:04Z",
+      "side": 1,
+      "message": "Would RTCConfiguration contain all objects that are possible to configure in on a PeerConnection? In that case it doesn\u0027t seem right since we only want to set the bitrate allocation strategy here?",
+      "parentUuid": "9d158f60_5bd9c873",
+      "revId": "56dcf70e32980dbd060af100b0b75571eeec7257",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "10f5e130_601a8b0b",
+        "filename": "webrtc/rtc_base/bitrateallocationstrategy.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 5525
+      },
+      "writtenOn": "2017-10-04T12:15:04Z",
+      "side": 1,
+      "message": "Remainder",
+      "range": {
+        "startLine": 48,
+        "startChar": 31,
+        "endLine": 48,
+        "endChar": 39
+      },
+      "revId": "56dcf70e32980dbd060af100b0b75571eeec7257",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a53f6903_7ed20a6d",
+        "filename": "webrtc/rtc_base/bitrateallocationstrategy.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 5525
+      },
+      "writtenOn": "2017-10-04T12:15:04Z",
+      "side": 1,
+      "message": "Personally I\u0027d prefer a range-based loop with an external counter than this type of loop and computing an index using pointer differences.",
+      "range": {
+        "startLine": 51,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 71
+      },
+      "revId": "56dcf70e32980dbd060af100b0b75571eeec7257",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c90b892a_ceeefa15",
+        "filename": "webrtc/rtc_base/bitrateallocationstrategy.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 5525
+      },
+      "writtenOn": "2017-10-04T12:15:04Z",
+      "side": 1,
+      "message": "++track_configs_it",
+      "range": {
+        "startLine": 52,
+        "startChar": 50,
+        "endLine": 52,
+        "endChar": 66
+      },
+      "revId": "56dcf70e32980dbd060af100b0b75571eeec7257",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce834a24_58e5fb00",
+        "filename": "webrtc/rtc_base/bitrateallocationstrategy.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 5525
+      },
+      "writtenOn": "2017-10-04T12:15:04Z",
+      "side": 1,
+      "message": "make_pair",
+      "range": {
+        "startLine": 53,
+        "startChar": 40,
+        "endLine": 53,
+        "endChar": 49
+      },
+      "revId": "56dcf70e32980dbd060af100b0b75571eeec7257",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a6a89bba_e416946e",
+        "filename": "webrtc/rtc_base/bitrateallocationstrategy.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 5525
+      },
+      "writtenOn": "2017-10-04T12:15:04Z",
+      "side": 1,
+      "message": "Remove parentheses",
+      "range": {
+        "startLine": 57,
+        "startChar": 40,
+        "endLine": 57,
+        "endChar": 41
+      },
+      "revId": "56dcf70e32980dbd060af100b0b75571eeec7257",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "394ff645_46993627",
+        "filename": "webrtc/rtc_base/bitrateallocationstrategy.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 5525
+      },
+      "writtenOn": "2017-10-04T12:15:04Z",
+      "side": 1,
+      "message": "const auto*\u0026?",
+      "range": {
+        "startLine": 88,
+        "startChar": 7,
+        "endLine": 88,
+        "endChar": 13
+      },
+      "revId": "56dcf70e32980dbd060af100b0b75571eeec7257",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1753236_a8a80288",
+        "filename": "webrtc/rtc_base/bitrateallocationstrategy.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 5525
+      },
+      "writtenOn": "2017-10-04T12:15:04Z",
+      "side": 1,
+      "message": "!audio_track_config or audio_track_config \u003d\u003d nullptr",
+      "range": {
+        "startLine": 95,
+        "startChar": 6,
+        "endLine": 95,
+        "endChar": 24
+      },
+      "revId": "56dcf70e32980dbd060af100b0b75571eeec7257",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "78414910_73deadc2",
+        "filename": "webrtc/rtc_base/bitrateallocationstrategy.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 5525
+      },
+      "writtenOn": "2017-10-04T12:15:04Z",
+      "side": 1,
+      "message": "audio_track_config?",
+      "range": {
+        "startLine": 112,
+        "startChar": 25,
+        "endLine": 112,
+        "endChar": 43
+      },
+      "revId": "56dcf70e32980dbd060af100b0b75571eeec7257",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "612a43c5_e2b0b729",
+        "filename": "webrtc/rtc_base/bitrateallocationstrategy.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 5525
+      },
+      "writtenOn": "2017-10-04T12:15:04Z",
+      "side": 1,
+      "message": "This is a way of making DistributeBitratesEvenly to give safe_sufficient_audio_bitrate to the audio stream first, right? Maybe comment on that. Took me a while to understand. :)",
+      "range": {
+        "startLine": 115,
+        "startChar": 43,
+        "endLine": 115,
+        "endChar": 66
+      },
+      "revId": "56dcf70e32980dbd060af100b0b75571eeec7257",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0c08cfdc_e5a9cd8a",
+        "filename": "webrtc/rtc_base/bitrateallocationstrategy.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 5525
+      },
+      "writtenOn": "2017-10-04T12:15:04Z",
+      "side": 1,
+      "message": "Is there a reason that we need to restore this before we return?",
+      "range": {
+        "startLine": 118,
+        "startChar": 42,
+        "endLine": 118,
+        "endChar": 60
+      },
+      "revId": "56dcf70e32980dbd060af100b0b75571eeec7257",
+      "serverId": "58829da1-049c-39fb-b951-ebdcd0984767",
+      "unresolved": true
     }
   ]
 }
