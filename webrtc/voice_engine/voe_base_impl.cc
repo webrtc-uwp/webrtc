@@ -244,9 +244,15 @@ int VoEBaseImpl::Init(
     return -1;
 #else
     // Create the internal ADM implementation.
+#if defined(WINUWP)
+    // Use AudioDeviceModule::kWindowsWasapiAudio for WinUWP
+    shared_->set_audio_device(AudioDeviceModuleImpl::Create(
+        VoEId(shared_->instance_id(), -1), AudioDeviceModule::kWindowsWasapiAudio));
+#else // defined(WINUWP)
     shared_->set_audio_device(AudioDeviceModule::Create(
         VoEId(shared_->instance_id(), -1),
         AudioDeviceModule::kPlatformDefaultAudio));
+#endif // defined(WINUWP)
     if (shared_->audio_device() == nullptr) {
       shared_->SetLastError(VE_NO_MEMORY, kTraceCritical,
                             "Init() failed to create the ADM");

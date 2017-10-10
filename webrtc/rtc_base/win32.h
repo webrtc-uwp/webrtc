@@ -90,6 +90,19 @@ inline uint64_t ToUInt64(const FILETIME& ft) {
   return r.QuadPart;
 }
 
+#if defined(WINUWP)
+inline bool IsWindowsVistaOrLater() {
+    return true;
+}
+
+inline bool IsWindowsXpOrLater() {
+    return true;
+}
+
+inline bool IsWindows8OrLater() {
+    return true;
+}
+#else // defined(WINUWP)
 enum WindowsMajorVersions {
   kWindows2000 = 5,
   kWindowsVista = 6,
@@ -112,7 +125,9 @@ inline bool IsWindows8OrLater() {
   return (GetOsVersion(&major, &minor, nullptr) &&
           (major > kWindowsVista || (major == kWindowsVista && minor >= 2)));
 }
+#endif // defined(WINUWP)
 
+#if !defined(WINUWP)
 // Determine the current integrity level of the process.
 bool GetCurrentProcessIntegrityLevel(int* level);
 
@@ -121,8 +136,17 @@ inline bool IsCurrentProcessLowIntegrity() {
   return (GetCurrentProcessIntegrityLevel(&level) &&
       level < SECURITY_MANDATORY_MEDIUM_RID);
 }
+#else /* !defined(WINUWP) */
+inline bool IsCurrentProcessLowIntegrity() {
+  // Assume this is NOT a low integrity level run as application privileges
+  // can be requested in manifest as appropriate.
+  return false;
+}
+#endif // !defined(WINUWP)
+
+bool AdjustCurrentProcessPrivilege(const TCHAR* privilege, bool to_enable);
 
 }  // namespace rtc
 
 #endif  // WEBRTC_WIN
-#endif  // WEBRTC_RTC_BASE_WIN32_H_
+#endif  // WEBRTC_BASE_WIN32_H_

@@ -95,6 +95,7 @@ rtc_static_library("rtc_base_approved") {
   defines = []
   libs = []
   deps = []
+  public_deps = []
   all_dependent_configs = [ ":rtc_base_approved_all_dependent_config" ]
 
   sources = [
@@ -187,6 +188,10 @@ rtc_static_library("rtc_base_approved") {
   ]
 
   deps += [ "..:webrtc_common" ]
+
+  if (is_winuwp) {
+    public_deps += [ "//third_party/winuwp_compat:force_include_all" ]
+  }
 
   if (is_android) {
     libs += [ "log" ]
@@ -357,9 +362,11 @@ rtc_source_set("rtc_task_queue_impl") {
         ]
       }
       if (is_win) {
-        sources = [
-          "task_queue_win.cc",
-        ]
+        if (is_winuwp) {
+          sources += [ "task_queue_stdlib.cc" ]
+        } else {
+          sources += [ "task_queue_win.cc" ]
+        }
       }
     }
   }
@@ -538,6 +545,10 @@ rtc_static_library("rtc_base") {
     "thread.h",
   ]
 
+  if (is_winuwp) {
+    public_deps += [ "//third_party/winuwp_compat:force_include_all" ]
+  }
+
   # TODO(henrike): issue 3307, make rtc_base build with the Chromium default
   # compiler settings.
   suppressed_configs += [ "//build/config/compiler:chromium_code" ]
@@ -575,6 +586,16 @@ rtc_static_library("rtc_base") {
         "win32socketserver.cc",
         "win32socketserver.h",
       ]
+	  if (is_winuwp) {
+        sources += [
+          "loggingserver.cc",
+          "loggingserver.h",
+        ]
+        sources -= [
+          "win32socketserver.cc",
+          "win32socketserver.h",
+        ]
+      }
     }
   }  # !build_with_chromium
 
@@ -642,6 +663,12 @@ rtc_static_library("rtc_base") {
       "win32window.cc",
       "win32window.h",
     ]
+	if (is_winuwp) {
+      sources -= [
+        "win32window.cc",
+        "win32window.h",
+      ]
+    }
 
     libs += [
       "crypt32.lib",
@@ -786,6 +813,9 @@ if (rtc_include_tests) {
       suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
     }
   }
+  if (is_winuwp) {
+      deps += [ "//third_party/winuwp_compat:wrap_main_utf8_cc" ]
+    }
 
   rtc_source_set("rtc_base_nonparallel_tests") {
     testonly = true
@@ -814,7 +844,7 @@ if (rtc_include_tests) {
       "../test:test_support",
       "//testing/gtest",
     ]
-    if (is_win) {
+    if ((is_win) && (!is_winuwp)) {
       sources += [ "win32socketserver_unittest.cc" ]
     }
 
@@ -1032,6 +1062,9 @@ if (rtc_include_tests) {
         "win32_unittest.cc",
         "win32window_unittest.cc",
       ]
+      if (is_winuwp) {
+        sources -= [ "win32window_unittest.cc" ]
+      }
     }
     if (is_mac) {
       sources += [ "macutils_unittest.cc" ]

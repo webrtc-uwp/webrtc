@@ -27,6 +27,9 @@ group("modules") {
     "video_coding",
     "video_processing",
   ]
+  if (is_winuwp) {
+    public_deps -= [ "desktop_capture" ]
+  }
 }
 
 rtc_source_set("module_api") {
@@ -72,6 +75,9 @@ if (rtc_include_tests) {
       "//testing/gmock",
       "//testing/gtest",
     ]
+    if (is_winuwp) {
+      deps -= [ "desktop_capture:desktop_capture_modules_tests" ]
+    }
 
     data = modules_tests_resources
 
@@ -240,6 +246,9 @@ if (rtc_include_tests) {
       "video_coding:video_coding_unittests",
       "video_processing:video_processing_unittests",
     ]
+    if (is_winuwp) {
+      deps -= [ "desktop_capture:desktop_capture_unittests" ]
+    }
 
     data = modules_unittests_resources
 

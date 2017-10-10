@@ -12,6 +12,10 @@
 
 #include <arm_neon.h>
 
+#ifdef _MSC_VER
+#define inline __inline
+#endif /* _MSC_VER */
+
 static inline void DotProductWithScaleNeon(int32_t* cross_correlation,
                                            const int16_t* vector1,
                                            const int16_t* vector2,

@@ -248,7 +248,7 @@ void ReceiveStatisticsProxy::UpdateHistograms() {
     // both.
     RTC_DCHECK(videocontenttypehelpers::GetExperimentId(content_type) == 0 ||
                videocontenttypehelpers::GetSimulcastId(content_type) == 0);
-
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
     int e2e_delay_ms = stats.e2e_delay_counter.Avg(kMinRequiredSamples);
     if (e2e_delay_ms != -1) {
       RTC_HISTOGRAM_COUNTS_SPARSE_10000(
@@ -263,6 +263,7 @@ void ReceiveStatisticsProxy::UpdateHistograms() {
       LOG(LS_INFO) << uma_prefix << ".EndToEndDelayMaxInMs" << uma_suffix << " "
                    << e2e_delay_max_ms;
     }
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
     int interframe_delay_ms =
         stats.interframe_delay_counter.Avg(kMinRequiredSamples);
     if (interframe_delay_ms != -1) {

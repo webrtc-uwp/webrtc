@@ -558,6 +558,10 @@ class Channel
   bool encoder_queue_is_active_ GUARDED_BY(encoder_queue_lock_) = false;
 
   rtc::TaskQueue* encoder_queue_ = nullptr;
+
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
+  int current_endtoend_delay_ms_ GUARDED_BY(ts_stats_lock_);
+#endif /* WEBRTC_FEATURE_END_TO_END_DELAY */
 };
 
 }  // namespace voe

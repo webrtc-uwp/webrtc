@@ -130,4 +130,5 @@ int main(int argc, char** argv) {
   CompareFiles(parser.GetFlag("reference_file").c_str(),
                parser.GetFlag("test_file").c_str(),
                parser.GetFlag("results_file").c_str(), width, height);
+  return 0;
 }

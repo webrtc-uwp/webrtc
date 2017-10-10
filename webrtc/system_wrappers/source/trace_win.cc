@@ -24,6 +24,20 @@ TraceWindows::TraceWindows()
 TraceWindows::~TraceWindows() {
 }
 
+
+#if defined(WINUWP)
+DWORD TraceWindows::timeGetTime() {
+    LARGE_INTEGER freq, t;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&t);
+
+    t.QuadPart = t.QuadPart /* ticks */
+        * 1000 /* ms/s */
+        / freq.QuadPart /* ticks/s */;
+    return t.LowPart;
+}
+#endif
+
 int32_t TraceWindows::AddTime(char* trace_message,
                               const TraceLevel level) const {
   uint32_t dw_current_time = timeGetTime();

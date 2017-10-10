@@ -70,6 +70,9 @@ class VCMTiming {
   int32_t StopDecodeTimer(uint32_t time_stamp,
                           int32_t decode_time_ms,
                           int64_t now_ms,
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
+                          int current_endtoend_delay_ms,
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
                           int64_t render_time_ms);
 
   // Used to report that a frame is passed to decoding. Updates the timestamp
@@ -100,6 +103,9 @@ class VCMTiming {
                           int* target_delay_ms,
                           int* jitter_buffer_ms,
                           int* min_playout_delay_ms,
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
+                          int* current_endtoend_delay_ms,
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
                           int* render_delay_ms) const;
 
   void SetTimingFrameInfo(const TimingFrameInfo& info);
@@ -132,6 +138,9 @@ class VCMTiming {
   int max_playout_delay_ms_ GUARDED_BY(crit_sect_);
   int jitter_delay_ms_ GUARDED_BY(crit_sect_);
   int current_delay_ms_ GUARDED_BY(crit_sect_);
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
+  int current_endtoend_delay_ms_ GUARDED_BY(crit_sect_);
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
   int last_decode_ms_ GUARDED_BY(crit_sect_);
   uint32_t prev_frame_timestamp_ GUARDED_BY(crit_sect_);
   rtc::Optional<TimingFrameInfo> timing_frame_info_ GUARDED_BY(crit_sect_);

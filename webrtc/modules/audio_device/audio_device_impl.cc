@@ -21,7 +21,10 @@
 #include <assert.h>
 #include <string.h>
 
-#if defined(_WIN32)
+#if defined (WINUWP)
+#include "audio_device_wasapi_win.h"
+#elif defined(_WIN32)
+#include "audio_device_wave_win.h"
 #if defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
 #include "audio_device_core_win.h"
 #endif
@@ -195,6 +198,16 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects() {
 // Create the *Windows* implementation of the Audio Device
 //
 #if defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
+#if defined(WINUWP)
+    if (audioLayer == kWindowsWasapiAudio)
+    {
+      LOG(INFO) << "attempting to use the Windows Wasapi Audio APIs...";
+
+      // create *Windows Core Audio* implementation
+      ptrAudioDevice = new AudioDeviceWindowsWasapi(Id());
+      LOG(INFO) << "Windows Wasapi Audio APIs will be utilized";
+    }
+#else // defined(WINUWP)
   if ((audioLayer == kWindowsCoreAudio) ||
       (audioLayer == kPlatformDefaultAudio)) {
     LOG(INFO) << "attempting to use the Windows Core Audio APIs...";
@@ -205,6 +218,7 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects() {
       LOG(INFO) << "Windows Core Audio APIs will be utilized";
     }
   }
+#endif  // defined(WINUWP)
 #endif  // defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
 
 #if defined(WEBRTC_ANDROID)

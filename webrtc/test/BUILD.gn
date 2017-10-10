@@ -189,6 +189,9 @@ if (!build_with_chromium) {
       "//testing/gmock",
       "//testing/gtest",
     ]
+    if (is_winuwp) {
+      deps += [ "//third_party/winuwp_compat:wrap_main_utf8_cc" ]
+    }
   }
 
   rtc_source_set("video_test_support") {
@@ -525,6 +528,13 @@ rtc_source_set("test_common") {
     "statistics.h",
     "win/run_loop_win.cc",
   ]
+  if (is_winuwp) {
+    sources -= [ "win/run_loop_win.cc" ]
+    sources += [
+      "run_loop.cc",
+      "run_loop.h",
+    ]
+  }
   if (!is_win) {
     sources += [
       "run_loop.cc",

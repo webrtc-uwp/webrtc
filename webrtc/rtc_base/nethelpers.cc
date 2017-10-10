@@ -162,7 +162,9 @@ bool HasIPv4Enabled() {
 }
 
 bool HasIPv6Enabled() {
-#if defined(WEBRTC_WIN)
+#if defined(WINUWP)
+    return true;
+#elif defined(WEBRTC_WIN)
   if (IsWindowsVistaOrLater()) {
     return true;
   }

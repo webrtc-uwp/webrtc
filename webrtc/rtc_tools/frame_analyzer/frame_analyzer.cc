@@ -107,4 +107,5 @@ int main(int argc, char** argv) {
   webrtc::test::PrintMaxRepeatedAndSkippedFrames(
       label, parser.GetFlag("stats_file_ref"),
       parser.GetFlag("stats_file_test"));
+  return 0;
 }

@@ -200,10 +200,17 @@ rtc_static_library("audio_device") {
         ]
       }
       if (is_win) {
-        sources += [
-          "win/audio_device_core_win.cc",
-          "win/audio_device_core_win.h",
-        ]
+        if (!is_winuwp) {
+          sources += [
+            "win/audio_device_core_win.cc",
+            "win/audio_device_core_win.h",
+          ]
+        } else {
+          sources += [
+            "win/audio_device_wasapi_win.cc",
+            "win/audio_device_wasapi_win.h",
+          ]
+        }
         libs = [
           # Required for the built-in WASAPI AEC.
           "dmoguids.lib",

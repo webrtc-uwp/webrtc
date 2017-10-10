@@ -89,6 +89,8 @@ if (!build_with_chromium) {
   rtc_static_library("video_capture_internal_impl") {
     configs += [ ":video_capture_internal_impl_warnings_config" ]
 
+    libs = []
+
     deps = [
       ":video_capture_module",
       "../../rtc_base:rtc_base_approved",
@@ -108,25 +110,43 @@ if (!build_with_chromium) {
       ]
     }
     if (is_win) {
-      sources = [
-        "windows/device_info_ds.cc",
-        "windows/device_info_ds.h",
-        "windows/device_info_mf.cc",
-        "windows/device_info_mf.h",
-        "windows/help_functions_ds.cc",
-        "windows/help_functions_ds.h",
-        "windows/sink_filter_ds.cc",
-        "windows/sink_filter_ds.h",
-        "windows/video_capture_ds.cc",
-        "windows/video_capture_ds.h",
-        "windows/video_capture_factory_windows.cc",
-        "windows/video_capture_mf.cc",
-        "windows/video_capture_mf.h",
-      ]
+      if (!is_winuwp) {
+        sources = [
+          "windows/device_info_ds.cc",
+          "windows/device_info_ds.h",
+          "windows/device_info_mf.cc",
+          "windows/device_info_mf.h",
+          "windows/help_functions_ds.cc",
+          "windows/help_functions_ds.h",
+          "windows/sink_filter_ds.cc",
+          "windows/sink_filter_ds.h",
+          "windows/video_capture_ds.cc",
+          "windows/video_capture_ds.h",
+          "windows/video_capture_factory_windows.cc",
+          "windows/video_capture_mf.cc",
+          "windows/video_capture_mf.h",
+        ]
 
-      libs = [ "Strmiids.lib" ]
+        deps += [ "//third_party/winsdk_samples" ]
 
-      deps += [ "//third_party/winsdk_samples" ]
+        libs += [ "Strmiids.lib" ]
+      } else {
+        sources = [
+          "windows/device_info_winuwp.cc",
+          "windows/device_info_winuwp.h",
+          "windows/video_capture_factory_windows.cc",
+          "windows/video_capture_sink_winuwp.cc",
+          "windows/video_capture_sink_winuwp.h",
+          "windows/video_capture_winuwp.cc",
+          "windows/video_capture_winuwp.h",
+        ]
+
+        deps += [ "//third_party/libyuv" ]
+        libs += [ 
+          "Mfplat.lib",
+          "mfuuid.lib",
+        ]
+      }
     }
     if (is_ios || is_mac) {
       sources = [

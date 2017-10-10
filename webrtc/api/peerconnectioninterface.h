@@ -105,6 +105,7 @@ namespace cricket {
 class MediaEngineInterface;
 class WebRtcVideoDecoderFactory;
 class WebRtcVideoEncoderFactory;
+class ChannelManager;
 }
 
 namespace webrtc {
@@ -1065,6 +1066,11 @@ rtc::scoped_refptr<PeerConnectionFactoryInterface> CreatePeerConnectionFactory(
 rtc::scoped_refptr<PeerConnectionFactoryInterface>
 CreatePeerConnectionFactory();
 
+rtc::scoped_refptr<PeerConnectionFactoryInterface>
+CreatePeerConnectionFactory(
+    cricket::WebRtcVideoEncoderFactory* encoder_factory,
+    cricket::WebRtcVideoDecoderFactory* decoder_factory);
+    
 // Create a new instance of PeerConnectionFactoryInterface.
 //
 // |network_thread|, |worker_thread| and |signaling_thread| are

@@ -11,7 +11,9 @@
 #include <time.h>
 
 #if defined(WEBRTC_WIN)
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif //ndef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -691,7 +693,7 @@ std::string quote(const std::string& str) {
   return result;
 }
 
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) && !defined(WINUWP)
 struct NegotiateAuthContext : public HttpAuthContext {
   CredHandle cred;
   CtxtHandle ctx;
@@ -708,7 +710,7 @@ struct NegotiateAuthContext : public HttpAuthContext {
     FreeCredentialsHandle(&cred);
   }
 };
-#endif // WEBRTC_WIN
+#endif // defined(WEBRTC_WIN) && !defined(WINUWP)
 
 HttpAuthResult HttpAuthenticate(
   const char * challenge, size_t len,
@@ -814,7 +816,7 @@ HttpAuthResult HttpAuthenticate(
     return HAR_RESPONSE;
   }
 
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) && !defined(WINUWP)
 #if 1
   bool want_negotiate = (_stricmp(auth_method.c_str(), "negotiate") == 0);
   bool want_ntlm = (_stricmp(auth_method.c_str(), "ntlm") == 0);

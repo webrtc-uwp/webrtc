@@ -309,4 +309,5 @@ int main(int argc, char* argv[]) {
   test.TearDown();
   if (delay_log != NULL)
     fclose(delay_log);
+  return 0;
 }

@@ -58,20 +58,25 @@ bool IsThreadRefEqual(const PlatformThreadRef& a, const PlatformThreadRef& b) {
 #endif
 }
 
-void SetCurrentThreadName(const char* name) {
 #if defined(WEBRTC_WIN)
-  struct {
-    DWORD dwType;
-    LPCSTR szName;
-    DWORD dwThreadID;
-    DWORD dwFlags;
-  } threadname_info = {0x1000, name, static_cast<DWORD>(-1), 0};
-
+void SetCurrentThreadNameHelper(THREADNAME_INFO threadname_info) {
   __try {
     ::RaiseException(0x406D1388, 0, sizeof(threadname_info) / sizeof(DWORD),
-                     reinterpret_cast<ULONG_PTR*>(&threadname_info));
-  } __except (EXCEPTION_EXECUTE_HANDLER) {
+      reinterpret_cast<ULONG_PTR*>(&threadname_info));
   }
+  __except (EXCEPTION_EXECUTE_HANDLER) {
+  }
+}
+#endif  // WEBRTC_WIN
+
+void SetCurrentThreadName(const char* name) {
+#if defined(WEBRTC_WIN)
+  THREADNAME_INFO threadname_info;
+  threadname_info.dwType = 0x1000;
+  threadname_info.szName = name;
+  threadname_info.dwThreadID = static_cast<DWORD>(-1);
+  threadname_info.dwFlags = 0;
+  SetCurrentThreadNameHelper(threadname_info);
 #elif defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID)
   prctl(PR_SET_NAME, reinterpret_cast<unsigned long>(name));
 #elif defined(WEBRTC_MAC) || defined(WEBRTC_IOS)
@@ -186,10 +191,14 @@ void PlatformThread::Stop() {
     return;
 
 #if defined(WEBRTC_WIN)
+#if defined(WINUWP)
+  stop_ = true;
+#else // WINUWP
   // Set stop_ to |true| on the worker thread.
   bool queued = QueueAPC(&RaiseFlag, reinterpret_cast<ULONG_PTR>(&stop_));
   // Queuing the APC can fail if the thread is being terminated.
   RTC_CHECK(queued || GetLastError() == ERROR_GEN_FAILURE);
+#endif // WINUWP
   WaitForSingleObject(thread_, INFINITE);
   CloseHandle(thread_);
   thread_ = nullptr;

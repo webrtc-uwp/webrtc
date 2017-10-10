@@ -16,6 +16,13 @@
 #define WEBRTC_COMMON_AUDIO_SIGNAL_PROCESSING_INCLUDE_SPL_INL_H_
 
 #include "webrtc/rtc_base/compile_assert_c.h"
+#ifdef WINUWP
+#include <winapifamily.h>
+#endif
+
+#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
+#include "webrtc/common_audio/signal_processing/include/spl_inl_neon.h"
+#else //defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
 
 extern const int8_t kWebRtcSpl_CountLeadingZeros32_Table[64];
 

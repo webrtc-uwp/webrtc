@@ -569,6 +569,9 @@ struct MediaReceiverInfo {
       : bytes_rcvd(0),
         packets_rcvd(0),
         packets_lost(0),
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
+        end_to_end_delay_ms(0),
+#endif
         fraction_lost(0.0) {
   }
   void add_ssrc(const SsrcReceiverInfo& stat) {
@@ -604,6 +607,9 @@ struct MediaReceiverInfo {
   int packets_rcvd;
   int packets_lost;
   float fraction_lost;
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
+  int end_to_end_delay_ms;
+#endif
   std::string codec_name;
   rtc::Optional<int> codec_payload_type;
   std::vector<SsrcReceiverInfo> local_stats;

@@ -1023,6 +1023,7 @@ rtc_static_library("neteq") {
     "../../rtc_base:gtest_prod",
     "../../rtc_base:rtc_base_approved",
     "../../system_wrappers",
+    rtc_opus_dir,
   ]
 
   defines = []
@@ -1931,7 +1932,7 @@ if (rtc_include_tests) {
 
   rtc_executable("isac_test") {
     testonly = true
-
+    is_c_main = true
     sources = [
       "codecs/isac/main/test/simpleKenny.c",
     ]
@@ -2018,6 +2019,7 @@ if (rtc_include_tests) {
 
   rtc_executable("ilbc_test") {
     testonly = true
+    is_c_main = true
 
     sources = [
       "codecs/ilbc/test/iLBC_test.c",

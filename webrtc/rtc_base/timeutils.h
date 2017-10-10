@@ -56,6 +56,8 @@ class ClockInterface {
 // that uses it, eliminating the need for a global variable and this function.
 ClockInterface* SetClockForTesting(ClockInterface* clock);
 
+void SyncWithNtp(int64_t timeFromNtpServer/*in ms*/);
+
 // Returns previously set clock, or nullptr if no custom clock is being used.
 ClockInterface* GetClockForTesting();
 

@@ -38,6 +38,11 @@ const double kOverUsingTimeThreshold = 10;
 const int kMinNumDeltas = 60;
 
 bool AdaptiveThresholdExperimentIsDisabled() {
+#ifdef WINUWP
+    // Don't use the Adaptive Threshold on WinUWP.
+    return true;
+#endif
+
   std::string experiment_string =
       webrtc::field_trial::FindFullName(kAdaptiveThresholdExperiment);
   const size_t kMinExperimentLength = kDisabledPrefixLength;
@@ -65,8 +70,16 @@ OveruseDetector::OveruseDetector()
     : in_experiment_(!AdaptiveThresholdExperimentIsDisabled()),
       k_up_(0.0087),
       k_down_(0.039),
+#ifdef WINUWP
+      // When being CPU bounds (like low level Windows Phone), the overuse_estimator/detector will detect that 
+      // some offsets between timestamp and time of arrival, which could be 
+      // interpreted as bandwidth limitation. Relax the overuse_detection threshold
+      overusing_time_threshold_(1000),
+      threshold_(250.0),
+#else // WINUWP
       overusing_time_threshold_(100),
       threshold_(12.5),
+#endif // WINUWP
       last_update_ms_(-1),
       prev_offset_(0.0),
       time_over_using_(-1),

@@ -177,7 +177,7 @@ int HandleCommandLineFlags(webrtc::test::TestConfig* config) {
   if (FLAGS_output_filename.empty()) {
     // Cut out the filename without extension from the given input file
     // (which may include a path)
-    size_t startIndex = FLAGS_input_filename.find_last_of("/") + 1;
+    int startIndex = static_cast<decltype(startIndex)>(FLAGS_input_filename.find_last_of("/") + 1);
     if (startIndex == 0) {
       startIndex = 0;
     }
