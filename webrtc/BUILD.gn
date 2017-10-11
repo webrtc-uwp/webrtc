@@ -334,7 +334,6 @@ if (!build_with_chromium) {
       }
       if (is_winuwp) {
         deps -= [
-          "voice_engine:voe_cmd_test",
           "voice_engine:voe_auto_test",
           "voice_engine:voice_engine_unittests",
         ]

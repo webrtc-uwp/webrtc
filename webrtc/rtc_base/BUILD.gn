@@ -339,8 +339,9 @@ rtc_source_set("rtc_task_queue_impl") {
     ":rtc_base_approved",
     ":rtc_task_queue_api",
   ]
+  sources = []
   if (build_with_chromium) {
-    sources = [
+    sources += [
       "../../webrtc_overrides/webrtc/rtc_base/task_queue.cc",
     ]
   } else {
@@ -348,7 +349,7 @@ rtc_source_set("rtc_task_queue_impl") {
       deps += [ "//base/third_party/libevent" ]
     }
     if (rtc_enable_libevent) {
-      sources = [
+      sources += [
         "task_queue_libevent.cc",
         "task_queue_posix.cc",
         "task_queue_posix.h",
@@ -356,7 +357,7 @@ rtc_source_set("rtc_task_queue_impl") {
       all_dependent_configs = [ ":enable_libevent_config" ]
     } else {
       if (is_mac || is_ios) {
-        sources = [
+        sources += [
           "task_queue_gcd.cc",
           "task_queue_posix.cc",
         ]
@@ -586,7 +587,7 @@ rtc_static_library("rtc_base") {
         "win32socketserver.cc",
         "win32socketserver.h",
       ]
-	  if (is_winuwp) {
+      if (is_winuwp) {
         sources += [
           "loggingserver.cc",
           "loggingserver.h",
@@ -663,7 +664,7 @@ rtc_static_library("rtc_base") {
       "win32window.cc",
       "win32window.h",
     ]
-	if (is_winuwp) {
+  if (is_winuwp) {
       sources -= [
         "win32window.cc",
         "win32window.h",
@@ -808,14 +809,15 @@ if (rtc_include_tests) {
       "//testing/gtest",
     ]
 
+     if (is_winuwp) {
+      deps += [ "//third_party/winuwp_compat:wrap_main_utf8_cc" ]
+    }
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
       suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
     }
   }
-  if (is_winuwp) {
-      deps += [ "//third_party/winuwp_compat:wrap_main_utf8_cc" ]
-    }
+ 
 
   rtc_source_set("rtc_base_nonparallel_tests") {
     testonly = true
