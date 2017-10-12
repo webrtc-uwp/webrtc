@@ -395,7 +395,7 @@ void VideoReceiveStream::OnFrame(const VideoFrame& video_frame) {
   }
   else
   {
-	  auto decodeFrameRate = GetStats().decode_frame_rate * 2;
+	  auto decodeFrameRate = GetStats().decode_frame_rate * 5;
 	  numberOfFramesDecoded++;
 
 	  // We received 2 seconds worth of delta frames and no key frame. Request one.
