@@ -69,6 +69,9 @@ VideoCodec CreateDecoderVideoCodec(const VideoReceiveStream::Decoder& decoder) {
 }
 }  // namespace
 
+static int numberOfFramesDecoded = 0;
+static int numberOfKeyFramesReceived = 0;
+
 namespace internal {
 
 VideoReceiveStream::VideoReceiveStream(
@@ -293,6 +296,26 @@ void VideoReceiveStream::OnFrame(const VideoFrame& video_frame) {
 
   // TODO(tommi): OnRenderFrame grabs a lock too.
   stats_proxy_.OnRenderedFrame(video_frame);
+
+  auto currentKeyReceived = GetStats().frame_counts.key_frames;
+  if (numberOfKeyFramesReceived < currentKeyReceived)
+  {
+    numberOfKeyFramesReceived = currentKeyReceived;
+    numberOfFramesDecoded = 0;
+  }
+  else
+  {
+    auto decodeFrameRate = GetStats().decode_frame_rate * 5;
+    numberOfFramesDecoded++;
+
+    // We received 2 seconds worth of delta frames and no key frame. Request one.
+    if (numberOfFramesDecoded > (decodeFrameRate > 60 ? decodeFrameRate : 60))
+    {
+      RequestKeyFrame();
+      numberOfFramesDecoded = 0;
+       numberOfKeyFramesReceived++;
+    }
+  }
 }
 
 // TODO(asapersson): Consider moving callback from video_encoder.h or
