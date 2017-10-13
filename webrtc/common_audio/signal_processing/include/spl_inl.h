@@ -158,4 +158,6 @@ static __inline int32_t WebRtc_MulAccumW16(int16_t a, int16_t b, int32_t c) {
 
 #endif  // WEBRTC_ARCH_ARM_V7
 
+#endif  // defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
+
 #endif  // WEBRTC_COMMON_AUDIO_SIGNAL_PROCESSING_INCLUDE_SPL_INL_H_
