@@ -20,7 +20,7 @@
 
 #if defined(WINUWP)
 #include <stdlib.h>
-#include "webrtc/base/win32.h"
+#include "webrtc/rtc_base/win32.h"
 #endif // defined(WINUWP)
 #endif
 
