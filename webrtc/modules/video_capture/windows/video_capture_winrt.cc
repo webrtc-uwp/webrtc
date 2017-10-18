@@ -19,7 +19,7 @@
 #include "webrtc/system_wrappers/include/logging.h"
 #include "webrtc/system_wrappers/include/event_wrapper.h"
 #include "webrtc/modules/video_capture/windows/video_capture_sink_winrt.h"
-#include "webrtc/base/Win32.h"
+#include "webrtc/rtc_base/Win32.h"
 #include "libyuv/planar_functions.h"
 #include "webrtc/common_video/video_common_winrt.h"
 
