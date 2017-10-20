@@ -24,7 +24,7 @@
 #if defined (WINUWP)
 #include "audio_device_wasapi_win.h"
 #elif defined(_WIN32)
-#include "audio_device_wave_win.h"
+//#include "audio_device_wave_win.h"
 #if defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
 #include "audio_device_core_win.h"
 #endif
