@@ -324,27 +324,27 @@ void CaptureDevice::StartCapture(
         media_encoding_profile->Video->FrameRate->Denominator));
   if (_wcsicmp(media_encoding_profile->Video->Subtype->Data(),
     MediaEncodingSubtypes::Yv12->Data()) == 0) {
-    frame_info_.rawType = kVideoYV12;
+    frame_info_.videoType = VideoType::kYV12;
   } else if (_wcsicmp(media_encoding_profile->Video->Subtype->Data(),
     MediaEncodingSubtypes::Yuy2->Data()) == 0) {
-    frame_info_.rawType = kVideoYUY2;
+    frame_info_.videoType = VideoType::kYUY2;
   } else if (_wcsicmp(media_encoding_profile->Video->Subtype->Data(),
     MediaEncodingSubtypes::Iyuv->Data()) == 0) {
-    frame_info_.rawType = kVideoIYUV;
+    frame_info_.videoType = VideoType::kIYUV;
   } else if (_wcsicmp(media_encoding_profile->Video->Subtype->Data(),
     MediaEncodingSubtypes::Rgb24->Data()) == 0) {
-    frame_info_.rawType = kVideoRGB24;
+    frame_info_.videoType = VideoType::kRGB24;
   } else if (_wcsicmp(media_encoding_profile->Video->Subtype->Data(),
     MediaEncodingSubtypes::Rgb32->Data()) == 0) {
-    frame_info_.rawType = kVideoARGB;
+    frame_info_.videoType = VideoType::kARGB;
   } else if (_wcsicmp(media_encoding_profile->Video->Subtype->Data(),
     MediaEncodingSubtypes::Mjpg->Data()) == 0) {
-    frame_info_.rawType = kVideoMJPEG;
+    frame_info_.videoType = VideoType::kMJPEG;
   } else if (_wcsicmp(media_encoding_profile->Video->Subtype->Data(),
     MediaEncodingSubtypes::Nv12->Data()) == 0) {
-    frame_info_.rawType = kVideoNV12;
+    frame_info_.videoType = VideoType::kNV12;
   } else {
-    frame_info_.rawType = kVideoUnknown;
+    frame_info_.videoType = VideoType::kUnknown;
   }
 
   media_capture_ =
@@ -483,7 +483,7 @@ void CaptureDevice::RemovePaddingPixels(uint8_t* video_frame,
   if (padded_col_num == 16)
     padded_col_num = 0;
 
-  if (frame_info_.rawType == kVideoYV12 &&
+  if (frame_info_.videoType == VideoType::kYV12 &&
     (int32_t)video_frame_length >
     frame_info_.width * frame_info_.height * 3 / 2) {
     uint8_t* src_video_y = video_frame;
@@ -508,7 +508,7 @@ void CaptureDevice::RemovePaddingPixels(uint8_t* video_frame,
     libyuv::CopyPlane(src_video_u, (frame_info_.width + padded_col_num) / 2,
       dst_video_u, frame_info_.width / 2,
       frame_info_.width / 2, frame_info_.height / 2);
-  } else if (frame_info_.rawType == kVideoYUY2 &&
+  } else if (frame_info_.videoType == VideoType::kYUY2 &&
     (int32_t)video_frame_length >
     frame_info_.width * frame_info_.height * 2) {
     uint8_t* src_video = video_frame;
@@ -517,7 +517,7 @@ void CaptureDevice::RemovePaddingPixels(uint8_t* video_frame,
     libyuv::CopyPlane(src_video, 2 * (frame_info_.width + padded_col_num),
       dst_video, 2 * frame_info_.width,
       2 * frame_info_.width, frame_info_.height);
-  } else if (frame_info_.rawType == kVideoIYUV &&
+  } else if (frame_info_.videoType == VideoType::kIYUV &&
     (int32_t)video_frame_length >
     frame_info_.width * frame_info_.height * 3 / 2) {
     uint8_t* src_video_y = video_frame;
@@ -542,7 +542,7 @@ void CaptureDevice::RemovePaddingPixels(uint8_t* video_frame,
     libyuv::CopyPlane(src_video_v, (frame_info_.width + padded_col_num) / 2,
       dst_video_v, frame_info_.width / 2,
       frame_info_.width / 2, frame_info_.height / 2);
-  } else if (frame_info_.rawType == kVideoRGB24 &&
+  } else if (frame_info_.videoType == VideoType::kRGB24 &&
     (int32_t)video_frame_length >
     frame_info_.width * frame_info_.height * 3) {
     uint8_t* src_video = video_frame;
@@ -551,7 +551,7 @@ void CaptureDevice::RemovePaddingPixels(uint8_t* video_frame,
     libyuv::CopyPlane(src_video, 3 * (frame_info_.width + padded_col_num),
       dst_video, 3 * frame_info_.width,
       3 * frame_info_.width, frame_info_.height);
-  } else if (frame_info_.rawType == kVideoARGB &&
+  } else if (frame_info_.videoType == VideoType::kARGB &&
     (int32_t)video_frame_length >
     frame_info_.width * frame_info_.height * 4) {
     uint8_t* src_video = video_frame;
@@ -560,7 +560,7 @@ void CaptureDevice::RemovePaddingPixels(uint8_t* video_frame,
     libyuv::CopyPlane(src_video, 4 * (frame_info_.width + padded_col_num),
       dst_video, 4 * frame_info_.width,
       4 * frame_info_.width, frame_info_.height);
-  } else if (frame_info_.rawType == kVideoNV12 &&
+  } else if (frame_info_.videoType == VideoType::kNV12 &&
     (int32_t)video_frame_length >
     frame_info_.width * frame_info_.height * 3 / 2) {
     uint8_t* src_video_y = video_frame;
@@ -617,7 +617,7 @@ BlackFramesGenerator::~BlackFramesGenerator() {
 void BlackFramesGenerator::StartCapture(
   const VideoCaptureCapability& frame_info) {
   frame_info_ = frame_info;
-  frame_info_.rawType = kVideoRGB24;
+  frame_info_.videoType = VideoType::kRGB24;
 
   if (capture_started_) {
     LOG(LS_INFO) << "Black frame generator already started";
@@ -759,28 +759,28 @@ int32_t VideoCaptureWinUWP::StartCapture(
   const VideoCaptureCapability& capability) {
   rtc::CritScope cs(&_apiCs);
   Platform::String^ subtype;
-  switch (capability.rawType) {
-  case kVideoYV12:
+  switch (capability.videoType) {
+  case VideoType::kYV12:
     subtype = MediaEncodingSubtypes::Yv12;
     break;
-  case kVideoYUY2:
+  case VideoType::kYUY2:
     subtype = MediaEncodingSubtypes::Yuy2;
     break;
-  case kVideoI420:
-  case kVideoIYUV:
+  case VideoType::kI420:
+  case VideoType::kIYUV:
     subtype = MediaEncodingSubtypes::Iyuv;
     break;
-  case kVideoRGB24:
+  case VideoType::kRGB24:
     subtype = MediaEncodingSubtypes::Rgb24;
     break;
-  case kVideoARGB:
+  case VideoType::kARGB:
     subtype = MediaEncodingSubtypes::Argb32;
     break;
-  case kVideoMJPEG:
+  case VideoType::kMJPEG:
     // MJPEG format is decoded internally by MF engine to NV12
     subtype = MediaEncodingSubtypes::Nv12;
     break;
-  case kVideoNV12:
+  case VideoType::kNV12:
     subtype = MediaEncodingSubtypes::Nv12;
     break;
   default:
@@ -810,9 +810,9 @@ int32_t VideoCaptureWinUWP::StartCapture(
     IVideoEncodingProperties^ prop =
       static_cast<IVideoEncodingProperties^>(streamProperties->GetAt(i));
 
-    if (capability.rawType != kVideoMJPEG &&
+    if (capability.videoType != VideoType::kMJPEG &&
       _wcsicmp(prop->Subtype->Data(), subtype->Data()) != 0 ||
-      capability.rawType == kVideoMJPEG &&
+      capability.videoType == VideoType::kMJPEG &&
       _wcsicmp(prop->Subtype->Data(),
         MediaEncodingSubtypes::Mjpg->Data()) != 0) {
       continue;
