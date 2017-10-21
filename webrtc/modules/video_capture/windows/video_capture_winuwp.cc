@@ -695,7 +695,7 @@ VideoCaptureWinUWP::~VideoCaptureWinUWP() {
 }
 
 int32_t VideoCaptureWinUWP::Init(const char* device_unique_id) {
-  CriticalSectionScoped cs(&_apiCs);
+  rtc::CritScope cs(&_apiCs);
   const int32_t device_unique_id_length = (int32_t)strlen(device_unique_id);
   if (device_unique_id_length > kVideoCaptureUniqueNameLength) {
     LOG(LS_ERROR) << "Device name too long";
@@ -757,7 +757,7 @@ int32_t VideoCaptureWinUWP::Init(const char* device_unique_id) {
 
 int32_t VideoCaptureWinUWP::StartCapture(
   const VideoCaptureCapability& capability) {
-  CriticalSectionScoped cs(&_apiCs);
+  rtc::CritScope cs(&_apiCs);
   Platform::String^ subtype;
   switch (capability.rawType) {
   case kVideoYV12:
@@ -891,7 +891,7 @@ void VideoCaptureWinUWP::ApplyDisplayOrientation(
 }
 
 int32_t VideoCaptureWinUWP::StopCapture() {
-  CriticalSectionScoped cs(&_apiCs);
+  rtc::CritScope cs(&_apiCs);
 
   try {
     if (device_->CaptureStarted()) {
@@ -909,13 +909,13 @@ int32_t VideoCaptureWinUWP::StopCapture() {
 }
 
 bool VideoCaptureWinUWP::CaptureStarted() {
-  CriticalSectionScoped cs(&_apiCs);
+  rtc::CritScope cs(&_apiCs);
 
   return device_->CaptureStarted() || fake_device_->CaptureStarted();
 }
 
 int32_t VideoCaptureWinUWP::CaptureSettings(VideoCaptureCapability& settings) {
-  CriticalSectionScoped cs(&_apiCs);
+  rtc::CritScope cs(&_apiCs);
   settings = device_->GetFrameInfo();
   return 0;
 }
@@ -976,7 +976,7 @@ void VideoCaptureWinUWP::OnCaptureDeviceFailed(HRESULT code,
                                               Platform::String^ message) {
   LOG(LS_ERROR) << "Capture device failed. HRESULT: " <<
     code << " Message: " << rtc::ToUtf8(message->Data());
-  CriticalSectionScoped cs(&_apiCs);
+  rtc::CritScope cs(&_apiCs);
   if (device_ != nullptr && device_->CaptureStarted()) {
     try {
       device_->StopCapture();
