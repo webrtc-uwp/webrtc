@@ -42,8 +42,8 @@
 
 #include "webrtc/system_wrappers/include/sleep.h"
 #include "webrtc/system_wrappers/include/trace.h"
-#include "webrtc/system_wrappers/include/logging.h"
 
+#include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/win32.h"
 
 using Windows::Foundation::EventRegistrationToken;

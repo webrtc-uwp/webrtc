@@ -19,7 +19,7 @@
 
 #include <windows.foundation.h>
 
-#include "webrtc/system_wrappers/include/logging.h"
+#include "webrtc/rtc_base/logging.h"
 
 using Microsoft::WRL::ComPtr;
 using Windows::Foundation::IPropertyValue;

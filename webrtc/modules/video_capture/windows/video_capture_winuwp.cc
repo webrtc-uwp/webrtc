@@ -16,7 +16,7 @@
 #include <vector>
 #include <Mferror.h>
 
-#include "webrtc/system_wrappers/include/logging.h"
+#include "webrtc/rtc_base/logging.h"
 #include "webrtc/system_wrappers/include/event_wrapper.h"
 #include "webrtc/modules/video_capture/windows/video_capture_sink_winuwp.h"
 #include "webrtc/rtc_base/Win32.h"
