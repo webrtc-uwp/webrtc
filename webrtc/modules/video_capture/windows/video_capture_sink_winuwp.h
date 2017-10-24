@@ -20,8 +20,9 @@
 #include <assert.h>
 #include <queue>
 
+#include "webrtc/rtc_base/criticalsection.h"
+
 namespace webrtc {
-class CriticalSectionWrapper;
 namespace videocapturemodule {
 class VideoCaptureMediaSinkWinUWP;
 
@@ -245,7 +246,7 @@ class VideoCaptureStreamSinkWinUWP :
 
  private:
   ULONG _cRef;
-  CriticalSectionWrapper* _critSec;
+  rtc::CriticalSection _critSec;
 
   DWORD _dwIdentifier;
   State _state;
@@ -322,7 +323,7 @@ class VideoCaptureMediaSinkWinUWP
 
  private:
   ULONG _cRef;
-  CriticalSectionWrapper* _critSec;
+  rtc::CriticalSection _critSec;
   bool _isShutdown;
   bool _isConnected;
   LONGLONG _llStartTime;
@@ -374,7 +375,7 @@ private ref class VideoCaptureMediaSinkProxyWinUWP sealed {
   void CheckShutdown();
 
  private:
-  CriticalSectionWrapper* _critSec;
+  rtc::CriticalSection _critSec;
   Microsoft::WRL::ComPtr<IMFMediaSink> _mediaSink;
   bool _shutdown;
 };
