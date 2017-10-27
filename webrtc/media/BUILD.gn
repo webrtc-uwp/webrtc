@@ -33,7 +33,7 @@ config("rtc_media_warnings_config") {
   }
 }
 
-rtc_source_set("rtc_h264_profile_id") {
+rtc_static_library("rtc_h264_profile_id") {
   sources = [
     "base/h264_profile_level_id.cc",
     "base/h264_profile_level_id.h",
