@@ -334,7 +334,7 @@ rtc_source_set("rtc_task_queue_api") {
   ]
 }
 
-rtc_source_set("rtc_task_queue_impl") {
+rtc_static_library("rtc_task_queue_impl") {
   deps = [
     ":rtc_base_approved",
     ":rtc_task_queue_api",
@@ -418,7 +418,7 @@ config("rtc_base_warnings_config") {
   }
 }
 
-rtc_source_set("rtc_json") {
+rtc_static_library("rtc_json") {
   defines = []
   sources = [
     "json.cc",
