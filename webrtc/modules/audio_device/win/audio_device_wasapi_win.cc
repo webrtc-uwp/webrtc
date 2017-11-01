@@ -2018,7 +2018,7 @@ int32_t AudioDeviceWindowsWasapi::SetPlayoutDevice(
   std::wstring str = _GetDeviceName(_renderDevice)->Data();
   if (str.length() > 0) {
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "friendly name: \"%S\"",
-      str);
+      str.c_str());
   }
 
   _usingOutputDeviceIndex = false;
@@ -4658,7 +4658,7 @@ int32_t AudioDeviceWindowsWasapi::_EnumerateEndpointDevicesAll() {
       }
       catch (Platform::Exception^ ex) {
         WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-          "Failed to enumerate audio render devices, ex=%s", rtc::ToUtf8(ex->Message->Data()));
+          "Failed to enumerate audio render devices, ex=%s", rtc::ToUtf8(ex->Message->Data()).c_str());
       }
     }, concurrency::task_continuation_context::use_arbitrary()).wait();
   }
@@ -4957,7 +4957,7 @@ void AudioDeviceWindowsWasapi::_TraceCOMError(HRESULT hr) const {
   WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
     "Core Audio method failed (hr=0x%08X)", hr);
   if (messageLength) {
-    WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id, "Error details (length=%d): %s", messageLength, rtc::ToUtf8(errorText, messageLength));
+    WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id, "Error details (length=%d): %s", messageLength, rtc::ToUtf8(errorText, messageLength).c_str());
   } else {
     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id, "Error details (length=%d): N/A", messageLength);
   }

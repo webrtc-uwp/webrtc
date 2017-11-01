@@ -270,7 +270,7 @@ void CaptureDevice::Cleanup() {
     if (_stopped->Wait(5000) == kEventTimeout) {
       Concurrency::create_task(
         media_capture->StopRecordAsync()).
-        then([this](Concurrency::task<void>& async_info) {
+        then([this](Concurrency::task<void> async_info) {
         try {
           async_info.get();
           CleanupSink();
@@ -403,7 +403,7 @@ void CaptureDevice::StopCapture() {
   }
   Concurrency::create_task(
     media_capture_.Get()->StopRecordAsync()).
-      then([this](Concurrency::task<void>& async_info) {
+      then([this](Concurrency::task<void> async_info) {
     try {
       async_info.get();
       CleanupSink();
