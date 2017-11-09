@@ -20,7 +20,7 @@
 #include <winapifamily.h>
 #endif
 
-#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
+#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP) && defined(WINUWP)
 #include "webrtc/common_audio/signal_processing/include/spl_inl_neon.h"
 #else //defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
 
