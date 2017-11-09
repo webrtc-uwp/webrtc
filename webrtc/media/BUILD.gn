@@ -211,7 +211,7 @@ rtc_static_library("rtc_audio_video") {
     include_dirs += [ "$rtc_libyuv_dir/include" ]
   }
 
-  if (current_os == "win" || is_winuwp) {
+  if (is_winuwp) {
     deps += [ "//third_party/winuwp_h264:winuwp_h264" ]
   }
   #if (is_winuwp) {
