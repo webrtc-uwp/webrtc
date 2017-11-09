@@ -12,8 +12,8 @@
 
 #include "webrtc/build/WinUWP_gyp/Stats/webrtc_stats_observer.h"
 #include "webrtc/build/WinUWP_gyp/Stats/webrtc_stats_network_sender.h"
-#include "webrtc/base/thread.h"
-#include "webrtc/base/timing.h"
+#include "webrtc/rtc_base/thread.h"
+#include "webrtc/rtc_base/timing.h"
 #include "webrtc/build/WinUWP_gyp/Api/RTCStatsReport.h"
 #include "webrtc/build/WinUWP_gyp/Api/Marshalling.h"
 

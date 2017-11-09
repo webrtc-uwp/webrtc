@@ -530,6 +530,9 @@ void ReceiveStatisticsProxy::OnFrameBufferTimingsUpdated(
     int target_delay_ms,
     int jitter_buffer_ms,
     int min_playout_delay_ms,
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
+    int current_endtoend_delay_ms,
+#endif /* WEBRTC_FEATURE_END_TO_END_DELAY */
     int render_delay_ms) {
   rtc::CritScope lock(&crit_);
   stats_.decode_ms = decode_ms;
@@ -538,6 +541,9 @@ void ReceiveStatisticsProxy::OnFrameBufferTimingsUpdated(
   stats_.target_delay_ms = target_delay_ms;
   stats_.jitter_buffer_ms = jitter_buffer_ms;
   stats_.min_playout_delay_ms = min_playout_delay_ms;
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
+  stats_.current_endtoend_delay_ms = current_endtoend_delay_ms;
+#endif /* WEBRTC_FEATURE_END_TO_END_DELAY */
   stats_.render_delay_ms = render_delay_ms;
   decode_time_counter_.Add(decode_ms);
   jitter_buffer_delay_counter_.Add(jitter_buffer_ms);

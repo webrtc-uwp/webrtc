@@ -28,8 +28,8 @@
 #include <ppltasks.h>
 
 
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
-#include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/rtc_base/criticalsection.h"
+#include "webrtc/rtc_base/scoped_ref_ptr.h"
 
 using Windows::Devices::Enumeration::DeviceClass;
 using Windows::Devices::Enumeration::DeviceInformation;
@@ -351,10 +351,10 @@ public:
  private:
     ScopedCOMInitializer                    _comInit;
     AudioDeviceBuffer*                      _ptrAudioBuffer;
-    CriticalSectionWrapper&                 _critSect;
-    CriticalSectionWrapper&                 _volumeMutex;
-    CriticalSectionWrapper&                 _recordingControlMutex;
-    CriticalSectionWrapper&                 _playoutControlMutex;
+    rtc::CriticalSection                    _critSect;
+    rtc::CriticalSection                    _volumeMutex;
+    rtc::CriticalSection                    _recordingControlMutex;
+    rtc::CriticalSection                    _playoutControlMutex;
     int32_t                                 _id;
 
  private:  // MMDevice

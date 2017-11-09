@@ -42,9 +42,9 @@
 
 #include "webrtc/system_wrappers/include/sleep.h"
 #include "webrtc/system_wrappers/include/trace.h"
-#include "webrtc/system_wrappers/include/logging.h"
 
-#include "webrtc/base/win32.h"
+#include "webrtc/rtc_base/logging.h"
+#include "webrtc/rtc_base/win32.h"
 
 using Windows::Foundation::EventRegistrationToken;
 using Windows::Foundation::TypedEventHandler;
@@ -705,10 +705,6 @@ concurrency::task<Microsoft::WRL::ComPtr<IAudioClient2>>
 
 AudioDeviceWindowsWasapi::AudioDeviceWindowsWasapi(const int32_t id) :
     _comInit(ScopedCOMInitializer::kMTA),
-    _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
-    _volumeMutex(*CriticalSectionWrapper::CreateCriticalSection()),
-    _recordingControlMutex(*CriticalSectionWrapper::CreateCriticalSection()),
-    _playoutControlMutex(*CriticalSectionWrapper::CreateCriticalSection()),
     _id(id),
     _ptrAudioBuffer(NULL),
     _ptrActivator(NULL),
@@ -885,11 +881,6 @@ AudioDeviceWindowsWasapi::~AudioDeviceWindowsWasapi() {
 
   if (NULL != _mixFormatSurroundOut)
     delete _mixFormatSurroundOut;
-
-  delete &_critSect;
-  delete &_volumeMutex;
-  delete &_recordingControlMutex;
-  delete &_playoutControlMutex;
 }
 
 // ============================================================================
@@ -928,7 +919,7 @@ int32_t AudioDeviceWindowsWasapi::ActiveAudioLayer(
 // ----------------------------------------------------------------------------
 
 AudioDeviceGeneric::InitStatus AudioDeviceWindowsWasapi::Init() {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   if (_initialized) {
       return AudioDeviceGeneric::InitStatus::OK;
@@ -952,7 +943,7 @@ AudioDeviceGeneric::InitStatus AudioDeviceWindowsWasapi::Init() {
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::Terminate() {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   if (!_initialized) {
       return 0;
@@ -989,7 +980,7 @@ bool AudioDeviceWindowsWasapi::Initialized() const {
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::InitSpeaker() {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   if (_playing) {
       return -1;
@@ -1118,7 +1109,7 @@ int32_t AudioDeviceWindowsWasapi::InitSpeaker() {
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::InitMicrophone() {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   if (_recording) {
       return -1;
@@ -1263,7 +1254,7 @@ bool AudioDeviceWindowsWasapi::MicrophoneIsInitialized() const {
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::SpeakerVolumeIsAvailable(bool& available) {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   if (_ptrClientOut == nullptr) {
     return -1;
@@ -1299,7 +1290,7 @@ Exit:
 
 int32_t AudioDeviceWindowsWasapi::SetSpeakerVolume(uint32_t volume) {
   {
-    CriticalSectionScoped lock(&_critSect);
+    rtc::CritScope lock(&_critSect);
 
     if (!_speakerIsInitialized) {
       return -1;
@@ -1337,7 +1328,7 @@ Exit:
 
 int32_t AudioDeviceWindowsWasapi::SpeakerVolume(uint32_t& volume) const {
   {
-    CriticalSectionScoped lock(&_critSect);
+    rtc::CritScope lock(&_critSect);
 
     if (!_speakerIsInitialized) {
       return -1;
@@ -1436,7 +1427,7 @@ int32_t AudioDeviceWindowsWasapi::SpeakerVolumeStepSize(
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::SpeakerMuteIsAvailable(bool& available) {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   if (_ptrClientOut == NULL) {
     return -1;
@@ -1472,7 +1463,7 @@ Exit:
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::SetSpeakerMute(bool enable) {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   if (!_speakerIsInitialized) {
     return -1;
@@ -1545,7 +1536,7 @@ Exit:
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::MicrophoneMuteIsAvailable(bool& available) {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   if (_ptrClientIn == NULL) {
       return -1;
@@ -1687,7 +1678,7 @@ int32_t AudioDeviceWindowsWasapi::StereoRecordingIsAvailable(bool& available) {
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::SetStereoRecording(bool enable) {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   if (enable) {
     _recChannelsPrioList[0] = 2;    // try stereo first
@@ -1729,7 +1720,7 @@ int32_t AudioDeviceWindowsWasapi::StereoPlayoutIsAvailable(bool& available) {
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::SetStereoPlayout(bool enable) {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   if (enable) {
     _playChannelsPrioList[0] = 2;    // try stereo first
@@ -1762,7 +1753,7 @@ int32_t AudioDeviceWindowsWasapi::StereoPlayout(bool& enabled) const {
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::SetAGC(bool enable) {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
   _AGC = enable;
   return 0;
 }
@@ -1772,7 +1763,7 @@ int32_t AudioDeviceWindowsWasapi::SetAGC(bool enable) {
 // ----------------------------------------------------------------------------
 
 bool AudioDeviceWindowsWasapi::AGC() const {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
   return _AGC;
 }
 
@@ -1782,7 +1773,7 @@ bool AudioDeviceWindowsWasapi::AGC() const {
 
 int32_t AudioDeviceWindowsWasapi::MicrophoneVolumeIsAvailable(
   bool& available) {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   if (_ptrClientIn == NULL) {
     return -1;
@@ -1818,7 +1809,7 @@ Exit:
 int32_t AudioDeviceWindowsWasapi::SetMicrophoneVolume(uint32_t volume) {
   WEBRTC_TRACE(kTraceStream, kTraceAudioDevice, _id,
     "AudioDeviceWindowsWasapi::SetMicrophoneVolume(volume=%u)", volume); {
-    CriticalSectionScoped lock(&_critSect);
+    rtc::CritScope lock(&_critSect);
 
     if (!_microphoneIsInitialized) {
       return -1;
@@ -1855,7 +1846,7 @@ Exit:
 
 int32_t AudioDeviceWindowsWasapi::MicrophoneVolume(uint32_t& volume) const {
   {
-    CriticalSectionScoped lock(&_critSect);
+    rtc::CritScope lock(&_critSect);
 
     if (!_microphoneIsInitialized) {
       return -1;
@@ -1941,7 +1932,7 @@ int32_t AudioDeviceWindowsWasapi::MicrophoneVolumeStepSize(
 // ----------------------------------------------------------------------------
 
 int16_t AudioDeviceWindowsWasapi::PlayoutDevices() {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   // Refresh the list of rendering endpoint devices
   _RefreshDeviceList(DeviceClass::AudioRender);
@@ -1972,7 +1963,7 @@ int32_t AudioDeviceWindowsWasapi::SetPlayoutDevice(uint16_t index) {
     return -1;
   }
 
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   assert(_ptrRenderCollection != nullptr);
 
@@ -2005,7 +1996,7 @@ int32_t AudioDeviceWindowsWasapi::SetPlayoutDevice(
     return -1;
   }
 
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   // Refresh the list of rendering endpoint devices
   _RefreshDeviceList(DeviceClass::AudioRender);
@@ -2066,7 +2057,7 @@ int32_t AudioDeviceWindowsWasapi::PlayoutDeviceName(
     memset(guid, 0, sizeof(guid));
   }
 
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   Platform::String^ deviceName = nullptr;
 
@@ -2142,7 +2133,7 @@ int32_t AudioDeviceWindowsWasapi::RecordingDeviceName(
     memset(guid, 0, sizeof(guid));
   }
 
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   Platform::String^ deviceName = nullptr;
 
@@ -2192,7 +2183,7 @@ int32_t AudioDeviceWindowsWasapi::RecordingDeviceName(
 // ----------------------------------------------------------------------------
 
 int16_t AudioDeviceWindowsWasapi::RecordingDevices() {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   // Refresh the list of capture endpoint devices
   _RefreshDeviceList(DeviceClass::AudioCapture);
@@ -2223,7 +2214,7 @@ int32_t AudioDeviceWindowsWasapi::SetRecordingDevice(uint16_t index) {
     return -1;
   }
 
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   assert(_ptrCaptureCollection != nullptr);
 
@@ -2257,7 +2248,7 @@ int32_t AudioDeviceWindowsWasapi::SetRecordingDevice(
       return -1;
   }
 
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   // Refresh the list of capture endpoint devices
   _RefreshDeviceList(DeviceClass::AudioCapture);
@@ -2333,12 +2324,12 @@ int32_t AudioDeviceWindowsWasapi::RecordingIsAvailable(bool& available) {
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::InitPlayout() {
-  CriticalSectionScoped lock(&_playoutControlMutex);
+  rtc::CritScope lock(&_playoutControlMutex);
   return InitPlayoutInternal();
 }
 
 int32_t AudioDeviceWindowsWasapi::InitPlayoutInternal() {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   if (_playing) {
       return -1;
@@ -2566,12 +2557,12 @@ Exit:
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::InitRecording() {
-  CriticalSectionScoped lock(&_recordingControlMutex);
+  rtc::CritScope lock(&_recordingControlMutex);
   return InitRecordingInternal();
 }
 
 int32_t AudioDeviceWindowsWasapi::InitRecordingInternal() {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   if (_recording) {
     return -1;
@@ -2764,7 +2755,7 @@ Exit:
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::StartRecording() {
-  CriticalSectionScoped critScoped(&_recordingControlMutex);
+  rtc::CritScope lock(&_recordingControlMutex);
   return StartRecordingInternal();
 }
 
@@ -2782,7 +2773,7 @@ int32_t AudioDeviceWindowsWasapi::StartRecordingInternal() {
   }
 
   {
-    CriticalSectionScoped critScoped(&_critSect);
+    rtc::CritScope lock(&_critSect);
 
     // Create thread which will drive the capturing
     LPTHREAD_START_ROUTINE lpStartAddress = WSAPICaptureThread;
@@ -2851,7 +2842,7 @@ int32_t AudioDeviceWindowsWasapi::StartRecordingInternal() {
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::StopRecording() {
-  CriticalSectionScoped critScoped(&_recordingControlMutex);
+  rtc::CritScope lock(&_recordingControlMutex);
   return StopRecordingInternal();
 }
 
@@ -2968,7 +2959,7 @@ bool AudioDeviceWindowsWasapi::PlayoutIsInitialized() const {
 //  StartPlayout
 // ----------------------------------------------------------------------------
 int32_t AudioDeviceWindowsWasapi::StartPlayout() {
-  CriticalSectionScoped critScoped(&_playoutControlMutex);
+  rtc::CritScope lock(&_playoutControlMutex);
   return StartPlayoutInternal();
 }
 
@@ -2986,7 +2977,7 @@ int32_t AudioDeviceWindowsWasapi::StartPlayoutInternal() {
   }
 
   {
-    CriticalSectionScoped critScoped(&_critSect);
+    rtc::CritScope lock(&_critSect);
 
     // Create thread which will drive the rendering.
     assert(_hPlayThread == NULL);
@@ -3025,7 +3016,7 @@ int32_t AudioDeviceWindowsWasapi::StartPlayoutInternal() {
 //  StopPlayout
 // ----------------------------------------------------------------------------
 int32_t AudioDeviceWindowsWasapi::StopPlayout() {
-  CriticalSectionScoped critScoped(&_playoutControlMutex);
+  rtc::CritScope lock(&_playoutControlMutex);
   return StopPlayoutInternal();
 }
 
@@ -3035,7 +3026,7 @@ int32_t AudioDeviceWindowsWasapi::StopPlayoutInternal() {
   }
 
   {
-    CriticalSectionScoped critScoped(&_critSect);
+    rtc::CritScope lock(&_critSect);
 
     if (_hPlayThread == NULL) {
       WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
@@ -3066,7 +3057,7 @@ int32_t AudioDeviceWindowsWasapi::StopPlayoutInternal() {
   }
 
   {
-    CriticalSectionScoped critScoped(&_critSect);
+    rtc::CritScope lock(&_critSect);
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
       "webrtc_core_audio_render_thread is now closed");
 
@@ -3109,7 +3100,7 @@ int32_t AudioDeviceWindowsWasapi::StopPlayoutInternal() {
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::PlayoutDelay(uint16_t& delayMS) const {
-  CriticalSectionScoped critScoped(&_critSect);
+  rtc::CritScope lock(&_critSect);
   delayMS = static_cast<uint16_t>(_sndCardPlayDelay);
   return 0;
 }
@@ -3119,7 +3110,7 @@ int32_t AudioDeviceWindowsWasapi::PlayoutDelay(uint16_t& delayMS) const {
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::RecordingDelay(uint16_t& delayMS) const {
-  CriticalSectionScoped critScoped(&_critSect);
+  rtc::CritScope lock(&_critSect);
   delayMS = static_cast<uint16_t>(_sndCardRecDelay);
   return 0;
 }
@@ -3137,7 +3128,7 @@ bool AudioDeviceWindowsWasapi::Playing() const {
 
 int32_t AudioDeviceWindowsWasapi::SetPlayoutBuffer(
   const AudioDeviceModule::BufferType type, uint16_t sizeMS) {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
 
   _playBufType = type;
 
@@ -3154,7 +3145,7 @@ int32_t AudioDeviceWindowsWasapi::SetPlayoutBuffer(
 
 int32_t AudioDeviceWindowsWasapi::PlayoutBuffer(
   AudioDeviceModule::BufferType& type, uint16_t& sizeMS) const {
-  CriticalSectionScoped lock(&_critSect);
+  rtc::CritScope lock(&_critSect);
   type = _playBufType;
 
   if (type == AudioDeviceModule::kFixedBufferSize) {
@@ -4146,7 +4137,7 @@ DWORD AudioDeviceWindowsWasapi::DoObserverThread() {
       keepObserving = false;
       break;
     case WAIT_OBJECT_0 + 1: {      // _hRestartCaptureEvent
-      CriticalSectionScoped critScoped(&_recordingControlMutex);
+      rtc::CritScope lock(&_recordingControlMutex);
       WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
         "observer -> restart audio capture event detected");
       int32_t result = StopRecordingInternal();
@@ -4175,7 +4166,7 @@ DWORD AudioDeviceWindowsWasapi::DoObserverThread() {
       break;
     }
     case WAIT_OBJECT_0 + 2: {      // _hRestartRenderEvent
-      CriticalSectionScoped critScoped(&_playoutControlMutex);
+      rtc::CritScope lock(&_playoutControlMutex);
       int32_t result = StopPlayoutInternal();
       if (result == 0) {
         _playIsRecovering = true;

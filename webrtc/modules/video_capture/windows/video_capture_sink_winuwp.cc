@@ -19,8 +19,7 @@
 
 #include <windows.foundation.h>
 
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/include/logging.h"
+#include "webrtc/rtc_base/logging.h"
 
 using Microsoft::WRL::ComPtr;
 using Windows::Foundation::IPropertyValue;
@@ -126,7 +125,6 @@ namespace videocapturemodule {
 
 VideoCaptureStreamSinkWinUWP::VideoCaptureStreamSinkWinUWP(DWORD dwIdentifier)
   : _cRef(1),
-    _critSec(CriticalSectionWrapper::CreateCriticalSection()),
     _dwIdentifier(dwIdentifier),
     _state(State_TypeNotSet),
     _isShutdown(false),
@@ -140,9 +138,6 @@ VideoCaptureStreamSinkWinUWP::VideoCaptureStreamSinkWinUWP(DWORD dwIdentifier)
 
 VideoCaptureStreamSinkWinUWP::~VideoCaptureStreamSinkWinUWP() {
   assert(_isShutdown);
-  if (_critSec) {
-    delete _critSec;
-  }
 }
 
 // IUnknown methods
@@ -189,7 +184,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::BeginGetEvent(
     IUnknown *punkState) {
   HRESULT hr = S_OK;
 
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   if (_isShutdown) {
     hr = MF_E_SHUTDOWN;
@@ -211,7 +206,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::EndGetEvent(
     IMFMediaEvent **ppEvent) {
   HRESULT hr = S_OK;
 
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   if (_isShutdown) {
     hr = MF_E_SHUTDOWN;
@@ -240,7 +235,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::GetEvent(
   ComPtr<IMFMediaEventQueue> spQueue;
 
   {
-    CriticalSectionScoped cs(_critSec);
+    rtc::CritScope lock(&_critSec);
 
     // Check shutdown
     if (_isShutdown) {
@@ -272,7 +267,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::QueueEvent(
     PROPVARIANT const *pvValue) {
   HRESULT hr = S_OK;
 
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   if (_isShutdown) {
     hr = MF_E_SHUTDOWN;
@@ -297,7 +292,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::GetMediaSink(
     return E_INVALIDARG;
   }
 
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   HRESULT hr = S_OK;
   if (_isShutdown) {
@@ -320,7 +315,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::GetIdentifier(
     return E_INVALIDARG;
   }
 
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   HRESULT hr = S_OK;
   if (_isShutdown) {
@@ -342,7 +337,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::GetMediaTypeHandler(
     return E_INVALIDARG;
   }
 
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   HRESULT hr = S_OK;
   if (_isShutdown) {
@@ -369,7 +364,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::ProcessSample(IMFSample *pSample) {
 
   HRESULT hr = S_OK;
 
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   if (_isShutdown) {
     hr = MF_E_SHUTDOWN;
@@ -405,7 +400,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::PlaceMarker(
     const PROPVARIANT *pvarMarkerValue,
     const PROPVARIANT *pvarContextValue) {
 
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   HRESULT hr = S_OK;
   ComPtr<IMarker> spMarker;
@@ -443,7 +438,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::PlaceMarker(
 
 // Discards all samples that were not processed yet.
 IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::Flush() {
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
   HRESULT hr = S_OK;
   try {
     if (_isShutdown) {
@@ -472,7 +467,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::IsMediaTypeSupported(
     return E_INVALIDARG;
   }
 
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   GUID majorType = GUID_NULL;
 
@@ -518,7 +513,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::GetMediaTypeCount(
     return E_INVALIDARG;
   }
 
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   HRESULT hr = S_OK;
   if (_isShutdown) {
@@ -543,7 +538,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::GetMediaTypeByIndex(
     return E_INVALIDARG;
   }
 
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   HRESULT hr = S_OK;
   if (_isShutdown) {
@@ -575,7 +570,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::SetCurrentMediaType(
     if (pMediaType == nullptr) {
       Throw(E_INVALIDARG);
     }
-    CriticalSectionScoped cs(_critSec);
+    rtc::CritScope lock(&_critSec);
 
     if (_isShutdown) {
       hr = MF_E_SHUTDOWN;
@@ -622,7 +617,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::GetCurrentMediaType(
     return E_INVALIDARG;
   }
 
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   HRESULT hr = S_OK;
   if (_isShutdown) {
@@ -693,7 +688,7 @@ HRESULT VideoCaptureStreamSinkWinUWP::Initialize(
 
 // Called when the presentation clock starts.
 HRESULT VideoCaptureStreamSinkWinUWP::Start(MFTIME start) {
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   HRESULT hr = S_OK;
 
@@ -719,7 +714,7 @@ HRESULT VideoCaptureStreamSinkWinUWP::Start(MFTIME start) {
 
 // Called when the presentation clock stops.
 HRESULT VideoCaptureStreamSinkWinUWP::Stop() {
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   HRESULT hr = S_OK;
 
@@ -739,7 +734,7 @@ HRESULT VideoCaptureStreamSinkWinUWP::Stop() {
 
 // Called when the presentation clock pauses.
 HRESULT VideoCaptureStreamSinkWinUWP::Pause() {
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   HRESULT hr = S_OK;
 
@@ -759,7 +754,7 @@ HRESULT VideoCaptureStreamSinkWinUWP::Pause() {
 
 // Called when the presentation clock restarts.
 HRESULT VideoCaptureStreamSinkWinUWP::Restart() {
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   HRESULT hr = S_OK;
 
@@ -810,7 +805,7 @@ HRESULT VideoCaptureStreamSinkWinUWP::ValidateOperation(StreamOperation op) {
 
 // Shuts down the stream sink.
 HRESULT VideoCaptureStreamSinkWinUWP::Shutdown() {
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   if (!_isShutdown) {
     if (_spEventQueue) {
@@ -938,7 +933,7 @@ bool VideoCaptureStreamSinkWinUWP::ProcessSamplesFromQueue(bool fFlush) {
   bool fSendSamples = true;
 
   {
-    CriticalSectionScoped cs(_critSec);
+    rtc::CritScope lock(&_critSec);
 
     if (_sampleQueue.size() == 0) {
       fNeedMoreSamples = true;
@@ -984,7 +979,7 @@ bool VideoCaptureStreamSinkWinUWP::ProcessSamplesFromQueue(bool fFlush) {
     }
 
     {
-      CriticalSectionScoped cs(_critSec);
+      rtc::CritScope lock(&_critSec);
 
       if (_state == State_Started && fProcessingSample && !_isShutdown) {
         // If we are still in started state request another sample
@@ -1180,7 +1175,6 @@ void VideoCaptureStreamSinkWinUWP::HandleError(HRESULT hr) {
 
 VideoCaptureMediaSinkWinUWP::VideoCaptureMediaSinkWinUWP()
     : _cRef(1),
-      _critSec(CriticalSectionWrapper::CreateCriticalSection()),
       _isShutdown(false),
       _isConnected(false),
       _llStartTime(0) {
@@ -1188,9 +1182,6 @@ VideoCaptureMediaSinkWinUWP::VideoCaptureMediaSinkWinUWP()
 
 VideoCaptureMediaSinkWinUWP::~VideoCaptureMediaSinkWinUWP() {
   assert(_isShutdown);
-  if (_critSec) {
-    delete _critSec;
-  }
 }
 
 HRESULT VideoCaptureMediaSinkWinUWP::RuntimeClassInitialize(
@@ -1221,7 +1212,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::GetCharacteristics(
   if (pdwCharacteristics == NULL) {
     return E_INVALIDARG;
   }
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   HRESULT hr;
   if (_isShutdown) {
@@ -1246,7 +1237,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::AddStreamSink(
     IMFStreamSink **ppStreamSink) {
   VideoCaptureStreamSinkWinUWP *pStream = nullptr;
   ComPtr<IMFStreamSink> spMFStream;
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
   HRESULT hr = S_OK;
   if (_isShutdown) {
     hr = MF_E_SHUTDOWN;
@@ -1295,7 +1286,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::AddStreamSink(
 
 IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::RemoveStreamSink(
     DWORD dwStreamSinkIdentifier) {
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
   HRESULT hr = S_OK;
   if (_isShutdown) {
     hr = MF_E_SHUTDOWN;
@@ -1323,7 +1314,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::GetStreamSinkCount(
     return E_INVALIDARG;
   }
 
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   HRESULT hr = S_OK;
   if (_isShutdown) {
@@ -1346,7 +1337,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::GetStreamSinkByIndex(
     return E_INVALIDARG;
   }
 
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   if (dwIndex >= 1) {
     return MF_E_INVALIDINDEX;
@@ -1375,7 +1366,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::GetStreamSinkById(
     return E_INVALIDARG;
   }
 
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
   HRESULT hr = S_OK;
   if (_isShutdown) {
     hr = MF_E_SHUTDOWN;
@@ -1396,7 +1387,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::GetStreamSinkById(
 
 IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::SetPresentationClock(
     IMFPresentationClock *pPresentationClock) {
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   HRESULT hr = S_OK;
   if (_isShutdown) {
@@ -1435,7 +1426,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::GetPresentationClock(
     return E_INVALIDARG;
   }
 
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   HRESULT hr = S_OK;
   if (_isShutdown) {
@@ -1462,7 +1453,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::GetPresentationClock(
 IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::Shutdown() {
   ISinkCallback ^callback;
   {
-    CriticalSectionScoped cs(_critSec);
+    rtc::CritScope lock(&_critSec);
     HRESULT hr = S_OK;
     if (_isShutdown) {
       hr = MF_E_SHUTDOWN;
@@ -1488,7 +1479,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::Shutdown() {
 IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::OnClockStart(
     MFTIME hnsSystemTime,
     LONGLONG llClockStartOffset) {
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   HRESULT hr = S_OK;
   if (_isShutdown) {
@@ -1508,7 +1499,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::OnClockStart(
 
 IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::OnClockStop(
     MFTIME hnsSystemTime) {
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   HRESULT hr = S_OK;
   if (_isShutdown) {
@@ -1540,8 +1531,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::OnClockSetRate(
   return S_OK;
 }
 
-VideoCaptureMediaSinkProxyWinUWP::VideoCaptureMediaSinkProxyWinUWP()
-  : _critSec(CriticalSectionWrapper::CreateCriticalSection()) {
+VideoCaptureMediaSinkProxyWinUWP::VideoCaptureMediaSinkProxyWinUWP() {
 }
 
 VideoCaptureMediaSinkProxyWinUWP::~VideoCaptureMediaSinkProxyWinUWP() {
@@ -1549,14 +1539,10 @@ VideoCaptureMediaSinkProxyWinUWP::~VideoCaptureMediaSinkProxyWinUWP() {
     _mediaSink->Shutdown();
     _mediaSink = nullptr;
   }
-
-  if (_critSec) {
-    delete _critSec;
-  }
 }
 
 IMediaExtension^ VideoCaptureMediaSinkProxyWinUWP::GetMFExtension() {
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
 
   if (_mediaSink == nullptr) {
     Throw(MF_E_NOT_INITIALIZED);
@@ -1574,7 +1560,7 @@ Windows::Foundation::IAsyncOperation<IMediaExtension^>^
     VideoCaptureMediaSinkProxyWinUWP::InitializeAsync(
         IMediaEncodingProperties ^encodingProperties) {
   return Concurrency::create_async([this, encodingProperties]() {
-    CriticalSectionScoped cs(_critSec);
+    rtc::CritScope lock(&_critSec);
     CheckShutdown();
 
     if (_mediaSink != nullptr) {
@@ -1600,7 +1586,7 @@ void VideoCaptureMediaSinkProxyWinUWP::OnSample(MediaSampleEventArgs^ args) {
 }
 
 void VideoCaptureMediaSinkProxyWinUWP::OnShutdown() {
-  CriticalSectionScoped cs(_critSec);
+  rtc::CritScope lock(&_critSec);
   if (_shutdown) {
     return;
   }
