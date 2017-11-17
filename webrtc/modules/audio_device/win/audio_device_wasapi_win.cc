@@ -3530,9 +3530,10 @@ DWORD AudioDeviceWindowsWasapi::DoRenderThread() {
               "output state has been modified during unlocked period");
             goto Exit;
           }
-          if (nSamples != static_cast<int32_t>(_playBlockSize)) {
+          if (nSamples != static_cast<int32_t>(_playChannels * _playBlockSize)) {
             WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-              "nSamples(%d) != _playBlockSize(%d)", nSamples, _playBlockSize);
+              "nSamples(%d) != _playBlockSize(%d)", nSamples,
+              _playChannels * _playBlockSize);
           }
 
           if (ShouldUpmix()) {
