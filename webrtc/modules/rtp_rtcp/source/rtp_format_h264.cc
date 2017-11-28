@@ -568,6 +568,7 @@ bool RtpDepacketizerH264::ProcessStapAOrSingleNalu(
         break;
       }
       case H264::NaluType::kPps: {
+#ifndef WINUWP
         uint32_t pps_id;
         uint32_t sps_id;
         if (PpsParser::ParsePpsIds(&payload_data[start_offset],
@@ -579,6 +580,7 @@ bool RtpDepacketizerH264::ProcessStapAOrSingleNalu(
           LOG(LS_WARNING)
               << "Failed to parse PPS id and SPS id from PPS slice.";
         }
+#endif
         break;
       }
       case H264::NaluType::kIdr:
