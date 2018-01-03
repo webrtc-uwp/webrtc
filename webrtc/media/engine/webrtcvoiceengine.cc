@@ -333,7 +333,9 @@ void WebRtcVoiceEngine::Init() {
 
   // Set default audio devices.
 #if !defined(WEBRTC_IOS)
+#if 0
   webrtc::adm_helpers::SetRecordingDevice(adm_);
+#endif
   apm()->Initialize();
   webrtc::adm_helpers::SetPlayoutDevice(adm_);
 #endif  // !WEBRTC_IOS

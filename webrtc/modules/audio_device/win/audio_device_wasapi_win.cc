@@ -4224,7 +4224,11 @@ bool AudioDeviceWindowsWasapi::BuiltInAECIsAvailable() const {
   // There is a bug in the OS preventing the Effects detection (Noise SUppression and AEC) to work for Win10 Phones.
   // The bug is severe enough that it's not only the detection that doesn't work but the activation of the effect.
   // For Windows phone (until the bug is solved at the OS level, it will return false, and the software AEC will be used
+#if 0
   return CheckBuiltInCaptureCapability(Windows::Media::Effects::AudioEffectType::AcousticEchoCancellation);
+#else
+  return false;
+#endif
 }
 
 int32_t AudioDeviceWindowsWasapi::EnableBuiltInNS(bool enable) {
@@ -4239,7 +4243,11 @@ int32_t AudioDeviceWindowsWasapi::EnableBuiltInNS(bool enable) {
 }
 
 bool AudioDeviceWindowsWasapi::BuiltInNSIsAvailable() const {
+#if 0
   return CheckBuiltInCaptureCapability(Windows::Media::Effects::AudioEffectType::NoiseSuppression);
+#else
+  return false;
+#endif
 }
 
 int32_t AudioDeviceWindowsWasapi::EnableBuiltInAGC(bool enable) {

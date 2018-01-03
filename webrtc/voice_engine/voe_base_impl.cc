@@ -310,6 +310,7 @@ int VoEBaseImpl::Init(
                           "Init() failed to initialize the speaker");
   }
 
+#if 0
   // Initialize the default microphone
   if (shared_->audio_device()->SetRecordingDevice(
           WEBRTC_VOICE_ENGINE_DEFAULT_DEVICE) != 0) {
@@ -320,6 +321,7 @@ int VoEBaseImpl::Init(
     shared_->SetLastError(VE_CANNOT_ACCESS_MIC_VOL, kTraceInfo,
                           "Init() failed to initialize the microphone");
   }
+#endif
 
   // Set number of channels
   if (shared_->audio_device()->StereoPlayoutIsAvailable(&available) != 0) {
@@ -331,6 +333,7 @@ int VoEBaseImpl::Init(
                           "Init() failed to set mono/stereo playout mode");
   }
 
+#if 0
   // TODO(andrew): These functions don't tell us whether stereo recording
   // is truly available. We simply set the AudioProcessing input to stereo
   // here, because we have to wait until receiving the first frame to
@@ -343,6 +346,7 @@ int VoEBaseImpl::Init(
     shared_->SetLastError(VE_SOUNDCARD_ERROR, kTraceWarning,
                           "Init() failed to set mono/stereo recording mode");
   }
+#endif
 
   shared_->set_audio_processing(audio_processing);
 
@@ -618,6 +622,7 @@ int32_t VoEBaseImpl::StopPlayout() {
 }
 
 int32_t VoEBaseImpl::StartSend() {
+#if 0
   if (!shared_->audio_device()->RecordingIsInitialized() &&
       !shared_->audio_device()->Recording()) {
     if (shared_->audio_device()->InitRecording() != 0) {
@@ -631,10 +636,12 @@ int32_t VoEBaseImpl::StartSend() {
       return -1;
     }
   }
+#endif
   return 0;
 }
 
 int32_t VoEBaseImpl::StopSend() {
+#if 0
   if (shared_->NumOfSendingChannels() == 0 &&
       !shared_->transmit_mixer()->IsRecordingMic()) {
     // Stop audio-device recording if no channel is recording
@@ -645,7 +652,7 @@ int32_t VoEBaseImpl::StopSend() {
     }
     shared_->transmit_mixer()->StopSend();
   }
-
+#endif
   return 0;
 }
 
@@ -665,10 +672,12 @@ int32_t VoEBaseImpl::TerminateInternal() {
       shared_->SetLastError(VE_SOUNDCARD_ERROR, kTraceWarning,
                             "TerminateInternal() failed to stop playout");
     }
+#if 0
     if (shared_->audio_device()->StopRecording() != 0) {
       shared_->SetLastError(VE_SOUNDCARD_ERROR, kTraceWarning,
                             "TerminateInternal() failed to stop recording");
     }
+#endif
     if (shared_->audio_device()->RegisterEventObserver(nullptr) != 0) {
       shared_->SetLastError(
           VE_AUDIO_DEVICE_MODULE_ERROR, kTraceWarning,
