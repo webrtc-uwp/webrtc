@@ -11,7 +11,7 @@
 
 #include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
 
-#if defined(WEBRTC_USE_H264)
+#if defined(WEBRTC_USE_H264) && (WEBRTC_INITIALIZE_FFMPEG)
 #include "webrtc/modules/video_coding/codecs/h264/h264_decoder_impl.h"
 #include "webrtc/modules/video_coding/codecs/h264/h264_encoder_impl.h"
 #endif
@@ -46,7 +46,7 @@ bool IsH264CodecSupported() {
 
 H264Encoder* H264Encoder::Create(const cricket::VideoCodec& codec) {
   RTC_DCHECK(H264Encoder::IsSupported());
-#if defined(WEBRTC_USE_H264)
+#if defined(WEBRTC_USE_H264) && (WEBRTC_INITIALIZE_FFMPEG)
   RTC_CHECK(g_rtc_use_h264);
   LOG(LS_INFO) << "Creating H264EncoderImpl.";
   return new H264EncoderImpl(codec);
@@ -62,7 +62,7 @@ bool H264Encoder::IsSupported() {
 
 H264Decoder* H264Decoder::Create() {
   RTC_DCHECK(H264Decoder::IsSupported());
-#if defined(WEBRTC_USE_H264)
+#if defined(WEBRTC_USE_H264) && (WEBRTC_INITIALIZE_FFMPEG)
   RTC_CHECK(g_rtc_use_h264);
   LOG(LS_INFO) << "Creating H264DecoderImpl.";
   return new H264DecoderImpl();
