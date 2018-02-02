@@ -19,7 +19,9 @@
 #include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
 #include "webrtc/modules/video_coding/utility/quality_scaler.h"
 
+#if defined(WEBRTC_USE_OPENH264)
 #include "third_party/openh264/src/codec/api/svc/codec_app_def.h"
+#endif
 
 class ISVCEncoder;
 
