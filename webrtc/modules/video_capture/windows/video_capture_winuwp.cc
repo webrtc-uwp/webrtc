@@ -19,6 +19,8 @@
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/system_wrappers/include/event_wrapper.h"
 #include "webrtc/modules/video_capture/windows/video_capture_sink_winuwp.h"
+#include "webrtc/modules/video_capture/windows/mrc_audio_effect_definition.h"
+#include "webrtc/modules/video_capture/windows/mrc_video_effect_definition.h"
 #include "webrtc/rtc_base/Win32.h"
 #include "libyuv/planar_functions.h"
 #include "webrtc/common_video/video_common_winuwp.h"
@@ -90,6 +92,13 @@ void AppStateDispatcher::DisplayOrientationChanged(
   for (auto obs_it = observers.begin(); obs_it != observers.end(); ++obs_it) {
     (*obs_it)->DisplayOrientationChanged(display_orientation);
   }
+}
+
+void AppStateDispatcher::MixedRealityCaptureChanged(
+	MrcEffectDefinitions::MrcVideoEffectDefinition video_effect_definition,
+	MrcEffectDefinitions::MrcAudioEffectDefinition audio_effect_definition) {
+  video_effect_definition_ = video_effect_definition;
+  audio_effect_definition_ = audio_effect_definition;
 }
 
 DisplayOrientations AppStateDispatcher::GetOrientation() const {
@@ -672,7 +681,20 @@ VideoCaptureWinUWP::VideoCaptureWinUWP()
     fake_device_(nullptr),
     last_frame_info_(),
     video_encoding_properties_(nullptr),
-    media_encoding_profile_(nullptr) {
+    media_encoding_profile_(nullptr),
+    audio_effect_definition_(),
+    video_effect_definition_(),
+    audio_effect_added_(false),
+    video_effect_added_(false) {
+		audio_effect_definition_ = MrcEffectDefinitions::MrcAudioEffectDefinition { 2 };
+		video_effect_definition_ = MrcEffectDefinitions::MrcVideoEffectDefinition{
+		  1, //VideoRecord
+		  false, //No MRC
+		  false, // No recording indicator
+		  false, // No stabilizations
+		  0, //buffer length
+		  0.9f //90% opacity
+		};
   if (VideoCommonWinUWP::GetCoreDispatcher() == nullptr) {
     LOG(LS_INFO) << "Using AppStateDispatcher as orientation source";
     AppStateDispatcher::Instance()->AddObserver(this);
@@ -849,6 +871,9 @@ int32_t VideoCaptureWinUWP::StartCapture(
     } else {
       ApplyDisplayOrientation(AppStateDispatcher::Instance()->GetOrientation());
     }
+    ApplyMixedRealityCapture(
+		video_effect_definition_,
+		audio_effect_definition_);
     device_->StartCapture(media_encoding_profile_,
                           video_encoding_properties_);
     last_frame_info_ = capability;
@@ -890,11 +915,109 @@ void VideoCaptureWinUWP::ApplyDisplayOrientation(
   }
 }
 
+void VideoCaptureWinUWP::ApplyMixedRealityCapture(
+    struct MrcEffectDefinitions::MrcVideoEffectDefinition video_effect_definition,
+	  struct MrcEffectDefinitions::MrcAudioEffectDefinition audio_effect_definition) {
+  auto mediaCapture =
+    MediaCaptureDevicesWinUWP::Instance()->GetMediaCapture(device_id_);
+  if (mediaCapture == nullptr) {
+    return;
+  }
+
+  if (true) //MRC on/off toggle
+  {
+    // Add video effect on videoRecord stream
+    auto mrcVideoEffectDefinition = ref new webrtc::videocapturemodule::mrceffectdefinitions::MrcVideoEffectDefinition;
+    mrcVideoEffectDefinition->StreamType = (Windows::Media::Capture::MediaStreamType)video_effect_definition.streamType;
+    mrcVideoEffectDefinition->HologramCompositionEnabled = video_effect_definition.hologramCompositionEnabled;
+    mrcVideoEffectDefinition->RecordingIndicatorEnabled = video_effect_definition.recordingIndicatorEnabled;
+    mrcVideoEffectDefinition->VideoStabilizationBufferLength = 0;
+    mrcVideoEffectDefinition->GlobalOpacityCoefficient = video_effect_definition.globalOpacityCoefficient;
+    
+
+    Concurrency::create_task(mediaCapture->AddVideoEffectAsync(mrcVideoEffectDefinition, MediaStreamType::VideoRecord)).then([this,mediaCapture,audio_effect_definition](IMediaExtension ^videoExtension)
+    {
+      OutputDebugString(L"VideoEffect Added\n");
+      video_effect_added_ = true;
+
+      if (mediaCapture->MediaCaptureSettings->StreamingCaptureMode != Windows::Media::Capture::StreamingCaptureMode::Video) //If audio enabled
+      {
+        // Add audio effect on audio stream
+        auto mrcAudioEffectDefinition = ref new webrtc::videocapturemodule::mrceffectdefinitions::MrcAudioEffectDefinition;
+        mrcAudioEffectDefinition->MixerMode = (webrtc::videocapturemodule::mrceffectdefinitions::AudioMixerMode)audio_effect_definition.mixerMode;
+
+        auto addAudioEffectTask = Concurrency::create_task(mediaCapture->AddAudioEffectAsync(mrcAudioEffectDefinition)).then([this](IMediaExtension^ audioExtension)
+        {
+          OutputDebugString(L"AudioEffect Added\n");
+          audio_effect_added_ = true;
+        });
+      }
+    }).wait();
+  }
+  else if (mediaCapture->MediaCaptureSettings->StreamingCaptureMode == Windows::Media::Capture::StreamingCaptureMode::Audio)
+  {
+    // Add audio effect on audio stream
+    auto mrcAudioEffectDefinition = ref new mrceffectdefinitions::MrcAudioEffectDefinition;
+    mrcAudioEffectDefinition->MixerMode = (webrtc::videocapturemodule::mrceffectdefinitions::AudioMixerMode)audio_effect_definition.mixerMode;
+
+    Concurrency::create_task(mediaCapture->AddAudioEffectAsync(mrcAudioEffectDefinition)).then([this](IMediaExtension^ audioExtension)
+    {
+      //auto lock = _lock.LockExclusive();
+      OutputDebugString(L"AudioEffect Added\n");
+      audio_effect_added_ = true;
+    }).wait();
+  }
+  return;
+}
+
+void VideoCaptureWinUWP::CleanMixedRealityCapture() {
+  auto mediaCapture =
+    MediaCaptureDevicesWinUWP::Instance()->GetMediaCapture(device_id_);
+  if (mediaCapture == nullptr) {
+    return;
+  }
+
+  if (hasVideoCaptureHolographicCapabilities())
+  {
+    // Clear effects in videoRecord stream
+    Concurrency::create_task(mediaCapture->ClearEffectsAsync(Windows::Media::Capture::MediaStreamType::VideoRecord)).then([this,mediaCapture]()
+    {
+      //auto lock = _lock.LockExclusive();
+      OutputDebugString(L"VideoEffect removed\n");
+      video_effect_added_ = false;
+
+      if (audio_effect_added_)
+      {
+        // Clear effects in audio stream
+        Concurrency::create_task(mediaCapture->ClearEffectsAsync(Windows::Media::Capture::MediaStreamType::Audio)).then([this]()
+        {
+          //auto lock = _lock.LockExclusive();
+          OutputDebugString(L"AudioEffect removed\n");
+          audio_effect_added_ = false;
+        });
+      }
+    }).wait();
+  }
+  else  if (audio_effect_added_)
+  {
+    // Clear effects in audio stream
+    Concurrency::create_task(mediaCapture->ClearEffectsAsync(Windows::Media::Capture::MediaStreamType::Audio)).then([this]()
+    {
+      //auto lock = _lock.LockExclusive();
+      OutputDebugString(L"AudioEffect removed\n");
+      audio_effect_added_ = false;
+    }).wait();
+  }
+  return;
+}
+
+
 int32_t VideoCaptureWinUWP::StopCapture() {
   rtc::CritScope cs(&_apiCs);
 
   try {
     if (device_->CaptureStarted()) {
+      CleanMixedRealityCapture();
       device_->StopCapture();
     }
     if (fake_device_->CaptureStarted()) {
@@ -955,6 +1078,12 @@ void VideoCaptureWinUWP::DisplayOrientationChanged(
     return;
   }
   ApplyDisplayOrientation(display_orientation);
+}
+
+void VideoCaptureWinUWP::MixedRealityCaptureChanged(
+	MrcEffectDefinitions::MrcVideoEffectDefinition video_effect_definition,
+	MrcEffectDefinitions::MrcAudioEffectDefinition audio_effect_definition) {
+	ApplyMixedRealityCapture(video_effect_definition_, audio_effect_definition_);
 }
 
 void VideoCaptureWinUWP::OnDisplayOrientationChanged(
