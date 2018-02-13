@@ -189,7 +189,7 @@ if (!build_with_chromium) {
       "//testing/gmock",
       "//testing/gtest",
     ]
-    if (is_winuwp) {
+    if (is_target_winuwp) {
       deps += [ "//third_party/winuwp_compat:wrap_main_utf8_cc" ]
     }
   }
@@ -528,7 +528,7 @@ rtc_source_set("test_common") {
     "statistics.h",
     "win/run_loop_win.cc",
   ]
-  if (is_winuwp) {
+  if (is_target_winuwp) {
     sources -= [ "win/run_loop_win.cc" ]
     sources += [
       "run_loop.cc",
