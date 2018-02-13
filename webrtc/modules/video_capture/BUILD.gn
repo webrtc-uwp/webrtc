@@ -110,7 +110,7 @@ if (!build_with_chromium) {
       ]
     }
     if (is_win) {
-      if (!is_winuwp) {
+      if (!is_target_winuwp) {
         sources = [
           "windows/device_info_ds.cc",
           "windows/device_info_ds.h",

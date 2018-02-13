@@ -200,7 +200,7 @@ rtc_static_library("audio_device") {
         ]
       }
       if (is_win) {
-        if (!is_winuwp) {
+        if (!is_target_winuwp) {
           sources += [
             "win/audio_device_core_win.cc",
             "win/audio_device_core_win.h",

@@ -497,7 +497,7 @@ if (rtc_include_tests) {
         "test/conversational_speech",
         "test/py_quality_assessment",
       ]
-      if (is_winuwp) {
+      if (is_target_winuwp) {
         public_deps -= [ "test/py_quality_assessment" ]
       }
     }

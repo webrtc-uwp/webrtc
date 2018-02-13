@@ -301,7 +301,7 @@ if (rtc_include_tests) {
       "//testing/gmock",
       "//testing/gtest",
     ]
-    if (is_winuwp) {
+    if (is_target_winuwp) {
       deps += [ "//third_party/winuwp_compat:force_include_std" ]
     }
     if (!build_with_chromium && is_clang) {

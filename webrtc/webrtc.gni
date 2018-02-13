@@ -273,7 +273,7 @@ template("rtc_test") {
     configs += invoker.configs
     configs -= rtc_remove_configs
     configs -= invoker.suppressed_configs
-    if (is_winuwp) {     
+    if (is_target_winuwp) {     
       if (is_c_main) {
         deps += [ "//third_party/winuwp_compat:wrap_main_utf8_c" ]
       } else {
@@ -327,7 +327,7 @@ template("rtc_executable") {
       "//build/config:exe_and_shlib_deps",
     ]
     deps += invoker.deps
-    if (is_winuwp) {     
+    if (is_target_winuwp) {     
       if (is_c_main) {
         deps += [ "//third_party/winuwp_compat:wrap_main_utf8_c" ]
       } else {
