@@ -23,30 +23,6 @@ ref class CaptureDevice;
 ref class BlackFramesGenerator;
 ref class DisplayOrientation;
 
-class MrcEffectDefinitions {
-	public:
-		struct MrcVideoEffectDefinition {
-			// MediaStreamType_VideoPreview = 0,
-			// MediaStreamType_VideoRecord = 1,
-			// MediaStreamType_Audio = 2,
-			// MediaStreamType_Photo = 3,
-			uint32_t streamType;
-			bool hologramCompositionEnabled;
-			bool recordingIndicatorEnabled;
-			bool videoStabilizationEnabled;
-			//VideoStabilizationBufferLength = DefaultVideoStabilizationBufferLength;
-			uint32_t videoStabilizationBufferLength;
-			float  globalOpacityCoefficient;
-		};
-
-		struct MrcAudioEffectDefinition {
-			//Mic = 0,
-			  //Loopback = 1,
-			  //MicAndLoopback = 2
-			uint32_t mixerMode;
-		};
-};
-
 class CaptureDeviceListener {
  public:
   virtual void OnIncomingFrame(uint8_t* video_frame,
@@ -66,9 +42,9 @@ class AppStateObserver {
  public:
   virtual void DisplayOrientationChanged(
     Windows::Graphics::Display::DisplayOrientations display_orientation) = 0;
-  virtual void MixedRealityCaptureChanged(
-	  MrcEffectDefinitions::MrcVideoEffectDefinition video_effect_definition,
-	  MrcEffectDefinitions::MrcAudioEffectDefinition audio_effect_definition) = 0;
+  // virtual void MixedRealityCaptureChanged(
+	//   MrcEffectDefinitions::MrcVideoEffectDefinition video_effect_definition,
+	//   MrcEffectDefinitions::MrcAudioEffectDefinition audio_effect_definition) = 0;
 };
 
 class AppStateDispatcher : public AppStateObserver {
@@ -78,9 +54,9 @@ class AppStateDispatcher : public AppStateObserver {
   void DisplayOrientationChanged(
     Windows::Graphics::Display::DisplayOrientations display_orientation);
   Windows::Graphics::Display::DisplayOrientations GetOrientation() const;
-  void MixedRealityCaptureChanged(
-	MrcEffectDefinitions::MrcVideoEffectDefinition video_effect_definition,
-	MrcEffectDefinitions::MrcAudioEffectDefinition audio_effect_definition);
+  // void MixedRealityCaptureChanged(
+	// MrcEffectDefinitions::MrcVideoEffectDefinition video_effect_definition,
+	// MrcEffectDefinitions::MrcAudioEffectDefinition audio_effect_definition);
 
   void AddObserver(AppStateObserver* observer);
   void RemoveObserver(AppStateObserver* observer);
@@ -91,8 +67,6 @@ class AppStateDispatcher : public AppStateObserver {
   std::vector<AppStateObserver*> observers;
   static AppStateDispatcher* instance_;
   Windows::Graphics::Display::DisplayOrientations display_orientation_;
-  struct MrcEffectDefinitions::MrcVideoEffectDefinition video_effect_definition_;
-  struct MrcEffectDefinitions::MrcAudioEffectDefinition audio_effect_definition_;
 };
 
 class VideoCaptureWinUWP
@@ -119,9 +93,9 @@ class VideoCaptureWinUWP
   void DisplayOrientationChanged(
     Windows::Graphics::Display::DisplayOrientations display_orientation) override;
 
-  void MixedRealityCaptureChanged(
-	  MrcEffectDefinitions::MrcVideoEffectDefinition video_effect_definition,
-	  MrcEffectDefinitions::MrcAudioEffectDefinition audio_effect_definition) override;
+  // void MixedRealityCaptureChanged(
+	//   MrcEffectDefinitions::MrcVideoEffectDefinition video_effect_definition,
+	//   MrcEffectDefinitions::MrcAudioEffectDefinition audio_effect_definition) override;
 
   // Overrides from DisplayOrientationListener
   void OnDisplayOrientationChanged(
@@ -140,9 +114,7 @@ class VideoCaptureWinUWP
   virtual void ApplyDisplayOrientation(
     Windows::Graphics::Display::DisplayOrientations orientation);
 
-  virtual void ApplyMixedRealityCapture(
-	  MrcEffectDefinitions::MrcVideoEffectDefinition video_effect_definition,
-	  MrcEffectDefinitions::MrcAudioEffectDefinition audio_effect_definition);
+  virtual void ApplyMixedRealityCapture();
 
   void VideoCaptureWinUWP::CleanMixedRealityCapture();
 
@@ -167,8 +139,6 @@ class VideoCaptureWinUWP
     video_encoding_properties_;
   Windows::Media::MediaProperties::MediaEncodingProfile^
     media_encoding_profile_;
-  struct MrcEffectDefinitions::MrcVideoEffectDefinition video_effect_definition_;
-  struct MrcEffectDefinitions::MrcAudioEffectDefinition audio_effect_definition_;
   bool audio_effect_added_;
   bool video_effect_added_;
 };
