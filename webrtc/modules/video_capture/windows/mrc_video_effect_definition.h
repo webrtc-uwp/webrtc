@@ -61,9 +61,9 @@
 #include "webrtc/typedefs.h"
 namespace webrtc {
 	namespace videocapturemodule {
-		public ref class MrcVideoEffectDefinition sealed : public Windows::Media::Effects::IVideoEffectDefinition
+		ref class MrcVideoEffectDefinition sealed : public Windows::Media::Effects::IVideoEffectDefinition
 		{
-		internal:
+		public:
 			MrcVideoEffectDefinition();
 
 			//

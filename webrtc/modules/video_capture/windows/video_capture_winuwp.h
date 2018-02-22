@@ -114,20 +114,6 @@ class VideoCaptureWinUWP
   virtual void ApplyDisplayOrientation(
     Windows::Graphics::Display::DisplayOrientations orientation);
 
-  virtual void ApplyMixedRealityCapture();
-
-  void VideoCaptureWinUWP::CleanMixedRealityCapture();
-
-  bool hasVideoCaptureHolographicCapabilities() {
-    if (audio_effect_added_) {
-      return true;
-    }
-    if (video_effect_added_) {
-      return true;
-    }
-    return false;
-  }
-
  private:
   Platform::String^ device_id_;
   CaptureDevice^ device_;
@@ -139,8 +125,6 @@ class VideoCaptureWinUWP
     video_encoding_properties_;
   Windows::Media::MediaProperties::MediaEncodingProfile^
     media_encoding_profile_;
-  bool audio_effect_added_;
-  bool video_effect_added_;
 };
 
 // Helper function to run code on the WinUWP CoreDispatcher

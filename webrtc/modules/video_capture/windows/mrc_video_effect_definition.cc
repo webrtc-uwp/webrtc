@@ -8,8 +8,8 @@ namespace webrtc {
             HologramCompositionEnabled = DefaultHologramCompositionEnabled;
             RecordingIndicatorEnabled = DefaultRecordingIndicatorEnabled;
             VideoStabilizationEnabled = DefaultVideoStabilizationEnabled;
-            //VideoStabilizationBufferLength = DefaultVideoStabilizationBufferLength;
-            VideoStabilizationBufferLength = 0;
+            VideoStabilizationBufferLength = DefaultVideoStabilizationBufferLength;
+            //VideoStabilizationBufferLength = 0;
             GlobalOpacityCoefficient = DefaultGlobalOpacityCoefficient;
         }
     }

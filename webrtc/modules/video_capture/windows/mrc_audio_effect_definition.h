@@ -22,14 +22,14 @@
 
 namespace webrtc {
 	namespace videocapturemodule {
-		public enum class AudioMixerMode
+		private enum class AudioMixerMode
 		{
 			Mic = 0,
 			Loopback = 1,
 			MicAndLoopback = 2
 		};
 
-		public ref class MrcAudioEffectDefinition sealed : public Windows::Media::Effects::IAudioEffectDefinition
+		ref class MrcAudioEffectDefinition sealed : public Windows::Media::Effects::IAudioEffectDefinition
 		{
 		public:
 			MrcAudioEffectDefinition();

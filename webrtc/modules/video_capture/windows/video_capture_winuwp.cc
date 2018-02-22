@@ -48,6 +48,7 @@ using Windows::UI::Core::CoreDispatcherPriority;
 using Windows::Foundation::IAsyncAction;
 using Windows::Foundation::TypedEventHandler;
 
+using Windows::System::Profile::AnalyticsInfo;
 using Windows::System::Threading::TimerElapsedHandler;
 using Windows::System::Threading::ThreadPoolTimer;
 
@@ -208,6 +209,18 @@ ref class CaptureDevice sealed {
     Platform::Agile<Windows::Media::Capture::MediaCapture> get();
   }
 
+  void CleanupMixedRealityCapture();
+
+  bool hasVideoCaptureHolographicCapabilities() {
+	  if (audio_effect_added_) {
+		  return true;
+	  }
+	  if (video_effect_added_) {
+		  return true;
+	  }
+	  return false;
+  }
+
  private:
   void RemovePaddingPixels(uint8_t* video_frame, size_t& video_frame_length);
 
@@ -222,6 +235,8 @@ ref class CaptureDevice sealed {
 
   CaptureDeviceListener* capture_device_listener_;
 
+  bool audio_effect_added_;
+  bool video_effect_added_;
   bool capture_started_;
   VideoCaptureCapability frame_info_;
   std::unique_ptr<webrtc::EventWrapper> _stopped;
@@ -233,7 +248,9 @@ CaptureDevice::CaptureDevice(
     device_id_(nullptr),
     media_sink_(nullptr),
     capture_device_listener_(capture_device_listener),
-    capture_started_(false) {
+    capture_started_(false),
+	audio_effect_added_(false),
+	video_effect_added_(false) {
   _stopped.reset(webrtc::EventWrapper::Create());
   _stopped->Set();
 }
@@ -259,6 +276,7 @@ void CaptureDevice::CleanupSink() {
 void CaptureDevice::CleanupMediaCapture() {
   Windows::Media::Capture::MediaCapture^ media_capture = media_capture_.Get();
   if (media_capture != nullptr) {
+	CleanupMixedRealityCapture();
     media_capture->Failed -= media_capture_failed_event_registration_token_;
     MediaCaptureDevicesWinUWP::Instance()->RemoveMediaCapture(device_id_);
     media_capture_ = nullptr;
@@ -301,6 +319,21 @@ void CaptureDevice::Cleanup() {
     device_id_ = nullptr;
   }
 }
+
+void CaptureDevice::CleanupMixedRealityCapture() {
+	Concurrency::task<void> cleanEffectTask;
+	if (video_effect_added_) {
+		// Clear effects in videoRecord stream
+		cleanEffectTask = Concurrency::create_task(media_capture_->ClearEffectsAsync(Windows::Media::Capture::MediaStreamType::VideoRecord)).then([this]()
+		{
+			OutputDebugString(L"VideoEffect removed\n");
+			video_effect_added_ = false;
+		});
+	}
+	cleanEffectTask.wait();
+	return;
+}
+
 
 void CaptureDevice::StartCapture(
   MediaEncodingProfile^ media_encoding_profile,
@@ -379,14 +412,26 @@ void CaptureDevice::StartCapture(
   auto initTask = Concurrency::create_task(initOp)
     .then([this, media_encoding_profile,
       video_encoding_properties](IMediaExtension^ media_extension) {
+
+	  Platform::String^ deviceFamily = Windows::System::Profile::AnalyticsInfo::VersionInfo->DeviceFamily;
+	  if (deviceFamily->Equals(L"Windows.Holographic")) {
+		  auto mrcVideoEffectDefinition = ref new MrcVideoEffectDefinition;
+		  mrcVideoEffectDefinition->StreamType = MediaStreamType::VideoRecord;
+		  auto addEffectTask = Concurrency::create_task(media_capture_->AddVideoEffectAsync(mrcVideoEffectDefinition, MediaStreamType::VideoRecord)).then([this](IMediaExtension ^videoExtension)
+		  {
+			  OutputDebugString(L"VideoEffect Added\n");
+			  video_effect_added_ = true;
+		  });
+		  Concurrency::create_task(addEffectTask).wait();
+	  }
       auto setPropOp =
         media_capture_->VideoDeviceController->SetMediaStreamPropertiesAsync(
         MediaStreamType::VideoRecord, video_encoding_properties);
       return Concurrency::create_task(setPropOp)
         .then([this, media_encoding_profile, media_extension]() {
-          auto startRecordOp = media_capture_->StartRecordToCustomSinkAsync(
-            media_encoding_profile, media_extension);
-          return Concurrency::create_task(startRecordOp);
+		  auto startRecordOp = media_capture_->StartRecordToCustomSinkAsync(
+			  media_encoding_profile, media_extension);
+		  return Concurrency::create_task(startRecordOp);
         });
       });
 
@@ -867,10 +912,6 @@ int32_t VideoCaptureWinUWP::StartCapture(
     } else {
       ApplyDisplayOrientation(AppStateDispatcher::Instance()->GetOrientation());
     }
-    ApplyMixedRealityCapture();
-    // ApplyMixedRealityCapture(
-		// video_effect_definition_,
-		// audio_effect_definition_);
     device_->StartCapture(media_encoding_profile_,
                           video_encoding_properties_);
     last_frame_info_ = capability;
@@ -912,107 +953,11 @@ void VideoCaptureWinUWP::ApplyDisplayOrientation(
   }
 }
 
-void VideoCaptureWinUWP::ApplyMixedRealityCapture() {
-  auto mediaCapture =
-    MediaCaptureDevicesWinUWP::Instance()->GetMediaCapture(device_id_);
-  if (mediaCapture == nullptr) {
-    return;
-  }
-
-  if (true) //MRC on/off toggle
-  {
-    // Add video effect on videoRecord stream
-    auto mrcVideoEffectDefinition = ref new MrcVideoEffectDefinition;
-    // mrcVideoEffectDefinition->StreamType = (Windows::Media::Capture::MediaStreamType)video_effect_definition.streamType;
-    // mrcVideoEffectDefinition->HologramCompositionEnabled = video_effect_definition.hologramCompositionEnabled;
-    // mrcVideoEffectDefinition->RecordingIndicatorEnabled = video_effect_definition.recordingIndicatorEnabled;
-    mrcVideoEffectDefinition->VideoStabilizationBufferLength = 0;
-    // mrcVideoEffectDefinition->GlobalOpacityCoefficient = video_effect_definition.globalOpacityCoefficient;
-    
-
-    Concurrency::create_task(mediaCapture->AddVideoEffectAsync(mrcVideoEffectDefinition, MediaStreamType::VideoRecord)).then([this,mediaCapture](IMediaExtension ^videoExtension)
-    {
-      OutputDebugString(L"VideoEffect Added\n");
-      video_effect_added_ = true;
-
-      if (mediaCapture->MediaCaptureSettings->StreamingCaptureMode != Windows::Media::Capture::StreamingCaptureMode::Video) //If audio enabled
-      {
-        // Add audio effect on audio stream
-        auto mrcAudioEffectDefinition = ref new MrcAudioEffectDefinition;
-        //mrcAudioEffectDefinition->MixerMode = (webrtc::videocapturemodule::mrceffectdefinitions::AudioMixerMode)audio_effect_definition.mixerMode;
-
-        auto addAudioEffectTask = Concurrency::create_task(mediaCapture->AddAudioEffectAsync(mrcAudioEffectDefinition)).then([this](IMediaExtension^ audioExtension)
-        {
-          OutputDebugString(L"AudioEffect Added\n");
-          audio_effect_added_ = true;
-        });
-      }
-    }).wait();
-  }
-  else if (mediaCapture->MediaCaptureSettings->StreamingCaptureMode == Windows::Media::Capture::StreamingCaptureMode::Audio)
-  {
-    // Add audio effect on audio stream
-    auto mrcAudioEffectDefinition = ref new MrcAudioEffectDefinition;
-    //mrcAudioEffectDefinition->MixerMode = (webrtc::videocapturemodule::mrceffectdefinitions::AudioMixerMode)audio_effect_definition.mixerMode;
-
-    Concurrency::create_task(mediaCapture->AddAudioEffectAsync(mrcAudioEffectDefinition)).then([this](IMediaExtension^ audioExtension)
-    {
-      //auto lock = _lock.LockExclusive();
-      OutputDebugString(L"AudioEffect Added\n");
-      audio_effect_added_ = true;
-    }).wait();
-  }
-  return;
-}
-
-void VideoCaptureWinUWP::CleanMixedRealityCapture() {
-  auto mediaCapture =
-    MediaCaptureDevicesWinUWP::Instance()->GetMediaCapture(device_id_);
-  if (mediaCapture == nullptr) {
-    return;
-  }
-
-  if (hasVideoCaptureHolographicCapabilities())
-  {
-    // Clear effects in videoRecord stream
-    Concurrency::create_task(mediaCapture->ClearEffectsAsync(Windows::Media::Capture::MediaStreamType::VideoRecord)).then([this,mediaCapture]()
-    {
-      //auto lock = _lock.LockExclusive();
-      OutputDebugString(L"VideoEffect removed\n");
-      video_effect_added_ = false;
-
-      if (audio_effect_added_)
-      {
-        // Clear effects in audio stream
-        Concurrency::create_task(mediaCapture->ClearEffectsAsync(Windows::Media::Capture::MediaStreamType::Audio)).then([this]()
-        {
-          //auto lock = _lock.LockExclusive();
-          OutputDebugString(L"AudioEffect removed\n");
-          audio_effect_added_ = false;
-        });
-      }
-    }).wait();
-  }
-  else  if (audio_effect_added_)
-  {
-    // Clear effects in audio stream
-    Concurrency::create_task(mediaCapture->ClearEffectsAsync(Windows::Media::Capture::MediaStreamType::Audio)).then([this]()
-    {
-      //auto lock = _lock.LockExclusive();
-      OutputDebugString(L"AudioEffect removed\n");
-      audio_effect_added_ = false;
-    }).wait();
-  }
-  return;
-}
-
-
 int32_t VideoCaptureWinUWP::StopCapture() {
   rtc::CritScope cs(&_apiCs);
 
   try {
     if (device_->CaptureStarted()) {
-      CleanMixedRealityCapture();
       device_->StopCapture();
     }
     if (fake_device_->CaptureStarted()) {
