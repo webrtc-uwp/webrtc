@@ -26,6 +26,7 @@
 #include "webrtc/media/base/mediachannel.h"
 #include "webrtc/media/base/videocommon.h"
 #include "webrtc/rtc_base/fileutils.h"
+#include "webrtc/modules/audio_device/audio_device_config.h"
 
 #if defined(GOOGLE_CHROME_BUILD) || defined(CHROMIUM_BUILD)
 #define DISABLE_MEDIA_ENGINE_FACTORY
@@ -127,7 +128,9 @@ class CompositeMediaEngine : public MediaEngineInterface {
                audio_processing) {}
   virtual ~CompositeMediaEngine() {}
   virtual bool Init() {
-    //voice_.Init();
+#ifndef WEBRTC_AUDIO_DEVICE_DISABLED
+    voice_.Init();
+#endif
     video_.Init();
     return true;
   }
