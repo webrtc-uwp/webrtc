@@ -44,6 +44,7 @@
 #include "webrtc/system_wrappers/include/metrics.h"
 #include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/voice_engine/transmit_mixer.h"
+#include "webrtc/modules/audio_device/audio_device_config.h"
 
 namespace cricket {
 namespace {
@@ -1932,6 +1933,10 @@ bool WebRtcVoiceMediaChannel::AddRecvStream(const StreamParams& sp) {
   TRACE_EVENT0("webrtc", "WebRtcVoiceMediaChannel::AddRecvStream");
   RTC_DCHECK(worker_thread_checker_.CalledOnValidThread());
   LOG(LS_INFO) << "AddRecvStream: " << sp.ToString();
+
+#ifdef WEBRTC_AUDIO_DEVICE_DISABLED
+  return false;
+#endif // WEBRTC_AUDIO_DEVICE_DISABLED
 
   if (!ValidateStreamParams(sp)) {
     return false;
