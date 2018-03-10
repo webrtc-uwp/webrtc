@@ -27,7 +27,7 @@ group("modules") {
     "video_coding",
     "video_processing",
   ]
-  if (is_winuwp) {
+  if (is_target_winuwp) {
     public_deps -= [ "desktop_capture" ]
   }
 }
@@ -75,7 +75,7 @@ if (rtc_include_tests) {
       "//testing/gmock",
       "//testing/gtest",
     ]
-    if (is_winuwp) {
+    if (is_target_winuwp) {
       deps -= [ "desktop_capture:desktop_capture_modules_tests" ]
     }
 
@@ -246,7 +246,7 @@ if (rtc_include_tests) {
       "video_coding:video_coding_unittests",
       "video_processing:video_processing_unittests",
     ]
-    if (is_winuwp) {
+    if (is_target_winuwp) {
       deps -= [ "desktop_capture:desktop_capture_unittests" ]
     }
 

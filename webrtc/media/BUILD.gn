@@ -211,10 +211,10 @@ rtc_static_library("rtc_audio_video") {
     include_dirs += [ "$rtc_libyuv_dir/include" ]
   }
 
-  if (is_winuwp) {
+  if (is_target_winuwp) {
     deps += [ "//third_party/winuwp_h264:winuwp_h264" ]
   }
-  #if (is_winuwp) {
+  #if (is_target_winuwp) {
   #  sources += [
   #    "devices/winuwpdevicemanager.cc",
   #    "devices/winuwpdevicemanager.h",

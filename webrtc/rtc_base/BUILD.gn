@@ -189,7 +189,7 @@ rtc_static_library("rtc_base_approved") {
 
   deps += [ "..:webrtc_common" ]
 
-  if (is_winuwp) {
+  if (is_target_winuwp) {
     public_deps += [ "//third_party/winuwp_compat:force_include_all" ]
   }
 
@@ -363,7 +363,7 @@ rtc_source_set("rtc_task_queue_impl") {
         ]
       }
       if (is_win) {
-        if (is_winuwp) {
+        if (is_target_winuwp) {
           sources += [ "task_queue_stdlib.cc" ]
         } else {
           sources += [ "task_queue_win.cc" ]
@@ -546,7 +546,7 @@ rtc_static_library("rtc_base") {
     "thread.h",
   ]
 
-  if (is_winuwp) {
+  if (is_target_winuwp) {
     public_deps += [ "//third_party/winuwp_compat:force_include_all" ]
   }
 
@@ -587,7 +587,7 @@ rtc_static_library("rtc_base") {
         "win32socketserver.cc",
         "win32socketserver.h",
       ]
-      if (is_winuwp) {
+      if (is_target_winuwp) {
         sources += [
           "loggingserver.cc",
           "loggingserver.h",
@@ -664,7 +664,7 @@ rtc_static_library("rtc_base") {
       "win32window.cc",
       "win32window.h",
     ]
-  if (is_winuwp) {
+  if (is_target_winuwp) {
       sources -= [
         "win32window.cc",
         "win32window.h",
@@ -809,7 +809,7 @@ if (rtc_include_tests) {
       "//testing/gtest",
     ]
 
-     if (is_winuwp) {
+     if (is_target_winuwp) {
       deps += [ "//third_party/winuwp_compat:wrap_main_utf8_cc" ]
     }
     if (!build_with_chromium && is_clang) {
@@ -846,7 +846,7 @@ if (rtc_include_tests) {
       "../test:test_support",
       "//testing/gtest",
     ]
-    if ((is_win) && (!is_winuwp)) {
+    if ((is_win) && (!is_target_winuwp)) {
       sources += [ "win32socketserver_unittest.cc" ]
     }
 
@@ -1064,7 +1064,7 @@ if (rtc_include_tests) {
         "win32_unittest.cc",
         "win32window_unittest.cc",
       ]
-      if (is_winuwp) {
+      if (is_target_winuwp) {
         sources -= [ "win32window_unittest.cc" ]
       }
     }
