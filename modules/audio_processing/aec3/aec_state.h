@@ -24,6 +24,7 @@
 #include "modules/audio_processing/aec3/erl_estimator.h"
 #include "modules/audio_processing/aec3/erle_estimator.h"
 #include "modules/audio_processing/aec3/render_buffer.h"
+#include "modules/audio_processing/aec3/suppression_gain_limiter.h"
 #include "rtc_base/constructormagic.h"
 
 namespace webrtc {
@@ -89,7 +90,9 @@ class AecState {
   float ReverbDecay() const { return reverb_decay_; }
 
   // Returns the upper limit for the echo suppression gain.
-  float SuppressionGainLimit() const { return suppressor_gain_limit_; }
+  float SuppressionGainLimit() const {
+    return suppression_gain_limiter_.Limit();
+  }
 
   // Returns whether the echo in the capture signal is audible.
   bool InaudibleEcho() const { return echo_audibility_.InaudibleEcho(); }
@@ -154,9 +157,6 @@ class AecState {
   bool transparent_mode_ = false;
   float previous_max_sample_ = 0.f;
   bool render_received_ = false;
-  int realignment_counter_ = 0;
-  float suppressor_gain_limit_ = 1.f;
-  bool active_render_seen_ = false;
   int filter_delay_ = 0;
   size_t blocks_since_last_saturation_ = 1000;
   float reverb_decay_to_test_ = 0.9f;
@@ -170,6 +170,7 @@ class AecState {
   bool filter_has_had_time_to_converge_ = false;
   bool initial_state_ = true;
   const float gain_rampup_increase_;
+  SuppressionGainUpperLimiter suppression_gain_limiter_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(AecState);
 };
