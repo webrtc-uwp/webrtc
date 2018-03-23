@@ -671,11 +671,13 @@ rtc_static_library("rtc_base") {
       ]
     }
 
-    libs += [
-      "crypt32.lib",
-      "iphlpapi.lib",
-      "secur32.lib",
-    ]
+    if (current_cpu != "arm" && current_cpu != "arm64")
+      libs += [
+        "crypt32.lib",
+        "iphlpapi.lib",
+        "secur32.lib",
+      ]
+    }
 
     cflags += [
       # Suppress warnings about WIN32_LEAN_AND_MEAN.

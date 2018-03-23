@@ -202,6 +202,13 @@ rtc_source_set("common_audio_c") {
 
   if (is_win) {
     cflags = [ "/wd4334" ]  # Ignore warning on shift operator promotion.
+    
+    if (current_cpu == "arm" || current_cpu == "arm64") {
+      sources += [
+        "signal_processing/complex_bit_reverse_arm.S",
+        "signal_processing/spl_sqrt_floor_arm.S",
+      ]
+    }
   }
 
   public_configs = [ ":common_audio_config" ]
