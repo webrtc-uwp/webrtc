@@ -671,7 +671,7 @@ rtc_static_library("rtc_base") {
       ]
     }
 
-    if (current_cpu != "arm" && current_cpu != "arm64")
+    if (current_cpu != "arm" && current_cpu != "arm64") {
       libs += [
         "crypt32.lib",
         "iphlpapi.lib",
