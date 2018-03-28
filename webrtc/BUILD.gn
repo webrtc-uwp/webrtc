@@ -26,7 +26,7 @@ config("common_inherited_config") {
   if (build_with_mozilla) {
     defines += [ "WEBRTC_MOZILLA_BUILD" ]
   }
-  if (is_target_winuwp) {
+  if (current_os == "winuwp") {
     defines += [
       "WEBRTC_FEATURE_END_TO_END_DELAY",
       "WEBRTC_BASE_QUEUED_TASK_USING_STDLIB",
@@ -338,7 +338,7 @@ if (!build_with_chromium) {
           "logging:rtc_event_log2rtp_dump",
         ]
       }
-      if (is_target_winuwp) {
+      if (current_os == "winuwp") {
         deps -= [
           "voice_engine:voe_auto_test",
           "voice_engine:voice_engine_unittests",
