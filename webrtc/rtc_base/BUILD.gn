@@ -664,14 +664,14 @@ rtc_static_library("rtc_base") {
       "win32window.cc",
       "win32window.h",
     ]
-  if (current_os == "winuwp") {
+    if (current_os == "winuwp") {
       sources -= [
         "win32window.cc",
         "win32window.h",
       ]
     }
 
-    if (current_cpu != "arm" && current_cpu != "arm64")
+    if (current_cpu != "arm" && current_cpu != "arm64") {
       libs += [
         "crypt32.lib",
         "iphlpapi.lib",
