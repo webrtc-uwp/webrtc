@@ -128,9 +128,7 @@ class CompositeMediaEngine : public MediaEngineInterface {
                audio_processing) {}
   virtual ~CompositeMediaEngine() {}
   virtual bool Init() {
-#ifndef WEBRTC_AUDIO_DEVICE_DISABLED
     voice_.Init();
-#endif
     video_.Init();
     return true;
   }

@@ -1934,10 +1934,6 @@ bool WebRtcVoiceMediaChannel::AddRecvStream(const StreamParams& sp) {
   RTC_DCHECK(worker_thread_checker_.CalledOnValidThread());
   LOG(LS_INFO) << "AddRecvStream: " << sp.ToString();
 
-#ifdef WEBRTC_AUDIO_DEVICE_DISABLED
-  return false;
-#endif // WEBRTC_AUDIO_DEVICE_DISABLED
-
   if (!ValidateStreamParams(sp)) {
     return false;
   }

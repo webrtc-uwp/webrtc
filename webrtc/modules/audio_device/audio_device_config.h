@@ -11,8 +11,6 @@
 #ifndef WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_CONFIG_H_
 #define WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_CONFIG_H_
 
-#define WEBRTC_AUDIO_DEVICE_DISABLED
-
 // Enumerators
 //
 enum { kAdmMaxIdleTimeProcess = 1000 };
@@ -20,7 +18,7 @@ enum { GET_MIC_VOLUME_INTERVAL_MS = 1000 };
 
 // Platform specifics
 //
-#if defined(_WIN32) && !defined(WEBRTC_AUDIO_DEVICE_DISABLED)
+#if defined(_WIN32)
 #if (_MSC_VER >= 1400)
 // Windows Core Audio is the default audio layer in Windows.
 // Only supported for VS 2005 and higher.
