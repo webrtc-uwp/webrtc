@@ -329,8 +329,8 @@ void CaptureDevice::CleanupMixedRealityCapture() {
 			OutputDebugString(L"VideoEffect removed\n");
 			video_effect_added_ = false;
 		});
+		cleanEffectTask.wait();
 	}
-	cleanEffectTask.wait();
 	return;
 }
 
