@@ -4954,9 +4954,6 @@ std::map<std::string, std::string> PeerConnection::GetTransportNamesByMid()
 std::map<std::string, cricket::TransportStats>
 PeerConnection::GetTransportStatsByNames(
     const std::set<std::string>& transport_names) {
-  if (!transport_controller_) {
-    return {};
-  }
   if (!network_thread()->IsCurrent()) {
     return network_thread()
         ->Invoke<std::map<std::string, cricket::TransportStats>>(
