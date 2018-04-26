@@ -23,7 +23,7 @@ if (rtc_include_opus) {
   audio_codec_deps += [ ":webrtc_opus" ]
 }
 if (!build_with_mozilla) {
-  if (current_cpu == "arm") {
+  if (current_cpu == "arm"  || current_cpu == "arm64") {
     audio_codec_deps += [ ":isac_fix" ]
   } else {
     audio_codec_deps += [ ":isac" ]
@@ -1069,7 +1069,7 @@ rtc_static_library("neteq") {
     deps += [ ":webrtc_opus" ]
   }
   if (!build_with_mozilla) {
-    if (current_cpu == "arm") {
+    if (current_cpu == "arm"  || current_cpu == "arm64") {
       defines += [ "WEBRTC_CODEC_ISACFX" ]
       deps += [ ":isac_fix" ]
     } else {
