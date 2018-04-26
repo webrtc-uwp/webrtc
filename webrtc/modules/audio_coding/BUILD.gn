@@ -606,13 +606,45 @@ rtc_source_set("isac_fix_common") {
   public_configs = [ ":isac_fix_config" ]
 }
 
+if (current_cpu == "arm" && arm_version >= 7) {
+  isac_fix_c_arm_asm_sources = [
+      "codecs/isac/fix/source/lattice_armv7.S",
+      "codecs/isac/fix/source/pitch_filter_armv6.S",
+  ]
+    
+  action_foreach("isac_fix_c_arm_assembly") {
+    script = "//third_party/openmax_dl/dl/run_perl.py"
+    sources = isac_fix_c_arm_asm_sources
+    outputs = [
+      "$target_gen_dir/{{source_file_part}}.obj",
+    ]
+
+    args = [
+      "-s",
+      "../../webrtc/build/gas-preprocessor/gas-preprocessor.pl",
+      "-i",
+      "{{source}}",
+      "-o",
+      rebase_path("$target_gen_dir/{{source_file_part}}.obj"),
+      "-p",
+      "environment.store_arm",
+      "-l",
+      "../../",
+    ]
+  }
+}
+
 rtc_source_set("isac_fix_c_arm_asm") {
   sources = []
   if (current_cpu == "arm" && arm_version >= 7) {
-    sources += [
-      "codecs/isac/fix/source/lattice_armv7.S",
-      "codecs/isac/fix/source/pitch_filter_armv6.S",
-    ]
+    if (current_os == "win" && target_os == "winuwp") {
+      sources = get_target_outputs(":isac_fix_c_arm_assembly")
+      deps = [
+        ":isac_fix_c_arm_assembly",
+      ]
+    } else {
+      sources = isac_fix_c_arm_asm_sources
+    }
   }
 }
 
