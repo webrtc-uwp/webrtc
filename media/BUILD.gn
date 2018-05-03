@@ -359,6 +359,9 @@ rtc_static_library("rtc_audio_video") {
     "../system_wrappers:field_trial_api",
     "../system_wrappers:metrics_api",
   ]
+  if (current_os == "winuwp") {
+    deps += [ "//third_party/winuwp_h264:winuwp_h264" ]
+  }
 }
 
 rtc_static_library("rtc_data") {

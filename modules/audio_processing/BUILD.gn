@@ -455,6 +455,9 @@ if (rtc_include_tests) {
         "test/conversational_speech",
         "test/py_quality_assessment",
       ]
+      if (current_os == "winuwp") {
+        public_deps -= [ "test/py_quality_assessment" ]
+      }
     }
   }
 

@@ -19,6 +19,11 @@
 #undef ERROR  // wingdi.h
 #endif
 
+#if defined(WINUWP)
+#include <stdlib.h>
+#include "rtc_base/win32.h"
+#endif // defined(WINUWP)
+
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
 #include <CoreServices/CoreServices.h>
 #elif defined(WEBRTC_ANDROID)
@@ -327,7 +332,7 @@ void LogMessage::ConfigureLogging(const char* params) {
     }
   }
 
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) && !defined(WINUWP)
   if ((LS_NONE != debug_level) && !::IsDebuggerPresent()) {
     // First, attempt to attach to our parent's console... so if you invoke
     // from the command line, we'll see the output there.  Otherwise, create
@@ -380,7 +385,10 @@ void LogMessage::OutputToDebug(const std::string& str,
   }
 #endif  // defined(WEBRTC_MAC) && !defined(WEBRTC_IOS) && defined(NDEBUG)
 
-#if defined(WEBRTC_WIN)
+#if defined(WINUWP)
+  // Always log to the debugger.
+  OutputDebugString(rtc::ToUtf16(str).c_str());
+#elif defined(WEBRTC_WIN)
   // Always log to the debugger.
   // Perhaps stderr should be controlled by a preference, as on Mac?
   OutputDebugStringA(str.c_str());

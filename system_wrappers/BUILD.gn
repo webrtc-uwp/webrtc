@@ -94,7 +94,9 @@ rtc_static_library("system_wrappers") {
   configs += [ "//build/config/compiler:no_size_t_to_int_warning" ]
 
   if (is_win) {
-    libs += [ "winmm.lib" ]
+    if (current_cpu != "arm" && current_cpu != "arm64") {
+      libs += [ "winmm.lib" ]
+    }
 
     cflags = [ "/wd4334" ]  # Ignore warning on shift operator promotion.
 

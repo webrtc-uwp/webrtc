@@ -123,6 +123,7 @@ namespace cricket {
 class MediaEngineInterface;
 class WebRtcVideoDecoderFactory;
 class WebRtcVideoEncoderFactory;
+class ChannelManager;
 }
 
 namespace webrtc {

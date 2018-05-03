@@ -287,6 +287,7 @@ void ReceiveStatisticsProxy::UpdateHistograms() {
     RTC_DCHECK(videocontenttypehelpers::GetExperimentId(content_type) == 0 ||
                videocontenttypehelpers::GetSimulcastId(content_type) == 0);
 
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
     int e2e_delay_ms = stats.e2e_delay_counter.Avg(kMinRequiredSamples);
     if (e2e_delay_ms != -1) {
       RTC_HISTOGRAM_COUNTS_SPARSE_10000(
@@ -301,6 +302,7 @@ void ReceiveStatisticsProxy::UpdateHistograms() {
       log_stream << uma_prefix << ".EndToEndDelayMaxInMs" << uma_suffix << " "
                  << e2e_delay_max_ms << '\n';
     }
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
     int interframe_delay_ms =
         stats.interframe_delay_counter.Avg(kMinRequiredSamples);
     if (interframe_delay_ms != -1) {
@@ -583,6 +585,9 @@ void ReceiveStatisticsProxy::OnFrameBufferTimingsUpdated(
     int target_delay_ms,
     int jitter_buffer_ms,
     int min_playout_delay_ms,
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
+    int current_endtoend_delay_ms,
+#endif // WEBRTC_FEATURE_END_TO_END_DELAY
     int render_delay_ms) {
   rtc::CritScope lock(&crit_);
   stats_.decode_ms = decode_ms;
@@ -591,6 +596,9 @@ void ReceiveStatisticsProxy::OnFrameBufferTimingsUpdated(
   stats_.target_delay_ms = target_delay_ms;
   stats_.jitter_buffer_ms = jitter_buffer_ms;
   stats_.min_playout_delay_ms = min_playout_delay_ms;
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
+  stats_.current_endtoend_delay_ms = current_endtoend_delay_ms;
+#endif /* WEBRTC_FEATURE_END_TO_END_DELAY */
   stats_.render_delay_ms = render_delay_ms;
   decode_time_counter_.Add(decode_ms);
   jitter_buffer_delay_counter_.Add(jitter_buffer_ms);

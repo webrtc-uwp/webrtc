@@ -44,6 +44,12 @@ rtc_static_library("common_video") {
     "video_render_frames.cc",
     "video_render_frames.h",
   ]
+  if (current_os == "winuwp") {
+    sources += [
+      "video_common_winuwp.cc",
+      "video_common_winuwp.h",
+    ]
+  }
 
   include_dirs = [ "../modules/interface" ]
 

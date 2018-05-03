@@ -170,6 +170,7 @@ rtc_source_set("rtc_base_approved_generic") {
     ":type_traits",
     "../:typedefs",
   ]
+  public_deps = []
 
   sources = [
     "arraysize.h",
@@ -256,6 +257,10 @@ rtc_source_set("rtc_base_approved_generic") {
     "../api:array_view",
     "../api:optional",
   ]
+
+  if (current_os == "winuwp") {
+    public_deps += [ "//third_party/winuwp_compat:force_include_all" ]
+  }
 
   if (is_android) {
     libs += [ "log" ]
@@ -439,9 +444,11 @@ rtc_source_set("rtc_task_queue_impl") {
       ]
     }
     if (is_win) {
-      sources = [
-        "task_queue_win.cc",
-      ]
+      if (current_os == "winuwp") {
+        sources = [ "task_queue_stdlib.cc" ]
+      } else {
+        sources = [ "task_queue_win.cc" ]
+      }
     }
   }
 }
@@ -673,6 +680,10 @@ rtc_static_library("rtc_base_generic") {
     ":rtc_base_objc",
   ]
 
+  if (current_os == "winuwp") {
+    public_deps += [ "//third_party/winuwp_compat:force_include_all" ]
+  }
+
   # TODO(henrike): issue 3307, make rtc_base build with the Chromium default
   # compiler settings.
   suppressed_configs += [ "//build/config/compiler:chromium_code" ]
@@ -709,6 +720,16 @@ rtc_static_library("rtc_base_generic") {
         "win32socketserver.cc",
         "win32socketserver.h",
       ]
+      if (current_os == "winuwp") {
+        sources += [
+          "loggingserver.cc",
+          "loggingserver.h",
+        ]
+        sources -= [
+          "win32socketserver.cc",
+          "win32socketserver.h",
+        ]
+      }
     }
   }  # !build_with_chromium
 
@@ -772,12 +793,20 @@ rtc_static_library("rtc_base_generic") {
       "win32window.cc",
       "win32window.h",
     ]
+    if (current_os == "winuwp") {
+      sources -= [
+        "win32window.cc",
+        "win32window.h",
+      ]
+    }
 
-    libs += [
-      "crypt32.lib",
-      "iphlpapi.lib",
-      "secur32.lib",
-    ]
+    if (current_cpu != "arm" && current_cpu != "arm64") {
+      libs += [
+        "crypt32.lib",
+        "iphlpapi.lib",
+        "secur32.lib",
+      ]
+    }
 
     cflags += [
       # Suppress warnings about WIN32_LEAN_AND_MEAN.
@@ -918,6 +947,10 @@ if (rtc_include_tests) {
     public_deps = [
       "//testing/gtest",
     ]
+
+    if (current_os == "winuwp") {
+      deps += [ "//third_party/winuwp_compat:wrap_main_utf8_cc" ]
+    }
   }
 
   rtc_source_set("rtc_base_nonparallel_tests") {
@@ -941,7 +974,7 @@ if (rtc_include_tests) {
       "../test:test_support",
       "//testing/gtest",
     ]
-    if (is_win) {
+    if ((is_win) && (current_os != "winuwp")) {
       sources += [ "win32socketserver_unittest.cc" ]
     }
   }
@@ -1115,6 +1148,9 @@ if (rtc_include_tests) {
         "win32_unittest.cc",
         "win32window_unittest.cc",
       ]
+      if (current_os == "winuwp") {
+        sources -= [ "win32window_unittest.cc" ]
+      }
     }
     if (is_posix) {
       sources += [

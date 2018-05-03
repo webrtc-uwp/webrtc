@@ -48,6 +48,9 @@ rtc_static_library("video") {
     "video_stream_encoder.h",
   ]
 
+  if (current_os == "winuwp") {
+    deps += [ "//third_party/winuwp_compat:force_include_std" ]
+  }
   if (!build_with_chromium && is_clang) {
     # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
     suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]

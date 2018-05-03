@@ -26,6 +26,10 @@
 #include <sys/timeb.h>
 #endif
 
+#ifdef WINUWP
+#include "system_wrappers/include/clock.h"
+#endif // WINUWP
+
 #include "rtc_base/checks.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/timeutils.h"
@@ -39,6 +43,66 @@ ClockInterface* SetClockForTesting(ClockInterface* clock) {
   g_clock = clock;
   return prev;
 }
+
+#if defined(WEBRTC_WIN)
+static const uint64_t kFileTimeToUnixTimeEpochOffset = 116444736000000000ULL;
+static const uint64_t kNTPTimeToUnixTimeEpochOffset = 2208988800000L;
+#endif
+
+int64_t gAppStartTime = -1;  // Record app start time
+int64_t gTimeSinceOsStart = -1;  // when app start,
+int64_t gOsTicksPerSecond = -1;
+
+#if defined(WEBRTC_WIN)
+//Warning, right now, the gAppStartTime and gTimeSinceOsStart are not protected with mutex.
+//we only call this function to sync the clock of testing device with ntp when the app starts.
+//if we want to call this function periodically in the runtime,then, suggest to use mutex 
+void SyncWithNtp(int64_t timeFromNtpServer /*in ms*/) {
+  TIME_ZONE_INFORMATION timeZone;
+  GetTimeZoneInformation(&timeZone);
+  int64_t timeZoneBias = (int64_t)timeZone.Bias * 60 * 1000 * 1000 * 1000;  // ns
+
+  gAppStartTime = (timeFromNtpServer - kNTPTimeToUnixTimeEpochOffset) * 1000000 - timeZoneBias;
+
+  // Since we just update the app reference time, need to update the reference point as well.
+ 
+  LARGE_INTEGER qpfreq;
+  QueryPerformanceFrequency(&qpfreq);
+  gOsTicksPerSecond = qpfreq.QuadPart;
+
+  LARGE_INTEGER qpcnt;
+  QueryPerformanceCounter(&qpcnt);
+  gTimeSinceOsStart = (int64_t)((((uint64_t)qpcnt.QuadPart) * 100000ull / ((uint64_t)gOsTicksPerSecond)) * 10000ull);  // ns
+}
+
+inline void InitializeAppStartTimestamp() {
+  if (gTimeSinceOsStart != -1)  // already initialized
+    return;
+
+  TIME_ZONE_INFORMATION timeZone;
+  GetTimeZoneInformation(&timeZone);
+  int64_t timeZoneBias = (int64_t)timeZone.Bias * 60 * 1000 * 1000 * 1000;  // ns
+  FILETIME ft; // In hns.
+  GetSystemTimeAsFileTime(&ft);  // this will give us system file in UTC format
+  LARGE_INTEGER li;
+  li.HighPart = ft.dwHighDateTime;
+  li.LowPart = ft.dwLowDateTime;
+
+  gAppStartTime = (li.QuadPart - kFileTimeToUnixTimeEpochOffset) * 100 // ns
+                             - timeZoneBias;
+
+  LARGE_INTEGER qpfreq;
+  QueryPerformanceFrequency(&qpfreq);
+  gOsTicksPerSecond = qpfreq.QuadPart;
+
+  LARGE_INTEGER qpcnt;
+  QueryPerformanceCounter(&qpcnt);
+  gTimeSinceOsStart = (int64_t)((((uint64_t)qpcnt.QuadPart) * 100000ull / ((uint64_t)gOsTicksPerSecond)) * 10000ull);  // ns
+}
+#else
+void SyncWithNtp(int64_t timeFromNtpServer /*in ms*/) {
+}
+#endif // WEBRTC_WIN
 
 ClockInterface* GetClockForTesting() {
   return g_clock;
@@ -70,6 +134,12 @@ int64_t SystemTimeNanos() {
   clock_gettime(CLOCK_MONOTONIC, &ts);
   ticks = kNumNanosecsPerSec * static_cast<int64_t>(ts.tv_sec) +
           static_cast<int64_t>(ts.tv_nsec);
+#elif defined(WINUWP)
+  InitializeAppStartTimestamp();
+  LARGE_INTEGER qpcnt;
+  QueryPerformanceCounter(&qpcnt);
+  ticks = (int64_t)((((uint64_t)qpcnt.QuadPart) * 100000ull / ((uint64_t)gOsTicksPerSecond)) * 10000ull);  // ns
+  ticks = gAppStartTime + ticks - gTimeSinceOsStart;
 #elif defined(WEBRTC_WIN)
   static volatile LONG last_timegettime = 0;
   static volatile int64_t num_wrap_timegettime = 0;

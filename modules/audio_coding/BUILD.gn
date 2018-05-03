@@ -1092,6 +1092,7 @@ rtc_static_library("neteq") {
     "../../rtc_base/system:fallthrough",
     "../../system_wrappers:field_trial_api",
     "../../system_wrappers:metrics_api",
+    rtc_opus_dir,
   ]
 }
 
@@ -1969,6 +1970,7 @@ if (rtc_include_tests) {
 
   rtc_executable("isac_test") {
     testonly = true
+    is_c_main = true
 
     sources = [
       "codecs/isac/main/test/simpleKenny.c",
@@ -2059,6 +2061,7 @@ if (rtc_include_tests) {
 
   rtc_executable("ilbc_test") {
     testonly = true
+    is_c_main = true
 
     sources = [
       "codecs/ilbc/test/iLBC_test.c",

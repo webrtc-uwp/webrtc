@@ -10,7 +10,12 @@
 
 #include "system_wrappers/source/event_timer_win.h"
 
+#ifndef WINUWP
 #include "Mmsystem.h"
+#else /* ndef WINUWP */
+using namespace Windows::System::Threading;
+using namespace Windows::Foundation;
+#endif /* ndef WINUWP */
 
 namespace webrtc {
 
@@ -19,59 +24,169 @@ EventTimerWrapper* EventTimerWrapper::Create() {
   return new EventTimerWin();
 }
 
-EventTimerWin::EventTimerWin()
+#ifndef WINUWP
+class EventTimerWin::Impl
+{
+ public:
+  Impl()
     : event_(::CreateEvent(NULL,    // security attributes
                            FALSE,   // manual reset
                            FALSE,   // initial state
                            NULL)),  // name of event
       timerID_(NULL) {}
 
+  ~Impl() {
+    StopTimer();
+    CloseHandle(event_);
+  }
+
+  bool Set() { {
+    // Note: setting an event that is already set has no effect.
+    return SetEvent(event_) == 1;
+  }
+
+  EventTypeWrapper Wait(unsigned long max_time) {
+    unsigned long res = WaitForSingleObject(event_, max_time);
+    switch (res) {
+      case WAIT_OBJECT_0:
+        return kEventSignaled;
+      case WAIT_TIMEOUT:
+        return kEventTimeout;
+      default:
+        return kEventError;
+    }
+  }
+
+  bool StartTimer(bool periodic, unsigned long time) {
+    if (timerID_ != NULL) {
+      timeKillEvent(timerID_);
+      timerID_ = NULL;
+    }
+
+    if (periodic) {
+      timerID_ = timeSetEvent(time, 0, (LPTIMECALLBACK)HANDLE(event_), 0,
+                              TIME_PERIODIC | TIME_CALLBACK_EVENT_PULSE);
+    } else {
+      timerID_ = timeSetEvent(time, 0, (LPTIMECALLBACK)HANDLE(event_), 0,
+                              TIME_ONESHOT | TIME_CALLBACK_EVENT_SET);
+    }
+
+    return timerID_ != NULL;
+  }
+
+  bool StopTimer() {
+    if (timerID_ != NULL) {
+      timeKillEvent(timerID_);
+      timerID_ = NULL;
+    }
+
+    return true;
+  }
+
+#else // WinUWP
+
+class EventTimerWin::Impl
+{
+ public:
+  Impl()
+      : event_(::CreateEvent(NULL,    // security attributes
+      FALSE,   // manual reset
+      FALSE,   // initial state
+      NULL)),  // name of event
+      timer_(nullptr)
+  {
+  }
+
+  ~Impl() {
+    StopTimer();
+    CloseHandle(event_);
+  }
+
+  bool Set() {
+    // Note: setting an event that is already set has no effect.
+    return SetEvent(event_) == 1;
+  }
+
+  bool Reset() {
+    return ResetEvent(event_) == 1;
+  }
+
+  EventTypeWrapper Wait(unsigned long max_time) {
+    unsigned long res = WaitForSingleObject(event_, max_time);
+    switch (res) {
+    case WAIT_OBJECT_0:
+        return kEventSignaled;
+    case WAIT_TIMEOUT:
+        return kEventTimeout;
+    default:
+        return kEventError;
+    }
+  }
+
+  bool StartTimer(bool periodic, unsigned long time) {
+    if (timer_ != nullptr) {
+      timer_->Cancel();
+      timer_ = nullptr;
+    }
+
+    // Duration specified in 100ns units.
+    TimeSpan period = { time * 10000 };
+
+    if (periodic) {
+      timer_ = ThreadPoolTimer::CreatePeriodicTimer(
+          ref new TimerElapsedHandler([this](ThreadPoolTimer^ source)
+      {
+          this->Set();
+      }), period);
+    } else {
+      timer_ = ThreadPoolTimer::CreateTimer(
+          ref new TimerElapsedHandler([this](ThreadPoolTimer^ source)
+      {
+          this->Set();
+      }), period);
+    }
+
+    return timer_ != nullptr;
+  }
+
+  bool StopTimer() {
+    if (timer_ != nullptr) {
+      timer_->Cancel();
+      timer_ = nullptr;
+    }
+
+    return true;
+  }
+
+ private:
+  HANDLE  event_;
+  ThreadPoolTimer^ timer_;
+};
+
+#endif //ndef WINUWP
+
+EventTimerWin::EventTimerWin()
+    : pimpl_(new Impl())
+{
+}
+
 EventTimerWin::~EventTimerWin() {
-  StopTimer();
-  CloseHandle(event_);
 }
 
 bool EventTimerWin::Set() {
-  // Note: setting an event that is already set has no effect.
-  return SetEvent(event_) == 1;
+  return pimpl_->Set();
 }
 
 EventTypeWrapper EventTimerWin::Wait(unsigned long max_time) {
-  unsigned long res = WaitForSingleObject(event_, max_time);
-  switch (res) {
-    case WAIT_OBJECT_0:
-      return kEventSignaled;
-    case WAIT_TIMEOUT:
-      return kEventTimeout;
-    default:
-      return kEventError;
-  }
+  return pimpl_->Wait(max_time);
 }
 
 bool EventTimerWin::StartTimer(bool periodic, unsigned long time) {
-  if (timerID_ != NULL) {
-    timeKillEvent(timerID_);
-    timerID_ = NULL;
-  }
-
-  if (periodic) {
-    timerID_ = timeSetEvent(time, 0, (LPTIMECALLBACK)HANDLE(event_), 0,
-                            TIME_PERIODIC | TIME_CALLBACK_EVENT_PULSE);
-  } else {
-    timerID_ = timeSetEvent(time, 0, (LPTIMECALLBACK)HANDLE(event_), 0,
-                            TIME_ONESHOT | TIME_CALLBACK_EVENT_SET);
-  }
-
-  return timerID_ != NULL;
+  return pimpl_->StartTimer(periodic, time);
 }
-
+ 
 bool EventTimerWin::StopTimer() {
-  if (timerID_ != NULL) {
-    timeKillEvent(timerID_);
-    timerID_ = NULL;
-  }
-
-  return true;
+  return pimpl_->StopTimer();
 }
 
 }  // namespace webrtc

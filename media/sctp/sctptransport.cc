@@ -96,7 +96,7 @@ std::string ListFlags(int flags) {
   bool first = true;
 // Skip past the first 12 chars (strlen("SCTP_STREAM_"))
 #define MAKEFLAG(X) \
-  { X, #X + 12 }
+  { X, const_cast<char *>(#X) + 12 }
   struct flaginfo_t {
     int value;
     const char* name;

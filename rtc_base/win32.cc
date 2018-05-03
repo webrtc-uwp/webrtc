@@ -332,6 +332,10 @@ bool Utf8ToWindowsFilename(const std::string& utf8, std::wstring* filename) {
   }
   // Replace forward slashes with backslashes
   std::replace(wfilename, wfilename + wlen, L'/', L'\\');
+#if defined(WINUWP)
+  // Keep relative paths on WinUWP.
+  filename->assign(wfilename);
+#else // defined(WINUWP)
   // Convert to complete filename
   DWORD full_len = ::GetFullPathName(wfilename, 0, nullptr, nullptr);
   if (0 == full_len) {
@@ -361,9 +365,12 @@ bool Utf8ToWindowsFilename(const std::string& utf8, std::wstring* filename) {
     // Already in long-path form.
   }
   filename->assign(start);
+#endif // defined(WINUWP)
+
   return true;
 }
 
+#ifndef WINUWP
 bool GetOsVersion(int* major, int* minor, int* build) {
   OSVERSIONINFO info = {0};
   info.dwOSVersionInfoSize = sizeof(info);
@@ -397,5 +404,6 @@ bool GetCurrentProcessIntegrityLevel(int* level) {
   }
   return ret;
 }
+#endif //ndef WINUWP
 
 }  // namespace rtc

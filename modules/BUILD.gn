@@ -24,6 +24,9 @@ group("modules") {
     "video_coding",
     "video_processing",
   ]
+  if (current_os == "winuwp") {
+    public_deps -= [ "desktop_capture" ]
+  }
 
   if (rtc_desktop_capture_supported) {
     deps += [ "desktop_capture" ]

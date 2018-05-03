@@ -194,6 +194,10 @@ rtc_source_set("test_support") {
     "//testing/gtest",
   ]
 
+  if (current_os == "winuwp") {
+    deps += [ "//third_party/winuwp_compat:wrap_main_utf8_cc" ]
+  }
+
   if (!build_with_chromium && is_clang) {
     # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
     suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
@@ -580,6 +584,13 @@ rtc_source_set("test_common") {
     "statistics.h",
     "win/run_loop_win.cc",
   ]
+  if (current_os == "winuwp") {
+    sources -= [ "win/run_loop_win.cc" ]
+    sources += [
+      "run_loop.cc",
+      "run_loop.h",
+    ]
+  }
   if (!is_win) {
     sources += [
       "run_loop.cc",

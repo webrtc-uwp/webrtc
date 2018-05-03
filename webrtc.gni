@@ -245,6 +245,7 @@ rtc_add_configs = rtc_common_configs
 set_defaults("rtc_test") {
   configs = rtc_add_configs
   suppressed_configs = []
+  is_c_main = false
 }
 
 set_defaults("rtc_source_set") {
@@ -255,6 +256,7 @@ set_defaults("rtc_source_set") {
 set_defaults("rtc_executable") {
   configs = rtc_add_configs
   suppressed_configs = []
+  is_c_main = false
 }
 
 set_defaults("rtc_static_library") {
@@ -292,6 +294,13 @@ template("rtc_test") {
     configs += invoker.configs
     configs -= rtc_remove_configs
     configs -= invoker.suppressed_configs
+    if (current_os == "winuwp") {     
+      if (is_c_main) {
+        deps += [ "//third_party/winuwp_compat:wrap_main_utf8_c" ]
+      } else {
+        deps += [ "//third_party/winuwp_compat:wrap_main_utf8_cc" ]
+      }
+    }
     public_configs = [ rtc_common_inherited_config ]
     if (defined(invoker.public_configs)) {
       public_configs += invoker.public_configs
@@ -349,6 +358,13 @@ template("rtc_executable") {
       "//build/config:exe_and_shlib_deps",
     ]
     deps += invoker.deps
+    if (current_os == "winuwp") {     
+      if (is_c_main) {
+        deps += [ "//third_party/winuwp_compat:wrap_main_utf8_c" ]
+      } else {
+        deps += [ "//third_party/winuwp_compat:wrap_main_utf8_cc" ]
+      }
+    }
 
     public_configs = [ rtc_common_inherited_config ]
     if (defined(invoker.public_configs)) {

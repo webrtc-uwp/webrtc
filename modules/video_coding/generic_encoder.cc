@@ -278,7 +278,7 @@ EncodedImageCallback::Result VCMEncodedFrameCallback::OnEncodedImage(
   } else if (codec_specific->codecType == kVideoCodecVP8) {
     simulcast_svc_idx = codec_specific->codecSpecific.VP8.simulcastIdx;
   } else if (codec_specific->codecType == kVideoCodecGeneric) {
-    simulcast_svc_idx = codec_specific->codecSpecific.generic.simulcast_idx;
+    simulcast_svc_idx = codec_specific->codecSpecific._generic.simulcast_idx;
   } else if (codec_specific->codecType == kVideoCodecH264) {
     // TODO(ilnik): When h264 simulcast is landed, extract simulcast idx here.
   }

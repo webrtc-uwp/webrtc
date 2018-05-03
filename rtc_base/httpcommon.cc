@@ -733,7 +733,7 @@ std::string quote(const std::string& str) {
   return result;
 }
 
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) && !defined(WINUWP)
 struct NegotiateAuthContext : public HttpAuthContext {
   CredHandle cred;
   CtxtHandle ctx;
@@ -750,7 +750,7 @@ struct NegotiateAuthContext : public HttpAuthContext {
     FreeCredentialsHandle(&cred);
   }
 };
-#endif // WEBRTC_WIN
+#endif // defined(WEBRTC_WIN) && !defined(WINUWP)
 
 HttpAuthResult HttpAuthenticate(
   const char * challenge, size_t len,
@@ -856,7 +856,7 @@ HttpAuthResult HttpAuthenticate(
     return HAR_RESPONSE;
   }
 
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) && !defined(WINUWP)
 #if 1
   bool want_negotiate = (_stricmp(auth_method.c_str(), "negotiate") == 0);
   bool want_ntlm = (_stricmp(auth_method.c_str(), "ntlm") == 0);

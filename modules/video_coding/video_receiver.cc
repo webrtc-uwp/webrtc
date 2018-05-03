@@ -390,6 +390,7 @@ int32_t VideoReceiver::RegisterReceiveCodec(const VideoCodec* receiveCodec,
   return 0;
 }
 
+bool globalRequestKeyFrame = false;
 // Incoming packet from network parsed and ready for decode, non blocking.
 int32_t VideoReceiver::IncomingPacket(const uint8_t* incomingPayload,
                                       size_t payloadLength,

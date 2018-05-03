@@ -30,6 +30,12 @@
 #define GET_CURRENT_DIR getcwd
 #endif
 
+#ifdef WINUWP
+#include <objbase.h>
+
+#include "webrtc/rtc_base/pathutils.h"
+#endif // WINUWP
+
 #include <sys/stat.h>  // To check for directory existence.
 #ifndef S_ISDIR  // Not defined in stat.h on Windows.
 #define S_ISDIR(mode) (((mode) & S_IFMT) == S_IFDIR)
@@ -65,6 +71,9 @@ const char* kPathDelimiter = "/";
 
 #ifdef WEBRTC_ANDROID
 const char* kRootDirName = "/sdcard/chromium_tests_root/";
+#elif WINUWP
+const char* kProjectRootFileName = "";
+const char* kFallbackPath = "./";
 #else
 #if !defined(WEBRTC_IOS)
 const char* kOutputDirName = "out";
@@ -139,6 +148,9 @@ std::string ProjectRootPath() {
   if (path == kFallbackPath) {
     return kCannotFindProjectRootDir;
   }
+#ifdef WINUWP
+  return path + kPathDelimiter;
+#else // WINUWP
   if (relative_dir_path_set) {
     path = path + kPathDelimiter + relative_dir_path;
   }
@@ -156,11 +168,17 @@ std::string ProjectRootPath() {
     fprintf(stderr, "Cannot find project root directory!\n");
     return kCannotFindProjectRootDir;
   }
+#endif /* WINUWP */
 #endif
 }
 
 std::string OutputPath() {
-#if defined(WEBRTC_IOS)
+#if defined(WINUWP)
+  auto folder = Windows::Storage::ApplicationData::Current->LocalFolder;
+  wchar_t buffer[255];
+  wcsncpy_s(buffer, 255, folder->Path->Data(), _TRUNCATE);
+  return ToUtf8(buffer) + kPathDelimiter;
+#elif defined(WEBRTC_IOS)
   return IOSOutputPath();
 #else
   std::string path = ProjectRootPath();
@@ -190,7 +208,28 @@ std::string WorkingDir() {
 // Generate a temporary filename in a safe way.
 // Largely copied from talk/base/{unixfilesystem,win32filesystem}.cc.
 std::string TempFilename(const std::string &dir, const std::string &prefix) {
-#ifdef WIN32
+#if defined(WINUWP)
+  rtc::Pathname fullpath = dir;
+  GUID g;
+  CoCreateGuid(&g);
+  wchar_t filename[MAX_PATH];
+
+  // printf format for the filename, consists of prefix followed by guid.
+  wchar_t* maskForFN = L"%s_%08x_%04x_%04x_%02x%02x_%02x%02x%02x%02x%02x%02x";
+  swprintf(filename, maskForFN, ToUtf16(prefix).c_str(), g.Data1, g.Data2, g.Data3,
+    UINT(g.Data4[0]), UINT(g.Data4[1]), UINT(g.Data4[2]), UINT(g.Data4[3]),
+    UINT(g.Data4[4]), UINT(g.Data4[5]), UINT(g.Data4[6]), UINT(g.Data4[7]));
+
+  fullpath.AppendPathname(ToUtf8(filename));
+  // make sure to create the file
+  ::CreateFile2(
+    ToUtf16(fullpath.pathname()).c_str(),
+    GENERIC_READ | GENERIC_WRITE,
+    FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+    CREATE_NEW,
+    NULL);
+  return fullpath.pathname();
+#elif defined(WIN32)
   wchar_t filename[MAX_PATH];
   if (::GetTempFileName(rtc::ToUtf16(dir).c_str(),
                         rtc::ToUtf16(prefix).c_str(), 0, filename) != 0)

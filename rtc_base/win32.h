@@ -51,6 +51,19 @@ int win32_inet_pton(int af, const char* src, void *dst);
 // Convert a Utf8 path representation to a non-length-limited Unicode pathname.
 bool Utf8ToWindowsFilename(const std::string& utf8, std::wstring* filename);
 
+#ifdef WINUWP
+inline bool IsWindowsVistaOrLater() {
+    return true;
+}
+
+inline bool IsWindowsXpOrLater() {
+    return true;
+}
+
+inline bool IsWindows8OrLater() {
+    return true;
+}
+#else /* WINUWP */
 enum WindowsMajorVersions {
   kWindows2000 = 5,
   kWindowsVista = 6,
@@ -73,6 +86,9 @@ inline bool IsWindows8OrLater() {
   return (GetOsVersion(&major, &minor, nullptr) &&
           (major > kWindowsVista || (major == kWindowsVista && minor >= 2)));
 }
+#endif /* WINUWP */
+
+#ifndef WINUWP
 
 // Determine the current integrity level of the process.
 bool GetCurrentProcessIntegrityLevel(int* level);
@@ -82,6 +98,16 @@ inline bool IsCurrentProcessLowIntegrity() {
   return (GetCurrentProcessIntegrityLevel(&level) &&
       level < SECURITY_MANDATORY_MEDIUM_RID);
 }
+
+#else /* ndef WINUWP */
+
+inline bool IsCurrentProcessLowIntegrity() {
+  // Assume this is NOT a low integrity level run as application privileges
+  // can be requested in manifest as appropriate.
+  return false;
+}
+
+#endif /* ndef WINUWP */
 
 }  // namespace rtc
 

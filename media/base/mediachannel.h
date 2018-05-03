@@ -374,6 +374,9 @@ struct MediaReceiverInfo {
   int64_t bytes_rcvd = 0;
   int packets_rcvd = 0;
   int packets_lost = 0;
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
+  int end_to_end_delay_ms = 0;
+#endif
   float fraction_lost = 0.0f;
   std::string codec_name;
   rtc::Optional<int> codec_payload_type;

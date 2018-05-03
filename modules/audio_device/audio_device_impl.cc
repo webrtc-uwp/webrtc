@@ -18,7 +18,9 @@
 #include "rtc_base/refcountedobject.h"
 #include "system_wrappers/include/metrics.h"
 
-#if defined(_WIN32)
+#if defined (WINUWP)
+#include "audio_device_wasapi_win.h"
+#elif defined(_WIN32)
 #if defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
 #include "audio_device_core_win.h"
 #endif
@@ -154,7 +156,15 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects() {
 #else
   AudioLayer audio_layer(PlatformAudioLayer());
 // Windows ADM implementation.
-#if defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
+#if defined(WINUWP)
+    if (audioLayer == kWindowsWasapiAudio) {
+      LOG(INFO) << "attempting to use the Windows Wasapi Audio APIs...";
+
+      // create *Windows Core Audio* implementation
+      audio_device_.reset(new AudioDeviceWindowsWasapi(Id()));
+      LOG(INFO) << "Windows Wasapi Audio APIs will be utilized";
+    }
+#elif defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
   if ((audio_layer == kWindowsCoreAudio) ||
       (audio_layer == kPlatformDefaultAudio)) {
     RTC_LOG(INFO) << "Attempting to use the Windows Core Audio APIs...";
