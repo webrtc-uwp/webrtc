@@ -613,7 +613,7 @@ if (current_cpu == "arm" && arm_version >= 7) {
   ]
     
   action_foreach("isac_fix_c_arm_assembly") {
-    script = "//third_party/openmax_dl/dl/run_perl.py"
+    script = "//webrtc/build/Win_ARM_Tools/run_arm_asm_compiler.py"
     sources = isac_fix_c_arm_asm_sources
     outputs = [
       "$target_gen_dir/{{source_file_part}}.obj",

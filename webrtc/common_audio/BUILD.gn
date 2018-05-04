@@ -115,7 +115,7 @@ if (current_cpu == "arm"  || current_cpu == "arm64") {
   }
     
   action_foreach("compile_common_audio_c_arm_assembly") {
-    script = "//third_party/openmax_dl/dl/run_perl.py"
+    script = "//webrtc/build/Win_ARM_Tools/run_arm_asm_compiler.py"
     sources = common_audio_c_arm_asm_sources
     outputs = [
       "$target_gen_dir/{{source_file_part}}.obj",
