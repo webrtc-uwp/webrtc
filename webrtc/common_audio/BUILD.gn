@@ -140,7 +140,7 @@ rtc_source_set("common_audio_c_arm_asm") {
   sources = []
   if (current_cpu == "arm"  || current_cpu == "arm64") {
   
-    if (current_os == "win" && target_os == "winuwp") {
+    if (current_os == "winuwp" && target_os == "winuwp") {
       sources = get_target_outputs(":compile_common_audio_c_arm_assembly")
       deps = [
         ":compile_common_audio_c_arm_assembly",
@@ -326,7 +326,7 @@ if (rtc_build_with_neon) {
       "resampler/sinc_resampler_neon.cc",
     ]
 
-    if (current_cpu != "arm64") {
+    if ( (current_cpu != "arm64") && (target_os != "winuwp") ) {
       # Enable compilation for the NEON instruction set. This is needed
       # since //build/config/arm.gni only enables NEON for iOS, not Android.
       # This provides the same functionality as webrtc/build/arm_neon.gypi.
@@ -365,7 +365,7 @@ if (rtc_build_with_neon) {
       "signal_processing/min_max_operations_neon.c",
     ]
 
-    if (current_cpu != "arm64") {
+    if ( (current_cpu != "arm64") && (target_os != "winuwp") ) {
       # Enable compilation for the NEON instruction set. This is needed
       # since //build/config/arm.gni only enables NEON for iOS, not Android.
       # This provides the same functionality as webrtc/build/arm_neon.gypi.
