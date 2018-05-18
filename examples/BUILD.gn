@@ -47,7 +47,7 @@ group("examples") {
       ":turnserver",
     ]
     if (current_os == "winuwp") {
-      public_deps -= [ ":peerconnection_client" ]
+      deps -= [ ":peerconnection_client" ]
     }
   }
 }
