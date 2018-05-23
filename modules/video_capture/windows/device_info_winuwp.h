@@ -11,13 +11,13 @@
 #ifndef WEBRTC_MODULES_VIDEO_CAPTURE_WINDOWS_DEVICE_INFO_WINUWP_H_
 #define WEBRTC_MODULES_VIDEO_CAPTURE_WINDOWS_DEVICE_INFO_WINUWP_H_
 
-#include "webrtc/modules/video_capture/device_info_impl.h"
+#include "modules/video_capture/device_info_impl.h"
 
 #include <ppltasks.h>
 
 #include <map>
 
-#include "webrtc/rtc_base/criticalsection.h"
+#include "rtc_base/criticalsection.h"
 
 namespace webrtc {
 namespace videocapturemodule {

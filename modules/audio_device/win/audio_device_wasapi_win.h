@@ -13,7 +13,7 @@
 
 #if (_MSC_VER >= 1400) && defined(WINUWP)  // only include for VS 2005 and higher
 
-#include "webrtc/modules/audio_device/audio_device_generic.h"
+#include "modules/audio_device/audio_device_generic.h"
 
 #include <wmcodecdsp.h>      // CLSID_CWMAudioAEC
                              // (must be before audioclient.h)
@@ -28,8 +28,8 @@
 #include <ppltasks.h>
 
 
-#include "webrtc/rtc_base/criticalsection.h"
-#include "webrtc/rtc_base/scoped_ref_ptr.h"
+#include "rtc_base/criticalsection.h"
+#include "rtc_base/scoped_ref_ptr.h"
 
 using Windows::Devices::Enumeration::DeviceClass;
 using Windows::Devices::Enumeration::DeviceInformation;
