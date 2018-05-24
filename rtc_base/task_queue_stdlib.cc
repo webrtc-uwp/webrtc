@@ -213,7 +213,7 @@ void TaskQueue::Impl::PostTask(std::unique_ptr<QueuedTask> task) {
 void TaskQueue::Impl::PostDelayedTask(std::unique_ptr<QueuedTask> task,
                                       uint32_t milliseconds) {
   
-  Time fire_at = now() + Milliseconds(milliseconds);
+  auto fire_at = std::chrono::system_clock::now() + Milliseconds(milliseconds);
 
   DelayedEntryTimeout delay;
   delay.next_fire_at_ = fire_at;
@@ -229,7 +229,7 @@ void TaskQueue::Impl::PostDelayedTask(std::unique_ptr<QueuedTask> task,
 
 void TaskQueue::Impl::PostTaskAndReply(std::unique_ptr<QueuedTask> task,
                                        std::unique_ptr<QueuedTask> reply,
-                                       TaskQueue* reply_queue) {
+                                       TaskQueue::Impl * reply_queue) {
   QueuedTask* task_ptr = task.release();
   QueuedTask* reply_task_ptr = reply.release();
   PostTask([task_ptr, reply_task_ptr, reply_queue]() {
@@ -243,15 +243,14 @@ void TaskQueue::Impl::PostTaskAndReply(std::unique_ptr<QueuedTask> task,
 // static
 void TaskQueue::Impl::ThreadMain(void* context) {
 
-  TaskQueue *me = static_cast<TaskQueue *>(context);
-  //SetQueuePtr(me);
+  TaskQueue::Impl *me = static_cast<TaskQueue::Impl *>(context);
 
   do
   {
     Microseconds sleep_time {};
     QueueTasksUniPtr run_task;
 
-    auto tick = now();
+    auto tick = std::chrono::system_clock::now();
 
     {
       CritScope lock(&(me->pending_lock_));
@@ -314,7 +313,7 @@ void TaskQueue::Impl::ThreadMain(void* context) {
   me->thread_did_quit_ = true;
 }
 
-void TaskQueue::notifyWake()
+void TaskQueue::Impl::notifyWake()
 {
   flag_notify_.notify_one();
 }
