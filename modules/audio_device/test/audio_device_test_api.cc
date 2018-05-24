@@ -14,15 +14,15 @@
 
 #include <memory>
 
-#include "webrtc/modules/audio_device/test/audio_device_test_defines.h"
+#include "modules/audio_device/test/audio_device_test_defines.h"
 
-#include "webrtc/test/gtest.h"
-#include "webrtc/test/testsupport/fileutils.h"
+#include "test/gtest.h"
+#include "test/testsupport/fileutils.h"
 
-#include "webrtc/modules/audio_device/audio_device_config.h"
-#include "webrtc/modules/audio_device/audio_device_impl.h"
-#include "webrtc/modules/utility/include/process_thread.h"
-#include "webrtc/system_wrappers/include/sleep.h"
+#include "modules/audio_device/audio_device_config.h"
+#include "modules/audio_device/audio_device_impl.h"
+#include "modules/utility/include/process_thread.h"
+#include "system_wrappers/include/sleep.h"
 
 // Helper functions
 #if defined(ANDROID)

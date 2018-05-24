@@ -13,8 +13,8 @@
 #include <string>
 
 #include "WinUWPTestManager.h"
-#include "webrtc/modules/audio_device/audio_device_config.h"
-#include "webrtc/modules/audio_device/audio_device_impl.h"
+#include "modules/audio_device/audio_device_config.h"
+#include "modules/audio_device/audio_device_impl.h"
 
 using namespace Platform;
 using namespace concurrency;

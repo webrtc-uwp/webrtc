@@ -12,7 +12,7 @@
 
 #include <string>
 
-#include "webrtc/api/peerconnectioninterface.h"
+#include "api/peerconnectioninterface.h"
 #include "webrtc/build/WinUWP_gyp/Api/RTCStatsReport.h"
 
 

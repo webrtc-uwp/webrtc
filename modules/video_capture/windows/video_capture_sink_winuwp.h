@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <queue>
 
-#include "webrtc/rtc_base/criticalsection.h"
+#include "rtc_base/criticalsection.h"
 
 namespace webrtc {
 namespace videocapturemodule {

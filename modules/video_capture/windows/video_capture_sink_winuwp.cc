@@ -8,7 +8,7 @@
 *  be found in the AUTHORS file in the root of the source tree.
 */
 
-#include "webrtc/modules/video_capture/windows/video_capture_sink_winuwp.h"
+#include "modules/video_capture/windows/video_capture_sink_winuwp.h"
 
 #include <ppltasks.h>
 
@@ -19,7 +19,7 @@
 
 #include <windows.foundation.h>
 
-#include "webrtc/rtc_base/logging.h"
+#include "rtc_base/logging.h"
 
 using Microsoft::WRL::ComPtr;
 using Windows::Foundation::IPropertyValue;

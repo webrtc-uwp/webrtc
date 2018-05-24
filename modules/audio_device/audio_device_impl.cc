@@ -157,12 +157,12 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects() {
   AudioLayer audio_layer(PlatformAudioLayer());
 // Windows ADM implementation.
 #if defined(WINUWP)
-    if (audioLayer == kWindowsWasapiAudio) {
-      LOG(INFO) << "attempting to use the Windows Wasapi Audio APIs...";
+    if (audio_layer == kWindowsWasapiAudio) {
+      RTC_LOG(INFO) << "attempting to use the Windows Wasapi Audio APIs...";
 
       // create *Windows Core Audio* implementation
       audio_device_.reset(new AudioDeviceWindowsWasapi(Id()));
-      LOG(INFO) << "Windows Wasapi Audio APIs will be utilized";
+      RTC_LOG(INFO) << "Windows Wasapi Audio APIs will be utilized";
     }
 #elif defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
   if ((audio_layer == kWindowsCoreAudio) ||

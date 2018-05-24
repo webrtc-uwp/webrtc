@@ -34,7 +34,7 @@ int LoggingServer::Listen(const SocketAddress& addr, LoggingSeverity level) {
   tw_.reset(new PlatformThread(&LoggingServer::processMessages, thread_, "LoggingServer"));
   tw_->Start();
 
-  LOG(LS_INFO) << "New LoggingServer thread created.";
+  RTC_LOG(LS_INFO) << "New LoggingServer thread created.";
 
   AsyncSocket* sock =
     thread_->socketserver()->CreateAsyncSocket(AF_INET, SOCK_STREAM);
@@ -78,7 +78,7 @@ void LoggingServer::OnAcceptEvent(AsyncSocket* socket) {
     LogMessage::AddLogToStream(stream, level_);
     incoming->SignalCloseEvent.connect(this, &LoggingServer::OnCloseEvent);
 
-    LOG(LS_INFO) << "Successfully connected to the logging server!";
+    RTC_LOG(LS_INFO) << "Successfully connected to the logging server!";
   }
 }
 
@@ -86,7 +86,7 @@ void LoggingServer::OnCloseEvent(AsyncSocket* socket, int err) {
   if (!socket)
     return;
 
-  LOG(LS_INFO) << "Connection closed : " << err;
+  RTC_LOG(LS_INFO) << "Connection closed : " << err;
 
   for (auto it = connections_.begin();
                it != connections_.end(); ++it) {

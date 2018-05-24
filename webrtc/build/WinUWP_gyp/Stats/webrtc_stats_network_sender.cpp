@@ -9,11 +9,11 @@
 #include "webrtc/build/WinUWP_gyp/Stats/webrtc_stats_network_sender.h"
 #include "webrtc/build/WinUWP_gyp/Stats/etw_providers.h"
 
-#include "webrtc/api/peerconnectioninterface.h"
-#include "webrtc/rtc_base/asynctcpsocket.h" 
-#include "webrtc/rtc_base/json.h"
-#include "webrtc/rtc_base/logging.h"
-#include "webrtc/rtc_base/physicalsocketserver.h"
+#include "api/peerconnectioninterface.h"
+#include "rtc_base/asynctcpsocket.h" 
+#include "rtc_base/json.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/physicalsocketserver.h"
 
 namespace webrtc {
  

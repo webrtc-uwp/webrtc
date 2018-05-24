@@ -33,7 +33,7 @@
 #ifdef WINUWP
 #include <objbase.h>
 
-#include "webrtc/rtc_base/pathutils.h"
+#include "rtc_base/pathutils.h"
 #endif // WINUWP
 
 #include <sys/stat.h>  // To check for directory existence.

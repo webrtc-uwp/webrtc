@@ -21,7 +21,7 @@
 #endif
 
 #if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP) && defined(WINUWP)
-#include "webrtc/common_audio/signal_processing/include/spl_inl_neon.h"
+#include "common_audio/signal_processing/include/spl_inl_neon.h"
 #else //defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP)
 
 extern const int8_t kWebRtcSpl_CountLeadingZeros32_Table[64];

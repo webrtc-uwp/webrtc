@@ -8,15 +8,15 @@
 *  be found in the AUTHORS file in the root of the source tree.
 */
 
-#include "webrtc/modules/video_capture/windows/device_info_winuwp.h"
+#include "modules/video_capture/windows/device_info_winuwp.h"
 
 #include <windows.media.h>
 
 #include <string>
 
-#include "webrtc/rtc_base/logging.h"
-#include "webrtc/rtc_base/win32.h"
-#include "webrtc/common_video/video_common_winuwp.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/win32.h"
+#include "common_video/video_common_winuwp.h"
 
 using Windows::Devices::Enumeration::DeviceClass;
 using Windows::Devices::Enumeration::DeviceInformation;

@@ -78,7 +78,7 @@ void ThreadManager::SetCurrentThread(Thread* thread) {
 #if defined(WEBRTC_WIN)
 ThreadManager::ThreadManager()
 #ifdef WINUWP
-    : key_(FlsAlloc()),
+    : key_(FlsAlloc(NULL)),
 #else // WINUWP
     : key_(TlsAlloc()),
 #endif // WINUWP

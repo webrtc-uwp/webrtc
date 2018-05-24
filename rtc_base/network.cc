@@ -558,7 +558,7 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
 
       std::string addrStr = rtc::ToUtf8(hostname->CanonicalName->Data());
       if (addrStr.substr(0, 7) == "169.254") {
-        LOG(LS_INFO) << "Ignoring private ip address: " << addrStr;
+        RTC_LOG(LS_INFO) << "Ignoring private ip address: " << addrStr;
         continue;
       }
 

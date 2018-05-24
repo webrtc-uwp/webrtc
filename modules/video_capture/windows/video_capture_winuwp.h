@@ -13,8 +13,8 @@
 
 #include <functional>
 #include <vector>
-#include "webrtc/modules/video_capture/video_capture_impl.h"
-#include "webrtc/modules/video_capture/windows/device_info_winuwp.h"
+#include "modules/video_capture/video_capture_impl.h"
+#include "modules/video_capture/windows/device_info_winuwp.h"
 
 namespace webrtc {
 namespace videocapturemodule {

@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/test/channel_transport/udp_socket_winuwp.h"
+#include "test/channel_transport/udp_socket_winuwp.h"
 
 #include <errno.h>
 #include <fcntl.h>

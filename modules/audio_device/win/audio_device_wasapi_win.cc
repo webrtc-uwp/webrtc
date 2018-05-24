@@ -20,11 +20,11 @@
 #pragma message(">> INFO: Windows Core Audio is not supported in VS 2003")
 #endif
 
-#include "webrtc/modules/audio_device/audio_device_config.h"
+#include "modules/audio_device/audio_device_config.h"
 
 #ifdef WEBRTC_WINDOWS_CORE_AUDIO_BUILD
 
-#include "webrtc/modules/audio_device/win/audio_device_wasapi_win.h"
+#include "modules/audio_device/win/audio_device_wasapi_win.h"
 
 #include <assert.h>
 #include <string.h>
@@ -40,11 +40,11 @@
 #include <ppltasks.h>
 #include <collection.h>
 
-#include "webrtc/system_wrappers/include/sleep.h"
-#include "webrtc/system_wrappers/include/trace.h"
+#include "system_wrappers/include/sleep.h"
+#include "system_wrappers/include/trace.h"
 
-#include "webrtc/rtc_base/logging.h"
-#include "webrtc/rtc_base/win32.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/win32.h"
 
 using Windows::Foundation::EventRegistrationToken;
 using Windows::Foundation::TypedEventHandler;

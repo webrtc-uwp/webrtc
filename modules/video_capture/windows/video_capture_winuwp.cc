@@ -8,7 +8,7 @@
 *  be found in the AUTHORS file in the root of the source tree.
 */
 
-#include "webrtc/modules/video_capture/windows/video_capture_winuwp.h"
+#include "modules/video_capture/windows/video_capture_winuwp.h"
 
 #include <ppltasks.h>
 
@@ -16,12 +16,12 @@
 #include <vector>
 #include <Mferror.h>
 
-#include "webrtc/rtc_base/logging.h"
-#include "webrtc/system_wrappers/include/event_wrapper.h"
-#include "webrtc/modules/video_capture/windows/video_capture_sink_winuwp.h"
-#include "webrtc/rtc_base/Win32.h"
+#include "rtc_base/logging.h"
+#include "system_wrappers/include/event_wrapper.h"
+#include "modules/video_capture/windows/video_capture_sink_winuwp.h"
+#include "rtc_base/Win32.h"
 #include "libyuv/planar_functions.h"
-#include "webrtc/common_video/video_common_winuwp.h"
+#include "common_video/video_common_winuwp.h"
 
 using Microsoft::WRL::ComPtr;
 using Windows::Devices::Enumeration::DeviceClass;

@@ -18,11 +18,11 @@
 
 #include "WinUWPTestManager.h"
 
-#include "webrtc/modules/audio_device/audio_device_config.h"
-#include "webrtc/modules/audio_device/audio_device_impl.h"
-#include "webrtc/system_wrappers/interface/sleep.h"
+#include "modules/audio_device/audio_device_config.h"
+#include "modules/audio_device/audio_device_impl.h"
+#include "system_wrappers/interface/sleep.h"
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/test/testsupport/fileutils.h"
+#include "test/testsupport/fileutils.h"
 
 std::string  RecordedMicrophoneFile = "recorded_microphone_mono_48.pcm";
 std::string  RecordedMicrophoneVolumeFile = "recorded_microphone_volume_mono_48.pcm";

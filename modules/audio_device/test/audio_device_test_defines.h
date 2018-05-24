@@ -11,9 +11,9 @@
 #ifndef WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_TEST_DEFINES_H
 #define WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_TEST_DEFINES_H
 
-#include "webrtc/common_types.h"
-#include "webrtc/modules/audio_device/include/audio_device.h"
-#include "webrtc/system_wrappers/include/trace.h"
+#include "common_types.h"
+#include "modules/audio_device/include/audio_device.h"
+#include "system_wrappers/include/trace.h"
 
 #ifdef _WIN32
 #define MACRO_DEFAULT_DEVICE AudioDeviceModule::kDefaultDevice
