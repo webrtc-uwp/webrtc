@@ -195,7 +195,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::BeginGetEvent(
   }
 
   if (!SUCCEEDED(hr)) {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -217,7 +217,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::EndGetEvent(
   }
 
   if (!SUCCEEDED(hr)) {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -254,7 +254,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::GetEvent(
   }
 
   if (!SUCCEEDED(hr)) {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -279,7 +279,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::QueueEvent(
   }
 
   if (!SUCCEEDED(hr)) {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -303,7 +303,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::GetMediaSink(
     _spSink.Get()->QueryInterface(IID_IMFMediaSink,
       reinterpret_cast<void**>(ppMediaSink));
   } else {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -325,7 +325,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::GetIdentifier(
   if (SUCCEEDED(hr)) {
     *pdwIdentifier = _dwIdentifier;
   } else {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -351,7 +351,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::GetMediaTypeHandler(
   }
 
   if (!SUCCEEDED(hr)) {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -389,7 +389,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::ProcessSample(IMFSample *pSample) {
   }
 
   if (!SUCCEEDED(hr)) {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -430,7 +430,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::PlaceMarker(
   }
 
   if (!SUCCEEDED(hr)) {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -452,7 +452,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::Flush() {
   }
 
   if (!SUCCEEDED(hr)) {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -500,7 +500,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::IsMediaTypeSupported(
   }
 
   if (!SUCCEEDED(hr)) {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -523,7 +523,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::GetMediaTypeCount(
   if (SUCCEEDED(hr)) {
     *pdwTypeCount = 1;
   } else {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -555,7 +555,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::GetMediaTypeByIndex(
   }
 
   if (!SUCCEEDED(hr)) {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -604,7 +604,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::SetCurrentMediaType(
   }
 
   if (!SUCCEEDED(hr)) {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -634,7 +634,7 @@ IFACEMETHODIMP VideoCaptureStreamSinkWinUWP::GetCurrentMediaType(
     *ppMediaType = _spCurrentType.Get();
     (*ppMediaType)->AddRef();
   } else {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -679,7 +679,7 @@ HRESULT VideoCaptureStreamSinkWinUWP::Initialize(
     _pParent = pParent;
     _callback = callback;
   } else {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -706,7 +706,7 @@ HRESULT VideoCaptureStreamSinkWinUWP::Start(MFTIME start) {
   }
 
   if (!SUCCEEDED(hr)) {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -726,7 +726,7 @@ HRESULT VideoCaptureStreamSinkWinUWP::Stop() {
   }
 
   if (!SUCCEEDED(hr)) {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -746,7 +746,7 @@ HRESULT VideoCaptureStreamSinkWinUWP::Pause() {
   }
 
   if (!SUCCEEDED(hr)) {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -766,7 +766,7 @@ HRESULT VideoCaptureStreamSinkWinUWP::Restart() {
   }
 
   if (!SUCCEEDED(hr)) {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -843,7 +843,7 @@ HRESULT VideoCaptureStreamSinkWinUWP::QueueAsyncOperation(StreamOperation op) {
   }
 
   if (!SUCCEEDED(hr)) {
-    LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture stream sink error: " << hr;
   }
 
   return hr;
@@ -1225,7 +1225,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::GetCharacteristics(
     // Rateless sink.
     *pdwCharacteristics = MEDIASINK_RATELESS;
   } else {
-    LOG_F(LS_ERROR) << "Capture media sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture media sink error: " << hr;
   }
 
   return hr;
@@ -1278,7 +1278,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::AddStreamSink(
     _spStreamSink = spMFStream;
     *ppStreamSink = spMFStream.Detach();
   } else {
-    LOG_F(LS_ERROR) << "Capture media sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture media sink error: " << hr;
   }
 
   return hr;
@@ -1302,7 +1302,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::RemoveStreamSink(
   }
 
   if (!SUCCEEDED(hr)) {
-    LOG_F(LS_ERROR) << "Capture media sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture media sink error: " << hr;
   }
 
   return hr;
@@ -1324,7 +1324,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::GetStreamSinkCount(
   if (SUCCEEDED(hr)) {
     *pcStreamSinkCount = 1;
   } else {
-    LOG_F(LS_ERROR) << "Capture media sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture media sink error: " << hr;
   }
 
   return hr;
@@ -1353,7 +1353,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::GetStreamSinkByIndex(
     ComPtr<IMFStreamSink> spResult = _spStreamSink;
     *ppStreamSink = spResult.Detach();
   } else {
-    LOG_F(LS_ERROR) << "Capture media sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture media sink error: " << hr;
   }
 
   return hr;
@@ -1414,7 +1414,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::SetPresentationClock(
     // Store the pointer to the new clock.
     _spClock = pPresentationClock;
   } else {
-    LOG_F(LS_ERROR) << "Capture media sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture media sink error: " << hr;
   }
 
   return hr;
@@ -1444,7 +1444,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::GetPresentationClock(
   }
 
   if (!SUCCEEDED(hr)) {
-    LOG_F(LS_ERROR) << "Capture media sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture media sink error: " << hr;
   }
 
   return hr;
@@ -1491,7 +1491,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::OnClockStart(
     static_cast<VideoCaptureStreamSinkWinUWP *>(_spStreamSink.Get())->Start(
       _llStartTime);
   } else {
-    LOG_F(LS_ERROR) << "Capture media sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture media sink error: " << hr;
   }
 
   return hr;
@@ -1509,7 +1509,7 @@ IFACEMETHODIMP VideoCaptureMediaSinkWinUWP::OnClockStop(
   if (SUCCEEDED(hr)) {
     static_cast<VideoCaptureStreamSinkWinUWP *>(_spStreamSink.Get())->Stop();
   } else {
-    LOG_F(LS_ERROR) << "Capture media sink error: " << hr;
+    RTC_LOG_F(LS_ERROR) << "Capture media sink error: " << hr;
   }
 
   return hr;

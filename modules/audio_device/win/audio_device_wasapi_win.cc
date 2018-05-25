@@ -41,7 +41,7 @@
 #include <collection.h>
 
 #include "system_wrappers/include/sleep.h"
-#include "system_wrappers/include/trace.h"
+//#include "system_wrappers/include/trace.h"
 
 #include "rtc_base/logging.h"
 #include "rtc_base/win32.h"
@@ -660,7 +660,7 @@ concurrency::task<Microsoft::WRL::ComPtr<IAudioClient2>>
 
     // Activation failure
     if (FAILED(hr)) {
-      LOG(LS_ERROR) << "Failed to activate " <<
+      RTC_LOG(LS_ERROR) << "Failed to activate " <<
         (m_DeviceType == eInputDevice ? "input" :
          m_DeviceType == eOutputDevice ? "output" : "unknown") <<
         " audio device, hr=" << std::showbase << std::hex << activateCompletedResult;
@@ -668,7 +668,7 @@ concurrency::task<Microsoft::WRL::ComPtr<IAudioClient2>>
     }
     // Failure to get activate result
     if (FAILED(hr2)) {
-      LOG(LS_ERROR) << "Failed to get activation result for " <<
+      RTC_LOG(LS_ERROR) << "Failed to get activation result for " <<
         (m_DeviceType == eInputDevice ? "input" :
          m_DeviceType == eOutputDevice ? "output" : "unknown") <<
         " audio device, hr=" << std::showbase << std::hex << activateCompletedResult;
@@ -676,7 +676,7 @@ concurrency::task<Microsoft::WRL::ComPtr<IAudioClient2>>
     }
 
     if (FAILED(activateCompletedResult)) {
-      LOG(LS_ERROR) << "Failed to configure " <<
+      RTC_LOG(LS_ERROR) << "Failed to configure " <<
         (m_DeviceType == eInputDevice ? "input" :
          m_DeviceType == eOutputDevice ? "output" : "unknown") <<
         " audio device after activate, hr=" << std::showbase << std::hex << activateCompletedResult;
@@ -765,7 +765,7 @@ AudioDeviceWindowsWasapi::AudioDeviceWindowsWasapi(const int32_t id) :
     _recWarning(0),
     _recError(0),
     _recIsRecovering(false),
-    _playBufType(AudioDeviceModule::kAdaptiveBufferSize),
+    //_playBufType(AudioDeviceModule::kAdaptiveBufferSize),
     _playBufDelay(80),
     _playBufDelayFixed(80),
     _usingInputDeviceIndex(false),
@@ -1003,14 +1003,14 @@ int32_t AudioDeviceWindowsWasapi::InitSpeaker() {
     _renderDevice = _GetListDevice(DeviceClass::AudioRender,
                                    _deviceIdStringOut);
     if (_renderDevice == nullptr) {
-      LOG(LS_WARNING) << "Selected audio playout device not found "
+      RTC_LOG(LS_WARNING) << "Selected audio playout device not found "
         << rtc::ToUtf8(_deviceIdStringOut->Data()).c_str()
         << ", using default!";
       WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
         "selected audio playout device not found %s, using default.",
         rtc::ToUtf8(_deviceIdStringOut->Data()).c_str());
     } else {
-      LOG(LS_INFO) << "Using selected audio playout device:"
+      RTC_LOG(LS_INFO) << "Using selected audio playout device:"
         << rtc::ToUtf8(_renderDevice->Name->Data()).c_str();
       WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
         "using selected audio playout device %s.",
@@ -1020,7 +1020,7 @@ int32_t AudioDeviceWindowsWasapi::InitSpeaker() {
     _renderDevice = _GetDefaultDevice(DeviceClass::AudioRender,
                                       _outputDeviceRole);
     if (_renderDevice == nullptr) {
-      LOG(LS_ERROR) << "Failed to get:"
+      RTC_LOG(LS_ERROR) << "Failed to get:"
         << (_outputDeviceRole == AudioDeviceRole::Communications ? "communications" :
             _outputDeviceRole == AudioDeviceRole::Default ? "default" : "unknown")
         << " audio playout device, using default.";
@@ -1029,7 +1029,7 @@ int32_t AudioDeviceWindowsWasapi::InitSpeaker() {
         _outputDeviceRole == AudioDeviceRole::Communications ? "communications" :
         _outputDeviceRole == AudioDeviceRole::Default ? "default" : "unknown");
     } else {
-      LOG(LS_INFO) << "Using "
+      RTC_LOG(LS_INFO) << "Using "
         << (_outputDeviceRole == AudioDeviceRole::Communications ? "communications" :
             _outputDeviceRole == AudioDeviceRole::Default ? "default" : "unknown")
         << " audio playout device: "
@@ -1041,7 +1041,7 @@ int32_t AudioDeviceWindowsWasapi::InitSpeaker() {
     _renderDevice = _GetDefaultDevice(DeviceClass::AudioRender,
                                       AudioDeviceRole::Communications);
     if (_renderDevice != nullptr) {
-      LOG(LS_ERROR) << "Using default audio playout device:"
+      RTC_LOG(LS_ERROR) << "Using default audio playout device:"
         << rtc::ToUtf8(_renderDevice->Name->Data()).c_str();
       WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
         "using default audio playout device: %s",
@@ -1059,13 +1059,13 @@ int32_t AudioDeviceWindowsWasapi::InitSpeaker() {
     .then([this](concurrency::task<void> t) {
     try {
       t.get();
-      LOG(LS_INFO) << "Output audio device activated "
+      RTC_LOG(LS_INFO) << "Output audio device activated "
         << rtc::ToUtf8(_renderDevice->Name->Data()).c_str();
       WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
         "output audio device activated: %s",
         rtc::ToUtf8(_renderDevice->Name->Data()).c_str());
     } catch(Platform::Exception^ ex) {
-      LOG(LS_ERROR) << "Failed to activate output audio device "
+      RTC_LOG(LS_ERROR) << "Failed to activate output audio device "
         << rtc::ToUtf8(_renderDevice->Name->Data()).c_str()
         << ", ex="
         << rtc::ToUtf8(ex->Message->Data()).c_str();
@@ -1083,7 +1083,7 @@ int32_t AudioDeviceWindowsWasapi::InitSpeaker() {
   }
 
   if (_ptrClientOut == nullptr) {  // Initialize audio output device failed
-    LOG(LS_ERROR) << "Failed to initialize the audio playout enpoint device";
+    RTC_LOG(LS_ERROR) << "Failed to initialize the audio playout enpoint device";
     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
       "failed to initialize audio playout device");
     return -1;
@@ -1132,14 +1132,14 @@ int32_t AudioDeviceWindowsWasapi::InitMicrophone() {
     _captureDevice = _GetListDevice(DeviceClass::AudioCapture,
                                     _deviceIdStringIn);
     if (_captureDevice == nullptr) {
-      LOG(LS_WARNING) << "Selected audio capture device not found "
+      RTC_LOG(LS_WARNING) << "Selected audio capture device not found "
         << rtc::ToUtf8(_deviceIdStringIn->Data()).c_str()
         << ", using default";
       WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
         "selected audio capture device not found %s, using default.",
         rtc::ToUtf8(_deviceIdStringIn->Data()).c_str());
     } else {
-      LOG(LS_INFO) << "Using selected audio capture device:"
+      RTC_LOG(LS_INFO) << "Using selected audio capture device:"
         << rtc::ToUtf8(_captureDevice->Name->Data()).c_str();
       WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
         "using selected audio capture device %s",
@@ -1149,7 +1149,7 @@ int32_t AudioDeviceWindowsWasapi::InitMicrophone() {
     _captureDevice = _GetDefaultDevice(DeviceClass::AudioCapture,
                                        _inputDeviceRole);
     if (_captureDevice == nullptr) {
-      LOG(LS_ERROR) << "Failed to get:"
+      RTC_LOG(LS_ERROR) << "Failed to get:"
         << (_inputDeviceRole == AudioDeviceRole::Communications ? "communications" :
             _inputDeviceRole == AudioDeviceRole::Default ? "default" : "unknown")
         << " audio capture device, using default.";
@@ -1158,7 +1158,7 @@ int32_t AudioDeviceWindowsWasapi::InitMicrophone() {
         _inputDeviceRole == AudioDeviceRole::Communications ? "communications" :
         _inputDeviceRole == AudioDeviceRole::Default ? "default" : "unknown");
     } else {
-      LOG(LS_INFO) << "Using "
+      RTC_LOG(LS_INFO) << "Using "
         << (_inputDeviceRole == AudioDeviceRole::Communications ? "communications" :
             _inputDeviceRole == AudioDeviceRole::Default ? "default" : "unknown")
         << " audio capture device: "
@@ -1170,7 +1170,7 @@ int32_t AudioDeviceWindowsWasapi::InitMicrophone() {
     _captureDevice = _GetDefaultDevice(DeviceClass::AudioCapture,
                                        AudioDeviceRole::Communications);
     if (_captureDevice != nullptr) {
-      LOG(LS_ERROR) << "Using default audio capture device:"
+      RTC_LOG(LS_ERROR) << "Using default audio capture device:"
         << rtc::ToUtf8(_captureDevice->Name->Data()).c_str();
       WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
         "using default audio recording device %s",
@@ -1188,14 +1188,14 @@ int32_t AudioDeviceWindowsWasapi::InitMicrophone() {
     .then([this](concurrency::task<void> t) {
     try {
       t.get();
-      LOG(LS_INFO) << "Input audio device activated "
+      RTC_LOG(LS_INFO) << "Input audio device activated "
         << rtc::ToUtf8(_captureDevice->Name->Data()).c_str();
       WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
         "input audio device activated: %s",
         rtc::ToUtf8(_captureDevice->Name->Data()).c_str());
     }
     catch (Platform::Exception^ ex) {
-      LOG(LS_ERROR) << "Failed to activate input audio device "
+      RTC_LOG(LS_ERROR) << "Failed to activate input audio device "
         << rtc::ToUtf8(_captureDevice->Name->Data()).c_str()
         << ", ex="
         << rtc::ToUtf8(ex->Message->Data()).c_str();
@@ -1213,7 +1213,7 @@ int32_t AudioDeviceWindowsWasapi::InitMicrophone() {
   }
 
   if (_ptrClientIn == nullptr) {
-    LOG(LS_ERROR) << "Failed to initialize the capturing enpoint device";
+    RTC_LOG(LS_ERROR) << "Failed to initialize the capturing enpoint device";
     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
       "failed to initialize the capturing enpoint device");
     return -1;
@@ -3126,7 +3126,7 @@ bool AudioDeviceWindowsWasapi::Playing() const {
 //  SetPlayoutBuffer
 // ----------------------------------------------------------------------------
 
-int32_t AudioDeviceWindowsWasapi::SetPlayoutBuffer(
+/*int32_t AudioDeviceWindowsWasapi::SetPlayoutBuffer(
   const AudioDeviceModule::BufferType type, uint16_t sizeMS) {
   rtc::CritScope lock(&_critSect);
 
@@ -3156,7 +3156,7 @@ int32_t AudioDeviceWindowsWasapi::PlayoutBuffer(
   }
 
   return 0;
-}
+}*/
 
 // ----------------------------------------------------------------------------
 //  CPULoad
@@ -3273,9 +3273,9 @@ DWORD AudioDeviceWindowsWasapi::DoGetCaptureVolumeThread() {
       if (MicrophoneVolume(currentMicLevel) == 0) {
         // This doesn't set the system volume, just stores it.
         _Lock();
-        if (_ptrAudioBuffer) {
+        /*if (_ptrAudioBuffer) {
             _ptrAudioBuffer->SetCurrentMicLevel(currentMicLevel);
-        }
+        }*/
         _UnLock();
       }
     }
@@ -3899,8 +3899,8 @@ DWORD AudioDeviceWindowsWasapi::DoCaptureThread() {
             _driftAccumulator -= clockDrift;
 
             _ptrAudioBuffer->SetVQEData(sndCardPlayDelay,
-                                        sndCardRecDelay,
-                                        clockDrift);
+                                        sndCardRecDelay);
+                                        //clockDrift);
 
             _ptrAudioBuffer->SetTypingStatus(KeyPressed());
 
@@ -3941,7 +3941,7 @@ DWORD AudioDeviceWindowsWasapi::DoCaptureThread() {
           sndCardRecDelay -= 10;
         }
 
-        if (_AGC) {
+        /*if (_AGC) {
           uint32_t newMicLevel = _ptrAudioBuffer->NewMicLevel();
           if (newMicLevel != 0) {
             // The VQE will only deliver non-zero microphone levels when a
@@ -3954,7 +3954,7 @@ DWORD AudioDeviceWindowsWasapi::DoCaptureThread() {
             _newMicLevel = newMicLevel;
             SetEvent(_hSetCaptureVolumeEvent);
           }
-        }
+        }*/
       } else {
         // If GetBuffer returns AUDCLNT_E_BUFFER_ERROR, the thread consuming
         // the audio samples must wait for the next processing pass. The client
@@ -4309,7 +4309,7 @@ bool AudioDeviceWindowsWasapi::CheckBuiltInRenderCapability(Windows::Media::Effe
     effManager = Windows::Media::Effects::AudioEffectsManager::CreateAudioRenderEffectsManager(
       deviceId, Category, Windows::Media::AudioProcessing::Default);
   } catch (Platform::Exception^ ex) {
-    LOG(LS_ERROR) << "Failed to create audio render effects manager ("
+    RTC_LOG(LS_ERROR) << "Failed to create audio render effects manager ("
       << rtc::ToUtf8(ex->Message->Data()).c_str() << ")";
     return false;
   }
@@ -5018,7 +5018,7 @@ void AudioDeviceWindowsWasapi::DefaultAudioCaptureDeviceChanged(
   if (_inputDeviceRole != args->Role) {
     return;
   }
-  LOG(LS_INFO) << "Default audio capture device changed, restarting capturer!";
+  RTC_LOG(LS_INFO) << "Default audio capture device changed, restarting capturer!";
   SetEvent(_hRestartCaptureEvent);
 }
 
@@ -5034,7 +5034,7 @@ void AudioDeviceWindowsWasapi::DefaultAudioRenderDeviceChanged(
   if (_outputDeviceRole != args->Role) {
     return;
   }
-  LOG(LS_INFO) << "Default audio render device changed, restarting renderer!";
+  RTC_LOG(LS_INFO) << "Default audio render device changed, restarting renderer!";
   SetEvent(_hRestartRenderEvent);
 }
 

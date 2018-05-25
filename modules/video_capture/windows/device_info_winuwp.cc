@@ -95,7 +95,7 @@ MediaCaptureDevicesWinUWP::GetMediaCapture(Platform::String^ device_id) {
           try {
             initTask.get();
           } catch (Platform::Exception^ e) {
-            LOG(LS_ERROR)
+            RTC_LOG(LS_ERROR)
               << "Failed to initialize media capture device. "
               << rtc::ToUtf8(e->Message->Data());
           }
@@ -133,7 +133,7 @@ DeviceInfoWinUWP* DeviceInfoWinUWP::Create() {
 	DeviceInfoWinUWP* winuwp_info = new DeviceInfoWinUWP();
   if (!winuwp_info || winuwp_info->Init() != 0) {
     delete winuwp_info;
-    LOG(LS_ERROR) << "Failed to initialize device info object.";
+    RTC_LOG(LS_ERROR) << "Failed to initialize device info object.";
   }
   return winuwp_info;
 }
@@ -190,7 +190,7 @@ int32_t DeviceInfoWinUWP::GetDeviceInfo(uint32_t device_number,
     try {
       DeviceInformationCollection^ dev_info_collection = find_task.get();
       if (dev_info_collection == nullptr || dev_info_collection->Size == 0) {
-        LOG_F(LS_ERROR) << "No video capture device found";
+        RTC_LOG_F(LS_ERROR) << "No video capture device found";
         return;
       }
       device_count = dev_info_collection->Size;
@@ -205,21 +205,21 @@ int32_t DeviceInfoWinUWP::GetDeviceInfo(uint32_t device_number,
           device_name->Data(), -1,
           device_name_utf8, device_name_utf8_length, NULL, NULL);
         if (convResult == 0) {
-          LOG(LS_ERROR) << "Failed to convert device name to UTF8. " <<
+          RTC_LOG(LS_ERROR) << "Failed to convert device name to UTF8. " <<
             GetLastError();
         }
         convResult = WideCharToMultiByte(CP_UTF8, 0,
           device_unique_id->Data(), -1,
           device_unique_id_utf8, device_unique_id_utf8_length, NULL, NULL);
         if (convResult == 0) {
-          LOG(LS_ERROR) << "Failed to convert device unique ID to UTF8. " <<
+          RTC_LOG(LS_ERROR) << "Failed to convert device unique ID to UTF8. " <<
             GetLastError();
         }
         if (product_unique_id_utf8 != NULL)
           product_unique_id_utf8[0] = 0;
       }
     } catch (Platform::Exception^ e) {
-      LOG(LS_ERROR) << "Failed to retrieve device info collection. " <<
+      RTC_LOG(LS_ERROR) << "Failed to retrieve device info collection. " <<
         rtc::ToUtf8(e->Message->Data());
     }
   }).wait();
@@ -233,7 +233,7 @@ int32_t DeviceInfoWinUWP::DisplayCaptureSettingsDialogBox(
   void* parent_window,
   uint32_t position_x,
   uint32_t position_y) {
-  LOG_F(LS_ERROR) << "Not supported.";
+  RTC_LOG_F(LS_ERROR) << "Not supported.";
   return -1;
 }
 
@@ -244,10 +244,10 @@ int32_t DeviceInfoWinUWP::CreateCapabilityMap(
   const int32_t device_unique_id_utf8_length =
     (int32_t)strlen(device_unique_id_utf8);
   if (device_unique_id_utf8_length > kVideoCaptureUniqueNameLength) {
-    LOG_F(LS_ERROR) << "Device name too long";
+    RTC_LOG_F(LS_ERROR) << "Device name too long";
     return -1;
   }
-  LOG(LS_INFO) << "CreateCapabilityMap called for device " <<
+  RTC_LOG(LS_INFO) << "CreateCapabilityMap called for device " <<
     device_unique_id_utf8;
 
   Concurrency::create_task(
@@ -257,7 +257,7 @@ int32_t DeviceInfoWinUWP::CreateCapabilityMap(
     try {
       DeviceInformationCollection^ dev_info_collection = find_task.get();
       if (dev_info_collection == nullptr || dev_info_collection->Size == 0) {
-        LOG_F(LS_ERROR) << "No video capture device found";
+        RTC_LOG_F(LS_ERROR) << "No video capture device found";
         return;
       }
       // Look for the device in the collection.
@@ -316,7 +316,7 @@ int32_t DeviceInfoWinUWP::CreateCapabilityMap(
         _captureCapabilities.push_back(capability);
       }
     } catch (Platform::Exception^ e) {
-      LOG(LS_ERROR) << "Failed to find media capture devices. " <<
+      RTC_LOG(LS_ERROR) << "Failed to find media capture devices. " <<
         rtc::ToUtf8(e->Message->Data());
     }
   }).wait();

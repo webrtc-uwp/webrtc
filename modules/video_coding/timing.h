@@ -65,7 +65,7 @@ class VCMTiming {
   void StopDecodeTimer(uint32_t time_stamp,
                        int32_t decode_time_ms,
                        int64_t now_ms,
-ifdef WEBRTC_FEATURE_END_TO_END_DELAY
+#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
                        int current_endtoend_delay_ms,
 #endif // WEBRTC_FEATURE_END_TO_END_DELAY
                        int64_t render_time_ms);

@@ -161,7 +161,8 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects() {
       RTC_LOG(INFO) << "attempting to use the Windows Wasapi Audio APIs...";
 
       // create *Windows Core Audio* implementation
-      audio_device_.reset(new AudioDeviceWindowsWasapi(Id()));
+      //audio_device_.reset(new AudioDeviceWindowsWasapi(Id()));
+      audio_device_.reset(new AudioDeviceWindowsWasapi(0));
       RTC_LOG(INFO) << "Windows Wasapi Audio APIs will be utilized";
     }
 #elif defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)

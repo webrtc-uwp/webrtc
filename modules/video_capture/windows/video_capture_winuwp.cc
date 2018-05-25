@@ -154,7 +154,7 @@ DisplayOrientation::DisplayOrientation(DisplayOrientationListener* listener)
     catch (...) {
       display_info = nullptr;
       orientation = Windows::Graphics::Display::DisplayOrientations::Portrait;
-      LOG(LS_ERROR) << "DisplayOrientation could not be initialized.";
+      RTC_LOG(LS_ERROR) << "DisplayOrientation could not be initialized.";
     }
   });
 }
@@ -233,7 +233,7 @@ CaptureDevice::~CaptureDevice() {
 }
 
 void CaptureDevice::Initialize(Platform::String^ device_id) {
-  LOG(LS_INFO) << "CaptureDevice::Initialize";
+  RTC_LOG(LS_INFO) << "CaptureDevice::Initialize";
   device_id_ = device_id;
 }
 
@@ -310,7 +310,7 @@ void CaptureDevice::StartCapture(
   CleanupMediaCapture();
 
   if (device_id_ == nullptr) {
-    LOG(LS_WARNING) << "Capture device is not initialized.";
+    RTC_LOG(LS_WARNING) << "Capture device is not initialized.";
     return;
   }
 
@@ -386,19 +386,19 @@ void CaptureDevice::StartCapture(
       async_info.get();
       capture_started_ = true;
     } catch (Platform::Exception^ e) {
-      LOG(LS_ERROR) << "StartRecordToCustomSinkAsync exception: "
+      RTC_LOG(LS_ERROR) << "StartRecordToCustomSinkAsync exception: "
                     << rtc::ToUtf8(e->Message->Data());
       CleanupSink();
       CleanupMediaCapture();
     }
   }).wait();
 
-  LOG(LS_INFO) << "CaptureDevice::StartCapture: returning";
+  RTC_LOG(LS_INFO) << "CaptureDevice::StartCapture: returning";
 }
 
 void CaptureDevice::StopCapture() {
   if (!capture_started_) {
-    LOG(LS_INFO) << "CaptureDevice::StopCapture: called when never started";
+    RTC_LOG(LS_INFO) << "CaptureDevice::StopCapture: called when never started";
     return;
   }
   Concurrency::create_task(
@@ -413,7 +413,7 @@ void CaptureDevice::StopCapture() {
       CleanupSink();
       CleanupMediaCapture();
       _stopped->Set();
-        LOG(LS_ERROR) <<
+        RTC_LOG(LS_ERROR) <<
           "CaptureDevice::StopCapture: Stop failed, reason: '" <<
           rtc::ToUtf8(e->Message->Data()) << "'";
     }
@@ -457,7 +457,7 @@ void CaptureDevice::OnMediaSample(Object^ sender, MediaSampleEventArgs^ args) {
 
       RemovePaddingPixels(video_frame, video_frame_length);
 
-      LOG(LS_VERBOSE) <<
+      RTC_LOG(LS_VERBOSE) <<
         "Video Capture - Media sample received - video frame length: " <<
         video_frame_length << ", capture time : " << capture_time;
 
@@ -468,7 +468,7 @@ void CaptureDevice::OnMediaSample(Object^ sender, MediaSampleEventArgs^ args) {
       hr = spMediaBuffer->Unlock();
     }
     if (FAILED(hr)) {
-      LOG(LS_ERROR) << "Failed to send media sample. " << hr;
+      RTC_LOG(LS_ERROR) << "Failed to send media sample. " << hr;
     }
   }
 }
@@ -620,11 +620,11 @@ void BlackFramesGenerator::StartCapture(
   frame_info_.videoType = VideoType::kRGB24;
 
   if (capture_started_) {
-    LOG(LS_INFO) << "Black frame generator already started";
+    RTC_LOG(LS_INFO) << "Black frame generator already started";
     throw ref new Platform::Exception(
       __HRESULT_FROM_WIN32(ERROR_INVALID_STATE));
   }
-  LOG(LS_INFO) << "Starting black frame generator";
+  RTC_LOG(LS_INFO) << "Starting black frame generator";
 
   size_t black_frame_size = frame_info_.width * frame_info_.height * 3;
   std::shared_ptr<std::vector<uint8_t>> black_frame(
@@ -652,7 +652,7 @@ void BlackFramesGenerator::StopCapture() {
       __HRESULT_FROM_WIN32(ERROR_INVALID_STATE));
   }
 
-  LOG(LS_INFO) << "Stopping black frame generator";
+  RTC_LOG(LS_INFO) << "Stopping black frame generator";
   timer_->Cancel();
   timer_ = nullptr;
   capture_started_ = false;
@@ -674,11 +674,11 @@ VideoCaptureWinUWP::VideoCaptureWinUWP()
     video_encoding_properties_(nullptr),
     media_encoding_profile_(nullptr) {
   if (VideoCommonWinUWP::GetCoreDispatcher() == nullptr) {
-    LOG(LS_INFO) << "Using AppStateDispatcher as orientation source";
+    RTC_LOG(LS_INFO) << "Using AppStateDispatcher as orientation source";
     AppStateDispatcher::Instance()->AddObserver(this);
   } else {
     // DisplayOrientation needs access to UI thread.
-    LOG(LS_INFO) << "Using local detection for orientation source";
+    RTC_LOG(LS_INFO) << "Using local detection for orientation source";
     display_orientation_ = ref new DisplayOrientation(this);
   }
 }
@@ -698,11 +698,11 @@ int32_t VideoCaptureWinUWP::Init(const char* device_unique_id) {
   rtc::CritScope cs(&_apiCs);
   const int32_t device_unique_id_length = (int32_t)strlen(device_unique_id);
   if (device_unique_id_length > kVideoCaptureUniqueNameLength) {
-    LOG(LS_ERROR) << "Device name too long";
+    RTC_LOG(LS_ERROR) << "Device name too long";
     return -1;
   }
 
-  LOG(LS_INFO) << "Init called for device " << device_unique_id;
+  RTC_LOG(LS_INFO) << "Init called for device " << device_unique_id;
 
   device_id_ = nullptr;
 
@@ -716,7 +716,7 @@ int32_t VideoCaptureWinUWP::Init(const char* device_unique_id) {
     try {
       DeviceInformationCollection^ dev_info_collection = find_task.get();
       if (dev_info_collection == nullptr || dev_info_collection->Size == 0) {
-        LOG_F(LS_ERROR) << "No video capture device found";
+        RTC_LOG_F(LS_ERROR) << "No video capture device found";
         return;
       }
       // Look for the device in the collection.
@@ -735,14 +735,14 @@ int32_t VideoCaptureWinUWP::Init(const char* device_unique_id) {
       }
     }
     catch (Platform::Exception^ e) {
-      LOG(LS_ERROR)
+      RTC_LOG(LS_ERROR)
         << "Failed to retrieve device info collection. "
         << rtc::ToUtf8(e->Message->Data());
     }
   }).wait();
 
   if (device_id_ == nullptr) {
-    LOG(LS_ERROR) << "No video capture device found";
+    RTC_LOG(LS_ERROR) << "No video capture device found";
     return -1;
   }
 
@@ -784,7 +784,7 @@ int32_t VideoCaptureWinUWP::StartCapture(
     subtype = MediaEncodingSubtypes::Nv12;
     break;
   default:
-    LOG(LS_ERROR) <<
+    RTC_LOG(LS_ERROR) <<
       "The specified raw video format is not supported on this plaform.";
     return -1;
   }
@@ -853,7 +853,7 @@ int32_t VideoCaptureWinUWP::StartCapture(
                           video_encoding_properties_);
     last_frame_info_ = capability;
   } catch (Platform::Exception^ e) {
-    LOG(LS_ERROR) << "Failed to start capture. "
+    RTC_LOG(LS_ERROR) << "Failed to start capture. "
       << rtc::ToUtf8(e->Message->Data());
     return -1;
   }
@@ -901,7 +901,7 @@ int32_t VideoCaptureWinUWP::StopCapture() {
       fake_device_->StopCapture();
     }
   } catch (Platform::Exception^ e) {
-    LOG(LS_ERROR) << "Failed to stop capture. "
+    RTC_LOG(LS_ERROR) << "Failed to stop capture. "
       << rtc::ToUtf8(e->Message->Data());
     return -1;
   }
@@ -922,24 +922,24 @@ int32_t VideoCaptureWinUWP::CaptureSettings(VideoCaptureCapability& settings) {
 
 bool VideoCaptureWinUWP::SuspendCapture() {
   if (device_->CaptureStarted()) {
-    LOG(LS_INFO) << "SuspendCapture";
+    RTC_LOG(LS_INFO) << "SuspendCapture";
     device_->StopCapture();
     fake_device_->StartCapture(last_frame_info_);
     return true;
   }
-  LOG(LS_INFO) << "SuspendCapture capture is not started";
+  RTC_LOG(LS_INFO) << "SuspendCapture capture is not started";
   return false;
 }
 
 bool VideoCaptureWinUWP::ResumeCapture() {
   if (fake_device_->CaptureStarted()) {
-    LOG(LS_INFO) << "ResumeCapture";
+    RTC_LOG(LS_INFO) << "ResumeCapture";
     fake_device_->StopCapture();
     device_->StartCapture(media_encoding_profile_,
       video_encoding_properties_);
     return true;
   }
-  LOG(LS_INFO) << "ResumeCapture, capture is not started";
+  RTC_LOG(LS_INFO) << "ResumeCapture, capture is not started";
   return false;
 }
 
@@ -950,7 +950,7 @@ bool VideoCaptureWinUWP::IsSuspended() {
 void VideoCaptureWinUWP::DisplayOrientationChanged(
   Windows::Graphics::Display::DisplayOrientations display_orientation) {
   if (display_orientation_ != nullptr) {
-    LOG(LS_WARNING) <<
+    RTC_LOG(LS_WARNING) <<
       "Ignoring orientation change notification from AppStateDispatcher";
     return;
   }
@@ -974,14 +974,14 @@ void VideoCaptureWinUWP::OnIncomingFrame(
 
 void VideoCaptureWinUWP::OnCaptureDeviceFailed(HRESULT code,
                                               Platform::String^ message) {
-  LOG(LS_ERROR) << "Capture device failed. HRESULT: " <<
+  RTC_LOG(LS_ERROR) << "Capture device failed. HRESULT: " <<
     code << " Message: " << rtc::ToUtf8(message->Data());
   rtc::CritScope cs(&_apiCs);
   if (device_ != nullptr && device_->CaptureStarted()) {
     try {
       device_->StopCapture();
     } catch (Platform::Exception^ ex) {
-      LOG(LS_WARNING) <<
+      RTC_LOG(LS_WARNING) <<
         "Capture device failed: failed to stop ex='"
         << rtc::ToUtf8(ex->Message->Data()) << "'";
     }

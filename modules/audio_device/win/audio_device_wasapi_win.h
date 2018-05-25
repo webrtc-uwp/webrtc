@@ -41,6 +41,53 @@ using Windows::Media::Devices::MediaDevice;
 
 // Use Multimedia Class Scheduler Service (MMCSS) to boost the thread priority
 #pragma comment(lib, "avrt.lib")
+#define WEBRTC_TRACE {}
+enum TraceModule {
+  kTraceUndefined = 0,
+  // not a module, triggered from the engine code
+  kTraceVoice = 0x0001,
+  // not a module, triggered from the engine code
+  kTraceVideo = 0x0002,
+  // not a module, triggered from the utility code
+  kTraceUtility = 0x0003,
+  kTraceRtpRtcp = 0x0004,
+  kTraceTransport = 0x0005,
+  kTraceSrtp = 0x0006,
+  kTraceAudioCoding = 0x0007,
+  kTraceAudioMixerServer = 0x0008,
+  kTraceAudioMixerClient = 0x0009,
+  kTraceFile = 0x000a,
+  kTraceAudioProcessing = 0x000b,
+  kTraceVideoCoding = 0x0010,
+  kTraceVideoMixer = 0x0011,
+  kTraceAudioDevice = 0x0012,
+  kTraceVideoRenderer = 0x0014,
+  kTraceVideoCapture = 0x0015,
+  kTraceRemoteBitrateEstimator = 0x0017,
+};
+enum TraceLevel {
+  kTraceNone = 0x0000,  // no trace
+  kTraceStateInfo = 0x0001,
+  kTraceWarning = 0x0002,
+  kTraceError = 0x0004,
+  kTraceCritical = 0x0008,
+  kTraceApiCall = 0x0010,
+  kTraceDefault = 0x00ff,
+
+  kTraceModuleCall = 0x0020,
+  kTraceMemory = 0x0100,  // memory info
+  kTraceTimer = 0x0200,   // timing info
+  kTraceStream = 0x0400,  // "continuous" stream of data
+
+  // used for debug purposes
+  kTraceDebug = 0x0800,  // debug
+  kTraceInfo = 0x1000,   // debug info
+
+  // Non-verbose level used by LS_INFO of logging.h. Do not use directly.
+  kTraceTerseInfo = 0x2000,
+
+  kTraceAll = 0xffff
+};
 
 namespace webrtc {
 
@@ -223,10 +270,10 @@ public:
     virtual int32_t StereoRecording(bool& enabled) const;
 
     // Delay information and control
-    virtual int32_t SetPlayoutBuffer(const AudioDeviceModule::BufferType type,
+    /*virtual int32_t SetPlayoutBuffer(const AudioDeviceModule::BufferType type,
       uint16_t sizeMS);
     virtual int32_t PlayoutBuffer(AudioDeviceModule::BufferType& type,
-      uint16_t& sizeMS) const;
+      uint16_t& sizeMS) const;*/
     virtual int32_t PlayoutDelay(uint16_t& delayMS) const;
     virtual int32_t RecordingDelay(uint16_t& delayMS) const;
 
@@ -458,7 +505,7 @@ public:
     uint16_t                                _recError;
     bool                                    _recIsRecovering;
 
-    AudioDeviceModule::BufferType           _playBufType;
+    //AudioDeviceModule::BufferType           _playBufType;
     uint16_t                                _playBufDelay;
     uint16_t                                _playBufDelayFixed;
 
