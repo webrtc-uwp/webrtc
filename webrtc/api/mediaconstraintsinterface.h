@@ -89,6 +89,9 @@ class MediaConstraintsInterface {
   // Google-specific constraint keys for a local video source
   static const char kNoiseReduction[];  // googNoiseReduction
 
+  // Microsoft Holographic features
+  static const char kEnableMrc[];  // msEnableMrc
+
   // Constraint keys for CreateOffer / CreateAnswer
   // Specified by the W3C PeerConnection spec
   static const char kOfferToReceiveVideo[];  // OfferToReceiveVideo

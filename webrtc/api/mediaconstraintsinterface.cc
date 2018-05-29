@@ -121,6 +121,9 @@ const char MediaConstraintsInterface::kAudioNetworkAdaptorConfig[] =
 // Google-specific constraint keys for a local video source (getUserMedia).
 const char MediaConstraintsInterface::kNoiseReduction[] = "googNoiseReduction";
 
+// Microsoft Holographic features
+const char MediaConstraintsInterface::kEnableMrc[] = "msEnableMrc";
+
 // Constraint keys for CreateOffer / CreateAnswer defined in W3C specification.
 const char MediaConstraintsInterface::kOfferToReceiveAudio[] =
     "OfferToReceiveAudio";

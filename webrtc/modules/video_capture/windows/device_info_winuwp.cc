@@ -314,6 +314,7 @@ int32_t DeviceInfoWinUWP::CreateCapabilityMap(
           capability.videoType = VideoType::kNV12;
         else
           capability.videoType = VideoType::kUnknown;
+        capability.mrcEnabled = false;
         _captureCapabilities.push_back(capability);
       }
     } catch (Platform::Exception^ e) {

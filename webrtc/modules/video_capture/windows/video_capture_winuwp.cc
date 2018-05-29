@@ -192,7 +192,8 @@ ref class CaptureDevice sealed {
   void Cleanup();
 
   void StartCapture(MediaEncodingProfile^ media_encoding_profile,
-                    IVideoEncodingProperties^ video_encoding_properties);
+                    IVideoEncodingProperties^ video_encoding_properties,
+                    bool mrc_enabled);
 
   void StopCapture();
 
@@ -239,7 +240,7 @@ ref class CaptureDevice sealed {
   bool video_effect_added_;
   bool capture_started_;
   VideoCaptureCapability frame_info_;
-  std::unique_ptr<webrtc::EventWrapper> _stopped;
+  std::unique_ptr<webrtc::EventWrapper> stopped_;
 };
 
 CaptureDevice::CaptureDevice(
@@ -251,8 +252,8 @@ CaptureDevice::CaptureDevice(
     capture_started_(false),
 	audio_effect_added_(false),
 	video_effect_added_(false) {
-  _stopped.reset(webrtc::EventWrapper::Create());
-  _stopped->Set();
+  stopped_.reset(webrtc::EventWrapper::Create());
+  stopped_->Set();
 }
 
 CaptureDevice::~CaptureDevice() {
@@ -294,7 +295,7 @@ void CaptureDevice::Cleanup() {
     return;
   }
   if (capture_started_) {
-    if (_stopped->Wait(5000) == kEventTimeout) {
+    if (stopped_->Wait(5000) == kEventTimeout) {
       Concurrency::create_task(
         media_capture->StopRecordAsync()).
         then([this](Concurrency::task<void> async_info) {
@@ -303,12 +304,12 @@ void CaptureDevice::Cleanup() {
           CleanupSink();
           CleanupMediaCapture();
           device_id_ = nullptr;
-          _stopped->Set();
+          stopped_->Set();
         } catch (Platform::Exception^ e) {
           CleanupSink();
           CleanupMediaCapture();
           device_id_ = nullptr;
-          _stopped->Set();
+          stopped_->Set();
           throw;
         }
       }).wait();
@@ -336,14 +337,15 @@ void CaptureDevice::CleanupMixedRealityCapture() {
 
 
 void CaptureDevice::StartCapture(
-  MediaEncodingProfile^ media_encoding_profile,
-  IVideoEncodingProperties^ video_encoding_properties) {
+    MediaEncodingProfile^ media_encoding_profile,
+    IVideoEncodingProperties^ video_encoding_properties,
+    bool mrc_enabled) { 	
   if (capture_started_) {
     throw ref new Platform::Exception(
       __HRESULT_FROM_WIN32(ERROR_INVALID_STATE));
   }
 
-  if (_stopped->Wait(5000) == kEventTimeout) {
+  if (stopped_->Wait(5000) == kEventTimeout) {
     throw ref new Platform::Exception(
       __HRESULT_FROM_WIN32(ERROR_INVALID_STATE));
   }
@@ -411,19 +413,19 @@ void CaptureDevice::StartCapture(
   auto initOp = media_sink_->InitializeAsync(media_encoding_profile->Video);
   auto initTask = Concurrency::create_task(initOp)
     .then([this, media_encoding_profile,
-      video_encoding_properties](IMediaExtension^ media_extension) {
+      video_encoding_properties, mrc_enabled](IMediaExtension^ media_extension) {
 
-	  Platform::String^ deviceFamily = Windows::System::Profile::AnalyticsInfo::VersionInfo->DeviceFamily;
-	  if (deviceFamily->Equals(L"Windows.Holographic")) {
-		  auto mrcVideoEffectDefinition = ref new MrcVideoEffectDefinition;
-		  mrcVideoEffectDefinition->StreamType = MediaStreamType::VideoRecord;
-		  auto addEffectTask = Concurrency::create_task(media_capture_->AddVideoEffectAsync(mrcVideoEffectDefinition, MediaStreamType::VideoRecord)).then([this](IMediaExtension ^videoExtension)
-		  {
-			  OutputDebugString(L"VideoEffect Added\n");
-			  video_effect_added_ = true;
-		  });
-		  Concurrency::create_task(addEffectTask).wait();
-	  }
+      Platform::String^ deviceFamily = Windows::System::Profile::AnalyticsInfo::VersionInfo->DeviceFamily;
+      if (deviceFamily->Equals(L"Windows.Holographic") && mrc_enabled) {
+        auto mrcVideoEffectDefinition = ref new MrcVideoEffectDefinition;
+        mrcVideoEffectDefinition->StreamType = MediaStreamType::VideoRecord;
+        auto addEffectTask = Concurrency::create_task(media_capture_->AddVideoEffectAsync(mrcVideoEffectDefinition, MediaStreamType::VideoRecord)).then([this](IMediaExtension ^videoExtension)
+        {
+          OutputDebugString(L"VideoEffect Added\n");
+          video_effect_added_ = true;
+        });
+        Concurrency::create_task(addEffectTask).wait();
+      }
       auto setPropOp =
         media_capture_->VideoDeviceController->SetMediaStreamPropertiesAsync(
         MediaStreamType::VideoRecord, video_encoding_properties);
@@ -462,11 +464,11 @@ void CaptureDevice::StopCapture() {
       async_info.get();
       CleanupSink();
       CleanupMediaCapture();
-      _stopped->Set();
+      stopped_->Set();
     } catch (Platform::Exception^ e) {
       CleanupSink();
       CleanupMediaCapture();
-      _stopped->Set();
+      stopped_->Set();
         LOG(LS_ERROR) <<
           "CaptureDevice::StopCapture: Stop failed, reason: '" <<
           rtc::ToUtf8(e->Message->Data()) << "'";
@@ -821,6 +823,7 @@ int32_t VideoCaptureWinUWP::Init(const char* device_unique_id) {
 int32_t VideoCaptureWinUWP::StartCapture(
   const VideoCaptureCapability& capability) {
   rtc::CritScope cs(&_apiCs);
+  _requestedCapability = capability;
   Platform::String^ subtype;
   switch (capability.videoType) {
   case VideoType::kYV12:
@@ -913,8 +916,9 @@ int32_t VideoCaptureWinUWP::StartCapture(
       ApplyDisplayOrientation(AppStateDispatcher::Instance()->GetOrientation());
     }
     device_->StartCapture(media_encoding_profile_,
-                          video_encoding_properties_);
-    last_frame_info_ = capability;
+                          video_encoding_properties_,
+                          capability.mrcEnabled);
+    last_frame_info_ = capability ;
   } catch (Platform::Exception^ e) {
     LOG(LS_ERROR) << "Failed to start capture. "
       << rtc::ToUtf8(e->Message->Data());
@@ -999,7 +1003,7 @@ bool VideoCaptureWinUWP::ResumeCapture() {
     LOG(LS_INFO) << "ResumeCapture";
     fake_device_->StopCapture();
     device_->StartCapture(media_encoding_profile_,
-      video_encoding_properties_);
+      video_encoding_properties_, _requestedCapability.mrcEnabled);
     return true;
   }
   LOG(LS_INFO) << "ResumeCapture, capture is not started";

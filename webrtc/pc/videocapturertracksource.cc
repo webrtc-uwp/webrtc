@@ -29,17 +29,17 @@ const double kRoundingTruncation = 0.0005;
 // Default resolution. If no constraint is specified, this is the resolution we
 // will use.
 static const cricket::VideoFormatPod kDefaultFormat = {
-    640, 480, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY};
+    640, 480, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY, false};
 
 // List of formats used if the camera doesn't support capability enumeration.
 static const cricket::VideoFormatPod kVideoFormats[] = {
-    {1920, 1080, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY},
-    {1280, 720, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY},
-    {960, 720, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY},
-    {640, 360, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY},
-    {640, 480, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY},
-    {320, 240, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY},
-    {320, 180, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY}};
+    {1920, 1080, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY, false },
+    {1280, 720, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY, false },
+    {960, 720, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY, false },
+    {640, 360, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY, false },
+    {640, 480, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY, false },
+    {320, 240, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY, false },
+    {320, 180, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY, false }};
 
 MediaSourceInterface::SourceState GetReadyState(cricket::CaptureState state) {
   switch (state) {
@@ -83,7 +83,7 @@ void FromConstraintsForScreencast(
   typedef MediaConstraintsInterface::Constraints::const_iterator
       ConstraintsIterator;
 
-  cricket::VideoFormat upper_limit(-1, -1, 0, 0);
+  cricket::VideoFormat upper_limit(-1, -1, 0, 0, false);
   for (ConstraintsIterator constraints_it = constraints.begin();
        constraints_it != constraints.end(); ++constraints_it)
     SetUpperLimitFromConstraint(*constraints_it, &upper_limit);
@@ -150,7 +150,8 @@ bool NewFormatWithConstraints(
     // Subtract 0.0005 to avoid rounding problems. Same as above.
     const double kRoundingTruncation = 0.0005;
     return (value >= ratio - kRoundingTruncation);
-  } else if (constraint.key == MediaConstraintsInterface::kNoiseReduction) {
+  } else if (constraint.key == MediaConstraintsInterface::kNoiseReduction ||
+      constraint.key == MediaConstraintsInterface::kEnableMrc) {
     // These are actually options, not constraints, so they can be satisfied
     // regardless of the format.
     return true;
@@ -351,6 +352,17 @@ void VideoCapturerTrackSource::Initialize(
   }
 
   format_ = GetBestCaptureFormat(formats);
+
+  rtc::Optional<bool> enableMrc;
+  if (!ExtractOption(constraints, MediaConstraintsInterface::kEnableMrc,
+                     &enableMrc)) {
+	  LOG(LS_WARNING) << "Invalid mandatory value for"
+                      << MediaConstraintsInterface::kEnableMrc;
+	  SetState(kEnded);
+	  return;
+  }
+  format_.mrcEnabled = enableMrc.value_or(false);
+
   // Start the camera with our best guess.
   if (!worker_thread_->Invoke<bool>(
           RTC_FROM_HERE, rtc::Bind(&cricket::VideoCapturer::StartCapturing,
