@@ -16,9 +16,9 @@
 #define COMMON_AUDIO_SIGNAL_PROCESSING_INCLUDE_SPL_INL_H_
 
 #include "rtc_base/compile_assert_c.h"
-#ifdef WINUWP
+//#ifdef WINUWP
 #include <winapifamily.h>
-#endif
+//#endif
 
 #if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP) && defined(WINUWP)
 #include "common_audio/signal_processing/include/spl_inl_neon.h"

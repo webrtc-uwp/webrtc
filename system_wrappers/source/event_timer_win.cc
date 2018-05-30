@@ -40,7 +40,7 @@ class EventTimerWin::Impl
     CloseHandle(event_);
   }
 
-  bool Set() { {
+  bool Set() { 
     // Note: setting an event that is already set has no effect.
     return SetEvent(event_) == 1;
   }
@@ -82,7 +82,11 @@ class EventTimerWin::Impl
 
     return true;
   }
-
+  
+  private:
+    HANDLE  event_;
+    uint32_t timerID_;
+};
 #else // WinUWP
 
 class EventTimerWin::Impl
@@ -165,28 +169,27 @@ class EventTimerWin::Impl
 
 #endif //ndef WINUWP
 
-EventTimerWin::EventTimerWin()
+  EventTimerWin::EventTimerWin()
     : pimpl_(new Impl())
-{
-}
+  {
+  }
 
-EventTimerWin::~EventTimerWin() {
-}
+  EventTimerWin::~EventTimerWin() {
+  }
 
-bool EventTimerWin::Set() {
-  return pimpl_->Set();
-}
+  bool EventTimerWin::Set() {
+    return pimpl_->Set();
+  }
 
-EventTypeWrapper EventTimerWin::Wait(unsigned long max_time) {
-  return pimpl_->Wait(max_time);
-}
+  EventTypeWrapper EventTimerWin::Wait(unsigned long max_time) {
+    return pimpl_->Wait(max_time);
+  }
 
-bool EventTimerWin::StartTimer(bool periodic, unsigned long time) {
-  return pimpl_->StartTimer(periodic, time);
-}
+  bool EventTimerWin::StartTimer(bool periodic, unsigned long time) {
+    return pimpl_->StartTimer(periodic, time);
+  }
  
-bool EventTimerWin::StopTimer() {
-  return pimpl_->StopTimer();
-}
-
+  bool EventTimerWin::StopTimer() {
+    return pimpl_->StopTimer();
+  }
 }  // namespace webrtc
