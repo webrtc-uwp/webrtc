@@ -67,6 +67,6 @@
 /rtc_tools/testing/golang/*/*.zip
 /x86-generic_out/
 /xcodebuild
-/ortc
+/third_party/ortc
 /chromium
 !webrtc/*
