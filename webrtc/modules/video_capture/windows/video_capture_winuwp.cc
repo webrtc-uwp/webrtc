@@ -95,6 +95,13 @@ void AppStateDispatcher::DisplayOrientationChanged(
   }
 }
 
+void AppStateDispatcher::VideoFrameReceived(void* pSample)
+{
+  for (auto obs_it = observers.begin(); obs_it != observers.end(); ++obs_it) {
+    (*obs_it)->VideoFrameReceived(pSample);
+  }
+}
+
 // void AppStateDispatcher::MixedRealityCaptureChanged(
 // 	MrcEffectDefinitions::MrcVideoEffectDefinition video_effect_definition,
 // 	MrcEffectDefinitions::MrcAudioEffectDefinition audio_effect_definition) {
@@ -522,6 +529,8 @@ void CaptureDevice::OnMediaSample(Object^ sender, MediaSampleEventArgs^ args) {
                                                 frame_info_);
 
       hr = spMediaBuffer->Unlock();
+      
+      AppStateDispatcher::Instance()->VideoFrameReceived(spMediaSample.Get());
     }
     if (FAILED(hr)) {
       LOG(LS_ERROR) << "Failed to send media sample. " << hr;
