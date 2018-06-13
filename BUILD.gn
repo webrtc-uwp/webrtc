@@ -14,6 +14,7 @@ group("default") {
     "//webrtc",
     "//webrtc/examples",
     "//webrtc/rtc_tools",
+    "//ortc",
   ]
   if (rtc_include_tests) {
     deps += [ "//webrtc:webrtc_tests" ]
