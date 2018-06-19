@@ -157,7 +157,8 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects() {
   AudioLayer audio_layer(PlatformAudioLayer());
 // Windows ADM implementation.
 #if defined(WINUWP)
-    if (audio_layer == kWindowsWasapiAudio) {
+  if ((audio_layer == kWindowsWasapiAudio) ||
+      (audio_layer == kPlatformDefaultAudio)) {
       RTC_LOG(INFO) << "attempting to use the Windows Wasapi Audio APIs...";
 
       // create *Windows Core Audio* implementation
