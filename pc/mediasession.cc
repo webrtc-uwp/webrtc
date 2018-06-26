@@ -574,8 +574,8 @@ static void PruneCryptos(const CryptoParamsVec& filter,
   }
   target_cryptos->erase(std::remove_if(target_cryptos->begin(),
                                        target_cryptos->end(),
-                                       bind2nd(ptr_fun(CryptoNotFound),
-                                               &filter)),
+                                       [&filter](const CryptoParams &crypto) { return CryptoNotFound(crypto, &filter); }
+                                       ),
                         target_cryptos->end());
 }
 
