@@ -263,7 +263,7 @@ config("common_config") {
   if (current_cpu == "arm") {
     defines += [ "WEBRTC_ARCH_ARM" ]
     if (arm_version >= 7) {
-      defines += [ "WEBRTC_ARCH_ARM_V7" ]
+#      defines += [ "WEBRTC_ARCH_ARM_V7" ]
       if (arm_use_neon) {
         defines += [ "WEBRTC_HAS_NEON" ]
       }
