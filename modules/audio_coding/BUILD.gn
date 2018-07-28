@@ -643,20 +643,47 @@ rtc_source_set("isac_fix_common") {
   ]
 }
 
-rtc_source_set("isac_fix_c_arm_asm") {
-  sources = []
-  if (current_cpu == "arm" && arm_version >= 7) {
-    sources += [
+if (current_cpu == "arm" && arm_version >= 7) {
+  isac_fix_c_arm_asm_sources = [
       "codecs/isac/fix/source/lattice_armv7.S",
       "codecs/isac/fix/source/pitch_filter_armv6.S",
+  ]
+    
+  action_foreach("isac_fix_c_arm_assembly") {
+    script = "//webrtc/build/Win_ARM_Tools/run_arm_asm_compiler.py"
+    sources = isac_fix_c_arm_asm_sources
+    outputs = [
+      "$target_gen_dir/{{source_file_part}}.obj",
     ]
-    deps = [
-      ":isac_fix_common",
-      "../../system_wrappers:asm_defines",
+
+    args = [
+      "-s",
+      "../../webrtc/build/gas-preprocessor/gas-preprocessor.pl",
+      "-i",
+      "{{source}}",
+      "-o",
+      rebase_path("$target_gen_dir/{{source_file_part}}.obj"),
+      "-p",
+      "environment.store_arm",
+      "-l",
+      "../../",
     ]
   }
 }
 
+rtc_source_set("isac_fix_c_arm_asm") {
+  sources = []
+  if (current_cpu == "arm" && arm_version >= 7) {
+    if (current_os == "winuwp" && target_os == "winuwp") {
+      sources = get_target_outputs(":isac_fix_c_arm_assembly")
+      deps = [
+        ":isac_fix_c_arm_assembly",
+      ]
+    } else {
+      sources = isac_fix_c_arm_asm_sources
+    }
+  }
+}
 rtc_source_set("isac_fix_c") {
   sources = [
     "codecs/isac/fix/include/audio_decoder_isacfix.h",
