@@ -21,6 +21,8 @@
 #include "api/array_view.h"
 #include "modules/audio_processing/aec3/aec3_common.h"
 
+#pragma warning( disable : 4065)
+
 namespace webrtc {
 
 // Struct that holds imaginary data produced from 128 point real-valued FFTs.
