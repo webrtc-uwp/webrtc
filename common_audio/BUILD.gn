@@ -101,7 +101,45 @@ rtc_static_library("common_audio") {
 
   if (current_cpu == "x86" || current_cpu == "x64") {
     deps += [ ":common_audio_sse2" ]
+  }  
+}
+
+if (current_cpu == "arm") {
+  common_audio_c_arm_asm_sources = [
+    "signal_processing/complex_bit_reverse_arm.S",
+    "signal_processing/spl_sqrt_floor_arm.S",
+  ]
+  if (current_cpu == "arm") {
+    if (arm_version >= 7) {
+      common_audio_c_arm_asm_sources += [ "signal_processing/filter_ar_fast_q12_armv7.S", ]
+    }
   }
+
+  action_foreach("compile_common_audio_c_arm_assembly") {
+    if (is_win) {
+      script = "//webrtc/build/Win_ARM_Tools/run_arm_asm_compiler.py"
+    } else {
+      script = "//third_party/openmax_dl/dl/run_perl.py"
+    }
+    sources = common_audio_c_arm_asm_sources
+    outputs = [
+      "$target_gen_dir/{{source_file_part}}.obj",
+    ]
+
+    args = [
+      "-s",
+      "../../webrtc/build/gas-preprocessor/gas-preprocessor.pl",
+      "-i",
+      "{{source}}",
+      "-o",
+      rebase_path("$target_gen_dir/{{source_file_part}}.obj"),
+      "-p",
+      "environment.store_arm",
+      "-l",
+      "../../",
+    ]
+  }
+
 }
 
 rtc_source_set("mock_common_audio") {
@@ -118,20 +156,22 @@ rtc_source_set("mock_common_audio") {
 }
 
 rtc_source_set("common_audio_c_arm_asm") {
+#  visibility = [ ":*" ]  # Only targets in this file can depend on this.
   sources = []
-  deps = []
   if (current_cpu == "arm") {
-    sources += [
-      "signal_processing/complex_bit_reverse_arm.S",
-      "signal_processing/spl_sqrt_floor_arm.S",
-    ]
-
-    if (arm_version >= 7) {
-      sources += [ "signal_processing/filter_ar_fast_q12_armv7.S" ]
+  
+    if (current_os == "winuwp" && target_os == "winuwp") {
+      sources = get_target_outputs(":compile_common_audio_c_arm_assembly")
+      deps = [
+        ":compile_common_audio_c_arm_assembly",
+      ]
     } else {
+      sources = common_audio_c_arm_asm_sources
+    }
+
+    if (arm_version < 7) {
       sources += [ "signal_processing/filter_ar_fast_q12.c" ]
     }
-    deps += [ "../system_wrappers:asm_defines" ]
   }
 }
 
@@ -158,7 +198,7 @@ rtc_source_set("common_audio_c") {
     "signal_processing/include/real_fft.h",
     "signal_processing/include/signal_processing_library.h",
     "signal_processing/include/spl_inl.h",
-    "signal_processing/include/spl_inl_armv7.h",
+#    "signal_processing/include/spl_inl_armv7.h",
     "signal_processing/levinson_durbin.c",
     "signal_processing/lpc_to_refl_coef.c",
     "signal_processing/min_max_operations.c",
@@ -219,12 +259,6 @@ rtc_source_set("common_audio_c") {
   if (is_win) {
     cflags = [ "/wd4334" ]  # Ignore warning on shift operator promotion.
     
-    if (current_cpu == "arm" || current_cpu == "arm64") {
-      sources += [
-        "signal_processing/complex_bit_reverse_arm.S",
-        "signal_processing/spl_sqrt_floor_arm.S",
-      ]
-    }
   }
 
   public_configs = [ ":common_audio_config" ]
@@ -404,7 +438,7 @@ if (rtc_build_with_neon) {
 
 if (rtc_include_tests) {
   rtc_test("common_audio_unittests") {
-    visibility += webrtc_default_visibility
+#    visibility += webrtc_default_visibility
     testonly = true
 
     sources = [
