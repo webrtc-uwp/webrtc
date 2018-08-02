@@ -11,8 +11,8 @@
 // This file contains platform-specific typedefs and defines.
 // Much of it is derived from Chromium's build/build_config.h.
 
-#ifndef TYPEDEFS_H_
-#define TYPEDEFS_H_
+#ifndef WEBRTC_TYPEDEFS_H_
+#define WEBRTC_TYPEDEFS_H_
 
 // Processor architecture detection.  For more info on what's defined, see:
 //   http://msdn.microsoft.com/en-us/library/b0084kay.aspx
@@ -95,6 +95,16 @@
 #endif
 #endif
 
+// Macro to be used for switch-case fallthrough (required for enabling
+// -Wimplicit-fallthrough warning on Clang).
+#ifndef FALLTHROUGH
+#if defined(__clang__)
+#define FALLTHROUGH() [[clang::fallthrough]]
+#else
+#define FALLTHROUGH() do { } while (0)
+#endif
+#endif
+
 #ifndef NO_RETURN
 // Annotate a function that will not return control flow to the caller.
 #if defined(_MSC_VER)
@@ -116,4 +126,4 @@
 #define RTC_UNUSED(x) static_cast<void>(x)
 #endif  // RTC_UNUSED
 
-#endif  // TYPEDEFS_H_
+#endif  // WEBRTC_TYPEDEFS_H_
