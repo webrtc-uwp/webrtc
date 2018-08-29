@@ -26,7 +26,7 @@ if (rtc_include_ilbc) {
 if (rtc_include_opus) {
   audio_codec_deps += [ ":webrtc_opus" ]
 }
-if (current_cpu == "arm") {
+if (current_cpu == "arm"  || current_cpu == "arm64") {
   audio_codec_deps += [ ":isac_fix" ]
 } else {
   audio_codec_deps += [ ":isac" ]

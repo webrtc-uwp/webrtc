@@ -156,7 +156,6 @@ rtc_source_set("mock_common_audio") {
 }
 
 rtc_source_set("common_audio_c_arm_asm") {
-#  visibility = [ ":*" ]  # Only targets in this file can depend on this.
   sources = []
   if (current_cpu == "arm") {
   
@@ -172,6 +171,7 @@ rtc_source_set("common_audio_c_arm_asm") {
     if (arm_version < 7) {
       sources += [ "signal_processing/filter_ar_fast_q12.c" ]
     }
+    deps += [ "../system_wrappers:asm_defines" ]
   }
 }
 
@@ -198,7 +198,7 @@ rtc_source_set("common_audio_c") {
     "signal_processing/include/real_fft.h",
     "signal_processing/include/signal_processing_library.h",
     "signal_processing/include/spl_inl.h",
-#    "signal_processing/include/spl_inl_armv7.h",
+    "signal_processing/include/spl_inl_armv7.h",
     "signal_processing/levinson_durbin.c",
     "signal_processing/lpc_to_refl_coef.c",
     "signal_processing/min_max_operations.c",
@@ -438,7 +438,7 @@ if (rtc_build_with_neon) {
 
 if (rtc_include_tests) {
   rtc_test("common_audio_unittests") {
-#    visibility += webrtc_default_visibility
+    visibility += webrtc_default_visibility
     testonly = true
 
     sources = [

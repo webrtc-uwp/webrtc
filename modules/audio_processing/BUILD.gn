@@ -190,6 +190,11 @@ rtc_static_library("audio_processing") {
     defines += [ "WEBRTC_NS_FLOAT" ]
   }
 
+  if (is_win && (current_cpu == "x64" || current_cpu == "arm" || current_cpu == "arm64")) {
+    # Suppress warning "switch statement contains 'default' but no 'case' labels"
+    cflags = [ "/wd4065" ]
+  }
+
   # TODO(jschuh): Bug 1348: fix this warning.
   configs += [ "//build/config/compiler:no_size_t_to_int_warning" ]
 
