@@ -9,7 +9,7 @@
  */
 #include "modules/audio_processing/aec3/block_processor.h"
 
-#include "api/optional.h"
+#include "absl/types/optional.h"
 #include "modules/audio_processing/aec3/aec3_common.h"
 #include "modules/audio_processing/aec3/block_processor_metrics.h"
 #include "modules/audio_processing/aec3/echo_path_variability.h"
@@ -43,6 +43,8 @@ class BlockProcessorImpl final : public BlockProcessor {
 
   void GetMetrics(EchoControl::Metrics* metrics) const override;
 
+  void SetAudioBufferDelay(size_t delay_ms) override;
+
  private:
   static int instance_count_;
   std::unique_ptr<ApmDataDumper> data_dumper_;
@@ -56,8 +58,8 @@ class BlockProcessorImpl final : public BlockProcessor {
   BlockProcessorMetrics metrics_;
   RenderDelayBuffer::BufferingEvent render_event_;
   size_t capture_call_counter_ = 0;
-  rtc::Optional<DelayEstimate> estimated_delay_;
-  rtc::Optional<int> echo_remover_delay_;
+  absl::optional<DelayEstimate> estimated_delay_;
+  absl::optional<int> echo_remover_delay_;
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(BlockProcessorImpl);
 };
 
@@ -230,8 +232,12 @@ void BlockProcessorImpl::UpdateEchoLeakageStatus(bool leakage_detected) {
 void BlockProcessorImpl::GetMetrics(EchoControl::Metrics* metrics) const {
   echo_remover_->GetMetrics(metrics);
   const int block_size_ms = sample_rate_hz_ == 8000 ? 8 : 4;
-  rtc::Optional<size_t> delay = render_buffer_->Delay();
+  absl::optional<size_t> delay = render_buffer_->Delay();
   metrics->delay_ms = delay ? static_cast<int>(*delay) * block_size_ms : 0;
+}
+
+void BlockProcessorImpl::SetAudioBufferDelay(size_t delay_ms) {
+  render_buffer_->SetAudioBufferDelay(delay_ms);
 }
 
 }  // namespace

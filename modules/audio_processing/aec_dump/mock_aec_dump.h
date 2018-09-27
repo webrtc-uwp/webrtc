@@ -14,7 +14,6 @@
 #include <memory>
 
 #include "modules/audio_processing/include/aec_dump.h"
-#include "modules/include/module_common_types.h"
 #include "test/gmock.h"
 
 namespace webrtc {
@@ -26,8 +25,8 @@ class MockAecDump : public AecDump {
   MockAecDump();
   virtual ~MockAecDump();
 
-  MOCK_METHOD1(WriteInitMessage,
-               void(const InternalAPMStreamsConfig& streams_config));
+  MOCK_METHOD2(WriteInitMessage,
+               void(const ProcessingConfig& api_format, int64_t time_now_ms));
 
   MOCK_METHOD1(AddCaptureStreamInput,
                void(const AudioFrameView<const float>& src));
@@ -44,6 +43,9 @@ class MockAecDump : public AecDump {
                void(const AudioFrameView<const float>& src));
 
   MOCK_METHOD1(WriteConfig, void(const InternalAPMConfig& config));
+
+  MOCK_METHOD1(WriteRuntimeSetting,
+               void(const AudioProcessing::RuntimeSetting& config));
 };
 
 }  // namespace test

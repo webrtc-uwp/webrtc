@@ -10,9 +10,13 @@
 
 package org.webrtc;
 
+import javax.annotation.Nullable;
+
 /** Java wrapper for a C++ MediaStreamTrackInterface. */
-@JNINamespace("webrtc::jni")
 public class MediaStreamTrack {
+  public static final String AUDIO_TRACK_KIND = "audio";
+  public static final String VIDEO_TRACK_KIND = "video";
+
   /** Tracks MediaStreamTrackInterface.TrackState */
   public enum State {
     LIVE,
@@ -48,6 +52,21 @@ public class MediaStreamTrack {
         }
       }
       throw new IllegalArgumentException("Unknown native media type: " + nativeIndex);
+    }
+  }
+
+  /** Factory method to create an AudioTrack or VideoTrack subclass. */
+  static @Nullable MediaStreamTrack createMediaStreamTrack(long nativeTrack) {
+    if (nativeTrack == 0) {
+      return null;
+    }
+    String trackKind = nativeGetKind(nativeTrack);
+    if (trackKind.equals(AUDIO_TRACK_KIND)) {
+      return new AudioTrack(nativeTrack);
+    } else if (trackKind.equals(VIDEO_TRACK_KIND)) {
+      return new VideoTrack(nativeTrack);
+    } else {
+      return null;
     }
   }
 

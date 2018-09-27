@@ -8,6 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "api/test/simulated_network.h"
+#include "call/fake_network_pipe.h"
+#include "call/simulated_network.h"
 #include "test/call_test.h"
 #include "test/field_trial.h"
 #include "test/gtest.h"
@@ -19,18 +22,16 @@ class ProbingEndToEndTest : public test::CallTest,
   ProbingEndToEndTest() : field_trial_(GetParam()) {}
 
   virtual ~ProbingEndToEndTest() {
-    EXPECT_EQ(nullptr, video_send_stream_);
-    EXPECT_TRUE(video_receive_streams_.empty());
   }
 
  private:
   test::ScopedFieldTrials field_trial_;
 };
-
-INSTANTIATE_TEST_CASE_P(RoundRobin,
-                        ProbingEndToEndTest,
-                        ::testing::Values("WebRTC-RoundRobinPacing/Disabled/",
-                                          "WebRTC-RoundRobinPacing/Enabled/"));
+INSTANTIATE_TEST_CASE_P(
+    FieldTrials,
+    ProbingEndToEndTest,
+    ::testing::Values("WebRTC-TaskQueueCongestionControl/Enabled/",
+                      "WebRTC-TaskQueueCongestionControl/Disabled/"));
 
 class ProbingTest : public test::EndToEndTest {
  public:
@@ -40,12 +41,8 @@ class ProbingTest : public test::EndToEndTest {
         state_(0),
         sender_call_(nullptr) {}
 
-  ~ProbingTest() {}
-
-  Call::Config GetSenderCallConfig() override {
-    Call::Config config(event_log_.get());
-    config.bitrate_config.start_bitrate_bps = start_bitrate_bps_;
-    return config;
+  void ModifySenderCallConfig(Call::Config* config) override {
+    config->bitrate_config.start_bitrate_bps = start_bitrate_bps_;
   }
 
   void OnCallsCreated(Call* sender_call, Call* receiver_call) override {
@@ -187,4 +184,126 @@ TEST_P(ProbingEndToEndTest, TriggerMidCallProbing) {
   EXPECT_TRUE(success) << "Failed to perform mid call probing (" << kMaxAttempts
                        << " attempts).";
 }
+
+#if defined(MEMORY_SANITIZER)
+TEST_P(ProbingEndToEndTest, DISABLED_ProbeOnVideoEncoderReconfiguration) {
+#elif defined(TARGET_IPHONE_SIMULATOR) && TARGET_IPHONE_SIMULATOR
+TEST_P(ProbingEndToEndTest, DISABLED_ProbeOnVideoEncoderReconfiguration) {
+#else
+TEST_P(ProbingEndToEndTest, ProbeOnVideoEncoderReconfiguration) {
+#endif
+
+  class ReconfigureTest : public ProbingTest {
+   public:
+    ReconfigureTest(test::SingleThreadedTaskQueueForTesting* task_queue,
+                    bool* success)
+        : ProbingTest(50000), task_queue_(task_queue), success_(success) {}
+
+    void ModifyVideoConfigs(
+        VideoSendStream::Config* send_config,
+        std::vector<VideoReceiveStream::Config>* receive_configs,
+        VideoEncoderConfig* encoder_config) override {
+      encoder_config_ = encoder_config;
+    }
+
+    void OnVideoStreamsCreated(
+        VideoSendStream* send_stream,
+        const std::vector<VideoReceiveStream*>& receive_streams) override {
+      send_stream_ = send_stream;
+    }
+
+    void OnRtpTransportControllerSendCreated(
+        RtpTransportControllerSend* transport_controller) override {
+      transport_controller_ = transport_controller;
+    }
+
+    test::PacketTransport* CreateSendTransport(
+        test::SingleThreadedTaskQueueForTesting* task_queue,
+        Call* sender_call) override {
+      auto network =
+          absl::make_unique<SimulatedNetwork>(DefaultNetworkSimulationConfig());
+      send_simulated_network_ = network.get();
+      return new test::PacketTransport(
+          task_queue, sender_call, this, test::PacketTransport::kSender,
+          CallTest::payload_type_map_,
+          absl::make_unique<FakeNetworkPipe>(Clock::GetRealTimeClock(),
+                                             std::move(network)));
+    }
+
+    void PerformTest() override {
+      *success_ = false;
+      int64_t start_time_ms = clock_->TimeInMilliseconds();
+      do {
+        if (clock_->TimeInMilliseconds() - start_time_ms > kTimeoutMs)
+          break;
+
+        Call::Stats stats = sender_call_->GetStats();
+
+        switch (state_) {
+          case 0:
+            // Wait until initial probing has been completed (6 times start
+            // bitrate).
+            if (stats.send_bandwidth_bps >= 250000 &&
+                stats.send_bandwidth_bps <= 350000) {
+              DefaultNetworkSimulationConfig config;
+              config.link_capacity_kbps = 200;
+              send_simulated_network_->SetConfig(config);
+
+              // In order to speed up the test we can interrupt exponential
+              // probing by toggling the network availability. The alternative
+              // is to wait for it to time out (1000 ms).
+              transport_controller_->OnNetworkAvailability(false);
+              transport_controller_->OnNetworkAvailability(true);
+
+              ++state_;
+            }
+            break;
+          case 1:
+            if (stats.send_bandwidth_bps <= 210000) {
+              DefaultNetworkSimulationConfig config;
+              config.link_capacity_kbps = 5000;
+              send_simulated_network_->SetConfig(config);
+
+              encoder_config_->max_bitrate_bps = 2000000;
+              encoder_config_->simulcast_layers[0].max_bitrate_bps = 1200000;
+              task_queue_->SendTask([this]() {
+                send_stream_->ReconfigureVideoEncoder(encoder_config_->Copy());
+              });
+
+              ++state_;
+            }
+            break;
+          case 2:
+            if (stats.send_bandwidth_bps >= 1000000) {
+              *success_ = true;
+              observation_complete_.Set();
+            }
+            break;
+        }
+      } while (!observation_complete_.Wait(20));
+    }
+
+   private:
+    const int kTimeoutMs = 3000;
+    test::SingleThreadedTaskQueueForTesting* const task_queue_;
+    bool* const success_;
+    SimulatedNetwork* send_simulated_network_;
+    VideoSendStream* send_stream_;
+    VideoEncoderConfig* encoder_config_;
+    RtpTransportControllerSend* transport_controller_;
+  };
+
+  bool success = false;
+  const int kMaxAttempts = 3;
+  for (int i = 0; i < kMaxAttempts; ++i) {
+    ReconfigureTest test(&task_queue_, &success);
+    RunBaseTest(&test);
+    if (success) {
+      return;
+    }
+  }
+  EXPECT_TRUE(success) << "Failed to perform mid call probing (" << kMaxAttempts
+                       << " attempts).";
+}
+
 }  // namespace webrtc

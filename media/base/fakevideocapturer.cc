@@ -53,8 +53,8 @@ bool FakeVideoCapturer::CaptureCustomFrame(int width, int height) {
   // Default to 30fps.
   // TODO(nisse): Would anything break if we always stick to
   // the configure frame interval?
-  return CaptureFrame(
-      frame_source_->GetFrame(width, height, rtc::kNumMicrosecsPerSec / 30));
+  return CaptureFrame(frame_source_->GetFrame(width, height, rotation_,
+                                              rtc::kNumMicrosecsPerSec / 30));
 }
 
 bool FakeVideoCapturer::CaptureFrame(const webrtc::VideoFrame& frame) {
@@ -93,7 +93,7 @@ cricket::CaptureState FakeVideoCapturer::Start(
   SetCaptureFormat(&format);
   running_ = true;
   SetCaptureState(cricket::CS_RUNNING);
-  frame_source_ = rtc::MakeUnique<FakeFrameSource>(
+  frame_source_ = absl::make_unique<FakeFrameSource>(
       format.width, format.height,
       format.interval / rtc::kNumNanosecsPerMicrosec);
   frame_source_->SetRotation(rotation_);

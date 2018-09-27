@@ -26,12 +26,20 @@ constexpr std::array<float, kInterpolatedGainCurveTotalPoints>
 constexpr std::array<float, kInterpolatedGainCurveTotalPoints>
     InterpolatedGainCurve::approximation_params_q_;
 
-InterpolatedGainCurve::InterpolatedGainCurve(ApmDataDumper* apm_data_dumper)
-    : apm_data_dumper_(apm_data_dumper) {}
+InterpolatedGainCurve::InterpolatedGainCurve(ApmDataDumper* apm_data_dumper,
+                                             std::string histogram_name_prefix)
+    : region_logger_("WebRTC.Audio." + histogram_name_prefix +
+                         ".FixedDigitalGainCurveRegion.Identity",
+                     "WebRTC.Audio." + histogram_name_prefix +
+                         ".FixedDigitalGainCurveRegion.Knee",
+                     "WebRTC.Audio." + histogram_name_prefix +
+                         ".FixedDigitalGainCurveRegion.Limiter",
+                     "WebRTC.Audio." + histogram_name_prefix +
+                         ".FixedDigitalGainCurveRegion.Saturation"),
+      apm_data_dumper_(apm_data_dumper) {}
 
 InterpolatedGainCurve::~InterpolatedGainCurve() {
   if (stats_.available) {
-    // TODO(alessiob): We might want to add these stats as RTC metrics.
     RTC_DCHECK(apm_data_dumper_);
     apm_data_dumper_->DumpRaw("agc2_interp_gain_curve_lookups_identity",
                               stats_.look_ups_identity_region);
@@ -41,21 +49,99 @@ InterpolatedGainCurve::~InterpolatedGainCurve() {
                               stats_.look_ups_limiter_region);
     apm_data_dumper_->DumpRaw("agc2_interp_gain_curve_lookups_saturation",
                               stats_.look_ups_saturation_region);
+    region_logger_.LogRegionStats(stats_);
+  }
+}
+
+InterpolatedGainCurve::RegionLogger::RegionLogger(
+    std::string identity_histogram_name,
+    std::string knee_histogram_name,
+    std::string limiter_histogram_name,
+    std::string saturation_histogram_name)
+    : identity_histogram(
+          metrics::HistogramFactoryGetCounts(identity_histogram_name,
+                                             1,
+                                             10000,
+                                             50)),
+      knee_histogram(metrics::HistogramFactoryGetCounts(knee_histogram_name,
+                                                        1,
+                                                        10000,
+                                                        50)),
+      limiter_histogram(
+          metrics::HistogramFactoryGetCounts(limiter_histogram_name,
+                                             1,
+                                             10000,
+                                             50)),
+      saturation_histogram(
+          metrics::HistogramFactoryGetCounts(saturation_histogram_name,
+                                             1,
+                                             10000,
+                                             50)) {}
+
+InterpolatedGainCurve::RegionLogger::~RegionLogger() = default;
+
+void InterpolatedGainCurve::RegionLogger::LogRegionStats(
+    const InterpolatedGainCurve::Stats& stats) const {
+  using Region = InterpolatedGainCurve::GainCurveRegion;
+  const int duration_s =
+      stats.region_duration_frames / (1000 / kFrameDurationMs);
+
+  switch (stats.region) {
+    case Region::kIdentity: {
+      if (identity_histogram) {
+        metrics::HistogramAdd(identity_histogram, duration_s);
+      }
+      break;
+    }
+    case Region::kKnee: {
+      if (knee_histogram) {
+        metrics::HistogramAdd(knee_histogram, duration_s);
+      }
+      break;
+    }
+    case Region::kLimiter: {
+      if (limiter_histogram) {
+        metrics::HistogramAdd(limiter_histogram, duration_s);
+      }
+      break;
+    }
+    case Region::kSaturation: {
+      if (saturation_histogram) {
+        metrics::HistogramAdd(saturation_histogram, duration_s);
+      }
+      break;
+    }
+    default: { RTC_NOTREACHED(); }
   }
 }
 
 void InterpolatedGainCurve::UpdateStats(float input_level) const {
   stats_.available = true;
 
+  GainCurveRegion region;
+
   if (input_level < approximation_params_x_[0]) {
     stats_.look_ups_identity_region++;
+    region = GainCurveRegion::kIdentity;
   } else if (input_level <
              approximation_params_x_[kInterpolatedGainCurveKneePoints - 1]) {
     stats_.look_ups_knee_region++;
+    region = GainCurveRegion::kKnee;
   } else if (input_level < kMaxInputLevelLinear) {
     stats_.look_ups_limiter_region++;
+    region = GainCurveRegion::kLimiter;
   } else {
     stats_.look_ups_saturation_region++;
+    region = GainCurveRegion::kSaturation;
+  }
+
+  if (region == stats_.region) {
+    ++stats_.region_duration_frames;
+  } else {
+    region_logger_.LogRegionStats(stats_);
+
+    stats_.region_duration_frames = 0;
+    stats_.region = region;
   }
 }
 

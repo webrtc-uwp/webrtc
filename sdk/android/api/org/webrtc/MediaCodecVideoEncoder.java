@@ -24,11 +24,14 @@ import android.view.Surface;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
+import org.webrtc.EglBase;
 import org.webrtc.EglBase14;
 import org.webrtc.VideoFrame;
 
@@ -36,7 +39,7 @@ import org.webrtc.VideoFrame;
 // This class is an implementation detail of the Java PeerConnection API.
 @TargetApi(19)
 @SuppressWarnings("deprecation")
-@JNINamespace("webrtc::jni")
+@Deprecated
 public class MediaCodecVideoEncoder {
   // This class is constructed, operated, and destroyed by its C++ incarnation,
   // so the class and its methods have non-public visibility.  The API this
@@ -45,8 +48,96 @@ public class MediaCodecVideoEncoder {
 
   private static final String TAG = "MediaCodecVideoEncoder";
 
+  /**
+   * Create a VideoEncoderFactory that can be injected in the PeerConnectionFactory and replicate
+   * the old behavior.
+   */
+  public static VideoEncoderFactory createFactory() {
+    return new DefaultVideoEncoderFactory(new HwEncoderFactory());
+  }
+
+  // Factory for creating HW MediaCodecVideoEncoder instances.
+  static class HwEncoderFactory implements VideoEncoderFactory {
+    private static boolean isSameCodec(VideoCodecInfo codecA, VideoCodecInfo codecB) {
+      if (!codecA.name.equalsIgnoreCase(codecB.name)) {
+        return false;
+      }
+      return codecA.name.equalsIgnoreCase("H264")
+          ? H264Utils.isSameH264Profile(codecA.params, codecB.params)
+          : true;
+    }
+
+    private static boolean isCodecSupported(
+        VideoCodecInfo[] supportedCodecs, VideoCodecInfo codec) {
+      for (VideoCodecInfo supportedCodec : supportedCodecs) {
+        if (isSameCodec(supportedCodec, codec)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    private static VideoCodecInfo[] getSupportedHardwareCodecs() {
+      final List<VideoCodecInfo> codecs = new ArrayList<VideoCodecInfo>();
+
+      if (isVp8HwSupported()) {
+        Logging.d(TAG, "VP8 HW Encoder supported.");
+        codecs.add(new VideoCodecInfo("VP8", new HashMap<>()));
+      }
+
+      if (isVp9HwSupported()) {
+        Logging.d(TAG, "VP9 HW Encoder supported.");
+        codecs.add(new VideoCodecInfo("VP9", new HashMap<>()));
+      }
+
+      // Check if high profile is supported by decoder. If yes, encoder can always
+      // fall back to baseline profile as a subset as high profile.
+      if (MediaCodecVideoDecoder.isH264HighProfileHwSupported()) {
+        Logging.d(TAG, "H.264 High Profile HW Encoder supported.");
+        codecs.add(H264Utils.DEFAULT_H264_HIGH_PROFILE_CODEC);
+      }
+
+      if (isH264HwSupported()) {
+        Logging.d(TAG, "H.264 HW Encoder supported.");
+        codecs.add(H264Utils.DEFAULT_H264_BASELINE_PROFILE_CODEC);
+      }
+
+      return codecs.toArray(new VideoCodecInfo[codecs.size()]);
+    }
+
+    private final VideoCodecInfo[] supportedHardwareCodecs = getSupportedHardwareCodecs();
+
+    @Override
+    public VideoCodecInfo[] getSupportedCodecs() {
+      return supportedHardwareCodecs;
+    }
+
+    @Nullable
+    @Override
+    public VideoEncoder createEncoder(VideoCodecInfo info) {
+      if (!isCodecSupported(supportedHardwareCodecs, info)) {
+        Logging.d(TAG, "No HW video encoder for codec " + info.name);
+        return null;
+      }
+      Logging.d(TAG, "Create HW video encoder for " + info.name);
+      return new WrappedNativeVideoEncoder() {
+        @Override
+        public long createNativeVideoEncoder() {
+          return nativeCreateEncoder(
+              info, /* hasEgl14Context= */ staticEglBase instanceof EglBase14);
+        }
+
+        @Override
+        public boolean isHardwareEncoder() {
+          return true;
+        }
+      };
+    }
+  }
+
   // Tracks webrtc::VideoCodecType.
   public enum VideoCodecType {
+    VIDEO_CODEC_UNKNOWN,
     VIDEO_CODEC_VP8,
     VIDEO_CODEC_VP9,
     VIDEO_CODEC_H264;
@@ -73,21 +164,22 @@ public class MediaCodecVideoEncoder {
 
   // Active running encoder instance. Set in initEncode() (called from native code)
   // and reset to null in release() call.
-  private static MediaCodecVideoEncoder runningInstance = null;
-  private static MediaCodecVideoEncoderErrorCallback errorCallback = null;
-  private static int codecErrors = 0;
+  @Nullable private static MediaCodecVideoEncoder runningInstance;
+  @Nullable private static MediaCodecVideoEncoderErrorCallback errorCallback;
+  private static int codecErrors;
   // List of disabled codec types - can be set from application.
   private static Set<String> hwEncoderDisabledTypes = new HashSet<String>();
+  @Nullable private static EglBase staticEglBase;
 
-  private Thread mediaCodecThread;
-  private MediaCodec mediaCodec;
+  @Nullable private Thread mediaCodecThread;
+  @Nullable private MediaCodec mediaCodec;
   private ByteBuffer[] outputBuffers;
-  private EglBase14 eglBase;
+  @Nullable private EglBase14 eglBase;
   private int profile;
   private int width;
   private int height;
-  private Surface inputSurface;
-  private GlRectDrawer drawer;
+  @Nullable private Surface inputSurface;
+  @Nullable private GlRectDrawer drawer;
 
   private static final String VP8_MIME_TYPE = "video/x-vnd.on2.vp8";
   private static final String VP9_MIME_TYPE = "video/x-vnd.on2.vp9";
@@ -144,6 +236,31 @@ public class MediaCodecVideoEncoder {
       this.minSdk = minSdk;
       this.bitrateAdjustmentType = bitrateAdjustmentType;
     }
+  }
+
+  /**
+   * Set EGL context used by HW encoding. The EGL context must be shared with the video capturer
+   * and any local render.
+   */
+  public static void setEglContext(EglBase.Context eglContext) {
+    if (staticEglBase != null) {
+      Logging.w(TAG, "Egl context already set.");
+      staticEglBase.release();
+    }
+    staticEglBase = EglBase.create(eglContext);
+  }
+
+  /** Dispose the EGL context used by HW encoding. */
+  public static void disposeEglContext() {
+    if (staticEglBase != null) {
+      staticEglBase.release();
+      staticEglBase = null;
+    }
+  }
+
+  @Nullable
+  static EglBase.Context getEglContext() {
+    return staticEglBase == null ? null : staticEglBase.getEglBaseContext();
   }
 
   // List of supported HW VP8 encoders.
@@ -231,7 +348,7 @@ public class MediaCodecVideoEncoder {
   private long lastKeyFrameMs;
 
   // SPS and PPS NALs (Config frame) for H.264.
-  private ByteBuffer configData = null;
+  @Nullable private ByteBuffer configData;
 
   // MediaCodec error handler - invoked when critical error happens which may prevent
   // further use of media codec API. Now it means that one of media codec instances
@@ -263,13 +380,12 @@ public class MediaCodecVideoEncoder {
   }
 
   // Functions to query if HW encoding is supported.
-  @CalledByNative
   public static boolean isVp8HwSupported() {
     return !hwEncoderDisabledTypes.contains(VP8_MIME_TYPE)
         && (findHwEncoder(VP8_MIME_TYPE, vp8HwList(), supportedColorList) != null);
   }
 
-  public static EncoderProperties vp8HwEncoderProperties() {
+  public static @Nullable EncoderProperties vp8HwEncoderProperties() {
     if (hwEncoderDisabledTypes.contains(VP8_MIME_TYPE)) {
       return null;
     } else {
@@ -277,13 +393,11 @@ public class MediaCodecVideoEncoder {
     }
   }
 
-  @CalledByNative
   public static boolean isVp9HwSupported() {
     return !hwEncoderDisabledTypes.contains(VP9_MIME_TYPE)
         && (findHwEncoder(VP9_MIME_TYPE, vp9HwList, supportedColorList) != null);
   }
 
-  @CalledByNative
   public static boolean isH264HwSupported() {
     return !hwEncoderDisabledTypes.contains(H264_MIME_TYPE)
         && (findHwEncoder(H264_MIME_TYPE, h264HwList(), supportedColorList) != null);
@@ -322,7 +436,7 @@ public class MediaCodecVideoEncoder {
     public final BitrateAdjustmentType bitrateAdjustmentType; // Bitrate adjustment type
   }
 
-  private static EncoderProperties findHwEncoder(
+  private static @Nullable EncoderProperties findHwEncoder(
       String mime, MediaCodecProperties[] supportedHwCodecProperties, int[] colorList) {
     // MediaCodec.setParameters is missing for JB and below, so bitrate
     // can not be adjusted dynamically.
@@ -433,7 +547,7 @@ public class MediaCodecVideoEncoder {
     }
   }
 
-  static MediaCodec createByCodecName(String codecName) {
+  static @Nullable MediaCodec createByCodecName(String codecName) {
     try {
       // In the L-SDK this call can throw IOException so in order to work in
       // both cases catch an exception.
@@ -445,8 +559,7 @@ public class MediaCodecVideoEncoder {
 
   @CalledByNativeUnchecked
   boolean initEncode(VideoCodecType type, int profile, int width, int height, int kbps, int fps,
-      EglBase14.Context sharedContext) {
-    final boolean useSurface = sharedContext != null;
+      boolean useSurface) {
     Logging.d(TAG,
         "Java initEncode: " + type + ". Profile: " + profile + " : " + width + " x " + height
             + ". @ " + kbps + " kbps. Fps: " + fps + ". Encode from texture : " + useSurface);
@@ -486,6 +599,8 @@ public class MediaCodecVideoEncoder {
         }
       }
       keyFrameIntervalSec = 20;
+    } else {
+      throw new RuntimeException("initEncode: Non-supported codec " + type);
     }
     if (properties == null) {
       throw new RuntimeException("Can not find HW encoder for " + type);
@@ -545,7 +660,7 @@ public class MediaCodecVideoEncoder {
       mediaCodec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
 
       if (useSurface) {
-        eglBase = new EglBase14(sharedContext, EglBase.CONFIG_RECORDABLE);
+        eglBase = new EglBase14((EglBase14.Context) getEglContext(), EglBase.CONFIG_RECORDABLE);
         // Create an input surface and keep a reference since we must release the surface when done.
         inputSurface = mediaCodec.createInputSurface();
         eglBase.createSurface(inputSurface);
@@ -607,25 +722,6 @@ public class MediaCodecVideoEncoder {
       return true;
     } catch (IllegalStateException e) {
       Logging.e(TAG, "encodeBuffer failed", e);
-      return false;
-    }
-  }
-
-  @CalledByNativeUnchecked
-  boolean encodeTexture(boolean isKeyframe, int oesTextureId, float[] transformationMatrix,
-      long presentationTimestampUs) {
-    checkOnMediaCodecThread();
-    try {
-      checkKeyFrameRequired(isKeyframe, presentationTimestampUs);
-      eglBase.makeCurrent();
-      // TODO(perkj): glClear() shouldn't be necessary since every pixel is covered anyway,
-      // but it's a workaround for bug webrtc:5147.
-      GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
-      drawer.drawOes(oesTextureId, transformationMatrix, width, height, 0, 0, width, height);
-      eglBase.swapBuffers(TimeUnit.MICROSECONDS.toNanos(presentationTimestampUs));
-      return true;
-    } catch (RuntimeException e) {
-      Logging.e(TAG, "encodeTexture failed", e);
       return false;
     }
   }
@@ -857,6 +953,7 @@ public class MediaCodecVideoEncoder {
 
   // Dequeue and return an output buffer, or null if no output is ready.  Return
   // a fake OutputBufferInfo with index -1 if the codec is no longer operable.
+  @Nullable
   @CalledByNativeUnchecked
   OutputBufferInfo dequeueOutputBuffer() {
     checkOnMediaCodecThread();
@@ -1005,4 +1102,5 @@ public class MediaCodecVideoEncoder {
   /** Fills an inputBuffer with the given index with data from the byte buffers. */
   private static native void nativeFillInputBuffer(long encoder, int inputBuffer, ByteBuffer dataY,
       int strideY, ByteBuffer dataU, int strideU, ByteBuffer dataV, int strideV);
+  private static native long nativeCreateEncoder(VideoCodecInfo info, boolean hasEgl14Context);
 }

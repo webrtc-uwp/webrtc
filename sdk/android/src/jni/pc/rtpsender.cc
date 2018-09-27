@@ -39,6 +39,8 @@ static jboolean JNI_RtpSender_SetTrack(JNIEnv* jni,
 jlong JNI_RtpSender_GetTrack(JNIEnv* jni,
                              const JavaParamRef<jclass>&,
                              jlong j_rtp_sender_pointer) {
+  // MediaStreamTrack will have shared ownership by the MediaStreamTrack Java
+  // object.
   return jlongFromPointer(
       reinterpret_cast<RtpSenderInterface*>(j_rtp_sender_pointer)
           ->track()
@@ -83,6 +85,15 @@ ScopedJavaLocalRef<jstring> JNI_RtpSender_GetId(JNIEnv* jni,
                                                 jlong j_rtp_sender_pointer) {
   return NativeToJavaString(
       jni, reinterpret_cast<RtpSenderInterface*>(j_rtp_sender_pointer)->id());
+}
+
+static void JNI_RtpSender_SetFrameEncryptor(JNIEnv* jni,
+                                            const JavaParamRef<jclass>&,
+                                            jlong j_rtp_sender_pointer,
+                                            jlong j_frame_encryptor_pointer) {
+  reinterpret_cast<RtpSenderInterface*>(j_rtp_sender_pointer)
+      ->SetFrameEncryptor(reinterpret_cast<FrameEncryptorInterface*>(
+          j_frame_encryptor_pointer));
 }
 
 }  // namespace jni

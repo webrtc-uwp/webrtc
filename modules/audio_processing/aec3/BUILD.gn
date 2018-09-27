@@ -6,7 +6,6 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
-import("//build/config/arm.gni")
 import("../../../webrtc.gni")
 
 rtc_static_library("aec3") {
@@ -21,6 +20,8 @@ rtc_static_library("aec3") {
     "aec3_fft.h",
     "aec_state.cc",
     "aec_state.h",
+    "block_delay_buffer.cc",
+    "block_delay_buffer.h",
     "block_framer.cc",
     "block_framer.h",
     "block_processor.cc",
@@ -36,6 +37,8 @@ rtc_static_library("aec3") {
     "delay_estimate.h",
     "downsampled_render_buffer.cc",
     "downsampled_render_buffer.h",
+    "echo_audibility.cc",
+    "echo_audibility.h",
     "echo_canceller3.cc",
     "echo_canceller3.h",
     "echo_path_delay_estimator.cc",
@@ -65,8 +68,8 @@ rtc_static_library("aec3") {
     "matched_filter_lag_aggregator.h",
     "matrix_buffer.cc",
     "matrix_buffer.h",
-    "output_selector.cc",
-    "output_selector.h",
+    "moving_average.cc",
+    "moving_average.h",
     "render_buffer.cc",
     "render_buffer.h",
     "render_delay_buffer.cc",
@@ -79,13 +82,28 @@ rtc_static_library("aec3") {
     "render_signal_analyzer.h",
     "residual_echo_estimator.cc",
     "residual_echo_estimator.h",
+    "reverb_decay_estimator.cc",
+    "reverb_decay_estimator.h",
+    "reverb_frequency_response.cc",
+    "reverb_frequency_response.h",
+    "reverb_model.cc",
+    "reverb_model.h",
+    "reverb_model_estimator.cc",
+    "reverb_model_estimator.h",
+    "reverb_model_fallback.cc",
+    "reverb_model_fallback.h",
     "shadow_filter_update_gain.cc",
     "shadow_filter_update_gain.h",
     "skew_estimator.cc",
     "skew_estimator.h",
+    "stationarity_estimator.cc",
+    "stationarity_estimator.h",
     "subtractor.cc",
     "subtractor.h",
+    "subtractor_output.cc",
     "subtractor_output.h",
+    "subtractor_output_analyzer.cc",
+    "subtractor_output_analyzer.h",
     "suppression_filter.cc",
     "suppression_filter.h",
     "suppression_gain.cc",
@@ -98,23 +116,28 @@ rtc_static_library("aec3") {
   ]
 
   defines = []
+  if (rtc_build_with_neon && current_cpu != "arm64") {
+    suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
+    cflags = [ "-mfpu=neon" ]
+  }
+
   deps = [
-    "..:aec_core",
     "..:apm_logging",
     "..:audio_processing",
-    "../../..:typedefs",
     "../../../api:array_view",
-    "../../../api:optional",
     "../../../api/audio:aec3_config",
     "../../../api/audio:echo_control",
     "../../../common_audio:common_audio_c",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "../../../rtc_base:safe_minmax",
+    "../../../rtc_base/system:arch",
     "../../../system_wrappers:cpu_features_api",
+    "../../../system_wrappers:field_trial_api",
     "../../../system_wrappers:metrics_api",
+    "../utility:ooura_fft",
+    "//third_party/abseil-cpp/absl/types:optional",
   ]
-
-  configs += [ "//build/config/compiler:no_size_t_to_int_warning" ]
 }
 
 if (rtc_include_tests) {
@@ -123,9 +146,13 @@ if (rtc_include_tests) {
 
     configs += [ "..:apm_debug_dump" ]
     sources = [
+      "mock/mock_block_processor.cc",
       "mock/mock_block_processor.h",
+      "mock/mock_echo_remover.cc",
       "mock/mock_echo_remover.h",
+      "mock/mock_render_delay_buffer.cc",
       "mock/mock_render_delay_buffer.h",
+      "mock/mock_render_delay_controller.cc",
       "mock/mock_render_delay_controller.h",
     ]
 
@@ -134,14 +161,15 @@ if (rtc_include_tests) {
       "..:apm_logging",
       "..:audio_processing",
       "..:audio_processing_unittests",
-      "../../..:typedefs",
       "../../../api:array_view",
-      "../../../api:optional",
       "../../../api/audio:aec3_config",
       "../../../rtc_base:checks",
       "../../../rtc_base:rtc_base_approved",
+      "../../../rtc_base:safe_minmax",
+      "../../../rtc_base/system:arch",
       "../../../system_wrappers:cpu_features_api",
       "../../../test:test_support",
+      "//third_party/abseil-cpp/absl/types:optional",
     ]
 
     defines = []
@@ -151,6 +179,7 @@ if (rtc_include_tests) {
         "adaptive_fir_filter_unittest.cc",
         "aec3_fft_unittest.cc",
         "aec_state_unittest.cc",
+        "block_delay_buffer_unittest.cc",
         "block_framer_unittest.cc",
         "block_processor_metrics_unittest.cc",
         "block_processor_unittest.cc",
@@ -169,13 +198,14 @@ if (rtc_include_tests) {
         "main_filter_update_gain_unittest.cc",
         "matched_filter_lag_aggregator_unittest.cc",
         "matched_filter_unittest.cc",
-        "output_selector_unittest.cc",
+        "moving_average_unittest.cc",
         "render_buffer_unittest.cc",
         "render_delay_buffer_unittest.cc",
         "render_delay_controller_metrics_unittest.cc",
         "render_delay_controller_unittest.cc",
         "render_signal_analyzer_unittest.cc",
         "residual_echo_estimator_unittest.cc",
+        "reverb_model_estimator_unittest.cc",
         "shadow_filter_update_gain_unittest.cc",
         "skew_estimator_unittest.cc",
         "subtractor_unittest.cc",
@@ -184,12 +214,5 @@ if (rtc_include_tests) {
         "vector_math_unittest.cc",
       ]
     }
-
-    if ((!build_with_chromium || is_win) && is_clang) {
-      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
-      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
-    }
-
-    configs += [ "//build/config/compiler:no_size_t_to_int_warning" ]
   }
 }

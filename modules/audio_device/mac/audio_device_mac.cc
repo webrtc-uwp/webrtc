@@ -9,11 +9,13 @@
  */
 
 #include "modules/audio_device/mac/audio_device_mac.h"
+#include "absl/memory/memory.h"
 #include "modules/audio_device/audio_device_config.h"
-#include "modules/audio_device/mac/portaudio/pa_ringbuffer.h"
+#include "modules/third_party/portaudio/pa_ringbuffer.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/platform_thread.h"
+#include "rtc_base/system/arch.h"
 #include "system_wrappers/include/event_wrapper.h"
 
 #include <ApplicationServices/ApplicationServices.h>
@@ -1564,8 +1566,8 @@ int32_t AudioDeviceMac::GetNumberDevices(const AudioObjectPropertyScope scope,
     return 0;
   }
 
-  AudioDeviceID* deviceIds = (AudioDeviceID*)malloc(size);
   UInt32 numberDevices = size / sizeof(AudioDeviceID);
+  const auto deviceIds = absl::make_unique<AudioDeviceID[]>(numberDevices);
   AudioBufferList* bufferList = NULL;
   UInt32 numberScopedDevices = 0;
 
@@ -1596,8 +1598,9 @@ int32_t AudioDeviceMac::GetNumberDevices(const AudioObjectPropertyScope scope,
   // Then list the rest of the devices
   bool listOK = true;
 
-  WEBRTC_CA_LOG_ERR(AudioObjectGetPropertyData(
-      kAudioObjectSystemObject, &propertyAddress, 0, NULL, &size, deviceIds));
+  WEBRTC_CA_LOG_ERR(AudioObjectGetPropertyData(kAudioObjectSystemObject,
+                                               &propertyAddress, 0, NULL, &size,
+                                               deviceIds.get()));
   if (err != noErr) {
     listOK = false;
   } else {
@@ -1641,23 +1644,11 @@ int32_t AudioDeviceMac::GetNumberDevices(const AudioObjectPropertyScope scope,
   }
 
   if (!listOK) {
-    if (deviceIds) {
-      free(deviceIds);
-      deviceIds = NULL;
-    }
-
     if (bufferList) {
       free(bufferList);
       bufferList = NULL;
     }
-
     return -1;
-  }
-
-  // Happy ending
-  if (deviceIds) {
-    free(deviceIds);
-    deviceIds = NULL;
   }
 
   return numberScopedDevices;

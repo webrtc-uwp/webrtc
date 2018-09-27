@@ -55,7 +55,18 @@ public class YuvHelperTest {
 
   @Before
   public void setUp() {
-    NativeLibrary.initialize(new NativeLibrary.DefaultLoader());
+    NativeLibrary.initialize(new NativeLibrary.DefaultLoader(), TestConstants.NATIVE_LIBRARY);
+  }
+
+  @SmallTest
+  @Test
+  public void testCopyPlane() {
+    final int dstStride = TEST_WIDTH;
+    final ByteBuffer dst = ByteBuffer.allocateDirect(TEST_HEIGHT * dstStride);
+
+    YuvHelper.copyPlane(TEST_I420_Y, TEST_I420_STRIDE_Y, dst, dstStride, TEST_WIDTH, TEST_HEIGHT);
+
+    assertByteBufferContentEquals(new byte[] {1, 2, 3, 4, 5, 6, 7, 8, 9}, dst);
   }
 
   @SmallTest

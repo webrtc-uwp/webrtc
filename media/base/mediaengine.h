@@ -34,11 +34,13 @@ class AudioDeviceModule;
 class AudioMixer;
 class AudioProcessing;
 class Call;
-}
+}  // namespace webrtc
 
 namespace cricket {
 
 struct RtpCapabilities {
+  RtpCapabilities();
+  ~RtpCapabilities();
   std::vector<webrtc::RtpExtension> header_extensions;
 };
 
@@ -82,7 +84,6 @@ class MediaEngineInterface {
   // Stops recording AEC dump.
   virtual void StopAecDump() = 0;
 };
-
 
 // CompositeMediaEngine constructs a MediaEngine from separate
 // voice and video engine classes.

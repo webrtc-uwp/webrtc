@@ -42,6 +42,7 @@ class WebRtcVoiceMediaChannel;
 // It uses the WebRtc VoiceEngine library for audio handling.
 class WebRtcVoiceEngine final {
   friend class WebRtcVoiceMediaChannel;
+
  public:
   WebRtcVoiceEngine(
       webrtc::AudioDeviceModule* adm,
@@ -119,16 +120,13 @@ class WebRtcVoiceEngine final {
   bool initialized_ = false;
 
   webrtc::AgcConfig default_agc_config_;
-  // Cache received extended_filter_aec, delay_agnostic_aec, experimental_ns
-  // level controller, and intelligibility_enhancer values, and apply them
-  // in case they are missing in the audio options. We need to do this because
-  // SetExtraOptions() will revert to defaults for options which are not
-  // provided.
-  rtc::Optional<bool> extended_filter_aec_;
-  rtc::Optional<bool> delay_agnostic_aec_;
-  rtc::Optional<bool> experimental_ns_;
-  rtc::Optional<bool> intelligibility_enhancer_;
-  rtc::Optional<bool> level_control_;
+  // Cache received extended_filter_aec, delay_agnostic_aec and experimental_ns
+  // values, and apply them in case they are missing in the audio options.
+  // We need to do this because SetExtraOptions() will revert to defaults for
+  // options which are not provided.
+  absl::optional<bool> extended_filter_aec_;
+  absl::optional<bool> delay_agnostic_aec_;
+  absl::optional<bool> experimental_ns_;
   // Jitter buffer settings for new streams.
   size_t audio_jitter_buffer_max_packets_ = 50;
   bool audio_jitter_buffer_fast_accelerate_ = false;
@@ -207,7 +205,8 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
 
   bool SendRtcp(const uint8_t* data, size_t len) override {
     rtc::CopyOnWriteBuffer packet(data, len, kMaxRtpPacketLen);
-    return VoiceMediaChannel::SendRtcp(&packet, rtc::PacketOptions());
+    rtc::PacketOptions rtc_options;
+    return VoiceMediaChannel::SendRtcp(&packet, rtc_options);
   }
 
  private:
@@ -241,7 +240,7 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
 
   int max_send_bitrate_bps_ = 0;
   AudioOptions options_;
-  rtc::Optional<int> dtmf_payload_type_;
+  absl::optional<int> dtmf_payload_type_;
   int dtmf_payload_freq_ = -1;
   bool recv_transport_cc_enabled_ = false;
   bool recv_nack_enabled_ = false;
@@ -252,6 +251,12 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
 
   // Queue of unsignaled SSRCs; oldest at the beginning.
   std::vector<uint32_t> unsignaled_recv_ssrcs_;
+
+  // This is a stream param that comes from the remote description, but wasn't
+  // signaled with any a=ssrc lines. It holds the information that was signaled
+  // before the unsignaled receive stream is created when the first packet is
+  // received.
+  StreamParams unsignaled_stream_params_;
 
   // Volume for unsignaled streams, which may be set before the stream exists.
   double default_recv_volume_ = 1.0;
@@ -265,13 +270,18 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
   class WebRtcAudioSendStream;
   std::map<uint32_t, WebRtcAudioSendStream*> send_streams_;
   std::vector<webrtc::RtpExtension> send_rtp_extensions_;
+  std::string mid_;
 
   class WebRtcAudioReceiveStream;
   std::map<uint32_t, WebRtcAudioReceiveStream*> recv_streams_;
   std::vector<webrtc::RtpExtension> recv_rtp_extensions_;
 
-  rtc::Optional<webrtc::AudioSendStream::Config::SendCodecSpec>
+  absl::optional<webrtc::AudioSendStream::Config::SendCodecSpec>
       send_codec_spec_;
+
+  // TODO(kwiberg): Per-SSRC codec pair IDs?
+  const webrtc::AudioCodecPairId codec_pair_id_ =
+      webrtc::AudioCodecPairId::Create();
 
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(WebRtcVoiceMediaChannel);
 };

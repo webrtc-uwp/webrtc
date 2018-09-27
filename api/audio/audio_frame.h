@@ -11,16 +11,14 @@
 #ifndef API_AUDIO_AUDIO_FRAME_H_
 #define API_AUDIO_AUDIO_FRAME_H_
 
+#include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h>
 
 #include "rtc_base/constructormagic.h"
-#include "rtc_base/deprecation.h"
-#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
-/* This class holds up to 60 ms of super-wideband (32 kHz) stereo audio. It
+/* This class holds up to 120 ms of super-wideband (32 kHz) stereo audio. It
  * allows for adding and subtracting frames while keeping track of the resulting
  * states.
  *
@@ -40,16 +38,13 @@ class AudioFrame {
   // variables which should allow us to switch to constexpr and keep this a
   // header-only class.
   enum : size_t {
-    // Stereo, 32 kHz, 60 ms (2 * 32 * 60)
-    kMaxDataSizeSamples = 3840,
+    // Stereo, 32 kHz, 120 ms (2 * 32 * 120)
+    // Stereo, 192 kHz, 20 ms (2 * 192 * 20)
+    kMaxDataSizeSamples = 7680,
     kMaxDataSizeBytes = kMaxDataSizeSamples * sizeof(int16_t),
   };
 
-  enum VADActivity {
-    kVadActive = 0,
-    kVadPassive = 1,
-    kVadUnknown = 2
-  };
+  enum VADActivity { kVadActive = 0, kVadPassive = 1, kVadUnknown = 2 };
   enum SpeechType {
     kNormalSpeech = 0,
     kPLC = 1,
@@ -68,20 +63,12 @@ class AudioFrame {
   // ResetWithoutMuting() to skip this wasteful zeroing.
   void ResetWithoutMuting();
 
-  // TODO(solenberg): Remove once downstream users of AudioFrame have updated.
-  RTC_DEPRECATED
-      void UpdateFrame(int id, uint32_t timestamp, const int16_t* data,
-                       size_t samples_per_channel, int sample_rate_hz,
-                       SpeechType speech_type, VADActivity vad_activity,
-                       size_t num_channels = 1) {
-    RTC_UNUSED(id);
-    UpdateFrame(timestamp, data, samples_per_channel, sample_rate_hz,
-                speech_type, vad_activity, num_channels);
-  }
-
-  void UpdateFrame(uint32_t timestamp, const int16_t* data,
-                   size_t samples_per_channel, int sample_rate_hz,
-                   SpeechType speech_type, VADActivity vad_activity,
+  void UpdateFrame(uint32_t timestamp,
+                   const int16_t* data,
+                   size_t samples_per_channel,
+                   int sample_rate_hz,
+                   SpeechType speech_type,
+                   VADActivity vad_activity,
                    size_t num_channels = 1);
 
   void CopyFrom(const AudioFrame& src);
@@ -108,13 +95,6 @@ class AudioFrame {
   // Frame is muted by default.
   bool muted() const;
 
-  // These methods are deprecated. Use the functions in
-  // webrtc/audio/utility instead. These methods will exists for a
-  // short period of time until webrtc clients have updated. See
-  // webrtc:6548 for details.
-  RTC_DEPRECATED AudioFrame& operator>>=(const int rhs);
-  RTC_DEPRECATED AudioFrame& operator+=(const AudioFrame& rhs);
-
   // RTP timestamp of the first sample in the AudioFrame.
   uint32_t timestamp_ = 0;
   // Time since the first frame in milliseconds.
@@ -131,7 +111,7 @@ class AudioFrame {
   // Monotonically increasing timestamp intended for profiling of audio frames.
   // Typically used for measuring elapsed time between two different points in
   // the audio path. No lock is used to save resources and we are thread safe
-  // by design. Also, rtc::Optional is not used since it will cause a "complex
+  // by design. Also, absl::optional is not used since it will cause a "complex
   // class/struct needs an explicit out-of-line destructor" build error.
   int64_t profile_timestamp_ms_ = 0;
 

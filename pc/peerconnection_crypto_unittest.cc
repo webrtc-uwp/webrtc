@@ -10,6 +10,8 @@
 
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
+#include "api/video_codecs/builtin_video_decoder_factory.h"
+#include "api/video_codecs/builtin_video_encoder_factory.h"
 #include "p2p/base/fakeportallocator.h"
 #include "pc/mediasession.h"
 #include "pc/peerconnectionwrapper.h"
@@ -17,10 +19,10 @@
 #ifdef WEBRTC_ANDROID
 #include "pc/test/androidtestinitializer.h"
 #endif
+#include "absl/memory/memory.h"
 #include "pc/test/fakeaudiocapturemodule.h"
 #include "pc/test/fakertccertificategenerator.h"
 #include "rtc_base/gunit.h"
-#include "rtc_base/ptr_util.h"
 #include "rtc_base/virtualsocketserver.h"
 
 namespace webrtc {
@@ -46,7 +48,9 @@ class PeerConnectionCryptoBaseTest : public ::testing::Test {
     pc_factory_ = CreatePeerConnectionFactory(
         rtc::Thread::Current(), rtc::Thread::Current(), rtc::Thread::Current(),
         FakeAudioCaptureModule::Create(), CreateBuiltinAudioEncoderFactory(),
-        CreateBuiltinAudioDecoderFactory(), nullptr, nullptr);
+        CreateBuiltinAudioDecoderFactory(), CreateBuiltinVideoEncoderFactory(),
+        CreateBuiltinVideoDecoderFactory(), nullptr /* audio_mixer */,
+        nullptr /* audio_processing */);
   }
 
   WrapperPtr CreatePeerConnection() {
@@ -60,9 +64,9 @@ class PeerConnectionCryptoBaseTest : public ::testing::Test {
   WrapperPtr CreatePeerConnection(
       const RTCConfiguration& config,
       std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_gen) {
-    auto fake_port_allocator = rtc::MakeUnique<cricket::FakePortAllocator>(
+    auto fake_port_allocator = absl::make_unique<cricket::FakePortAllocator>(
         rtc::Thread::Current(), nullptr);
-    auto observer = rtc::MakeUnique<MockPeerConnectionObserver>();
+    auto observer = absl::make_unique<MockPeerConnectionObserver>();
     RTCConfiguration modified_config = config;
     modified_config.sdp_semantics = sdp_semantics_;
     auto pc = pc_factory_->CreatePeerConnection(
@@ -72,8 +76,8 @@ class PeerConnectionCryptoBaseTest : public ::testing::Test {
       return nullptr;
     }
 
-    return rtc::MakeUnique<PeerConnectionWrapper>(pc_factory_, pc,
-                                                  std::move(observer));
+    return absl::make_unique<PeerConnectionWrapper>(pc_factory_, pc,
+                                                    std::move(observer));
   }
 
   // Accepts the same arguments as CreatePeerConnection and adds default audio
@@ -562,7 +566,7 @@ TEST_P(PeerConnectionCryptoDtlsCertGenTest, TestCertificateGeneration) {
   RTCConfiguration config;
   config.enable_dtls_srtp.emplace(true);
   auto owned_fake_certificate_generator =
-      rtc::MakeUnique<FakeRTCCertificateGenerator>();
+      absl::make_unique<FakeRTCCertificateGenerator>();
   auto* fake_certificate_generator = owned_fake_certificate_generator.get();
   fake_certificate_generator->set_should_fail(cert_gen_result_ ==
                                               CertGenResult::kFail);
@@ -594,9 +598,11 @@ TEST_P(PeerConnectionCryptoDtlsCertGenTest, TestCertificateGeneration) {
         new rtc::RefCountedObject<MockCreateSessionDescriptionObserver>();
     observers.push_back(observer);
     if (sdp_type_ == SdpType::kOffer) {
-      pc->pc()->CreateOffer(observer, nullptr);
+      pc->pc()->CreateOffer(observer,
+                            PeerConnectionInterface::RTCOfferAnswerOptions());
     } else {
-      pc->pc()->CreateAnswer(observer, nullptr);
+      pc->pc()->CreateAnswer(observer,
+                             PeerConnectionInterface::RTCOfferAnswerOptions());
     }
   }
   for (auto& observer : observers) {

@@ -37,8 +37,8 @@
 #endif // WINUWP
 
 #include <sys/stat.h>  // To check for directory existence.
-#ifndef S_ISDIR  // Not defined in stat.h on Windows.
-#define S_ISDIR(mode) (((mode) & S_IFMT) == S_IFDIR)
+#ifndef S_ISDIR        // Not defined in stat.h on Windows.
+#define S_ISDIR(mode) (((mode)&S_IFMT) == S_IFDIR)
 #endif
 
 #include <stdio.h>
@@ -49,7 +49,7 @@
 #include <utility>
 
 #include "rtc_base/checks.h"
-#include "typedefs.h"  // NOLINT(build/include)  // For architecture defines
+#include "rtc_base/stringutils.h"
 
 namespace webrtc {
 namespace test {
@@ -100,9 +100,9 @@ void SetExecutablePath(const std::string& path) {
   if (path.find(working_dir) != std::string::npos) {
     temp_path = path.substr(working_dir.length() + 1);
   }
-  // On Windows, when tests are run under memory tools like DrMemory and TSan,
-  // slashes occur in the path as directory separators. Make sure we replace
-  // such cases with backslashes in order for the paths to be correct.
+// On Windows, when tests are run under memory tools like DrMemory and TSan,
+// slashes occur in the path as directory separators. Make sure we replace
+// such cases with backslashes in order for the paths to be correct.
 #ifdef WIN32
   std::replace(temp_path.begin(), temp_path.end(), '/', '\\');
 #endif
@@ -120,8 +120,8 @@ bool FileExists(const std::string& file_name) {
 
 bool DirExists(const std::string& directory_name) {
   struct stat directory_info = {0};
-  return stat(directory_name.c_str(), &directory_info) == 0 && S_ISDIR(
-      directory_info.st_mode);
+  return stat(directory_name.c_str(), &directory_info) == 0 &&
+         S_ISDIR(directory_info.st_mode);
 }
 
 #ifdef WEBRTC_ANDROID
@@ -207,7 +207,7 @@ std::string WorkingDir() {
 
 // Generate a temporary filename in a safe way.
 // Largely copied from talk/base/{unixfilesystem,win32filesystem}.cc.
-std::string TempFilename(const std::string &dir, const std::string &prefix) {
+std::string TempFilename(const std::string& dir, const std::string& prefix) {
 #if defined(WINUWP)
   rtc::Pathname fullpath = dir;
   GUID g;
@@ -231,8 +231,8 @@ std::string TempFilename(const std::string &dir, const std::string &prefix) {
   return fullpath.pathname();
 #elif defined(WIN32)
   wchar_t filename[MAX_PATH];
-  if (::GetTempFileName(rtc::ToUtf16(dir).c_str(),
-                        rtc::ToUtf16(prefix).c_str(), 0, filename) != 0)
+  if (::GetTempFileName(rtc::ToUtf16(dir).c_str(), rtc::ToUtf16(prefix).c_str(),
+                        0, filename) != 0)
     return rtc::ToUtf8(filename);
   assert(false);
   return "";
@@ -240,8 +240,7 @@ std::string TempFilename(const std::string &dir, const std::string &prefix) {
   int len = dir.size() + prefix.size() + 2 + 6;
   std::unique_ptr<char[]> tempname(new char[len]);
 
-  snprintf(tempname.get(), len, "%s/%sXXXXXX", dir.c_str(),
-           prefix.c_str());
+  snprintf(tempname.get(), len, "%s/%sXXXXXX", dir.c_str(), prefix.c_str());
   int fd = ::mkstemp(tempname.get());
   if (fd == -1) {
     assert(false);
@@ -254,9 +253,16 @@ std::string TempFilename(const std::string &dir, const std::string &prefix) {
 #endif
 }
 
-rtc::Optional<std::vector<std::string>> ReadDirectory(std::string path) {
+std::string GenerateTempFilename(const std::string& dir,
+                                 const std::string& prefix) {
+  std::string filename = TempFilename(dir, prefix);
+  RemoveFile(filename);
+  return filename;
+}
+
+absl::optional<std::vector<std::string>> ReadDirectory(std::string path) {
   if (path.length() == 0)
-    return rtc::Optional<std::vector<std::string>>();
+    return absl::optional<std::vector<std::string>>();
 
 #if defined(WEBRTC_WIN)
   // Append separator character if needed.
@@ -267,7 +273,7 @@ rtc::Optional<std::vector<std::string>> ReadDirectory(std::string path) {
   WIN32_FIND_DATA data;
   HANDLE handle = ::FindFirstFile(rtc::ToUtf16(path + '*').c_str(), &data);
   if (handle == INVALID_HANDLE_VALUE)
-    return rtc::Optional<std::vector<std::string>>();
+    return absl::optional<std::vector<std::string>>();
 
   // Populate output.
   std::vector<std::string> found_entries;
@@ -288,7 +294,7 @@ rtc::Optional<std::vector<std::string>> ReadDirectory(std::string path) {
   // Init.
   DIR* dir = ::opendir(path.c_str());
   if (dir == nullptr)
-    return rtc::Optional<std::vector<std::string>>();
+    return absl::optional<std::vector<std::string>>();
 
   // Populate output.
   std::vector<std::string> found_entries;
@@ -302,7 +308,7 @@ rtc::Optional<std::vector<std::string>> ReadDirectory(std::string path) {
   closedir(dir);
 #endif
 
-  return rtc::Optional<std::vector<std::string>>(std::move(found_entries));
+  return absl::optional<std::vector<std::string>>(std::move(found_entries));
 }
 
 bool CreateDir(const std::string& directory_name) {
@@ -310,7 +316,8 @@ bool CreateDir(const std::string& directory_name) {
   // Check if the path exists already:
   if (stat(directory_name.c_str(), &path_info) == 0) {
     if (!S_ISDIR(path_info.st_mode)) {
-      fprintf(stderr, "Path %s exists but is not a directory! Remove this "
+      fprintf(stderr,
+              "Path %s exists but is not a directory! Remove this "
               "file and re-run to create the directory.\n",
               directory_name.c_str());
       return false;
@@ -319,7 +326,7 @@ bool CreateDir(const std::string& directory_name) {
 #ifdef WIN32
     return _mkdir(directory_name.c_str()) == 0;
 #else
-    return mkdir(directory_name.c_str(),  S_IRWXU | S_IRWXG | S_IRWXO) == 0;
+    return mkdir(directory_name.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) == 0;
 #endif
   }
   return true;
@@ -327,9 +334,9 @@ bool CreateDir(const std::string& directory_name) {
 
 bool RemoveDir(const std::string& directory_name) {
 #ifdef WIN32
-    return RemoveDirectoryA(directory_name.c_str()) != FALSE;
+  return RemoveDirectoryA(directory_name.c_str()) != FALSE;
 #else
-    return rmdir(directory_name.c_str()) == 0;
+  return rmdir(directory_name.c_str()) == 0;
 #endif
 }
 
@@ -357,33 +364,21 @@ std::string ResourcePath(const std::string& name,
   platform = "android";
 #endif  // WEBRTC_ANDROID
 
-#ifdef WEBRTC_ARCH_64_BITS
-  std::string architecture = "64";
-#else
-  std::string architecture = "32";
-#endif  // WEBRTC_ARCH_64_BITS
-
-  std::string resources_path = ProjectRootPath() + kResourcesDirName +
-      kPathDelimiter;
-  std::string resource_file = resources_path + name + "_" + platform + "_" +
-      architecture + "." + extension;
+  std::string resources_path =
+      ProjectRootPath() + kResourcesDirName + kPathDelimiter;
+  std::string resource_file =
+      resources_path + name + "_" + platform + "." + extension;
   if (FileExists(resource_file)) {
     return resource_file;
   }
-  // Try without architecture.
-  resource_file = resources_path + name + "_" + platform + "." + extension;
-  if (FileExists(resource_file)) {
-    return resource_file;
-  }
-  // Try without platform.
-  resource_file = resources_path + name + "_" + architecture + "." + extension;
-  if (FileExists(resource_file)) {
-    return resource_file;
-  }
-
-  // Fall back on name without architecture or platform.
+  // Fall back on name without platform.
   return resources_path + name + "." + extension;
 #endif  // defined (WEBRTC_IOS)
+}
+
+std::string JoinFilename(const std::string& dir, const std::string& name) {
+  RTC_CHECK(!dir.empty()) << "Special cases not implemented.";
+  return dir + kPathDelimiter + name;
 }
 
 size_t GetFileSize(const std::string& filename) {

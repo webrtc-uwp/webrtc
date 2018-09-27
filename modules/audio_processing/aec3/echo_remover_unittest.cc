@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <memory>
 #include <numeric>
-#include <sstream>
 #include <string>
 
 #include "modules/audio_processing/aec3/aec3_common.h"
@@ -22,28 +21,29 @@
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "modules/audio_processing/test/echo_canceller_test_tools.h"
 #include "rtc_base/random.h"
+#include "rtc_base/strings/string_builder.h"
 #include "test/gtest.h"
 
 namespace webrtc {
 namespace {
 
 std::string ProduceDebugText(int sample_rate_hz) {
-  std::ostringstream ss;
+  rtc::StringBuilder ss;
   ss << "Sample rate: " << sample_rate_hz;
-  return ss.str();
+  return ss.Release();
 }
 
 std::string ProduceDebugText(int sample_rate_hz, int delay) {
-  std::ostringstream ss(ProduceDebugText(sample_rate_hz));
+  rtc::StringBuilder ss(ProduceDebugText(sample_rate_hz));
   ss << ", Delay: " << delay;
-  return ss.str();
+  return ss.Release();
 }
 
 }  // namespace
 
 // Verifies the basic API call sequence
 TEST(EchoRemover, BasicApiCalls) {
-  rtc::Optional<DelayEstimate> delay_estimate;
+  absl::optional<DelayEstimate> delay_estimate;
   for (auto rate : {8000, 16000, 32000, 48000}) {
     SCOPED_TRACE(ProduceDebugText(rate));
     std::unique_ptr<EchoRemover> remover(
@@ -84,7 +84,7 @@ TEST(EchoRemover, DISABLED_WrongSampleRate) {
 
 // Verifies the check for the capture block size.
 TEST(EchoRemover, WrongCaptureBlockSize) {
-  rtc::Optional<DelayEstimate> delay_estimate;
+  absl::optional<DelayEstimate> delay_estimate;
   for (auto rate : {8000, 16000, 32000, 48000}) {
     SCOPED_TRACE(ProduceDebugText(rate));
     std::unique_ptr<EchoRemover> remover(
@@ -106,7 +106,7 @@ TEST(EchoRemover, WrongCaptureBlockSize) {
 // TODO(peah): Re-enable the test once the issue with memory leaks during DEATH
 // tests on test bots has been fixed.c
 TEST(EchoRemover, DISABLED_WrongCaptureNumBands) {
-  rtc::Optional<DelayEstimate> delay_estimate;
+  absl::optional<DelayEstimate> delay_estimate;
   for (auto rate : {16000, 32000, 48000}) {
     SCOPED_TRACE(ProduceDebugText(rate));
     std::unique_ptr<EchoRemover> remover(
@@ -127,7 +127,7 @@ TEST(EchoRemover, DISABLED_WrongCaptureNumBands) {
 
 // Verifies the check for non-null capture block.
 TEST(EchoRemover, NullCapture) {
-  rtc::Optional<DelayEstimate> delay_estimate;
+  absl::optional<DelayEstimate> delay_estimate;
   std::unique_ptr<EchoRemover> remover(
       EchoRemover::Create(EchoCanceller3Config(), 8000));
   std::unique_ptr<RenderDelayBuffer> render_buffer(
@@ -147,7 +147,7 @@ TEST(EchoRemover, NullCapture) {
 TEST(EchoRemover, BasicEchoRemoval) {
   constexpr int kNumBlocksToProcess = 500;
   Random random_generator(42U);
-  rtc::Optional<DelayEstimate> delay_estimate;
+  absl::optional<DelayEstimate> delay_estimate;
   for (auto rate : {8000, 16000, 32000, 48000}) {
     std::vector<std::vector<float>> x(NumBandsForRate(rate),
                                       std::vector<float>(kBlockSize, 0.f));

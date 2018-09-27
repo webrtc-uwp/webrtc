@@ -13,9 +13,11 @@
 
 #include <string>
 
-#include "common_types.h"  // NOLINT(build/include)
+#include "api/rtp_headers.h"
+#include "api/video/video_bitrate_allocation.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "rtc_base/task_queue.h"
+#include "system_wrappers/include/ntp_time.h"
 
 namespace webrtc {
 class ReceiveStatisticsProvider;
@@ -33,7 +35,7 @@ class MediaReceiverRtcpObserver {
                               uint32_t rtp_time) {}
   virtual void OnBye(uint32_t sender_ssrc) {}
   virtual void OnBitrateAllocation(uint32_t sender_ssrc,
-                                   const BitrateAllocation& allocation) {}
+                                   const VideoBitrateAllocation& allocation) {}
 };
 
 struct RtcpTransceiverConfig {
@@ -80,6 +82,8 @@ struct RtcpTransceiverConfig {
   //
   // Tuning parameters.
   //
+  // Initial state if |outgoing_transport| ready to accept packets.
+  bool initial_ready_to_send = true;
   // Delay before 1st periodic compound packet.
   int initial_report_delay_ms = 500;
 

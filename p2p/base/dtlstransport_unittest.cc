@@ -334,9 +334,9 @@ class DtlsTransportTestBase {
 
     if (use_dtls_) {
       // Check that we negotiated the right ciphers. Since GCM ciphers are not
-      // negotiated by default, we should end up with SRTP_AES128_CM_SHA1_32.
-      client1_.CheckSrtp(rtc::SRTP_AES128_CM_SHA1_32);
-      client2_.CheckSrtp(rtc::SRTP_AES128_CM_SHA1_32);
+      // negotiated by default, we should end up with SRTP_AES128_CM_SHA1_80.
+      client1_.CheckSrtp(rtc::SRTP_AES128_CM_SHA1_80);
+      client2_.CheckSrtp(rtc::SRTP_AES128_CM_SHA1_80);
     } else {
       // If DTLS isn't actually being used, GetSrtpCryptoSuite should return
       // false.
@@ -579,10 +579,9 @@ TEST_F(DtlsTransportTest, TestRetransmissionSchedule) {
     // millisecond before the expected time and verify that no unexpected
     // retransmissions were sent. Then advance it the final millisecond and
     // verify that the expected retransmission was sent.
-    fake_clock_.AdvanceTime(
-        rtc::TimeDelta::FromMilliseconds(timeout_schedule_ms[i] - 1));
+    fake_clock_.AdvanceTime(webrtc::TimeDelta::ms(timeout_schedule_ms[i] - 1));
     EXPECT_EQ(expected_hellos, client1_.received_dtls_client_hellos());
-    fake_clock_.AdvanceTime(rtc::TimeDelta::FromMilliseconds(1));
+    fake_clock_.AdvanceTime(webrtc::TimeDelta::ms(1));
     EXPECT_EQ(++expected_hellos, client1_.received_dtls_client_hellos());
   }
 }

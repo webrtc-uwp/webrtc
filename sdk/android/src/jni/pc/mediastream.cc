@@ -10,7 +10,7 @@
 
 #include "sdk/android/src/jni/pc/mediastream.h"
 
-#include "rtc_base/ptr_util.h"
+#include "absl/memory/memory.h"
 #include "sdk/android/generated_peerconnection_jni/jni/MediaStream_jni.h"
 #include "sdk/android/native_api/jni/java_types.h"
 #include "sdk/android/src/jni/jni_helpers.h"
@@ -25,7 +25,7 @@ JavaMediaStream::JavaMediaStream(
           env,
           Java_MediaStream_Constructor(env,
                                        jlongFromPointer(media_stream.get()))),
-      observer_(rtc::MakeUnique<MediaStreamObserver>(media_stream)) {
+      observer_(absl::make_unique<MediaStreamObserver>(media_stream)) {
   for (rtc::scoped_refptr<AudioTrackInterface> track :
        media_stream->GetAudioTracks()) {
     Java_MediaStream_addNativeAudioTrack(env, j_media_stream_,
@@ -135,9 +135,9 @@ static jboolean JNI_MediaStream_RemoveVideoTrack(JNIEnv* jni,
 }
 
 static ScopedJavaLocalRef<jstring>
-JNI_MediaStream_GetLabel(JNIEnv* jni, const JavaParamRef<jclass>&, jlong j_p) {
-  return NativeToJavaString(
-      jni, reinterpret_cast<MediaStreamInterface*>(j_p)->label());
+JNI_MediaStream_GetId(JNIEnv* jni, const JavaParamRef<jclass>&, jlong j_p) {
+  return NativeToJavaString(jni,
+                            reinterpret_cast<MediaStreamInterface*>(j_p)->id());
 }
 
 }  // namespace jni

@@ -16,6 +16,7 @@
 #include "common_video/include/video_frame_buffer.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "modules/include/module_common_types.h"
+#include "modules/video_coding/codecs/multiplex/include/augmented_video_frame_buffer.h"
 #include "rtc_base/keep_ref_until_done.h"
 #include "rtc_base/logging.h"
 
@@ -47,10 +48,12 @@ class MultiplexEncoderAdapter::AdapterEncodedImageCallback
 
 MultiplexEncoderAdapter::MultiplexEncoderAdapter(
     VideoEncoderFactory* factory,
-    const SdpVideoFormat& associated_format)
+    const SdpVideoFormat& associated_format,
+    bool supports_augmented_data)
     : factory_(factory),
       associated_format_(associated_format),
-      encoded_complete_callback_(nullptr) {}
+      encoded_complete_callback_(nullptr),
+      supports_augmented_data_(supports_augmented_data) {}
 
 MultiplexEncoderAdapter::~MultiplexEncoderAdapter() {
   Release();
@@ -122,25 +125,49 @@ int MultiplexEncoderAdapter::Encode(
   }
   const bool has_alpha = input_image.video_frame_buffer()->type() ==
                          VideoFrameBuffer::Type::kI420A;
-  stashed_images_.emplace(
-      std::piecewise_construct, std::forward_as_tuple(input_image.timestamp()),
-      std::forward_as_tuple(picture_index_,
-                            has_alpha ? kAlphaCodecStreams : 1));
+  std::unique_ptr<uint8_t[]> augmenting_data = nullptr;
+  uint16_t augmenting_data_length = 0;
+  AugmentedVideoFrameBuffer* augmented_video_frame_buffer = nullptr;
+  if (supports_augmented_data_) {
+    augmented_video_frame_buffer = static_cast<AugmentedVideoFrameBuffer*>(
+        input_image.video_frame_buffer().get());
+    augmenting_data_length =
+        augmented_video_frame_buffer->GetAugmentingDataSize();
+    augmenting_data =
+        std::unique_ptr<uint8_t[]>(new uint8_t[augmenting_data_length]);
+    memcpy(augmenting_data.get(),
+           augmented_video_frame_buffer->GetAugmentingData(),
+           augmenting_data_length);
+    augmenting_data_size_ = augmenting_data_length;
+  }
+
+  {
+    rtc::CritScope cs(&crit_);
+    stashed_images_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(input_image.timestamp()),
+        std::forward_as_tuple(
+            picture_index_, has_alpha ? kAlphaCodecStreams : 1,
+            std::move(augmenting_data), augmenting_data_length));
+  }
 
   ++picture_index_;
 
   // Encode YUV
   int rv = encoders_[kYUVStream]->Encode(input_image, codec_specific_info,
                                          &adjusted_frame_types);
+
   // If we do not receive an alpha frame, we send a single frame for this
   // |picture_index_|. The receiver will receive |frame_count| as 1 which
-  // soecifies this case.
+  // specifies this case.
   if (rv || !has_alpha)
     return rv;
 
   // Encode AXX
   const I420ABufferInterface* yuva_buffer =
-      input_image.video_frame_buffer()->GetI420A();
+      supports_augmented_data_
+          ? augmented_video_frame_buffer->GetVideoFrameBuffer()->GetI420A()
+          : input_image.video_frame_buffer()->GetI420A();
   rtc::scoped_refptr<I420BufferInterface> alpha_buffer =
       WrapI420Buffer(input_image.width(), input_image.height(),
                      yuva_buffer->DataA(), yuva_buffer->StrideA(),
@@ -170,14 +197,19 @@ int MultiplexEncoderAdapter::SetChannelParameters(uint32_t packet_loss,
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int MultiplexEncoderAdapter::SetRateAllocation(const BitrateAllocation& bitrate,
-                                               uint32_t framerate) {
+int MultiplexEncoderAdapter::SetRateAllocation(
+    const VideoBitrateAllocation& bitrate,
+    uint32_t framerate) {
+  VideoBitrateAllocation bitrate_allocation(bitrate);
+  bitrate_allocation.SetBitrate(
+      0, 0, bitrate.GetBitrate(0, 0) - augmenting_data_size_);
   for (auto& encoder : encoders_) {
     // TODO(emircan): |framerate| is used to calculate duration in encoder
     // instances. We report the total frame rate to keep real time for now.
     // Remove this after refactoring duration logic.
     const int rv = encoder->SetRateAllocation(
-        bitrate, static_cast<uint32_t>(encoders_.size()) * framerate);
+        bitrate_allocation,
+        static_cast<uint32_t>(encoders_.size()) * framerate);
     if (rv)
       return rv;
   }
@@ -192,6 +224,7 @@ int MultiplexEncoderAdapter::Release() {
   }
   encoders_.clear();
   adapter_callbacks_.clear();
+  rtc::CritScope cs(&crit_);
   for (auto& stashed_image : stashed_images_) {
     for (auto& image_component : stashed_image.second.image_components) {
       delete[] image_component.encoded_image._buffer;
@@ -214,12 +247,6 @@ EncodedImageCallback::Result MultiplexEncoderAdapter::OnEncodedImage(
     const EncodedImage& encodedImage,
     const CodecSpecificInfo* codecSpecificInfo,
     const RTPFragmentationHeader* fragmentation) {
-  const auto& stashed_image_itr = stashed_images_.find(encodedImage._timeStamp);
-  const auto& stashed_image_next_itr = std::next(stashed_image_itr, 1);
-  RTC_DCHECK(stashed_image_itr != stashed_images_.end());
-  MultiplexImage& stashed_image = stashed_image_itr->second;
-  const uint8_t frame_count = stashed_image.component_count;
-
   // Save the image
   MultiplexImageComponent image_component;
   image_component.component_index = stream_idx;
@@ -229,6 +256,14 @@ EncodedImageCallback::Result MultiplexEncoderAdapter::OnEncodedImage(
   image_component.encoded_image._buffer = new uint8_t[encodedImage._length];
   std::memcpy(image_component.encoded_image._buffer, encodedImage._buffer,
               encodedImage._length);
+
+  rtc::CritScope cs(&crit_);
+  const auto& stashed_image_itr =
+      stashed_images_.find(encodedImage.Timestamp());
+  const auto& stashed_image_next_itr = std::next(stashed_image_itr, 1);
+  RTC_DCHECK(stashed_image_itr != stashed_images_.end());
+  MultiplexImage& stashed_image = stashed_image_itr->second;
+  const uint8_t frame_count = stashed_image.component_count;
 
   stashed_image.image_components.push_back(image_component);
 
@@ -250,7 +285,6 @@ EncodedImageCallback::Result MultiplexEncoderAdapter::OnEncodedImage(
 
       CodecSpecificInfo codec_info = *codecSpecificInfo;
       codec_info.codecType = kVideoCodecMultiplex;
-      codec_info.codecSpecific._generic.simulcast_idx = 0;
       encoded_complete_callback_->OnEncodedImage(combined_image_, &codec_info,
                                                  fragmentation);
     }

@@ -10,10 +10,9 @@
 
 package org.webrtc;
 
-@JNINamespace("webrtc::jni")
 class VP9Decoder extends WrappedNativeVideoDecoder {
   @Override
-  long createNativeDecoder() {
+  public long createNativeVideoDecoder() {
     return nativeCreateDecoder();
   }
 

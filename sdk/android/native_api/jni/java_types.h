@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#include "api/optional.h"
+#include "absl/types/optional.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/thread_checker.h"
 #include "sdk/android/native_api/jni/scoped_java_ref.h"
@@ -126,10 +126,11 @@ ScopedJavaLocalRef<jobject> GetJavaMapEntryValue(
 
 int64_t JavaToNativeLong(JNIEnv* env, const JavaRef<jobject>& j_long);
 
-rtc::Optional<bool> JavaToNativeOptionalBool(JNIEnv* jni,
-                                             const JavaRef<jobject>& boolean);
-rtc::Optional<int32_t> JavaToNativeOptionalInt(JNIEnv* jni,
-                                               const JavaRef<jobject>& integer);
+absl::optional<bool> JavaToNativeOptionalBool(JNIEnv* jni,
+                                              const JavaRef<jobject>& boolean);
+absl::optional<int32_t> JavaToNativeOptionalInt(
+    JNIEnv* jni,
+    const JavaRef<jobject>& integer);
 
 // Given a (UTF-16) jstring return a new UTF-8 native string.
 std::string JavaToNativeString(JNIEnv* jni, const JavaRef<jstring>& j_string);
@@ -148,6 +149,21 @@ std::vector<T> JavaToNativeVector(JNIEnv* env,
   }
   CHECK_EXCEPTION(env) << "Error during JavaToNativeVector";
   return container;
+}
+
+template <typename T, typename Java_T = jobject, typename Convert>
+std::vector<T> JavaListToNativeVector(JNIEnv* env,
+                                      const JavaRef<jobject>& j_list,
+                                      Convert convert) {
+  std::vector<T> native_list;
+  if (!j_list.is_null()) {
+    for (ScopedJavaLocalRef<jobject>& j_item : Iterable(env, j_list)) {
+      native_list.emplace_back(
+          convert(env, static_java_ref_cast<Java_T>(env, j_item)));
+    }
+    CHECK_EXCEPTION(env) << "Error during JavaListToNativeVector";
+  }
+  return native_list;
 }
 
 template <typename Key, typename T, typename Convert>
@@ -181,7 +197,10 @@ ScopedJavaLocalRef<jstring> NativeToJavaString(JNIEnv* jni,
 
 ScopedJavaLocalRef<jobject> NativeToJavaInteger(
     JNIEnv* jni,
-    const rtc::Optional<int32_t>& optional_int);
+    const absl::optional<int32_t>& optional_int);
+ScopedJavaLocalRef<jstring> NativeToJavaString(
+    JNIEnv* jni,
+    const absl::optional<std::string>& str);
 
 // Helper function for converting std::vector<T> into a Java array.
 template <typename T, typename Convert>
@@ -267,6 +286,23 @@ ScopedJavaLocalRef<jobject> NativeToJavaMap(JNIEnv* env,
   return builder.GetJavaMap();
 }
 
+template <typename C>
+ScopedJavaLocalRef<jobject> NativeToJavaStringMap(JNIEnv* env,
+                                                  const C& container) {
+  JavaMapBuilder builder(env);
+  for (const auto& e : container) {
+    const auto key_value_pair = std::make_pair(
+        NativeToJavaString(env, e.first), NativeToJavaString(env, e.second));
+    builder.put(key_value_pair.first, key_value_pair.second);
+  }
+  return builder.GetJavaMap();
+}
+
+// Return a |jlong| that will correctly convert back to |ptr|.  This is needed
+// because the alternative (of silently passing a 32-bit pointer to a vararg
+// function expecting a 64-bit param) picks up garbage in the high 32 bits.
+jlong NativeToJavaPointer(void* ptr);
+
 // ------------------------
 // -- Deprecated methods --
 // ------------------------
@@ -282,7 +318,7 @@ inline std::string JavaToStdString(JNIEnv* jni, jstring j_string) {
   return JavaToStdString(jni, JavaParamRef<jstring>(j_string));
 }
 
-// Deprecated. Use JavaToNativeVector<std::string> instead.
+// Deprecated. Use JavaListToNativeVector<std::string, jstring> instead.
 // Given a List of (UTF-16) jstrings
 // return a new vector of UTF-8 native strings.
 std::vector<std::string> JavaToStdVectorStrings(JNIEnv* jni,

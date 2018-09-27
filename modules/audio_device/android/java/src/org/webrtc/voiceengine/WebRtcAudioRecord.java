@@ -19,6 +19,7 @@ import java.lang.System;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 import org.webrtc.Logging;
 import org.webrtc.ThreadUtils;
 
@@ -51,14 +52,14 @@ public class WebRtcAudioRecord {
 
   private final long nativeAudioRecord;
 
-  private WebRtcAudioEffects effects = null;
+  private @Nullable WebRtcAudioEffects effects;
 
   private ByteBuffer byteBuffer;
 
-  private AudioRecord audioRecord = null;
-  private AudioRecordThread audioThread = null;
+  private @Nullable AudioRecord audioRecord;
+  private @Nullable AudioRecordThread audioThread;
 
-  private static volatile boolean microphoneMute = false;
+  private static volatile boolean microphoneMute;
   private byte[] emptyBytes;
 
   // Audio recording error handler functions.
@@ -73,7 +74,7 @@ public class WebRtcAudioRecord {
     void onWebRtcAudioRecordError(String errorMessage);
   }
 
-  private static WebRtcAudioRecordErrorCallback errorCallback = null;
+  private static @Nullable WebRtcAudioRecordErrorCallback errorCallback;
 
   public static void setErrorCallback(WebRtcAudioRecordErrorCallback errorCallback) {
     Logging.d(TAG, "Set error callback");
@@ -123,7 +124,7 @@ public class WebRtcAudioRecord {
     void onWebRtcAudioRecordSamplesReady(AudioSamples samples);
   }
 
-  private static WebRtcAudioRecordSamplesReadyCallback audioSamplesReadyCallback = null;
+  private static @Nullable WebRtcAudioRecordSamplesReadyCallback audioSamplesReadyCallback;
 
   public static void setOnAudioSamplesReady(WebRtcAudioRecordSamplesReadyCallback callback) {
     audioSamplesReadyCallback = callback;
@@ -142,6 +143,8 @@ public class WebRtcAudioRecord {
       super(name);
     }
 
+    // TODO(titovartem) make correct fix during webrtc:9175
+    @SuppressWarnings("ByteBufferBackingArray")
     @Override
     public void run() {
       Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);

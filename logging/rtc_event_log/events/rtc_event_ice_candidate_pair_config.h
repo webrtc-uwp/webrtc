@@ -11,45 +11,55 @@
 #ifndef LOGGING_RTC_EVENT_LOG_EVENTS_RTC_EVENT_ICE_CANDIDATE_PAIR_CONFIG_H_
 #define LOGGING_RTC_EVENT_LOG_EVENTS_RTC_EVENT_ICE_CANDIDATE_PAIR_CONFIG_H_
 
+#include <memory>
+
 #include "logging/rtc_event_log/events/rtc_event.h"
 
-#include "logging/rtc_event_log/events/rtc_event_ice_candidate_pair.h"
-
-#include <string>
-
 namespace webrtc {
+
+enum class IceCandidatePairConfigType {
+  kAdded,
+  kUpdated,
+  kDestroyed,
+  kSelected,
+  kNumValues,
+};
 
 // TODO(qingsi): Change the names of candidate types to "host", "srflx", "prflx"
 // and "relay" after the naming is spec-compliant in the signaling part
 enum class IceCandidateType {
+  kUnknown,
   kLocal,
   kStun,
   kPrflx,
   kRelay,
-  kUnknown,
+  kNumValues,
 };
 
 enum class IceCandidatePairProtocol {
+  kUnknown,
   kUdp,
   kTcp,
   kSsltcp,
   kTls,
-  kUnknown,
+  kNumValues,
 };
 
 enum class IceCandidatePairAddressFamily {
+  kUnknown,
   kIpv4,
   kIpv6,
-  kUnknown,
+  kNumValues,
 };
 
 enum class IceCandidateNetworkType {
+  kUnknown,
   kEthernet,
   kLoopback,
   kWifi,
   kVpn,
   kCellular,
-  kUnknown,
+  kNumValues,
 };
 
 class IceCandidatePairDescription {
@@ -72,7 +82,7 @@ class IceCandidatePairDescription {
 class RtcEventIceCandidatePairConfig final : public RtcEvent {
  public:
   RtcEventIceCandidatePairConfig(
-      IceCandidatePairEventType type,
+      IceCandidatePairConfigType type,
       uint32_t candidate_pair_id,
       const IceCandidatePairDescription& candidate_pair_desc);
 
@@ -82,9 +92,14 @@ class RtcEventIceCandidatePairConfig final : public RtcEvent {
 
   bool IsConfigEvent() const override;
 
-  const IceCandidatePairEventType type_;
+  std::unique_ptr<RtcEvent> Copy() const override;
+
+  const IceCandidatePairConfigType type_;
   const uint32_t candidate_pair_id_;
   const IceCandidatePairDescription candidate_pair_desc_;
+
+ private:
+  RtcEventIceCandidatePairConfig(const RtcEventIceCandidatePairConfig& other);
 };
 
 }  // namespace webrtc

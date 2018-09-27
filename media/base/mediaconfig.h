@@ -63,8 +63,7 @@ struct MediaConfig {
 
   bool operator==(const MediaConfig& o) const {
     return enable_dscp == o.enable_dscp &&
-           video.enable_cpu_adaptation ==
-               o.video.enable_cpu_adaptation &&
+           video.enable_cpu_adaptation == o.video.enable_cpu_adaptation &&
            video.suspend_below_min_bitrate ==
                o.video.suspend_below_min_bitrate &&
            video.enable_prerenderer_smoothing ==

@@ -63,8 +63,7 @@ class VideoSender {
  public:
   typedef VideoCodingModule::SenderNackMode SenderNackMode;
 
-  VideoSender(Clock* clock,
-              EncodedImageCallback* post_encode_callback);
+  VideoSender(Clock* clock, EncodedImageCallback* post_encode_callback);
 
   ~VideoSender();
 
@@ -75,11 +74,7 @@ class VideoSender {
                             uint32_t maxPayloadSize);
 
   void RegisterExternalEncoder(VideoEncoder* externalEncoder,
-                               uint8_t payloadType,
                                bool internalSource);
-
-  int Bitrate(unsigned int* bitrate) const;
-  int FrameRate(unsigned int* framerate) const;
 
   // Update the channel parameters based on new rates and rtt. This will also
   // cause an immediate call to VideoEncoder::SetRateAllocation().
@@ -98,10 +93,6 @@ class VideoSender {
   void UpdateChannelParameters(
       VideoBitrateAllocator* bitrate_allocator,
       VideoBitrateAllocationObserver* bitrate_updated_callback);
-
-  // Deprecated:
-  // TODO(perkj): Remove once no projects use it.
-  int32_t RegisterProtectionCallback(VCMProtectionCallback* protection);
 
   int32_t AddVideoFrame(const VideoFrame& videoFrame,
                         const CodecSpecificInfo* codecSpecificInfo);
@@ -178,7 +169,6 @@ class VideoReceiver : public Module {
                        int max_incomplete_time_ms);
 
   void SetDecodeErrorMode(VCMDecodeErrorMode decode_error_mode);
-  int SetMinReceiverDelay(int desired_delay_ms);
 
   int32_t SetReceiveChannelParameters(int64_t rtt);
   int32_t SetVideoProtection(VCMVideoProtection videoProtection, bool enable);

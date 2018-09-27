@@ -42,9 +42,11 @@ class UDPPort : public Port {
                          const std::string& username,
                          const std::string& password,
                          const std::string& origin,
-                         bool emit_local_for_anyaddress) {
+                         bool emit_local_for_anyaddress,
+                         absl::optional<int> stun_keepalive_interval) {
     UDPPort* port = new UDPPort(thread, factory, network, socket, username,
                                 password, origin, emit_local_for_anyaddress);
+    port->set_stun_keepalive_delay(stun_keepalive_interval);
     if (!port->Init()) {
       delete port;
       port = NULL;
@@ -60,10 +62,12 @@ class UDPPort : public Port {
                          const std::string& username,
                          const std::string& password,
                          const std::string& origin,
-                         bool emit_local_for_anyaddress) {
+                         bool emit_local_for_anyaddress,
+                         absl::optional<int> stun_keepalive_interval) {
     UDPPort* port =
         new UDPPort(thread, factory, network, min_port, max_port, username,
                     password, origin, emit_local_for_anyaddress);
+    port->set_stun_keepalive_delay(stun_keepalive_interval);
     if (!port->Init()) {
       delete port;
       port = NULL;
@@ -101,9 +105,9 @@ class UDPPort : public Port {
   bool SupportsProtocol(const std::string& protocol) const override;
   ProtocolType GetProtocol() const override;
 
-  void GetStunStats(rtc::Optional<StunStats>* stats) override;
+  void GetStunStats(absl::optional<StunStats>* stats) override;
 
-  void set_stun_keepalive_delay(const rtc::Optional<int>& delay);
+  void set_stun_keepalive_delay(const absl::optional<int>& delay);
   int stun_keepalive_delay() const {
     return stun_keepalive_delay_;
   }
@@ -238,6 +242,7 @@ class UDPPort : public Port {
   StunRequestManager requests_;
   rtc::AsyncPacketSocket* socket_;
   int error_;
+  int send_error_count_ = 0;
   std::unique_ptr<AddressResolver> resolver_;
   bool ready_;
   int stun_keepalive_delay_;
@@ -262,7 +267,8 @@ class StunPort : public UDPPort {
                           const std::string& username,
                           const std::string& password,
                           const ServerAddresses& servers,
-                          const std::string& origin);
+                          const std::string& origin,
+                          absl::optional<int> stun_keepalive_interval);
 
   void PrepareAddress() override;
 

@@ -8,6 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "api/test/simulated_network.h"
+#include "call/fake_network_pipe.h"
+#include "call/simulated_network.h"
 #include "test/call_test.h"
 #include "test/gtest.h"
 #include "test/rtcp_packet_parser.h"
@@ -52,13 +55,13 @@ TEST_F(SsrcEndToEndTest, UnknownRtpPacketGivesUnknownSsrcReturnCode) {
    private:
     DeliveryStatus DeliverPacket(MediaType media_type,
                                  rtc::CopyOnWriteBuffer packet,
-                                 const PacketTime& packet_time) override {
+                                 int64_t packet_time_us) override {
       if (RtpHeaderParser::IsRtcp(packet.cdata(), packet.size())) {
         return receiver_->DeliverPacket(media_type, std::move(packet),
-                                        packet_time);
+                                        packet_time_us);
       } else {
         DeliveryStatus delivery_status = receiver_->DeliverPacket(
-            media_type, std::move(packet), packet_time);
+            media_type, std::move(packet), packet_time_us);
         EXPECT_EQ(DELIVERY_UNKNOWN_SSRC, delivery_status);
         delivered_packet_.Set();
         return delivery_status;
@@ -75,14 +78,22 @@ TEST_F(SsrcEndToEndTest, UnknownRtpPacketGivesUnknownSsrcReturnCode) {
 
   task_queue_.SendTask([this, &send_transport, &receive_transport,
                         &input_observer]() {
-    CreateCalls(Call::Config(event_log_.get()), Call::Config(event_log_.get()));
+    CreateCalls();
 
-    send_transport = rtc::MakeUnique<test::DirectTransport>(
-        &task_queue_, sender_call_.get(), payload_type_map_);
-    receive_transport = rtc::MakeUnique<test::DirectTransport>(
-        &task_queue_, receiver_call_.get(), payload_type_map_);
+    send_transport = absl::make_unique<test::DirectTransport>(
+        &task_queue_,
+        absl::make_unique<FakeNetworkPipe>(
+            Clock::GetRealTimeClock(), absl::make_unique<SimulatedNetwork>(
+                                           DefaultNetworkSimulationConfig())),
+        sender_call_.get(), payload_type_map_);
+    receive_transport = absl::make_unique<test::DirectTransport>(
+        &task_queue_,
+        absl::make_unique<FakeNetworkPipe>(
+            Clock::GetRealTimeClock(), absl::make_unique<SimulatedNetwork>(
+                                           DefaultNetworkSimulationConfig())),
+        receiver_call_.get(), payload_type_map_);
     input_observer =
-        rtc::MakeUnique<PacketInputObserver>(receiver_call_->Receiver());
+        absl::make_unique<PacketInputObserver>(receiver_call_->Receiver());
     send_transport->SetReceiver(input_observer.get());
     receive_transport->SetReceiver(sender_call_->Receiver());
 

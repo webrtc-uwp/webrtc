@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "api/fec_controller.h"
+#include "api/video/video_stream_encoder_interface.h"
 #include "call/bitrate_allocator.h"
 #include "call/video_receive_stream.h"
 #include "call/video_send_stream.h"
@@ -23,11 +24,8 @@
 #include "rtc_base/criticalsection.h"
 #include "rtc_base/event.h"
 #include "rtc_base/task_queue.h"
-#include "video/encoder_rtcp_feedback.h"
 #include "video/send_delay_stats.h"
-#include "video/payload_router.h"
 #include "video/send_statistics_proxy.h"
-#include "video/video_stream_encoder.h"
 
 namespace webrtc {
 namespace test {
@@ -38,6 +36,7 @@ class CallStats;
 class SendSideCongestionController;
 class IvfFileWriter;
 class ProcessThread;
+class RateLimiter;
 class RtpRtcp;
 class RtpTransportControllerSendInterface;
 class RtcEventLog;
@@ -52,6 +51,9 @@ class VideoSendStreamImpl;
 // |worker_queue|.
 class VideoSendStream : public webrtc::VideoSendStream {
  public:
+  using RtpStateMap = std::map<uint32_t, RtpState>;
+  using RtpPayloadStateMap = std::map<uint32_t, RtpPayloadState>;
+
   VideoSendStream(
       int num_cpu_cores,
       ProcessThread* module_process_thread,
@@ -69,7 +71,6 @@ class VideoSendStream : public webrtc::VideoSendStream {
 
   ~VideoSendStream() override;
 
-  void SignalNetworkState(NetworkState state);
   bool DeliverRtcp(const uint8_t* packet, size_t length);
 
   // webrtc::VideoSendStream implementation.
@@ -84,18 +85,6 @@ class VideoSendStream : public webrtc::VideoSendStream {
   void ReconfigureVideoEncoder(VideoEncoderConfig) override;
   Stats GetStats() override;
 
-  typedef std::map<uint32_t, RtpState> RtpStateMap;
-  typedef std::map<uint32_t, RtpPayloadState> RtpPayloadStateMap;
-
-  // Takes ownership of each file, is responsible for closing them later.
-  // Calling this method will close and finalize any current logs.
-  // Giving rtc::kInvalidPlatformFileValue in any position disables logging
-  // for the corresponding stream.
-  // If a frame to be written would make the log too large the write fails and
-  // the log is closed and finalized. A |byte_limit| of 0 means no limit.
-  void EnableEncodedFrameRecording(const std::vector<rtc::PlatformFile>& files,
-                                   size_t byte_limit) override;
-
   void StopPermanentlyAndGetRtpStates(RtpStateMap* rtp_state_map,
                                       RtpPayloadStateMap* payload_state_map);
 
@@ -105,9 +94,8 @@ class VideoSendStream : public webrtc::VideoSendStream {
   friend class test::VideoSendStreamPeer;
 
   class ConstructionTask;
-  class DestructAndGetRtpStateTask;
 
-  rtc::Optional<float> GetPacingFactorOverride() const;
+  absl::optional<float> GetPacingFactorOverride() const;
 
   rtc::ThreadChecker thread_checker_;
   rtc::TaskQueue* const worker_queue_;
@@ -117,7 +105,7 @@ class VideoSendStream : public webrtc::VideoSendStream {
   const VideoSendStream::Config config_;
   const VideoEncoderConfig::ContentType content_type_;
   std::unique_ptr<VideoSendStreamImpl> send_stream_;
-  std::unique_ptr<VideoStreamEncoder> video_stream_encoder_;
+  std::unique_ptr<VideoStreamEncoderInterface> video_stream_encoder_;
 };
 
 }  // namespace internal

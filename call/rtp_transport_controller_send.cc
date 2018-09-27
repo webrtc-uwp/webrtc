@@ -8,35 +8,149 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 #include <utility>
+#include <vector>
 
+#include "absl/memory/memory.h"
 #include "call/rtp_transport_controller_send.h"
+#include "modules/congestion_controller/include/send_side_congestion_controller.h"
+#include "modules/congestion_controller/rtp/include/send_side_congestion_controller.h"
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/rate_limiter.h"
+#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
+namespace {
+static const int64_t kRetransmitWindowSizeMs = 500;
+const char kTaskQueueExperiment[] = "WebRTC-TaskQueueCongestionControl";
+using TaskQueueController = webrtc::webrtc_cc::SendSideCongestionController;
+
+bool TaskQueueExperimentEnabled() {
+  std::string trial = webrtc::field_trial::FindFullName(kTaskQueueExperiment);
+  return trial.find("Enable") == 0;
+}
+
+std::unique_ptr<SendSideCongestionControllerInterface> CreateController(
+    Clock* clock,
+    rtc::TaskQueue* task_queue,
+    webrtc::RtcEventLog* event_log,
+    PacedSender* pacer,
+    const BitrateConstraints& bitrate_config,
+    bool task_queue_controller,
+    NetworkControllerFactoryInterface* controller_factory) {
+  if (task_queue_controller) {
+    RTC_LOG(LS_INFO) << "Using TaskQueue based SSCC";
+    return absl::make_unique<webrtc::webrtc_cc::SendSideCongestionController>(
+        clock, task_queue, event_log, pacer, bitrate_config.start_bitrate_bps,
+        bitrate_config.min_bitrate_bps, bitrate_config.max_bitrate_bps,
+        controller_factory);
+  }
+  RTC_LOG(LS_INFO) << "Using Legacy SSCC";
+  auto cc = absl::make_unique<webrtc::SendSideCongestionController>(
+      clock, nullptr /* observer */, event_log, pacer);
+  cc->SignalNetworkState(kNetworkDown);
+  cc->SetBweBitrates(bitrate_config.min_bitrate_bps,
+                     bitrate_config.start_bitrate_bps,
+                     bitrate_config.max_bitrate_bps);
+  return std::move(cc);
+}
+}  // namespace
 
 RtpTransportControllerSend::RtpTransportControllerSend(
     Clock* clock,
     webrtc::RtcEventLog* event_log,
+    NetworkControllerFactoryInterface* controller_factory,
     const BitrateConstraints& bitrate_config)
-    : pacer_(clock, &packet_router_, event_log),
-      send_side_cc_(clock, nullptr /* observer */, event_log, &pacer_),
+    : clock_(clock),
+      pacer_(clock, &packet_router_, event_log),
       bitrate_configurator_(bitrate_config),
-      process_thread_(ProcessThread::Create("SendControllerThread")) {
-  send_side_cc_.SignalNetworkState(kNetworkDown);
-  send_side_cc_.SetBweBitrates(bitrate_config.min_bitrate_bps,
-                               bitrate_config.start_bitrate_bps,
-                               bitrate_config.max_bitrate_bps);
+      process_thread_(ProcessThread::Create("SendControllerThread")),
+      observer_(nullptr),
+      retransmission_rate_limiter_(clock, kRetransmitWindowSizeMs),
+      task_queue_("rtp_send_controller") {
+  // Created after task_queue to be able to post to the task queue internally.
+  send_side_cc_ =
+      CreateController(clock, &task_queue_, event_log, &pacer_, bitrate_config,
+                       TaskQueueExperimentEnabled(), controller_factory);
 
   process_thread_->RegisterModule(&pacer_, RTC_FROM_HERE);
-  process_thread_->RegisterModule(&send_side_cc_, RTC_FROM_HERE);
+  process_thread_->RegisterModule(send_side_cc_.get(), RTC_FROM_HERE);
   process_thread_->Start();
 }
 
 RtpTransportControllerSend::~RtpTransportControllerSend() {
   process_thread_->Stop();
-  process_thread_->DeRegisterModule(&send_side_cc_);
+  process_thread_->DeRegisterModule(send_side_cc_.get());
   process_thread_->DeRegisterModule(&pacer_);
+}
+
+RtpVideoSenderInterface* RtpTransportControllerSend::CreateRtpVideoSender(
+    const std::vector<uint32_t>& ssrcs,
+    std::map<uint32_t, RtpState> suspended_ssrcs,
+    const std::map<uint32_t, RtpPayloadState>& states,
+    const RtpConfig& rtp_config,
+    const RtcpConfig& rtcp_config,
+    Transport* send_transport,
+    const RtpSenderObservers& observers,
+    RtcEventLog* event_log) {
+  video_rtp_senders_.push_back(absl::make_unique<RtpVideoSender>(
+      ssrcs, suspended_ssrcs, states, rtp_config, rtcp_config, send_transport,
+      observers,
+      // TODO(holmer): Remove this circular dependency by injecting
+      // the parts of RtpTransportControllerSendInterface that are really used.
+      this, event_log, &retransmission_rate_limiter_));
+  return video_rtp_senders_.back().get();
+}
+
+void RtpTransportControllerSend::DestroyRtpVideoSender(
+    RtpVideoSenderInterface* rtp_video_sender) {
+  std::vector<std::unique_ptr<RtpVideoSenderInterface>>::iterator it =
+      video_rtp_senders_.end();
+  for (it = video_rtp_senders_.begin(); it != video_rtp_senders_.end(); ++it) {
+    if (it->get() == rtp_video_sender) {
+      break;
+    }
+  }
+  RTC_DCHECK(it != video_rtp_senders_.end());
+  video_rtp_senders_.erase(it);
+}
+
+void RtpTransportControllerSend::OnNetworkChanged(uint32_t bitrate_bps,
+                                                  uint8_t fraction_loss,
+                                                  int64_t rtt_ms,
+                                                  int64_t probing_interval_ms) {
+  // TODO(srte): Skip this step when old SendSideCongestionController is
+  // deprecated.
+  TargetTransferRate msg;
+  msg.at_time = Timestamp::ms(clock_->TimeInMilliseconds());
+  msg.target_rate = DataRate::bps(bitrate_bps);
+  msg.network_estimate.at_time = msg.at_time;
+  msg.network_estimate.bwe_period = TimeDelta::ms(probing_interval_ms);
+  uint32_t bandwidth_bps;
+  if (send_side_cc_->AvailableBandwidth(&bandwidth_bps))
+    msg.network_estimate.bandwidth = DataRate::bps(bandwidth_bps);
+  msg.network_estimate.loss_rate_ratio = fraction_loss / 255.0;
+  msg.network_estimate.round_trip_time = TimeDelta::ms(rtt_ms);
+
+  retransmission_rate_limiter_.SetMaxRate(bandwidth_bps);
+
+  if (!task_queue_.IsCurrent()) {
+    task_queue_.PostTask([this, msg] {
+      rtc::CritScope cs(&observer_crit_);
+      // We won't register as observer until we have an observers.
+      RTC_DCHECK(observer_ != nullptr);
+      observer_->OnTargetTransferRate(msg);
+    });
+  } else {
+    rtc::CritScope cs(&observer_crit_);
+    // We won't register as observer until we have an observers.
+    RTC_DCHECK(observer_ != nullptr);
+    observer_->OnTargetTransferRate(msg);
+  }
+}
+
+rtc::TaskQueue* RtpTransportControllerSend::GetWorkerQueue() {
+  return &task_queue_;
 }
 
 PacketRouter* RtpTransportControllerSend::packet_router() {
@@ -45,7 +159,7 @@ PacketRouter* RtpTransportControllerSend::packet_router() {
 
 TransportFeedbackObserver*
 RtpTransportControllerSend::transport_feedback_observer() {
-  return &send_side_cc_;
+  return send_side_cc_.get();
 }
 
 RtpPacketSender* RtpTransportControllerSend::packet_sender() {
@@ -58,8 +172,10 @@ const RtpKeepAliveConfig& RtpTransportControllerSend::keepalive_config() const {
 
 void RtpTransportControllerSend::SetAllocatedSendBitrateLimits(
     int min_send_bitrate_bps,
-    int max_padding_bitrate_bps) {
-  pacer_.SetSendBitrateLimits(min_send_bitrate_bps, max_padding_bitrate_bps);
+    int max_padding_bitrate_bps,
+    int max_total_bitrate_bps) {
+  send_side_cc_->SetAllocatedSendBitrateLimits(
+      min_send_bitrate_bps, max_padding_bitrate_bps, max_total_bitrate_bps);
 }
 
 void RtpTransportControllerSend::SetKeepAliveConfig(
@@ -67,29 +183,31 @@ void RtpTransportControllerSend::SetKeepAliveConfig(
   keepalive_ = config;
 }
 void RtpTransportControllerSend::SetPacingFactor(float pacing_factor) {
-  pacer_.SetPacingFactor(pacing_factor);
+  send_side_cc_->SetPacingFactor(pacing_factor);
 }
 void RtpTransportControllerSend::SetQueueTimeLimit(int limit_ms) {
   pacer_.SetQueueTimeLimit(limit_ms);
 }
 CallStatsObserver* RtpTransportControllerSend::GetCallStatsObserver() {
-  return &send_side_cc_;
+  return send_side_cc_.get();
 }
 void RtpTransportControllerSend::RegisterPacketFeedbackObserver(
     PacketFeedbackObserver* observer) {
-  send_side_cc_.RegisterPacketFeedbackObserver(observer);
+  send_side_cc_->RegisterPacketFeedbackObserver(observer);
 }
 void RtpTransportControllerSend::DeRegisterPacketFeedbackObserver(
     PacketFeedbackObserver* observer) {
-  send_side_cc_.DeRegisterPacketFeedbackObserver(observer);
+  send_side_cc_->DeRegisterPacketFeedbackObserver(observer);
 }
-void RtpTransportControllerSend::RegisterNetworkObserver(
-    NetworkChangedObserver* observer) {
-  send_side_cc_.RegisterNetworkObserver(observer);
-}
-void RtpTransportControllerSend::DeRegisterNetworkObserver(
-    NetworkChangedObserver* observer) {
-  send_side_cc_.DeRegisterNetworkObserver(observer);
+
+void RtpTransportControllerSend::RegisterTargetTransferRateObserver(
+    TargetTransferRateObserver* observer) {
+  {
+    rtc::CritScope cs(&observer_crit_);
+    RTC_DCHECK(observer_ == nullptr);
+    observer_ = observer;
+  }
+  send_side_cc_->RegisterNetworkObserver(this);
 }
 void RtpTransportControllerSend::OnNetworkRouteChanged(
     const std::string& transport_name,
@@ -125,50 +243,46 @@ void RtpTransportControllerSend::OnNetworkRouteChanged(
                      << " bps,  max: " << bitrate_config.max_bitrate_bps
                      << " bps.";
     RTC_DCHECK_GT(bitrate_config.start_bitrate_bps, 0);
-    send_side_cc_.OnNetworkRouteChanged(
+    send_side_cc_->OnNetworkRouteChanged(
         network_route, bitrate_config.start_bitrate_bps,
         bitrate_config.min_bitrate_bps, bitrate_config.max_bitrate_bps);
   }
 }
 void RtpTransportControllerSend::OnNetworkAvailability(bool network_available) {
-  send_side_cc_.SignalNetworkState(network_available ? kNetworkUp
-                                                     : kNetworkDown);
-}
-void RtpTransportControllerSend::SetTransportOverhead(
-    size_t transport_overhead_bytes_per_packet) {
-  send_side_cc_.SetTransportOverhead(transport_overhead_bytes_per_packet);
+  send_side_cc_->SignalNetworkState(network_available ? kNetworkUp
+                                                      : kNetworkDown);
+  for (auto& rtp_sender : video_rtp_senders_) {
+    rtp_sender->OnNetworkAvailability(network_available);
+  }
 }
 RtcpBandwidthObserver* RtpTransportControllerSend::GetBandwidthObserver() {
-  return send_side_cc_.GetBandwidthObserver();
-}
-bool RtpTransportControllerSend::AvailableBandwidth(uint32_t* bandwidth) const {
-  return send_side_cc_.AvailableBandwidth(bandwidth);
+  return send_side_cc_->GetBandwidthObserver();
 }
 int64_t RtpTransportControllerSend::GetPacerQueuingDelayMs() const {
-  return send_side_cc_.GetPacerQueuingDelayMs();
+  return pacer_.QueueInMs();
 }
 int64_t RtpTransportControllerSend::GetFirstPacketTimeMs() const {
-  return send_side_cc_.GetFirstPacketTimeMs();
+  return pacer_.FirstSentPacketTimeMs();
 }
-RateLimiter* RtpTransportControllerSend::GetRetransmissionRateLimiter() {
-  return send_side_cc_.GetRetransmissionRateLimiter();
+void RtpTransportControllerSend::SetPerPacketFeedbackAvailable(bool available) {
+  send_side_cc_->SetPerPacketFeedbackAvailable(available);
 }
 void RtpTransportControllerSend::EnablePeriodicAlrProbing(bool enable) {
-  send_side_cc_.EnablePeriodicAlrProbing(enable);
+  send_side_cc_->EnablePeriodicAlrProbing(enable);
 }
 void RtpTransportControllerSend::OnSentPacket(
     const rtc::SentPacket& sent_packet) {
-  send_side_cc_.OnSentPacket(sent_packet);
+  send_side_cc_->OnSentPacket(sent_packet);
 }
 
 void RtpTransportControllerSend::SetSdpBitrateParameters(
     const BitrateConstraints& constraints) {
-  rtc::Optional<BitrateConstraints> updated =
+  absl::optional<BitrateConstraints> updated =
       bitrate_configurator_.UpdateWithSdpParameters(constraints);
   if (updated.has_value()) {
-    send_side_cc_.SetBweBitrates(updated->min_bitrate_bps,
-                                 updated->start_bitrate_bps,
-                                 updated->max_bitrate_bps);
+    send_side_cc_->SetBweBitrates(updated->min_bitrate_bps,
+                                  updated->start_bitrate_bps,
+                                  updated->max_bitrate_bps);
   } else {
     RTC_LOG(LS_VERBOSE)
         << "WebRTC.RtpTransportControllerSend.SetSdpBitrateParameters: "
@@ -177,17 +291,22 @@ void RtpTransportControllerSend::SetSdpBitrateParameters(
 }
 
 void RtpTransportControllerSend::SetClientBitratePreferences(
-    const BitrateConstraintsMask& preferences) {
-  rtc::Optional<BitrateConstraints> updated =
+    const BitrateSettings& preferences) {
+  absl::optional<BitrateConstraints> updated =
       bitrate_configurator_.UpdateWithClientPreferences(preferences);
   if (updated.has_value()) {
-    send_side_cc_.SetBweBitrates(updated->min_bitrate_bps,
-                                 updated->start_bitrate_bps,
-                                 updated->max_bitrate_bps);
+    send_side_cc_->SetBweBitrates(updated->min_bitrate_bps,
+                                  updated->start_bitrate_bps,
+                                  updated->max_bitrate_bps);
   } else {
     RTC_LOG(LS_VERBOSE)
         << "WebRTC.RtpTransportControllerSend.SetClientBitratePreferences: "
         << "nothing to update";
   }
+}
+
+void RtpTransportControllerSend::SetAllocatedBitrateWithoutFeedback(
+    uint32_t bitrate_bps) {
+  send_side_cc_->SetAllocatedBitrateWithoutFeedback(bitrate_bps);
 }
 }  // namespace webrtc

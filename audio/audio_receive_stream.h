@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "api/audio/audio_mixer.h"
+#include "api/rtp_headers.h"
 #include "audio/audio_state.h"
 #include "call/audio_receive_stream.h"
 #include "call/rtp_packet_sink_interface.h"
@@ -79,7 +80,7 @@ class AudioReceiveStream final : public webrtc::AudioReceiveStream,
 
   // Syncable
   int id() const override;
-  rtc::Optional<Syncable::Info> GetInfo() const override;
+  absl::optional<Syncable::Info> GetInfo() const override;
   uint32_t GetPlayoutTimestamp() const override;
   void SetMinimumPlayoutDelay(int delay_ms) override;
 

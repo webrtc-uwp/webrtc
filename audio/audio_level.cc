@@ -10,8 +10,8 @@
 
 #include "audio/audio_level.h"
 
+#include "api/audio/audio_frame.h"
 #include "common_audio/signal_processing/include/signal_processing_library.h"
-#include "modules/include/module_common_types.h"
 
 namespace webrtc {
 namespace voe {
@@ -47,10 +47,12 @@ double AudioLevel::TotalDuration() const {
 
 void AudioLevel::ComputeLevel(const AudioFrame& audioFrame, double duration) {
   // Check speech level (works for 2 channels as well)
-  int16_t abs_value = audioFrame.muted() ? 0 :
-      WebRtcSpl_MaxAbsValueW16(
-          audioFrame.data(),
-          audioFrame.samples_per_channel_ * audioFrame.num_channels_);
+  int16_t abs_value =
+      audioFrame.muted()
+          ? 0
+          : WebRtcSpl_MaxAbsValueW16(
+                audioFrame.data(),
+                audioFrame.samples_per_channel_ * audioFrame.num_channels_);
 
   // Protect member access using a lock since this method is called on a
   // dedicated audio thread in the RecordedDataIsAvailable() callback.

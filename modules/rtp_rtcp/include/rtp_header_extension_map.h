@@ -16,7 +16,6 @@
 #include "api/array_view.h"
 #include "api/rtpparameters.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "rtc_base/basictypes.h"
 #include "rtc_base/checks.h"
 
 namespace webrtc {
@@ -45,11 +44,7 @@ class RtpHeaderExtensionMap {
     return GetId(type) != kInvalidId;
   }
   // Return kInvalidType if not found.
-  RTPExtensionType GetType(int id) const {
-    RTC_DCHECK_GE(id, kMinId);
-    RTC_DCHECK_LE(id, kMaxId);
-    return types_[id];
-  }
+  RTPExtensionType GetType(int id) const;
   // Return kInvalidId if not found.
   uint8_t GetId(RTPExtensionType type) const {
     RTC_DCHECK_GT(type, kRtpExtensionNone);
@@ -71,7 +66,6 @@ class RtpHeaderExtensionMap {
   static constexpr int kMaxId = 14;
   bool Register(int id, RTPExtensionType type, const char* uri);
 
-  RTPExtensionType types_[kMaxId + 1];
   uint8_t ids_[kRtpExtensionNumberOfExtensions];
 };
 

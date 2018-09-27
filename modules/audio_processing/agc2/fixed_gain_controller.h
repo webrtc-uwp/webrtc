@@ -20,6 +20,8 @@ class ApmDataDumper;
 class FixedGainController {
  public:
   explicit FixedGainController(ApmDataDumper* apm_data_dumper);
+  FixedGainController(ApmDataDumper* apm_data_dumper,
+                      std::string histogram_name_prefix);
 
   void Process(AudioFrameView<float> signal);
 
@@ -27,13 +29,11 @@ class FixedGainController {
   // with any other method call).
   void SetGain(float gain_to_apply_db);
   void SetSampleRate(size_t sample_rate_hz);
-  void EnableLimiter(bool enable_limiter);
 
  private:
   float gain_to_apply_ = 1.f;
   ApmDataDumper* apm_data_dumper_ = nullptr;
   GainCurveApplier gain_curve_applier_;
-  bool enable_limiter_ = true;
 };
 
 }  // namespace webrtc

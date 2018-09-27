@@ -46,10 +46,19 @@ MainFilterUpdateGain::~MainFilterUpdateGain() {}
 
 void MainFilterUpdateGain::HandleEchoPathChange(
     const EchoPathVariability& echo_path_variability) {
-  // TODO(peah): Add even-specific behavior.
-  H_error_.fill(kHErrorInitial);
-  poor_excitation_counter_ = kPoorExcitationCounterInitial;
-  call_counter_ = 0;
+  if (echo_path_variability.gain_change) {
+    // TODO(bugs.webrtc.org/9526) Handle gain changes.
+  }
+
+  if (echo_path_variability.delay_change !=
+      EchoPathVariability::DelayAdjustment::kNone) {
+    H_error_.fill(kHErrorInitial);
+  }
+
+  if (!echo_path_variability.gain_change) {
+    poor_excitation_counter_ = kPoorExcitationCounterInitial;
+    call_counter_ = 0;
+  }
 }
 
 void MainFilterUpdateGain::Compute(

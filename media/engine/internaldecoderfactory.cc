@@ -12,45 +12,57 @@
 
 #include "api/video_codecs/sdp_video_format.h"
 #include "media/base/mediaconstants.h"
-#if defined(USE_BUILTIN_SW_CODECS)
 #include "modules/video_coding/codecs/h264/include/h264.h"
-#include "modules/video_coding/codecs/vp8/include/vp8.h"  // nogncheck
-#include "modules/video_coding/codecs/vp9/include/vp9.h"  // nogncheck
-#endif
+#include "modules/video_coding/codecs/vp8/include/vp8.h"
+#include "modules/video_coding/codecs/vp9/include/vp9.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {
 
+namespace {
+
+bool IsFormatSupported(
+    const std::vector<webrtc::SdpVideoFormat>& supported_formats,
+    const webrtc::SdpVideoFormat& format) {
+  for (const webrtc::SdpVideoFormat& supported_format : supported_formats) {
+    if (cricket::IsSameCodec(format.name, format.parameters,
+                             supported_format.name,
+                             supported_format.parameters)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+}  // namespace
+
 std::vector<SdpVideoFormat> InternalDecoderFactory::GetSupportedFormats()
     const {
   std::vector<SdpVideoFormat> formats;
-#if defined(USE_BUILTIN_SW_CODECS)
   formats.push_back(SdpVideoFormat(cricket::kVp8CodecName));
-  if (VP9Decoder::IsSupported())
-    formats.push_back(SdpVideoFormat(cricket::kVp9CodecName));
+  for (const SdpVideoFormat& format : SupportedVP9Codecs())
+    formats.push_back(format);
   for (const SdpVideoFormat& h264_format : SupportedH264Codecs())
     formats.push_back(h264_format);
-#endif
   return formats;
 }
 
 std::unique_ptr<VideoDecoder> InternalDecoderFactory::CreateVideoDecoder(
     const SdpVideoFormat& format) {
-#if defined(USE_BUILTIN_SW_CODECS)
-  if (cricket::CodecNamesEq(format.name, cricket::kVp8CodecName))
-    return VP8Decoder::Create();
-
-  if (cricket::CodecNamesEq(format.name, cricket::kVp9CodecName)) {
-    RTC_DCHECK(VP9Decoder::IsSupported());
-    return VP9Decoder::Create();
+  if (!IsFormatSupported(GetSupportedFormats(), format)) {
+    RTC_LOG(LS_ERROR) << "Trying to create decoder for unsupported format";
+    return nullptr;
   }
 
+  if (cricket::CodecNamesEq(format.name, cricket::kVp8CodecName))
+    return VP8Decoder::Create();
+  if (cricket::CodecNamesEq(format.name, cricket::kVp9CodecName))
+    return VP9Decoder::Create();
   if (cricket::CodecNamesEq(format.name, cricket::kH264CodecName))
     return H264Decoder::Create();
-#endif
 
-  RTC_LOG(LS_ERROR) << "Trying to create decoder for unsupported format";
+  RTC_NOTREACHED();
   return nullptr;
 }
 

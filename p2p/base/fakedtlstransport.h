@@ -16,10 +16,10 @@
 #include <utility>
 #include <vector>
 
+#include "absl/memory/memory.h"
 #include "p2p/base/dtlstransportinternal.h"
 #include "p2p/base/fakeicetransport.h"
 #include "rtc_base/fakesslidentity.h"
-#include "rtc_base/ptr_util.h"
 
 namespace cricket {
 
@@ -55,7 +55,8 @@ class FakeDtlsTransport : public DtlsTransportInternal {
   // If this constructor is called, a new fake ICE transport will be created,
   // and this FakeDtlsTransport will take the ownership.
   explicit FakeDtlsTransport(const std::string& name, int component)
-      : FakeDtlsTransport(rtc::MakeUnique<FakeIceTransport>(name, component)) {}
+      : FakeDtlsTransport(
+            absl::make_unique<FakeIceTransport>(name, component)) {}
 
   ~FakeDtlsTransport() override {
     if (dest_ && dest_->dest_ == this) {
@@ -171,15 +172,13 @@ class FakeDtlsTransport : public DtlsTransportInternal {
     *crypto_suite = crypto_suite_;
     return true;
   }
-  void SetSrtpCryptoSuite(int crypto_suite) {
-    crypto_suite_ = crypto_suite;
-  }
+  void SetSrtpCryptoSuite(int crypto_suite) { crypto_suite_ = crypto_suite; }
   bool GetSslCipherSuite(int* cipher_suite) override { return false; }
   rtc::scoped_refptr<rtc::RTCCertificate> GetLocalCertificate() const override {
     return local_cert_;
   }
   std::unique_ptr<rtc::SSLCertChain> GetRemoteSSLCertChain() const override {
-    return remote_cert_ ? rtc::MakeUnique<rtc::SSLCertChain>(remote_cert_)
+    return remote_cert_ ? absl::make_unique<rtc::SSLCertChain>(remote_cert_)
                         : nullptr;
   }
   bool ExportKeyingMaterial(const std::string& label,
@@ -225,7 +224,7 @@ class FakeDtlsTransport : public DtlsTransportInternal {
   }
   int GetError() override { return ice_transport_->GetError(); }
 
-  rtc::Optional<rtc::NetworkRoute> network_route() const override {
+  absl::optional<rtc::NetworkRoute> network_route() const override {
     return ice_transport_->network_route();
   }
 
@@ -257,7 +256,7 @@ class FakeDtlsTransport : public DtlsTransportInternal {
     SignalWritableState(this);
   }
 
-  void OnNetworkRouteChanged(rtc::Optional<rtc::NetworkRoute> network_route) {
+  void OnNetworkRouteChanged(absl::optional<rtc::NetworkRoute> network_route) {
     SignalNetworkRouteChanged(network_route);
   }
 
@@ -271,7 +270,7 @@ class FakeDtlsTransport : public DtlsTransportInternal {
   bool do_dtls_ = false;
   rtc::SSLProtocolVersion ssl_max_version_ = rtc::SSL_PROTOCOL_DTLS_12;
   rtc::SSLFingerprint dtls_fingerprint_;
-  rtc::Optional<rtc::SSLRole> dtls_role_;
+  absl::optional<rtc::SSLRole> dtls_role_;
   int crypto_suite_ = rtc::SRTP_AES128_CM_SHA1_80;
   rtc::CryptoOptions crypto_options_;
 

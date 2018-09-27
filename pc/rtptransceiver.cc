@@ -16,10 +16,6 @@
 
 namespace webrtc {
 
-std::ostream& operator<<(std::ostream& os, RtpTransceiverDirection direction) {
-  return os << RtpTransceiverDirectionToString(direction);
-}
-
 RtpTransceiver::RtpTransceiver(cricket::MediaType media_type)
     : unified_plan_(false), media_type_(media_type) {
   RTC_DCHECK(media_type == cricket::MEDIA_TYPE_AUDIO ||
@@ -152,7 +148,7 @@ cricket::MediaType RtpTransceiver::media_type() const {
   return media_type_;
 }
 
-rtc::Optional<std::string> RtpTransceiver::mid() const {
+absl::optional<std::string> RtpTransceiver::mid() const {
   return mid_;
 }
 
@@ -175,10 +171,21 @@ rtc::scoped_refptr<RtpReceiverInterface> RtpTransceiver::receiver() const {
 }
 
 void RtpTransceiver::set_current_direction(RtpTransceiverDirection direction) {
+  RTC_LOG(LS_INFO) << "Changing transceiver (MID=" << mid_.value_or("<not set>")
+                   << ") current direction from "
+                   << (current_direction_ ? RtpTransceiverDirectionToString(
+                                                *current_direction_)
+                                          : "<not set>")
+                   << " to " << RtpTransceiverDirectionToString(direction)
+                   << ".";
   current_direction_ = direction;
   if (RtpTransceiverDirectionHasSend(*current_direction_)) {
     has_ever_been_used_to_send_ = true;
   }
+}
+
+void RtpTransceiver::set_fired_direction(RtpTransceiverDirection direction) {
+  fired_direction_ = direction;
 }
 
 bool RtpTransceiver::stopped() const {
@@ -200,9 +207,14 @@ void RtpTransceiver::SetDirection(RtpTransceiverDirection new_direction) {
   SignalNegotiationNeeded();
 }
 
-rtc::Optional<RtpTransceiverDirection> RtpTransceiver::current_direction()
+absl::optional<RtpTransceiverDirection> RtpTransceiver::current_direction()
     const {
   return current_direction_;
+}
+
+absl::optional<RtpTransceiverDirection> RtpTransceiver::fired_direction()
+    const {
+  return fired_direction_;
 }
 
 void RtpTransceiver::Stop() {
@@ -213,7 +225,7 @@ void RtpTransceiver::Stop() {
     receiver->internal()->Stop();
   }
   stopped_ = true;
-  current_direction_ = rtc::nullopt;
+  current_direction_ = absl::nullopt;
 }
 
 void RtpTransceiver::SetCodecPreferences(

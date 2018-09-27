@@ -12,6 +12,9 @@
 
 namespace cricket {
 
+RtpCapabilities::RtpCapabilities() = default;
+RtpCapabilities::~RtpCapabilities() = default;
+
 webrtc::RtpParameters CreateRtpParametersWithOneEncoding() {
   webrtc::RtpParameters parameters;
   webrtc::RtpEncodingParameters encoding;
@@ -30,6 +33,7 @@ webrtc::RtpParameters CreateRtpParametersWithEncodings(StreamParams sp) {
   }
   webrtc::RtpParameters parameters;
   parameters.encodings = encodings;
+  parameters.rtcp.cname = sp.cname;
   return parameters;
 }
 

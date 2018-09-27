@@ -17,32 +17,6 @@
 
 namespace webrtc {
 
-// Used to specify which enum counter type we're incrementing in
-// MetricsObserverInterface::IncrementEnumCounter.
-enum PeerConnectionEnumCounterType {
-  kEnumCounterAddressFamily,
-  // For the next 2 counters, we track them separately based on the "first hop"
-  // protocol used by the local candidate. "First hop" means the local candidate
-  // type in the case of non-TURN candidates, and the protocol used to connect
-  // to the TURN server in the case of TURN candidates.
-  kEnumCounterIceCandidatePairTypeUdp,
-  kEnumCounterIceCandidatePairTypeTcp,
-
-  kEnumCounterAudioSrtpCipher,
-  kEnumCounterAudioSslCipher,
-  kEnumCounterVideoSrtpCipher,
-  kEnumCounterVideoSslCipher,
-  kEnumCounterDataSrtpCipher,
-  kEnumCounterDataSslCipher,
-  kEnumCounterDtlsHandshakeError,
-  kEnumCounterIceRegathering,
-  kEnumCounterIceRestart,
-  kEnumCounterKeyProtocol,
-  kEnumCounterSdpSemanticRequested,
-  kEnumCounterSdpSemanticNegotiated,
-  kPeerConnectionEnumCounterMax
-};
-
 // Currently this contains information related to WebRTC network/transport
 // information.
 
@@ -120,6 +94,16 @@ enum KeyExchangeProtocolType {
   kEnumCounterKeyProtocolMax
 };
 
+enum KeyExchangeProtocolMedia {
+  kEnumCounterKeyProtocolMediaTypeDtlsAudio,
+  kEnumCounterKeyProtocolMediaTypeDtlsVideo,
+  kEnumCounterKeyProtocolMediaTypeDtlsData,
+  kEnumCounterKeyProtocolMediaTypeSdesAudio,
+  kEnumCounterKeyProtocolMediaTypeSdesVideo,
+  kEnumCounterKeyProtocolMediaTypeSdesData,
+  kEnumCounterKeyProtocolMediaTypeMax
+};
+
 enum SdpSemanticRequested {
   kSdpSemanticRequestDefault,
   kSdpSemanticRequestPlanB,
@@ -135,26 +119,36 @@ enum SdpSemanticNegotiated {
   kSdpSemanticNegotiatedMax
 };
 
-class MetricsObserverInterface : public rtc::RefCountInterface {
- public:
-  // |type| is the type of the enum counter to be incremented. |counter|
-  // is the particular counter in that type. |counter_max| is the next sequence
-  // number after the highest counter.
-  virtual void IncrementEnumCounter(PeerConnectionEnumCounterType type,
-                                    int counter,
-                                    int counter_max) {}
-
-  // This is used to handle sparse counters like SSL cipher suites.
-  // TODO(guoweis): Remove the implementation once the dependency's interface
-  // definition is updated.
-  virtual void IncrementSparseEnumCounter(PeerConnectionEnumCounterType type,
-                                          int counter);
-
-  virtual void AddHistogramSample(PeerConnectionMetricsName type,
-                                  int value) = 0;
+// Metric which records the format of the received SDP for tracking how much the
+// difference between Plan B and Unified Plan affect users.
+enum SdpFormatReceived {
+  // No audio or video tracks. This is worth special casing since it seems to be
+  // the most common scenario (data-channel only).
+  kSdpFormatReceivedNoTracks,
+  // No more than one audio and one video track. Should be compatible with both
+  // Plan B and Unified Plan endpoints.
+  kSdpFormatReceivedSimple,
+  // More than one audio track or more than one video track in the Plan B format
+  // (e.g., one audio media section with multiple streams).
+  kSdpFormatReceivedComplexPlanB,
+  // More than one audio track or more than one video track in the Unified Plan
+  // format (e.g., two audio media sections).
+  kSdpFormatReceivedComplexUnifiedPlan,
+  kSdpFormatReceivedMax
 };
 
-typedef MetricsObserverInterface UMAObserver;
+// Metric for counting the outcome of adding an ICE candidate
+enum AddIceCandidateResult {
+  kAddIceCandidateSuccess,
+  kAddIceCandidateFailClosed,
+  kAddIceCandidateFailNoRemoteDescription,
+  kAddIceCandidateFailNullCandidate,
+  kAddIceCandidateFailNotValid,
+  kAddIceCandidateFailNotReady,
+  kAddIceCandidateFailInAddition,
+  kAddIceCandidateFailNotUsable,
+  kAddIceCandidateMax
+};
 
 }  // namespace webrtc
 

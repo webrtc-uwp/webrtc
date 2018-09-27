@@ -12,9 +12,9 @@
 #define MODULES_CONGESTION_CONTROLLER_RTP_SEND_TIME_HISTORY_H_
 
 #include <map>
+#include <utility>
 
 #include "modules/include/module_common_types.h"
-#include "rtc_base/basictypes.h"
 #include "rtc_base/constructormagic.h"
 
 namespace webrtc {
@@ -34,7 +34,7 @@ class SendTimeHistory {
   bool OnSentPacket(uint16_t sequence_number, int64_t send_time_ms);
 
   // Retrieves packet info identified by |sequence_number|.
-  rtc::Optional<PacketFeedback> GetPacket(uint16_t sequence_number) const;
+  absl::optional<PacketFeedback> GetPacket(uint16_t sequence_number) const;
 
   // Look up PacketFeedback for a sent packet, based on the sequence number, and
   // populate all fields except for arrival_time. The packet parameter must
@@ -45,11 +45,17 @@ class SendTimeHistory {
                              uint16_t remote_net_id) const;
 
  private:
+  using RemoteAndLocalNetworkId = std::pair<uint16_t, uint16_t>;
+
+  void AddPacketBytes(const PacketFeedback& packet);
+  void RemovePacketBytes(const PacketFeedback& packet);
+  void UpdateAckedSeqNum(int64_t acked_seq_num);
   const Clock* const clock_;
   const int64_t packet_age_limit_ms_;
   SequenceNumberUnwrapper seq_num_unwrapper_;
   std::map<int64_t, PacketFeedback> history_;
-  rtc::Optional<int64_t> latest_acked_seq_num_;
+  absl::optional<int64_t> last_ack_seq_num_;
+  std::map<RemoteAndLocalNetworkId, size_t> in_flight_bytes_;
 
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(SendTimeHistory);
 };

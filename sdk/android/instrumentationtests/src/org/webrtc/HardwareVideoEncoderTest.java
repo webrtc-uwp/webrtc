@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 import org.chromium.base.test.params.BaseJUnit4RunnerDelegate;
 import org.chromium.base.test.params.ParameterAnnotations.ClassParameter;
 import org.chromium.base.test.params.ParameterAnnotations.UseRunnerDelegate;
@@ -69,7 +70,7 @@ public class HardwareVideoEncoderTest {
   private static final boolean ENABLE_H264_HIGH_PROFILE = true;
   private static final VideoEncoder.Settings SETTINGS =
       new VideoEncoder.Settings(1 /* core */, 640 /* width */, 480 /* height */, 300 /* kbps */,
-          30 /* fps */, true /* automaticResizeOn */);
+          30 /* fps */, 1 /* numberOfSimulcastStreams */, true /* automaticResizeOn */);
   private static final int ENCODE_TIMEOUT_MS = 1000;
   private static final int NUM_TEST_FRAMES = 10;
   private static final int NUM_ENCODE_TRIES = 100;
@@ -78,7 +79,7 @@ public class HardwareVideoEncoderTest {
   // # Mock classes
   /**
    * Mock encoder callback that allows easy verification of the general properties of the encoded
-   * frame such as width and height. Also used from HardwareVideoDecoderTest.
+   * frame such as width and height. Also used from AndroidVideoDecoderInstrumentationTest.
    */
   static class MockEncoderCallback implements VideoEncoder.Callback {
     private BlockingQueue<EncodedImage> frameQueue = new LinkedBlockingQueue<>();
@@ -271,7 +272,7 @@ public class HardwareVideoEncoderTest {
 
   // # Test fields
   private final Object referencedFramesLock = new Object();
-  private int referencedFrames = 0;
+  private int referencedFrames;
 
   private Runnable releaseFrameCallback = new Runnable() {
     @Override
@@ -291,7 +292,7 @@ public class HardwareVideoEncoderTest {
         eglContext, ENABLE_INTEL_VP8_ENCODER, ENABLE_H264_HIGH_PROFILE);
   }
 
-  private VideoEncoder createEncoder() {
+  private @Nullable VideoEncoder createEncoder() {
     VideoEncoderFactory factory =
         createEncoderFactory(useEglContext ? eglBase.getEglBaseContext() : null);
     VideoCodecInfo[] supportedCodecs = factory.getSupportedCodecs();
@@ -353,7 +354,7 @@ public class HardwareVideoEncoderTest {
   // # Tests
   @Before
   public void setUp() {
-    NativeLibrary.initialize(new NativeLibrary.DefaultLoader());
+    NativeLibrary.initialize(new NativeLibrary.DefaultLoader(), TestConstants.NATIVE_LIBRARY);
 
     eglBase = new EglBase14(null, EglBase.CONFIG_PLAIN);
     eglBase.createDummyPbufferSurface();

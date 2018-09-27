@@ -12,6 +12,8 @@
 
 #include <vector>
 
+#include "absl/memory/memory.h"
+#include "api/video/video_bitrate_allocation.h"
 #include "modules/rtp_rtcp/include/receive_statistics.h"
 #include "modules/rtp_rtcp/mocks/mock_rtcp_rtt_stats.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/app.h"
@@ -20,7 +22,6 @@
 #include "modules/rtp_rtcp/source/time_util.h"
 #include "rtc_base/event.h"
 #include "rtc_base/fakeclock.h"
-#include "rtc_base/ptr_util.h"
 #include "rtc_base/task_queue.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -35,7 +36,7 @@ using ::testing::Invoke;
 using ::testing::Return;
 using ::testing::SizeIs;
 using ::testing::StrictMock;
-using ::webrtc::BitrateAllocation;
+using ::webrtc::VideoBitrateAllocation;
 using ::webrtc::CompactNtp;
 using ::webrtc::CompactNtpRttToMs;
 using ::webrtc::MockRtcpRttStats;
@@ -60,7 +61,8 @@ class MockMediaReceiverRtcpObserver : public webrtc::MediaReceiverRtcpObserver {
  public:
   MOCK_METHOD3(OnSenderReport, void(uint32_t, NtpTime, uint32_t));
   MOCK_METHOD1(OnBye, void(uint32_t));
-  MOCK_METHOD2(OnBitrateAllocation, void(uint32_t, const BitrateAllocation&));
+  MOCK_METHOD2(OnBitrateAllocation,
+               void(uint32_t, const VideoBitrateAllocation&));
 };
 
 // Since some tests will need to wait for this period, make it small to avoid
@@ -130,7 +132,43 @@ RtcpTransceiverConfig DefaultTestConfig() {
   RtcpTransceiverConfig config;
   config.outgoing_transport = &null_transport;
   config.schedule_periodic_compound_packets = false;
+  config.initial_report_delay_ms = 10;
+  config.report_period_ms = kReportPeriodMs;
   return config;
+}
+
+TEST(RtcpTransceiverImplTest, CanDestroyOnTaskQueue) {
+  FakeRtcpTransport transport;
+  rtc::TaskQueue queue("rtcp");
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  config.task_queue = &queue;
+  config.schedule_periodic_compound_packets = true;
+  config.outgoing_transport = &transport;
+  auto* rtcp_transceiver = new RtcpTransceiverImpl(config);
+  // Wait for a periodic packet.
+  EXPECT_TRUE(transport.WaitPacket());
+
+  rtc::Event done(false, false);
+  queue.PostTask([rtcp_transceiver, &done] {
+    delete rtcp_transceiver;
+    done.Set();
+  });
+  ASSERT_TRUE(done.Wait(/*milliseconds=*/1000));
+}
+
+TEST(RtcpTransceiverImplTest, CanDestroyAfterTaskQueue) {
+  FakeRtcpTransport transport;
+  auto* queue = new rtc::TaskQueue("rtcp");
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  config.task_queue = queue;
+  config.schedule_periodic_compound_packets = true;
+  config.outgoing_transport = &transport;
+  auto* rtcp_transceiver = new RtcpTransceiverImpl(config);
+  // Wait for a periodic packet.
+  EXPECT_TRUE(transport.WaitPacket());
+
+  delete queue;
+  delete rtcp_transceiver;
 }
 
 TEST(RtcpTransceiverImplTest, DelaysSendingFirstCompondPacket) {
@@ -140,7 +178,7 @@ TEST(RtcpTransceiverImplTest, DelaysSendingFirstCompondPacket) {
   config.outgoing_transport = &transport;
   config.initial_report_delay_ms = 10;
   config.task_queue = &queue;
-  rtc::Optional<RtcpTransceiverImpl> rtcp_transceiver;
+  absl::optional<RtcpTransceiverImpl> rtcp_transceiver;
 
   int64_t started_ms = rtc::TimeMillis();
   queue.PostTask([&] { rtcp_transceiver.emplace(config); });
@@ -165,7 +203,7 @@ TEST(RtcpTransceiverImplTest, PeriodicallySendsPackets) {
   config.initial_report_delay_ms = 0;
   config.report_period_ms = kReportPeriodMs;
   config.task_queue = &queue;
-  rtc::Optional<RtcpTransceiverImpl> rtcp_transceiver;
+  absl::optional<RtcpTransceiverImpl> rtcp_transceiver;
   int64_t time_just_before_1st_packet_ms = 0;
   queue.PostTask([&] {
     // Because initial_report_delay_ms is set to 0, time_just_before_the_packet
@@ -179,7 +217,7 @@ TEST(RtcpTransceiverImplTest, PeriodicallySendsPackets) {
   int64_t time_just_after_2nd_packet_ms = rtc::TimeMillis();
 
   EXPECT_GE(time_just_after_2nd_packet_ms - time_just_before_1st_packet_ms,
-            config.report_period_ms);
+            config.report_period_ms - 1);
 
   // Cleanup.
   rtc::Event done(false, false);
@@ -198,7 +236,7 @@ TEST(RtcpTransceiverImplTest, SendCompoundPacketDelaysPeriodicSendPackets) {
   config.initial_report_delay_ms = 0;
   config.report_period_ms = kReportPeriodMs;
   config.task_queue = &queue;
-  rtc::Optional<RtcpTransceiverImpl> rtcp_transceiver;
+  absl::optional<RtcpTransceiverImpl> rtcp_transceiver;
   queue.PostTask([&] { rtcp_transceiver.emplace(config); });
 
   // Wait for first packet.
@@ -224,7 +262,71 @@ TEST(RtcpTransceiverImplTest, SendCompoundPacketDelaysPeriodicSendPackets) {
   int64_t time_of_last_periodic_packet_ms = rtc::TimeMillis();
 
   EXPECT_GE(time_of_last_periodic_packet_ms - time_of_non_periodic_packet_ms,
-            config.report_period_ms);
+            config.report_period_ms - 1);
+
+  // Cleanup.
+  rtc::Event done(false, false);
+  queue.PostTask([&] {
+    rtcp_transceiver.reset();
+    done.Set();
+  });
+  ASSERT_TRUE(done.Wait(kAlmostForeverMs));
+}
+
+TEST(RtcpTransceiverImplTest, SendsNoRtcpWhenNetworkStateIsDown) {
+  MockTransport mock_transport;
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  config.initial_ready_to_send = false;
+  config.outgoing_transport = &mock_transport;
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  EXPECT_CALL(mock_transport, SendRtcp(_, _)).Times(0);
+
+  const uint8_t raw[] = {1, 2, 3, 4};
+  const std::vector<uint16_t> sequence_numbers = {45, 57};
+  const uint32_t ssrcs[] = {123};
+  rtcp_transceiver.SendCompoundPacket();
+  rtcp_transceiver.SendRawPacket(raw);
+  rtcp_transceiver.SendNack(ssrcs[0], sequence_numbers);
+  rtcp_transceiver.SendPictureLossIndication(ssrcs[0]);
+  rtcp_transceiver.SendFullIntraRequest(ssrcs);
+}
+
+TEST(RtcpTransceiverImplTest, SendsRtcpWhenNetworkStateIsUp) {
+  MockTransport mock_transport;
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  config.initial_ready_to_send = false;
+  config.outgoing_transport = &mock_transport;
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  rtcp_transceiver.SetReadyToSend(true);
+
+  EXPECT_CALL(mock_transport, SendRtcp(_, _)).Times(5);
+
+  const uint8_t raw[] = {1, 2, 3, 4};
+  const std::vector<uint16_t> sequence_numbers = {45, 57};
+  const uint32_t ssrcs[] = {123};
+  rtcp_transceiver.SendCompoundPacket();
+  rtcp_transceiver.SendRawPacket(raw);
+  rtcp_transceiver.SendNack(ssrcs[0], sequence_numbers);
+  rtcp_transceiver.SendPictureLossIndication(ssrcs[0]);
+  rtcp_transceiver.SendFullIntraRequest(ssrcs);
+}
+
+TEST(RtcpTransceiverImplTest, SendsPeriodicRtcpWhenNetworkStateIsUp) {
+  rtc::TaskQueue queue("rtcp");
+  FakeRtcpTransport transport;
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  config.schedule_periodic_compound_packets = true;
+  config.initial_ready_to_send = false;
+  config.outgoing_transport = &transport;
+  config.task_queue = &queue;
+  absl::optional<RtcpTransceiverImpl> rtcp_transceiver;
+  rtcp_transceiver.emplace(config);
+
+  queue.PostTask([&] { rtcp_transceiver->SetReadyToSend(true); });
+
+  EXPECT_TRUE(transport.WaitPacket());
 
   // Cleanup.
   rtc::Event done(false, false);
@@ -485,7 +587,7 @@ TEST(RtcpTransceiverImplTest, CallsObserverOnTargetBitrateBySenderSsrc) {
   xr.SetTargetBitrate(target_bitrate);
   auto raw_packet = xr.Build();
 
-  BitrateAllocation bitrate_allocation;
+  VideoBitrateAllocation bitrate_allocation;
   bitrate_allocation.SetBitrate(0, 0, /*bitrate_bps=*/10000);
   bitrate_allocation.SetBitrate(0, 1, /*bitrate_bps=*/20000);
   bitrate_allocation.SetBitrate(1, 0, /*bitrate_bps=*/40000);
@@ -511,7 +613,7 @@ TEST(RtcpTransceiverImplTest, SkipsIncorrectTargetBitrateEntries) {
   xr.SetSenderSsrc(kRemoteSsrc);
   auto raw_packet = xr.Build();
 
-  BitrateAllocation expected_allocation;
+  VideoBitrateAllocation expected_allocation;
   expected_allocation.SetBitrate(0, 0, /*bitrate_bps=*/10000);
   EXPECT_CALL(observer, OnBitrateAllocation(kRemoteSsrc, expected_allocation));
   rtcp_transceiver.ReceivePacket(raw_packet, /*now_us=*/0);

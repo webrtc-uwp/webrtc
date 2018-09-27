@@ -17,20 +17,18 @@
 #include <vector>
 
 #include "api/call/transport.h"
-#include "api/rtpparameters.h"
-#include "api/rtp_headers.h"
-#include "api/videosinkinterface.h"
-#include "api/videosourceinterface.h"
+#include "api/video/video_sink_interface.h"
+#include "api/video/video_source_interface.h"
+#include "api/video/video_stream_encoder_settings.h"
+#include "api/video_codecs/video_encoder_config.h"
+#include "api/video_codecs/video_encoder_factory.h"
 #include "call/rtp_config.h"
-#include "call/video_config.h"
 #include "common_types.h"  // NOLINT(build/include)
 #include "common_video/include/frame_callback.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "rtc_base/platform_file.h"
 
 namespace webrtc {
-
-class VideoEncoder;
 
 class VideoSendStream {
  public:
@@ -69,15 +67,12 @@ class VideoSendStream {
     uint32_t frames_dropped_by_encoder_queue = 0;
     uint32_t frames_dropped_by_rate_limiter = 0;
     uint32_t frames_dropped_by_encoder = 0;
-    rtc::Optional<uint64_t> qp_sum;
+    absl::optional<uint64_t> qp_sum;
     // Bitrate the encoder is currently configured to use due to bandwidth
     // limitations.
     int target_media_bitrate_bps = 0;
     // Bitrate the encoder is actually producing.
     int media_bitrate_bps = 0;
-    // Media bitrate this VideoSendStream is configured to prefer if there are
-    // no bandwidth limitations.
-    int preferred_media_bitrate_bps = 0;
     bool suspended = false;
     bool bw_limited_resolution = false;
     bool cpu_limited_resolution = false;
@@ -110,109 +105,11 @@ class VideoSendStream {
 
     std::string ToString() const;
 
-    struct EncoderSettings {
-      EncoderSettings() = default;
-      EncoderSettings(std::string payload_name,
-                      int payload_type,
-                      VideoEncoder* encoder)
-          : payload_name(std::move(payload_name)),
-            payload_type(payload_type),
-            encoder(encoder) {}
-      std::string ToString() const;
+    VideoStreamEncoderSettings encoder_settings;
 
-      std::string payload_name;
-      int payload_type = -1;
+    RtpConfig rtp;
 
-      // TODO(sophiechang): Delete this field when no one is using internal
-      // sources anymore.
-      bool internal_source = false;
-
-      // Allow 100% encoder utilization. Used for HW encoders where CPU isn't
-      // expected to be the limiting factor, but a chip could be running at
-      // 30fps (for example) exactly.
-      bool full_overuse_time = false;
-
-      // Enables the new method to estimate the cpu load from encoding, used for
-      // cpu adaptation.
-      bool experiment_cpu_load_estimator = false;
-
-      // Uninitialized VideoEncoder instance to be used for encoding. Will be
-      // initialized from inside the VideoSendStream.
-      VideoEncoder* encoder = nullptr;
-    } encoder_settings;
-
-    static const size_t kDefaultMaxPacketSize = 1500 - 40;  // TCP over IPv4.
-    struct Rtp {
-      Rtp();
-      Rtp(const Rtp&);
-      ~Rtp();
-      std::string ToString() const;
-
-      std::vector<uint32_t> ssrcs;
-
-      // See RtcpMode for description.
-      RtcpMode rtcp_mode = RtcpMode::kCompound;
-
-      // Max RTP packet size delivered to send transport from VideoEngine.
-      size_t max_packet_size = kDefaultMaxPacketSize;
-
-      // RTP header extensions to use for this send stream.
-      std::vector<RtpExtension> extensions;
-
-      // See NackConfig for description.
-      NackConfig nack;
-
-      // See UlpfecConfig for description.
-      UlpfecConfig ulpfec;
-
-      struct Flexfec {
-        Flexfec();
-        Flexfec(const Flexfec&);
-        ~Flexfec();
-        // Payload type of FlexFEC. Set to -1 to disable sending FlexFEC.
-        int payload_type = -1;
-
-        // SSRC of FlexFEC stream.
-        uint32_t ssrc = 0;
-
-        // Vector containing a single element, corresponding to the SSRC of the
-        // media stream being protected by this FlexFEC stream.
-        // The vector MUST have size 1.
-        //
-        // TODO(brandtr): Update comment above when we support
-        // multistream protection.
-        std::vector<uint32_t> protected_media_ssrcs;
-      } flexfec;
-
-      // Settings for RTP retransmission payload format, see RFC 4588 for
-      // details.
-      struct Rtx {
-        Rtx();
-        Rtx(const Rtx&);
-        ~Rtx();
-        std::string ToString() const;
-        // SSRCs to use for the RTX streams.
-        std::vector<uint32_t> ssrcs;
-
-        // Payload type to use for the RTX stream.
-        int payload_type = -1;
-      } rtx;
-
-      // RTCP CNAME, see RFC 3550.
-      std::string c_name;
-    } rtp;
-
-    struct Rtcp {
-      Rtcp();
-      Rtcp(const Rtcp&);
-      ~Rtcp();
-      std::string ToString() const;
-
-      // Time interval between RTCP report for video
-      int64_t video_report_interval_ms = 1000;
-      // Time interval between RTCP report for audio
-      int64_t audio_report_interval_ms = 5000;
-    } rtcp;
+    RtcpConfig rtcp;
 
     // Transport for outgoing packets.
     Transport* send_transport = nullptr;
@@ -270,23 +167,6 @@ class VideoSendStream {
   // When a stream is stopped, it can't receive, process or deliver packets.
   virtual void Stop() = 0;
 
-  // Based on the spec in
-  // https://w3c.github.io/webrtc-pc/#idl-def-rtcdegradationpreference.
-  // These options are enforced on a best-effort basis. For instance, all of
-  // these options may suffer some frame drops in order to avoid queuing.
-  // TODO(sprang): Look into possibility of more strictly enforcing the
-  // maintain-framerate option.
-  enum class DegradationPreference {
-    // Don't take any actions based on over-utilization signals.
-    kDegradationDisabled,
-    // On over-use, request lower frame rate, possibly causing frame drops.
-    kMaintainResolution,
-    // On over-use, request lower resolution, possibly causing down-scaling.
-    kMaintainFramerate,
-    // Try to strike a "pleasing" balance between frame rate or resolution.
-    kBalanced,
-  };
-
   virtual void SetSource(
       rtc::VideoSourceInterface<webrtc::VideoFrame>* source,
       const DegradationPreference& degradation_preference) = 0;
@@ -297,22 +177,6 @@ class VideoSendStream {
   virtual void ReconfigureVideoEncoder(VideoEncoderConfig config) = 0;
 
   virtual Stats GetStats() = 0;
-
-  // Takes ownership of each file, is responsible for closing them later.
-  // Calling this method will close and finalize any current logs.
-  // Some codecs produce multiple streams (VP8 only at present), each of these
-  // streams will log to a separate file. kMaxSimulcastStreams in common_types.h
-  // gives the max number of such streams. If there is no file for a stream, or
-  // the file is rtc::kInvalidPlatformFileValue, frames from that stream will
-  // not be logged.
-  // If a frame to be written would make the log too large the write fails and
-  // the log is closed and finalized. A |byte_limit| of 0 means no limit.
-  virtual void EnableEncodedFrameRecording(
-      const std::vector<rtc::PlatformFile>& files,
-      size_t byte_limit) = 0;
-  inline void DisableEncodedFrameRecording() {
-    EnableEncodedFrameRecording(std::vector<rtc::PlatformFile>(), 0);
-  }
 
  protected:
   virtual ~VideoSendStream() {}

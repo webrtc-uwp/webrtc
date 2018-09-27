@@ -10,6 +10,8 @@
 
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
+#include "api/video_codecs/builtin_video_decoder_factory.h"
+#include "api/video_codecs/builtin_video_encoder_factory.h"
 #include "media/engine/webrtcmediaengine.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "pc/mediasession.h"
@@ -19,10 +21,10 @@
 #ifdef WEBRTC_ANDROID
 #include "pc/test/androidtestinitializer.h"
 #endif
+#include "absl/memory/memory.h"
 #include "pc/test/fakeaudiocapturemodule.h"
 #include "pc/test/fakesctptransport.h"
 #include "rtc_base/gunit.h"
-#include "rtc_base/ptr_util.h"
 #include "rtc_base/virtualsocketserver.h"
 #include "test/gmock.h"
 
@@ -44,24 +46,24 @@ using ::testing::UnorderedElementsAre;
 class PeerConnectionFactoryForJsepTest : public PeerConnectionFactory {
  public:
   PeerConnectionFactoryForJsepTest()
-      : PeerConnectionFactory(
-            rtc::Thread::Current(),
-            rtc::Thread::Current(),
-            rtc::Thread::Current(),
-            rtc::WrapUnique(cricket::WebRtcMediaEngineFactory::Create(
-                FakeAudioCaptureModule::Create(),
-                CreateBuiltinAudioEncoderFactory(),
-                CreateBuiltinAudioDecoderFactory(),
-                nullptr,
-                nullptr,
-                nullptr,
-                AudioProcessingBuilder().Create())),
-            CreateCallFactory(),
-            nullptr) {}
+      : PeerConnectionFactory(rtc::Thread::Current(),
+                              rtc::Thread::Current(),
+                              rtc::Thread::Current(),
+                              cricket::WebRtcMediaEngineFactory::Create(
+                                  rtc::scoped_refptr<AudioDeviceModule>(
+                                      FakeAudioCaptureModule::Create()),
+                                  CreateBuiltinAudioEncoderFactory(),
+                                  CreateBuiltinAudioDecoderFactory(),
+                                  CreateBuiltinVideoEncoderFactory(),
+                                  CreateBuiltinVideoDecoderFactory(),
+                                  nullptr,
+                                  AudioProcessingBuilder().Create()),
+                              CreateCallFactory(),
+                              nullptr) {}
 
   std::unique_ptr<cricket::SctpTransportInternalFactory>
   CreateSctpTransportInternalFactory() {
-    return rtc::MakeUnique<FakeSctpTransportFactory>();
+    return absl::make_unique<FakeSctpTransportFactory>();
   }
 };
 
@@ -86,15 +88,15 @@ class PeerConnectionJsepTest : public ::testing::Test {
     rtc::scoped_refptr<PeerConnectionFactory> pc_factory(
         new rtc::RefCountedObject<PeerConnectionFactoryForJsepTest>());
     RTC_CHECK(pc_factory->Initialize());
-    auto observer = rtc::MakeUnique<MockPeerConnectionObserver>();
+    auto observer = absl::make_unique<MockPeerConnectionObserver>();
     auto pc = pc_factory->CreatePeerConnection(config, nullptr, nullptr,
                                                observer.get());
     if (!pc) {
       return nullptr;
     }
 
-    return rtc::MakeUnique<PeerConnectionWrapper>(pc_factory, pc,
-                                                  std::move(observer));
+    return absl::make_unique<PeerConnectionWrapper>(pc_factory, pc,
+                                                    std::move(observer));
   }
 
   std::unique_ptr<rtc::VirtualSocketServer> vss_;
@@ -257,12 +259,16 @@ TEST_F(PeerConnectionJsepTest, SetRemoteOfferCreatesTransceivers) {
 
   auto transceivers = callee->pc()->GetTransceivers();
   ASSERT_EQ(2u, transceivers.size());
+
   EXPECT_EQ(cricket::MEDIA_TYPE_AUDIO, transceivers[0]->media_type());
   EXPECT_EQ(caller_audio->mid(), transceivers[0]->mid());
   EXPECT_EQ(RtpTransceiverDirection::kRecvOnly, transceivers[0]->direction());
+  EXPECT_EQ(0u, transceivers[0]->sender()->stream_ids().size());
+
   EXPECT_EQ(cricket::MEDIA_TYPE_VIDEO, transceivers[1]->media_type());
   EXPECT_EQ(caller_video->mid(), transceivers[1]->mid());
   EXPECT_EQ(RtpTransceiverDirection::kRecvOnly, transceivers[1]->direction());
+  EXPECT_EQ(0u, transceivers[1]->sender()->stream_ids().size());
 }
 
 // Test that setting a remote offer with an audio track will reuse the
@@ -302,7 +308,7 @@ TEST_F(PeerConnectionJsepTest,
 
   auto transceivers = callee->pc()->GetTransceivers();
   ASSERT_EQ(2u, transceivers.size());
-  EXPECT_EQ(rtc::nullopt, transceivers[0]->mid());
+  EXPECT_EQ(absl::nullopt, transceivers[0]->mid());
   EXPECT_EQ(caller_audio->mid(), transceivers[1]->mid());
 }
 
@@ -320,7 +326,7 @@ TEST_F(PeerConnectionJsepTest,
 
   auto transceivers = callee->pc()->GetTransceivers();
   ASSERT_EQ(2u, transceivers.size());
-  EXPECT_EQ(rtc::nullopt, transceivers[0]->mid());
+  EXPECT_EQ(absl::nullopt, transceivers[0]->mid());
   EXPECT_EQ(caller->pc()->GetTransceivers()[0]->mid(), transceivers[1]->mid());
   EXPECT_EQ(MediaStreamTrackInterface::kAudioKind,
             transceivers[1]->receiver()->track()->kind());
@@ -339,7 +345,7 @@ TEST_F(PeerConnectionJsepTest,
 
   auto transceivers = callee->pc()->GetTransceivers();
   ASSERT_EQ(2u, transceivers.size());
-  EXPECT_EQ(rtc::nullopt, transceivers[0]->mid());
+  EXPECT_EQ(absl::nullopt, transceivers[0]->mid());
   EXPECT_EQ(caller->pc()->GetTransceivers()[0]->mid(), transceivers[1]->mid());
   EXPECT_EQ(MediaStreamTrackInterface::kAudioKind,
             transceivers[1]->receiver()->track()->kind());
@@ -358,7 +364,7 @@ TEST_F(PeerConnectionJsepTest, SetRemoteOfferDoesNotReuseStoppedTransceiver) {
 
   auto transceivers = callee->pc()->GetTransceivers();
   ASSERT_EQ(2u, transceivers.size());
-  EXPECT_EQ(rtc::nullopt, transceivers[0]->mid());
+  EXPECT_EQ(absl::nullopt, transceivers[0]->mid());
   EXPECT_TRUE(transceivers[0]->stopped());
   EXPECT_EQ(caller->pc()->GetTransceivers()[0]->mid(), transceivers[1]->mid());
   EXPECT_FALSE(transceivers[1]->stopped());
@@ -604,7 +610,7 @@ TEST_F(PeerConnectionJsepTest,
       caller->SetRemoteDescription(callee->CreateAnswerAndSetAsLocal()));
   EXPECT_TRUE(first_transceiver->stopped());
   // First transceivers aren't dissociated yet.
-  ASSERT_NE(rtc::nullopt, first_transceiver->mid());
+  ASSERT_NE(absl::nullopt, first_transceiver->mid());
   std::string first_mid = *first_transceiver->mid();
   EXPECT_EQ(first_mid, callee->pc()->GetTransceivers()[0]->mid());
 
@@ -623,10 +629,10 @@ TEST_F(PeerConnectionJsepTest,
   // associate the new transceivers.
   ASSERT_TRUE(
       caller->SetLocalDescription(CloneSessionDescription(offer.get())));
-  EXPECT_EQ(rtc::nullopt, first_transceiver->mid());
+  EXPECT_EQ(absl::nullopt, first_transceiver->mid());
   EXPECT_EQ(second_mid, caller->pc()->GetTransceivers()[1]->mid());
   ASSERT_TRUE(callee->SetRemoteDescription(std::move(offer)));
-  EXPECT_EQ(rtc::nullopt, callee->pc()->GetTransceivers()[0]->mid());
+  EXPECT_EQ(absl::nullopt, callee->pc()->GetTransceivers()[0]->mid());
   EXPECT_EQ(second_mid, callee->pc()->GetTransceivers()[1]->mid());
 
   // The new answer should also recycle the m section correctly.
@@ -642,11 +648,11 @@ TEST_F(PeerConnectionJsepTest,
   ASSERT_TRUE(caller->SetRemoteDescription(std::move(answer)));
   auto caller_transceivers = caller->pc()->GetTransceivers();
   ASSERT_EQ(2u, caller_transceivers.size());
-  EXPECT_EQ(rtc::nullopt, caller_transceivers[0]->mid());
+  EXPECT_EQ(absl::nullopt, caller_transceivers[0]->mid());
   EXPECT_EQ(second_mid, caller_transceivers[1]->mid());
   auto callee_transceivers = callee->pc()->GetTransceivers();
   ASSERT_EQ(2u, callee_transceivers.size());
-  EXPECT_EQ(rtc::nullopt, callee_transceivers[0]->mid());
+  EXPECT_EQ(absl::nullopt, callee_transceivers[0]->mid());
   EXPECT_EQ(second_mid, callee_transceivers[1]->mid());
 }
 
@@ -685,7 +691,7 @@ TEST_F(PeerConnectionJsepTest, CreateOfferRecyclesWhenOfferingTwice) {
   // Make sure that the caller's transceivers are associated correctly.
   auto caller_transceivers = caller->pc()->GetTransceivers();
   ASSERT_EQ(2u, caller_transceivers.size());
-  EXPECT_EQ(rtc::nullopt, caller_transceivers[0]->mid());
+  EXPECT_EQ(absl::nullopt, caller_transceivers[0]->mid());
   EXPECT_EQ(second_mid, caller_transceivers[1]->mid());
   EXPECT_FALSE(caller_transceivers[1]->stopped());
 }
@@ -735,7 +741,7 @@ TEST_P(RecycleMediaSectionTest, VerifyOfferAnswerAndTransceivers) {
   // the MID for the new transceiver.
   ASSERT_TRUE(
       caller->SetLocalDescription(CloneSessionDescription(offer.get())));
-  EXPECT_EQ(rtc::nullopt, first_transceiver->mid());
+  EXPECT_EQ(absl::nullopt, first_transceiver->mid());
   EXPECT_EQ(second_mid, second_transceiver->mid());
 
   // Setting the remote offer will dissociate the previous transceiver and
@@ -743,7 +749,7 @@ TEST_P(RecycleMediaSectionTest, VerifyOfferAnswerAndTransceivers) {
   ASSERT_TRUE(callee->SetRemoteDescription(std::move(offer)));
   auto callee_transceivers = callee->pc()->GetTransceivers();
   ASSERT_EQ(2u, callee_transceivers.size());
-  EXPECT_EQ(rtc::nullopt, callee_transceivers[0]->mid());
+  EXPECT_EQ(absl::nullopt, callee_transceivers[0]->mid());
   EXPECT_EQ(first_type_, callee_transceivers[0]->media_type());
   EXPECT_EQ(second_mid, callee_transceivers[1]->mid());
   EXPECT_EQ(second_type_, callee_transceivers[1]->media_type());
@@ -1162,11 +1168,11 @@ TEST_F(PeerConnectionJsepTest,
 
   ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
 
-  ASSERT_EQ(callee->observer()->add_track_events_.size(), 1u);
-  EXPECT_EQ(kTrackLabel,
-            callee->observer()->add_track_events_[0].receiver->track()->id());
-  // TODO(bugs.webrtc.org/7933): Also verify that no stream was added to the
-  // receiver.
+  const auto& track_events = callee->observer()->add_track_events_;
+  ASSERT_EQ(1u, track_events.size());
+  const auto& event = track_events[0];
+  EXPECT_EQ(kTrackLabel, event.receiver->track()->id());
+  EXPECT_EQ(0u, event.streams.size());
 }
 
 // Test that setting a remote offer with one track that has one stream fires off
@@ -1174,11 +1180,11 @@ TEST_F(PeerConnectionJsepTest,
 TEST_F(PeerConnectionJsepTest,
        SetRemoteOfferWithOneTrackOneStreamFiresOnAddTrack) {
   const std::string kTrackLabel = "audio_track";
-  const std::string kStreamLabel = "audio_stream";
+  const std::string kStreamId = "audio_stream";
 
   auto caller = CreatePeerConnection();
   auto callee = CreatePeerConnection();
-  ASSERT_TRUE(caller->AddAudioTrack(kTrackLabel, {kStreamLabel}));
+  ASSERT_TRUE(caller->AddAudioTrack(kTrackLabel, {kStreamId}));
 
   ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
 
@@ -1187,7 +1193,7 @@ TEST_F(PeerConnectionJsepTest,
   const auto& event = track_events[0];
   ASSERT_EQ(1u, event.streams.size());
   auto stream = event.streams[0];
-  EXPECT_EQ(kStreamLabel, stream->label());
+  EXPECT_EQ(kStreamId, stream->id());
   EXPECT_THAT(track_events[0].snapshotted_stream_tracks.at(stream),
               ElementsAre(event.receiver->track()));
   EXPECT_EQ(event.receiver->streams(), track_events[0].streams);
@@ -1202,12 +1208,12 @@ TEST_F(PeerConnectionJsepTest,
        SetRemoteOfferWithTwoTracksSameStreamFiresOnAddTrack) {
   const std::string kTrack1Label = "audio_track1";
   const std::string kTrack2Label = "audio_track2";
-  const std::string kSharedStreamLabel = "stream";
+  const std::string kSharedStreamId = "stream";
 
   auto caller = CreatePeerConnection();
   auto callee = CreatePeerConnection();
-  ASSERT_TRUE(caller->AddAudioTrack(kTrack1Label, {kSharedStreamLabel}));
-  ASSERT_TRUE(caller->AddAudioTrack(kTrack2Label, {kSharedStreamLabel}));
+  ASSERT_TRUE(caller->AddAudioTrack(kTrack1Label, {kSharedStreamId}));
+  ASSERT_TRUE(caller->AddAudioTrack(kTrack2Label, {kSharedStreamId}));
 
   ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
 
@@ -1226,7 +1232,27 @@ TEST_F(PeerConnectionJsepTest,
               UnorderedElementsAre(track1, track2));
 }
 
-// TODO(bugs.webrtc.org/7932): Also test multi-stream case.
+// Test that setting a remote offer with one track that has two streams fires
+// off the correct OnAddTrack event.
+TEST_F(PeerConnectionJsepTest,
+       SetRemoteOfferWithOneTrackTwoStreamFiresOnAddTrack) {
+  const std::string kTrackLabel = "audio_track";
+  const std::string kStreamId1 = "audio_stream1";
+  const std::string kStreamId2 = "audio_stream2";
+
+  auto caller = CreatePeerConnection();
+  auto callee = CreatePeerConnection();
+  ASSERT_TRUE(caller->AddAudioTrack(kTrackLabel, {kStreamId1, kStreamId2}));
+
+  ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
+
+  const auto& track_events = callee->observer()->add_track_events_;
+  ASSERT_EQ(1u, track_events.size());
+  const auto& event = track_events[0];
+  ASSERT_EQ(2u, event.streams.size());
+  EXPECT_EQ(kStreamId1, event.streams[0]->id());
+  EXPECT_EQ(kStreamId2, event.streams[1]->id());
+}
 
 // Test that if an RtpTransceiver with a current_direction set is stopped, then
 // current_direction is changed to null.
@@ -1241,6 +1267,53 @@ TEST_F(PeerConnectionJsepTest, CurrentDirectionResetWhenRtpTransceiverStopped) {
   ASSERT_TRUE(transceiver->current_direction());
   transceiver->Stop();
   EXPECT_FALSE(transceiver->current_direction());
+}
+
+// Test that you can't set an answer on a PeerConnection before setting the
+// offer.
+TEST_F(PeerConnectionJsepTest, AnswerBeforeOfferFails) {
+  auto caller = CreatePeerConnection();
+  auto callee = CreatePeerConnection();
+  caller->AddAudioTrack("audio");
+
+  ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOffer()));
+
+  RTCError error;
+  ASSERT_FALSE(caller->SetRemoteDescription(callee->CreateAnswer(), &error));
+  EXPECT_EQ(RTCErrorType::INVALID_STATE, error.type());
+}
+
+// Test that a Unified Plan PeerConnection fails to set a Plan B offer if it has
+// two video tracks.
+TEST_F(PeerConnectionJsepTest, TwoVideoPlanBToUnifiedPlanFails) {
+  RTCConfiguration config_planb;
+  config_planb.sdp_semantics = SdpSemantics::kPlanB;
+  auto caller = CreatePeerConnection(config_planb);
+  auto callee = CreatePeerConnection();
+  caller->AddVideoTrack("video1");
+  caller->AddVideoTrack("video2");
+
+  RTCError error;
+  ASSERT_FALSE(callee->SetRemoteDescription(caller->CreateOffer(), &error));
+  EXPECT_EQ(RTCErrorType::INVALID_PARAMETER, error.type());
+}
+
+// Test that a Unified Plan PeerConnection fails to set a Plan B answer if it
+// has two video tracks.
+TEST_F(PeerConnectionJsepTest, OneVideoUnifiedPlanToTwoVideoPlanBFails) {
+  auto caller = CreatePeerConnection();
+  RTCConfiguration config_planb;
+  config_planb.sdp_semantics = SdpSemantics::kPlanB;
+  auto callee = CreatePeerConnection(config_planb);
+  caller->AddVideoTrack("video");
+  callee->AddVideoTrack("video1");
+  callee->AddVideoTrack("video2");
+
+  ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
+
+  RTCError error;
+  ASSERT_FALSE(caller->SetRemoteDescription(caller->CreateAnswer(), &error));
+  EXPECT_EQ(RTCErrorType::INVALID_PARAMETER, error.type());
 }
 
 }  // namespace webrtc

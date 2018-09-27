@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Iterator;
 
 /** Java wrapper for a C++ MediaStreamInterface. */
-@JNINamespace("webrtc::jni")
 public class MediaStream {
   private static final String TAG = "MediaStream";
 
@@ -88,13 +87,13 @@ public class MediaStream {
     JniCommon.nativeReleaseRef(nativeStream);
   }
 
-  public String label() {
-    return nativeGetLabel(nativeStream);
+  public String getId() {
+    return nativeGetId(nativeStream);
   }
 
   @Override
   public String toString() {
-    return "[" + label() + ":A=" + audioTracks.size() + ":V=" + videoTracks.size() + "]";
+    return "[" + getId() + ":A=" + audioTracks.size() + ":V=" + videoTracks.size() + "]";
   }
 
   @CalledByNative
@@ -137,5 +136,5 @@ public class MediaStream {
       long stream, long nativeVideoTrack);
   private static native boolean nativeRemoveAudioTrack(long stream, long nativeAudioTrack);
   private static native boolean nativeRemoveVideoTrack(long stream, long nativeVideoTrack);
-  private static native String nativeGetLabel(long stream);
+  private static native String nativeGetId(long stream);
 }

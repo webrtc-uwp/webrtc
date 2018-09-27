@@ -10,7 +10,6 @@
 
 #include "logging/rtc_event_log/rtc_event_log.h"
 
-#include <atomic>
 #include <deque>
 #include <functional>
 #include <limits>
@@ -18,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/memory/memory.h"
 #include "logging/rtc_event_log/encoder/rtc_event_log_encoder_legacy.h"
 #include "logging/rtc_event_log/output/rtc_event_log_output_file.h"
 #include "rtc_base/checks.h"
@@ -26,7 +26,6 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/numerics/safe_minmax.h"
-#include "rtc_base/ptr_util.h"
 #include "rtc_base/sequenced_task_checker.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/thread_annotations.h"
@@ -40,11 +39,6 @@ constexpr size_t kMaxEventsInHistory = 10000;
 // The config-history is supposed to be unbounded, but needs to have some bound
 // to prevent an attack via unreasonable memory use.
 constexpr size_t kMaxEventsInConfigHistory = 1000;
-
-// Observe a limit on the number of concurrent logs, so as not to run into
-// OS-imposed limits on open files and/or threads/task-queues.
-// TODO(eladalon): Known issue - there's a race over |rtc_event_log_count|.
-std::atomic<int> rtc_event_log_count(0);
 
 // TODO(eladalon): This class exists because C++11 doesn't allow transferring a
 // unique_ptr to a lambda (a copy constructor is required). We should get
@@ -70,7 +64,7 @@ std::unique_ptr<RtcEventLogEncoder> CreateEncoder(
     RtcEventLog::EncodingType type) {
   switch (type) {
     case RtcEventLog::EncodingType::Legacy:
-      return rtc::MakeUnique<RtcEventLogEncoderLegacy>();
+      return absl::make_unique<RtcEventLogEncoderLegacy>();
     default:
       RTC_LOG(LS_ERROR) << "Unknown RtcEventLog encoder type (" << int(type)
                         << ")";
@@ -81,7 +75,9 @@ std::unique_ptr<RtcEventLogEncoder> CreateEncoder(
 
 class RtcEventLogImpl final : public RtcEventLog {
  public:
-  explicit RtcEventLogImpl(std::unique_ptr<RtcEventLogEncoder> event_encoder);
+  RtcEventLogImpl(std::unique_ptr<RtcEventLogEncoder> event_encoder,
+                  std::unique_ptr<rtc::TaskQueue> task_queue);
+
   ~RtcEventLogImpl() override;
 
   // TODO(eladalon): We should change these name to reflect that what we're
@@ -93,19 +89,19 @@ class RtcEventLogImpl final : public RtcEventLog {
   void Log(std::unique_ptr<RtcEvent> event) override;
 
  private:
-  void LogToMemory(std::unique_ptr<RtcEvent> event) RTC_RUN_ON(&task_queue_);
-  void LogEventsFromMemoryToOutput() RTC_RUN_ON(&task_queue_);
+  void LogToMemory(std::unique_ptr<RtcEvent> event) RTC_RUN_ON(task_queue_);
+  void LogEventsFromMemoryToOutput() RTC_RUN_ON(task_queue_);
 
-  void StopOutput() RTC_RUN_ON(&task_queue_);
+  void StopOutput() RTC_RUN_ON(task_queue_);
 
   void WriteConfigsAndHistoryToOutput(const std::string& encoded_configs,
                                       const std::string& encoded_history)
-      RTC_RUN_ON(&task_queue_);
-  void WriteToOutput(const std::string& output_string) RTC_RUN_ON(&task_queue_);
+      RTC_RUN_ON(task_queue_);
+  void WriteToOutput(const std::string& output_string) RTC_RUN_ON(task_queue_);
 
-  void StopLoggingInternal() RTC_RUN_ON(&task_queue_);
+  void StopLoggingInternal() RTC_RUN_ON(task_queue_);
 
-  void ScheduleOutput() RTC_RUN_ON(&task_queue_);
+  void ScheduleOutput() RTC_RUN_ON(task_queue_);
 
   // Make sure that the event log is "managed" - created/destroyed, as well
   // as started/stopped - from the same thread/task-queue.
@@ -113,34 +109,35 @@ class RtcEventLogImpl final : public RtcEventLog {
 
   // History containing all past configuration events.
   std::deque<std::unique_ptr<RtcEvent>> config_history_
-      RTC_GUARDED_BY(task_queue_);
+      RTC_GUARDED_BY(*task_queue_);
 
   // History containing the most recent (non-configuration) events (~10s).
-  std::deque<std::unique_ptr<RtcEvent>> history_ RTC_GUARDED_BY(task_queue_);
+  std::deque<std::unique_ptr<RtcEvent>> history_ RTC_GUARDED_BY(*task_queue_);
 
-  size_t max_size_bytes_ RTC_GUARDED_BY(task_queue_);
-  size_t written_bytes_ RTC_GUARDED_BY(task_queue_);
+  size_t max_size_bytes_ RTC_GUARDED_BY(*task_queue_);
+  size_t written_bytes_ RTC_GUARDED_BY(*task_queue_);
 
   std::unique_ptr<RtcEventLogEncoder> event_encoder_
-      RTC_GUARDED_BY(task_queue_);
-  std::unique_ptr<RtcEventLogOutput> event_output_ RTC_GUARDED_BY(task_queue_);
+      RTC_GUARDED_BY(*task_queue_);
+  std::unique_ptr<RtcEventLogOutput> event_output_ RTC_GUARDED_BY(*task_queue_);
 
-  size_t num_config_events_written_ RTC_GUARDED_BY(task_queue_);
-  int64_t output_period_ms_ RTC_GUARDED_BY(task_queue_);
-  int64_t last_output_ms_ RTC_GUARDED_BY(task_queue_);
-  bool output_scheduled_ RTC_GUARDED_BY(task_queue_);
+  size_t num_config_events_written_ RTC_GUARDED_BY(*task_queue_);
+  int64_t output_period_ms_ RTC_GUARDED_BY(*task_queue_);
+  int64_t last_output_ms_ RTC_GUARDED_BY(*task_queue_);
+  bool output_scheduled_ RTC_GUARDED_BY(*task_queue_);
 
   // Since we are posting tasks bound to |this|,  it is critical that the event
   // log and it's members outlive the |task_queue_|. Keep the "task_queue_|
   // last to ensure it destructs first, or else tasks living on the queue might
   // access other members after they've been torn down.
-  rtc::TaskQueue task_queue_;
+  std::unique_ptr<rtc::TaskQueue> task_queue_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(RtcEventLogImpl);
 };
 
 RtcEventLogImpl::RtcEventLogImpl(
-    std::unique_ptr<RtcEventLogEncoder> event_encoder)
+    std::unique_ptr<RtcEventLogEncoder> event_encoder,
+    std::unique_ptr<rtc::TaskQueue> task_queue)
     : max_size_bytes_(std::numeric_limits<decltype(max_size_bytes_)>::max()),
       written_bytes_(0),
       event_encoder_(std::move(event_encoder)),
@@ -148,16 +145,15 @@ RtcEventLogImpl::RtcEventLogImpl(
       output_period_ms_(kImmediateOutput),
       last_output_ms_(rtc::TimeMillis()),
       output_scheduled_(false),
-      task_queue_("rtc_event_log") {}
+      task_queue_(std::move(task_queue)) {
+  RTC_DCHECK(task_queue_);
+}
 
 RtcEventLogImpl::~RtcEventLogImpl() {
   RTC_DCHECK_CALLED_SEQUENTIALLY(&owner_sequence_checker_);
 
   // If we're logging to the output, this will stop that. Blocking function.
   StopLogging();
-
-  int count = std::atomic_fetch_sub(&rtc_event_log_count, 1) - 1;
-  RTC_DCHECK_GE(count, 0);
 }
 
 bool RtcEventLogImpl::StartLogging(std::unique_ptr<RtcEventLogOutput> output,
@@ -172,13 +168,16 @@ bool RtcEventLogImpl::StartLogging(std::unique_ptr<RtcEventLogOutput> output,
     return false;
   }
 
-  RTC_LOG(LS_INFO) << "Starting WebRTC event log.";
-
+  // TODO(terelius): The mapping between log timestamps and UTC should be stored
+  // in the event_log START event.
   const int64_t timestamp_us = rtc::TimeMicros();
+  const int64_t utc_time_us = rtc::TimeUTCMicros();
+  RTC_LOG(LS_INFO) << "Starting WebRTC event log. (Timestamp, UTC) = "
+                   << "(" << timestamp_us << ", " << utc_time_us << ").";
 
   // Binding to |this| is safe because |this| outlives the |task_queue_|.
   auto start = [this, timestamp_us](std::unique_ptr<RtcEventLogOutput> output) {
-    RTC_DCHECK_RUN_ON(&task_queue_);
+    RTC_DCHECK_RUN_ON(task_queue_.get());
     RTC_DCHECK(output->IsActive());
     event_output_ = std::move(output);
     num_config_events_written_ = 0;
@@ -186,8 +185,9 @@ bool RtcEventLogImpl::StartLogging(std::unique_ptr<RtcEventLogOutput> output,
     LogEventsFromMemoryToOutput();
   };
 
-  task_queue_.PostTask(rtc::MakeUnique<ResourceOwningTask<RtcEventLogOutput>>(
-      std::move(output), start));
+  task_queue_->PostTask(
+      absl::make_unique<ResourceOwningTask<RtcEventLogOutput>>(
+          std::move(output), start));
 
   return true;
 }
@@ -200,8 +200,8 @@ void RtcEventLogImpl::StopLogging() {
   rtc::Event output_stopped(true, false);
 
   // Binding to |this| is safe because |this| outlives the |task_queue_|.
-  task_queue_.PostTask([this, &output_stopped]() {
-    RTC_DCHECK_RUN_ON(&task_queue_);
+  task_queue_->PostTask([this, &output_stopped]() {
+    RTC_DCHECK_RUN_ON(task_queue_.get());
     if (event_output_) {
       RTC_DCHECK(event_output_->IsActive());
       LogEventsFromMemoryToOutput();
@@ -220,13 +220,13 @@ void RtcEventLogImpl::Log(std::unique_ptr<RtcEvent> event) {
 
   // Binding to |this| is safe because |this| outlives the |task_queue_|.
   auto event_handler = [this](std::unique_ptr<RtcEvent> unencoded_event) {
-    RTC_DCHECK_RUN_ON(&task_queue_);
+    RTC_DCHECK_RUN_ON(task_queue_.get());
     LogToMemory(std::move(unencoded_event));
     if (event_output_)
       ScheduleOutput();
   };
 
-  task_queue_.PostTask(rtc::MakeUnique<ResourceOwningTask<RtcEvent>>(
+  task_queue_->PostTask(absl::make_unique<ResourceOwningTask<RtcEvent>>(
       std::move(event), event_handler));
 }
 
@@ -250,7 +250,7 @@ void RtcEventLogImpl::ScheduleOutput() {
     output_scheduled_ = true;
     // Binding to |this| is safe because |this| outlives the |task_queue_|.
     auto output_task = [this]() {
-      RTC_DCHECK_RUN_ON(&task_queue_);
+      RTC_DCHECK_RUN_ON(task_queue_.get());
       if (event_output_) {
         RTC_DCHECK(event_output_->IsActive());
         LogEventsFromMemoryToOutput();
@@ -261,7 +261,7 @@ void RtcEventLogImpl::ScheduleOutput() {
     int64_t time_since_output_ms = now_ms - last_output_ms_;
     uint32_t delay = rtc::SafeClamp(output_period_ms_ - time_since_output_ms, 0,
                                     output_period_ms_);
-    task_queue_.PostDelayedTask(output_task, delay);
+    task_queue_->PostDelayedTask(output_task, delay);
   }
 }
 
@@ -357,18 +357,16 @@ void RtcEventLogImpl::WriteToOutput(const std::string& output_string) {
 
 // RtcEventLog member functions.
 std::unique_ptr<RtcEventLog> RtcEventLog::Create(EncodingType encoding_type) {
+  return Create(encoding_type,
+                absl::make_unique<rtc::TaskQueue>("rtc_event_log"));
+}
+
+std::unique_ptr<RtcEventLog> RtcEventLog::Create(
+    EncodingType encoding_type,
+    std::unique_ptr<rtc::TaskQueue> task_queue) {
 #ifdef ENABLE_RTC_EVENT_LOG
-  // TODO(eladalon): Known issue - there's a race over |rtc_event_log_count|.
-  constexpr int kMaxLogCount = 5;
-  int count = 1 + std::atomic_fetch_add(&rtc_event_log_count, 1);
-  if (count > kMaxLogCount) {
-    RTC_LOG(LS_WARNING) << "Denied creation of additional WebRTC event logs. "
-                        << count - 1 << " logs open already.";
-    std::atomic_fetch_sub(&rtc_event_log_count, 1);
-    return CreateNull();
-  }
-  auto encoder = CreateEncoder(encoding_type);
-  return rtc::MakeUnique<RtcEventLogImpl>(std::move(encoder));
+  return absl::make_unique<RtcEventLogImpl>(CreateEncoder(encoding_type),
+                                            std::move(task_queue));
 #else
   return CreateNull();
 #endif  // ENABLE_RTC_EVENT_LOG

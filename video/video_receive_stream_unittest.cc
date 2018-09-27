@@ -10,8 +10,8 @@
 
 #include <vector>
 
-#include "test/gtest.h"
 #include "test/gmock.h"
+#include "test/gtest.h"
 
 #include "api/video_codecs/video_decoder.h"
 #include "call/rtp_stream_receiver_controller.h"
@@ -34,9 +34,6 @@ using testing::Invoke;
 
 constexpr int kDefaultTimeOutMs = 50;
 
-const char kNewJitterBufferFieldTrialEnabled[] =
-    "WebRTC-NewVideoJitterBuffer/Enabled/";
-
 class MockTransport : public Transport {
  public:
   MOCK_METHOD3(SendRtp,
@@ -50,10 +47,9 @@ class MockVideoDecoder : public VideoDecoder {
  public:
   MOCK_METHOD2(InitDecode,
                int32_t(const VideoCodec* config, int32_t number_of_cores));
-  MOCK_METHOD5(Decode,
+  MOCK_METHOD4(Decode,
                int32_t(const EncodedImage& input,
                        bool missing_frames,
-                       const RTPFragmentationHeader* fragmentation,
                        const CodecSpecificInfo* codec_specific_info,
                        int64_t render_time_ms));
   MOCK_METHOD1(RegisterDecodeCompleteCallback,
@@ -67,10 +63,9 @@ class MockVideoDecoder : public VideoDecoder {
 class VideoReceiveStreamTest : public testing::Test {
  public:
   VideoReceiveStreamTest()
-      : override_field_trials_(kNewJitterBufferFieldTrialEnabled),
+      : process_thread_(ProcessThread::Create("TestThread")),
         config_(&mock_transport_),
-        call_stats_(Clock::GetRealTimeClock()),
-        process_thread_(ProcessThread::Create("TestThread")) {}
+        call_stats_(Clock::GetRealTimeClock(), process_thread_.get()) {}
 
   void SetUp() {
     constexpr int kDefaultNumCpuCores = 2;
@@ -79,24 +74,24 @@ class VideoReceiveStreamTest : public testing::Test {
     config_.renderer = &fake_renderer_;
     VideoReceiveStream::Decoder h264_decoder;
     h264_decoder.payload_type = 99;
-    h264_decoder.payload_name = "H264";
-    h264_decoder.codec_params.insert(
+    h264_decoder.video_format = SdpVideoFormat("H264");
+    h264_decoder.video_format.parameters.insert(
         {"sprop-parameter-sets", "Z0IACpZTBYmI,aMljiA=="});
     h264_decoder.decoder = &mock_h264_video_decoder_;
     config_.decoders.push_back(h264_decoder);
     VideoReceiveStream::Decoder null_decoder;
     null_decoder.payload_type = 98;
-    null_decoder.payload_name = "null";
+    null_decoder.video_format = SdpVideoFormat("null");
     null_decoder.decoder = &mock_null_video_decoder_;
     config_.decoders.push_back(null_decoder);
 
     video_receive_stream_.reset(new webrtc::internal::VideoReceiveStream(
-        &rtp_stream_receiver_controller_, kDefaultNumCpuCores,
-        &packet_router_, config_.Copy(), process_thread_.get(), &call_stats_));
+        &rtp_stream_receiver_controller_, kDefaultNumCpuCores, &packet_router_,
+        config_.Copy(), process_thread_.get(), &call_stats_));
   }
 
  protected:
-  webrtc::test::ScopedFieldTrials override_field_trials_;
+  std::unique_ptr<ProcessThread> process_thread_;
   VideoReceiveStream::Config config_;
   CallStats call_stats_;
   MockVideoDecoder mock_h264_video_decoder_;
@@ -104,7 +99,6 @@ class VideoReceiveStreamTest : public testing::Test {
   cricket::FakeVideoRenderer fake_renderer_;
   MockTransport mock_transport_;
   PacketRouter packet_router_;
-  std::unique_ptr<ProcessThread> process_thread_;
   RtpStreamReceiverController rtp_stream_receiver_controller_;
   std::unique_ptr<webrtc::internal::VideoReceiveStream> video_receive_stream_;
 };
@@ -128,7 +122,7 @@ TEST_F(VideoReceiveStreamTest, CreateFrameFromH264FmtpSpropAndIdr) {
       }));
   EXPECT_CALL(mock_h264_video_decoder_, RegisterDecodeCompleteCallback(_));
   video_receive_stream_->Start();
-  EXPECT_CALL(mock_h264_video_decoder_, Decode(_, false, _, _, _));
+  EXPECT_CALL(mock_h264_video_decoder_, Decode(_, false, _, _));
   RtpPacketReceived parsed_packet;
   ASSERT_TRUE(parsed_packet.Parse(rtppacket.data(), rtppacket.size()));
   rtp_stream_receiver_controller_.OnRtpPacket(parsed_packet);

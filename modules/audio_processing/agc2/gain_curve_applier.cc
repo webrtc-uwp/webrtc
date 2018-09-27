@@ -84,8 +84,9 @@ void ScaleSamples(rtc::ArrayView<const float> per_sample_scaling_factors,
 }  // namespace
 
 GainCurveApplier::GainCurveApplier(size_t sample_rate_hz,
-                                   ApmDataDumper* apm_data_dumper)
-    : interp_gain_curve_(apm_data_dumper),
+                                   ApmDataDumper* apm_data_dumper,
+                                   std::string histogram_name)
+    : interp_gain_curve_(apm_data_dumper, histogram_name),
       level_estimator_(sample_rate_hz, apm_data_dumper),
       apm_data_dumper_(apm_data_dumper) {}
 
@@ -127,6 +128,10 @@ void GainCurveApplier::SetSampleRate(size_t sample_rate_hz) {
   // Check that per_sample_scaling_factors_ is large enough.
   RTC_DCHECK_LE(sample_rate_hz,
                 kMaximalNumberOfSamplesPerChannel * 1000 / kFrameDurationMs);
+}
+
+void GainCurveApplier::Reset() {
+  level_estimator_.Reset();
 }
 
 }  // namespace webrtc

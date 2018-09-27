@@ -14,6 +14,7 @@
 #include <deque>
 #include <vector>
 
+#include "api/transport/network_types.h"
 #include "modules/congestion_controller/rtp/send_time_history.h"
 #include "rtc_base/criticalsection.h"
 #include "rtc_base/thread_annotations.h"
@@ -28,6 +29,7 @@ namespace rtcp {
 class TransportFeedback;
 }  // namespace rtcp
 
+namespace webrtc_cc {
 class TransportFeedbackAdapter {
  public:
   explicit TransportFeedbackAdapter(const Clock* clock);
@@ -47,7 +49,7 @@ class TransportFeedbackAdapter {
   // to the CongestionController interface.
   void OnTransportFeedback(const rtcp::TransportFeedback& feedback);
   std::vector<PacketFeedback> GetTransportFeedbackVector() const;
-  rtc::Optional<PacketFeedback> GetPacket(uint16_t sequence_number) const;
+  absl::optional<PacketFeedback> GetPacket(uint16_t sequence_number) const;
 
   void SetTransportOverhead(int transport_overhead_bytes_per_packet);
 
@@ -73,6 +75,7 @@ class TransportFeedbackAdapter {
       RTC_GUARDED_BY(&observers_lock_);
 };
 
+}  // namespace webrtc_cc
 }  // namespace webrtc
 
 #endif  // MODULES_CONGESTION_CONTROLLER_RTP_TRANSPORT_FEEDBACK_ADAPTER_H_

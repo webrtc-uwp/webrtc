@@ -22,6 +22,7 @@
 #include "modules/audio_processing/aec3/render_buffer.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "rtc_base/constructormagic.h"
+#include "rtc_base/system/arch.h"
 
 namespace webrtc {
 namespace aec3 {
@@ -127,15 +128,30 @@ class AdaptiveFirFilter {
   // Returns the estimate of the impulse response.
   const std::vector<float>& FilterImpulseResponse() const { return h_; }
 
-  void DumpFilter(const char* name) {
-    size_t current_size_partitions = H_.size();
+  void DumpFilter(const char* name_frequency_domain,
+                  const char* name_time_domain) {
+    size_t current_size = H_.size();
     H_.resize(max_size_partitions_);
     for (auto& H : H_) {
-      data_dumper_->DumpRaw(name, H.re);
-      data_dumper_->DumpRaw(name, H.im);
+      data_dumper_->DumpRaw(name_frequency_domain, H.re);
+      data_dumper_->DumpRaw(name_frequency_domain, H.im);
     }
-    H_.resize(current_size_partitions);
+    H_.resize(current_size);
+
+    current_size = h_.size();
+    h_.resize(GetTimeDomainLength(max_size_partitions_));
+    data_dumper_->DumpRaw(name_time_domain, h_);
+    h_.resize(current_size);
   }
+
+  // Scale the filter impulse response and spectrum by a factor.
+  void ScaleFilter(float factor);
+
+  // Set the filter coefficients.
+  void SetFilter(const std::vector<FftData>& H);
+
+  // Gets the filter coefficients.
+  const std::vector<FftData>& GetFilter() const { return H_; }
 
  private:
   // Constrain the filter partitions in a cyclic manner.

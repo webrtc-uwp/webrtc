@@ -13,7 +13,6 @@
 
 #include <memory>
 
-#include "sdk/objc/Framework/Headers/WebRTC/RTCMacros.h"
 #include "modules/audio_device/audio_device_generic.h"
 #include "modules/audio_device/ios/audio_session_observer.h"
 #include "modules/audio_device/ios/voice_processing_audio_unit.h"
@@ -22,6 +21,7 @@
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/thread_checker.h"
+#include "sdk/objc/base/RTCMacros.h"
 
 RTC_FWD_DECL_OBJC_CLASS(RTCAudioSessionDelegateAdapter);
 
@@ -154,7 +154,7 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
                             AudioBufferList* io_data) override;
 
   // Handles messages from posts.
-  void OnMessage(rtc::Message *msg) override;
+  void OnMessage(rtc::Message* msg) override;
 
  private:
   // Called by the relevant AudioSessionObserver methods on |thread_|.
@@ -194,6 +194,9 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
 
   // Closes and deletes the voice-processing I/O unit.
   void ShutdownPlayOrRecord();
+
+  // Resets thread-checkers before a call is restarted.
+  void PrepareForNewStart();
 
   // Ensures that methods are called from the same thread as this object is
   // created on.
@@ -246,7 +249,7 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
   // On real iOS devices, the size will be fixed and set once. For iOS
   // simulators, the size can vary from callback to callback and the size
   // will be changed dynamically to account for this behavior.
-  rtc::BufferT<int8_t> record_audio_buffer_;
+  rtc::BufferT<int16_t> record_audio_buffer_;
 
   // Set to 1 when recording is active and 0 otherwise.
   volatile int recording_;

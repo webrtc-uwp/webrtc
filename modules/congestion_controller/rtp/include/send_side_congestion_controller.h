@@ -17,9 +17,10 @@
 #include <memory>
 #include <vector>
 
+#include "api/transport/network_control.h"
+#include "api/transport/network_types.h"
 #include "common_types.h"  // NOLINT(build/include)
-#include "modules/congestion_controller/rtp/network_control/include/network_control.h"
-#include "modules/congestion_controller/rtp/network_control/include/network_types.h"
+#include "modules/congestion_controller/include/send_side_congestion_controller_interface.h"
 #include "modules/congestion_controller/rtp/pacer_controller.h"
 #include "modules/congestion_controller/rtp/transport_feedback_adapter.h"
 #include "modules/include/module.h"
@@ -42,6 +43,8 @@ class Clock;
 class RateLimiter;
 class RtcEventLog;
 
+namespace webrtc_cc {
+
 namespace send_side_cc_internal {
 // This is used to observe the network controller state and route calls to
 // the proper handler. It also keeps cached values for safe asynchronous use.
@@ -49,36 +52,35 @@ namespace send_side_cc_internal {
 // in SendSideCongestionController, which would risk causing data race on
 // destruction unless members are properly ordered.
 class ControlHandler;
+
+// TODO(srte): Make sure the PeriodicTask implementation is reusable and move it
+// to task_queue.h.
+class PeriodicTask : public rtc::QueuedTask {
+ public:
+  virtual void Stop() = 0;
+};
 }  // namespace send_side_cc_internal
 
-class SendSideCongestionController : public CallStatsObserver,
-                                     public Module,
-                                     public TransportFeedbackObserver,
-                                     public RtcpBandwidthObserver {
+class SendSideCongestionController
+    : public SendSideCongestionControllerInterface,
+      public RtcpBandwidthObserver {
  public:
-  // Observer class for bitrate changes announced due to change in bandwidth
-  // estimate or due to that the send pacer is full. Fraction loss and rtt is
-  // also part of this callback to allow the observer to optimize its settings
-  // for different types of network environments. The bitrate does not include
-  // packet headers and is measured in bits per second.
-  class Observer {
-   public:
-    virtual void OnNetworkChanged(uint32_t bitrate_bps,
-                                  uint8_t fraction_loss,  // 0 - 255.
-                                  int64_t rtt_ms,
-                                  int64_t probing_interval_ms) = 0;
+  SendSideCongestionController(
+      const Clock* clock,
+      rtc::TaskQueue* task_queue,
+      RtcEventLog* event_log,
+      PacedSender* pacer,
+      int start_bitrate_bps,
+      int min_bitrate_bps,
+      int max_bitrate_bps,
+      NetworkControllerFactoryInterface* controller_factory);
 
-   protected:
-    virtual ~Observer() {}
-  };
-  SendSideCongestionController(const Clock* clock,
-                               Observer* observer,
-                               RtcEventLog* event_log,
-                               PacedSender* pacer);
   ~SendSideCongestionController() override;
 
-  void RegisterPacketFeedbackObserver(PacketFeedbackObserver* observer);
-  void DeRegisterPacketFeedbackObserver(PacketFeedbackObserver* observer);
+  void RegisterPacketFeedbackObserver(
+      PacketFeedbackObserver* observer) override;
+  void DeRegisterPacketFeedbackObserver(
+      PacketFeedbackObserver* observer) override;
 
   // Currently, there can be at most one observer.
   // TODO(nisse): The RegisterNetworkObserver method is needed because we first
@@ -86,32 +88,33 @@ class SendSideCongestionController : public CallStatsObserver,
   // reference to Call, which then registers itself as the observer. We should
   // try to break this circular chain of references, and make the observer a
   // construction time constant.
-  void RegisterNetworkObserver(Observer* observer);
-  void DeRegisterNetworkObserver(Observer* observer);
+  void RegisterNetworkObserver(NetworkChangedObserver* observer) override;
 
-  virtual void SetBweBitrates(int min_bitrate_bps,
-                              int start_bitrate_bps,
-                              int max_bitrate_bps);
+  void SetBweBitrates(int min_bitrate_bps,
+                      int start_bitrate_bps,
+                      int max_bitrate_bps) override;
+
+  void SetAllocatedSendBitrateLimits(int64_t min_send_bitrate_bps,
+                                     int64_t max_padding_bitrate_bps,
+                                     int64_t max_total_bitrate_bps) override;
+
   // Resets the BWE state. Note the first argument is the bitrate_bps.
-  virtual void OnNetworkRouteChanged(const rtc::NetworkRoute& network_route,
-                                     int bitrate_bps,
-                                     int min_bitrate_bps,
-                                     int max_bitrate_bps);
-  virtual void SignalNetworkState(NetworkState state);
-  virtual void SetTransportOverhead(size_t transport_overhead_bytes_per_packet);
+  void OnNetworkRouteChanged(const rtc::NetworkRoute& network_route,
+                             int bitrate_bps,
+                             int min_bitrate_bps,
+                             int max_bitrate_bps) override;
+  void SignalNetworkState(NetworkState state) override;
 
-  virtual RtcpBandwidthObserver* GetBandwidthObserver();
+  RtcpBandwidthObserver* GetBandwidthObserver() override;
 
-  virtual bool AvailableBandwidth(uint32_t* bandwidth) const;
-  virtual int64_t GetPacerQueuingDelayMs() const;
-  virtual int64_t GetFirstPacketTimeMs() const;
+  bool AvailableBandwidth(uint32_t* bandwidth) const override;
 
-  virtual TransportFeedbackObserver* GetTransportFeedbackObserver();
+  TransportFeedbackObserver* GetTransportFeedbackObserver() override;
 
-  RateLimiter* GetRetransmissionRateLimiter();
-  void EnablePeriodicAlrProbing(bool enable);
+  void SetPerPacketFeedbackAvailable(bool available) override;
+  void EnablePeriodicAlrProbing(bool enable) override;
 
-  virtual void OnSentPacket(const rtc::SentPacket& sent_packet);
+  void OnSentPacket(const rtc::SentPacket& sent_packet) override;
 
   // Implements RtcpBandwidthObserver
   void OnReceivedEstimatedBitrate(uint32_t bitrate) override;
@@ -131,66 +134,95 @@ class SendSideCongestionController : public CallStatsObserver,
                  size_t length,
                  const PacedPacketInfo& pacing_info) override;
   void OnTransportFeedback(const rtcp::TransportFeedback& feedback) override;
-  std::vector<PacketFeedback> GetTransportFeedbackVector() const override;
 
-  // Sets the minimum send bitrate and maximum padding bitrate requested by send
-  // streams.
-  // |min_send_bitrate_bps| might be higher that the estimated available network
-  // bitrate and if so, the pacer will send with |min_send_bitrate_bps|.
-  // |max_padding_bitrate_bps| might be higher than the estimate available
-  // network bitrate and if so, the pacer will send padding packets to reach
-  // the min of the estimated available bitrate and |max_padding_bitrate_bps|.
-  void SetSendBitrateLimits(int64_t min_send_bitrate_bps,
-                            int64_t max_padding_bitrate_bps);
-  void SetPacingFactor(float pacing_factor);
+  std::vector<PacketFeedback> GetTransportFeedbackVector() const;
+
+  void SetPacingFactor(float pacing_factor) override;
+
+  void SetAllocatedBitrateWithoutFeedback(uint32_t bitrate_bps) override;
 
  protected:
-  // Waits long enough that any outstanding tasks should be finished.
-  void WaitOnTasks();
+  // TODO(srte): The tests should be rewritten to not depend on internals and
+  // these functions should be removed.
+  // Since we can't control the timing of the internal task queue, this method
+  // is used in unit tests to stop the periodic tasks from running unless
+  // PostPeriodicTasksForTest is called.
+  void DisablePeriodicTasks();
+  // Post periodic tasks just once. This allows unit tests to trigger process
+  // updates immediately.
+  void PostPeriodicTasksForTest();
+  // Waits for outstanding tasks to be finished. This allos unit tests to ensure
+  // that expected callbacks has been called.
+  void WaitOnTasksForTest();
 
  private:
-  SendSideCongestionController(
-      const Clock* clock,
-      RtcEventLog* event_log,
-      PacedSender* pacer,
-      NetworkControllerFactoryInterface::uptr controller_factory);
+  void MaybeCreateControllers() RTC_RUN_ON(task_queue_);
+  void MaybeRecreateControllers() RTC_RUN_ON(task_queue_);
+  void UpdateInitialConstraints(TargetRateConstraints new_contraints)
+      RTC_RUN_ON(task_queue_);
 
-  void UpdateStreamsConfig();
-  void WaitOnTask(std::function<void()> closure);
+  void StartProcessPeriodicTasks() RTC_RUN_ON(task_queue_);
+  void UpdateControllerWithTimeInterval() RTC_RUN_ON(task_queue_);
+  void UpdatePacerQueue() RTC_RUN_ON(task_queue_);
+
+  void UpdateStreamsConfig() RTC_RUN_ON(task_queue_);
   void MaybeUpdateOutstandingData();
   void OnReceivedRtcpReceiverReportBlocks(const ReportBlockList& report_blocks,
-                                          int64_t now_ms);
+                                          int64_t now_ms)
+      RTC_RUN_ON(task_queue_);
 
   const Clock* const clock_;
+  // PacedSender is thread safe and doesn't need protection here.
   PacedSender* const pacer_;
+  // TODO(srte): Move all access to feedback adapter to task queue.
   TransportFeedbackAdapter transport_feedback_adapter_;
 
-  const std::unique_ptr<PacerController> pacer_controller_;
-  const std::unique_ptr<send_side_cc_internal::ControlHandler> control_handler;
-  const std::unique_ptr<NetworkControllerInterface> controller_;
+  NetworkControllerFactoryInterface* const controller_factory_with_feedback_
+      RTC_GUARDED_BY(task_queue_);
+  const std::unique_ptr<NetworkControllerFactoryInterface>
+      controller_factory_fallback_ RTC_GUARDED_BY(task_queue_);
 
-  TimeDelta process_interval_;
-  int64_t last_process_update_ms_ = 0;
+  const std::unique_ptr<PacerController> pacer_controller_
+      RTC_GUARDED_BY(task_queue_);
 
-  std::map<uint32_t, RTCPReportBlock> last_report_blocks_;
-  Timestamp last_report_block_time_;
+  std::unique_ptr<send_side_cc_internal::ControlHandler> control_handler_
+      RTC_GUARDED_BY(task_queue_);
 
-  StreamsConfig streams_config_;
+  std::unique_ptr<NetworkControllerInterface> controller_
+      RTC_GUARDED_BY(task_queue_);
+
+  TimeDelta process_interval_ RTC_GUARDED_BY(task_queue_);
+
+  std::map<uint32_t, RTCPReportBlock> last_report_blocks_
+      RTC_GUARDED_BY(task_queue_);
+  Timestamp last_report_block_time_ RTC_GUARDED_BY(task_queue_);
+
+  NetworkChangedObserver* observer_ RTC_GUARDED_BY(task_queue_);
+  NetworkControllerConfig initial_config_ RTC_GUARDED_BY(task_queue_);
+  StreamsConfig streams_config_ RTC_GUARDED_BY(task_queue_);
+
   const bool send_side_bwe_with_overhead_;
+  // Transport overhead is written by OnNetworkRouteChanged and read by
+  // AddPacket.
+  // TODO(srte): Remove atomic when feedback adapter runs on task queue.
   std::atomic<size_t> transport_overhead_bytes_per_packet_;
-  std::atomic<bool> network_available_;
+  bool network_available_ RTC_GUARDED_BY(task_queue_);
+  bool periodic_tasks_enabled_ RTC_GUARDED_BY(task_queue_);
+  bool packet_feedback_available_ RTC_GUARDED_BY(task_queue_);
+  send_side_cc_internal::PeriodicTask* pacer_queue_update_task_
+      RTC_GUARDED_BY(task_queue_);
+  send_side_cc_internal::PeriodicTask* controller_task_
+      RTC_GUARDED_BY(task_queue_);
 
+  // Protects access to last_packet_feedback_vector_ in feedback adapter.
+  // TODO(srte): Remove this checker when feedback adapter runs on task queue.
   rtc::RaceChecker worker_race_;
 
-  // Note that moving ownership of the task queue makes it neccessary to make
-  // sure that there is no outstanding tasks on it using destructed objects.
-  // This is currently guranteed by using explicit reset in the destructor of
-  // this class. It is declared last to indicate that it's lifetime is shorter
-  // than all other members.
-  std::unique_ptr<rtc::TaskQueue> task_queue_;
+  rtc::TaskQueue* task_queue_;
 
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(SendSideCongestionController);
 };
+}  // namespace webrtc_cc
 }  // namespace webrtc
 
 #endif  // MODULES_CONGESTION_CONTROLLER_RTP_INCLUDE_SEND_SIDE_CONGESTION_CONTROLLER_H_

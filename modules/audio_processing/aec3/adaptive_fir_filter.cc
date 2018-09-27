@@ -10,10 +10,12 @@
 
 #include "modules/audio_processing/aec3/adaptive_fir_filter.h"
 
+// Defines WEBRTC_ARCH_X86_FAMILY, used below.
+#include "rtc_base/system/arch.h"
+
 #if defined(WEBRTC_HAS_NEON)
 #include <arm_neon.h>
 #endif
-#include "typedefs.h"  // NOLINT(build/include)
 #if defined(WEBRTC_ARCH_X86_FAMILY)
 #include <emmintrin.h>
 #endif
@@ -504,6 +506,9 @@ void AdaptiveFirFilter::ResetFilterBuffersToCurrentSize() {
   H_.resize(current_size_partitions_);
   H2_.resize(current_size_partitions_);
   h_.resize(GetTimeDomainLength(current_size_partitions_));
+  RTC_DCHECK_LT(0, current_size_partitions_);
+  partition_to_constrain_ =
+      std::min(partition_to_constrain_, current_size_partitions_ - 1);
 }
 
 void AdaptiveFirFilter::UpdateSize() {
@@ -611,6 +616,29 @@ void AdaptiveFirFilter::Constrain() {
   partition_to_constrain_ = partition_to_constrain_ < (H_.size() - 1)
                                 ? partition_to_constrain_ + 1
                                 : 0;
+}
+
+void AdaptiveFirFilter::ScaleFilter(float factor) {
+  for (auto& H : H_) {
+    for (auto& re : H.re) {
+      re *= factor;
+    }
+    for (auto& im : H.im) {
+      im *= factor;
+    }
+  }
+  for (auto& h : h_) {
+    h *= factor;
+  }
+}
+
+// Set the filter coefficients.
+void AdaptiveFirFilter::SetFilter(const std::vector<FftData>& H) {
+  const size_t num_partitions = std::min(H_.size(), H.size());
+  for (size_t k = 0; k < num_partitions; ++k) {
+    std::copy(H[k].re.begin(), H[k].re.end(), H_[k].re.begin());
+    std::copy(H[k].im.begin(), H[k].im.end(), H_[k].im.begin());
+  }
 }
 
 }  // namespace webrtc

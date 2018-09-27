@@ -49,8 +49,7 @@ DelayManagerTest::DelayManagerTest()
     : dm_(NULL), detector_(&tick_timer_), seq_no_(0x1234), ts_(0x12345678) {}
 
 void DelayManagerTest::SetUp() {
-  EXPECT_CALL(detector_, Reset())
-            .Times(1);
+  EXPECT_CALL(detector_, Reset()).Times(1);
   dm_ = new DelayManager(kMaxNumberOfPackets, &detector_, &tick_timer_);
 }
 
@@ -94,8 +93,7 @@ TEST_F(DelayManagerTest, VectorInitialization) {
 TEST_F(DelayManagerTest, SetPacketAudioLength) {
   const int kLengthMs = 30;
   // Expect DelayManager to pass on the new length to the detector object.
-  EXPECT_CALL(detector_, SetPacketAudioLength(kLengthMs))
-      .Times(1);
+  EXPECT_CALL(detector_, SetPacketAudioLength(kLengthMs)).Times(1);
   EXPECT_EQ(0, dm_->SetPacketAudioLength(kLengthMs));
   EXPECT_EQ(-1, dm_->SetPacketAudioLength(-1));  // Illegal parameter value.
 }
@@ -121,8 +119,7 @@ TEST_F(DelayManagerTest, UpdateNormal) {
   // Expect detector update method to be called once with inter-arrival time
   // equal to 1 packet, and (base) target level equal to 1 as well.
   // Return false to indicate no peaks found.
-  EXPECT_CALL(detector_, Update(1, 1))
-      .WillOnce(Return(false));
+  EXPECT_CALL(detector_, Update(1, 1)).WillOnce(Return(false));
   InsertNextPacket();
   EXPECT_EQ(1 << 8, dm_->TargetLevel());  // In Q8.
   EXPECT_EQ(1, dm_->base_target_level());
@@ -145,8 +142,7 @@ TEST_F(DelayManagerTest, UpdateLongInterArrivalTime) {
   // Expect detector update method to be called once with inter-arrival time
   // equal to 1 packet, and (base) target level equal to 1 as well.
   // Return false to indicate no peaks found.
-  EXPECT_CALL(detector_, Update(2, 2))
-      .WillOnce(Return(false));
+  EXPECT_CALL(detector_, Update(2, 2)).WillOnce(Return(false));
   InsertNextPacket();
   EXPECT_EQ(2 << 8, dm_->TargetLevel());  // In Q8.
   EXPECT_EQ(2, dm_->base_target_level());
@@ -169,10 +165,8 @@ TEST_F(DelayManagerTest, UpdatePeakFound) {
   // Expect detector update method to be called once with inter-arrival time
   // equal to 1 packet, and (base) target level equal to 1 as well.
   // Return true to indicate that peaks are found. Let the peak height be 5.
-  EXPECT_CALL(detector_, Update(1, 1))
-      .WillOnce(Return(true));
-  EXPECT_CALL(detector_, MaxPeakHeight())
-      .WillOnce(Return(5));
+  EXPECT_CALL(detector_, Update(1, 1)).WillOnce(Return(true));
+  EXPECT_CALL(detector_, MaxPeakHeight()).WillOnce(Return(5));
   InsertNextPacket();
   EXPECT_EQ(5 << 8, dm_->TargetLevel());
   EXPECT_EQ(1, dm_->base_target_level());  // Base target level is w/o peaks.
@@ -193,8 +187,7 @@ TEST_F(DelayManagerTest, TargetDelay) {
   // Expect detector update method to be called once with inter-arrival time
   // equal to 1 packet, and (base) target level equal to 1 as well.
   // Return false to indicate no peaks found.
-  EXPECT_CALL(detector_, Update(1, 1))
-      .WillOnce(Return(false));
+  EXPECT_CALL(detector_, Update(1, 1)).WillOnce(Return(false));
   InsertNextPacket();
   const int kExpectedTarget = 1;
   EXPECT_EQ(kExpectedTarget << 8, dm_->TargetLevel());  // In Q8.
@@ -207,7 +200,7 @@ TEST_F(DelayManagerTest, TargetDelay) {
   EXPECT_EQ(lower + (20 << 8) / kFrameSizeMs, higher);
 }
 
-TEST_F(DelayManagerTest, MaxAndRequiredDelay) {
+TEST_F(DelayManagerTest, MaxDelay) {
   const int kExpectedTarget = 5;
   const int kTimeIncrement = kExpectedTarget * kFrameSizeMs;
   SetPacketAudioLength(kFrameSizeMs);
@@ -231,14 +224,13 @@ TEST_F(DelayManagerTest, MaxAndRequiredDelay) {
   EXPECT_TRUE(dm_->SetMaximumDelay(kMaxDelayMs));
   IncreaseTime(kTimeIncrement);
   InsertNextPacket();
-  EXPECT_EQ(kExpectedTarget * kFrameSizeMs, dm_->least_required_delay_ms());
   EXPECT_EQ(kMaxDelayPackets << 8, dm_->TargetLevel());
 
   // Target level at least should be one packet.
   EXPECT_FALSE(dm_->SetMaximumDelay(kFrameSizeMs - 1));
 }
 
-TEST_F(DelayManagerTest, MinAndRequiredDelay) {
+TEST_F(DelayManagerTest, MinDelay) {
   const int kExpectedTarget = 5;
   const int kTimeIncrement = kExpectedTarget * kFrameSizeMs;
   SetPacketAudioLength(kFrameSizeMs);
@@ -262,7 +254,6 @@ TEST_F(DelayManagerTest, MinAndRequiredDelay) {
   dm_->SetMinimumDelay(kMinDelayMs);
   IncreaseTime(kTimeIncrement);
   InsertNextPacket();
-  EXPECT_EQ(kExpectedTarget * kFrameSizeMs, dm_->least_required_delay_ms());
   EXPECT_EQ(kMinDelayPackets << 8, dm_->TargetLevel());
 }
 

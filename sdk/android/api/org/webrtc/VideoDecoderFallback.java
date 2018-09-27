@@ -13,7 +13,6 @@ package org.webrtc;
 /**
  * A combined video decoder that falls back on a secondary decoder if the primary decoder fails.
  */
-@JNINamespace("webrtc::jni")
 public class VideoDecoderFallback extends WrappedNativeVideoDecoder {
   private final VideoDecoder fallback;
   private final VideoDecoder primary;
@@ -24,7 +23,7 @@ public class VideoDecoderFallback extends WrappedNativeVideoDecoder {
   }
 
   @Override
-  long createNativeDecoder() {
+  public long createNativeVideoDecoder() {
     return nativeCreateDecoder(fallback, primary);
   }
 

@@ -17,8 +17,8 @@
 
 #include "pc/channel.h"
 #include "pc/peerconnection.h"
-#include "rtc_base/base64.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/third_party/base64/base64.h"
 
 namespace webrtc {
 namespace {
@@ -39,8 +39,9 @@ const char* STATSREPORT_ADAPTER_TYPE_WIFI = "wlan";
 const char* STATSREPORT_ADAPTER_TYPE_WWAN = "wwan";
 const char* STATSREPORT_ADAPTER_TYPE_VPN = "vpn";
 const char* STATSREPORT_ADAPTER_TYPE_LOOPBACK = "loopback";
+const char* STATSREPORT_ADAPTER_TYPE_WILDCARD = "wildcard";
 
-template<typename ValueType>
+template <typename ValueType>
 struct TypeForAdd {
   const StatsReport::StatsValueName name;
   const ValueType& value;
@@ -133,37 +134,36 @@ void SetAudioProcessingStats(StatsReport* report,
 void ExtractStats(const cricket::VoiceReceiverInfo& info, StatsReport* report) {
   ExtractCommonReceiveProperties(info, report);
   const FloatForAdd floats[] = {
-    { StatsReport::kStatsValueNameExpandRate, info.expand_rate },
-    { StatsReport::kStatsValueNameSecondaryDecodedRate,
-      info.secondary_decoded_rate },
-    { StatsReport::kStatsValueNameSecondaryDiscardedRate,
-      info.secondary_discarded_rate },
-    { StatsReport::kStatsValueNameSpeechExpandRate, info.speech_expand_rate },
-    { StatsReport::kStatsValueNameAccelerateRate, info.accelerate_rate },
-    { StatsReport::kStatsValueNamePreemptiveExpandRate,
-      info.preemptive_expand_rate },
-    { StatsReport::kStatsValueNameTotalAudioEnergy, info.total_output_energy },
-    { StatsReport::kStatsValueNameTotalSamplesDuration,
-      info.total_output_duration }
-  };
+      {StatsReport::kStatsValueNameExpandRate, info.expand_rate},
+      {StatsReport::kStatsValueNameSecondaryDecodedRate,
+       info.secondary_decoded_rate},
+      {StatsReport::kStatsValueNameSecondaryDiscardedRate,
+       info.secondary_discarded_rate},
+      {StatsReport::kStatsValueNameSpeechExpandRate, info.speech_expand_rate},
+      {StatsReport::kStatsValueNameAccelerateRate, info.accelerate_rate},
+      {StatsReport::kStatsValueNamePreemptiveExpandRate,
+       info.preemptive_expand_rate},
+      {StatsReport::kStatsValueNameTotalAudioEnergy, info.total_output_energy},
+      {StatsReport::kStatsValueNameTotalSamplesDuration,
+       info.total_output_duration}};
 
   const IntForAdd ints[] = {
-    { StatsReport::kStatsValueNameCurrentDelayMs, info.delay_estimate_ms },
-    { StatsReport::kStatsValueNameDecodingCNG, info.decoding_cng },
-    { StatsReport::kStatsValueNameDecodingCTN, info.decoding_calls_to_neteq },
-    { StatsReport::kStatsValueNameDecodingCTSG,
-      info.decoding_calls_to_silence_generator },
-    { StatsReport::kStatsValueNameDecodingMutedOutput,
-      info.decoding_muted_output },
-    { StatsReport::kStatsValueNameDecodingNormal, info.decoding_normal },
-    { StatsReport::kStatsValueNameDecodingPLC, info.decoding_plc },
-    { StatsReport::kStatsValueNameDecodingPLCCNG, info.decoding_plc_cng },
-    { StatsReport::kStatsValueNameJitterBufferMs, info.jitter_buffer_ms },
-    { StatsReport::kStatsValueNameJitterReceived, info.jitter_ms },
-    { StatsReport::kStatsValueNamePacketsLost, info.packets_lost },
-    { StatsReport::kStatsValueNamePacketsReceived, info.packets_rcvd },
-    { StatsReport::kStatsValueNamePreferredJitterBufferMs,
-      info.jitter_buffer_preferred_ms },
+      {StatsReport::kStatsValueNameCurrentDelayMs, info.delay_estimate_ms},
+      {StatsReport::kStatsValueNameDecodingCNG, info.decoding_cng},
+      {StatsReport::kStatsValueNameDecodingCTN, info.decoding_calls_to_neteq},
+      {StatsReport::kStatsValueNameDecodingCTSG,
+       info.decoding_calls_to_silence_generator},
+      {StatsReport::kStatsValueNameDecodingMutedOutput,
+       info.decoding_muted_output},
+      {StatsReport::kStatsValueNameDecodingNormal, info.decoding_normal},
+      {StatsReport::kStatsValueNameDecodingPLC, info.decoding_plc},
+      {StatsReport::kStatsValueNameDecodingPLCCNG, info.decoding_plc_cng},
+      {StatsReport::kStatsValueNameJitterBufferMs, info.jitter_buffer_ms},
+      {StatsReport::kStatsValueNameJitterReceived, info.jitter_ms},
+      {StatsReport::kStatsValueNamePacketsLost, info.packets_lost},
+      {StatsReport::kStatsValueNamePacketsReceived, info.packets_rcvd},
+      {StatsReport::kStatsValueNamePreferredJitterBufferMs,
+       info.jitter_buffer_preferred_ms},
   };
 
   for (const auto& f : floats)
@@ -176,8 +176,7 @@ void ExtractStats(const cricket::VoiceReceiverInfo& info, StatsReport* report) {
                    info.audio_level);
   }
 
-  report->AddInt64(StatsReport::kStatsValueNameBytesReceived,
-                   info.bytes_rcvd);
+  report->AddInt64(StatsReport::kStatsValueNameBytesReceived, info.bytes_rcvd);
   if (info.capture_start_ntp_time_ms >= 0) {
     report->AddInt64(StatsReport::kStatsValueNameCaptureStartNtpTimeMs,
                      info.capture_start_ntp_time_ms);
@@ -192,17 +191,16 @@ void ExtractStats(const cricket::VoiceSenderInfo& info, StatsReport* report) {
                           info.apm_statistics);
 
   const FloatForAdd floats[] = {
-    { StatsReport::kStatsValueNameTotalAudioEnergy, info.total_input_energy },
-    { StatsReport::kStatsValueNameTotalSamplesDuration,
-      info.total_input_duration }
-  };
+      {StatsReport::kStatsValueNameTotalAudioEnergy, info.total_input_energy},
+      {StatsReport::kStatsValueNameTotalSamplesDuration,
+       info.total_input_duration}};
 
   RTC_DCHECK_GE(info.audio_level, 0);
   const IntForAdd ints[] = {
-    { StatsReport::kStatsValueNameAudioInputLevel, info.audio_level},
-    { StatsReport::kStatsValueNameJitterReceived, info.jitter_ms },
-    { StatsReport::kStatsValueNamePacketsLost, info.packets_lost },
-    { StatsReport::kStatsValueNamePacketsSent, info.packets_sent },
+      {StatsReport::kStatsValueNameAudioInputLevel, info.audio_level},
+      {StatsReport::kStatsValueNameJitterReceived, info.jitter_ms},
+      {StatsReport::kStatsValueNamePacketsLost, info.packets_lost},
+      {StatsReport::kStatsValueNamePacketsSent, info.packets_sent},
   };
 
   for (const auto& f : floats) {
@@ -249,8 +247,7 @@ void ExtractStats(const cricket::VideoReceiverInfo& info, StatsReport* report) {
   ExtractCommonReceiveProperties(info, report);
   report->AddString(StatsReport::kStatsValueNameCodecImplementationName,
                     info.decoder_implementation_name);
-  report->AddInt64(StatsReport::kStatsValueNameBytesReceived,
-                   info.bytes_rcvd);
+  report->AddInt64(StatsReport::kStatsValueNameBytesReceived, info.bytes_rcvd);
   if (info.capture_start_ntp_time_ms >= 0) {
     report->AddInt64(StatsReport::kStatsValueNameCaptureStartNtpTimeMs,
                      info.capture_start_ntp_time_ms);
@@ -259,25 +256,25 @@ void ExtractStats(const cricket::VideoReceiverInfo& info, StatsReport* report) {
     report->AddInt64(StatsReport::kStatsValueNameQpSum, *info.qp_sum);
 
   const IntForAdd ints[] = {
-    { StatsReport::kStatsValueNameCurrentDelayMs, info.current_delay_ms },
-    { StatsReport::kStatsValueNameDecodeMs, info.decode_ms },
-    { StatsReport::kStatsValueNameFirsSent, info.firs_sent },
-    { StatsReport::kStatsValueNameFrameHeightReceived, info.frame_height },
-    { StatsReport::kStatsValueNameFrameRateDecoded, info.framerate_decoded },
-    { StatsReport::kStatsValueNameFrameRateOutput, info.framerate_output },
-    { StatsReport::kStatsValueNameFrameRateReceived, info.framerate_rcvd },
-    { StatsReport::kStatsValueNameFrameWidthReceived, info.frame_width },
-    { StatsReport::kStatsValueNameJitterBufferMs, info.jitter_buffer_ms },
-    { StatsReport::kStatsValueNameMaxDecodeMs, info.max_decode_ms },
-    { StatsReport::kStatsValueNameMinPlayoutDelayMs,
-      info.min_playout_delay_ms },
-    { StatsReport::kStatsValueNameNacksSent, info.nacks_sent },
-    { StatsReport::kStatsValueNamePacketsLost, info.packets_lost },
-    { StatsReport::kStatsValueNamePacketsReceived, info.packets_rcvd },
-    { StatsReport::kStatsValueNamePlisSent, info.plis_sent },
-    { StatsReport::kStatsValueNameRenderDelayMs, info.render_delay_ms },
-    { StatsReport::kStatsValueNameTargetDelayMs, info.target_delay_ms },
-    { StatsReport::kStatsValueNameFramesDecoded, info.frames_decoded },
+      {StatsReport::kStatsValueNameCurrentDelayMs, info.current_delay_ms},
+      {StatsReport::kStatsValueNameDecodeMs, info.decode_ms},
+      {StatsReport::kStatsValueNameFirsSent, info.firs_sent},
+      {StatsReport::kStatsValueNameFrameHeightReceived, info.frame_height},
+      {StatsReport::kStatsValueNameFrameRateDecoded, info.framerate_decoded},
+      {StatsReport::kStatsValueNameFrameRateOutput, info.framerate_output},
+      {StatsReport::kStatsValueNameFrameRateReceived, info.framerate_rcvd},
+      {StatsReport::kStatsValueNameFrameWidthReceived, info.frame_width},
+      {StatsReport::kStatsValueNameJitterBufferMs, info.jitter_buffer_ms},
+      {StatsReport::kStatsValueNameMaxDecodeMs, info.max_decode_ms},
+      {StatsReport::kStatsValueNameMinPlayoutDelayMs,
+       info.min_playout_delay_ms},
+      {StatsReport::kStatsValueNameNacksSent, info.nacks_sent},
+      {StatsReport::kStatsValueNamePacketsLost, info.packets_lost},
+      {StatsReport::kStatsValueNamePacketsReceived, info.packets_rcvd},
+      {StatsReport::kStatsValueNamePlisSent, info.plis_sent},
+      {StatsReport::kStatsValueNameRenderDelayMs, info.render_delay_ms},
+      {StatsReport::kStatsValueNameTargetDelayMs, info.target_delay_ms},
+      {StatsReport::kStatsValueNameFramesDecoded, info.frames_decoded},
   };
 
   for (const auto& i : ints)
@@ -345,14 +342,14 @@ void ExtractStats(const cricket::BandwidthEstimationInfo& info,
 
   report->set_timestamp(stats_gathering_started);
   const IntForAdd ints[] = {
-    { StatsReport::kStatsValueNameAvailableSendBandwidth,
-      info.available_send_bandwidth },
-    { StatsReport::kStatsValueNameAvailableReceiveBandwidth,
-      info.available_recv_bandwidth },
-    { StatsReport::kStatsValueNameTargetEncBitrate, info.target_enc_bitrate },
-    { StatsReport::kStatsValueNameActualEncBitrate, info.actual_enc_bitrate },
-    { StatsReport::kStatsValueNameRetransmitBitrate, info.retransmit_bitrate },
-    { StatsReport::kStatsValueNameTransmitBitrate, info.transmit_bitrate },
+      {StatsReport::kStatsValueNameAvailableSendBandwidth,
+       info.available_send_bandwidth},
+      {StatsReport::kStatsValueNameAvailableReceiveBandwidth,
+       info.available_recv_bandwidth},
+      {StatsReport::kStatsValueNameTargetEncBitrate, info.target_enc_bitrate},
+      {StatsReport::kStatsValueNameActualEncBitrate, info.actual_enc_bitrate},
+      {StatsReport::kStatsValueNameRetransmitBitrate, info.retransmit_bitrate},
+      {StatsReport::kStatsValueNameTransmitBitrate, info.transmit_bitrate},
   };
   for (const auto& i : ints)
     report->AddInt(i.name, i.value);
@@ -375,7 +372,7 @@ void ExtractRemoteStats(const cricket::MediaReceiverInfo& info,
 // In order to use the template, the functions that are called from it,
 // ExtractStats and ExtractRemoteStats, must be defined and overloaded
 // for each type.
-template<typename T>
+template <typename T>
 void ExtractStatsFromList(const std::vector<T>& data,
                           const StatsReport::Id& transport_id,
                           StatsCollector* collector,
@@ -384,8 +381,8 @@ void ExtractStatsFromList(const std::vector<T>& data,
     uint32_t ssrc = d.ssrc();
     // Each track can have stats for both local and remote objects.
     // TODO(hta): Handle the case of multiple SSRCs per object.
-    StatsReport* report = collector->PrepareReport(true, ssrc, transport_id,
-                                                   direction);
+    StatsReport* report =
+        collector->PrepareReport(true, ssrc, transport_id, direction);
     if (report)
       ExtractStats(d, report);
 
@@ -430,6 +427,8 @@ const char* AdapterTypeToStatsType(rtc::AdapterType type) {
       return STATSREPORT_ADAPTER_TYPE_VPN;
     case rtc::ADAPTER_TYPE_LOOPBACK:
       return STATSREPORT_ADAPTER_TYPE_LOOPBACK;
+    case rtc::ADAPTER_TYPE_ANY:
+      return STATSREPORT_ADAPTER_TYPE_WILDCARD;
     default:
       RTC_NOTREACHED();
       return "";
@@ -447,8 +446,7 @@ StatsCollector::~StatsCollector() {
 
 // Wallclock time in ms.
 double StatsCollector::GetTimeNow() {
-  return rtc::TimeUTCMicros() /
-         static_cast<double>(rtc::kNumMicrosecsPerMillisec);
+  return static_cast<double>(rtc::TimeUTCMillis());
 }
 
 // Adds a MediaStream with tracks that can be used as a |selector| in a call
@@ -529,8 +527,8 @@ void StatsCollector::GetStats(MediaStreamTrackInterface* track,
   if (report)
     reports->push_back(report);
 
-  report = reports_.Find(StatsReport::NewTypedId(
-      StatsReport::kStatsReportTypeTrack, track->id()));
+  report = reports_.Find(
+      StatsReport::NewTypedId(StatsReport::kStatsReportTypeTrack, track->id()));
 
   if (!report)
     return;
@@ -549,8 +547,8 @@ void StatsCollector::GetStats(MediaStreamTrackInterface* track,
   }
 }
 
-void
-StatsCollector::UpdateStats(PeerConnectionInterface::StatsOutputLevel level) {
+void StatsCollector::UpdateStats(
+    PeerConnectionInterface::StatsOutputLevel level) {
   RTC_DCHECK(pc_->signaling_thread()->IsCurrent());
   double time_now = GetTimeNow();
   // Calls to UpdateStats() that occur less than kMinGatherStatsPeriod number of
@@ -576,33 +574,29 @@ StatsCollector::UpdateStats(PeerConnectionInterface::StatsOutputLevel level) {
   UpdateTrackReports();
 }
 
-StatsReport* StatsCollector::PrepareReport(
-    bool local,
-    uint32_t ssrc,
-    const StatsReport::Id& transport_id,
-    StatsReport::Direction direction) {
+StatsReport* StatsCollector::PrepareReport(bool local,
+                                           uint32_t ssrc,
+                                           const StatsReport::Id& transport_id,
+                                           StatsReport::Direction direction) {
   RTC_DCHECK(pc_->signaling_thread()->IsCurrent());
   StatsReport::Id id(StatsReport::NewIdWithDirection(
       local ? StatsReport::kStatsReportTypeSsrc
             : StatsReport::kStatsReportTypeRemoteSsrc,
-      rtc::ToString<uint32_t>(ssrc), direction));
+      rtc::ToString(ssrc), direction));
   StatsReport* report = reports_.Find(id);
 
   // Use the ID of the track that is currently mapped to the SSRC, if any.
   std::string track_id;
   if (!GetTrackIdBySsrc(ssrc, &track_id, direction)) {
-    if (!report) {
-      // The ssrc is not used by any track or existing report, return NULL
-      // in such case to indicate no report is prepared for the ssrc.
-      return NULL;
+    // The SSRC is not used by any existing track (or lookup failed since the
+    // SSRC wasn't signaled in SDP). Try copying the track ID from a previous
+    // report: if one exists.
+    if (report) {
+      const StatsReport::Value* v =
+          report->FindValue(StatsReport::kStatsValueNameTrackId);
+      if (v)
+        track_id = v->string_val();
     }
-
-    // The ssrc is not used by any existing track. Keeps the old track id
-    // since we want to report the stats for inactive ssrc.
-    const StatsReport::Value* v =
-        report->FindValue(StatsReport::kStatsValueNameTrackId);
-    if (v)
-      track_id = v->string_val();
   }
 
   if (!report)
@@ -612,7 +606,9 @@ StatsReport* StatsCollector::PrepareReport(
   report->set_timestamp(stats_gathering_started_);
 
   report->AddInt64(StatsReport::kStatsValueNameSsrc, ssrc);
-  report->AddString(StatsReport::kStatsValueNameTrackId, track_id);
+  if (!track_id.empty()) {
+    report->AddString(StatsReport::kStatsValueNameTrackId, track_id);
+  }
   // Add the mapping of SSRC to transport.
   report->AddId(StatsReport::kStatsValueNameTransportId, transport_id);
   return report;
@@ -652,18 +648,20 @@ StatsReport* StatsCollector::AddCertificateReports(
 }
 
 StatsReport* StatsCollector::AddConnectionInfoReport(
-    const std::string& content_name, int component, int connection_id,
+    const std::string& content_name,
+    int component,
+    int connection_id,
     const StatsReport::Id& channel_report_id,
     const cricket::ConnectionInfo& info) {
-  StatsReport::Id id(StatsReport::NewCandidatePairId(content_name, component,
-                                                     connection_id));
+  StatsReport::Id id(
+      StatsReport::NewCandidatePairId(content_name, component, connection_id));
   StatsReport* report = reports_.ReplaceOrAddNew(id);
   report->set_timestamp(stats_gathering_started_);
 
   const BoolForAdd bools[] = {
-    {StatsReport::kStatsValueNameActiveConnection, info.best_connection},
-    {StatsReport::kStatsValueNameReceiving, info.receiving},
-    {StatsReport::kStatsValueNameWritable, info.writable},
+      {StatsReport::kStatsValueNameActiveConnection, info.best_connection},
+      {StatsReport::kStatsValueNameReceiving, info.receiving},
+      {StatsReport::kStatsValueNameWritable, info.writable},
   };
   for (const auto& b : bools)
     report->AddBoolean(b.name, b.value);
@@ -720,18 +718,6 @@ StatsReport* StatsCollector::AddCandidateReport(
     if (local) {
       report->AddString(StatsReport::kStatsValueNameCandidateNetworkType,
                         AdapterTypeToStatsType(candidate.network_type()));
-      if (candidate_stats.stun_stats.has_value()) {
-        const auto& stun_stats = candidate_stats.stun_stats.value();
-        report->AddInt64(StatsReport::kStatsValueNameSentStunKeepaliveRequests,
-                         stun_stats.stun_binding_requests_sent);
-        report->AddInt64(StatsReport::kStatsValueNameRecvStunKeepaliveResponses,
-                         stun_stats.stun_binding_responses_received);
-        report->AddFloat(StatsReport::kStatsValueNameStunKeepaliveRttTotal,
-                         stun_stats.stun_binding_rtt_ms_total);
-        report->AddFloat(
-            StatsReport::kStatsValueNameStunKeepaliveRttSquaredTotal,
-            stun_stats.stun_binding_rtt_ms_squared_total);
-      }
     }
     report->AddString(StatsReport::kStatsValueNameCandidateIPAddress,
                       candidate.address().ipaddr().ToString());
@@ -743,6 +729,18 @@ StatsReport* StatsCollector::AddCandidateReport(
                       IceCandidateTypeToStatsType(candidate.type()));
     report->AddString(StatsReport::kStatsValueNameCandidateTransportType,
                       candidate.protocol());
+  }
+
+  if (local && candidate_stats.stun_stats.has_value()) {
+    const auto& stun_stats = candidate_stats.stun_stats.value();
+    report->AddInt64(StatsReport::kStatsValueNameSentStunKeepaliveRequests,
+                     stun_stats.stun_binding_requests_sent);
+    report->AddInt64(StatsReport::kStatsValueNameRecvStunKeepaliveResponses,
+                     stun_stats.stun_binding_responses_received);
+    report->AddFloat(StatsReport::kStatsValueNameStunKeepaliveRttTotal,
+                     stun_stats.stun_binding_rtt_ms_total);
+    report->AddFloat(StatsReport::kStatsValueNameStunKeepaliveRttSquaredTotal,
+                     stun_stats.stun_binding_rtt_ms_squared_total);
   }
 
   return report;
@@ -842,7 +840,7 @@ void StatsCollector::ExtractSessionInfo() {
 
       int connection_id = 0;
       for (const cricket::ConnectionInfo& info :
-               channel_iter.connection_infos) {
+           channel_iter.connection_infos) {
         StatsReport* connection_report = AddConnectionInfoReport(
             transport_name, channel_iter.component, connection_id++,
             channel_report->id(), info);
@@ -1006,8 +1004,8 @@ void StatsCollector::ExtractSenderInfo() {
       continue;
     }
     const StatsReport::Id stats_id = StatsReport::NewIdWithDirection(
-        StatsReport::kStatsReportTypeSsrc,
-        rtc::ToString<uint32_t>(sender->ssrc()), StatsReport::kSend);
+        StatsReport::kStatsReportTypeSsrc, rtc::ToString(sender->ssrc()),
+        StatsReport::kSend);
     StatsReport* report = reports_.FindOrAddNew(stats_id);
     report->AddInt(StatsReport::kStatsValueNameFrameWidthInput,
                    stats.input_width);
@@ -1053,9 +1051,8 @@ void StatsCollector::UpdateStatsFromExistingLocalAudioTracks(
   for (const auto& it : local_audio_tracks_) {
     AudioTrackInterface* track = it.first;
     uint32_t ssrc = it.second;
-    StatsReport* report =
-        GetReport(StatsReport::kStatsReportTypeSsrc,
-                  rtc::ToString<uint32_t>(ssrc), StatsReport::kSend);
+    StatsReport* report = GetReport(StatsReport::kStatsReportTypeSsrc,
+                                    rtc::ToString(ssrc), StatsReport::kSend);
     if (report == NULL) {
       // This can happen if a local audio track is added to a stream on the
       // fly and the report has not been set up yet. Do nothing in this case.

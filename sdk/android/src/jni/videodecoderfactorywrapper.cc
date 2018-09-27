@@ -16,7 +16,8 @@
 #include "rtc_base/logging.h"
 #include "sdk/android/generated_video_jni/jni/VideoDecoderFactory_jni.h"
 #include "sdk/android/native_api/jni/java_types.h"
-#include "sdk/android/src/jni/wrappednativecodec.h"
+#include "sdk/android/src/jni/videocodecinfo.h"
+#include "sdk/android/src/jni/videodecoderwrapper.h"
 
 namespace webrtc {
 namespace jni {
@@ -25,12 +26,15 @@ VideoDecoderFactoryWrapper::VideoDecoderFactoryWrapper(
     JNIEnv* jni,
     const JavaRef<jobject>& decoder_factory)
     : decoder_factory_(jni, decoder_factory) {}
+VideoDecoderFactoryWrapper::~VideoDecoderFactoryWrapper() = default;
 
 std::unique_ptr<VideoDecoder> VideoDecoderFactoryWrapper::CreateVideoDecoder(
     const SdpVideoFormat& format) {
   JNIEnv* jni = AttachCurrentThreadIfNeeded();
+  ScopedJavaLocalRef<jobject> j_codec_info =
+      SdpVideoFormatToVideoCodecInfo(jni, format);
   ScopedJavaLocalRef<jobject> decoder = Java_VideoDecoderFactory_createDecoder(
-      jni, decoder_factory_, NativeToJavaString(jni, format.name));
+      jni, decoder_factory_, j_codec_info);
   if (!decoder.obj())
     return nullptr;
   return JavaToNativeVideoDecoder(jni, decoder);
@@ -38,8 +42,10 @@ std::unique_ptr<VideoDecoder> VideoDecoderFactoryWrapper::CreateVideoDecoder(
 
 std::vector<SdpVideoFormat> VideoDecoderFactoryWrapper::GetSupportedFormats()
     const {
-  // TODO(andersc): VideoDecoderFactory.java does not have this method.
-  return std::vector<SdpVideoFormat>();
+  JNIEnv* env = AttachCurrentThreadIfNeeded();
+  return JavaToNativeVector<SdpVideoFormat>(
+      env, Java_VideoDecoderFactory_getSupportedCodecs(env, decoder_factory_),
+      &VideoCodecInfoToSdpVideoFormat);
 }
 
 }  // namespace jni

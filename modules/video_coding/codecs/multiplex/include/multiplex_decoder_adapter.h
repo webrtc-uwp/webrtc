@@ -24,9 +24,10 @@ namespace webrtc {
 
 class MultiplexDecoderAdapter : public VideoDecoder {
  public:
-  // |factory| is not owned and expected to outlive this class' lifetime.
-  explicit MultiplexDecoderAdapter(VideoDecoderFactory* factory,
-                                   const SdpVideoFormat& associated_format);
+  // |factory| is not owned and expected to outlive this class.
+  MultiplexDecoderAdapter(VideoDecoderFactory* factory,
+                          const SdpVideoFormat& associated_format,
+                          bool supports_augmenting_data = false);
   virtual ~MultiplexDecoderAdapter();
 
   // Implements VideoDecoder
@@ -34,7 +35,6 @@ class MultiplexDecoderAdapter : public VideoDecoder {
                      int32_t number_of_cores) override;
   int32_t Decode(const EncodedImage& input_image,
                  bool missing_frames,
-                 const RTPFragmentationHeader* fragmentation,
                  const CodecSpecificInfo* codec_specific_info,
                  int64_t render_time_ms) override;
   int32_t RegisterDecodeCompleteCallback(
@@ -43,8 +43,8 @@ class MultiplexDecoderAdapter : public VideoDecoder {
 
   void Decoded(AlphaCodecStream stream_idx,
                VideoFrame* decoded_image,
-               rtc::Optional<int32_t> decode_time_ms,
-               rtc::Optional<uint8_t> qp);
+               absl::optional<int32_t> decode_time_ms,
+               absl::optional<uint8_t> qp);
 
  private:
   // Wrapper class that redirects Decoded() calls.
@@ -53,12 +53,17 @@ class MultiplexDecoderAdapter : public VideoDecoder {
   // Holds the decoded image output of a frame.
   struct DecodedImageData;
 
+  // Holds the augmenting data of an image
+  struct AugmentingData;
+
   void MergeAlphaImages(VideoFrame* decoded_image,
-                        const rtc::Optional<int32_t>& decode_time_ms,
-                        const rtc::Optional<uint8_t>& qp,
+                        const absl::optional<int32_t>& decode_time_ms,
+                        const absl::optional<uint8_t>& qp,
                         VideoFrame* multiplex_decoded_image,
-                        const rtc::Optional<int32_t>& multiplex_decode_time_ms,
-                        const rtc::Optional<uint8_t>& multiplex_qp);
+                        const absl::optional<int32_t>& multiplex_decode_time_ms,
+                        const absl::optional<uint8_t>& multiplex_qp,
+                        std::unique_ptr<uint8_t[]> augmenting_data,
+                        uint16_t augmenting_data_length);
 
   VideoDecoderFactory* const factory_;
   const SdpVideoFormat associated_format_;
@@ -68,6 +73,8 @@ class MultiplexDecoderAdapter : public VideoDecoder {
 
   // Holds YUV or AXX decode output of a frame that is identified by timestamp.
   std::map<uint32_t /* timestamp */, DecodedImageData> decoded_data_;
+  std::map<uint32_t /* timestamp */, AugmentingData> decoded_augmenting_data_;
+  const bool supports_augmenting_data_;
 };
 
 }  // namespace webrtc

@@ -16,7 +16,39 @@
 namespace webrtc {
 namespace video_coding {
 
+// NOTE: This class is still under development and may change without notice.
+struct VideoLayerFrameId {
+  // TODO(philipel): The default ctor is currently used internaly, but have a
+  //                 look if we can remove it.
+  VideoLayerFrameId() : picture_id(-1), spatial_layer(0) {}
+  VideoLayerFrameId(int64_t picture_id, uint8_t spatial_layer)
+      : picture_id(picture_id), spatial_layer(spatial_layer) {}
+
+  bool operator==(const VideoLayerFrameId& rhs) const {
+    return picture_id == rhs.picture_id && spatial_layer == rhs.spatial_layer;
+  }
+
+  bool operator!=(const VideoLayerFrameId& rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator<(const VideoLayerFrameId& rhs) const {
+    if (picture_id == rhs.picture_id)
+      return spatial_layer < rhs.spatial_layer;
+    return picture_id < rhs.picture_id;
+  }
+
+  bool operator<=(const VideoLayerFrameId& rhs) const { return !(rhs < *this); }
+  bool operator>(const VideoLayerFrameId& rhs) const { return rhs < *this; }
+  bool operator>=(const VideoLayerFrameId& rhs) const { return rhs <= *this; }
+
+  int64_t picture_id;
+  uint8_t spatial_layer;
+};
+
 // TODO(philipel): Remove webrtc::VCMEncodedFrame inheritance.
+// TODO(philipel): Move transport specific info out of EncodedFrame.
+// NOTE: This class is still under development and may change without notice.
 class EncodedFrame : public webrtc::VCMEncodedFrame {
  public:
   static const uint8_t kMaxFrameReferences = 5;
@@ -25,9 +57,6 @@ class EncodedFrame : public webrtc::VCMEncodedFrame {
   virtual ~EncodedFrame() {}
 
   virtual bool GetBitstream(uint8_t* destination) const = 0;
-
-  // The capture timestamp of this frame.
-  virtual uint32_t Timestamp() const = 0;
 
   // When this frame was received.
   virtual int64_t ReceivedTime() const = 0;
@@ -38,18 +67,13 @@ class EncodedFrame : public webrtc::VCMEncodedFrame {
   // This information is currently needed by the timing calculation class.
   // TODO(philipel): Remove this function when a new timing class has
   //                 been implemented.
-  virtual bool delayed_by_retransmission() const { return 0; }
+  virtual bool delayed_by_retransmission() const;
 
   size_t size() const { return _length; }
 
   bool is_keyframe() const { return num_references == 0; }
 
-  // The tuple (|picture_id|, |spatial_layer|) uniquely identifies a frame
-  // object. For codec types that don't necessarily have picture ids they
-  // have to be constructed from the header data relevant to that codec.
-  int64_t picture_id = 0;
-  uint8_t spatial_layer = 0;
-  uint32_t timestamp = 0;
+  VideoLayerFrameId id;
 
   // TODO(philipel): Add simple modify/access functions to prevent adding too
   // many |references|.

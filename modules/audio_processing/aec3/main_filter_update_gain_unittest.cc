@@ -24,6 +24,7 @@
 #include "modules/audio_processing/test/echo_canceller_test_tools.h"
 #include "rtc_base/numerics/safe_minmax.h"
 #include "rtc_base/random.h"
+#include "rtc_base/strings/string_builder.h"
 #include "test/gtest.h"
 
 namespace webrtc {
@@ -68,7 +69,7 @@ void RunFilterUpdateTest(int num_blocks_to_process,
       RenderDelayBuffer::Create(config, 3));
   AecState aec_state(config);
   RenderSignalAnalyzer render_signal_analyzer(config);
-  rtc::Optional<DelayEstimate> delay_estimate;
+  absl::optional<DelayEstimate> delay_estimate;
   std::array<float, kFftLength> s_scratch;
   std::array<float, kBlockSize> s;
   FftData S;
@@ -162,8 +163,9 @@ void RunFilterUpdateTest(int num_blocks_to_process,
     aec_state.HandleEchoPathChange(EchoPathVariability(
         false, EchoPathVariability::DelayAdjustment::kNone, false));
     aec_state.Update(delay_estimate, main_filter.FilterFrequencyResponse(),
-                     main_filter.FilterImpulseResponse(), true, false,
-                     *render_delay_buffer->GetRenderBuffer(), E2_main, Y2, s);
+                     main_filter.FilterImpulseResponse(),
+                     *render_delay_buffer->GetRenderBuffer(), E2_main, Y2,
+                     output, y);
   }
 
   std::copy(e_main.begin(), e_main.end(), e_last_block->begin());
@@ -173,16 +175,16 @@ void RunFilterUpdateTest(int num_blocks_to_process,
 }
 
 std::string ProduceDebugText(int filter_length_blocks) {
-  std::ostringstream ss;
+  rtc::StringBuilder ss;
   ss << "Length: " << filter_length_blocks;
-  return ss.str();
+  return ss.Release();
 }
 
 std::string ProduceDebugText(size_t delay, int filter_length_blocks) {
-  std::ostringstream ss;
+  rtc::StringBuilder ss;
   ss << "Delay: " << delay << ", ";
   ss << ProduceDebugText(filter_length_blocks);
-  return ss.str();
+  return ss.Release();
 }
 
 }  // namespace
@@ -221,7 +223,7 @@ TEST(MainFilterUpdateGain, GainCausesFilterToConverge) {
       std::array<float, kBlockSize> y;
       FftData G;
 
-      RunFilterUpdateTest(500, delay_samples, filter_length_blocks,
+      RunFilterUpdateTest(600, delay_samples, filter_length_blocks,
                           blocks_with_echo_path_changes, blocks_with_saturation,
                           false, &e, &y, &G);
 
@@ -241,34 +243,34 @@ TEST(MainFilterUpdateGain, GainCausesFilterToConverge) {
 // Verifies that the magnitude of the gain on average decreases for a
 // persistently exciting signal.
 TEST(MainFilterUpdateGain, DecreasingGain) {
-    std::vector<int> blocks_with_echo_path_changes;
-    std::vector<int> blocks_with_saturation;
+  std::vector<int> blocks_with_echo_path_changes;
+  std::vector<int> blocks_with_saturation;
 
-    std::array<float, kBlockSize> e;
-    std::array<float, kBlockSize> y;
-    FftData G_a;
-    FftData G_b;
-    FftData G_c;
-    std::array<float, kFftLengthBy2Plus1> G_a_power;
-    std::array<float, kFftLengthBy2Plus1> G_b_power;
-    std::array<float, kFftLengthBy2Plus1> G_c_power;
+  std::array<float, kBlockSize> e;
+  std::array<float, kBlockSize> y;
+  FftData G_a;
+  FftData G_b;
+  FftData G_c;
+  std::array<float, kFftLengthBy2Plus1> G_a_power;
+  std::array<float, kFftLengthBy2Plus1> G_b_power;
+  std::array<float, kFftLengthBy2Plus1> G_c_power;
 
-    RunFilterUpdateTest(100, 65, 12, blocks_with_echo_path_changes,
-                        blocks_with_saturation, false, &e, &y, &G_a);
-    RunFilterUpdateTest(300, 65, 12, blocks_with_echo_path_changes,
-                        blocks_with_saturation, false, &e, &y, &G_b);
-    RunFilterUpdateTest(600, 65, 12, blocks_with_echo_path_changes,
-                        blocks_with_saturation, false, &e, &y, &G_c);
+  RunFilterUpdateTest(250, 65, 12, blocks_with_echo_path_changes,
+                      blocks_with_saturation, false, &e, &y, &G_a);
+  RunFilterUpdateTest(500, 65, 12, blocks_with_echo_path_changes,
+                      blocks_with_saturation, false, &e, &y, &G_b);
+  RunFilterUpdateTest(750, 65, 12, blocks_with_echo_path_changes,
+                      blocks_with_saturation, false, &e, &y, &G_c);
 
-    G_a.Spectrum(Aec3Optimization::kNone, G_a_power);
-    G_b.Spectrum(Aec3Optimization::kNone, G_b_power);
-    G_c.Spectrum(Aec3Optimization::kNone, G_c_power);
+  G_a.Spectrum(Aec3Optimization::kNone, G_a_power);
+  G_b.Spectrum(Aec3Optimization::kNone, G_b_power);
+  G_c.Spectrum(Aec3Optimization::kNone, G_c_power);
 
-    EXPECT_GT(std::accumulate(G_a_power.begin(), G_a_power.end(), 0.),
-              std::accumulate(G_b_power.begin(), G_b_power.end(), 0.));
+  EXPECT_GT(std::accumulate(G_a_power.begin(), G_a_power.end(), 0.),
+            std::accumulate(G_b_power.begin(), G_b_power.end(), 0.));
 
-    EXPECT_GT(std::accumulate(G_b_power.begin(), G_b_power.end(), 0.),
-              std::accumulate(G_c_power.begin(), G_c_power.end(), 0.));
+  EXPECT_GT(std::accumulate(G_b_power.begin(), G_b_power.end(), 0.),
+            std::accumulate(G_c_power.begin(), G_c_power.end(), 0.));
 }
 
 // Verifies that the gain is zero when there is saturation and that the internal

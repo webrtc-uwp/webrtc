@@ -11,9 +11,12 @@
 #include <iostream>
 
 #include "modules/audio_processing/test/aec_dump_based_simulator.h"
+#include "modules/audio_processing/test/runtime_setting_util.h"
 
 #include "modules/audio_processing/test/protobuf_utils.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/numerics/safe_conversions.h"
 
 namespace webrtc {
 namespace test {
@@ -62,8 +65,10 @@ bool VerifyFloatBitExactness(const webrtc::audioproc::Stream& msg,
 
 }  // namespace
 
-AecDumpBasedSimulator::AecDumpBasedSimulator(const SimulationSettings& settings)
-    : AudioProcessingSimulator(settings) {}
+AecDumpBasedSimulator::AecDumpBasedSimulator(
+    const SimulationSettings& settings,
+    std::unique_ptr<AudioProcessingBuilder> ap_builder)
+    : AudioProcessingSimulator(settings, std::move(ap_builder)) {}
 
 AecDumpBasedSimulator::~AecDumpBasedSimulator() = default;
 
@@ -130,23 +135,16 @@ void AecDumpBasedSimulator::PrepareProcessStreamCall(
     }
   }
 
-  if (!settings_.stream_delay) {
-    if (msg.has_delay()) {
+  if (!settings_.use_stream_delay || *settings_.use_stream_delay) {
+    if (!settings_.stream_delay) {
+      if (msg.has_delay()) {
+        RTC_CHECK_EQ(AudioProcessing::kNoError,
+                     ap_->set_stream_delay_ms(msg.delay()));
+      }
+    } else {
       RTC_CHECK_EQ(AudioProcessing::kNoError,
-                   ap_->set_stream_delay_ms(msg.delay()));
+                   ap_->set_stream_delay_ms(*settings_.stream_delay));
     }
-  } else {
-    RTC_CHECK_EQ(AudioProcessing::kNoError,
-                 ap_->set_stream_delay_ms(*settings_.stream_delay));
-  }
-
-  if (!settings_.stream_drift_samples) {
-    if (msg.has_drift()) {
-      ap_->echo_cancellation()->set_stream_drift_samples(msg.drift());
-    }
-  } else {
-    ap_->echo_cancellation()->set_stream_drift_samples(
-        *settings_.stream_drift_samples);
   }
 
   if (!settings_.use_ts) {
@@ -248,8 +246,12 @@ void AecDumpBasedSimulator::Process() {
         RTC_CHECK(event_msg.has_config());
         HandleMessage(event_msg.config());
         break;
-      default:
+      case webrtc::audioproc::Event::RUNTIME_SETTING:
+        HandleMessage(event_msg.runtime_setting());
+        break;
+      case webrtc::audioproc::Event::UNKNOWN_EVENT:
         RTC_CHECK(false);
+        break;
     }
   }
 
@@ -272,12 +274,11 @@ void AecDumpBasedSimulator::HandleMessage(
       std::cout << "Setting used in config:" << std::endl;
     }
     Config config;
-    AudioProcessing::Config apm_config;
+    AudioProcessing::Config apm_config = ap_->GetConfig();
 
     if (msg.has_aec_enabled() || settings_.use_aec) {
       bool enable = settings_.use_aec ? *settings_.use_aec : msg.aec_enabled();
-      RTC_CHECK_EQ(AudioProcessing::kNoError,
-                   ap_->echo_cancellation()->Enable(enable));
+      apm_config.echo_canceller.enabled = enable;
       if (settings_.use_verbose_logging) {
         std::cout << " aec_enabled: " << (enable ? "true" : "false")
                   << std::endl;
@@ -297,14 +298,11 @@ void AecDumpBasedSimulator::HandleMessage(
 
     if (msg.has_aec_drift_compensation_enabled() ||
         settings_.use_drift_compensation) {
-      bool enable = settings_.use_drift_compensation
-                        ? *settings_.use_drift_compensation
-                        : msg.aec_drift_compensation_enabled();
-      RTC_CHECK_EQ(AudioProcessing::kNoError,
-                   ap_->echo_cancellation()->enable_drift_compensation(enable));
-      if (settings_.use_verbose_logging) {
-        std::cout << " aec_drift_compensation_enabled: "
-                  << (enable ? "true" : "false") << std::endl;
+      if (settings_.use_drift_compensation
+              ? *settings_.use_drift_compensation
+              : msg.aec_drift_compensation_enabled()) {
+        RTC_LOG(LS_ERROR)
+            << "Ignoring deprecated setting: AEC2 drift compensation";
       }
     }
 
@@ -321,23 +319,28 @@ void AecDumpBasedSimulator::HandleMessage(
     }
 
     if (msg.has_aec_suppression_level() || settings_.aec_suppression_level) {
-      int level = settings_.aec_suppression_level
-                      ? *settings_.aec_suppression_level
-                      : msg.aec_suppression_level();
-      RTC_CHECK_EQ(
-          AudioProcessing::kNoError,
-          ap_->echo_cancellation()->set_suppression_level(
-              static_cast<webrtc::EchoCancellation::SuppressionLevel>(level)));
-      if (settings_.use_verbose_logging) {
-        std::cout << " aec_suppression_level: " << level << std::endl;
+      auto level = static_cast<webrtc::EchoCancellation::SuppressionLevel>(
+          settings_.aec_suppression_level ? *settings_.aec_suppression_level
+                                          : msg.aec_suppression_level());
+      if (level ==
+          webrtc::EchoCancellation::SuppressionLevel::kLowSuppression) {
+        RTC_LOG(LS_ERROR)
+            << "Ignoring deprecated setting: AEC2 low suppression";
+      } else {
+        apm_config.echo_canceller.legacy_moderate_suppression_level =
+            (level ==
+             webrtc::EchoCancellation::SuppressionLevel::kModerateSuppression);
+        if (settings_.use_verbose_logging) {
+          std::cout << " aec_suppression_level: " << level << std::endl;
+        }
       }
     }
 
     if (msg.has_aecm_enabled() || settings_.use_aecm) {
       bool enable =
           settings_.use_aecm ? *settings_.use_aecm : msg.aecm_enabled();
-      RTC_CHECK_EQ(AudioProcessing::kNoError,
-                   ap_->echo_control_mobile()->Enable(enable));
+      apm_config.echo_canceller.enabled |= enable;
+      apm_config.echo_canceller.mobile_mode = enable;
       if (settings_.use_verbose_logging) {
         std::cout << " aecm_enabled: " << (enable ? "true" : "false")
                   << std::endl;
@@ -423,16 +426,6 @@ void AecDumpBasedSimulator::HandleMessage(
       }
     }
 
-    if (msg.has_intelligibility_enhancer_enabled() || settings_.use_ie) {
-      bool enable = settings_.use_ie ? *settings_.use_ie
-                                     : msg.intelligibility_enhancer_enabled();
-      config.Set<Intelligibility>(new Intelligibility(enable));
-      if (settings_.use_verbose_logging) {
-        std::cout << " intelligibility_enhancer_enabled: "
-                  << (enable ? "true" : "false") << std::endl;
-      }
-    }
-
     if (msg.has_hpf_enabled() || settings_.use_hpf) {
       bool enable = settings_.use_hpf ? *settings_.use_hpf : msg.hpf_enabled();
       apm_config.high_pass_filter.enabled = enable;
@@ -462,6 +455,15 @@ void AecDumpBasedSimulator::HandleMessage(
       }
     }
 
+    if (msg.has_pre_amplifier_enabled() || settings_.use_pre_amplifier) {
+      const bool enable = settings_.use_pre_amplifier
+                              ? *settings_.use_pre_amplifier
+                              : msg.pre_amplifier_enabled();
+      apm_config.pre_amplifier.enabled = enable;
+      apm_config.pre_amplifier.fixed_gain_factor =
+          settings_.pre_amplifier_gain_factor;
+    }
+
     if (settings_.use_verbose_logging && msg.has_experiments_description() &&
         !msg.experiments_description().empty()) {
       std::cout << " experiments not included by default in the simulation: "
@@ -471,10 +473,6 @@ void AecDumpBasedSimulator::HandleMessage(
     if (settings_.use_refined_adaptive_filter) {
       config.Set<RefinedAdaptiveFilter>(
           new RefinedAdaptiveFilter(*settings_.use_refined_adaptive_filter));
-    }
-
-    if (settings_.use_lc) {
-      apm_config.level_controller.enabled = *settings_.use_lc;
     }
 
     if (settings_.use_ed) {
@@ -551,6 +549,12 @@ void AecDumpBasedSimulator::HandleMessage(
     const webrtc::audioproc::ReverseStream& msg) {
   PrepareReverseProcessStreamCall(msg);
   ProcessReverseStream(interface_used_ == InterfaceType::kFixedInterface);
+}
+
+void AecDumpBasedSimulator::HandleMessage(
+    const webrtc::audioproc::RuntimeSetting& msg) {
+  RTC_CHECK(ap_.get());
+  ReplayRuntimeSetting(ap_.get(), msg);
 }
 
 }  // namespace test

@@ -17,8 +17,8 @@
 
 #include "api/turncustomizer.h"
 #include "p2p/base/portallocator.h"
-#include "p2p/client/turnportfactory.h"
 #include "p2p/client/relayportfactoryinterface.h"
+#include "p2p/client/turnportfactory.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/messagequeue.h"
 #include "rtc_base/network.h"
@@ -47,13 +47,22 @@ class BasicPortAllocator : public PortAllocator {
 
   // Set to kDefaultNetworkIgnoreMask by default.
   void SetNetworkIgnoreMask(int network_ignore_mask) override;
-  int network_ignore_mask() const { return network_ignore_mask_; }
+  int network_ignore_mask() const {
+    CheckRunOnValidThreadIfInitialized();
+    return network_ignore_mask_;
+  }
 
-  rtc::NetworkManager* network_manager() const { return network_manager_; }
+  rtc::NetworkManager* network_manager() const {
+    CheckRunOnValidThreadIfInitialized();
+    return network_manager_;
+  }
 
   // If socket_factory() is set to NULL each PortAllocatorSession
   // creates its own socket factory.
-  rtc::PacketSocketFactory* socket_factory() { return socket_factory_; }
+  rtc::PacketSocketFactory* socket_factory() {
+    CheckRunOnValidThreadIfInitialized();
+    return socket_factory_;
+  }
 
   PortAllocatorSession* CreateSessionInternal(
       const std::string& content_name,
@@ -65,6 +74,7 @@ class BasicPortAllocator : public PortAllocator {
   void AddTurnServer(const RelayServerConfig& turn_server);
 
   RelayPortFactoryInterface* relay_port_factory() {
+    CheckRunOnValidThreadIfInitialized();
     return relay_port_factory_;
   }
 
@@ -128,7 +138,7 @@ class BasicPortAllocatorSession : public PortAllocatorSession,
   void RegatherOnFailedNetworks() override;
   void RegatherOnAllNetworks() override;
   void SetStunKeepaliveIntervalForReadyPorts(
-      const rtc::Optional<int>& stun_keepalive_interval) override;
+      const absl::optional<int>& stun_keepalive_interval) override;
   void PruneAllPorts() override;
 
  protected:
@@ -176,9 +186,7 @@ class BasicPortAllocatorSession : public PortAllocatorSession,
       }
       has_pairable_candidate_ = has_pairable_candidate;
     }
-    void set_complete() {
-      state_ = STATE_COMPLETE;
-    }
+    void set_complete() { state_ = STATE_COMPLETE; }
     void set_error() {
       RTC_DCHECK(state_ == STATE_INPROGRESS);
       state_ = STATE_ERROR;
@@ -208,7 +216,8 @@ class BasicPortAllocatorSession : public PortAllocatorSession,
   void DisableEquivalentPhases(rtc::Network* network,
                                PortConfiguration* config,
                                uint32_t* flags);
-  void AddAllocatedPort(Port* port, AllocationSequence* seq,
+  void AddAllocatedPort(Port* port,
+                        AllocationSequence* seq,
                         bool prepare_address);
   void OnCandidateReady(Port* port, const Candidate& c);
   void OnPortComplete(Port* port);
@@ -298,8 +307,8 @@ struct PortConfiguration : public rtc::MessageData {
   bool SupportsProtocol(RelayType turn_type, ProtocolType type) const;
   // Helper method returns the server addresses for the matching RelayType and
   // Protocol type.
-  ServerAddresses GetRelayServerAddresses(
-      RelayType turn_type, ProtocolType type) const;
+  ServerAddresses GetRelayServerAddresses(RelayType turn_type,
+                                          ProtocolType type) const;
 };
 
 class UDPPort;

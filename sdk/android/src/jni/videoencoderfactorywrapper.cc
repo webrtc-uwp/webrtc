@@ -17,7 +17,7 @@
 #include "sdk/android/native_api/jni/class_loader.h"
 #include "sdk/android/native_api/jni/java_types.h"
 #include "sdk/android/src/jni/videocodecinfo.h"
-#include "sdk/android/src/jni/wrappednativecodec.h"
+#include "sdk/android/src/jni/videoencoderwrapper.h"
 
 namespace webrtc {
 namespace jni {
@@ -31,6 +31,7 @@ VideoEncoderFactoryWrapper::VideoEncoderFactoryWrapper(
   supported_formats_ = JavaToNativeVector<SdpVideoFormat>(
       jni, j_supported_codecs, &VideoCodecInfoToSdpVideoFormat);
 }
+VideoEncoderFactoryWrapper::~VideoEncoderFactoryWrapper() = default;
 
 std::unique_ptr<VideoEncoder> VideoEncoderFactoryWrapper::CreateVideoEncoder(
     const SdpVideoFormat& format) {
@@ -44,6 +45,11 @@ std::unique_ptr<VideoEncoder> VideoEncoderFactoryWrapper::CreateVideoEncoder(
   return JavaToNativeVideoEncoder(jni, encoder);
 }
 
+std::vector<SdpVideoFormat> VideoEncoderFactoryWrapper::GetSupportedFormats()
+    const {
+  return supported_formats_;
+}
+
 VideoEncoderFactory::CodecInfo VideoEncoderFactoryWrapper::QueryVideoEncoder(
     const SdpVideoFormat& format) const {
   JNIEnv* jni = AttachCurrentThreadIfNeeded();
@@ -54,7 +60,7 @@ VideoEncoderFactory::CodecInfo VideoEncoderFactoryWrapper::QueryVideoEncoder(
 
   CodecInfo codec_info;
   // Check if this is a wrapped native software encoder implementation.
-  codec_info.is_hardware_accelerated = !IsWrappedSoftwareEncoder(jni, encoder);
+  codec_info.is_hardware_accelerated = IsHardwareVideoEncoder(jni, encoder);
   codec_info.has_internal_source = false;
   return codec_info;
 }

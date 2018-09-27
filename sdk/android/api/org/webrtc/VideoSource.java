@@ -10,13 +10,17 @@
 
 package org.webrtc;
 
+import javax.annotation.Nullable;
+
 /**
  * Java wrapper of native AndroidVideoTrackSource.
  */
-@JNINamespace("webrtc::jni")
 public class VideoSource extends MediaSource {
+  private final NativeCapturerObserver capturerObserver;
+
   public VideoSource(long nativeSource) {
     super(nativeSource);
+    this.capturerObserver = new NativeCapturerObserver(nativeGetInternalSource(nativeSource));
   }
 
   /**
@@ -29,5 +33,11 @@ public class VideoSource extends MediaSource {
     nativeAdaptOutputFormat(nativeSource, width, height, fps);
   }
 
+  public CapturerObserver getCapturerObserver() {
+    return capturerObserver;
+  }
+
+  // Returns source->internal() from webrtc::VideoTrackSourceProxy.
+  private static native long nativeGetInternalSource(long source);
   private static native void nativeAdaptOutputFormat(long source, int width, int height, int fps);
 }

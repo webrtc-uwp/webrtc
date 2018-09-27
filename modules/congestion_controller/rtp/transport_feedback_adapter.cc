@@ -19,6 +19,7 @@
 #include "rtc_base/numerics/mod_ops.h"
 
 namespace webrtc {
+namespace webrtc_cc {
 
 const int64_t kNoTimestamp = -1;
 const int64_t kSendTimeHistoryWindowMs = 60000;
@@ -82,7 +83,7 @@ void TransportFeedbackAdapter::OnSentPacket(uint16_t sequence_number,
   send_time_history_.OnSentPacket(sequence_number, send_time_ms);
 }
 
-rtc::Optional<PacketFeedback> TransportFeedbackAdapter::GetPacket(
+absl::optional<PacketFeedback> TransportFeedbackAdapter::GetPacket(
     uint16_t sequence_number) const {
   rtc::CritScope cs(&lock_);
   return send_time_history_.GetPacket(sequence_number);
@@ -188,4 +189,5 @@ size_t TransportFeedbackAdapter::GetOutstandingBytes() const {
   rtc::CritScope cs(&lock_);
   return send_time_history_.GetOutstandingBytes(local_net_id_, remote_net_id_);
 }
+}  // namespace webrtc_cc
 }  // namespace webrtc

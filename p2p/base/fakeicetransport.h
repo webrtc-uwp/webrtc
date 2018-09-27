@@ -85,7 +85,9 @@ class FakeIceTransport : public IceTransportInternal {
   }
 
   // Convenience functions for accessing ICE config and other things.
-  int receiving_timeout() const { return ice_config_.receiving_timeout; }
+  int receiving_timeout() const {
+    return ice_config_.receiving_timeout_or_default();
+  }
   bool gather_continually() const { return ice_config_.gather_continually(); }
   const Candidates& remote_candidates() const { return remote_candidates_; }
 
@@ -166,10 +168,7 @@ class FakeIceTransport : public IceTransportInternal {
     return true;
   }
 
-  rtc::Optional<int> GetRttEstimate() override { return rtc::nullopt; }
-
-  void SetMetricsObserver(webrtc::MetricsObserverInterface* observer) override {
-  }
+  absl::optional<int> GetRttEstimate() override { return absl::nullopt; }
 
   // Fake PacketTransportInternal implementation.
   bool writable() const override { return writable_; }
@@ -222,10 +221,10 @@ class FakeIceTransport : public IceTransportInternal {
 
   rtc::CopyOnWriteBuffer last_sent_packet() { return last_sent_packet_; }
 
-  rtc::Optional<rtc::NetworkRoute> network_route() const override {
+  absl::optional<rtc::NetworkRoute> network_route() const override {
     return network_route_;
   }
-  void SetNetworkRoute(rtc::Optional<rtc::NetworkRoute> network_route) {
+  void SetNetworkRoute(absl::optional<rtc::NetworkRoute> network_route) {
     network_route_ = network_route;
   }
 
@@ -280,7 +279,7 @@ class FakeIceTransport : public IceTransportInternal {
   bool receiving_ = false;
   bool combine_outgoing_packets_ = false;
   rtc::CopyOnWriteBuffer send_packet_;
-  rtc::Optional<rtc::NetworkRoute> network_route_;
+  absl::optional<rtc::NetworkRoute> network_route_;
   std::map<rtc::Socket::Option, int> socket_options_;
   rtc::CopyOnWriteBuffer last_sent_packet_;
 };

@@ -28,13 +28,13 @@ namespace jni {
 class VideoDecoderWrapper : public VideoDecoder {
  public:
   VideoDecoderWrapper(JNIEnv* jni, const JavaRef<jobject>& decoder);
+  ~VideoDecoderWrapper() override;
 
   int32_t InitDecode(const VideoCodec* codec_settings,
                      int32_t number_of_cores) override;
 
   int32_t Decode(const EncodedImage& input_image,
                  bool missing_frames,
-                 const RTPFragmentationHeader* fragmentation,
                  const CodecSpecificInfo* codec_specific_info,
                  int64_t render_time_ms) override;
 
@@ -66,7 +66,11 @@ class VideoDecoderWrapper : public VideoDecoder {
 
     uint32_t timestamp_rtp;
     int64_t timestamp_ntp;
-    rtc::Optional<uint8_t> qp;
+    absl::optional<uint8_t> qp;
+
+    FrameExtraInfo();
+    FrameExtraInfo(const FrameExtraInfo&);
+    ~FrameExtraInfo();
   };
 
   int32_t InitDecodeInternal(JNIEnv* jni) RTC_RUN_ON(decoder_thread_checker_);
@@ -78,7 +82,7 @@ class VideoDecoderWrapper : public VideoDecoder {
                            const char* method_name)
       RTC_RUN_ON(decoder_thread_checker_);
 
-  rtc::Optional<uint8_t> ParseQP(const EncodedImage& input_image)
+  absl::optional<uint8_t> ParseQP(const EncodedImage& input_image)
       RTC_RUN_ON(decoder_thread_checker_);
 
   const ScopedJavaGlobalRef<jobject> decoder_;
@@ -105,6 +109,13 @@ class VideoDecoderWrapper : public VideoDecoder {
   std::deque<FrameExtraInfo> frame_extra_infos_
       RTC_GUARDED_BY(frame_extra_infos_lock_);
 };
+
+/* If the j_decoder is a wrapped native decoder, unwrap it. If it is not,
+ * wrap it in a VideoDecoderWrapper.
+ */
+std::unique_ptr<VideoDecoder> JavaToNativeVideoDecoder(
+    JNIEnv* jni,
+    const JavaRef<jobject>& j_decoder);
 
 }  // namespace jni
 }  // namespace webrtc

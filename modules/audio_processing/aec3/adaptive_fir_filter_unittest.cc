@@ -10,14 +10,17 @@
 
 #include "modules/audio_processing/aec3/adaptive_fir_filter.h"
 
+// Defines WEBRTC_ARCH_X86_FAMILY, used below.
+#include "rtc_base/system/arch.h"
+
 #include <math.h>
 #include <algorithm>
 #include <numeric>
 #include <string>
-#include "typedefs.h"  // NOLINT(build/include)
 #if defined(WEBRTC_ARCH_X86_FAMILY)
 #include <emmintrin.h>
 #endif
+
 #include "modules/audio_processing/aec3/aec3_fft.h"
 #include "modules/audio_processing/aec3/aec_state.h"
 #include "modules/audio_processing/aec3/cascaded_biquad_filter.h"
@@ -29,6 +32,7 @@
 #include "rtc_base/arraysize.h"
 #include "rtc_base/numerics/safe_minmax.h"
 #include "rtc_base/random.h"
+#include "rtc_base/strings/string_builder.h"
 #include "system_wrappers/include/cpu_features_wrapper.h"
 #include "test/gtest.h"
 
@@ -37,9 +41,9 @@ namespace aec3 {
 namespace {
 
 std::string ProduceDebugText(size_t delay) {
-  std::ostringstream ss;
+  rtc::StringBuilder ss;
   ss << ", Delay: " << delay;
-  return ss.str();
+  return ss.Release();
 }
 
 }  // namespace
@@ -73,7 +77,7 @@ TEST(AdaptiveFirFilter, FilterAdaptationNeonOptimizations) {
     }
     render_delay_buffer->PrepareCaptureProcessing();
   }
-  const auto& render_buffer = render_delay_buffer->GetRenderBuffer();
+  auto* const render_buffer = render_delay_buffer->GetRenderBuffer();
 
   for (size_t j = 0; j < G.re.size(); ++j) {
     G.re[j] = j / 10001.f;
@@ -183,7 +187,7 @@ TEST(AdaptiveFirFilter, FilterAdaptationSse2Optimizations) {
         render_delay_buffer->Reset();
       }
       render_delay_buffer->PrepareCaptureProcessing();
-      const auto& render_buffer = render_delay_buffer->GetRenderBuffer();
+      auto* const render_buffer = render_delay_buffer->GetRenderBuffer();
 
       ApplyFilter_SSE2(*render_buffer, H_SSE2, &S_SSE2);
       ApplyFilter(*render_buffer, H_C, &S_C);
@@ -325,10 +329,10 @@ TEST(AdaptiveFirFilter, FilterAndAdapt) {
   std::vector<float> y(kBlockSize, 0.f);
   AecState aec_state(EchoCanceller3Config{});
   RenderSignalAnalyzer render_signal_analyzer(config);
-  rtc::Optional<DelayEstimate> delay_estimate;
+  absl::optional<DelayEstimate> delay_estimate;
   std::vector<float> e(kBlockSize, 0.f);
   std::array<float, kFftLength> s_scratch;
-  std::array<float, kBlockSize> s;
+  SubtractorOutput output;
   FftData S;
   FftData G;
   FftData E;
@@ -342,6 +346,7 @@ TEST(AdaptiveFirFilter, FilterAndAdapt) {
   Y2.fill(0.f);
   E2_main.fill(0.f);
   E2_shadow.fill(0.f);
+  output.Reset();
 
   constexpr float kScale = 1.0f / kFftLengthBy2;
 
@@ -357,9 +362,8 @@ TEST(AdaptiveFirFilter, FilterAndAdapt) {
 
       RandomizeSampleVector(&random_generator, n);
       static constexpr float kNoiseScaling = 1.f / 100.f;
-      std::transform(
-          y.begin(), y.end(), n.begin(), y.begin(),
-          [](float a, float b) { return a + b * kNoiseScaling; });
+      std::transform(y.begin(), y.end(), n.begin(), y.begin(),
+                     [](float a, float b) { return a + b * kNoiseScaling; });
 
       x_hp_filter.Process(x[0]);
       y_hp_filter.Process(y);
@@ -369,7 +373,7 @@ TEST(AdaptiveFirFilter, FilterAndAdapt) {
         render_delay_buffer->Reset();
       }
       render_delay_buffer->PrepareCaptureProcessing();
-      const auto& render_buffer = render_delay_buffer->GetRenderBuffer();
+      auto* const render_buffer = render_delay_buffer->GetRenderBuffer();
 
       render_signal_analyzer.Update(*render_buffer,
                                     aec_state.FilterDelayBlocks());
@@ -383,7 +387,7 @@ TEST(AdaptiveFirFilter, FilterAndAdapt) {
                     [](float& a) { a = rtc::SafeClamp(a, -32768.f, 32767.f); });
       fft.ZeroPaddedFft(e, Aec3Fft::Window::kRectangular, &E);
       for (size_t k = 0; k < kBlockSize; ++k) {
-        s[k] = kScale * s_scratch[k + kFftLengthBy2];
+        output.s_main[k] = kScale * s_scratch[k + kFftLengthBy2];
       }
 
       std::array<float, kFftLengthBy2Plus1> render_power;
@@ -395,8 +399,8 @@ TEST(AdaptiveFirFilter, FilterAndAdapt) {
           false, EchoPathVariability::DelayAdjustment::kNone, false));
 
       aec_state.Update(delay_estimate, filter.FilterFrequencyResponse(),
-                       filter.FilterImpulseResponse(), true, false,
-                       *render_buffer, E2_main, Y2, s);
+                       filter.FilterImpulseResponse(), *render_buffer, E2_main,
+                       Y2, output, y);
     }
     // Verify that the filter is able to perform well.
     EXPECT_LT(1000 * std::inner_product(e.begin(), e.end(), e.begin(), 0.f),

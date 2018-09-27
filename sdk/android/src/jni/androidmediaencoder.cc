@@ -8,21 +8,20 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-// NOTICE: androidmediaencoder_jni.h must be included before
-// androidmediacodeccommon.h to avoid build errors.
-#include "sdk/android/src/jni/androidmediaencoder_jni.h"
-
 #include <algorithm>
 #include <list>
 #include <memory>
 #include <string>
 #include <utility>
 
+#include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_encoder.h"
 #include "common_types.h"  // NOLINT(build/include)
 #include "common_video/h264/h264_bitstream_parser.h"
 #include "common_video/h264/h264_common.h"
 #include "common_video/h264/profile_level_id.h"
+#include "media/base/codec.h"
+#include "media/base/mediaconstants.h"
 #include "media/engine/internalencoderfactory.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/utility/quality_scaler.h"
@@ -31,7 +30,6 @@
 #include "rtc_base/bind.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/random.h"
 #include "rtc_base/sequenced_task_checker.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/thread.h"
@@ -40,8 +38,8 @@
 #include "sdk/android/generated_video_jni/jni/MediaCodecVideoEncoder_jni.h"
 #include "sdk/android/native_api/jni/java_types.h"
 #include "sdk/android/src/jni/androidmediacodeccommon.h"
-#include "sdk/android/src/jni/androidmediadecoder_jni.h"
 #include "sdk/android/src/jni/jni_helpers.h"
+#include "sdk/android/src/jni/videocodecinfo.h"
 #include "sdk/android/src/jni/videoframe.h"
 #include "system_wrappers/include/field_trial.h"
 #include "third_party/libyuv/include/libyuv/convert.h"
@@ -77,11 +75,10 @@ __android_log_print(ANDROID_LOG_VERBOSE, TAG_ENCODER, __VA_ARGS__)
 #define ALOGW RTC_LOG_TAG(rtc::LS_WARNING, TAG_ENCODER)
 #define ALOGE RTC_LOG_TAG(rtc::LS_ERROR, TAG_ENCODER)
 
-namespace {
+    namespace {
   // Maximum time limit between incoming frames before requesting a key frame.
-  const size_t kFrameDiffThresholdMs = 350;
+  const int64_t kFrameDiffThresholdMs = 350;
   const int kMinKeyFrameInterval = 6;
-  const char kH264HighProfileFieldTrial[] = "WebRTC-H264HighProfile";
   const char kCustomQPThresholdsFieldTrial[] = "WebRTC-CustomQPThresholds";
 }  // namespace
 
@@ -93,10 +90,10 @@ namespace {
 // this is the encoder queue from ViE encoder.
 class MediaCodecVideoEncoder : public VideoEncoder {
  public:
-  virtual ~MediaCodecVideoEncoder();
+  ~MediaCodecVideoEncoder() override;
   MediaCodecVideoEncoder(JNIEnv* jni,
-                         const cricket::VideoCodec& codec,
-                         jobject egl_context);
+                         const SdpVideoFormat& format,
+                         bool has_egl_context);
 
   // VideoEncoder implementation.
   int32_t InitEncode(const VideoCodec* codec_settings,
@@ -110,10 +107,10 @@ class MediaCodecVideoEncoder : public VideoEncoder {
   int32_t Release() override;
   int32_t SetChannelParameters(uint32_t /* packet_loss */,
                                int64_t /* rtt */) override;
-  int32_t SetRateAllocation(const BitrateAllocation& rate_allocation,
+  int32_t SetRateAllocation(const VideoBitrateAllocation& rate_allocation,
                             uint32_t frame_rate) override;
 
-  bool SupportsNativeHandle() const override { return egl_context_ != nullptr; }
+  bool SupportsNativeHandle() const override { return has_egl_context_; }
   const char* ImplementationName() const override;
 
   // Fills the input buffer with data from the buffers passed as parameters.
@@ -172,7 +169,6 @@ class MediaCodecVideoEncoder : public VideoEncoder {
                         bool key_frame,
                         const VideoFrame& frame,
                         int input_buffer_index);
-  bool EncodeTexture(JNIEnv* jni, bool key_frame, const VideoFrame& frame);
   // Encodes a new style org.webrtc.VideoFrame. Might be a I420 or a texture
   // frame.
   bool EncodeJavaFrame(JNIEnv* jni,
@@ -200,7 +196,7 @@ class MediaCodecVideoEncoder : public VideoEncoder {
 #endif
 
   // Type of video codec.
-  const cricket::VideoCodec codec_;
+  const SdpVideoFormat format_;
 
   EncodedImageCallback* callback_;
 
@@ -215,20 +211,20 @@ class MediaCodecVideoEncoder : public VideoEncoder {
   bool inited_;
   bool use_surface_;
   enum libyuv::FourCC encoder_fourcc_;  // Encoder color space format.
-  int last_set_bitrate_kbps_;  // Last-requested bitrate in kbps.
-  int last_set_fps_;  // Last-requested frame rate.
-  int64_t current_timestamp_us_;  // Current frame timestamps in us.
-  int frames_received_;  // Number of frames received by encoder.
-  int frames_encoded_;  // Number of frames encoded by encoder.
-  int frames_dropped_media_encoder_;  // Number of frames dropped by encoder.
+  uint32_t last_set_bitrate_kbps_;      // Last-requested bitrate in kbps.
+  uint32_t last_set_fps_;               // Last-requested frame rate.
+  int64_t current_timestamp_us_;        // Current frame timestamps in us.
+  int frames_received_;                 // Number of frames received by encoder.
+  int frames_encoded_;                  // Number of frames encoded by encoder.
+  int frames_dropped_media_encoder_;    // Number of frames dropped by encoder.
   // Number of dropped frames caused by full queue.
   int consecutive_full_queue_frame_drops_;
   int64_t stat_start_time_ms_;  // Start time for statistics.
   int current_frames_;  // Number of frames in the current statistics interval.
-  int current_bytes_;  // Encoded bytes in the current statistics interval.
+  int current_bytes_;   // Encoded bytes in the current statistics interval.
   int current_acc_qp_;  // Accumulated QP in the current statistics interval.
   int current_encoding_time_ms_;  // Overall encoding time in the current second
-  int64_t last_input_timestamp_ms_;  // Timestamp of last received yuv frame.
+  int64_t last_input_timestamp_ms_;   // Timestamp of last received yuv frame.
   int64_t last_output_timestamp_ms_;  // Timestamp of last encoded frame.
   // Holds the task while the polling loop is paused.
   std::unique_ptr<rtc::QueuedTask> encode_task_;
@@ -274,9 +270,7 @@ class MediaCodecVideoEncoder : public VideoEncoder {
                     // non-flexible VP9 mode.
   size_t gof_idx_;
 
-  // EGL context - owned by factory, should not be allocated/destroyed
-  // by MediaCodecVideoEncoder.
-  jobject egl_context_;
+  const bool has_egl_context_;
 
   // Temporary fix for VP8.
   // Sends a key frame if frames are largely spaced apart (possibly
@@ -284,10 +278,6 @@ class MediaCodecVideoEncoder : public VideoEncoder {
   int64_t last_frame_received_ms_;
   int frames_received_since_last_key_;
   VideoCodecMode codec_mode_;
-
-  // RTP state.
-  uint16_t picture_id_;
-  uint8_t tl0_pic_idx_;
 
   bool sw_fallback_required_;
 
@@ -304,22 +294,18 @@ MediaCodecVideoEncoder::~MediaCodecVideoEncoder() {
 }
 
 MediaCodecVideoEncoder::MediaCodecVideoEncoder(JNIEnv* jni,
-                                               const cricket::VideoCodec& codec,
-                                               jobject egl_context)
-    : codec_(codec),
+                                               const SdpVideoFormat& format,
+                                               bool has_egl_context)
+    : format_(format),
       callback_(NULL),
       j_media_codec_video_encoder_(
           jni,
           Java_MediaCodecVideoEncoder_Constructor(jni)),
       inited_(false),
       use_surface_(false),
-      egl_context_(egl_context),
+      has_egl_context_(has_egl_context),
       sw_fallback_required_(false) {
   encoder_queue_checker_.Detach();
-
-  Random random(rtc::TimeMicros());
-  picture_id_ = random.Rand<uint16_t>() & 0x7FFF;
-  tl0_pic_idx_ = random.Rand<uint8_t>();
 }
 
 int32_t MediaCodecVideoEncoder::InitEncode(const VideoCodec* codec_settings,
@@ -355,11 +341,18 @@ int32_t MediaCodecVideoEncoder::InitEncode(const VideoCodec* codec_settings,
   ALOGD << "InitEncode request: " << init_width << " x " << init_height;
   ALOGD << "Encoder automatic resize " << (scale_ ? "enabled" : "disabled");
 
+  if (codec_settings->numberOfSimulcastStreams > 1) {
+    ALOGD << "Number of simulcast layers requested: "
+          << codec_settings->numberOfSimulcastStreams
+          << ". Requesting software fallback.";
+    return WEBRTC_VIDEO_CODEC_FALLBACK_SOFTWARE;
+  }
+
   // Check allowed H.264 profile
   profile_ = H264::Profile::kProfileBaseline;
   if (codec_type == kVideoCodecH264) {
-    const rtc::Optional<H264::ProfileLevelId> profile_level_id =
-        H264::ParseSdpProfileLevelId(codec_.params);
+    const absl::optional<H264::ProfileLevelId> profile_level_id =
+        H264::ParseSdpProfileLevelId(format_.parameters);
     RTC_DCHECK(profile_level_id);
     profile_ = profile_level_id->profile;
     ALOGD << "H.264 profile: " << profile_;
@@ -368,7 +361,7 @@ int32_t MediaCodecVideoEncoder::InitEncode(const VideoCodec* codec_settings,
   return InitEncodeInternal(
       init_width, init_height, codec_settings->startBitrate,
       codec_settings->maxFramerate,
-      codec_settings->expect_encode_from_texture && (egl_context_ != nullptr));
+      codec_settings->expect_encode_from_texture && has_egl_context_);
 }
 
 int32_t MediaCodecVideoEncoder::SetChannelParameters(uint32_t /* packet_loss */,
@@ -436,12 +429,14 @@ bool MediaCodecVideoEncoder::EncodeTask::Run() {
   return false;
 }
 
-bool IsFormatSupported(
-    const std::vector<webrtc::SdpVideoFormat>& supported_formats,
-    const std::string& name) {
-  for (const webrtc::SdpVideoFormat& supported_format : supported_formats) {
-    if (cricket::CodecNamesEq(name, supported_format.name))
+bool IsFormatSupported(const std::vector<SdpVideoFormat>& supported_formats,
+                       const SdpVideoFormat& format) {
+  for (const SdpVideoFormat& supported_format : supported_formats) {
+    if (cricket::IsSameCodec(format.name, format.parameters,
+                             supported_format.name,
+                             supported_format.parameters)) {
       return true;
+    }
   }
   return false;
 }
@@ -450,7 +445,7 @@ bool MediaCodecVideoEncoder::ProcessHWError(
     bool reset_if_fallback_unavailable) {
   ALOGE << "ProcessHWError";
   if (IsFormatSupported(InternalEncoderFactory().GetSupportedFormats(),
-                        codec_.name)) {
+                        format_)) {
     ALOGE << "Fallback to SW encoder.";
     sw_fallback_required_ = true;
     return false;
@@ -468,7 +463,7 @@ int32_t MediaCodecVideoEncoder::ProcessHWErrorOnEncode() {
 }
 
 VideoCodecType MediaCodecVideoEncoder::GetCodecType() const {
-  return PayloadStringToCodecType(codec_.name);
+  return PayloadStringToCodecType(format_.name);
 }
 
 int32_t MediaCodecVideoEncoder::InitEncodeInternal(int width,
@@ -480,7 +475,7 @@ int32_t MediaCodecVideoEncoder::InitEncodeInternal(int width,
   if (sw_fallback_required_) {
     return WEBRTC_VIDEO_CODEC_OK;
   }
-  RTC_CHECK(!use_surface || egl_context_ != nullptr) << "EGL context not set.";
+  RTC_CHECK(!use_surface || has_egl_context_) << "EGL context not set.";
   JNIEnv* jni = AttachCurrentThreadIfNeeded();
   ScopedLocalRefFrame local_ref_frame(jni);
 
@@ -527,8 +522,8 @@ int32_t MediaCodecVideoEncoder::InitEncodeInternal(int width,
       Java_VideoCodecType_fromNativeIndex(jni, codec_type);
   const bool encode_status = Java_MediaCodecVideoEncoder_initEncode(
       jni, j_media_codec_video_encoder_, j_video_codec_enum, profile_, width,
-      height, kbps, fps,
-      JavaParamRef<jobject>(use_surface ? egl_context_ : nullptr));
+      height, kbps, fps, use_surface);
+
   if (!encode_status) {
     ALOGE << "Failed to configure encoder.";
     ProcessHWError(false /* reset_if_fallback_unavailable */);
@@ -616,7 +611,7 @@ int32_t MediaCodecVideoEncoder::Encode(
   }
 
   bool send_key_frame = false;
-  if (codec_mode_ == kRealtimeVideo) {
+  if (codec_mode_ == VideoCodecMode::kRealtimeVideo) {
     ++frames_received_since_last_key_;
     int64_t now_ms = rtc::TimeMillis();
     if (last_frame_received_ms_ != -1 &&
@@ -721,25 +716,10 @@ int32_t MediaCodecVideoEncoder::Encode(
     encode_status =
         EncodeByteBuffer(jni, key_frame, input_frame, j_input_buffer_index);
   } else {
-    AndroidVideoFrameBuffer* android_buffer =
-        static_cast<AndroidVideoFrameBuffer*>(
-            input_frame.video_frame_buffer().get());
-    switch (android_buffer->android_type()) {
-      case AndroidVideoFrameBuffer::AndroidType::kTextureBuffer:
-        encode_status = EncodeTexture(jni, key_frame, input_frame);
-        break;
-      case AndroidVideoFrameBuffer::AndroidType::kJavaBuffer: {
-        ScopedJavaLocalRef<jobject> j_frame =
-            NativeToJavaVideoFrame(jni, frame);
-        encode_status =
-            EncodeJavaFrame(jni, key_frame, j_frame, j_input_buffer_index);
-        ReleaseJavaVideoFrame(jni, j_frame);
-        break;
-      }
-      default:
-        RTC_NOTREACHED();
-        return WEBRTC_VIDEO_CODEC_ERROR;
-    }
+    ScopedJavaLocalRef<jobject> j_frame = NativeToJavaVideoFrame(jni, frame);
+    encode_status =
+        EncodeJavaFrame(jni, key_frame, j_frame, j_input_buffer_index);
+    ReleaseJavaVideoFrame(jni, j_frame);
   }
 
   if (!encode_status) {
@@ -779,16 +759,15 @@ bool MediaCodecVideoEncoder::MaybeReconfigureEncoder(JNIEnv* jni,
       frame.width() != width_ || frame.height() != height_;
 
   if (reconfigure_due_to_format) {
-      ALOGD << "Reconfigure encoder due to format change. "
-            << (use_surface_ ?
-                "Reconfiguring to encode from byte buffer." :
-                "Reconfiguring to encode from texture.");
-      LogStatistics(true);
+    ALOGD << "Reconfigure encoder due to format change. "
+          << (use_surface_ ? "Reconfiguring to encode from byte buffer."
+                           : "Reconfiguring to encode from texture.");
+    LogStatistics(true);
   }
   if (reconfigure_due_to_size) {
     ALOGW << "Reconfigure encoder due to frame resolution change from "
-        << width_ << " x " << height_ << " to " << frame.width() << " x "
-        << frame.height();
+          << width_ << " x " << height_ << " to " << frame.width() << " x "
+          << frame.height();
     LogStatistics(true);
     width_ = frame.width();
     height_ = frame.height();
@@ -808,20 +787,9 @@ bool MediaCodecVideoEncoder::IsTextureFrame(JNIEnv* jni,
   if (frame.video_frame_buffer()->type() != VideoFrameBuffer::Type::kNative) {
     return false;
   }
-
-  AndroidVideoFrameBuffer* android_buffer =
-      static_cast<AndroidVideoFrameBuffer*>(frame.video_frame_buffer().get());
-  switch (android_buffer->android_type()) {
-    case AndroidVideoFrameBuffer::AndroidType::kTextureBuffer:
-      return true;
-    case AndroidVideoFrameBuffer::AndroidType::kJavaBuffer:
-      return Java_MediaCodecVideoEncoder_isTextureBuffer(
-          jni, static_cast<AndroidVideoBuffer*>(android_buffer)
-                   ->video_frame_buffer());
-    default:
-      RTC_NOTREACHED();
-      return false;
-  }
+  return Java_MediaCodecVideoEncoder_isTextureBuffer(
+      jni, static_cast<AndroidVideoBuffer*>(frame.video_frame_buffer().get())
+               ->video_frame_buffer());
 }
 
 bool MediaCodecVideoEncoder::EncodeByteBuffer(JNIEnv* jni,
@@ -872,26 +840,6 @@ bool MediaCodecVideoEncoder::FillInputBuffer(JNIEnv* jni,
                                      width_, height_, encoder_fourcc_))
       << "ConvertFromI420 failed";
   return true;
-}
-
-bool MediaCodecVideoEncoder::EncodeTexture(JNIEnv* jni,
-                                           bool key_frame,
-                                           const VideoFrame& frame) {
-  RTC_DCHECK_CALLED_SEQUENTIALLY(&encoder_queue_checker_);
-  RTC_CHECK(use_surface_);
-  NativeHandleImpl handle =
-      static_cast<AndroidTextureBuffer*>(frame.video_frame_buffer().get())
-          ->native_handle_impl();
-
-  bool encode_status = Java_MediaCodecVideoEncoder_encodeTexture(
-      jni, j_media_codec_video_encoder_, key_frame, handle.oes_texture_id,
-      handle.sampling_matrix.ToJava(jni), current_timestamp_us_);
-  if (CheckException(jni)) {
-    ALOGE << "Exception in encode texture.";
-    ProcessHWError(true /* reset_if_fallback_unavailable */);
-    return false;
-  }
-  return encode_status;
 }
 
 bool MediaCodecVideoEncoder::EncodeJavaFrame(JNIEnv* jni,
@@ -951,7 +899,7 @@ int32_t MediaCodecVideoEncoder::Release() {
 }
 
 int32_t MediaCodecVideoEncoder::SetRateAllocation(
-    const BitrateAllocation& rate_allocation,
+    const VideoBitrateAllocation& rate_allocation,
     uint32_t frame_rate) {
   RTC_DCHECK_CALLED_SEQUENTIALLY(&encoder_queue_checker_);
   const uint32_t new_bit_rate = rate_allocation.get_sum_kbps();
@@ -971,7 +919,9 @@ int32_t MediaCodecVideoEncoder::SetRateAllocation(
     last_set_fps_ = frame_rate;
   }
   bool ret = Java_MediaCodecVideoEncoder_setRates(
-      jni, j_media_codec_video_encoder_, last_set_bitrate_kbps_, last_set_fps_);
+      jni, j_media_codec_video_encoder_,
+      rtc::dchecked_cast<int>(last_set_bitrate_kbps_),
+      rtc::dchecked_cast<int>(last_set_fps_));
   if (CheckException(jni) || !ret) {
     ProcessHWError(true /* reset_if_fallback_unavailable */);
     return sw_fallback_required_ ? WEBRTC_VIDEO_CODEC_OK
@@ -1044,42 +994,38 @@ bool MediaCodecVideoEncoder::DeliverPendingOutputs(JNIEnv* jni) {
           new EncodedImage(payload, payload_size, payload_size));
       image->_encodedWidth = width_;
       image->_encodedHeight = height_;
-      image->_timeStamp = output_timestamp_;
+      image->SetTimestamp(output_timestamp_);
       image->capture_time_ms_ = output_render_time_ms_;
       image->rotation_ = output_rotation_;
       image->content_type_ = (codec_mode_ == VideoCodecMode::kScreensharing)
                                  ? VideoContentType::SCREENSHARE
                                  : VideoContentType::UNSPECIFIED;
-      image->timing_.flags = TimingFrameFlags::kInvalid;
+      image->timing_.flags = VideoSendTiming::kInvalid;
       image->_frameType = (key_frame ? kVideoFrameKey : kVideoFrameDelta);
       image->_completeFrame = true;
       CodecSpecificInfo info;
       memset(&info, 0, sizeof(info));
       info.codecType = codec_type;
       if (codec_type == kVideoCodecVP8) {
-        info.codecSpecific.VP8.pictureId = picture_id_;
         info.codecSpecific.VP8.nonReference = false;
-        info.codecSpecific.VP8.simulcastIdx = 0;
         info.codecSpecific.VP8.temporalIdx = kNoTemporalIdx;
         info.codecSpecific.VP8.layerSync = false;
-        info.codecSpecific.VP8.tl0PicIdx = kNoTl0PicIdx;
         info.codecSpecific.VP8.keyIdx = kNoKeyIdx;
       } else if (codec_type == kVideoCodecVP9) {
         if (key_frame) {
           gof_idx_ = 0;
         }
-        info.codecSpecific.VP9.picture_id = picture_id_;
         info.codecSpecific.VP9.inter_pic_predicted = key_frame ? false : true;
         info.codecSpecific.VP9.flexible_mode = false;
         info.codecSpecific.VP9.ss_data_available = key_frame ? true : false;
-        info.codecSpecific.VP9.tl0_pic_idx = tl0_pic_idx_++;
         info.codecSpecific.VP9.temporal_idx = kNoTemporalIdx;
-        info.codecSpecific.VP9.spatial_idx = kNoSpatialIdx;
         info.codecSpecific.VP9.temporal_up_switch = true;
         info.codecSpecific.VP9.inter_layer_predicted = false;
         info.codecSpecific.VP9.gof_idx =
             static_cast<uint8_t>(gof_idx_++ % gof_.num_frames_in_gof);
         info.codecSpecific.VP9.num_spatial_layers = 1;
+        info.codecSpecific.VP9.first_frame_in_picture = true;
+        info.codecSpecific.VP9.end_of_picture = true;
         info.codecSpecific.VP9.spatial_layer_resolution_present = false;
         if (info.codecSpecific.VP9.ss_data_available) {
           info.codecSpecific.VP9.spatial_layer_resolution_present = true;
@@ -1088,7 +1034,6 @@ bool MediaCodecVideoEncoder::DeliverPendingOutputs(JNIEnv* jni) {
           info.codecSpecific.VP9.gof.CopyGofInfoVP9(gof_);
         }
       }
-      picture_id_ = (picture_id_ + 1) & 0x7FFF;
 
       // Generate a header describing a single fragment.
       RTPFragmentationHeader header;
@@ -1124,9 +1069,9 @@ bool MediaCodecVideoEncoder::DeliverPendingOutputs(JNIEnv* jni) {
             H264::FindNaluIndices(payload, payload_size);
         if (nalu_idxs.empty()) {
           ALOGE << "Start code is not found!";
-          ALOGE << "Data:" <<  image->_buffer[0] << " " << image->_buffer[1]
-              << " " << image->_buffer[2] << " " << image->_buffer[3]
-              << " " << image->_buffer[4] << " " << image->_buffer[5];
+          ALOGE << "Data:" << image->_buffer[0] << " " << image->_buffer[1]
+                << " " << image->_buffer[2] << " " << image->_buffer[3] << " "
+                << image->_buffer[4] << " " << image->_buffer[5];
           ProcessHWError(true /* reset_if_fallback_unavailable */);
           return false;
         }
@@ -1180,21 +1125,21 @@ bool MediaCodecVideoEncoder::DeliverPendingOutputs(JNIEnv* jni) {
 
 void MediaCodecVideoEncoder::LogStatistics(bool force_log) {
   int statistic_time_ms = rtc::TimeMillis() - stat_start_time_ms_;
-  if ((statistic_time_ms >= kMediaCodecStatisticsIntervalMs || force_log)
-      && statistic_time_ms > 0) {
+  if ((statistic_time_ms >= kMediaCodecStatisticsIntervalMs || force_log) &&
+      statistic_time_ms > 0) {
     // Prevent division by zero.
     int current_frames_divider = current_frames_ != 0 ? current_frames_ : 1;
 
     int current_bitrate = current_bytes_ * 8 / statistic_time_ms;
     int current_fps =
         (current_frames_ * 1000 + statistic_time_ms / 2) / statistic_time_ms;
-    ALOGD << "Encoded frames: " << frames_encoded_ <<
-        ". Bitrate: " << current_bitrate <<
-        ", target: " << last_set_bitrate_kbps_ << " kbps" <<
-        ", fps: " << current_fps <<
-        ", encTime: " << (current_encoding_time_ms_ / current_frames_divider) <<
-        ". QP: " << (current_acc_qp_ / current_frames_divider) <<
-        " for last " << statistic_time_ms << " ms.";
+    ALOGD << "Encoded frames: " << frames_encoded_
+          << ". Bitrate: " << current_bitrate
+          << ", target: " << last_set_bitrate_kbps_ << " kbps"
+          << ", fps: " << current_fps << ", encTime: "
+          << (current_encoding_time_ms_ / current_frames_divider)
+          << ". QP: " << (current_acc_qp_ / current_frames_divider)
+          << " for last " << statistic_time_ms << " ms.";
     stat_start_time_ms_ = rtc::TimeMillis();
     current_frames_ = 0;
     current_bytes_ = 0;
@@ -1265,116 +1210,6 @@ const char* MediaCodecVideoEncoder::ImplementationName() const {
   return "MediaCodec";
 }
 
-MediaCodecVideoEncoderFactory::MediaCodecVideoEncoderFactory()
-    : egl_context_(nullptr) {
-  JNIEnv* jni = AttachCurrentThreadIfNeeded();
-  ScopedLocalRefFrame local_ref_frame(jni);
-  supported_codecs_.clear();
-
-  bool is_vp8_hw_supported = Java_MediaCodecVideoEncoder_isVp8HwSupported(jni);
-  if (is_vp8_hw_supported) {
-    ALOGD << "VP8 HW Encoder supported.";
-    supported_codecs_.push_back(cricket::VideoCodec(cricket::kVp8CodecName));
-  }
-
-  bool is_vp9_hw_supported = Java_MediaCodecVideoEncoder_isVp9HwSupported(jni);
-  if (is_vp9_hw_supported) {
-    ALOGD << "VP9 HW Encoder supported.";
-    supported_codecs_.push_back(cricket::VideoCodec(cricket::kVp9CodecName));
-  }
-  supported_codecs_with_h264_hp_ = supported_codecs_;
-
-  // Check if high profile is supported by decoder. If yes, encoder can always
-  // fall back to baseline profile as a subset as high profile.
-  bool is_h264_high_profile_hw_supported =
-      MediaCodecVideoDecoderFactory::IsH264HighProfileSupported(jni);
-  if (is_h264_high_profile_hw_supported) {
-    ALOGD << "H.264 High Profile HW Encoder supported.";
-    // TODO(magjed): Enumerate actual level instead of using hardcoded level
-    // 3.1. Level 3.1 is 1280x720@30fps which is enough for now.
-    cricket::VideoCodec constrained_high(cricket::kH264CodecName);
-    const H264::ProfileLevelId constrained_high_profile(
-        H264::kProfileConstrainedHigh, H264::kLevel3_1);
-    constrained_high.SetParam(
-        cricket::kH264FmtpProfileLevelId,
-        *H264::ProfileLevelIdToString(constrained_high_profile));
-    constrained_high.SetParam(cricket::kH264FmtpLevelAsymmetryAllowed, "1");
-    constrained_high.SetParam(cricket::kH264FmtpPacketizationMode, "1");
-    supported_codecs_with_h264_hp_.push_back(constrained_high);
-  }
-
-  bool is_h264_hw_supported =
-      Java_MediaCodecVideoEncoder_isH264HwSupported(jni);
-  if (is_h264_hw_supported) {
-    ALOGD << "H.264 HW Encoder supported.";
-    // TODO(magjed): Push Constrained High profile as well when negotiation is
-    // ready, http://crbug/webrtc/6337. We can negotiate Constrained High
-    // profile as long as we have decode support for it and still send Baseline
-    // since Baseline is a subset of the High profile.
-    cricket::VideoCodec constrained_baseline(cricket::kH264CodecName);
-    const H264::ProfileLevelId constrained_baseline_profile(
-        H264::kProfileConstrainedBaseline, H264::kLevel3_1);
-    constrained_baseline.SetParam(
-        cricket::kH264FmtpProfileLevelId,
-        *H264::ProfileLevelIdToString(constrained_baseline_profile));
-    constrained_baseline.SetParam(cricket::kH264FmtpLevelAsymmetryAllowed, "1");
-    constrained_baseline.SetParam(cricket::kH264FmtpPacketizationMode, "1");
-    supported_codecs_.push_back(constrained_baseline);
-    supported_codecs_with_h264_hp_.push_back(constrained_baseline);
-  }
-}
-
-MediaCodecVideoEncoderFactory::~MediaCodecVideoEncoderFactory() {
-  ALOGD << "MediaCodecVideoEncoderFactory dtor";
-  if (egl_context_) {
-    JNIEnv* jni = AttachCurrentThreadIfNeeded();
-    jni->DeleteGlobalRef(egl_context_);
-  }
-}
-
-void MediaCodecVideoEncoderFactory::SetEGLContext(
-    JNIEnv* jni, jobject egl_context) {
-  ALOGD << "MediaCodecVideoEncoderFactory::SetEGLContext";
-  if (egl_context_) {
-    jni->DeleteGlobalRef(egl_context_);
-    egl_context_ = nullptr;
-  }
-  egl_context_ = jni->NewGlobalRef(egl_context);
-  if (CheckException(jni)) {
-    ALOGE << "error calling NewGlobalRef for EGL Context.";
-  }
-}
-
-VideoEncoder* MediaCodecVideoEncoderFactory::CreateVideoEncoder(
-    const cricket::VideoCodec& codec) {
-  if (supported_codecs().empty()) {
-    ALOGW << "No HW video encoder for codec " << codec.name;
-    return nullptr;
-  }
-  if (FindMatchingCodec(supported_codecs(), codec)) {
-    ALOGD << "Create HW video encoder for " << codec.name;
-    JNIEnv* jni = AttachCurrentThreadIfNeeded();
-    ScopedLocalRefFrame local_ref_frame(jni);
-    return new MediaCodecVideoEncoder(jni, codec, egl_context_);
-  }
-  ALOGW << "Can not find HW video encoder for type " << codec.name;
-  return nullptr;
-}
-
-const std::vector<cricket::VideoCodec>&
-MediaCodecVideoEncoderFactory::supported_codecs() const {
-  if (field_trial::IsEnabled(kH264HighProfileFieldTrial)) {
-    return supported_codecs_with_h264_hp_;
-  } else {
-    return supported_codecs_;
-  }
-}
-
-void MediaCodecVideoEncoderFactory::DestroyVideoEncoder(VideoEncoder* encoder) {
-  ALOGD << "Destroy video encoder.";
-  delete encoder;
-}
-
 static void JNI_MediaCodecVideoEncoder_FillInputBuffer(
     JNIEnv* jni,
     const JavaParamRef<jclass>&,
@@ -1403,6 +1238,16 @@ static void JNI_MediaCodecVideoEncoder_FillInputBuffer(
   reinterpret_cast<MediaCodecVideoEncoder*>(native_encoder)
       ->FillInputBuffer(jni, input_buffer, buffer_y, stride_y, buffer_u,
                         stride_u, buffer_v, stride_v);
+}
+
+static jlong JNI_MediaCodecVideoEncoder_CreateEncoder(
+    JNIEnv* env,
+    const JavaParamRef<jclass>&,
+    const JavaParamRef<jobject>& format,
+    jboolean has_egl_context) {
+  ScopedLocalRefFrame local_ref_frame(env);
+  return jlongFromPointer(new MediaCodecVideoEncoder(
+      env, VideoCodecInfoToSdpVideoFormat(env, format), has_egl_context));
 }
 
 }  // namespace jni

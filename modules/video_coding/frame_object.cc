@@ -26,7 +26,6 @@ RtpFrameObject::RtpFrameObject(PacketBuffer* packet_buffer,
     : packet_buffer_(packet_buffer),
       first_seq_num_(first_seq_num),
       last_seq_num_(last_seq_num),
-      timestamp_(0),
       received_time_(received_time),
       times_nacked_(times_nacked) {
   VCMPacket* first_packet = packet_buffer_->GetPacket(first_seq_num);
@@ -41,7 +40,7 @@ RtpFrameObject::RtpFrameObject(PacketBuffer* packet_buffer,
   CopyCodecSpecific(&first_packet->video_header);
   _completeFrame = true;
   _payloadType = first_packet->payloadType;
-  _timeStamp = first_packet->timestamp;
+  SetTimestamp(first_packet->timestamp);
   ntp_time_ms_ = first_packet->ntp_time_ms_;
   _frameType = first_packet->frameType;
 
@@ -69,11 +68,11 @@ RtpFrameObject::RtpFrameObject(PacketBuffer* packet_buffer,
   _encodedHeight = first_packet->height;
 
   // EncodedFrame members
-  timestamp = first_packet->timestamp;
+  SetTimestamp(first_packet->timestamp);
 
   VCMPacket* last_packet = packet_buffer_->GetPacket(last_seq_num);
   RTC_CHECK(last_packet);
-  RTC_CHECK(last_packet->markerBit);
+  RTC_CHECK(last_packet->is_last_packet_in_frame);
   // http://www.etsi.org/deliver/etsi_ts/126100_126199/126114/12.07.00_60/
   // ts_126114v120700p.pdf Section 7.4.5.
   // The MTSI client shall add the payload bytes as defined in this clause
@@ -84,7 +83,7 @@ RtpFrameObject::RtpFrameObject(PacketBuffer* packet_buffer,
   _rotation_set = true;
   content_type_ = last_packet->video_header.content_type;
   if (last_packet->video_header.video_timing.flags !=
-      TimingFrameFlags::kInvalid) {
+      VideoSendTiming::kInvalid) {
     // ntp_time_ms_ may be -1 if not estimated yet. This is not a problem,
     // as this will be dealt with at the time of reporting.
     timing_.encode_start_ms =
@@ -140,10 +139,6 @@ bool RtpFrameObject::GetBitstream(uint8_t* destination) const {
   return packet_buffer_->GetBitstream(*this, destination);
 }
 
-uint32_t RtpFrameObject::Timestamp() const {
-  return timestamp_;
-}
-
 int64_t RtpFrameObject::ReceivedTime() const {
   return received_time_;
 }
@@ -156,12 +151,20 @@ bool RtpFrameObject::delayed_by_retransmission() const {
   return times_nacked() > 0;
 }
 
-rtc::Optional<RTPVideoTypeHeader> RtpFrameObject::GetCodecHeader() const {
+absl::optional<RTPVideoHeader> RtpFrameObject::GetRtpVideoHeader() const {
   rtc::CritScope lock(&packet_buffer_->crit_);
   VCMPacket* packet = packet_buffer_->GetPacket(first_seq_num_);
   if (!packet)
-    return rtc::nullopt;
-  return packet->video_header.codecHeader;
+    return absl::nullopt;
+  return packet->video_header;
+}
+
+absl::optional<FrameMarking> RtpFrameObject::GetFrameMarking() const {
+  rtc::CritScope lock(&packet_buffer_->crit_);
+  VCMPacket* packet = packet_buffer_->GetPacket(first_seq_num_);
+  if (!packet)
+    return absl::nullopt;
+  return packet->video_header.frame_marking;
 }
 
 }  // namespace video_coding

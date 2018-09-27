@@ -26,11 +26,12 @@ class CreateSdpObserverJni : public CreateSessionDescriptionObserver {
   CreateSdpObserverJni(JNIEnv* env,
                        const JavaRef<jobject>& j_observer,
                        std::unique_ptr<MediaConstraintsInterface> constraints);
+  ~CreateSdpObserverJni() override;
 
   MediaConstraintsInterface* constraints() { return constraints_.get(); }
 
   void OnSuccess(SessionDescriptionInterface* desc) override;
-  void OnFailure(const std::string& error) override;
+  void OnFailure(RTCError error) override;
 
  private:
   const ScopedJavaGlobalRef<jobject> j_observer_global_;
@@ -42,11 +43,12 @@ class SetSdpObserverJni : public SetSessionDescriptionObserver {
   SetSdpObserverJni(JNIEnv* env,
                     const JavaRef<jobject>& j_observer,
                     std::unique_ptr<MediaConstraintsInterface> constraints);
+  ~SetSdpObserverJni() override;
 
   MediaConstraintsInterface* constraints() { return constraints_.get(); }
 
   void OnSuccess() override;
-  void OnFailure(const std::string& error) override;
+  void OnFailure(RTCError error) override;
 
  private:
   const ScopedJavaGlobalRef<jobject> j_observer_global_;

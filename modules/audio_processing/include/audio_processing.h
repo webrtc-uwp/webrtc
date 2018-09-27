@@ -18,22 +18,22 @@
 
 #include <math.h>
 #include <stddef.h>  // size_t
-#include <stdio.h>  // FILE
+#include <stdio.h>   // FILE
 #include <string.h>
 #include <vector>
 
+#include "absl/types/optional.h"
 #include "api/audio/echo_canceller3_config.h"
 #include "api/audio/echo_control.h"
-#include "api/optional.h"
-#include "modules/audio_processing/beamformer/array_util.h"
+#include "modules/audio_processing/include/audio_generator.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
 #include "modules/audio_processing/include/config.h"
+#include "modules/audio_processing/include/gain_control.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/deprecation.h"
 #include "rtc_base/platform_file.h"
 #include "rtc_base/refcount.h"
 #include "rtc_base/scoped_ref_ptr.h"
-#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
@@ -42,8 +42,6 @@ struct AecCore;
 class AecDump;
 class AudioBuffer;
 class AudioFrame;
-
-class NonlinearBeamformer;
 
 class StreamConfig;
 class ProcessingConfig;
@@ -55,11 +53,9 @@ class GainControl;
 class HighPassFilter;
 class LevelEstimator;
 class NoiseSuppression;
+class CustomAudioAnalyzer;
 class CustomProcessing;
 class VoiceDetection;
-
-// webrtc:8665, addedd temporarily to avoid breaking dependencies.
-typedef CustomProcessing PostProcessing;
 
 // Use to enable the extended filter mode in the AEC, along with robustness
 // measures around the reported system delays. It comes with a significant
@@ -124,6 +120,15 @@ static constexpr int kClippedLevelMin = 70;
 struct ExperimentalAgc {
   ExperimentalAgc() = default;
   explicit ExperimentalAgc(bool enabled) : enabled(enabled) {}
+  ExperimentalAgc(bool enabled,
+                  bool enabled_agc2_level_estimator,
+                  bool digital_adaptive_disabled,
+                  bool analyze_before_aec)
+      : enabled(enabled),
+        enabled_agc2_level_estimator(enabled_agc2_level_estimator),
+        digital_adaptive_disabled(digital_adaptive_disabled),
+        analyze_before_aec(analyze_before_aec) {}
+
   ExperimentalAgc(bool enabled, int startup_min_volume)
       : enabled(enabled), startup_min_volume(startup_min_volume) {}
   ExperimentalAgc(bool enabled, int startup_min_volume, int clipped_level_min)
@@ -135,6 +140,11 @@ struct ExperimentalAgc {
   int startup_min_volume = kAgcStartupMinVolume;
   // Lowest microphone level that will be applied in response to clipping.
   int clipped_level_min = kClippedLevelMin;
+  bool enabled_agc2_level_estimator = false;
+  bool digital_adaptive_disabled = false;
+  // 'analyze_before_aec' is an experimental flag. It is intended to be removed
+  // at some point.
+  bool analyze_before_aec = false;
 };
 
 // Use to enable experimental noise suppression. It can be set in the
@@ -143,33 +153,6 @@ struct ExperimentalNs {
   ExperimentalNs() : enabled(false) {}
   explicit ExperimentalNs(bool enabled) : enabled(enabled) {}
   static const ConfigOptionID identifier = ConfigOptionID::kExperimentalNs;
-  bool enabled;
-};
-
-// Use to enable beamforming. Must be provided through the constructor. It will
-// have no impact if used with AudioProcessing::SetExtraOptions().
-struct Beamforming {
-  Beamforming();
-  Beamforming(bool enabled, const std::vector<Point>& array_geometry);
-  Beamforming(bool enabled,
-              const std::vector<Point>& array_geometry,
-              SphericalPointf target_direction);
-  ~Beamforming();
-
-  static const ConfigOptionID identifier = ConfigOptionID::kBeamforming;
-  const bool enabled;
-  const std::vector<Point> array_geometry;
-  const SphericalPointf target_direction;
-};
-
-// Use to enable intelligibility enhancer in audio processing.
-//
-// Note: If enabled and the reverse stream has more than one output channel,
-// the reverse stream will become an upmixed mono signal.
-struct Intelligibility {
-  Intelligibility() : enabled(false) {}
-  explicit Intelligibility(bool enabled) : enabled(enabled) {}
-  static const ConfigOptionID identifier = ConfigOptionID::kIntelligibility;
   bool enabled;
 };
 
@@ -210,12 +193,11 @@ struct Intelligibility {
 // AudioProcessing* apm = AudioProcessingBuilder().Create();
 //
 // AudioProcessing::Config config;
-// config.level_controller.enabled = true;
+// config.echo_canceller.enabled = true;
+// config.echo_canceller.mobile_mode = false;
 // config.high_pass_filter.enabled = true;
+// config.gain_controller2.enabled = true;
 // apm->ApplyConfig(config)
-//
-// apm->echo_cancellation()->enable_drift_compensation(false);
-// apm->echo_cancellation()->Enable(true);
 //
 // apm->noise_reduction()->set_level(kHighSuppression);
 // apm->noise_reduction()->Enable(true);
@@ -261,14 +243,15 @@ class AudioProcessing : public rtc::RefCountInterface {
   // by changing the default values in the AudioProcessing::Config struct.
   // The config is applied by passing the struct to the ApplyConfig method.
   struct Config {
-    struct LevelController {
+    // TODO(bugs.webrtc.org/9535): Currently unused. Use this to determine AEC.
+    struct EchoCanceller {
       bool enabled = false;
+      bool mobile_mode = false;
+      // Recommended not to use. Will be removed in the future.
+      // APM components are not fine-tuned for legacy suppression levels.
+      bool legacy_moderate_suppression_level = false;
+    } echo_canceller;
 
-      // Sets the initial peak level to use inside the level controller in order
-      // to compute the signal gain. The unit for the peak level is dBFS and
-      // the allowed range is [-100, 0].
-      float initial_peak_level_dbfs = -6.0206f;
-    } level_controller;
     struct ResidualEchoDetector {
       bool enabled = true;
     } residual_echo_detector;
@@ -277,14 +260,23 @@ class AudioProcessing : public rtc::RefCountInterface {
       bool enabled = false;
     } high_pass_filter;
 
+    // Enabled the pre-amplifier. It amplifies the capture signal
+    // before any other processing is done.
+    struct PreAmplifier {
+      bool enabled = false;
+      float fixed_gain_factor = 1.f;
+    } pre_amplifier;
+
     // Enables the next generation AGC functionality. This feature replaces the
-    // standard methods of gain control in the previous AGC.
-    // The functionality is not yet activated in the code and turning this on
-    // does not yet have the desired behavior.
+    // standard methods of gain control in the previous AGC. Enabling this
+    // submodule enables an adaptive digital AGC followed by a limiter. By
+    // setting |fixed_gain_db|, the limiter can be turned into a compressor that
+    // first applies a fixed gain. The adaptive digital AGC can be turned off by
+    // setting |adaptive_digital_mode=false|.
     struct GainController2 {
       bool enabled = false;
+      bool adaptive_digital_mode = true;
       float fixed_gain_db = 0.f;
-      bool enable_limiter = true;
     } gain_controller2;
 
     // Explicit copy assignment implementation to avoid issues with memory
@@ -308,6 +300,40 @@ class AudioProcessing : public rtc::RefCountInterface {
     kMonoAndKeyboard,
     // Left, right, keyboard, and mic.
     kStereoAndKeyboard
+  };
+
+  // Specifies the properties of a setting to be passed to AudioProcessing at
+  // runtime.
+  class RuntimeSetting {
+   public:
+    enum class Type {
+      kNotSpecified,
+      kCapturePreGain,
+      kCustomRenderProcessingRuntimeSetting
+    };
+
+    RuntimeSetting() : type_(Type::kNotSpecified), value_(0.f) {}
+    ~RuntimeSetting() = default;
+
+    static RuntimeSetting CreateCapturePreGain(float gain) {
+      RTC_DCHECK_GE(gain, 1.f) << "Attenuation is not allowed.";
+      return {Type::kCapturePreGain, gain};
+    }
+
+    static RuntimeSetting CreateCustomRenderSetting(float payload) {
+      return {Type::kCustomRenderProcessingRuntimeSetting, payload};
+    }
+
+    Type type() const { return type_; }
+    void GetFloat(float* value) const {
+      RTC_DCHECK(value);
+      *value = value_;
+    }
+
+   private:
+    RuntimeSetting(Type id, float value) : type_(id), value_(value) {}
+    Type type_;
+    float value_;
   };
 
   ~AudioProcessing() override {}
@@ -366,6 +392,9 @@ class AudioProcessing : public rtc::RefCountInterface {
   // but some components may change behavior based on this information.
   // Default false.
   virtual void set_output_will_be_muted(bool muted) = 0;
+
+  // Enqueue a runtime setting.
+  virtual void SetRuntimeSetting(RuntimeSetting setting) = 0;
 
   // Processes a 10 ms |frame| of the primary audio stream. On the client-side,
   // this is the near-end (or captured) audio.
@@ -479,6 +508,16 @@ class AudioProcessing : public rtc::RefCountInterface {
   // attached, it's destructor is called. The d-tor may block until
   // all pending logging tasks are completed.
   virtual void DetachAecDump() = 0;
+
+  // Attaches provided webrtc::AudioGenerator for modifying playout audio.
+  // Calling this method when another AudioGenerator is attached replaces the
+  // active AudioGenerator with a new one.
+  virtual void AttachPlayoutAudioGenerator(
+      std::unique_ptr<AudioGenerator> audio_generator) = 0;
+
+  // If no AudioGenerator is attached, this has no effect. If an AecDump is
+  // attached, its destructor is called.
+  virtual void DetachPlayoutAudioGenerator() = 0;
 
   // Use to send UMA histograms at end of a call. Note that all histogram
   // specific member variables are reset.
@@ -627,12 +666,12 @@ class AudioProcessingBuilder {
   // The AudioProcessingBuilder takes ownership of the render_pre_processing.
   AudioProcessingBuilder& SetRenderPreProcessing(
       std::unique_ptr<CustomProcessing> render_pre_processing);
-  // The AudioProcessingBuilder takes ownership of the nonlinear beamformer.
-  AudioProcessingBuilder& SetNonlinearBeamformer(
-      std::unique_ptr<NonlinearBeamformer> nonlinear_beamformer);
   // The AudioProcessingBuilder takes ownership of the echo_detector.
   AudioProcessingBuilder& SetEchoDetector(
-      std::unique_ptr<EchoDetector> echo_detector);
+      rtc::scoped_refptr<EchoDetector> echo_detector);
+  // The AudioProcessingBuilder takes ownership of the capture_analyzer.
+  AudioProcessingBuilder& SetCaptureAnalyzer(
+      std::unique_ptr<CustomAudioAnalyzer> capture_analyzer);
   // This creates an APM instance using the previously set components. Calling
   // the Create function resets the AudioProcessingBuilder to its initial state.
   AudioProcessing* Create();
@@ -642,8 +681,8 @@ class AudioProcessingBuilder {
   std::unique_ptr<EchoControlFactory> echo_control_factory_;
   std::unique_ptr<CustomProcessing> capture_post_processing_;
   std::unique_ptr<CustomProcessing> render_pre_processing_;
-  std::unique_ptr<NonlinearBeamformer> nonlinear_beamformer_;
-  std::unique_ptr<EchoDetector> echo_detector_;
+  rtc::scoped_refptr<EchoDetector> echo_detector_;
+  std::unique_ptr<CustomAudioAnalyzer> capture_analyzer_;
   RTC_DISALLOW_COPY_AND_ASSIGN(AudioProcessingBuilder);
 };
 
@@ -696,8 +735,8 @@ class StreamConfig {
 
  private:
   static size_t calculate_frames(int sample_rate_hz) {
-    return static_cast<size_t>(
-        AudioProcessing::kChunkSizeMs * sample_rate_hz / 1000);
+    return static_cast<size_t>(AudioProcessing::kChunkSizeMs * sample_rate_hz /
+                               1000);
   }
 
   int sample_rate_hz_;
@@ -846,7 +885,8 @@ class EchoCancellation {
   // Deprecated. Use GetStatistics on the AudioProcessing interface instead.
   virtual int GetDelayMetrics(int* median, int* std) = 0;
   // Deprecated. Use GetStatistics on the AudioProcessing interface instead.
-  virtual int GetDelayMetrics(int* median, int* std,
+  virtual int GetDelayMetrics(int* median,
+                              int* std,
                               float* fraction_poor_delays) = 0;
 
   // Returns a pointer to the low level AEC component.  In case of multiple
@@ -915,97 +955,6 @@ class EchoControlMobile {
   virtual ~EchoControlMobile() {}
 };
 
-// The automatic gain control (AGC) component brings the signal to an
-// appropriate range. This is done by applying a digital gain directly and, in
-// the analog mode, prescribing an analog gain to be applied at the audio HAL.
-//
-// Recommended to be enabled on the client-side.
-class GainControl {
- public:
-  virtual int Enable(bool enable) = 0;
-  virtual bool is_enabled() const = 0;
-
-  // When an analog mode is set, this must be called prior to |ProcessStream()|
-  // to pass the current analog level from the audio HAL. Must be within the
-  // range provided to |set_analog_level_limits()|.
-  virtual int set_stream_analog_level(int level) = 0;
-
-  // When an analog mode is set, this should be called after |ProcessStream()|
-  // to obtain the recommended new analog level for the audio HAL. It is the
-  // users responsibility to apply this level.
-  virtual int stream_analog_level() = 0;
-
-  enum Mode {
-    // Adaptive mode intended for use if an analog volume control is available
-    // on the capture device. It will require the user to provide coupling
-    // between the OS mixer controls and AGC through the |stream_analog_level()|
-    // functions.
-    //
-    // It consists of an analog gain prescription for the audio device and a
-    // digital compression stage.
-    kAdaptiveAnalog,
-
-    // Adaptive mode intended for situations in which an analog volume control
-    // is unavailable. It operates in a similar fashion to the adaptive analog
-    // mode, but with scaling instead applied in the digital domain. As with
-    // the analog mode, it additionally uses a digital compression stage.
-    kAdaptiveDigital,
-
-    // Fixed mode which enables only the digital compression stage also used by
-    // the two adaptive modes.
-    //
-    // It is distinguished from the adaptive modes by considering only a
-    // short time-window of the input signal. It applies a fixed gain through
-    // most of the input level range, and compresses (gradually reduces gain
-    // with increasing level) the input signal at higher levels. This mode is
-    // preferred on embedded devices where the capture signal level is
-    // predictable, so that a known gain can be applied.
-    kFixedDigital
-  };
-
-  virtual int set_mode(Mode mode) = 0;
-  virtual Mode mode() const = 0;
-
-  // Sets the target peak |level| (or envelope) of the AGC in dBFs (decibels
-  // from digital full-scale). The convention is to use positive values. For
-  // instance, passing in a value of 3 corresponds to -3 dBFs, or a target
-  // level 3 dB below full-scale. Limited to [0, 31].
-  //
-  // TODO(ajm): use a negative value here instead, if/when VoE will similarly
-  //            update its interface.
-  virtual int set_target_level_dbfs(int level) = 0;
-  virtual int target_level_dbfs() const = 0;
-
-  // Sets the maximum |gain| the digital compression stage may apply, in dB. A
-  // higher number corresponds to greater compression, while a value of 0 will
-  // leave the signal uncompressed. Limited to [0, 90].
-  virtual int set_compression_gain_db(int gain) = 0;
-  virtual int compression_gain_db() const = 0;
-
-  // When enabled, the compression stage will hard limit the signal to the
-  // target level. Otherwise, the signal will be compressed but not limited
-  // above the target level.
-  virtual int enable_limiter(bool enable) = 0;
-  virtual bool is_limiter_enabled() const = 0;
-
-  // Sets the |minimum| and |maximum| analog levels of the audio capture device.
-  // Must be set if and only if an analog mode is used. Limited to [0, 65535].
-  virtual int set_analog_level_limits(int minimum,
-                                      int maximum) = 0;
-  virtual int analog_level_minimum() const = 0;
-  virtual int analog_level_maximum() const = 0;
-
-  // Returns true if the AGC has detected a saturation event (period where the
-  // signal reaches digital full-scale) in the current frame and the analog
-  // level cannot be reduced.
-  //
-  // This could be used as an indicator to reduce or disable analog mic gain at
-  // the audio HAL.
-  virtual bool stream_is_saturated() const = 0;
-
- protected:
-  virtual ~GainControl() {}
-};
 // TODO(peah): Remove this interface.
 // A filtering component which removes DC offset and low-frequency noise.
 // Recommended to be enabled on the client-side.
@@ -1050,12 +999,7 @@ class NoiseSuppression {
 
   // Determines the aggressiveness of the suppression. Increasing the level
   // will reduce the noise level at the expense of a higher speech distortion.
-  enum Level {
-    kLow,
-    kModerate,
-    kHigh,
-    kVeryHigh
-  };
+  enum Level { kLow, kModerate, kHigh, kVeryHigh };
 
   virtual int set_level(Level level) = 0;
   virtual Level level() const = 0;
@@ -1072,6 +1016,19 @@ class NoiseSuppression {
   virtual ~NoiseSuppression() {}
 };
 
+// Experimental interface for a custom analysis submodule.
+class CustomAudioAnalyzer {
+ public:
+  // (Re-) Initializes the submodule.
+  virtual void Initialize(int sample_rate_hz, int num_channels) = 0;
+  // Analyzes the given capture or render signal.
+  virtual void Analyze(const AudioBuffer* audio) = 0;
+  // Returns a string representation of the module state.
+  virtual std::string ToString() const = 0;
+
+  virtual ~CustomAudioAnalyzer() {}
+};
+
 // Interface for a custom processing submodule.
 class CustomProcessing {
  public:
@@ -1081,15 +1038,21 @@ class CustomProcessing {
   virtual void Process(AudioBuffer* audio) = 0;
   // Returns a string representation of the module state.
   virtual std::string ToString() const = 0;
+  // Handles RuntimeSettings. TODO(webrtc:9262): make pure virtual
+  // after updating dependencies.
+  virtual void SetRuntimeSetting(AudioProcessing::RuntimeSetting setting);
 
   virtual ~CustomProcessing() {}
 };
 
 // Interface for an echo detector submodule.
-class EchoDetector {
+class EchoDetector : public rtc::RefCountInterface {
  public:
   // (Re-)Initializes the submodule.
-  virtual void Initialize(int sample_rate_hz, int num_channels) = 0;
+  virtual void Initialize(int capture_sample_rate_hz,
+                          int num_capture_channels,
+                          int render_sample_rate_hz,
+                          int num_render_channels) = 0;
 
   // Analysis (not changing) of the render signal.
   virtual void AnalyzeRenderAudio(rtc::ArrayView<const float> render_audio) = 0;
@@ -1109,8 +1072,6 @@ class EchoDetector {
 
   // Collect current metrics from the echo detector.
   virtual Metrics GetMetrics() const = 0;
-
-  virtual ~EchoDetector() {}
 };
 
 // The voice activity detection (VAD) component analyzes the stream to
@@ -1162,6 +1123,7 @@ class VoiceDetection {
  protected:
   virtual ~VoiceDetection() {}
 };
+
 }  // namespace webrtc
 
 #endif  // MODULES_AUDIO_PROCESSING_INCLUDE_AUDIO_PROCESSING_H_

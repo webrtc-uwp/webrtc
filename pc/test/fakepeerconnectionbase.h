@@ -43,14 +43,8 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
 
   RTCErrorOr<rtc::scoped_refptr<RtpSenderInterface>> AddTrack(
       rtc::scoped_refptr<MediaStreamTrackInterface> track,
-      const std::vector<std::string>& stream_labels) override {
+      const std::vector<std::string>& stream_ids) override {
     return RTCError(RTCErrorType::UNSUPPORTED_OPERATION, "Not implemented");
-  }
-
-  rtc::scoped_refptr<RtpSenderInterface> AddTrack(
-      MediaStreamTrackInterface* track,
-      std::vector<MediaStreamInterface*> streams) override {
-    return nullptr;
   }
 
   bool RemoveTrack(RtpSenderInterface* sender) override { return false; }
@@ -75,11 +69,6 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
       cricket::MediaType media_type,
       const RtpTransceiverInit& init) override {
     return RTCError(RTCErrorType::UNSUPPORTED_OPERATION, "Not implemented");
-  }
-
-  rtc::scoped_refptr<DtmfSenderInterface> CreateDtmfSender(
-      AudioTrackInterface* track) override {
-    return nullptr;
   }
 
   rtc::scoped_refptr<RtpSenderInterface> CreateSender(
@@ -110,6 +99,12 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
   }
 
   void GetStats(RTCStatsCollectorCallback* callback) override {}
+  void GetStats(
+      rtc::scoped_refptr<RtpSenderInterface> selector,
+      rtc::scoped_refptr<RTCStatsCollectorCallback> callback) override {}
+  void GetStats(
+      rtc::scoped_refptr<RtpReceiverInterface> selector,
+      rtc::scoped_refptr<RTCStatsCollectorCallback> callback) override {}
 
   void ClearStatsCache() override {}
 
@@ -145,16 +140,10 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
   }
 
   void CreateOffer(CreateSessionDescriptionObserver* observer,
-                   const MediaConstraintsInterface* constraints) override {}
-
-  void CreateOffer(CreateSessionDescriptionObserver* observer,
                    const RTCOfferAnswerOptions& options) override {}
 
   void CreateAnswer(CreateSessionDescriptionObserver* observer,
                     const RTCOfferAnswerOptions& options) override {}
-
-  void CreateAnswer(CreateSessionDescriptionObserver* observer,
-                    const MediaConstraintsInterface* constraints) override {}
 
   void SetLocalDescription(SetSessionDescriptionObserver* observer,
                            SessionDescriptionInterface* desc) override {}
@@ -166,13 +155,6 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
       std::unique_ptr<SessionDescriptionInterface> desc,
       rtc::scoped_refptr<SetRemoteDescriptionObserverInterface> observer)
       override {}
-
-  bool UpdateIce(const IceServers& configuration,
-                 const MediaConstraintsInterface* constraints) override {
-    return false;
-  }
-
-  bool UpdateIce(const IceServers& configuration) override { return false; }
 
   RTCConfiguration GetConfiguration() override { return RTCConfiguration(); }
 
@@ -195,9 +177,7 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
     return false;
   }
 
-  void RegisterUMAObserver(UMAObserver* observer) override {}
-
-  RTCError SetBitrate(const BitrateParameters& bitrate) override {
+  RTCError SetBitrate(const BitrateSettings& bitrate) override {
     return RTCError(RTCErrorType::UNSUPPORTED_OPERATION, "Not implemented");
   }
 
@@ -267,12 +247,12 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
     return {};
   }
 
-  rtc::Optional<std::string> sctp_content_name() const override {
-    return rtc::nullopt;
+  absl::optional<std::string> sctp_content_name() const override {
+    return absl::nullopt;
   }
 
-  rtc::Optional<std::string> sctp_transport_name() const override {
-    return rtc::nullopt;
+  absl::optional<std::string> sctp_transport_name() const override {
+    return absl::nullopt;
   }
 
   std::map<std::string, std::string> GetTransportNamesByMid() const override {

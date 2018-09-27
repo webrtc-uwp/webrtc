@@ -21,6 +21,7 @@ namespace webrtc {
 // asyncpacketsocket.h.
 struct PacketOptions {
   PacketOptions();
+  PacketOptions(const PacketOptions&);
   ~PacketOptions();
 
   // A 16 bits positive id. Negative ids are invalid and should be interpreted
@@ -29,6 +30,8 @@ struct PacketOptions {
   // Additional data bound to the RTP packet for use in application code,
   // outside of WebRTC.
   std::vector<uint8_t> application_data;
+  // Whether this is a retransmission of an earlier packet.
+  bool is_retransmit = false;
 };
 
 class Transport {

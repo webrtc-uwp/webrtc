@@ -10,12 +10,20 @@
 
 #include "logging/rtc_event_log/events/rtc_event_ice_candidate_pair.h"
 
+#include "absl/memory/memory.h"
+
 namespace webrtc {
 
 RtcEventIceCandidatePair::RtcEventIceCandidatePair(
     IceCandidatePairEventType type,
     uint32_t candidate_pair_id)
     : type_(type), candidate_pair_id_(candidate_pair_id) {}
+
+RtcEventIceCandidatePair::RtcEventIceCandidatePair(
+    const RtcEventIceCandidatePair& other)
+    : RtcEvent(other.timestamp_us_),
+      type_(other.type_),
+      candidate_pair_id_(other.candidate_pair_id_) {}
 
 RtcEventIceCandidatePair::~RtcEventIceCandidatePair() = default;
 
@@ -25,6 +33,10 @@ RtcEvent::Type RtcEventIceCandidatePair::GetType() const {
 
 bool RtcEventIceCandidatePair::IsConfigEvent() const {
   return false;
+}
+
+std::unique_ptr<RtcEvent> RtcEventIceCandidatePair::Copy() const {
+  return absl::WrapUnique<RtcEvent>(new RtcEventIceCandidatePair(*this));
 }
 
 }  // namespace webrtc

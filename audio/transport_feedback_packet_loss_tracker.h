@@ -14,8 +14,7 @@
 #include <map>
 #include <vector>
 
-#include "api/optional.h"
-#include "modules/include/module_common_types.h"
+#include "absl/types/optional.h"
 
 namespace webrtc {
 
@@ -36,6 +35,7 @@ class TransportFeedbackPacketLossTracker final {
   TransportFeedbackPacketLossTracker(int64_t max_window_size_ms,
                                      size_t plr_min_num_acked_packets,
                                      size_t rplr_min_num_acked_pairs);
+  ~TransportFeedbackPacketLossTracker();
 
   void OnPacketAdded(uint16_t seq_num, int64_t send_time_ms);
 
@@ -44,11 +44,11 @@ class TransportFeedbackPacketLossTracker final {
 
   // Returns the packet loss rate, if the window has enough packet statuses to
   // reliably compute it. Otherwise, returns empty.
-  rtc::Optional<float> GetPacketLossRate() const;
+  absl::optional<float> GetPacketLossRate() const;
 
   // Returns the first-order-FEC recoverable packet loss rate, if the window has
   // enough status pairs to reliably compute it. Otherwise, returns empty.
-  rtc::Optional<float> GetRecoverablePacketLossRate() const;
+  absl::optional<float> GetRecoverablePacketLossRate() const;
 
   // Verifies that the internal states are correct. Only used for tests.
   void Validate() const;
@@ -109,7 +109,7 @@ class TransportFeedbackPacketLossTracker final {
       num_received_packets_ = 0;
       num_lost_packets_ = 0;
     }
-    rtc::Optional<float> GetMetric() const;
+    absl::optional<float> GetMetric() const;
     const size_t min_num_acked_packets_;
     size_t num_received_packets_;
     size_t num_lost_packets_;
@@ -125,7 +125,7 @@ class TransportFeedbackPacketLossTracker final {
       num_acked_pairs_ = 0;
       num_recoverable_losses_ = 0;
     }
-    rtc::Optional<float> GetMetric() const;
+    absl::optional<float> GetMetric() const;
     // Recoverable packets are those which were lost, but immediately followed
     // by a properly received packet. If that second packet carried FEC,
     // the data from the former (lost) packet could be recovered.

@@ -88,11 +88,11 @@ class FuzzSignalInput : public NetEqInput {
     output_event_period_ms_ = fuzz_data_.SelectOneOf(output_event_periods);
   }
 
-  rtc::Optional<int64_t> NextPacketTime() const override {
+  absl::optional<int64_t> NextPacketTime() const override {
     return packet_->time_ms;
   }
 
-  rtc::Optional<int64_t> NextOutputEventTime() const override {
+  absl::optional<int64_t> NextOutputEventTime() const override {
     return next_output_event_ms_;
   }
 
@@ -124,7 +124,7 @@ class FuzzSignalInput : public NetEqInput {
 
   bool ended() const override { return ended_; }
 
-  rtc::Optional<RTPHeader> NextHeader() const override {
+  absl::optional<RTPHeader> NextHeader() const override {
     RTC_DCHECK(packet_);
     return packet_->header;
   }
@@ -141,9 +141,6 @@ class FuzzSignalInput : public NetEqInput {
 
 void FuzzOneInputTest(const uint8_t* data, size_t size) {
   if (size < 1)
-    return;
-  // Limit the input size to 100000 bytes to avoid fuzzer timeout.
-  if (size > 100000)
     return;
 
   FuzzDataHelper fuzz_data(rtc::ArrayView<const uint8_t>(data, size));
@@ -167,31 +164,22 @@ void FuzzOneInputTest(const uint8_t* data, size_t size) {
   NetEq::Config config;
   config.enable_post_decode_vad = true;
   config.enable_fast_accelerate = true;
-  NetEqTest::DecoderMap codecs;
-  codecs[0] = std::make_pair(NetEqDecoder::kDecoderPCMu, "pcmu");
-  codecs[8] = std::make_pair(NetEqDecoder::kDecoderPCMa, "pcma");
-  codecs[103] = std::make_pair(NetEqDecoder::kDecoderISAC, "isac");
-  codecs[104] = std::make_pair(NetEqDecoder::kDecoderISACswb, "isac-swb");
-  codecs[111] = std::make_pair(NetEqDecoder::kDecoderOpus, "opus");
-  codecs[9] = std::make_pair(NetEqDecoder::kDecoderG722, "g722");
-  codecs[106] = std::make_pair(NetEqDecoder::kDecoderAVT, "avt");
-  codecs[114] = std::make_pair(NetEqDecoder::kDecoderAVT16kHz, "avt-16");
-  codecs[115] = std::make_pair(NetEqDecoder::kDecoderAVT32kHz, "avt-32");
-  codecs[116] = std::make_pair(NetEqDecoder::kDecoderAVT48kHz, "avt-48");
-  codecs[117] = std::make_pair(NetEqDecoder::kDecoderRED, "red");
-  codecs[13] = std::make_pair(NetEqDecoder::kDecoderCNGnb, "cng-nb");
-  codecs[98] = std::make_pair(NetEqDecoder::kDecoderCNGwb, "cng-wb");
-  codecs[99] = std::make_pair(NetEqDecoder::kDecoderCNGswb32kHz, "cng-swb32");
-  codecs[100] = std::make_pair(NetEqDecoder::kDecoderCNGswb48kHz, "cng-swb48");
-  // One of these payload types will be used for encoding.
-  codecs[rate_types[0].second] =
-      std::make_pair(NetEqDecoder::kDecoderPCM16B, "pcm16-nb");
-  codecs[rate_types[1].second] =
-      std::make_pair(NetEqDecoder::kDecoderPCM16Bwb, "pcm16-wb");
-  codecs[rate_types[2].second] =
-      std::make_pair(NetEqDecoder::kDecoderPCM16Bswb32kHz, "pcm16-swb32");
-  codecs[rate_types[3].second] =
-      std::make_pair(NetEqDecoder::kDecoderPCM16Bswb48kHz, "pcm16-swb48");
+  auto codecs = NetEqTest::StandardDecoderMap();
+  // rate_types contains the payload types that will be used for encoding.
+  // Verify that they all are included in the standard decoder map, and that
+  // they point to the expected decoder types.
+  RTC_CHECK_EQ(codecs.count(rate_types[0].second), 1);
+  RTC_CHECK(codecs[rate_types[0].second].first == NetEqDecoder::kDecoderPCM16B);
+  RTC_CHECK_EQ(codecs.count(rate_types[1].second), 1);
+  RTC_CHECK(codecs[rate_types[1].second].first ==
+            NetEqDecoder::kDecoderPCM16Bwb);
+  RTC_CHECK_EQ(codecs.count(rate_types[2].second), 1);
+  RTC_CHECK(codecs[rate_types[2].second].first ==
+            NetEqDecoder::kDecoderPCM16Bswb32kHz);
+  RTC_CHECK_EQ(codecs.count(rate_types[3].second), 1);
+  RTC_CHECK(codecs[rate_types[3].second].first ==
+            NetEqDecoder::kDecoderPCM16Bswb48kHz);
+
   NetEqTest::ExtDecoderMap ext_codecs;
 
   NetEqTest test(config, codecs, ext_codecs, std::move(input),

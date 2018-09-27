@@ -67,7 +67,6 @@ rtc::scoped_refptr<PeerConnectionFactoryInterface> CreatePeerConnectionFactory(
       network_thread, worker_thread, signaling_thread, std::move(media_engine),
       std::move(call_factory), std::move(event_log_factory));
 }
-#endif
 
 rtc::scoped_refptr<PeerConnectionFactoryInterface> CreatePeerConnectionFactory(
     rtc::Thread* network_thread,
@@ -80,7 +79,9 @@ rtc::scoped_refptr<PeerConnectionFactoryInterface> CreatePeerConnectionFactory(
     cricket::WebRtcVideoDecoderFactory* video_decoder_factory,
     rtc::scoped_refptr<AudioMixer> audio_mixer,
     rtc::scoped_refptr<AudioProcessing> audio_processing,
-    std::unique_ptr<FecControllerFactoryInterface> fec_controller_factory) {
+    std::unique_ptr<FecControllerFactoryInterface> fec_controller_factory,
+    std::unique_ptr<NetworkControllerFactoryInterface>
+        network_controller_factory) {
   rtc::scoped_refptr<AudioProcessing> audio_processing_use = audio_processing;
   if (!audio_processing_use) {
     audio_processing_use = AudioProcessingBuilder().Create();
@@ -100,8 +101,9 @@ rtc::scoped_refptr<PeerConnectionFactoryInterface> CreatePeerConnectionFactory(
   return CreateModularPeerConnectionFactory(
       network_thread, worker_thread, signaling_thread, std::move(media_engine),
       std::move(call_factory), std::move(event_log_factory),
-      std::move(fec_controller_factory));
+      std::move(fec_controller_factory), std::move(network_controller_factory));
 }
+#endif
 
 rtc::scoped_refptr<PeerConnectionFactoryInterface> CreatePeerConnectionFactory(
     rtc::Thread* network_thread,

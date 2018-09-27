@@ -11,225 +11,53 @@
 #ifndef MODULES_INCLUDE_MODULE_COMMON_TYPES_H_
 #define MODULES_INCLUDE_MODULE_COMMON_TYPES_H_
 
-#include <assert.h>
-#include <string.h>  // memcpy
+#include <stddef.h>
+#include <stdint.h>
 
-#include <algorithm>
-#include <limits>
-
-#include "api/optional.h"
-// TODO(bugs.webrtc.org/7504): Included here because users of this header expect
-// it to declare AudioFrame. Delete as soon as all known users are updated.
-#include "api/audio/audio_frame.h"
 #include "api/rtp_headers.h"
-#include "api/video/video_rotation.h"
 #include "common_types.h"  // NOLINT(build/include)
 #include "modules/include/module_common_types_public.h"
 #include "modules/include/module_fec_types.h"
-#include "modules/video_coding/codecs/h264/include/h264_globals.h"
-#include "modules/video_coding/codecs/vp8/include/vp8_globals.h"
-#include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
-#include "rtc_base/constructormagic.h"
-#include "rtc_base/deprecation.h"
-#include "rtc_base/numerics/safe_conversions.h"
-#include "rtc_base/timeutils.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "modules/rtp_rtcp/source/rtp_video_header.h"
 
 namespace webrtc {
 
-struct RTPAudioHeader {
-  uint8_t numEnergy;                  // number of valid entries in arrOfEnergy
-  uint8_t arrOfEnergy[kRtpCsrcSize];  // one energy byte (0-9) per channel
-  bool isCNG;                         // is this CNG
-  size_t channel;                     // number of channels 2 = stereo
-};
-
-enum RtpVideoCodecTypes {
-  kRtpVideoNone = 0,
-  kRtpVideoGeneric = 1,
-  kRtpVideoVp8 = 2,
-  kRtpVideoVp9 = 3,
-  kRtpVideoH264 = 4
-};
-
-union RTPVideoTypeHeader {
-  RTPVideoHeaderVP8 VP8;
-  RTPVideoHeaderVP9 VP9;
-  RTPVideoHeaderH264 H264;
-};
-
-// Since RTPVideoHeader is used as a member of a union, it can't have a
-// non-trivial default constructor.
-struct RTPVideoHeader {
-  uint16_t width;  // size
-  uint16_t height;
-  VideoRotation rotation;
-
-  PlayoutDelay playout_delay;
-
-  VideoContentType content_type;
-
-  VideoSendTiming video_timing;
-
-  bool is_first_packet_in_frame;
-  uint8_t simulcastIdx;  // Index if the simulcast encoder creating
-                         // this frame, 0 if not using simulcast.
-  RtpVideoCodecTypes codec;
-  RTPVideoTypeHeader codecHeader;
-};
-union RTPTypeHeader {
-  RTPAudioHeader Audio;
-  RTPVideoHeader Video;
-};
-
 struct WebRtcRTPHeader {
+  RTPVideoHeader& video_header() { return video; }
+  const RTPVideoHeader& video_header() const { return video; }
+  RTPVideoHeader video;
+
   RTPHeader header;
   FrameType frameType;
-  RTPTypeHeader type;
   // NTP time of the capture time in local timebase in milliseconds.
   int64_t ntp_time_ms;
 };
 
 class RTPFragmentationHeader {
  public:
-  RTPFragmentationHeader()
-      : fragmentationVectorSize(0),
-        fragmentationOffset(NULL),
-        fragmentationLength(NULL),
-        fragmentationTimeDiff(NULL),
-        fragmentationPlType(NULL) {}
+  RTPFragmentationHeader();
+  RTPFragmentationHeader(const RTPFragmentationHeader&) = delete;
+  RTPFragmentationHeader(RTPFragmentationHeader&& other);
+  RTPFragmentationHeader& operator=(const RTPFragmentationHeader& other) =
+      delete;
+  RTPFragmentationHeader& operator=(RTPFragmentationHeader&& other);
+  ~RTPFragmentationHeader();
 
-  RTPFragmentationHeader(RTPFragmentationHeader&& other)
-      : RTPFragmentationHeader() {
-    std::swap(*this, other);
-  }
+  friend void swap(RTPFragmentationHeader& a, RTPFragmentationHeader& b);
 
-  ~RTPFragmentationHeader() {
-    delete[] fragmentationOffset;
-    delete[] fragmentationLength;
-    delete[] fragmentationTimeDiff;
-    delete[] fragmentationPlType;
-  }
+  void CopyFrom(const RTPFragmentationHeader& src);
+  void VerifyAndAllocateFragmentationHeader(size_t size) { Resize(size); }
 
-  void operator=(RTPFragmentationHeader&& other) { std::swap(*this, other); }
+  void Resize(size_t size);
+  size_t Size() const { return fragmentationVectorSize; }
 
-  friend void swap(RTPFragmentationHeader& a, RTPFragmentationHeader& b) {
-    using std::swap;
-    swap(a.fragmentationVectorSize, b.fragmentationVectorSize);
-    swap(a.fragmentationOffset, b.fragmentationOffset);
-    swap(a.fragmentationLength, b.fragmentationLength);
-    swap(a.fragmentationTimeDiff, b.fragmentationTimeDiff);
-    swap(a.fragmentationPlType, b.fragmentationPlType);
-  }
+  size_t Offset(size_t index) const { return fragmentationOffset[index]; }
+  size_t Length(size_t index) const { return fragmentationLength[index]; }
+  uint16_t TimeDiff(size_t index) const { return fragmentationTimeDiff[index]; }
+  int PayloadType(size_t index) const { return fragmentationPlType[index]; }
 
-  void CopyFrom(const RTPFragmentationHeader& src) {
-    if (this == &src) {
-      return;
-    }
-
-    if (src.fragmentationVectorSize != fragmentationVectorSize) {
-      // new size of vectors
-
-      // delete old
-      delete[] fragmentationOffset;
-      fragmentationOffset = NULL;
-      delete[] fragmentationLength;
-      fragmentationLength = NULL;
-      delete[] fragmentationTimeDiff;
-      fragmentationTimeDiff = NULL;
-      delete[] fragmentationPlType;
-      fragmentationPlType = NULL;
-
-      if (src.fragmentationVectorSize > 0) {
-        // allocate new
-        if (src.fragmentationOffset) {
-          fragmentationOffset = new size_t[src.fragmentationVectorSize];
-        }
-        if (src.fragmentationLength) {
-          fragmentationLength = new size_t[src.fragmentationVectorSize];
-        }
-        if (src.fragmentationTimeDiff) {
-          fragmentationTimeDiff = new uint16_t[src.fragmentationVectorSize];
-        }
-        if (src.fragmentationPlType) {
-          fragmentationPlType = new uint8_t[src.fragmentationVectorSize];
-        }
-      }
-      // set new size
-      fragmentationVectorSize = src.fragmentationVectorSize;
-    }
-
-    if (src.fragmentationVectorSize > 0) {
-      // copy values
-      if (src.fragmentationOffset) {
-        memcpy(fragmentationOffset, src.fragmentationOffset,
-               src.fragmentationVectorSize * sizeof(size_t));
-      }
-      if (src.fragmentationLength) {
-        memcpy(fragmentationLength, src.fragmentationLength,
-               src.fragmentationVectorSize * sizeof(size_t));
-      }
-      if (src.fragmentationTimeDiff) {
-        memcpy(fragmentationTimeDiff, src.fragmentationTimeDiff,
-               src.fragmentationVectorSize * sizeof(uint16_t));
-      }
-      if (src.fragmentationPlType) {
-        memcpy(fragmentationPlType, src.fragmentationPlType,
-               src.fragmentationVectorSize * sizeof(uint8_t));
-      }
-    }
-  }
-
-  void VerifyAndAllocateFragmentationHeader(const size_t size) {
-    assert(size <= std::numeric_limits<uint16_t>::max());
-    const uint16_t size16 = static_cast<uint16_t>(size);
-    if (fragmentationVectorSize < size16) {
-      uint16_t oldVectorSize = fragmentationVectorSize;
-      {
-        // offset
-        size_t* oldOffsets = fragmentationOffset;
-        fragmentationOffset = new size_t[size16];
-        memset(fragmentationOffset + oldVectorSize, 0,
-               sizeof(size_t) * (size16 - oldVectorSize));
-        // copy old values
-        memcpy(fragmentationOffset, oldOffsets,
-               sizeof(size_t) * oldVectorSize);
-        delete[] oldOffsets;
-      }
-      // length
-      {
-        size_t* oldLengths = fragmentationLength;
-        fragmentationLength = new size_t[size16];
-        memset(fragmentationLength + oldVectorSize, 0,
-               sizeof(size_t) * (size16 - oldVectorSize));
-        memcpy(fragmentationLength, oldLengths,
-               sizeof(size_t) * oldVectorSize);
-        delete[] oldLengths;
-      }
-      // time diff
-      {
-        uint16_t* oldTimeDiffs = fragmentationTimeDiff;
-        fragmentationTimeDiff = new uint16_t[size16];
-        memset(fragmentationTimeDiff + oldVectorSize, 0,
-               sizeof(uint16_t) * (size16 - oldVectorSize));
-        memcpy(fragmentationTimeDiff, oldTimeDiffs,
-               sizeof(uint16_t) * oldVectorSize);
-        delete[] oldTimeDiffs;
-      }
-      // payload type
-      {
-        uint8_t* oldTimePlTypes = fragmentationPlType;
-        fragmentationPlType = new uint8_t[size16];
-        memset(fragmentationPlType + oldVectorSize, 0,
-               sizeof(uint8_t) * (size16 - oldVectorSize));
-        memcpy(fragmentationPlType, oldTimePlTypes,
-               sizeof(uint8_t) * oldVectorSize);
-        delete[] oldTimePlTypes;
-      }
-      fragmentationVectorSize = size16;
-    }
-  }
-
+  // TODO(danilchap): Move all members to private section,
+  // simplify by replacing 4 raw arrays with single std::vector<Fragment>
   uint16_t fragmentationVectorSize;  // Number of fragmentations
   size_t* fragmentationOffset;       // Offset of pointer to data for each
                                      // fragmentation
@@ -237,9 +65,6 @@ class RTPFragmentationHeader {
   uint16_t* fragmentationTimeDiff;   // Timestamp difference relative "now" for
                                      // each fragmentation
   uint8_t* fragmentationPlType;      // Payload type of each fragmentation
-
- private:
-  RTC_DISALLOW_COPY_AND_ASSIGN(RTPFragmentationHeader);
 };
 
 struct RTCPVoIPMetric {
@@ -276,29 +101,32 @@ class CallStatsObserver {
   virtual ~CallStatsObserver() {}
 };
 
-struct PacedPacketInfo {
-  PacedPacketInfo() {}
-  PacedPacketInfo(int probe_cluster_id,
-                  int probe_cluster_min_probes,
-                  int probe_cluster_min_bytes)
-      : probe_cluster_id(probe_cluster_id),
-        probe_cluster_min_probes(probe_cluster_min_probes),
-        probe_cluster_min_bytes(probe_cluster_min_bytes) {}
+// Interface used by NackModule and JitterBuffer.
+class NackSender {
+ public:
+  virtual void SendNack(const std::vector<uint16_t>& sequence_numbers) = 0;
 
-  bool operator==(const PacedPacketInfo& rhs) const {
-    return send_bitrate_bps == rhs.send_bitrate_bps &&
-           probe_cluster_id == rhs.probe_cluster_id &&
-           probe_cluster_min_probes == rhs.probe_cluster_min_probes &&
-           probe_cluster_min_bytes == rhs.probe_cluster_min_bytes;
-  }
-
-  static constexpr int kNotAProbe = -1;
-  int send_bitrate_bps = -1;
-  int probe_cluster_id = kNotAProbe;
-  int probe_cluster_min_probes = -1;
-  int probe_cluster_min_bytes = -1;
+ protected:
+  virtual ~NackSender() {}
 };
 
+// Interface used by NackModule and JitterBuffer.
+class KeyFrameRequestSender {
+ public:
+  virtual void RequestKeyFrame() = 0;
+
+ protected:
+  virtual ~KeyFrameRequestSender() {}
+};
+
+// Used to indicate if a received packet contain a complete NALU (or equivalent)
+enum VCMNaluCompleteness {
+  kNaluUnset = 0,     // Packet has not been filled.
+  kNaluComplete = 1,  // Packet can be decoded as is.
+  kNaluStart,         // Packet contain beginning of NALU
+  kNaluIncomplete,    // Packet is not beginning or end of NALU
+  kNaluEnd,           // Packet is the end of a NALU
+};
 }  // namespace webrtc
 
 #endif  // MODULES_INCLUDE_MODULE_COMMON_TYPES_H_

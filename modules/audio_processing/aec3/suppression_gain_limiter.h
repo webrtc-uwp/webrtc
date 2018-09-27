@@ -32,6 +32,15 @@ class SuppressionGainUpperLimiter {
   // Returns the current suppressor gain limit.
   float Limit() const { return suppressor_gain_limit_; }
 
+  // Return whether the suppressor gain limit is active.
+  bool IsActive() const { return (realignment_counter_ > 0); }
+
+  // Inactivate limiter.
+  void Deactivate() {
+    realignment_counter_ = 0;
+    suppressor_gain_limit_ = 1.f;
+  }
+
  private:
   const EchoCanceller3Config::EchoRemovalControl::GainRampup rampup_config_;
   const float gain_rampup_increase_;

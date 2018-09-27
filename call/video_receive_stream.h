@@ -16,12 +16,13 @@
 #include <string>
 #include <vector>
 
-#include "api/rtp_headers.h"
 #include "api/call/transport.h"
+#include "api/rtp_headers.h"
 #include "api/rtpparameters.h"
 #include "api/video/video_content_type.h"
+#include "api/video/video_sink_interface.h"
 #include "api/video/video_timing.h"
-#include "api/videosinkinterface.h"
+#include "api/video_codecs/sdp_video_format.h"
 #include "call/rtp_config.h"
 #include "common_types.h"  // NOLINT(build/include)
 #include "common_video/include/frame_callback.h"
@@ -45,19 +46,11 @@ class VideoReceiveStream {
 
     // The actual decoder instance.
     VideoDecoder* decoder = nullptr;
+    SdpVideoFormat video_format;
 
     // Received RTP packets with this payload type will be sent to this decoder
     // instance.
     int payload_type = 0;
-
-    // Name of the decoded payload (such as VP8). Maps back to the depacketizer
-    // used to unpack incoming packets.
-    std::string payload_name;
-
-    // This map contains the codec specific parameters from SDP, i.e. the "fmtp"
-    // parameters. It is the same as cricket::CodecParameterMap used in
-    // cricket::VideoCodec.
-    std::map<std::string, std::string> codec_params;
   };
 
   struct Stats {
@@ -85,7 +78,7 @@ class VideoReceiveStream {
     int render_delay_ms = 10;
     int64_t interframe_delay_max_ms = -1;
     uint32_t frames_decoded = 0;
-    rtc::Optional<uint64_t> qp_sum;
+    absl::optional<uint64_t> qp_sum;
 
     int current_payload_type = -1;
 
@@ -107,7 +100,7 @@ class VideoReceiveStream {
 
     // Timing frame info: all important timestamps for a full lifetime of a
     // single 'timing frame'.
-    rtc::Optional<webrtc::TimingFrameInfo> timing_frame_info;
+    absl::optional<webrtc::TimingFrameInfo> timing_frame_info;
   };
 
   struct Config {
@@ -215,11 +208,6 @@ class VideoReceiveStream {
     // TODO(pbos): Synchronize streams in a sync group, not just video streams
     // to one of the audio streams.
     std::string sync_group;
-
-    // Called for each incoming video frame, i.e. in encoded state. E.g. used
-    // when
-    // saving the stream to a file. 'nullptr' disables the callback.
-    EncodedFrameObserver* pre_decode_callback = nullptr;
 
     // Target delay in milliseconds. A positive value indicates this stream is
     // used for streaming instead of a real-time call.

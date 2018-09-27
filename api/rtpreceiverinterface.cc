@@ -32,6 +32,10 @@ RtpSource::RtpSource(const RtpSource&) = default;
 RtpSource& RtpSource::operator=(const RtpSource&) = default;
 RtpSource::~RtpSource() = default;
 
+std::vector<std::string> RtpReceiverInterface::stream_ids() const {
+  return {};
+}
+
 std::vector<rtc::scoped_refptr<MediaStreamInterface>>
 RtpReceiverInterface::streams() const {
   return {};
@@ -39,6 +43,14 @@ RtpReceiverInterface::streams() const {
 
 std::vector<RtpSource> RtpReceiverInterface::GetSources() const {
   return {};
+}
+
+void RtpReceiverInterface::SetFrameDecryptor(
+    rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor) {}
+
+rtc::scoped_refptr<FrameDecryptorInterface>
+RtpReceiverInterface::GetFrameDecryptor() const {
+  return nullptr;
 }
 
 }  // namespace webrtc

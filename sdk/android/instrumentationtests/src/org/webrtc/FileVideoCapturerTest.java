@@ -27,7 +27,7 @@ import org.junit.runner.RunWith;
 
 @RunWith(BaseJUnit4ClassRunner.class)
 public class FileVideoCapturerTest {
-  public static class MockCapturerObserver implements VideoCapturer.CapturerObserver {
+  public static class MockCapturerObserver implements CapturerObserver {
     private final ArrayList<VideoFrame> frames = new ArrayList<VideoFrame>();
 
     @Override
@@ -44,6 +44,7 @@ public class FileVideoCapturerTest {
     // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
     @SuppressWarnings("NoSynchronizedMethodCheck")
     public synchronized void onFrameCaptured(VideoFrame frame) {
+      frame.retain();
       frames.add(frame);
       notify();
     }
@@ -61,7 +62,7 @@ public class FileVideoCapturerTest {
 
   @Before
   public void setUp() {
-    NativeLibrary.initialize(new NativeLibrary.DefaultLoader());
+    NativeLibrary.initialize(new NativeLibrary.DefaultLoader(), TestConstants.NATIVE_LIBRARY);
   }
 
   @Test
@@ -119,6 +120,7 @@ public class FileVideoCapturerTest {
 
       assertByteBufferContents(
           expectedFrames[i].getBytes(Charset.forName("US-ASCII")), frameContents);
+      frame.release();
     }
   }
 

@@ -13,9 +13,11 @@
 #include <utility>
 #include <vector>
 
+#include "api/mediastreamproxy.h"
 #include "api/mediastreamtrackproxy.h"
 #include "api/videosourceproxy.h"
 #include "pc/audiotrack.h"
+#include "pc/mediastream.h"
 #include "pc/videotrack.h"
 #include "rtc_base/trace_event.h"
 
@@ -30,7 +32,36 @@ int GenerateUniqueId() {
   return ++g_unique_id;
 }
 
+std::vector<rtc::scoped_refptr<MediaStreamInterface>> CreateStreamsFromIds(
+    std::vector<std::string> stream_ids) {
+  std::vector<rtc::scoped_refptr<MediaStreamInterface>> streams(
+      stream_ids.size());
+  for (size_t i = 0; i < stream_ids.size(); ++i) {
+    streams[i] = MediaStreamProxy::Create(
+        rtc::Thread::Current(), MediaStream::Create(std::move(stream_ids[i])));
+  }
+  return streams;
+}
+
+void AttachFrameDecryptorToMediaChannel(
+    rtc::Thread* worker_thread,
+    webrtc::FrameDecryptorInterface* frame_decryptor,
+    cricket::MediaChannel* media_channel) {
+  if (media_channel) {
+    return worker_thread->Invoke<void>(RTC_FROM_HERE, [&] {
+      media_channel->SetFrameDecryptor(frame_decryptor);
+    });
+  }
+}
+
 }  // namespace
+
+AudioRtpReceiver::AudioRtpReceiver(rtc::Thread* worker_thread,
+                                   std::string receiver_id,
+                                   std::vector<std::string> stream_ids)
+    : AudioRtpReceiver(worker_thread,
+                       receiver_id,
+                       CreateStreamsFromIds(std::move(stream_ids))) {}
 
 AudioRtpReceiver::AudioRtpReceiver(
     rtc::Thread* worker_thread,
@@ -92,6 +123,13 @@ void AudioRtpReceiver::OnSetVolume(double volume) {
   }
 }
 
+std::vector<std::string> AudioRtpReceiver::stream_ids() const {
+  std::vector<std::string> stream_ids(streams_.size());
+  for (size_t i = 0; i < streams_.size(); ++i)
+    stream_ids[i] = streams_[i]->id();
+  return stream_ids;
+}
+
 RtpParameters AudioRtpReceiver::GetParameters() const {
   if (!media_channel_ || !ssrc_ || stopped_) {
     return RtpParameters();
@@ -109,6 +147,18 @@ bool AudioRtpReceiver::SetParameters(const RtpParameters& parameters) {
   return worker_thread_->Invoke<bool>(RTC_FROM_HERE, [&] {
     return media_channel_->SetRtpReceiveParameters(*ssrc_, parameters);
   });
+}
+
+void AudioRtpReceiver::SetFrameDecryptor(
+    rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor) {
+  frame_decryptor_ = std::move(frame_decryptor);
+  AttachFrameDecryptorToMediaChannel(worker_thread_, frame_decryptor_.get(),
+                                     media_channel_);
+}
+
+rtc::scoped_refptr<FrameDecryptorInterface>
+AudioRtpReceiver::GetFrameDecryptor() const {
+  return frame_decryptor_;
 }
 
 void AudioRtpReceiver::Stop() {
@@ -141,13 +191,17 @@ void AudioRtpReceiver::SetupMediaChannel(uint32_t ssrc) {
   Reconfigure();
 }
 
+void AudioRtpReceiver::set_stream_ids(std::vector<std::string> stream_ids) {
+  SetStreams(CreateStreamsFromIds(std::move(stream_ids)));
+}
+
 void AudioRtpReceiver::SetStreams(
     const std::vector<rtc::scoped_refptr<MediaStreamInterface>>& streams) {
   // Remove remote track from any streams that are going away.
   for (auto existing_stream : streams_) {
     bool removed = true;
     for (auto stream : streams) {
-      if (existing_stream->label() == stream->label()) {
+      if (existing_stream->id() == stream->id()) {
         RTC_DCHECK_EQ(existing_stream.get(), stream.get());
         removed = false;
         break;
@@ -161,7 +215,7 @@ void AudioRtpReceiver::SetStreams(
   for (auto stream : streams) {
     bool added = true;
     for (auto existing_stream : streams_) {
-      if (stream->label() == existing_stream->label()) {
+      if (stream->id() == existing_stream->id()) {
         RTC_DCHECK_EQ(stream.get(), existing_stream.get());
         added = false;
         break;
@@ -202,6 +256,13 @@ void AudioRtpReceiver::SetObserver(RtpReceiverObserverInterface* observer) {
   }
 }
 
+void AudioRtpReceiver::SetVoiceMediaChannel(
+    cricket::VoiceMediaChannel* voice_media_channel) {
+  media_channel_ = voice_media_channel;
+  AttachFrameDecryptorToMediaChannel(worker_thread_, frame_decryptor_.get(),
+                                     media_channel_);
+}
+
 void AudioRtpReceiver::NotifyFirstPacketReceived() {
   if (observer_) {
     observer_->OnFirstPacketReceived(media_type());
@@ -209,14 +270,20 @@ void AudioRtpReceiver::NotifyFirstPacketReceived() {
   received_first_packet_ = true;
 }
 
+VideoRtpReceiver::VideoRtpReceiver(rtc::Thread* worker_thread,
+                                   std::string receiver_id,
+                                   std::vector<std::string> stream_ids)
+    : VideoRtpReceiver(worker_thread,
+                       receiver_id,
+                       CreateStreamsFromIds(std::move(stream_ids))) {}
+
 VideoRtpReceiver::VideoRtpReceiver(
     rtc::Thread* worker_thread,
     const std::string& receiver_id,
     const std::vector<rtc::scoped_refptr<MediaStreamInterface>>& streams)
     : worker_thread_(worker_thread),
       id_(receiver_id),
-      source_(new RefCountedObject<VideoTrackSource>(&broadcaster_,
-                                                     true /* remote */)),
+      source_(new RefCountedObject<VideoRtpTrackSource>()),
       track_(VideoTrackProxy::Create(
           rtc::Thread::Current(),
           worker_thread,
@@ -236,6 +303,13 @@ VideoRtpReceiver::~VideoRtpReceiver() {
   // Since cricket::VideoRenderer is not reference counted,
   // we need to remove it from the channel before we are deleted.
   Stop();
+}
+
+std::vector<std::string> VideoRtpReceiver::stream_ids() const {
+  std::vector<std::string> stream_ids(streams_.size());
+  for (size_t i = 0; i < streams_.size(); ++i)
+    stream_ids[i] = streams_[i]->id();
+  return stream_ids;
 }
 
 bool VideoRtpReceiver::SetSink(rtc::VideoSinkInterface<VideoFrame>* sink) {
@@ -264,13 +338,24 @@ bool VideoRtpReceiver::SetParameters(const RtpParameters& parameters) {
   });
 }
 
+void VideoRtpReceiver::SetFrameDecryptor(
+    rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor) {
+  frame_decryptor_ = std::move(frame_decryptor);
+  AttachFrameDecryptorToMediaChannel(worker_thread_, frame_decryptor_.get(),
+                                     media_channel_);
+}
+
+rtc::scoped_refptr<FrameDecryptorInterface>
+VideoRtpReceiver::GetFrameDecryptor() const {
+  return frame_decryptor_;
+}
+
 void VideoRtpReceiver::Stop() {
   // TODO(deadbeef): Need to do more here to fully stop receiving packets.
   if (stopped_) {
     return;
   }
   source_->SetState(MediaSourceInterface::kEnded);
-  source_->OnSourceDestroyed();
   if (!media_channel_ || !ssrc_) {
     RTC_LOG(LS_WARNING) << "VideoRtpReceiver::Stop: No video channel exists.";
   } else {
@@ -293,7 +378,11 @@ void VideoRtpReceiver::SetupMediaChannel(uint32_t ssrc) {
     SetSink(nullptr);
   }
   ssrc_ = ssrc;
-  SetSink(&broadcaster_);
+  SetSink(source_->sink());
+}
+
+void VideoRtpReceiver::set_stream_ids(std::vector<std::string> stream_ids) {
+  SetStreams(CreateStreamsFromIds(std::move(stream_ids)));
 }
 
 void VideoRtpReceiver::SetStreams(
@@ -302,7 +391,7 @@ void VideoRtpReceiver::SetStreams(
   for (auto existing_stream : streams_) {
     bool removed = true;
     for (auto stream : streams) {
-      if (existing_stream->label() == stream->label()) {
+      if (existing_stream->id() == stream->id()) {
         RTC_DCHECK_EQ(existing_stream.get(), stream.get());
         removed = false;
         break;
@@ -316,7 +405,7 @@ void VideoRtpReceiver::SetStreams(
   for (auto stream : streams) {
     bool added = true;
     for (auto existing_stream : streams_) {
-      if (stream->label() == existing_stream->label()) {
+      if (stream->id() == existing_stream->id()) {
         RTC_DCHECK_EQ(stream.get(), existing_stream.get());
         added = false;
         break;
@@ -335,6 +424,13 @@ void VideoRtpReceiver::SetObserver(RtpReceiverObserverInterface* observer) {
   if (received_first_packet_ && observer_) {
     observer_->OnFirstPacketReceived(media_type());
   }
+}
+
+void VideoRtpReceiver::SetVideoMediaChannel(
+    cricket::VideoMediaChannel* video_media_channel) {
+  media_channel_ = video_media_channel;
+  AttachFrameDecryptorToMediaChannel(worker_thread_, frame_decryptor_.get(),
+                                     media_channel_);
 }
 
 void VideoRtpReceiver::NotifyFirstPacketReceived() {

@@ -11,6 +11,7 @@
 #include <stdio.h>
 
 #include "rtc_base/flags.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/stringencode.h"
 #include "system_wrappers/include/field_trial_default.h"
 #include "test/field_trial.h"
@@ -20,6 +21,17 @@
 
 namespace webrtc {
 namespace flags {
+
+InterLayerPredMode IntToInterLayerPredMode(int inter_layer_pred) {
+  if (inter_layer_pred == 0) {
+    return InterLayerPredMode::kOn;
+  } else if (inter_layer_pred == 1) {
+    return InterLayerPredMode::kOff;
+  } else {
+    RTC_DCHECK_EQ(inter_layer_pred, 2);
+    return InterLayerPredMode::kOnKeyPic;
+  }
+}
 
 // Flags for video.
 DEFINE_int(vwidth, 640, "Video width.");
@@ -78,6 +90,14 @@ int VideoNumStreams() {
 DEFINE_int(vnum_spatial_layers, 1, "Number of video spatial layers to use.");
 int VideoNumSpatialLayers() {
   return static_cast<int>(FLAG_vnum_spatial_layers);
+}
+
+DEFINE_int(vinter_layer_pred,
+           2,
+           "Video inter-layer prediction mode. "
+           "0 - enabled, 1 - disabled, 2 - enabled only for key pictures.");
+InterLayerPredMode VideoInterLayerPred() {
+  return IntToInterLayerPredMode(FLAG_vinter_layer_pred);
 }
 
 DEFINE_string(
@@ -190,9 +210,17 @@ int ScreenshareNumStreams() {
 
 DEFINE_int(snum_spatial_layers,
            1,
-           "Number of screemshare spatial layers to use.");
+           "Number of screenshare spatial layers to use.");
 int ScreenshareNumSpatialLayers() {
   return static_cast<int>(FLAG_snum_spatial_layers);
+}
+
+DEFINE_int(sinter_layer_pred,
+           0,
+           "Screenshare inter-layer prediction mode. "
+           "0 - enabled, 1 - disabled, 2 - enabled only for key pictures.");
+InterLayerPredMode ScreenshareInterLayerPred() {
+  return IntToInterLayerPredMode(FLAG_sinter_layer_pred);
 }
 
 DEFINE_string(
@@ -445,7 +473,7 @@ void Loopback() {
     screenshare_idx = 0;
   }
 
-  FakeNetworkPipe::Config pipe_config;
+  DefaultNetworkSimulationConfig pipe_config;
   pipe_config.loss_percent = flags::LossPercent();
   pipe_config.avg_burst_loss_length = flags::AvgBurstLossLength();
   pipe_config.link_capacity_kbps = flags::LinkCapacityKbps();
@@ -481,6 +509,7 @@ void Loopback() {
       flags::ScreenshareMinTransmitBitrateKbps() * 1000,
       false,  // ULPFEC disabled.
       false,  // FlexFEC disabled.
+      false,  // Automatic scaling disabled
       ""};
   params.video[camera_idx] = {flags::FLAG_video,
                               flags::VideoWidth(),
@@ -496,19 +525,20 @@ void Loopback() {
                               0,  // No min transmit bitrate.
                               flags::FLAG_use_ulpfec,
                               flags::FLAG_use_flexfec,
+                              false,
                               flags::VideoClip(),
                               flags::GetCaptureDevice()};
   params.audio = {flags::FLAG_audio, flags::FLAG_audio_video_sync,
                   flags::FLAG_audio_dtx};
-  params.logging = {flags::FLAG_logs, flags::FLAG_rtc_event_log_name,
-                    flags::FLAG_rtp_dump_name, flags::FLAG_encoded_frame_path};
+  params.logging = {flags::FLAG_rtc_event_log_name, flags::FLAG_rtp_dump_name,
+                    flags::FLAG_encoded_frame_path};
   params.analyzer = {"dual_streams",
                      0.0,
                      0.0,
                      flags::DurationSecs(),
                      flags::OutputFilename(),
                      flags::GraphTitle()};
-  params.pipe = pipe_config;
+  params.config = pipe_config;
 
   params.screenshare[camera_idx].enabled = false;
   params.screenshare[screenshare_idx] = {
@@ -536,7 +566,7 @@ void Loopback() {
       &params, screenshare_idx, stream_descriptors,
       flags::ScreenshareNumStreams(), flags::ScreenshareSelectedStream(),
       flags::ScreenshareNumSpatialLayers(), flags::ScreenshareSelectedSL(),
-      SL_descriptors);
+      flags::ScreenshareInterLayerPred(), SL_descriptors);
 
   stream_descriptors.clear();
   stream_descriptors.push_back(flags::VideoStream0());
@@ -547,13 +577,13 @@ void Loopback() {
   VideoQualityTest::FillScalabilitySettings(
       &params, camera_idx, stream_descriptors, flags::VideoNumStreams(),
       flags::VideoSelectedStream(), flags::VideoNumSpatialLayers(),
-      flags::VideoSelectedSL(), SL_descriptors);
+      flags::VideoSelectedSL(), flags::VideoInterLayerPred(), SL_descriptors);
 
-  VideoQualityTest test;
+  auto fixture = absl::make_unique<VideoQualityTest>(nullptr);
   if (flags::DurationSecs()) {
-    test.RunWithAnalyzer(params);
+    fixture->RunWithAnalyzer(params);
   } else {
-    test.RunWithRenderers(params);
+    fixture->RunWithRenderers(params);
   }
 }
 }  // namespace webrtc
@@ -568,6 +598,8 @@ int main(int argc, char* argv[]) {
     rtc::FlagList::Print(nullptr, false);
     return 0;
   }
+
+  rtc::LogMessage::SetLogToStderr(webrtc::flags::FLAG_logs);
 
   webrtc::test::ValidateFieldTrialsStringOrDie(
       webrtc::flags::FLAG_force_fieldtrials);

@@ -25,9 +25,9 @@
 #ifdef WEBRTC_ANDROID
 #include "pc/test/androidtestinitializer.h"
 #endif
+#include "absl/memory/memory.h"
 #include "pc/test/fakertccertificategenerator.h"
 #include "rtc_base/gunit.h"
-#include "rtc_base/ptr_util.h"
 #include "rtc_base/virtualsocketserver.h"
 #include "test/gmock.h"
 
@@ -72,16 +72,16 @@ class PeerConnectionMediaBaseTest : public ::testing::Test {
   }
 
   WrapperPtr CreatePeerConnection(const RTCConfiguration& config) {
-    auto media_engine = rtc::MakeUnique<FakeMediaEngine>();
+    auto media_engine = absl::make_unique<FakeMediaEngine>();
     auto* media_engine_ptr = media_engine.get();
     auto pc_factory = CreateModularPeerConnectionFactory(
         rtc::Thread::Current(), rtc::Thread::Current(), rtc::Thread::Current(),
         std::move(media_engine), CreateCallFactory(),
         CreateRtcEventLogFactory());
 
-    auto fake_port_allocator = rtc::MakeUnique<cricket::FakePortAllocator>(
+    auto fake_port_allocator = absl::make_unique<cricket::FakePortAllocator>(
         rtc::Thread::Current(), nullptr);
-    auto observer = rtc::MakeUnique<MockPeerConnectionObserver>();
+    auto observer = absl::make_unique<MockPeerConnectionObserver>();
     auto modified_config = config;
     modified_config.sdp_semantics = sdp_semantics_;
     auto pc = pc_factory->CreatePeerConnection(modified_config,
@@ -91,7 +91,7 @@ class PeerConnectionMediaBaseTest : public ::testing::Test {
       return nullptr;
     }
 
-    auto wrapper = rtc::MakeUnique<PeerConnectionWrapperForMediaTest>(
+    auto wrapper = absl::make_unique<PeerConnectionWrapperForMediaTest>(
         pc_factory, pc, std::move(observer));
     wrapper->set_media_engine(media_engine_ptr);
     return wrapper;
@@ -271,6 +271,56 @@ TEST_F(PeerConnectionMediaTestPlanB, EmptyRemoteOfferRemovesRecvStreams) {
   EXPECT_EQ(0u, callee_voice->recv_streams().size());
   EXPECT_EQ(1u, callee_video->send_streams().size());
   EXPECT_EQ(0u, callee_video->recv_streams().size());
+}
+
+// Test enabling of simulcast with Plan B semantics.
+// This test creating an offer.
+TEST_F(PeerConnectionMediaTestPlanB, SimulcastOffer) {
+  auto caller = CreatePeerConnection();
+  auto caller_video_track = caller->AddVideoTrack("v");
+  RTCOfferAnswerOptions options;
+  options.num_simulcast_layers = 3;
+  auto offer = caller->CreateOffer(options);
+  auto* description = cricket::GetFirstMediaContent(
+      offer->description(),
+      cricket::MEDIA_TYPE_VIDEO)->media_description();
+  ASSERT_EQ(1u, description->streams().size());
+  ASSERT_TRUE(description->streams()[0].get_ssrc_group("SIM"));
+  EXPECT_EQ(3u, description->streams()[0].get_ssrc_group("SIM")->ssrcs.size());
+
+  // Check that it actually creates simulcast aswell.
+  caller->SetLocalDescription(std::move(offer));
+  auto senders = caller->pc()->GetSenders();
+  ASSERT_EQ(1u, senders.size());
+  EXPECT_EQ(cricket::MediaType::MEDIA_TYPE_VIDEO, senders[0]->media_type());
+  EXPECT_EQ(3u, senders[0]->GetParameters().encodings.size());
+}
+
+// Test enabling of simulcast with Plan B semantics.
+// This test creating an answer.
+TEST_F(PeerConnectionMediaTestPlanB, SimulcastAnswer) {
+  auto caller = CreatePeerConnection();
+  caller->AddVideoTrack("v0");
+  auto offer = caller->CreateOffer();
+  auto callee = CreatePeerConnection();
+  auto callee_video_track = callee->AddVideoTrack("v1");
+  ASSERT_TRUE(callee->SetRemoteDescription(std::move(offer)));
+  RTCOfferAnswerOptions options;
+  options.num_simulcast_layers = 3;
+  auto answer = callee->CreateAnswer(options);
+  auto* description = cricket::GetFirstMediaContent(
+      answer->description(),
+      cricket::MEDIA_TYPE_VIDEO)->media_description();
+  ASSERT_EQ(1u, description->streams().size());
+  ASSERT_TRUE(description->streams()[0].get_ssrc_group("SIM"));
+  EXPECT_EQ(3u, description->streams()[0].get_ssrc_group("SIM")->ssrcs.size());
+
+  // Check that it actually creates simulcast aswell.
+  callee->SetLocalDescription(std::move(answer));
+  auto senders = callee->pc()->GetSenders();
+  ASSERT_EQ(1u, senders.size());
+  EXPECT_EQ(cricket::MediaType::MEDIA_TYPE_VIDEO, senders[0]->media_type());
+  EXPECT_EQ(3u, senders[0]->GetParameters().encodings.size());
 }
 
 // Test that stopping the callee transceivers causes the media channels to be
@@ -955,12 +1005,20 @@ void RenameContent(cricket::SessionDescription* desc,
   auto* transport = desc->GetTransportInfoByName(old_name);
   RTC_DCHECK(transport);
   transport->content_name = new_name;
+
+  // Rename the content name in the BUNDLE group.
+  cricket::ContentGroup new_bundle_group =
+      *desc->GetGroupByName(cricket::GROUP_TYPE_BUNDLE);
+  new_bundle_group.RemoveContentName(old_name);
+  new_bundle_group.AddContentName(new_name);
+  desc->RemoveGroupByName(cricket::GROUP_TYPE_BUNDLE);
+  desc->AddGroup(new_bundle_group);
 }
 
 // Tests that an answer responds with the same MIDs as the offer.
 TEST_P(PeerConnectionMediaTest, AnswerHasSameMidsAsOffer) {
-  const std::string kAudioMid = "not default1";
-  const std::string kVideoMid = "not default2";
+  const std::string kAudioMid = "notdefault1";
+  const std::string kVideoMid = "notdefault2";
 
   auto caller = CreatePeerConnectionWithAudioVideo();
   auto callee = CreatePeerConnectionWithAudioVideo();
@@ -980,8 +1038,8 @@ TEST_P(PeerConnectionMediaTest, AnswerHasSameMidsAsOffer) {
 // Test that if the callee creates a re-offer, the MIDs are the same as the
 // original offer.
 TEST_P(PeerConnectionMediaTest, ReOfferHasSameMidsAsFirstOffer) {
-  const std::string kAudioMid = "not default1";
-  const std::string kVideoMid = "not default2";
+  const std::string kAudioMid = "notdefault1";
+  const std::string kVideoMid = "notdefault2";
 
   auto caller = CreatePeerConnectionWithAudioVideo();
   auto callee = CreatePeerConnectionWithAudioVideo();

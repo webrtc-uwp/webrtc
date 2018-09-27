@@ -61,12 +61,11 @@ TEST(GainController2, ToString) {
   config.fixed_gain_db = 5.f;
 
   config.enabled = false;
-  config.enable_limiter = true;
-  EXPECT_EQ("{enabled: false, fixed_gain_dB: 5, enable_limiter: true}",
+  EXPECT_EQ("{enabled: false, fixed_gain_dB: 5}",
             GainController2::ToString(config));
 
   config.enabled = true;
-  EXPECT_EQ("{enabled: true, fixed_gain_dB: 5, enable_limiter: true}",
+  EXPECT_EQ("{enabled: true, fixed_gain_dB: 5}",
             GainController2::ToString(config));
 }
 
@@ -80,12 +79,6 @@ TEST(GainController2, Usage) {
   constexpr float sample_value = 1000.f;
   SetAudioBufferSamples(sample_value, &ab);
   AudioProcessing::Config::GainController2 config;
-
-  // Check that samples are not modified when the fixed gain is 0 dB.
-  config.fixed_gain_db = 0.f;
-  gain_controller2->ApplyConfig(config);
-  gain_controller2->Process(&ab);
-  EXPECT_EQ(ab.channels_f()[0][0], sample_value);
 
   // Check that samples are amplified when the fixed gain is greater than 0 dB.
   config.fixed_gain_db = 5.f;

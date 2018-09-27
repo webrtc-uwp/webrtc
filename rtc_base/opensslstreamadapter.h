@@ -11,18 +11,15 @@
 #ifndef RTC_BASE_OPENSSLSTREAMADAPTER_H_
 #define RTC_BASE_OPENSSLSTREAMADAPTER_H_
 
-#include <string>
+#include <openssl/ossl_typ.h>
+
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "rtc_base/buffer.h"
 #include "rtc_base/opensslidentity.h"
 #include "rtc_base/sslstreamadapter.h"
-
-typedef struct ssl_st SSL;
-typedef struct ssl_ctx_st SSL_CTX;
-typedef struct ssl_cipher_st SSL_CIPHER;
-typedef struct x509_store_ctx_st X509_STORE_CTX;
 
 namespace rtc {
 
@@ -128,14 +125,14 @@ class OpenSSLStreamAdapter : public SSLStreamAdapter {
     // Before calling one of the StartSSL methods, data flows
     // in clear text.
     SSL_NONE,
-    SSL_WAIT,  // waiting for the stream to open to start SSL negotiation
+    SSL_WAIT,        // waiting for the stream to open to start SSL negotiation
     SSL_CONNECTING,  // SSL negotiation in progress
-    SSL_CONNECTED,  // SSL stream successfully established
-    SSL_ERROR,  // some SSL error occurred, stream is closed
-    SSL_CLOSED  // Clean close
+    SSL_CONNECTED,   // SSL stream successfully established
+    SSL_ERROR,       // some SSL error occurred, stream is closed
+    SSL_CLOSED       // Clean close
   };
 
-  enum { MSG_TIMEOUT = MSG_MAX+1};
+  enum { MSG_TIMEOUT = MSG_MAX + 1 };
 
   // The following three methods return 0 on success and a negative
   // error code on failure. The error code may be from OpenSSL or -1

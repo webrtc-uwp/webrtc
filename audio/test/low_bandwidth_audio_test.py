@@ -55,12 +55,14 @@ def _ParseArgs():
   parser.add_argument('--android', action='store_true',
       help='Perform the test on a connected Android device instead.')
   parser.add_argument('--adb-path', help='Path to adb binary.', default='adb')
-  parser.add_argument('--isolated-script-test-perf-output',
-      help='Where to store perf results in chartjson format.', default=None)
+  parser.add_argument('--num-retries', default='0',
+                      help='Number of times to retry the test on Android.')
+  parser.add_argument('--isolated-script-test-perf-output', default=None,
+      help='Path to store perf results in chartjson format.')
+  parser.add_argument('--isolated-script-test-output', default=None,
+      help='Path to output an empty JSON file which Chromium infra requires.')
 
   # Ignore Chromium-specific flags
-  parser.add_argument('--isolated-script-test-output',
-                      type=str, default=None)
   parser.add_argument('--test-launcher-summary-output',
                       type=str, default=None)
   args = parser.parse_args()
@@ -221,7 +223,8 @@ def main():
   out_dir = os.path.join(args.build_dir, '..')
   if args.android:
     test_command = [os.path.join(args.build_dir, 'bin',
-                                 'run_low_bandwidth_audio_test'), '-v']
+                                 'run_low_bandwidth_audio_test'),
+                    '-v', '--num-retries', args.num_retries]
   else:
     test_command = [os.path.join(args.build_dir, 'low_bandwidth_audio_test')]
 
@@ -270,6 +273,10 @@ def main():
   if args.isolated_script_test_perf_output:
     with open(args.isolated_script_test_perf_output, 'w') as f:
       json.dump({"format_version": "1.0", "charts": charts}, f)
+
+  if args.isolated_script_test_output:
+    with open(args.isolated_script_test_output, 'w') as f:
+      json.dump({"version": 3}, f)
 
   return test_process.wait()
 

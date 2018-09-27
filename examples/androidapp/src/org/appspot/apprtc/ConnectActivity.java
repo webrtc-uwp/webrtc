@@ -45,7 +45,7 @@ public class ConnectActivity extends Activity {
   private static final String TAG = "ConnectActivity";
   private static final int CONNECTION_REQUEST = 1;
   private static final int REMOVE_FAVORITE_INDEX = 0;
-  private static boolean commandLineRun = false;
+  private static boolean commandLineRun;
 
   private ImageButton addFavoriteButton;
   private EditText roomEditText;
@@ -235,7 +235,7 @@ public class ConnectActivity extends Activity {
    */
   private boolean sharedPrefGetBoolean(
       int attributeId, String intentName, int defaultId, boolean useFromIntent) {
-    boolean defaultValue = Boolean.valueOf(getString(defaultId));
+    boolean defaultValue = Boolean.parseBoolean(getString(defaultId));
     if (useFromIntent) {
       return getIntent().getBooleanExtra(intentName, defaultValue);
     } else {
@@ -342,11 +342,6 @@ public class ConnectActivity extends Activity {
         CallActivity.EXTRA_DISABLE_BUILT_IN_NS, R.string.pref_disable_built_in_ns_default,
         useValuesFromIntent);
 
-    // Check Enable level control.
-    boolean enableLevelControl = sharedPrefGetBoolean(R.string.pref_enable_level_control_key,
-        CallActivity.EXTRA_ENABLE_LEVEL_CONTROL, R.string.pref_enable_level_control_key,
-        useValuesFromIntent);
-
     // Check Disable gain control
     boolean disableWebRtcAGCAndHPF = sharedPrefGetBoolean(
         R.string.pref_disable_webrtc_agc_and_hpf_key, CallActivity.EXTRA_DISABLE_WEBRTC_AGC_AND_HPF,
@@ -439,6 +434,10 @@ public class ConnectActivity extends Activity {
         CallActivity.EXTRA_ENABLE_RTCEVENTLOG, R.string.pref_enable_rtceventlog_default,
         useValuesFromIntent);
 
+    boolean useLegacyAudioDevice = sharedPrefGetBoolean(R.string.pref_use_legacy_audio_device_key,
+        CallActivity.EXTRA_USE_LEGACY_AUDIO_DEVICE, R.string.pref_use_legacy_audio_device_default,
+        useValuesFromIntent);
+
     // Get datachannel options
     boolean dataChannelEnabled = sharedPrefGetBoolean(R.string.pref_enable_datachannel_key,
         CallActivity.EXTRA_DATA_CHANNEL_ENABLED, R.string.pref_enable_datachannel_default,
@@ -485,7 +484,6 @@ public class ConnectActivity extends Activity {
       intent.putExtra(CallActivity.EXTRA_DISABLE_BUILT_IN_AEC, disableBuiltInAEC);
       intent.putExtra(CallActivity.EXTRA_DISABLE_BUILT_IN_AGC, disableBuiltInAGC);
       intent.putExtra(CallActivity.EXTRA_DISABLE_BUILT_IN_NS, disableBuiltInNS);
-      intent.putExtra(CallActivity.EXTRA_ENABLE_LEVEL_CONTROL, enableLevelControl);
       intent.putExtra(CallActivity.EXTRA_DISABLE_WEBRTC_AGC_AND_HPF, disableWebRtcAGCAndHPF);
       intent.putExtra(CallActivity.EXTRA_AUDIO_BITRATE, audioStartBitrate);
       intent.putExtra(CallActivity.EXTRA_AUDIOCODEC, audioCodec);
@@ -494,6 +492,7 @@ public class ConnectActivity extends Activity {
       intent.putExtra(CallActivity.EXTRA_ENABLE_RTCEVENTLOG, rtcEventLogEnabled);
       intent.putExtra(CallActivity.EXTRA_CMDLINE, commandLineRun);
       intent.putExtra(CallActivity.EXTRA_RUNTIME, runTimeMs);
+      intent.putExtra(CallActivity.EXTRA_USE_LEGACY_AUDIO_DEVICE, useLegacyAudioDevice);
 
       intent.putExtra(CallActivity.EXTRA_DATA_CHANNEL_ENABLED, dataChannelEnabled);
 

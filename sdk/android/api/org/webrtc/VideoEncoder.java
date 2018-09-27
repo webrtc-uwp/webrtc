@@ -10,6 +10,7 @@
 
 package org.webrtc;
 
+import javax.annotation.Nullable;
 import org.webrtc.EncodedImage;
 
 /**
@@ -25,16 +26,18 @@ public interface VideoEncoder {
     public final int height;
     public final int startBitrate; // Kilobits per second.
     public final int maxFramerate;
+    public final int numberOfSimulcastStreams;
     public final boolean automaticResizeOn;
 
     @CalledByNative("Settings")
     public Settings(int numberOfCores, int width, int height, int startBitrate, int maxFramerate,
-        boolean automaticResizeOn) {
+        int numberOfSimulcastStreams, boolean automaticResizeOn) {
       this.numberOfCores = numberOfCores;
       this.width = width;
       this.height = height;
       this.startBitrate = startBitrate;
       this.maxFramerate = maxFramerate;
+      this.numberOfSimulcastStreams = numberOfSimulcastStreams;
       this.automaticResizeOn = automaticResizeOn;
     }
   }
@@ -93,8 +96,8 @@ public interface VideoEncoder {
   /** Settings for WebRTC quality based scaling. */
   public class ScalingSettings {
     public final boolean on;
-    public final Integer low;
-    public final Integer high;
+    @Nullable public final Integer low;
+    @Nullable public final Integer high;
 
     /**
      * Settings to disable quality based scaling.
@@ -147,6 +150,11 @@ public interface VideoEncoder {
       this.low = low;
       this.high = high;
     }
+
+    @Override
+    public String toString() {
+      return on ? "[ " + low + ", " + high + " ]" : "OFF";
+    }
   }
 
   public interface Callback {
@@ -155,6 +163,36 @@ public interface VideoEncoder {
      * accessed after the call to this method returns.
      */
     void onEncodedFrame(EncodedImage frame, CodecSpecificInfo info);
+  }
+
+  /**
+   * The encoder implementation backing this interface is either 1) a Java
+   * encoder (e.g., an Android platform encoder), or alternatively 2) a native
+   * encoder (e.g., a software encoder or a C++ encoder adapter).
+   *
+   * For case 1), createNativeVideoEncoder() should return zero.
+   * In this case, we expect the native library to call the encoder through
+   * JNI using the Java interface declared below.
+   *
+   * For case 2), createNativeVideoEncoder() should return a non-zero value.
+   * In this case, we expect the native library to treat the returned value as
+   * a raw pointer of type webrtc::VideoEncoder* (ownership is transferred to
+   * the caller). The native library should then directly call the
+   * webrtc::VideoEncoder interface without going through JNI. All calls to
+   * the Java interface methods declared below should thus throw an
+   * UnsupportedOperationException.
+   */
+  @CalledByNative
+  default long createNativeVideoEncoder() {
+    return 0;
+  }
+
+  /**
+   * Returns true if the encoder is backed by hardware.
+   */
+  @CalledByNative
+  default boolean isHardwareEncoder() {
+    return true;
   }
 
   /**

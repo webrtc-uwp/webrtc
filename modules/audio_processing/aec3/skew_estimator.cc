@@ -28,7 +28,7 @@ void SkewEstimator::Reset() {
   std::fill(skew_history_.begin(), skew_history_.end(), 0);
 }
 
-rtc::Optional<int> SkewEstimator::GetSkewFromCapture() {
+absl::optional<int> SkewEstimator::GetSkewFromCapture() {
   --skew_;
 
   skew_sum_ += skew_ - skew_history_[next_index_];
@@ -38,9 +38,9 @@ rtc::Optional<int> SkewEstimator::GetSkewFromCapture() {
     sufficient_skew_stored_ = true;
   }
 
-  return sufficient_skew_stored_
-             ? rtc::Optional<int>(skew_sum_ >> skew_history_size_log2_)
-             : rtc::nullopt;
+  const int bias = static_cast<int>(skew_history_.size()) >> 1;
+  const int average = (skew_sum_ + bias) >> skew_history_size_log2_;
+  return sufficient_skew_stored_ ? absl::optional<int>(average) : absl::nullopt;
 }
 
 }  // namespace webrtc

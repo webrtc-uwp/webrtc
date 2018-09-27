@@ -10,22 +10,21 @@
 
 package org.webrtc;
 
+import javax.annotation.Nullable;
+
 /** Java wrapper for a C++ RtpSenderInterface. */
-@JNINamespace("webrtc::jni")
 public class RtpSender {
   final long nativeRtpSender;
 
-  private MediaStreamTrack cachedTrack;
+  @Nullable private MediaStreamTrack cachedTrack;
   private boolean ownsTrack = true;
-
-  private final DtmfSender dtmfSender;
+  private final @Nullable DtmfSender dtmfSender;
 
   @CalledByNative
   public RtpSender(long nativeRtpSender) {
     this.nativeRtpSender = nativeRtpSender;
-    long track = nativeGetTrack(nativeRtpSender);
-    // It may be possible for an RtpSender to be created without a track.
-    cachedTrack = (track != 0) ? new MediaStreamTrack(track) : null;
+    long nativeTrack = nativeGetTrack(nativeRtpSender);
+    cachedTrack = MediaStreamTrack.createMediaStreamTrack(nativeTrack);
 
     long nativeDtmfSender = nativeGetDtmfSender(nativeRtpSender);
     dtmfSender = (nativeDtmfSender != 0) ? new DtmfSender(nativeDtmfSender) : null;
@@ -45,7 +44,7 @@ public class RtpSender {
    *                      or a MediaStream.
    * @return              true on success and false on failure.
    */
-  public boolean setTrack(MediaStreamTrack track, boolean takeOwnership) {
+  public boolean setTrack(@Nullable MediaStreamTrack track, boolean takeOwnership) {
     if (!nativeSetTrack(nativeRtpSender, (track == null) ? 0 : track.nativeTrack)) {
       return false;
     }
@@ -57,6 +56,7 @@ public class RtpSender {
     return true;
   }
 
+  @Nullable
   public MediaStreamTrack track() {
     return cachedTrack;
   }
@@ -73,8 +73,13 @@ public class RtpSender {
     return nativeGetId(nativeRtpSender);
   }
 
+  @Nullable
   public DtmfSender dtmf() {
     return dtmfSender;
+  }
+
+  public void setFrameEncryptor(FrameEncryptor frameEncryptor) {
+    nativeSetFrameEncryptor(nativeRtpSender, frameEncryptor.getNativeFrameEncryptor());
   }
 
   public void dispose() {
@@ -102,4 +107,6 @@ public class RtpSender {
   private static native RtpParameters nativeGetParameters(long rtpSender);
 
   private static native String nativeGetId(long rtpSender);
+
+  private static native void nativeSetFrameEncryptor(long rtpSender, long nativeFrameEncryptor);
 };

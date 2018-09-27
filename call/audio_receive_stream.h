@@ -16,15 +16,14 @@
 #include <string>
 #include <vector>
 
+#include "absl/types/optional.h"
 #include "api/audio_codecs/audio_decoder_factory.h"
 #include "api/call/transport.h"
-#include "api/optional.h"
 #include "api/rtpparameters.h"
 #include "api/rtpreceiverinterface.h"
 #include "call/rtp_config.h"
 #include "common_types.h"  // NOLINT(build/include)
 #include "rtc_base/scoped_ref_ptr.h"
-#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 class AudioSinkInterface;
@@ -32,13 +31,15 @@ class AudioSinkInterface;
 class AudioReceiveStream {
  public:
   struct Stats {
+    Stats();
+    ~Stats();
     uint32_t remote_ssrc = 0;
     int64_t bytes_rcvd = 0;
     uint32_t packets_rcvd = 0;
     uint32_t packets_lost = 0;
     float fraction_lost = 0.0f;
     std::string codec_name;
-    rtc::Optional<int> codec_payload_type;
+    absl::optional<int> codec_payload_type;
     uint32_t ext_seqnum = 0;
     uint32_t jitter_ms = 0;
     uint32_t jitter_buffer_ms = 0;
@@ -71,10 +72,16 @@ class AudioReceiveStream {
   };
 
   struct Config {
+    Config();
+    ~Config();
+
     std::string ToString() const;
 
     // Receive-stream specific RTP settings.
     struct Rtp {
+      Rtp();
+      ~Rtp();
+
       std::string ToString() const;
 
       // Synchronization source (stream identifier) to be received.
@@ -111,6 +118,8 @@ class AudioReceiveStream {
     std::map<int, SdpAudioFormat> decoder_map;
 
     rtc::scoped_refptr<AudioDecoderFactory> decoder_factory;
+
+    absl::optional<AudioCodecPairId> codec_pair_id;
   };
 
   // Reconfigure the stream according to the Configuration.

@@ -46,25 +46,25 @@ class SendSideCongestionControllerInterface : public CallStatsObserver,
   virtual void DeRegisterPacketFeedbackObserver(
       PacketFeedbackObserver* observer) = 0;
   virtual void RegisterNetworkObserver(NetworkChangedObserver* observer) = 0;
-  virtual void DeRegisterNetworkObserver(NetworkChangedObserver* observer) = 0;
   virtual void SetBweBitrates(int min_bitrate_bps,
                               int start_bitrate_bps,
                               int max_bitrate_bps) = 0;
+  virtual void SetAllocatedSendBitrateLimits(int64_t min_send_bitrate_bps,
+                                             int64_t max_padding_bitrate_bps,
+                                             int64_t max_total_bitrate_bps) = 0;
   virtual void OnNetworkRouteChanged(const rtc::NetworkRoute& network_route,
                                      int bitrate_bps,
                                      int min_bitrate_bps,
                                      int max_bitrate_bps) = 0;
   virtual void SignalNetworkState(NetworkState state) = 0;
-  virtual void SetTransportOverhead(
-      size_t transport_overhead_bytes_per_packet) = 0;
-  virtual RtcpBandwidthObserver* GetBandwidthObserver() const = 0;
+  virtual RtcpBandwidthObserver* GetBandwidthObserver() = 0;
   virtual bool AvailableBandwidth(uint32_t* bandwidth) const = 0;
-  virtual int64_t GetPacerQueuingDelayMs() const = 0;
-  virtual int64_t GetFirstPacketTimeMs() const = 0;
   virtual TransportFeedbackObserver* GetTransportFeedbackObserver() = 0;
-  virtual RateLimiter* GetRetransmissionRateLimiter() = 0;
+  virtual void SetPerPacketFeedbackAvailable(bool available) = 0;
   virtual void EnablePeriodicAlrProbing(bool enable) = 0;
   virtual void OnSentPacket(const rtc::SentPacket& sent_packet) = 0;
+  virtual void SetPacingFactor(float pacing_factor) = 0;
+  virtual void SetAllocatedBitrateWithoutFeedback(uint32_t bitrate_bps) = 0;
   RTC_DISALLOW_COPY_AND_ASSIGN(SendSideCongestionControllerInterface);
 };
 

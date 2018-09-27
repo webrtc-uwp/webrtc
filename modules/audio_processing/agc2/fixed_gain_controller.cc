@@ -34,8 +34,17 @@ bool CloseToOne(float gain_factor) {
 }  // namespace
 
 FixedGainController::FixedGainController(ApmDataDumper* apm_data_dumper)
+    : FixedGainController(apm_data_dumper, "Agc2") {}
+
+FixedGainController::FixedGainController(ApmDataDumper* apm_data_dumper,
+                                         std::string histogram_name_prefix)
     : apm_data_dumper_(apm_data_dumper),
-      gain_curve_applier_(48000, apm_data_dumper_) {}
+      gain_curve_applier_(48000, apm_data_dumper_, histogram_name_prefix) {
+  // Do update histograms.xml when adding name prefixes.
+  RTC_DCHECK(histogram_name_prefix == "" || histogram_name_prefix == "Test" ||
+             histogram_name_prefix == "AudioMixer" ||
+             histogram_name_prefix == "Agc2");
+}
 
 void FixedGainController::SetGain(float gain_to_apply_db) {
   // Changes in gain_to_apply_ cause discontinuities. We assume
@@ -45,21 +54,23 @@ void FixedGainController::SetGain(float gain_to_apply_db) {
   // The gain
   RTC_DCHECK_LE(-50.f, gain_to_apply_db);
   RTC_DCHECK_LE(gain_to_apply_db, 50.f);
+  const float previous_applied_gained = gain_to_apply_;
   gain_to_apply_ = DbToRatio(gain_to_apply_db);
   RTC_DCHECK_LT(0.f, gain_to_apply_);
   RTC_DLOG(LS_INFO) << "Gain to apply: " << gain_to_apply_db << " db.";
+  // Reset the gain curve applier to quickly react on abrupt level changes
+  // caused by large changes of the applied gain.
+  if (previous_applied_gained != gain_to_apply_) {
+    gain_curve_applier_.Reset();
+  }
 }
 
 void FixedGainController::SetSampleRate(size_t sample_rate_hz) {
   gain_curve_applier_.SetSampleRate(sample_rate_hz);
 }
 
-void FixedGainController::EnableLimiter(bool enable_limiter) {
-  enable_limiter_ = enable_limiter;
-}
-
 void FixedGainController::Process(AudioFrameView<float> signal) {
-  // Apply fixed digital gain; interpolate if necessary. One of the
+  // Apply fixed digital gain. One of the
   // planned usages of the FGC is to only use the limiter. In that
   // case, the gain would be 1.0. Not doing the multiplications speeds
   // it up considerably. Hence the check.
@@ -72,16 +83,13 @@ void FixedGainController::Process(AudioFrameView<float> signal) {
     }
   }
 
-  // Use the limiter (if configured to).
-  if (enable_limiter_) {
-    gain_curve_applier_.Process(signal);
+  // Use the limiter.
+  gain_curve_applier_.Process(signal);
 
-    // Dump data for debug.
-    const auto channel_view = signal.channel(0);
-    apm_data_dumper_->DumpRaw("agc2_fixed_digital_gain_curve_applier",
-                              channel_view.size(), channel_view.data());
-  }
-
+  // Dump data for debug.
+  const auto channel_view = signal.channel(0);
+  apm_data_dumper_->DumpRaw("agc2_fixed_digital_gain_curve_applier",
+                            channel_view.size(), channel_view.data());
   // Hard-clipping.
   for (size_t k = 0; k < signal.num_channels(); ++k) {
     rtc::ArrayView<float> channel_view = signal.channel(k);

@@ -15,35 +15,18 @@ import("../webrtc.gni")
 rtc_static_library("system_wrappers") {
   visibility = [ "*" ]
   sources = [
-    "include/aligned_array.h",
-    "include/aligned_malloc.h",
     "include/clock.h",
     "include/cpu_info.h",
     "include/event_wrapper.h",
-    "include/file_wrapper.h",
     "include/ntp_time.h",
     "include/rtp_to_ntp_estimator.h",
-    "include/rw_lock_wrapper.h",
     "include/sleep.h",
-    "include/timestamp_extrapolator.h",
-    "source/aligned_malloc.cc",
     "source/clock.cc",
     "source/cpu_features.cc",
     "source/cpu_info.cc",
     "source/event.cc",
-    "source/event_timer_posix.cc",
-    "source/event_timer_posix.h",
-    "source/event_timer_win.cc",
-    "source/event_timer_win.h",
-    "source/file_impl.cc",
     "source/rtp_to_ntp_estimator.cc",
-    "source/rw_lock.cc",
-    "source/rw_lock_posix.cc",
-    "source/rw_lock_posix.h",
-    "source/rw_lock_win.cc",
-    "source/rw_lock_win.h",
     "source/sleep.cc",
-    "source/timestamp_extrapolator.cc",
   ]
 
   defines = []
@@ -54,10 +37,11 @@ rtc_static_library("system_wrappers") {
     ":metrics_api",
     ":runtime_enabled_features_api",
     "..:webrtc_common",
-    "../:typedefs",
-    "../api:optional",
     "../modules:module_api_public",
     "../rtc_base:checks",
+    "../rtc_base/synchronization:rw_lock_wrapper",
+    "../rtc_base/system:arch",
+    "//third_party/abseil-cpp/absl/types:optional",
   ]
 
   if (is_android) {
@@ -90,24 +74,14 @@ rtc_static_library("system_wrappers") {
     defines += [ "WEBRTC_THREAD_RR" ]
   }
 
-  # TODO(jschuh): Bug 1348: fix this warning.
-  configs += [ "//build/config/compiler:no_size_t_to_int_warning" ]
-
   if (is_win) {
     if (current_cpu != "arm" && current_cpu != "arm64") {
       libs += [ "winmm.lib" ]
     }
 
-    cflags = [ "/wd4334" ]  # Ignore warning on shift operator promotion.
-
     # Windows needs ../rtc_base:rtc_base due to include of
     # webrtc/rtc_base/win32.h in source/clock.cc.
     deps += [ "../rtc_base:rtc_base" ]
-  }
-
-  if (is_win && is_clang) {
-    # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
-    suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 
   deps += [
@@ -122,20 +96,38 @@ rtc_source_set("cpu_features_api") {
   ]
   deps = [
     "..:webrtc_common",
-    "../:typedefs",
   ]
 }
 
-rtc_source_set("asm_defines") {
-  sources = [
-    "include/asm_defines.h",
-  ]
-}
-
-rtc_source_set("field_trial_api") {
-  sources = [
+rtc_source_set("field_trial") {
+  visibility = [ "*" ]
+  public = [
     "include/field_trial.h",
+    "include/field_trial_default.h",
   ]
+  sources = [
+    "source/field_trial.cc",
+  ]
+  if (rtc_exclude_field_trial_default) {
+    defines = [ "WEBRTC_EXCLUDE_FIELD_TRIAL_DEFAULT" ]
+  }
+}
+
+# TODO(bugs.webrtc.org/9631): Remove this as soon as Chromium stop depending
+# on it.
+rtc_source_set("field_trial_api") {
+  public_deps = [  # no-presubmit-check TODO(webrtc:8603)
+    ":field_trial",
+  ]
+}
+
+# TODO(bugs.webrtc.org/9631): Remove this as soon as Chromium stop depending
+# on it.
+rtc_source_set("field_trial_default") {
+  public_deps = [  # no-presubmit-check TODO(webrtc:8603)
+    ":field_trial",
+  ]
+  visibility = [ "*" ]
 }
 
 rtc_source_set("runtime_enabled_features_api") {
@@ -145,31 +137,9 @@ rtc_source_set("runtime_enabled_features_api") {
   ]
 }
 
-rtc_source_set("metrics_api") {
-  visibility = [ "*" ]
-  sources = [
-    "include/metrics.h",
-  ]
-  deps = [
-    "..:webrtc_common",
-    "../rtc_base:checks",
-    "../rtc_base:rtc_base_approved",
-  ]
-}
-
-rtc_source_set("field_trial_default") {
-  visibility = [ "*" ]
-  sources = [
-    "include/field_trial_default.h",
-    "source/field_trial_default.cc",
-  ]
-  deps = [
-    ":field_trial_api",
-  ]
-}
-
 rtc_source_set("runtime_enabled_features_default") {
   visibility = [ "*" ]
+  configs += [ "..:no_global_constructors" ]
   sources = [
     "source/runtime_enabled_features_default.cc",
   ]
@@ -179,15 +149,40 @@ rtc_source_set("runtime_enabled_features_default") {
   ]
 }
 
+rtc_source_set("metrics") {
+  visibility = [ "*" ]
+  public = [
+    "include/metrics.h",
+    "include/metrics_default.h",
+  ]
+  sources = [
+    "source/metrics.cc",
+  ]
+  if (rtc_exclude_metrics_default) {
+    defines = [ "WEBRTC_EXCLUDE_METRICS_DEFAULT" ]
+  }
+  deps = [
+    "..:webrtc_common",
+    "../rtc_base:checks",
+    "../rtc_base:rtc_base_approved",
+  ]
+}
+
+# TODO(bugs.webrtc.org/9631): Remove this as soon as Chromium stops depending
+# on it.
+rtc_source_set("metrics_api") {
+  visibility = [ "*" ]
+  public_deps = [  # no-presubmit-check TODO(webrtc:8603)
+    ":metrics",
+  ]
+}
+
+# TODO(bugs.webrtc.org/9631): Remove this as soon as Chromium stops depending
+# on it.
 rtc_source_set("metrics_default") {
   visibility = [ "*" ]
-  sources = [
-    "include/metrics_default.h",
-    "source/metrics_default.cc",
-  ]
-  deps = [
-    ":metrics_api",
-    "../rtc_base:rtc_base_approved",
+  public_deps = [  # no-presubmit-check TODO(webrtc:8603)
+    ":metrics",
   ]
 }
 
@@ -219,6 +214,7 @@ if (is_linux) {
     ]
     deps = [
       ":cpu_features_api",
+      "../rtc_base/system:arch",
     ]
   }
 }
@@ -227,28 +223,18 @@ if (rtc_include_tests) {
   rtc_test("system_wrappers_unittests") {
     testonly = true
     sources = [
-      "source/aligned_array_unittest.cc",
-      "source/aligned_malloc_unittest.cc",
       "source/clock_unittest.cc",
-      "source/event_timer_posix_unittest.cc",
       "source/metrics_default_unittest.cc",
       "source/metrics_unittest.cc",
       "source/ntp_time_unittest.cc",
       "source/rtp_to_ntp_estimator_unittest.cc",
     ]
-    configs += [ "//build/config/compiler:no_size_t_to_int_warning" ]
-
-    if (!build_with_chromium && is_clang) {
-      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
-      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
-    }
 
     deps = [
       ":metrics_api",
       ":metrics_default",
       ":system_wrappers",
       "..:webrtc_common",
-      "../:typedefs",
       "../rtc_base:rtc_base_approved",
       "../test:test_main",
       "//testing/gtest",

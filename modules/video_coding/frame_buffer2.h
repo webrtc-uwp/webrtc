@@ -22,6 +22,7 @@
 #include "rtc_base/constructormagic.h"
 #include "rtc_base/criticalsection.h"
 #include "rtc_base/event.h"
+#include "rtc_base/experiments/rtt_mult_experiment.h"
 #include "rtc_base/numerics/sequence_number_util.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -47,6 +48,7 @@ class FrameBuffer {
 
   // Insert a frame into the frame buffer. Returns the picture id
   // of the last continuous frame or -1 if there is no continuous frame.
+  // TODO(philipel): Return a VideoLayerFrameId and not only the picture id.
   int64_t InsertFrame(std::unique_ptr<EncodedFrame> frame);
 
   // Get the next frame for decoding. Will return at latest after
@@ -78,24 +80,11 @@ class FrameBuffer {
   void UpdateRtt(int64_t rtt_ms);
 
  private:
-  struct FrameKey {
-    FrameKey() : picture_id(-1), spatial_layer(0) {}
-    FrameKey(int64_t picture_id, uint8_t spatial_layer)
-        : picture_id(picture_id), spatial_layer(spatial_layer) {}
-
-    bool operator<(const FrameKey& rhs) const {
-      if (picture_id == rhs.picture_id)
-        return spatial_layer < rhs.spatial_layer;
-      return picture_id < rhs.picture_id;
-    }
-
-    bool operator<=(const FrameKey& rhs) const { return !(rhs < *this); }
-
-    int64_t picture_id;
-    uint8_t spatial_layer;
-  };
-
   struct FrameInfo {
+    FrameInfo();
+    FrameInfo(FrameInfo&&);
+    ~FrameInfo();
+
     // The maximum number of frames that can depend on this frame.
     static constexpr size_t kMaxNumDependentFrames = 8;
 
@@ -103,7 +92,7 @@ class FrameBuffer {
     // on this frame.
     // TODO(philipel): Add simple modify/access functions to prevent adding too
     // many |dependent_frames|.
-    FrameKey dependent_frames[kMaxNumDependentFrames];
+    VideoLayerFrameId dependent_frames[kMaxNumDependentFrames];
     size_t num_dependent_frames = 0;
 
     // A frame is continiuous if it has all its referenced/indirectly
@@ -124,7 +113,7 @@ class FrameBuffer {
     std::unique_ptr<EncodedFrame> frame;
   };
 
-  using FrameMap = std::map<FrameKey, FrameInfo>;
+  using FrameMap = std::map<VideoLayerFrameId, FrameInfo>;
 
   // Check that the references of |frame| are valid.
   bool ValidReferences(const EncodedFrame& frame) const;

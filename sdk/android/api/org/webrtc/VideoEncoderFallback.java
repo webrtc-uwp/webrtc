@@ -13,7 +13,6 @@ package org.webrtc;
 /**
  * A combined video encoder that falls back on a secondary encoder if the primary encoder fails.
  */
-@JNINamespace("webrtc::jni")
 public class VideoEncoderFallback extends WrappedNativeVideoEncoder {
   private final VideoEncoder fallback;
   private final VideoEncoder primary;
@@ -24,13 +23,13 @@ public class VideoEncoderFallback extends WrappedNativeVideoEncoder {
   }
 
   @Override
-  long createNativeEncoder() {
+  public long createNativeVideoEncoder() {
     return nativeCreateEncoder(fallback, primary);
   }
 
   @Override
-  boolean isSoftwareEncoder() {
-    return isWrappedSoftwareEncoder(primary);
+  public boolean isHardwareEncoder() {
+    return primary.isHardwareEncoder();
   }
 
   private static native long nativeCreateEncoder(VideoEncoder fallback, VideoEncoder primary);

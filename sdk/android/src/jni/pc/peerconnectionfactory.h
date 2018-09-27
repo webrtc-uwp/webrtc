@@ -12,6 +12,8 @@
 #define SDK_ANDROID_SRC_JNI_PC_PEERCONNECTIONFACTORY_H_
 
 #include <jni.h>
+#include "api/peerconnectioninterface.h"
+#include "rtc_base/thread.h"
 
 namespace webrtc {
 namespace jni {
@@ -19,6 +21,15 @@ namespace jni {
 void PeerConnectionFactoryNetworkThreadReady();
 void PeerConnectionFactoryWorkerThreadReady();
 void PeerConnectionFactorySignalingThreadReady();
+
+// Creates java PeerConnectionFactory with specified |pcf|.
+jobject NativeToJavaPeerConnectionFactory(
+    JNIEnv* jni,
+    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> pcf,
+    std::unique_ptr<rtc::Thread> network_thread,
+    std::unique_ptr<rtc::Thread> worker_thread,
+    std::unique_ptr<rtc::Thread> signaling_thread,
+    rtc::NetworkMonitorFactory* network_monitor_factory = nullptr);
 
 }  // namespace jni
 }  // namespace webrtc

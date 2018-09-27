@@ -15,6 +15,8 @@
 #include "common_video/include/video_frame.h"
 #include "common_video/include/video_frame_buffer.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
+#include "modules/video_coding/codecs/multiplex/include/augmented_video_frame_buffer.h"
+#include "modules/video_coding/codecs/multiplex/multiplex_encoded_image_packer.h"
 #include "rtc_base/keep_ref_until_done.h"
 #include "rtc_base/logging.h"
 
@@ -33,8 +35,8 @@ class MultiplexDecoderAdapter::AdapterDecodedImageCallback
       : adapter_(adapter), stream_idx_(stream_idx) {}
 
   void Decoded(VideoFrame& decoded_image,
-               rtc::Optional<int32_t> decode_time_ms,
-               rtc::Optional<uint8_t> qp) override {
+               absl::optional<int32_t> decode_time_ms,
+               absl::optional<uint8_t> qp) override {
     if (!adapter_)
       return;
     adapter_->Decoded(stream_idx_, &decoded_image, decode_time_ms, qp);
@@ -64,25 +66,38 @@ struct MultiplexDecoderAdapter::DecodedImageData {
   }
   DecodedImageData(AlphaCodecStream stream_idx,
                    const VideoFrame& decoded_image,
-                   const rtc::Optional<int32_t>& decode_time_ms,
-                   const rtc::Optional<uint8_t>& qp)
+                   const absl::optional<int32_t>& decode_time_ms,
+                   const absl::optional<uint8_t>& qp)
       : stream_idx_(stream_idx),
         decoded_image_(decoded_image),
         decode_time_ms_(decode_time_ms),
         qp_(qp) {}
   const AlphaCodecStream stream_idx_;
   VideoFrame decoded_image_;
-  const rtc::Optional<int32_t> decode_time_ms_;
-  const rtc::Optional<uint8_t> qp_;
+  const absl::optional<int32_t> decode_time_ms_;
+  const absl::optional<uint8_t> qp_;
 
  private:
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(DecodedImageData);
 };
 
+struct MultiplexDecoderAdapter::AugmentingData {
+  AugmentingData(std::unique_ptr<uint8_t[]> augmenting_data, uint16_t data_size)
+      : data_(std::move(augmenting_data)), size_(data_size) {}
+  std::unique_ptr<uint8_t[]> data_;
+  const uint16_t size_;
+
+ private:
+  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(AugmentingData);
+};
+
 MultiplexDecoderAdapter::MultiplexDecoderAdapter(
     VideoDecoderFactory* factory,
-    const SdpVideoFormat& associated_format)
-    : factory_(factory), associated_format_(associated_format) {}
+    const SdpVideoFormat& associated_format,
+    bool supports_augmenting_data)
+    : factory_(factory),
+      associated_format_(associated_format),
+      supports_augmenting_data_(supports_augmenting_data) {}
 
 MultiplexDecoderAdapter::~MultiplexDecoderAdapter() {
   Release();
@@ -111,24 +126,32 @@ int32_t MultiplexDecoderAdapter::InitDecode(const VideoCodec* codec_settings,
 int32_t MultiplexDecoderAdapter::Decode(
     const EncodedImage& input_image,
     bool missing_frames,
-    const RTPFragmentationHeader* /*fragmentation*/,
     const CodecSpecificInfo* codec_specific_info,
     int64_t render_time_ms) {
-  const MultiplexImage& image =
-      MultiplexEncodedImagePacker::Unpack(input_image);
+  MultiplexImage image = MultiplexEncodedImagePacker::Unpack(input_image);
+
+  if (supports_augmenting_data_) {
+    RTC_DCHECK(decoded_augmenting_data_.find(input_image.Timestamp()) ==
+               decoded_augmenting_data_.end());
+    decoded_augmenting_data_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(input_image.Timestamp()),
+        std::forward_as_tuple(std::move(image.augmenting_data),
+                              image.augmenting_data_size));
+  }
 
   if (image.component_count == 1) {
-    RTC_DCHECK(decoded_data_.find(input_image._timeStamp) ==
+    RTC_DCHECK(decoded_data_.find(input_image.Timestamp()) ==
                decoded_data_.end());
     decoded_data_.emplace(std::piecewise_construct,
-                          std::forward_as_tuple(input_image._timeStamp),
+                          std::forward_as_tuple(input_image.Timestamp()),
                           std::forward_as_tuple(kAXXStream));
   }
   int32_t rv = 0;
   for (size_t i = 0; i < image.image_components.size(); i++) {
     rv = decoders_[image.image_components[i].component_index]->Decode(
         image.image_components[i].encoded_image, missing_frames, nullptr,
-        nullptr, render_time_ms);
+        render_time_ms);
     if (rv != WEBRTC_VIDEO_CODEC_OK)
       return rv;
   }
@@ -154,25 +177,40 @@ int32_t MultiplexDecoderAdapter::Release() {
 
 void MultiplexDecoderAdapter::Decoded(AlphaCodecStream stream_idx,
                                       VideoFrame* decoded_image,
-                                      rtc::Optional<int32_t> decode_time_ms,
-                                      rtc::Optional<uint8_t> qp) {
+                                      absl::optional<int32_t> decode_time_ms,
+                                      absl::optional<uint8_t> qp) {
   const auto& other_decoded_data_it =
       decoded_data_.find(decoded_image->timestamp());
+  const auto& augmenting_data_it =
+      decoded_augmenting_data_.find(decoded_image->timestamp());
+  const bool has_augmenting_data =
+      augmenting_data_it != decoded_augmenting_data_.end();
   if (other_decoded_data_it != decoded_data_.end()) {
+    uint16_t augmenting_data_size =
+        has_augmenting_data ? augmenting_data_it->second.size_ : 0;
+    std::unique_ptr<uint8_t[]> augmenting_data =
+        has_augmenting_data ? std::move(augmenting_data_it->second.data_)
+                            : nullptr;
     auto& other_image_data = other_decoded_data_it->second;
     if (stream_idx == kYUVStream) {
       RTC_DCHECK_EQ(kAXXStream, other_image_data.stream_idx_);
       MergeAlphaImages(decoded_image, decode_time_ms, qp,
                        &other_image_data.decoded_image_,
-                       other_image_data.decode_time_ms_, other_image_data.qp_);
+                       other_image_data.decode_time_ms_, other_image_data.qp_,
+                       std::move(augmenting_data), augmenting_data_size);
     } else {
       RTC_DCHECK_EQ(kYUVStream, other_image_data.stream_idx_);
       RTC_DCHECK_EQ(kAXXStream, stream_idx);
       MergeAlphaImages(&other_image_data.decoded_image_,
                        other_image_data.decode_time_ms_, other_image_data.qp_,
-                       decoded_image, decode_time_ms, qp);
+                       decoded_image, decode_time_ms, qp,
+                       std::move(augmenting_data), augmenting_data_size);
     }
     decoded_data_.erase(decoded_data_.begin(), other_decoded_data_it);
+    if (has_augmenting_data) {
+      decoded_augmenting_data_.erase(decoded_augmenting_data_.begin(),
+                                     augmenting_data_it);
+    }
     return;
   }
   RTC_DCHECK(decoded_data_.find(decoded_image->timestamp()) ==
@@ -185,28 +223,35 @@ void MultiplexDecoderAdapter::Decoded(AlphaCodecStream stream_idx,
 
 void MultiplexDecoderAdapter::MergeAlphaImages(
     VideoFrame* decoded_image,
-    const rtc::Optional<int32_t>& decode_time_ms,
-    const rtc::Optional<uint8_t>& qp,
+    const absl::optional<int32_t>& decode_time_ms,
+    const absl::optional<uint8_t>& qp,
     VideoFrame* alpha_decoded_image,
-    const rtc::Optional<int32_t>& alpha_decode_time_ms,
-    const rtc::Optional<uint8_t>& alpha_qp) {
+    const absl::optional<int32_t>& alpha_decode_time_ms,
+    const absl::optional<uint8_t>& alpha_qp,
+    std::unique_ptr<uint8_t[]> augmenting_data,
+    uint16_t augmenting_data_length) {
+  rtc::scoped_refptr<VideoFrameBuffer> merged_buffer;
   if (!alpha_decoded_image->timestamp()) {
-    decoded_complete_callback_->Decoded(*decoded_image, decode_time_ms, qp);
-    return;
+    merged_buffer = decoded_image->video_frame_buffer();
+  } else {
+    rtc::scoped_refptr<webrtc::I420BufferInterface> yuv_buffer =
+        decoded_image->video_frame_buffer()->ToI420();
+    rtc::scoped_refptr<webrtc::I420BufferInterface> alpha_buffer =
+        alpha_decoded_image->video_frame_buffer()->ToI420();
+    RTC_DCHECK_EQ(yuv_buffer->width(), alpha_buffer->width());
+    RTC_DCHECK_EQ(yuv_buffer->height(), alpha_buffer->height());
+    merged_buffer = WrapI420ABuffer(
+        yuv_buffer->width(), yuv_buffer->height(), yuv_buffer->DataY(),
+        yuv_buffer->StrideY(), yuv_buffer->DataU(), yuv_buffer->StrideU(),
+        yuv_buffer->DataV(), yuv_buffer->StrideV(), alpha_buffer->DataY(),
+        alpha_buffer->StrideY(),
+        rtc::Bind(&KeepBufferRefs, yuv_buffer, alpha_buffer));
   }
-
-  rtc::scoped_refptr<webrtc::I420BufferInterface> yuv_buffer =
-      decoded_image->video_frame_buffer()->ToI420();
-  rtc::scoped_refptr<webrtc::I420BufferInterface> alpha_buffer =
-      alpha_decoded_image->video_frame_buffer()->ToI420();
-  RTC_DCHECK_EQ(yuv_buffer->width(), alpha_buffer->width());
-  RTC_DCHECK_EQ(yuv_buffer->height(), alpha_buffer->height());
-  rtc::scoped_refptr<I420ABufferInterface> merged_buffer = WrapI420ABuffer(
-      yuv_buffer->width(), yuv_buffer->height(), yuv_buffer->DataY(),
-      yuv_buffer->StrideY(), yuv_buffer->DataU(), yuv_buffer->StrideU(),
-      yuv_buffer->DataV(), yuv_buffer->StrideV(), alpha_buffer->DataY(),
-      alpha_buffer->StrideY(),
-      rtc::Bind(&KeepBufferRefs, yuv_buffer, alpha_buffer));
+  if (supports_augmenting_data_) {
+    merged_buffer = rtc::scoped_refptr<webrtc::AugmentedVideoFrameBuffer>(
+        new rtc::RefCountedObject<AugmentedVideoFrameBuffer>(
+            merged_buffer, std::move(augmenting_data), augmenting_data_length));
+  }
 
   VideoFrame merged_image(merged_buffer, decoded_image->timestamp(),
                           0 /* render_time_ms */, decoded_image->rotation());

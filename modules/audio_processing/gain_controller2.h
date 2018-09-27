@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 
+#include "modules/audio_processing/agc2/adaptive_agc.h"
 #include "modules/audio_processing/agc2/fixed_gain_controller.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "rtc_base/constructormagic.h"
@@ -32,6 +33,7 @@ class GainController2 {
 
   void Initialize(int sample_rate_hz);
   void Process(AudioBuffer* audio);
+  void NotifyAnalogLevel(int level);
 
   void ApplyConfig(const AudioProcessing::Config::GainController2& config);
   static bool Validate(const AudioProcessing::Config::GainController2& config);
@@ -41,8 +43,11 @@ class GainController2 {
  private:
   static int instance_count_;
   std::unique_ptr<ApmDataDumper> data_dumper_;
-  FixedGainController gain_controller_;
+  FixedGainController fixed_gain_controller_;
   AudioProcessing::Config::GainController2 config_;
+  AdaptiveAgc adaptive_agc_;
+  int analog_level_ = -1;
+  bool adaptive_digital_mode_ = true;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(GainController2);
 };

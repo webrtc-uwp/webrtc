@@ -18,14 +18,18 @@
 #ifdef WEBRTC_ANDROID
 #include "pc/test/androidtestinitializer.h"
 #endif
+#include "absl/memory/memory.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
 #include "api/peerconnectionproxy.h"
+#include "api/video_codecs/builtin_video_decoder_factory.h"
+#include "api/video_codecs/builtin_video_encoder_factory.h"
 #include "pc/test/fakeaudiocapturemodule.h"
 #include "rtc_base/fakenetwork.h"
 #include "rtc_base/gunit.h"
-#include "rtc_base/ptr_util.h"
+#include "rtc_base/strings/string_builder.h"
 #include "rtc_base/virtualsocketserver.h"
+#include "system_wrappers/include/metrics_default.h"
 
 namespace webrtc {
 
@@ -48,8 +52,9 @@ class PeerConnectionWrapperForIceTest : public PeerConnectionWrapper {
     RTC_DCHECK(desc->contents().size() > 0);
     const auto& first_content = desc->contents()[0];
     candidate->set_transport_name(first_content.name);
-    JsepIceCandidate jsep_candidate(first_content.name, 0, *candidate);
-    return pc()->AddIceCandidate(&jsep_candidate);
+    std::unique_ptr<IceCandidateInterface> jsep_candidate =
+        CreateIceCandidate(first_content.name, 0, *candidate);
+    return pc()->AddIceCandidate(jsep_candidate.get());
   }
 
   // Returns ICE candidates from the remote session description.
@@ -89,8 +94,10 @@ class PeerConnectionIceBaseTest : public ::testing::Test {
 #endif
     pc_factory_ = CreatePeerConnectionFactory(
         rtc::Thread::Current(), rtc::Thread::Current(), rtc::Thread::Current(),
-        FakeAudioCaptureModule::Create(), CreateBuiltinAudioEncoderFactory(),
-        CreateBuiltinAudioDecoderFactory(), nullptr, nullptr);
+        rtc::scoped_refptr<AudioDeviceModule>(FakeAudioCaptureModule::Create()),
+        CreateBuiltinAudioEncoderFactory(), CreateBuiltinAudioDecoderFactory(),
+        CreateBuiltinVideoEncoderFactory(), CreateBuiltinVideoDecoderFactory(),
+        nullptr /* audio_mixer */, nullptr /* audio_processing */);
   }
 
   WrapperPtr CreatePeerConnection() {
@@ -100,20 +107,20 @@ class PeerConnectionIceBaseTest : public ::testing::Test {
   WrapperPtr CreatePeerConnection(const RTCConfiguration& config) {
     auto* fake_network = NewFakeNetwork();
     auto port_allocator =
-        rtc::MakeUnique<cricket::BasicPortAllocator>(fake_network);
+        absl::make_unique<cricket::BasicPortAllocator>(fake_network);
     port_allocator->set_flags(cricket::PORTALLOCATOR_DISABLE_TCP |
                               cricket::PORTALLOCATOR_DISABLE_RELAY);
     port_allocator->set_step_delay(cricket::kMinimumStepDelay);
     RTCConfiguration modified_config = config;
     modified_config.sdp_semantics = sdp_semantics_;
-    auto observer = rtc::MakeUnique<MockPeerConnectionObserver>();
+    auto observer = absl::make_unique<MockPeerConnectionObserver>();
     auto pc = pc_factory_->CreatePeerConnection(
         modified_config, std::move(port_allocator), nullptr, observer.get());
     if (!pc) {
       return nullptr;
     }
 
-    auto wrapper = rtc::MakeUnique<PeerConnectionWrapperForIceTest>(
+    auto wrapper = absl::make_unique<PeerConnectionWrapperForIceTest>(
         pc_factory_, pc, std::move(observer));
     wrapper->set_network(fake_network);
     return wrapper;
@@ -200,7 +207,9 @@ class PeerConnectionIceBaseTest : public ::testing::Test {
       if (transceiver->media_type() == cricket::MEDIA_TYPE_AUDIO) {
         cricket::BaseChannel* channel = transceiver->internal()->channel();
         if (channel) {
-          return channel->rtp_dtls_transport()->ice_transport()->GetIceRole();
+          auto dtls_transport = static_cast<cricket::DtlsTransportInternal*>(
+              channel->rtp_packet_transport());
+          return dtls_transport->ice_transport()->GetIceRole();
         }
       }
     }
@@ -214,8 +223,9 @@ class PeerConnectionIceBaseTest : public ::testing::Test {
     RTC_DCHECK(desc->contents().size() > 0);
     const auto& first_content = desc->contents()[0];
     candidate->set_transport_name(first_content.name);
-    JsepIceCandidate jsep_candidate(first_content.name, 0, *candidate);
-    return sdesc->AddCandidate(&jsep_candidate);
+    std::unique_ptr<IceCandidateInterface> jsep_candidate =
+        CreateIceCandidate(first_content.name, 0, *candidate);
+    return sdesc->AddCandidate(jsep_candidate.get());
   }
 
   rtc::FakeNetworkManager* NewFakeNetwork() {
@@ -240,14 +250,16 @@ class PeerConnectionIceTest
     : public PeerConnectionIceBaseTest,
       public ::testing::WithParamInterface<SdpSemantics> {
  protected:
-  PeerConnectionIceTest() : PeerConnectionIceBaseTest(GetParam()) {}
+  PeerConnectionIceTest() : PeerConnectionIceBaseTest(GetParam()) {
+    webrtc::metrics::Reset();
+  }
 };
 
 ::testing::AssertionResult AssertCandidatesEqual(const char* a_expr,
                                                  const char* b_expr,
                                                  const cricket::Candidate& a,
                                                  const cricket::Candidate& b) {
-  std::stringstream failure_info;
+  rtc::StringBuilder failure_info;
   if (a.component() != b.component()) {
     failure_info << "\ncomponent: " << a.component() << " != " << b.component();
   }
@@ -349,6 +361,21 @@ TEST_P(PeerConnectionIceTest, SetRemoteDescriptionFailsIfNoIceCredentials) {
   EXPECT_FALSE(callee->SetRemoteDescription(std::move(offer)));
 }
 
+// Test that doing an offer/answer exchange with no transport (i.e., no data
+// channel or media) results in the ICE connection state staying at New.
+TEST_P(PeerConnectionIceTest,
+       OfferAnswerWithNoTransportsDoesNotChangeIceConnectionState) {
+  auto caller = CreatePeerConnection();
+  auto callee = CreatePeerConnection();
+
+  ASSERT_TRUE(caller->ExchangeOfferAnswerWith(callee.get()));
+
+  EXPECT_EQ(PeerConnectionInterface::kIceConnectionNew,
+            caller->pc()->ice_connection_state());
+  EXPECT_EQ(PeerConnectionInterface::kIceConnectionNew,
+            callee->pc()->ice_connection_state());
+}
+
 // The following group tests that ICE candidates are not generated before
 // SetLocalDescription is called on a PeerConnection.
 
@@ -387,13 +414,38 @@ TEST_P(PeerConnectionIceTest, CannotAddCandidateWhenRemoteDescriptionNotSet) {
 
   auto caller = CreatePeerConnectionWithAudioVideo();
   cricket::Candidate candidate = CreateLocalUdpCandidate(kCalleeAddress);
-  JsepIceCandidate jsep_candidate(cricket::CN_AUDIO, 0, candidate);
+  std::unique_ptr<IceCandidateInterface> jsep_candidate =
+      CreateIceCandidate(cricket::CN_AUDIO, 0, candidate);
 
-  EXPECT_FALSE(caller->pc()->AddIceCandidate(&jsep_candidate));
+  EXPECT_FALSE(caller->pc()->AddIceCandidate(jsep_candidate.get()));
 
   caller->CreateOfferAndSetAsLocal();
 
-  EXPECT_FALSE(caller->pc()->AddIceCandidate(&jsep_candidate));
+  EXPECT_FALSE(caller->pc()->AddIceCandidate(jsep_candidate.get()));
+  EXPECT_EQ(
+      2, webrtc::metrics::NumSamples("WebRTC.PeerConnection.AddIceCandidate"));
+  EXPECT_EQ(
+      2, webrtc::metrics::NumEvents("WebRTC.PeerConnection.AddIceCandidate",
+                                    kAddIceCandidateFailNoRemoteDescription));
+}
+
+TEST_P(PeerConnectionIceTest, CannotAddCandidateWhenPeerConnectionClosed) {
+  const SocketAddress kCalleeAddress("1.1.1.1", 1111);
+
+  auto caller = CreatePeerConnectionWithAudioVideo();
+  auto callee = CreatePeerConnectionWithAudioVideo();
+
+  ASSERT_TRUE(caller->ExchangeOfferAnswerWith(callee.get()));
+
+  cricket::Candidate candidate = CreateLocalUdpCandidate(kCalleeAddress);
+  auto* audio_content = cricket::GetFirstAudioContent(
+      caller->pc()->local_description()->description());
+  std::unique_ptr<IceCandidateInterface> jsep_candidate =
+      CreateIceCandidate(audio_content->name, 0, candidate);
+
+  caller->pc()->Close();
+
+  EXPECT_FALSE(caller->pc()->AddIceCandidate(jsep_candidate.get()));
 }
 
 TEST_P(PeerConnectionIceTest, DuplicateIceCandidateIgnoredWhenAdded) {
@@ -413,6 +465,28 @@ TEST_P(PeerConnectionIceTest, DuplicateIceCandidateIgnoredWhenAdded) {
 }
 
 TEST_P(PeerConnectionIceTest,
+       CannotRemoveIceCandidatesWhenPeerConnectionClosed) {
+  const SocketAddress kCalleeAddress("1.1.1.1", 1111);
+
+  auto caller = CreatePeerConnectionWithAudioVideo();
+  auto callee = CreatePeerConnectionWithAudioVideo();
+
+  ASSERT_TRUE(caller->ExchangeOfferAnswerWith(callee.get()));
+
+  cricket::Candidate candidate = CreateLocalUdpCandidate(kCalleeAddress);
+  auto* audio_content = cricket::GetFirstAudioContent(
+      caller->pc()->local_description()->description());
+  std::unique_ptr<IceCandidateInterface> ice_candidate =
+      CreateIceCandidate(audio_content->name, 0, candidate);
+
+  ASSERT_TRUE(caller->pc()->AddIceCandidate(ice_candidate.get()));
+
+  caller->pc()->Close();
+
+  EXPECT_FALSE(caller->pc()->RemoveIceCandidates({candidate}));
+}
+
+TEST_P(PeerConnectionIceTest,
        AddRemoveCandidateWithEmptyTransportDoesNotCrash) {
   const SocketAddress kCalleeAddress("1.1.1.1", 1111);
 
@@ -427,8 +501,9 @@ TEST_P(PeerConnectionIceTest,
   cricket::Candidate candidate = CreateLocalUdpCandidate(kCalleeAddress);
   auto* audio_content = cricket::GetFirstAudioContent(
       caller->pc()->local_description()->description());
-  JsepIceCandidate ice_candidate(audio_content->name, 0, candidate);
-  EXPECT_TRUE(caller->pc()->AddIceCandidate(&ice_candidate));
+  std::unique_ptr<IceCandidateInterface> ice_candidate =
+      CreateIceCandidate(audio_content->name, 0, candidate);
+  EXPECT_TRUE(caller->pc()->AddIceCandidate(ice_candidate.get()));
   EXPECT_TRUE(caller->pc()->RemoveIceCandidates({candidate}));
 }
 
@@ -482,23 +557,23 @@ TEST_P(PeerConnectionIceTest,
 // The standard (https://tools.ietf.org/html/rfc5245#section-15.4) says that
 // pwd must be 22-256 characters and ufrag must be 4-256 characters.
 TEST_P(PeerConnectionIceTest, VerifyUfragPwdLength) {
-  auto set_local_description_with_ufrag_pwd_length =
-      [this](int ufrag_len, int pwd_len) {
-        auto pc = CreatePeerConnectionWithAudioVideo();
-        auto offer = pc->CreateOffer();
-        SetIceUfragPwd(offer.get(), std::string(ufrag_len, 'x'),
-                       std::string(pwd_len, 'x'));
-        return pc->SetLocalDescription(std::move(offer));
-      };
+  auto set_local_description_with_ufrag_pwd_length = [this](int ufrag_len,
+                                                            int pwd_len) {
+    auto pc = CreatePeerConnectionWithAudioVideo();
+    auto offer = pc->CreateOffer();
+    SetIceUfragPwd(offer.get(), std::string(ufrag_len, 'x'),
+                   std::string(pwd_len, 'x'));
+    return pc->SetLocalDescription(std::move(offer));
+  };
 
-  auto set_remote_description_with_ufrag_pwd_length =
-      [this](int ufrag_len, int pwd_len) {
-        auto pc = CreatePeerConnectionWithAudioVideo();
-        auto offer = pc->CreateOffer();
-        SetIceUfragPwd(offer.get(), std::string(ufrag_len, 'x'),
-                       std::string(pwd_len, 'x'));
-        return pc->SetRemoteDescription(std::move(offer));
-      };
+  auto set_remote_description_with_ufrag_pwd_length = [this](int ufrag_len,
+                                                             int pwd_len) {
+    auto pc = CreatePeerConnectionWithAudioVideo();
+    auto offer = pc->CreateOffer();
+    SetIceUfragPwd(offer.get(), std::string(ufrag_len, 'x'),
+                   std::string(pwd_len, 'x'));
+    return pc->SetRemoteDescription(std::move(offer));
+  };
 
   EXPECT_FALSE(set_local_description_with_ufrag_pwd_length(3, 22));
   EXPECT_FALSE(set_remote_description_with_ufrag_pwd_length(3, 22));
@@ -519,13 +594,13 @@ TEST_P(PeerConnectionIceTest, VerifyUfragPwdLength) {
     const char* candidates_expr,
     const SocketAddress& address,
     const std::vector<IceCandidateInterface*> candidates) {
-  std::stringstream candidate_hosts;
+  rtc::StringBuilder candidate_hosts;
   for (const auto* candidate : candidates) {
     const auto& candidate_ip = candidate->candidate().address().ipaddr();
     if (candidate_ip == address.ipaddr()) {
       return ::testing::AssertionSuccess();
     }
-    candidate_hosts << "\n" << candidate_ip;
+    candidate_hosts << "\n" << candidate_ip.ToString();
   }
   return ::testing::AssertionFailure()
          << address_expr << " (host " << address.HostAsURIString()
@@ -885,5 +960,51 @@ INSTANTIATE_TEST_CASE_P(PeerConnectionIceTest,
                         PeerConnectionIceTest,
                         Values(SdpSemantics::kPlanB,
                                SdpSemantics::kUnifiedPlan));
+
+class PeerConnectionIceConfigTest : public testing::Test {
+ protected:
+  void SetUp() override {
+    pc_factory_ = CreatePeerConnectionFactory(
+        rtc::Thread::Current(), rtc::Thread::Current(), rtc::Thread::Current(),
+        FakeAudioCaptureModule::Create(), CreateBuiltinAudioEncoderFactory(),
+        CreateBuiltinAudioDecoderFactory(), CreateBuiltinVideoEncoderFactory(),
+        CreateBuiltinVideoDecoderFactory(), nullptr /* audio_mixer */,
+        nullptr /* audio_processing */);
+  }
+  void CreatePeerConnection(const RTCConfiguration& config) {
+    std::unique_ptr<cricket::FakePortAllocator> port_allocator(
+        new cricket::FakePortAllocator(rtc::Thread::Current(), nullptr));
+    port_allocator_ = port_allocator.get();
+    rtc::scoped_refptr<PeerConnectionInterface> pc(
+        pc_factory_->CreatePeerConnection(config, std::move(port_allocator),
+                                          nullptr /* cert_generator */,
+                                          &observer_));
+    EXPECT_TRUE(pc.get());
+    pc_ = std::move(pc.get());
+  }
+
+  rtc::scoped_refptr<PeerConnectionFactoryInterface> pc_factory_ = nullptr;
+  rtc::scoped_refptr<PeerConnectionInterface> pc_ = nullptr;
+  cricket::FakePortAllocator* port_allocator_ = nullptr;
+
+  MockPeerConnectionObserver observer_;
+};
+
+TEST_F(PeerConnectionIceConfigTest, SetStunCandidateKeepaliveInterval) {
+  RTCConfiguration config;
+  config.stun_candidate_keepalive_interval = 123;
+  config.ice_candidate_pool_size = 1;
+  CreatePeerConnection(config);
+  ASSERT_NE(port_allocator_, nullptr);
+  absl::optional<int> actual_stun_keepalive_interval =
+      port_allocator_->stun_candidate_keepalive_interval();
+  EXPECT_EQ(actual_stun_keepalive_interval.value_or(-1), 123);
+  config.stun_candidate_keepalive_interval = 321;
+  RTCError error;
+  pc_->SetConfiguration(config, &error);
+  actual_stun_keepalive_interval =
+      port_allocator_->stun_candidate_keepalive_interval();
+  EXPECT_EQ(actual_stun_keepalive_interval.value_or(-1), 321);
+}
 
 }  // namespace webrtc

@@ -81,20 +81,19 @@ def _ParseArgs():
   parser = argparse.ArgumentParser(description='Start loopback video analysis.')
   parser.add_argument('build_dir_android',
       help='The path to the build directory for Android.')
-  parser.add_argument('--build_dir_x86',
-      help='The path to the build directory for building locally.')
   parser.add_argument('--temp_dir',
       help='A temporary directory to put the output.')
   parser.add_argument('--adb-path', help='Path to adb binary.', default='adb')
+  parser.add_argument('--num-retries', default='0',
+                      help='Number of times to retry the test on Android.')
   parser.add_argument('--isolated-script-test-perf-output',
       help='Where to store perf results in chartjson format.', default=None)
-
+  parser.add_argument('--isolated-script-test-output', default=None,
+      help='Path to output an empty JSON file which Chromium infra requires.')
   args, unknown_args = parser.parse_known_args()
 
   # Ignore Chromium-specific flags
   parser = argparse.ArgumentParser()
-  parser.add_argument('--isolated-script-test-output',
-                      type=str, default=None)
   parser.add_argument('--test-launcher-summary-output',
                       type=str, default=None)
 
@@ -131,12 +130,12 @@ def SetUpTools(android_device, temp_dir, processes):
 
   # Build AppRTC.
   build_apprtc_script = os.path.join(RTC_TOOLS_DIR, 'build_apprtc.py')
-  apprtc_src_dir = os.path.join(temp_dir, 'apprtc', 'src')
+  apprtc_dir = os.path.join(temp_dir, 'apprtc')
   go_dir = os.path.join(temp_dir, 'go')
   collider_dir = os.path.join(temp_dir, 'collider')
 
-  _RunCommand([sys.executable, build_apprtc_script, apprtc_src_dir, go_dir,
-              collider_dir])
+  _RunCommand([sys.executable, build_apprtc_script, apprtc_dir, go_dir,
+               collider_dir])
 
   # Start AppRTC Server.
   dev_appserver = os.path.join(temp_dir, 'apprtc', 'temp', 'google-cloud-sdk',
@@ -160,7 +159,7 @@ def SetUpTools(android_device, temp_dir, processes):
       '8089']))
 
 
-def RunTest(android_device, adb_path, build_dir, temp_dir,
+def RunTest(android_device, adb_path, build_dir, temp_dir, num_retries,
             chartjson_result_file):
   ffmpeg_path = os.path.join(TOOLCHAIN_DIR, 'ffmpeg')
   def ConvertVideo(input_video, output_video):
@@ -168,8 +167,9 @@ def RunTest(android_device, adb_path, build_dir, temp_dir,
 
   # Start loopback call and record video.
   test_script = os.path.join(
-      build_dir, 'bin', 'run_AppRTCMobileTestStubbedVideoIO')
-  _RunCommand([test_script, '--device', android_device])
+      build_dir, 'bin', 'run_AppRTCMobile_stubbed_video_io_test_apk')
+  _RunCommand([test_script, '--device', android_device,
+               '--num-retries', num_retries])
 
   # Pull the recorded video.
   test_video = os.path.join(temp_dir, 'test_video.y4m')
@@ -189,7 +189,7 @@ def RunTest(android_device, adb_path, build_dir, temp_dir,
 
   # Run comparison script.
   compare_script = os.path.join(SRC_DIR, 'rtc_tools', 'compare_videos.py')
-  frame_analyzer = os.path.join(TOOLCHAIN_DIR, 'frame_analyzer')
+  frame_analyzer = os.path.join(build_dir, 'frame_analyzer_host')
   zxing_path = os.path.join(TOOLCHAIN_DIR, 'zxing')
   stats_file_ref = os.path.join(temp_dir, 'stats_ref.txt')
   stats_file_test = os.path.join(temp_dir, 'stats_test.txt')
@@ -225,7 +225,7 @@ def main():
   try:
     android_device = SelectAndroidDevice(adb_path)
     SetUpTools(android_device, temp_dir, processes)
-    RunTest(android_device, adb_path, build_dir, temp_dir,
+    RunTest(android_device, adb_path, build_dir, temp_dir, args.num_retries,
             args.isolated_script_test_perf_output)
   finally:
     for process in processes:
@@ -235,7 +235,10 @@ def main():
 
     utils.RemoveDirectory(temp_dir)
 
+  if args.isolated_script_test_output:
+    with open(args.isolated_script_test_output, 'w') as f:
+      f.write('{"version": 3}')
+
 
 if __name__ == '__main__':
   sys.exit(main())
-

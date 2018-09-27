@@ -35,6 +35,7 @@ enum NetworkType {
   NETWORK_2G,
   NETWORK_UNKNOWN_CELLULAR,
   NETWORK_BLUETOOTH,
+  NETWORK_VPN,
   NETWORK_NONE
 };
 
@@ -44,10 +45,15 @@ struct NetworkInformation {
   std::string interface_name;
   NetworkHandle handle;
   NetworkType type;
+  NetworkType underlying_type_for_vpn;
   std::vector<rtc::IPAddress> ip_addresses;
 
   NetworkInformation();
+  NetworkInformation(const NetworkInformation&);
+  NetworkInformation(NetworkInformation&&);
   ~NetworkInformation();
+  NetworkInformation& operator=(const NetworkInformation&);
+  NetworkInformation& operator=(NetworkInformation&&);
 
   std::string ToString() const;
 };
@@ -55,7 +61,8 @@ struct NetworkInformation {
 class AndroidNetworkMonitor : public rtc::NetworkMonitorBase,
                               public rtc::NetworkBinderInterface {
  public:
-  explicit AndroidNetworkMonitor(JNIEnv* env);
+  explicit AndroidNetworkMonitor(JNIEnv* env,
+                                 const JavaRef<jobject>& j_application_context);
   ~AndroidNetworkMonitor() override;
 
   // TODO(sakal): Remove once down stream dependencies have been updated.
@@ -68,6 +75,8 @@ class AndroidNetworkMonitor : public rtc::NetworkMonitorBase,
       int socket_fd,
       const rtc::IPAddress& address) override;
   rtc::AdapterType GetAdapterType(const std::string& if_name) override;
+  rtc::AdapterType GetVpnUnderlyingAdapterType(
+      const std::string& if_name) override;
   void OnNetworkConnected(const NetworkInformation& network_info);
   void OnNetworkDisconnected(NetworkHandle network_handle);
   // Always expected to be called on the network thread.
@@ -90,19 +99,30 @@ class AndroidNetworkMonitor : public rtc::NetworkMonitorBase,
   void OnNetworkDisconnected_w(NetworkHandle network_handle);
 
   const int android_sdk_int_;
+  ScopedJavaGlobalRef<jobject> j_application_context_;
   ScopedJavaGlobalRef<jobject> j_network_monitor_;
   rtc::ThreadChecker thread_checker_;
   bool started_ = false;
   std::map<std::string, rtc::AdapterType> adapter_type_by_name_;
+  std::map<std::string, rtc::AdapterType> vpn_underlying_adapter_type_by_name_;
   std::map<rtc::IPAddress, NetworkHandle> network_handle_by_address_;
   std::map<NetworkHandle, NetworkInformation> network_info_by_handle_;
 };
 
 class AndroidNetworkMonitorFactory : public rtc::NetworkMonitorFactory {
  public:
-  AndroidNetworkMonitorFactory() {}
+  // Deprecated. Pass in application context to this class.
+  AndroidNetworkMonitorFactory();
+
+  AndroidNetworkMonitorFactory(JNIEnv* env,
+                               const JavaRef<jobject>& j_application_context);
+
+  ~AndroidNetworkMonitorFactory() override;
 
   rtc::NetworkMonitorInterface* CreateNetworkMonitor() override;
+
+ private:
+  ScopedJavaGlobalRef<jobject> j_application_context_;
 };
 
 }  // namespace jni

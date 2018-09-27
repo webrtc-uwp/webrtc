@@ -13,7 +13,6 @@ package org.webrtc;
 import java.nio.ByteBuffer;
 
 /** Java wrapper for a C++ DataChannelInterface. */
-@JNINamespace("webrtc::jni")
 public class DataChannel {
   /** Java wrapper for WebIDL RTCDataChannel. */
   public static class Init {
@@ -23,7 +22,7 @@ public class DataChannel {
     // Optional unsigned short in WebIDL, -1 means unspecified.
     public int maxRetransmits = -1;
     public String protocol = "";
-    public boolean negotiated = false;
+    public boolean negotiated;
     // Optional unsigned short in WebIDL, -1 means unspecified.
     public int id = -1;
 

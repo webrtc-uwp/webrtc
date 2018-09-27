@@ -22,6 +22,8 @@
 #include "rtc_base/constructormagic.h"
 #include "rtc_base/sslstreamadapter.h"
 #include "rtc_base/stream.h"
+#include "rtc_base/strings/string_builder.h"
+#include "rtc_base/thread_checker.h"
 
 namespace rtc {
 class PacketTransportInternal;
@@ -83,6 +85,9 @@ class StreamInterfaceChannel : public rtc::StreamInterface {
 //
 //   - The SSLStreamAdapter writes to downward_->Write() which translates it
 //     into packet writes on ice_transport_.
+//
+// This class is not thread safe; all methods must be called on the same thread
+// as the constructor.
 class DtlsTransport : public DtlsTransportInternal {
  public:
   // |ice_transport| is the ICE transport this DTLS transport is wrapping.
@@ -171,17 +176,17 @@ class DtlsTransport : public DtlsTransportInternal {
 
   int GetError() override;
 
-  rtc::Optional<rtc::NetworkRoute> network_route() const override;
+  absl::optional<rtc::NetworkRoute> network_route() const override;
 
   int SetOption(rtc::Socket::Option opt, int value) override;
 
   std::string ToString() const {
-    const char RECEIVING_ABBREV[2] = {'_', 'R'};
-    const char WRITABLE_ABBREV[2] = {'_', 'W'};
-    std::stringstream ss;
-    ss << "DtlsTransport[" << transport_name_ << "|" << component_ << "|"
+    const absl::string_view RECEIVING_ABBREV[2] = {"_", "R"};
+    const absl::string_view WRITABLE_ABBREV[2] = {"_", "W"};
+    rtc::StringBuilder sb;
+    sb << "DtlsTransport[" << transport_name_ << "|" << component_ << "|"
        << RECEIVING_ABBREV[receiving()] << WRITABLE_ABBREV[writable()] << "]";
-    return ss.str();
+    return sb.Release();
   }
 
  private:
@@ -198,7 +203,7 @@ class DtlsTransport : public DtlsTransportInternal {
   void OnReadyToSend(rtc::PacketTransportInternal* transport);
   void OnReceivingState(rtc::PacketTransportInternal* transport);
   void OnDtlsEvent(rtc::StreamInterface* stream_, int sig, int err);
-  void OnNetworkRouteChanged(rtc::Optional<rtc::NetworkRoute> network_route);
+  void OnNetworkRouteChanged(absl::optional<rtc::NetworkRoute> network_route);
   bool SetupDtls();
   void MaybeStartDtls();
   bool HandleDtlsPacket(const char* data, size_t size);
@@ -210,10 +215,11 @@ class DtlsTransport : public DtlsTransportInternal {
   // Sets the DTLS state, signaling if necessary.
   void set_dtls_state(DtlsTransportState state);
 
+  rtc::ThreadChecker thread_checker_;
+
   std::string transport_name_;
   int component_;
   DtlsTransportState dtls_state_ = DTLS_TRANSPORT_NEW;
-  rtc::Thread* network_thread_;  // Everything should occur on this thread.
   // Underlying ice_transport, not owned by this class.
   IceTransportInternal* const ice_transport_;
   std::unique_ptr<IceTransportInternal> owned_ice_transport_;
@@ -223,7 +229,7 @@ class DtlsTransport : public DtlsTransportInternal {
   std::vector<int> srtp_ciphers_;  // SRTP ciphers to use with DTLS.
   bool dtls_active_ = false;
   rtc::scoped_refptr<rtc::RTCCertificate> local_certificate_;
-  rtc::Optional<rtc::SSLRole> dtls_role_;
+  absl::optional<rtc::SSLRole> dtls_role_;
   rtc::SSLProtocolVersion ssl_max_version_;
   rtc::CryptoOptions crypto_options_;
   rtc::Buffer remote_fingerprint_value_;

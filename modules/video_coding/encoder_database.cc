@@ -23,10 +23,8 @@ VCMEncoderDataBase::VCMEncoderDataBase(
     VCMEncodedFrameCallback* encoded_frame_callback)
     : number_of_cores_(0),
       max_payload_size_(kDefaultPayloadSize),
-      periodic_key_frames_(false),
       pending_encoder_reset_(true),
       send_codec_(),
-      encoder_payload_type_(0),
       external_encoder_(nullptr),
       internal_source_(false),
       encoded_frame_callback_(encoded_frame_callback) {}
@@ -44,10 +42,8 @@ bool VCMEncoderDataBase::SetSendCodec(const VideoCodec* send_codec,
     max_payload_size = kDefaultPayloadSize;
   }
   RTC_DCHECK_GE(number_of_cores, 1);
-  RTC_DCHECK_GE(send_codec->plType, 1);
   // Make sure the start bit rate is sane...
   RTC_DCHECK_LE(send_codec->startBitrate, 1000000);
-  RTC_DCHECK(send_codec->codecType != kVideoCodecUnknown);
   bool reset_required = pending_encoder_reset_;
   if (number_of_cores_ != number_of_cores) {
     number_of_cores_ = number_of_cores;
@@ -89,8 +85,6 @@ bool VCMEncoderDataBase::SetSendCodec(const VideoCodec* send_codec,
 
   // If encoder exists, will destroy it and create new one.
   DeleteEncoder();
-  RTC_DCHECK_EQ(encoder_payload_type_, send_codec_.plType)
-      << "Encoder not registered for payload type " << send_codec_.plType;
   ptr_encoder_.reset(new VCMGenericEncoder(
       external_encoder_, encoded_frame_callback_, internal_source_));
   encoded_frame_callback_->SetInternalSource(internal_source_);
@@ -101,42 +95,24 @@ bool VCMEncoderDataBase::SetSendCodec(const VideoCodec* send_codec,
     return false;
   }
 
-  // Intentionally don't check return value since the encoder registration
-  // shouldn't fail because the codec doesn't support changing the periodic key
-  // frame setting.
-  ptr_encoder_->SetPeriodicKeyFrames(periodic_key_frames_);
-
   pending_encoder_reset_ = false;
 
   return true;
 }
 
-bool VCMEncoderDataBase::DeregisterExternalEncoder(uint8_t payload_type,
-                                                   bool* was_send_codec) {
-  RTC_DCHECK(was_send_codec);
-  *was_send_codec = false;
-  if (encoder_payload_type_ != payload_type) {
-    return false;
-  }
-  if (send_codec_.plType == payload_type) {
-    // De-register as send codec if needed.
-    DeleteEncoder();
-    memset(&send_codec_, 0, sizeof(VideoCodec));
-    *was_send_codec = true;
-  }
-  encoder_payload_type_ = 0;
+void VCMEncoderDataBase::DeregisterExternalEncoder() {
+  DeleteEncoder();
+  memset(&send_codec_, 0, sizeof(VideoCodec));
   external_encoder_ = nullptr;
   internal_source_ = false;
-  return true;
 }
 
 void VCMEncoderDataBase::RegisterExternalEncoder(VideoEncoder* external_encoder,
-                                                 uint8_t payload_type,
                                                  bool internal_source) {
   // Since only one encoder can be used at a given time, only one external
   // encoder can be registered/used.
+  RTC_CHECK(external_encoder_ == nullptr);
   external_encoder_ = external_encoder;
-  encoder_payload_type_ = payload_type;
   internal_source_ = internal_source;
   pending_encoder_reset_ = true;
 }
@@ -146,10 +122,8 @@ bool VCMEncoderDataBase::RequiresEncoderReset(
   if (!ptr_encoder_)
     return true;
 
-  // Does not check startBitrate or maxFramerate
+  // Does not check startBitrate, maxFramerate or plType
   if (new_send_codec.codecType != send_codec_.codecType ||
-      strcmp(new_send_codec.plName, send_codec_.plName) != 0 ||
-      new_send_codec.plType != send_codec_.plType ||
       new_send_codec.width != send_codec_.width ||
       new_send_codec.height != send_codec_.height ||
       new_send_codec.maxBitrate != send_codec_.maxBitrate ||
@@ -163,60 +137,36 @@ bool VCMEncoderDataBase::RequiresEncoderReset(
 
   switch (new_send_codec.codecType) {
     case kVideoCodecVP8:
-      if (memcmp(&new_send_codec.VP8(), send_codec_.VP8(),
-                 sizeof(new_send_codec.VP8())) != 0) {
+      if (new_send_codec.VP8() != *send_codec_.VP8()) {
         return true;
       }
       break;
+
     case kVideoCodecVP9:
-      if (memcmp(&new_send_codec.VP9(), send_codec_.VP9(),
-                 sizeof(new_send_codec.VP9())) != 0) {
+      if (new_send_codec.VP9() != *send_codec_.VP9()) {
         return true;
       }
       break;
+
     case kVideoCodecH264:
-      if (memcmp(&new_send_codec.H264(), send_codec_.H264(),
-                 sizeof(new_send_codec.H264())) != 0) {
+      if (new_send_codec.H264() != *send_codec_.H264()) {
         return true;
       }
       break;
-    case kVideoCodecGeneric:
+
+    default:
       break;
-    // Known codecs without payload-specifics
-    case kVideoCodecI420:
-    case kVideoCodecRED:
-    case kVideoCodecULPFEC:
-    case kVideoCodecFlexfec:
-    case kVideoCodecMultiplex:
-      break;
-    // Unknown codec type, reset just to be sure.
-    case kVideoCodecUnknown:
-      return true;
   }
 
-  if (new_send_codec.numberOfSimulcastStreams > 0) {
-    for (unsigned char i = 0; i < new_send_codec.numberOfSimulcastStreams;
-         ++i) {
-      if (memcmp(&new_send_codec.simulcastStream[i],
-                 &send_codec_.simulcastStream[i],
-                 sizeof(new_send_codec.simulcastStream[i])) != 0) {
-        return true;
-      }
-    }
+  for (unsigned char i = 0; i < new_send_codec.numberOfSimulcastStreams; ++i) {
+    if (new_send_codec.simulcastStream[i] != send_codec_.simulcastStream[i])
+      return true;
   }
   return false;
 }
 
 VCMGenericEncoder* VCMEncoderDataBase::GetEncoder() {
   return ptr_encoder_.get();
-}
-
-bool VCMEncoderDataBase::SetPeriodicKeyFrames(bool enable) {
-  periodic_key_frames_ = enable;
-  if (ptr_encoder_) {
-    return (ptr_encoder_->SetPeriodicKeyFrames(periodic_key_frames_) == 0);
-  }
-  return true;
 }
 
 void VCMEncoderDataBase::DeleteEncoder() {

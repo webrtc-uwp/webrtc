@@ -12,7 +12,7 @@
 #include <memory>
 #include <set>
 
-#include "common_types.h"  // NOLINT(build/include)
+#include "api/video_codecs/video_codec.h"
 #include "modules/rtp_rtcp/include/rtp_header_parser.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtcp_packet.h"
@@ -37,20 +37,18 @@ const int64_t kOneWayNetworkDelayMs = 100;
 const uint8_t kBaseLayerTid = 0;
 const uint8_t kHigherLayerTid = 1;
 const uint16_t kSequenceNumber = 100;
-const int64_t kMaxRttMs = 1000;
 
 class RtcpRttStatsTestImpl : public RtcpRttStats {
  public:
   RtcpRttStatsTestImpl() : rtt_ms_(0) {}
-  virtual ~RtcpRttStatsTestImpl() {}
+  ~RtcpRttStatsTestImpl() override = default;
 
   void OnRttUpdate(int64_t rtt_ms) override { rtt_ms_ = rtt_ms; }
   int64_t LastProcessedRtt() const override { return rtt_ms_; }
   int64_t rtt_ms_;
 };
 
-class SendTransport : public Transport,
-                      public RtpData {
+class SendTransport : public Transport, public RtpData {
  public:
   SendTransport()
       : receiver_(nullptr),
@@ -61,9 +59,7 @@ class SendTransport : public Transport,
         keepalive_payload_type_(0),
         num_keepalive_sent_(0) {}
 
-  void SetRtpRtcpModule(ModuleRtpRtcpImpl* receiver) {
-    receiver_ = receiver;
-  }
+  void SetRtpRtcpModule(ModuleRtpRtcpImpl* receiver) { receiver_ = receiver; }
   void SimulateNetworkDelay(int64_t delay_ms, SimulatedClock* clock) {
     clock_ = clock;
     delay_ms_ = delay_ms;
@@ -119,7 +115,6 @@ class RtpRtcpModule : public RtcpPacketTypeCounterObserver {
   explicit RtpRtcpModule(SimulatedClock* clock)
       : receive_statistics_(ReceiveStatistics::Create(clock)),
         remote_ssrc_(0),
-        retransmission_rate_limiter_(clock, kMaxRttMs),
         clock_(clock) {
     CreateModuleImpl();
     transport_.SimulateNetworkDelay(kOneWayNetworkDelayMs, clock);
@@ -132,7 +127,6 @@ class RtpRtcpModule : public RtcpPacketTypeCounterObserver {
   RtcpRttStatsTestImpl rtt_stats_;
   std::unique_ptr<ModuleRtpRtcpImpl> impl_;
   uint32_t remote_ssrc_;
-  RateLimiter retransmission_rate_limiter_;
   RtpKeepAliveConfig keepalive_config_;
   RtcpIntervalConfig rtcp_interval_config_;
 
@@ -156,9 +150,7 @@ class RtpRtcpModule : public RtcpPacketTypeCounterObserver {
     // Received RTCP stats for (own) local SSRC.
     return counter_map_[impl_->SSRC()];
   }
-  int RtpSent() {
-    return transport_.rtp_packets_sent_;
-  }
+  int RtpSent() { return transport_.rtp_packets_sent_; }
   uint16_t LastRtpSequenceNumber() {
     return transport_.last_rtp_header_.sequenceNumber;
   }
@@ -185,7 +177,6 @@ class RtpRtcpModule : public RtcpPacketTypeCounterObserver {
     config.receive_statistics = receive_statistics_.get();
     config.rtcp_packet_type_counter_observer = this;
     config.rtt_stats = &rtt_stats_;
-    config.retransmission_rate_limiter = &retransmission_rate_limiter_;
     config.keepalive_config = keepalive_config_;
     config.rtcp_interval_config = rtcp_interval_config_;
 
@@ -214,10 +205,9 @@ class RtpRtcpImplTest : public ::testing::Test {
 
     memset(&codec_, 0, sizeof(VideoCodec));
     codec_.plType = 100;
-    strncpy(codec_.plName, "VP8", 3);
     codec_.width = 320;
     codec_.height = 180;
-    EXPECT_EQ(0, sender_.impl_->RegisterSendPayload(codec_));
+    sender_.impl_->RegisterVideoSendPayload(codec_.plType, "VP8");
 
     // Receive module.
     EXPECT_EQ(0, receiver_.impl_->SetSendingStatus(false));
@@ -245,14 +235,14 @@ class RtpRtcpImplTest : public ::testing::Test {
     rtp_video_header.playout_delay = {-1, -1};
     rtp_video_header.is_first_packet_in_frame = true;
     rtp_video_header.simulcastIdx = 0;
-    rtp_video_header.codec = kRtpVideoVp8;
-    rtp_video_header.codecHeader = {vp8_header};
+    rtp_video_header.codec = kVideoCodecVP8;
+    rtp_video_header.video_type_header = vp8_header;
     rtp_video_header.video_timing = {0u, 0u, 0u, 0u, 0u, 0u, false};
 
     const uint8_t payload[100] = {0};
     EXPECT_EQ(true, module->impl_->SendOutgoingData(
-                     kVideoFrameKey, codec_.plType, 0, 0, payload,
-                     sizeof(payload), nullptr, &rtp_video_header, nullptr));
+                        kVideoFrameKey, codec_.plType, 0, 0, payload,
+                        sizeof(payload), nullptr, &rtp_video_header, nullptr));
   }
 
   void IncomingRtcpNack(const RtpRtcpModule* module, uint16_t sequence_number) {
@@ -333,7 +323,7 @@ TEST_F(RtpRtcpImplTest, Rtt) {
   header.sequenceNumber = 123;
   header.ssrc = kSenderSsrc;
   header.headerLength = 12;
-  receiver_.receive_statistics_->IncomingPacket(header, 100, false);
+  receiver_.receive_statistics_->IncomingPacket(header, 100);
 
   // Send Frame before sending an SR.
   SendFrame(&sender_, kBaseLayerTid);
@@ -349,16 +339,16 @@ TEST_F(RtpRtcpImplTest, Rtt) {
   int64_t avg_rtt;
   int64_t min_rtt;
   int64_t max_rtt;
-  EXPECT_EQ(0,
-      sender_.impl_->RTT(kReceiverSsrc, &rtt, &avg_rtt, &min_rtt, &max_rtt));
+  EXPECT_EQ(
+      0, sender_.impl_->RTT(kReceiverSsrc, &rtt, &avg_rtt, &min_rtt, &max_rtt));
   EXPECT_NEAR(2 * kOneWayNetworkDelayMs, rtt, 1);
   EXPECT_NEAR(2 * kOneWayNetworkDelayMs, avg_rtt, 1);
   EXPECT_NEAR(2 * kOneWayNetworkDelayMs, min_rtt, 1);
   EXPECT_NEAR(2 * kOneWayNetworkDelayMs, max_rtt, 1);
 
   // No RTT from other ssrc.
-  EXPECT_EQ(-1,
-      sender_.impl_->RTT(kReceiverSsrc+1, &rtt, &avg_rtt, &min_rtt, &max_rtt));
+  EXPECT_EQ(-1, sender_.impl_->RTT(kReceiverSsrc + 1, &rtt, &avg_rtt, &min_rtt,
+                                   &max_rtt));
 
   // Verify RTT from rtt_stats config.
   EXPECT_EQ(0, sender_.rtt_stats_.LastProcessedRtt());
@@ -465,8 +455,8 @@ TEST_F(RtpRtcpImplTest, AddStreamDataCounters) {
   rtp.transmitted.header_bytes = 2;
   rtp.transmitted.padding_bytes = 3;
   EXPECT_EQ(rtp.transmitted.TotalBytes(), rtp.transmitted.payload_bytes +
-                                          rtp.transmitted.header_bytes +
-                                          rtp.transmitted.padding_bytes);
+                                              rtp.transmitted.header_bytes +
+                                              rtp.transmitted.padding_bytes);
 
   StreamDataCounters rtp2;
   rtp2.first_packet_time_ms = -1;

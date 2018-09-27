@@ -12,11 +12,13 @@
 #define MODULES_AUDIO_PROCESSING_AGC2_INTERPOLATED_GAIN_CURVE_H_
 
 #include <array>
+#include <string>
 
 #include "modules/audio_processing/agc2/agc2_common.h"
-#include "rtc_base/basictypes.h"
+
 #include "rtc_base/constructormagic.h"
 #include "rtc_base/gtest_prod_util.h"
+#include "system_wrappers/include/metrics.h"
 
 namespace webrtc {
 
@@ -33,6 +35,13 @@ constexpr float kMaxInputLevelLinear = static_cast<float>(36766.300710566735);
 // estimates of the gain to apply given an estimated input level.
 class InterpolatedGainCurve {
  public:
+  enum class GainCurveRegion {
+    kIdentity = 0,
+    kKnee = 1,
+    kLimiter = 2,
+    kSaturation = 3
+  };
+
   struct Stats {
     // Region in which the output level equals the input one.
     size_t look_ups_identity_region = 0;
@@ -45,10 +54,15 @@ class InterpolatedGainCurve {
     size_t look_ups_saturation_region = 0;
     // True if stats have been populated.
     bool available = false;
+
+    // The current region, and for how many frames the level has been
+    // in that region.
+    GainCurveRegion region = GainCurveRegion::kIdentity;
+    int64_t region_duration_frames = 0;
   };
 
-  // InterpolatedGainCurve(InterpolatedGainCurve&&);
-  explicit InterpolatedGainCurve(ApmDataDumper* apm_data_dumper);
+  InterpolatedGainCurve(ApmDataDumper* apm_data_dumper,
+                        std::string histogram_name_prefix);
   ~InterpolatedGainCurve();
 
   Stats get_stats() const { return stats_; }
@@ -64,6 +78,23 @@ class InterpolatedGainCurve {
   // ComputeInterpolatedGainCurve.
   FRIEND_TEST_ALL_PREFIXES(AutomaticGainController2InterpolatedGainCurve,
                            CheckApproximationParams);
+
+  struct RegionLogger {
+    metrics::Histogram* identity_histogram;
+    metrics::Histogram* knee_histogram;
+    metrics::Histogram* limiter_histogram;
+    metrics::Histogram* saturation_histogram;
+
+    RegionLogger(std::string identity_histogram_name,
+                 std::string knee_histogram_name,
+                 std::string limiter_histogram_name,
+                 std::string saturation_histogram_name);
+
+    ~RegionLogger();
+
+    void LogRegionStats(const InterpolatedGainCurve::Stats& stats) const;
+  } region_logger_;
+
   void UpdateStats(float input_level) const;
 
   ApmDataDumper* const apm_data_dumper_;

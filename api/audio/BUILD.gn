@@ -16,9 +16,7 @@ rtc_source_set("audio_frame_api") {
   ]
 
   deps = [
-    "../../:typedefs",
     "../../rtc_base:checks",
-    "../../rtc_base:deprecation",
     "../../rtc_base:rtc_base_approved",
   ]
 }
@@ -56,6 +54,7 @@ rtc_source_set("aec3_factory") {
     ":echo_control",
     "../../modules/audio_processing/aec3",
     "../../rtc_base:rtc_base_approved",
+    "//third_party/abseil-cpp/absl/memory",
   ]
 }
 

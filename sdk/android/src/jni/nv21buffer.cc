@@ -42,11 +42,6 @@ static void JNI_NV21Buffer_CropAndScale(JNIEnv* jni,
   const int src_stride_uv = src_width;
   const int crop_chroma_x = crop_x / 2;
   const int crop_chroma_y = crop_y / 2;
-  const int crop_chroma_width = (crop_width + 1) / 2;
-  const int crop_chroma_height = (crop_height + 1) / 2;
-  const int tmp_stride_u = crop_chroma_width;
-  const int tmp_stride_v = crop_chroma_width;
-  const int tmp_size = crop_chroma_height * (tmp_stride_u + tmp_stride_v);
 
   jboolean was_copy;
   jbyte* src_bytes = jni->GetByteArrayElements(j_src.obj(), &was_copy);
@@ -63,7 +58,7 @@ static void JNI_NV21Buffer_CropAndScale(JNIEnv* jni,
 
   // Crop using pointer arithmetic.
   src_y += crop_x + crop_y * src_stride_y;
-  src_uv += crop_chroma_x + crop_chroma_y * src_stride_uv;
+  src_uv += 2 * crop_chroma_x + crop_chroma_y * src_stride_uv;
 
   NV12ToI420Scaler scaler;
   // U- and V-planes are swapped because this is NV21 not NV12.

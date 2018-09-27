@@ -80,7 +80,11 @@ int32_t UlpfecReceiverImpl::AddReceivedRedPacket(
         << "Received RED packet with different SSRC than expected; dropping.";
     return -1;
   }
-
+  if (packet_length > IP_PACKET_SIZE) {
+    RTC_LOG(LS_WARNING) << "Received RED packet with length exceeds maximum IP "
+                           "packet size; dropping.";
+    return -1;
+  }
   rtc::CritScope cs(&crit_sect_);
 
   uint8_t red_header_length = 1;
@@ -180,6 +184,7 @@ int32_t UlpfecReceiverImpl::AddReceivedRedPacket(
 
   } else if (received_packet->is_fec) {
     ++packet_counter_.num_fec_packets;
+
     // everything behind the RED header
     memcpy(received_packet->pkt->data,
            incoming_rtp_packet + header.headerLength + red_header_length,
@@ -228,7 +233,7 @@ int32_t UlpfecReceiverImpl::ProcessReceivedFec() {
   // not modifying the vector we are currently iterating over (packets are added
   // in AddReceivedRedPacket).
   std::vector<std::unique_ptr<ForwardErrorCorrection::ReceivedPacket>>
-    received_packets;
+      received_packets;
   received_packets.swap(received_packets_);
 
   for (const auto& received_packet : received_packets) {
@@ -255,8 +260,7 @@ int32_t UlpfecReceiverImpl::ProcessReceivedFec() {
     // header, OnRecoveredPacket will recurse back here.
     recovered_packet->returned = true;
     crit_sect_.Leave();
-    recovered_packet_callback_->OnRecoveredPacket(packet->data,
-                                                  packet->length);
+    recovered_packet_callback_->OnRecoveredPacket(packet->data, packet->length);
     crit_sect_.Enter();
   }
 
