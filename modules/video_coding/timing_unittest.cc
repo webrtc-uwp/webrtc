@@ -77,9 +77,6 @@ TEST(ReceiverTiming, Tests) {
     clock.AdvanceTimeMilliseconds(kDecodeTimeMs);
     timing.StopDecodeTimer(
         timestamp, kDecodeTimeMs, clock.TimeInMilliseconds(),
-#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
-        0,//dummy data
-#endif // WEBRTC_FEATURE_END_TO_END_DELAY
         timing.RenderTimeMs(timestamp, clock.TimeInMilliseconds()));
     timestamp += 90000 / kFps;
     clock.AdvanceTimeMilliseconds(1000 / kFps - kDecodeTimeMs);

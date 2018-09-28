@@ -292,16 +292,10 @@ TEST_F(ReceiveStatisticsProxyTest, GetStatsReportsDecodeTimingStats) {
   const int kMinPlayoutDelayMs = 6;
   const int kRenderDelayMs = 7;
   const int64_t kRttMs = 8;
-#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
-  const int kEndToEndDelayMs = 9;
-#endif /* WEBRTC_FEATURE_END_TO_END_DELAY */
   statistics_proxy_->OnRttUpdate(kRttMs, 0);
   statistics_proxy_->OnFrameBufferTimingsUpdated(
       kDecodeMs, kMaxDecodeMs, kCurrentDelayMs, kTargetDelayMs, kJitterBufferMs,
       kMinPlayoutDelayMs,
-#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
-      kEndToEndDelayMs,
-#endif /* WEBRTC_FEATURE_END_TO_END_DELAY */
       kRenderDelayMs);
   VideoReceiveStream::Stats stats = statistics_proxy_->GetStats();
   EXPECT_EQ(kDecodeMs, stats.decode_ms);
@@ -310,9 +304,6 @@ TEST_F(ReceiveStatisticsProxyTest, GetStatsReportsDecodeTimingStats) {
   EXPECT_EQ(kTargetDelayMs, stats.target_delay_ms);
   EXPECT_EQ(kJitterBufferMs, stats.jitter_buffer_ms);
   EXPECT_EQ(kMinPlayoutDelayMs, stats.min_playout_delay_ms);
-#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
-  EXPECT_EQ(kEndToEndDelayMs, stats.current_endtoend_delay_ms);
-#endif /* WEBRTC_FEATURE_END_TO_END_DELAY */
   EXPECT_EQ(kRenderDelayMs, stats.render_delay_ms);
 }
 

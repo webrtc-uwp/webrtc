@@ -72,9 +72,6 @@ struct CallStatistics {
   // The capture ntp time (in local timebase) of the first played out audio
   // frame.
   int64_t capture_start_ntp_time_ms_;
-#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
-  int endtoend_delay_ms_;
-#endif /* WEBRTC_FEATURE_END_TO_END_DELAY */
 };
 
 // See section 6.4.2 in http://www.ietf.org/rfc/rfc3550.txt for details.

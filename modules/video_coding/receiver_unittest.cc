@@ -467,9 +467,6 @@ TEST_F(VCMReceiverTimingTest, FrameForDecodingPreferLateDecoding) {
   int max_decode_ms;
   int dummy;
   timing_.GetTimings(&dummy, &max_decode_ms, &dummy, &dummy, &dummy, &dummy,
-#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
-                     &dummy,
-#endif // WEBRTC_FEATURE_END_TO_END_DELAY
                      &render_delay_ms);
 
   // Construct test samples.

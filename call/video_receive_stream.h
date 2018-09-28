@@ -69,9 +69,6 @@ class VideoReceiveStream {
     int decode_ms = 0;
     int max_decode_ms = 0;
     int current_delay_ms = 0;
-#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
-    int current_endtoend_delay_ms = 0;
-#endif /* WEBRTC_FEATURE_END_TO_END_DELAY */
     int target_delay_ms = 0;
     int jitter_buffer_ms = 0;
     int min_playout_delay_ms = 0;

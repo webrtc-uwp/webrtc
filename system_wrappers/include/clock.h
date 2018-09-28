@@ -51,9 +51,6 @@ class Clock {
   // Returns an instance of the real-time system clock implementation.
   static Clock* GetRealTimeClock();
 
-#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
-  static const int64_t CurrentNtpDeltaMs;
-#endif /* WEBRTC_FEATURE_END_TO_END_DELAY */
 };
 
 class SimulatedClock : public Clock {

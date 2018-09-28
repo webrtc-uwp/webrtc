@@ -103,7 +103,6 @@ config("common_inherited_config") {
   }
   if (current_os == "winuwp") {
     defines += [
-      "WEBRTC_FEATURE_END_TO_END_DELAY",
       "WEBRTC_BASE_QUEUED_TASK_USING_STDLIB",
     ]
   }

@@ -97,9 +97,6 @@ class VCMReceiveStatisticsCallback {
                                            int target_delay_ms,
                                            int jitter_buffer_ms,
                                            int min_playout_delay_ms,
-#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
-                                           int current_endtoend_delay_ms,
-#endif /* WEBRTC_FEATURE_END_TO_END_DELAY */
                                            int render_delay_ms) = 0;
 
   virtual void OnTimingFrameInfoUpdated(const TimingFrameInfo& info) = 0;

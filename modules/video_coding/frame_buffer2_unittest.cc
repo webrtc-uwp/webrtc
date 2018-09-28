@@ -63,9 +63,6 @@ class VCMTimingFake : public VCMTiming {
                   int* target_delay_ms,
                   int* jitter_buffer_ms,
                   int* min_playout_delay_ms,
-#ifdef WEBRTC_FEATURE_END_TO_END_DELAY
-                  int* current_endtoend_delay_ms,
-#endif // WEBRTC_FEATURE_END_TO_END_DELAY
                   int* render_delay_ms) const override {
     return true;
   }
@@ -112,7 +109,6 @@ class VCMReceiveStatisticsCallbackMock : public VCMReceiveStatisticsCallback {
                     VideoContentType content_type));
   MOCK_METHOD1(OnDiscardedPacketsUpdated, void(int discarded_packets));
   MOCK_METHOD1(OnFrameCountsUpdated, void(const FrameCounts& frame_counts));
-#ifndef WEBRTC_FEATURE_END_TO_END_DELAY
   MOCK_METHOD7(OnFrameBufferTimingsUpdated,
                void(int decode_ms,
                     int max_decode_ms,
@@ -121,17 +117,6 @@ class VCMReceiveStatisticsCallbackMock : public VCMReceiveStatisticsCallback {
                     int jitter_buffer_ms,
                     int min_playout_delay_ms,
                     int render_delay_ms));
-#else //ndef WEBRTC_FEATURE_END_TO_END_DELAY
-  MOCK_METHOD8(OnFrameBufferTimingsUpdated,
-               void(int decode_ms,
-                    int max_decode_ms,
-                    int current_delay_ms,
-                    int target_delay_ms,
-                    int jitter_buffer_ms,
-                    int min_playout_delay_ms,
-                    int current_endtoend_delay_ms,
-                    int render_delay_ms));
-#endif //ndef WEBRTC_FEATURE_END_TO_END_DELAY
   MOCK_METHOD1(OnTimingFrameInfoUpdated, void(const TimingFrameInfo& info));
 };
 
@@ -525,13 +510,8 @@ TEST_F(TestFrameBuffer2, StatsCallback) {
 
   EXPECT_CALL(stats_callback_,
               OnCompleteFrame(true, kFrameSize, VideoContentType::UNSPECIFIED));
-#ifndef WEBRTC_FEATURE_END_TO_END_DELAY
   EXPECT_CALL(stats_callback_,
               OnFrameBufferTimingsUpdated(_, _, _, _, _, _, _));
-#else // ndef WEBRTC_FEATURE_END_TO_END_DELAY
-  EXPECT_CALL(stats_callback_,
-              OnFrameBufferTimingsUpdated(_, _, _, _, _, _, _, _));
-#endif // ndef WEBRTC_FEATURE_END_TO_END_DELAY
 
   {
     std::unique_ptr<FrameObjectFake> frame(new FrameObjectFake());
