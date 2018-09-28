@@ -295,8 +295,7 @@ TEST_F(ReceiveStatisticsProxyTest, GetStatsReportsDecodeTimingStats) {
   statistics_proxy_->OnRttUpdate(kRttMs, 0);
   statistics_proxy_->OnFrameBufferTimingsUpdated(
       kDecodeMs, kMaxDecodeMs, kCurrentDelayMs, kTargetDelayMs, kJitterBufferMs,
-      kMinPlayoutDelayMs,
-      kRenderDelayMs);
+      kMinPlayoutDelayMs, kRenderDelayMs);
   VideoReceiveStream::Stats stats = statistics_proxy_->GetStats();
   EXPECT_EQ(kDecodeMs, stats.decode_ms);
   EXPECT_EQ(kMaxDecodeMs, stats.max_decode_ms);

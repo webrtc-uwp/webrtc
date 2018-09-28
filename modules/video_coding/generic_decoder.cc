@@ -82,7 +82,6 @@ void VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage,
     return;
   }
 
-
   const int64_t now_ms = _clock->TimeInMilliseconds();
   if (!decode_time_ms) {
     decode_time_ms = now_ms - frameInfo->decodeStartTimeMs;

@@ -83,28 +83,15 @@ void ThreadManager::SetCurrentThread(Thread* thread) {
 
 #if defined(WEBRTC_WIN)
 ThreadManager::ThreadManager()
-#ifdef WINUWP
-    : key_(FlsAlloc()),
-#else // WINUWP
-    : key_(TlsAlloc()),
-#endif // WINUWP
-      main_thread_ref_(CurrentThreadRef()) {}
+    : key_(TlsAlloc()), main_thread_ref_(CurrentThreadRef()) {}
 
 Thread* ThreadManager::CurrentThread() {
-#ifdef WINUWP
-  return static_cast<Thread*>(FlsGetValue(key_));
-#else // WINUWP
   return static_cast<Thread*>(TlsGetValue(key_));
-#endif // WINUWP
 }
 
 void ThreadManager::SetCurrentThread(Thread* thread) {
   RTC_DCHECK(!CurrentThread() || !thread);
-#ifdef WINUWP
-  FlsSetValue(key_, thread);
-#else // WINUWP
   TlsSetValue(key_, thread);
-#endif // WINUWP
 }
 #endif
 
@@ -533,11 +520,7 @@ bool Thread::WrapCurrentWithThreadManager(ThreadManager* thread_manager,
   if (need_synchronize_access) {
     // We explicitly ask for no rights other than synchronization.
     // This gives us the best chance of succeeding.
-#ifdef WINUWP
-    thread_ = GetCurrentThread();
-#else // WINUWP
     thread_ = OpenThread(SYNCHRONIZE, FALSE, GetCurrentThreadId());
-#endif // WINUWP
     if (!thread_) {
       RTC_LOG_GLE(LS_ERROR) << "Unable to get handle to thread.";
       return false;
