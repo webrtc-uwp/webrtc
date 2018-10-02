@@ -641,8 +641,8 @@ rtc_source_set("isac_fix_c_arm_asm") {
     if (current_os == "winuwp" && target_os == "winuwp") {
       sources += [get_target_outputs(":isac_fix_c_arm_assembly")
       deps += [
-+        ":isac_fix_c_arm_assembly",
-+      ]
+        ":isac_fix_c_arm_assembly",
+      ]
     } else {
       sources += isac_fix_c_arm_asm_sources
     }
