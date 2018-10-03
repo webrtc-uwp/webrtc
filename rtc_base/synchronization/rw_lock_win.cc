@@ -16,7 +16,9 @@ namespace webrtc {
 
 static bool native_rw_locks_supported = false;
 static bool module_load_attempted = false;
+#ifndef WINUWP
 static HMODULE library = NULL;
+#endif //ndef WINUWP
 
 typedef void(WINAPI* PInitializeSRWLock)(PSRWLOCK);
 

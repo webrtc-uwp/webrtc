@@ -284,7 +284,6 @@ rtc_library_impl_config = [ webrtc_root + ":library_impl_config" ]
 set_defaults("rtc_test") {
   configs = rtc_add_configs
   suppressed_configs = []
-  is_c_main = false
 }
 
 set_defaults("rtc_source_set") {
@@ -295,7 +294,6 @@ set_defaults("rtc_source_set") {
 set_defaults("rtc_executable") {
   configs = rtc_add_configs
   suppressed_configs = []
-  is_c_main = false
 }
 
 set_defaults("rtc_static_library") {
@@ -374,13 +372,6 @@ template("rtc_test") {
     configs += invoker.configs
     configs -= rtc_remove_configs
     configs -= invoker.suppressed_configs
-    if (current_os == "winuwp") {     
-      if (is_c_main) {
-        deps += [ "//third_party/winuwp_compat:wrap_main_utf8_c" ]
-      } else {
-        deps += [ "//third_party/winuwp_compat:wrap_main_utf8_cc" ]
-      }
-    }
     public_configs = [
       rtc_common_inherited_config,
       absl_include_config,
@@ -487,13 +478,6 @@ template("rtc_executable") {
     configs -= rtc_remove_configs
     configs -= invoker.suppressed_configs
     deps = invoker.deps
-    if (current_os == "winuwp") {     
-      if (is_c_main) {
-        deps += [ "//third_party/winuwp_compat:wrap_main_utf8_c" ]
-      } else {
-        deps += [ "//third_party/winuwp_compat:wrap_main_utf8_cc" ]
-      }
-    }
 
     public_configs = [
       rtc_common_inherited_config,

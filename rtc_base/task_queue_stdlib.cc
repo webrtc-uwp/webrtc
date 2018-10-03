@@ -24,6 +24,7 @@
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/refcount.h"
 #include "rtc_base/refcountedobject.h"
+#include "rtc_base/thread_annotations.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
@@ -147,7 +148,7 @@ class TaskQueue::Impl : public RefCountInterface {
 
   rtc::CriticalSection pending_lock_;
 
-  OrderId thread_posting_order_{} RTC_GUARDED_BY(pending_lock_);
+  OrderId thread_posting_order_ RTC_GUARDED_BY(pending_lock_) {};
   QueueTaskQueue pending_queue_ RTC_GUARDED_BY(pending_lock_);
   DelayTimeoutQueueMap delayed_queue_ RTC_GUARDED_BY(pending_lock_);  
 };
@@ -292,7 +293,7 @@ void TaskQueue::Impl::ThreadMain(void* context) {
     {
       if (run_task) {
         // process entry immediately then try again
-        auto release_ptr = run_task.release();
+        QueuedTask *release_ptr = run_task.release();
         if (release_ptr->Run())
           delete release_ptr;
 

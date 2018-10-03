@@ -32,7 +32,7 @@
 
 namespace rtc {
 namespace {
-#if defined(WEBRTC_WIN)
+#if defined(WEBRTC_WIN) && !defined(WINUWP)
 ///////////////////////////////////////////////////////////////////////////////
 // ConstantToLabel can be used to easily generate string names from constant
 // values.  This can be useful for logging descriptive names of error messages.
@@ -107,7 +107,7 @@ const ConstantToLabel SECURITY_ERRORS[] = {
     LASTLABEL};
 #undef KLABEL
 #undef LASTLABEL
-#endif  // defined(WEBRTC_WIN)
+#endif  // defined(WEBRTC_WIN) && !defined(WINUWP)
 }  // namespace
 
 //////////////////////////////////////////////////////////////////////

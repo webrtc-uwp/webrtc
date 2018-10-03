@@ -191,7 +191,7 @@ public:
     : last_time_ms_(),
     ref_point_(GetSystemReferencePoint()) {}
 
-  virtual ~WinUWPRealTimeClock() {}
+  ~WinUWPRealTimeClock() override {}
 
 protected:
   struct ReferencePoint {
@@ -257,7 +257,7 @@ protected:
   }
 
   static ReferencePoint GetSystemReferencePoint() {
-    ReferencePoint ref = { 0 };
+    ReferencePoint ref = {};
     FILETIME ft0 = { 0 };
     FILETIME ft1 = { 0 };
     // Spin waiting for a change in system time. As soon as this change

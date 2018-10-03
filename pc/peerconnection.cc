@@ -5935,38 +5935,6 @@ void PeerConnection::ReportNegotiatedSdpSemantics(
                             semantics_negotiated, kSdpSemanticNegotiatedMax);
 }
 
-void PeerConnection::ReportNegotiatedSdpSemantics(
-    const SessionDescriptionInterface& answer) {
-  if (!uma_observer_) {
-    return;
-  }
-  switch (answer.description()->msid_signaling()) {
-    case 0:
-      uma_observer_->IncrementEnumCounter(kEnumCounterSdpSemanticNegotiated,
-                                          kSdpSemanticNegotiatedNone,
-                                          kSdpSemanticNegotiatedMax);
-      break;
-    case cricket::kMsidSignalingMediaSection:
-      uma_observer_->IncrementEnumCounter(kEnumCounterSdpSemanticNegotiated,
-                                          kSdpSemanticNegotiatedUnifiedPlan,
-                                          kSdpSemanticNegotiatedMax);
-      break;
-    case cricket::kMsidSignalingSsrcAttribute:
-      uma_observer_->IncrementEnumCounter(kEnumCounterSdpSemanticNegotiated,
-                                          kSdpSemanticNegotiatedPlanB,
-                                          kSdpSemanticNegotiatedMax);
-      break;
-    case cricket::kMsidSignalingMediaSection |
-        cricket::kMsidSignalingSsrcAttribute:
-      uma_observer_->IncrementEnumCounter(kEnumCounterSdpSemanticNegotiated,
-                                          kSdpSemanticNegotiatedMixed,
-                                          kSdpSemanticNegotiatedMax);
-      break;
-    default:
-      RTC_NOTREACHED();
-  }
-}
-
 // We need to check the local/remote description for the Transport instead of
 // the session, because a new Transport added during renegotiation may have
 // them unset while the session has them set from the previous negotiation.

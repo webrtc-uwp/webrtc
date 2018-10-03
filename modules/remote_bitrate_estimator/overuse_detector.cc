@@ -39,6 +39,7 @@ const int kMinNumDeltas = 60;
 bool AdaptiveThresholdExperimentIsDisabled() {
 #ifdef WINUWP
   // Don't use the Adaptive Threshold on WinUWP.
+  (void)kDisabledPrefixLength;
   return true;
 #else // WINUWP
   std::string experiment_string =

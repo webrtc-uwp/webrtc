@@ -28,6 +28,8 @@
 #error Creators Update SDK (10.0.15063.468) required.
 #endif
 
+#ifndef WINUWP
+
 namespace {
 
 typedef BOOL(WINAPI* GetProductInfoPtr)(DWORD, DWORD, DWORD, DWORD, PDWORD);
@@ -171,6 +173,8 @@ class RegKey {
 
 }  // namespace
 
+#endif // ndef WINUWP
+
 namespace rtc {
 namespace rtc_win {
 namespace {
@@ -221,6 +225,9 @@ Version MajorMinorBuildToVersion(int major, int minor, int build) {
 // this undocumented value appears to be similar to a patch number.
 // Returns 0 if the value does not exist or it could not be read.
 int GetUBR() {
+#ifdef WINUWP
+  return 0;
+#else // WINUWP
   // The values under the CurrentVersion registry hive are mirrored under
   // the corresponding Wow6432 hive.
   static constexpr wchar_t kRegKeyWindowsNTCurrentVersion[] =
@@ -236,6 +243,7 @@ int GetUBR() {
   key.ReadValueDW(L"UBR", &ubr);
 
   return static_cast<int>(ubr);
+#endif // WINUWP
 }
 
 }  // namespace
@@ -294,6 +302,7 @@ OSInfo::OSInfo()
   processors_ = system_info.dwNumberOfProcessors;
   allocation_granularity_ = system_info.dwAllocationGranularity;
 
+#ifndef WINUWP
   GetProductInfoPtr get_product_info;
   DWORD os_type;
 
@@ -366,11 +375,17 @@ OSInfo::OSInfo()
     // Windows is pre XP so we don't care but pick a safe default.
     version_type_ = SUITE_HOME;
   }
+#else // ndef WINUWP
+  version_type_ = SUITE_HOME;
+#endif // ndef WINUWP
 }
 
 OSInfo::~OSInfo() {}
 
 std::string OSInfo::processor_model_name() {
+#ifdef WINUWP
+  return "Unknown Processor (UWP)";
+#else // WINUWP
   if (processor_model_name_.empty()) {
     const wchar_t kProcessorNameString[] =
         L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0";
@@ -380,10 +395,15 @@ std::string OSInfo::processor_model_name() {
     processor_model_name_ = rtc::ToUtf8(value);
   }
   return processor_model_name_;
+#endif // WINUWP
 }
 
 // static
 OSInfo::WOW64Status OSInfo::GetWOW64StatusForProcess(HANDLE process_handle) {
+#ifdef WINUWP
+  BOOL is_wow64 = FALSE;
+  if (!IsWow64Process(process_handle, &is_wow64))
+#else // WINUWP
   typedef BOOL(WINAPI * IsWow64ProcessFunc)(HANDLE, PBOOL);
   IsWow64ProcessFunc is_wow64_process = reinterpret_cast<IsWow64ProcessFunc>(
       GetProcAddress(GetModuleHandle(L"kernel32.dll"), "IsWow64Process"));
@@ -391,6 +411,7 @@ OSInfo::WOW64Status OSInfo::GetWOW64StatusForProcess(HANDLE process_handle) {
     return WOW64_DISABLED;
   BOOL is_wow64 = FALSE;
   if (!(*is_wow64_process)(process_handle, &is_wow64))
+#endif // WINUWP
     return WOW64_UNKNOWN;
   return is_wow64 ? WOW64_ENABLED : WOW64_DISABLED;
 }

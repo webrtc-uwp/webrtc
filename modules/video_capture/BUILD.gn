@@ -146,13 +146,7 @@ if (!build_with_chromium) {
         }
       } else {
         sources = [
-          "windows/device_info_winuwp.cc",
-          "windows/device_info_winuwp.h",
           "windows/video_capture_factory_windows.cc",
-          "windows/video_capture_sink_winuwp.cc",
-          "windows/video_capture_sink_winuwp.h",
-          "windows/video_capture_winuwp.cc",
-          "windows/video_capture_winuwp.h",
         ]
         deps += [ "//third_party/libyuv" ]
         libs += [
