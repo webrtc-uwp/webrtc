@@ -114,45 +114,34 @@ if (!build_with_chromium) {
         "../../media:rtc_media_base",
       ]
     }
-    if (is_win) {
-      if (current_os != "winuwp") {
-        sources = [
-          "windows/device_info_ds.cc",
-          "windows/device_info_ds.h",
-          "windows/device_info_mf.cc",
-          "windows/device_info_mf.h",
-          "windows/help_functions_ds.cc",
-          "windows/help_functions_ds.h",
-          "windows/sink_filter_ds.cc",
-          "windows/sink_filter_ds.h",
-          "windows/video_capture_ds.cc",
-          "windows/video_capture_ds.h",
-          "windows/video_capture_factory_windows.cc",
-          "windows/video_capture_mf.cc",
-          "windows/video_capture_mf.h",
+    if (is_win && current_os != "winuwp") {
+      sources = [
+        "windows/device_info_ds.cc",
+        "windows/device_info_ds.h",
+        "windows/device_info_mf.cc",
+        "windows/device_info_mf.h",
+        "windows/help_functions_ds.cc",
+        "windows/help_functions_ds.h",
+        "windows/sink_filter_ds.cc",
+        "windows/sink_filter_ds.h",
+        "windows/video_capture_ds.cc",
+        "windows/video_capture_ds.h",
+        "windows/video_capture_factory_windows.cc",
+        "windows/video_capture_mf.cc",
+        "windows/video_capture_mf.h",
+      ]
+
+      libs = [ "strmiids.lib" ]
+
+      if (build_with_mozilla) {
+        sources += [
+          "windows/BaseFilter.cpp",
+          "windows/BaseInputPin.cpp",
+          "windows/BasePin.cpp",
+          "windows/MediaType.cpp",
         ]
-
-        libs = [ "strmiids.lib" ]
-
-        if (build_with_mozilla) {
-          sources += [
-            "windows/BaseFilter.cpp",
-            "windows/BaseInputPin.cpp",
-            "windows/BasePin.cpp",
-            "windows/MediaType.cpp",
-          ]
-        } else {
-          deps += [ "//third_party/winsdk_samples" ]
-        }
       } else {
-        sources = [
-          "windows/video_capture_factory_windows.cc",
-        ]
-        deps += [ "//third_party/libyuv" ]
-        libs += [
-          "Mfplat.lib",
-          "mfuuid.lib",
-        ]
+        deps += [ "//third_party/winsdk_samples" ]
       }
     }
     if (is_ios || is_mac) {
