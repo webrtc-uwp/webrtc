@@ -10,14 +10,15 @@
 
 #include "rtc_base/task_queue.h"
 
-#include <condition_variable>
-#include <queue>
-#include <atomic>
-#include <map>
-#include <algorithm>
-#include <utility>
 #include <string.h>
+#include <algorithm>
+#include <atomic>
+#include <condition_variable>
+#include <map>
+#include <queue>
+#include <utility>
 
+#include "rtc_base/checks.h"
 #include "rtc_base/criticalsection.h"
 #include "rtc_base/event.h"
 #include "rtc_base/logging.h"
@@ -25,8 +26,6 @@
 #include "rtc_base/refcount.h"
 #include "rtc_base/refcountedobject.h"
 #include "rtc_base/thread_annotations.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
 
 namespace rtc {
 namespace {
@@ -37,15 +36,13 @@ struct ThreadStartupData {
 };
 
 using Priority = TaskQueue::Priority;
-static thread_local void *g_thread_context {};
+static thread_local void* g_thread_context{};
 
-static void *GetQueuePtrTls()
-{
+static void* GetQueuePtrTls() {
   return g_thread_context;
 }
 
-static void SetQueuePtr(void *context)
-{
+static void SetQueuePtr(void* context) {
   g_thread_context = context;
 }
 
@@ -120,14 +117,13 @@ class TaskQueue::Impl : public RefCountInterface {
     }
   };
 
-  struct DelayedEntryTimeout
-  {
+  struct DelayedEntryTimeout {
     Time next_fire_at_{};
     OrderId order_{};
 
-    bool operator<(const DelayedEntryTimeout &o) const
-    {
-      return std::tie(next_fire_at_, order_) < std::tie(o.next_fire_at_, o.order_);
+    bool operator<(const DelayedEntryTimeout& o) const {
+      return std::tie(next_fire_at_, order_) <
+             std::tie(o.next_fire_at_, o.order_);
     }
   };
 
@@ -148,9 +144,9 @@ class TaskQueue::Impl : public RefCountInterface {
 
   rtc::CriticalSection pending_lock_;
 
-  OrderId thread_posting_order_ RTC_GUARDED_BY(pending_lock_) {};
+  OrderId thread_posting_order_ RTC_GUARDED_BY(pending_lock_){};
   QueueTaskQueue pending_queue_ RTC_GUARDED_BY(pending_lock_);
-  DelayTimeoutQueueMap delayed_queue_ RTC_GUARDED_BY(pending_lock_);  
+  DelayTimeoutQueueMap delayed_queue_ RTC_GUARDED_BY(pending_lock_);
 };
 
 TaskQueue::Impl::Impl(const char* queue_name,
@@ -178,7 +174,8 @@ TaskQueue::Impl::~Impl() {
   notifyWake();
 
   while (!thread_did_quit_) {
-    //RTC_CHECK_EQ(static_cast<DWORD>(ERROR_NOT_ENOUGH_QUOTA), ::GetLastError());
+    // RTC_CHECK_EQ(static_cast<DWORD>(ERROR_NOT_ENOUGH_QUOTA),
+    // ::GetLastError());
     Sleep(1);
   }
   thread_.Stop();
@@ -200,7 +197,6 @@ bool TaskQueue::Impl::IsCurrent() const {
 }
 
 void TaskQueue::Impl::PostTask(std::unique_ptr<QueuedTask> task) {
-  
   {
     CritScope lock(&pending_lock_);
     OrderId order = ++thread_posting_order_;
@@ -213,7 +209,6 @@ void TaskQueue::Impl::PostTask(std::unique_ptr<QueuedTask> task) {
 
 void TaskQueue::Impl::PostDelayedTask(std::unique_ptr<QueuedTask> task,
                                       uint32_t milliseconds) {
-  
   auto fire_at = std::chrono::system_clock::now() + Milliseconds(milliseconds);
 
   DelayedEntryTimeout delay;
@@ -230,7 +225,7 @@ void TaskQueue::Impl::PostDelayedTask(std::unique_ptr<QueuedTask> task,
 
 void TaskQueue::Impl::PostTaskAndReply(std::unique_ptr<QueuedTask> task,
                                        std::unique_ptr<QueuedTask> reply,
-                                       TaskQueue::Impl * reply_queue) {
+                                       TaskQueue::Impl* reply_queue) {
   QueuedTask* task_ptr = task.release();
   QueuedTask* reply_task_ptr = reply.release();
   PostTask([task_ptr, reply_task_ptr, reply_queue]() {
@@ -243,12 +238,10 @@ void TaskQueue::Impl::PostTaskAndReply(std::unique_ptr<QueuedTask> task,
 
 // static
 void TaskQueue::Impl::ThreadMain(void* context) {
+  TaskQueue::Impl* me = static_cast<TaskQueue::Impl*>(context);
 
-  TaskQueue::Impl *me = static_cast<TaskQueue::Impl *>(context);
-
-  do
-  {
-    Microseconds sleep_time {};
+  do {
+    Microseconds sleep_time{};
     QueueTasksUniPtr run_task;
 
     auto tick = std::chrono::system_clock::now();
@@ -258,13 +251,13 @@ void TaskQueue::Impl::ThreadMain(void* context) {
 
       if (me->delayed_queue_.size() > 0) {
         auto delayed_entry = me->delayed_queue_.begin();
-        auto &delay_info = (*delayed_entry).first;
-        auto &delay_run = (*delayed_entry).second;
+        auto& delay_info = (*delayed_entry).first;
+        auto& delay_run = (*delayed_entry).second;
         if (tick >= delay_info.next_fire_at_) {
           if (me->pending_queue_.size() > 0) {
-            auto &entry = me->pending_queue_.front();
-            auto &entry_order = entry.first;
-            auto &entry_run = entry.second;
+            auto& entry = me->pending_queue_.front();
+            auto& entry_order = entry.first;
+            auto& entry_run = entry.second;
             if (entry_order < delay_info.order_) {
               run_task = std::move(entry_run);
               me->pending_queue_.pop();
@@ -277,11 +270,12 @@ void TaskQueue::Impl::ThreadMain(void* context) {
           goto process;
         }
 
-        sleep_time = std::chrono::duration_cast<Microseconds>(delay_info.next_fire_at_ - tick);
+        sleep_time = std::chrono::duration_cast<Microseconds>(
+            delay_info.next_fire_at_ - tick);
       }
 
       if (me->pending_queue_.size() > 0) {
-        auto &entry = me->pending_queue_.front();
+        auto& entry = me->pending_queue_.front();
         run_task = std::move(entry.second);
         me->pending_queue_.pop();
       }
@@ -289,33 +283,32 @@ void TaskQueue::Impl::ThreadMain(void* context) {
       goto process;
     }
 
-  process:
-    {
-      if (run_task) {
-        // process entry immediately then try again
-        QueuedTask *release_ptr = run_task.release();
-        if (release_ptr->Run())
-          delete release_ptr;
+  process : {
+    if (run_task) {
+      // process entry immediately then try again
+      QueuedTask* release_ptr = run_task.release();
+      if (release_ptr->Run())
+        delete release_ptr;
 
-        // attempt to sleep again
-        continue;
-      }
-
-      if (me->thread_should_quit_) break;
-
-      std::unique_lock<std::mutex> flag_lock(me->flag_lock_);
-      if (Microseconds() == sleep_time)
-        me->flag_notify_.wait(flag_lock);
-      else
-        me->flag_notify_.wait_for(flag_lock, sleep_time);
+      // attempt to sleep again
+      continue;
     }
+
+    if (me->thread_should_quit_)
+      break;
+
+    std::unique_lock<std::mutex> flag_lock(me->flag_lock_);
+    if (Microseconds() == sleep_time)
+      me->flag_notify_.wait(flag_lock);
+    else
+      me->flag_notify_.wait_for(flag_lock, sleep_time);
+  }
   } while (true);
 
   me->thread_did_quit_ = true;
 }
 
-void TaskQueue::Impl::notifyWake()
-{
+void TaskQueue::Impl::notifyWake() {
   flag_notify_.notify_one();
 }
 
