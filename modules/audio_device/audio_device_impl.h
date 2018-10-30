@@ -41,7 +41,9 @@ class AudioDeviceModuleImpl : public AudioDeviceModule {
   int32_t CreatePlatformSpecificObjects();
   int32_t AttachAudioBuffer();
 
-  AudioDeviceModuleImpl(const AudioLayer audioLayer);
+  AudioDeviceModuleImpl(const AudioLayer audioLayer,
+                        bool recordingEnabled,
+                        bool playoutEnabled);
   ~AudioDeviceModuleImpl() override;
 
   // Retrieve the currently utilized audio layer
@@ -161,6 +163,8 @@ class AudioDeviceModuleImpl : public AudioDeviceModule {
 #endif
   AudioDeviceBuffer audio_device_buffer_;
   std::unique_ptr<AudioDeviceGeneric> audio_device_;
+  bool recording_enabled_;
+  bool playout_enabled_;
 };
 
 }  // namespace webrtc

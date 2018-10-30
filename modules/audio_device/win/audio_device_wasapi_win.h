@@ -164,7 +164,8 @@ class AudioInterfaceActivator :
 
 class AudioDeviceWindowsWasapi : public AudioDeviceGeneric {
 public:
-    explicit AudioDeviceWindowsWasapi(const int32_t id);
+    explicit AudioDeviceWindowsWasapi(const int32_t id, bool recordingEnable,
+      bool playoutEnabled);
     ~AudioDeviceWindowsWasapi();
 
     friend class AudioInterfaceActivator;
@@ -514,6 +515,9 @@ public:
     mutable char                            _str[512];
 
     DefaultAudioDeviceWatcher^              _defaultDeviceWatcher;
+
+    bool                                    _recordingEnabled;
+    bool                                    _playoutEnabled;
 };
 
 #endif    // #if (_MSC_VER >= 1400)
