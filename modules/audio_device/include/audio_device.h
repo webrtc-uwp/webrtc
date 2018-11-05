@@ -52,8 +52,12 @@ class AudioDeviceModule : public rtc::RefCountInterface {
 
  public:
   // Creates an ADM.
+  // Options recordingEnabled and playoutEnabled are available on Windows UWP
+  // platform only
   static rtc::scoped_refptr<AudioDeviceModule> Create(
-      const AudioLayer audio_layer);
+      const AudioLayer audio_layer,
+      bool recordingEnabled = true,
+      bool playoutEnabled = true);
   // TODO(bugs.webrtc.org/7306): deprecated (to be removed).
   static rtc::scoped_refptr<AudioDeviceModule> Create(
       const int32_t id,

@@ -68,11 +68,14 @@ namespace webrtc {
 
 // static
 rtc::scoped_refptr<AudioDeviceModule> AudioDeviceModule::Create(
-    const AudioLayer audio_layer) {
+    const AudioLayer audio_layer,
+    bool recordingEnabled,
+    bool playoutEnabled) {
   RTC_LOG(INFO) << __FUNCTION__;
   // Create the generic reference counted (platform independent) implementation.
   rtc::scoped_refptr<AudioDeviceModuleImpl> audioDevice(
-      new rtc::RefCountedObject<AudioDeviceModuleImpl>(audio_layer));
+      new rtc::RefCountedObject<AudioDeviceModuleImpl>(audio_layer,
+      recordingEnabled, playoutEnabled));
 
   // Ensure that the current platform is supported.
   if (audioDevice->CheckPlatform() == -1) {
@@ -101,8 +104,13 @@ rtc::scoped_refptr<AudioDeviceModule> AudioDeviceModule::Create(
   return AudioDeviceModule::Create(audio_layer);
 }
 
-AudioDeviceModuleImpl::AudioDeviceModuleImpl(const AudioLayer audioLayer)
-    : audio_layer_(audioLayer) {
+AudioDeviceModuleImpl::AudioDeviceModuleImpl(
+  const AudioLayer audioLayer,
+  bool recordingEnabled,
+  bool playoutEnabled)
+    : audio_layer_(audioLayer),
+      recording_enabled_(recordingEnabled),
+      playout_enabled_(playoutEnabled) {
   RTC_LOG(INFO) << __FUNCTION__;
 }
 
@@ -162,8 +170,8 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects() {
       RTC_LOG(INFO) << "attempting to use the Windows Wasapi Audio APIs...";
 
       // create *Windows Core Audio* implementation
-      //audio_device_.reset(new AudioDeviceWindowsWasapi(Id()));
-      audio_device_.reset(new AudioDeviceWindowsWasapi(0));
+      audio_device_.reset(new AudioDeviceWindowsWasapi(0, recording_enabled_,
+        playout_enabled_));
       RTC_LOG(INFO) << "Windows Wasapi Audio APIs will be utilized";
     }
 #elif defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)

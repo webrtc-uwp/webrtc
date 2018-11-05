@@ -703,7 +703,9 @@ concurrency::task<Microsoft::WRL::ComPtr<IAudioClient2>>
 //  AudioDeviceWindowsWasapi() - ctor
 // ----------------------------------------------------------------------------
 
-AudioDeviceWindowsWasapi::AudioDeviceWindowsWasapi(const int32_t id) :
+AudioDeviceWindowsWasapi::AudioDeviceWindowsWasapi(const int32_t id,
+  bool recordingEnabled, bool playoutEnabled)
+    :
     _comInit(ScopedCOMInitializer::kMTA),
     _id(id),
     _ptrAudioBuffer(NULL),
@@ -774,7 +776,9 @@ AudioDeviceWindowsWasapi::AudioDeviceWindowsWasapi(const int32_t id) :
     _outputDeviceRole(AudioDeviceRole::Communications),
     _inputDeviceIndex(0),
     _outputDeviceIndex(0),
-    _newMicLevel(0) {
+    _newMicLevel(0),
+    _recordingEnabled(recordingEnabled),
+    _playoutEnabled(playoutEnabled) {
     WEBRTC_TRACE(kTraceMemory, kTraceAudioDevice, id, "%s created",
       __FUNCTION__);
     // Create our samples ready events - we want auto reset events that start
@@ -986,6 +990,10 @@ int32_t AudioDeviceWindowsWasapi::InitSpeaker() {
       return -1;
   }
 
+  if (!_playoutEnabled) {
+    return 0;
+  }
+
   if (_usingOutputDeviceIndex) {
     int16_t nDevices = PlayoutDevices();
     if (_outputDeviceIndex > (nDevices - 1)) {
@@ -1113,6 +1121,10 @@ int32_t AudioDeviceWindowsWasapi::InitMicrophone() {
 
   if (_recording) {
       return -1;
+  }
+
+  if (!_recordingEnabled) {
+    return 0;
   }
 
   if (_usingInputDeviceIndex) {
@@ -1953,6 +1965,10 @@ int32_t AudioDeviceWindowsWasapi::SetPlayoutDevice(uint16_t index) {
     return -1;
   }
 
+  if (!_playoutEnabled) {
+    return 0;
+  }
+
   // Get current number of available rendering endpoint devices and refresh the
   // rendering collection.
   UINT nDevices = PlayoutDevices();
@@ -1994,6 +2010,10 @@ int32_t AudioDeviceWindowsWasapi::SetPlayoutDevice(
   AudioDeviceModule::WindowsDeviceType device) {
   if (_playIsInitialized) {
     return -1;
+  }
+
+  if (!_playoutEnabled) {
+    return 0;
   }
 
   rtc::CritScope lock(&_critSect);
@@ -2204,6 +2224,10 @@ int32_t AudioDeviceWindowsWasapi::SetRecordingDevice(uint16_t index) {
       return -1;
   }
 
+  if (!_recordingEnabled) {
+    return 0;
+  }
+
   // Get current number of available capture endpoint devices and refresh the
   // capture collection.
   UINT nDevices = RecordingDevices();
@@ -2246,6 +2270,10 @@ int32_t AudioDeviceWindowsWasapi::SetRecordingDevice(
   AudioDeviceModule::WindowsDeviceType device) {
   if (_recIsInitialized) {
       return -1;
+  }
+
+  if (!_recordingEnabled) {
+    return 0;
   }
 
   rtc::CritScope lock(&_critSect);
@@ -2324,6 +2352,9 @@ int32_t AudioDeviceWindowsWasapi::RecordingIsAvailable(bool& available) {
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::InitPlayout() {
+  if (!_playoutEnabled) {
+    return 0;
+  }
   rtc::CritScope lock(&_playoutControlMutex);
   return InitPlayoutInternal();
 }
@@ -2557,6 +2588,9 @@ Exit:
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::InitRecording() {
+  if (!_recordingEnabled) {
+    return 0;
+  }
   rtc::CritScope lock(&_recordingControlMutex);
   return InitRecordingInternal();
 }
@@ -2755,6 +2789,9 @@ Exit:
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::StartRecording() {
+  if (!_recordingEnabled) {
+    return 0;
+  }
   rtc::CritScope lock(&_recordingControlMutex);
   return StartRecordingInternal();
 }
@@ -2842,6 +2879,9 @@ int32_t AudioDeviceWindowsWasapi::StartRecordingInternal() {
 // ----------------------------------------------------------------------------
 
 int32_t AudioDeviceWindowsWasapi::StopRecording() {
+  if (!_recordingEnabled) {
+    return 0;
+  }
   rtc::CritScope lock(&_recordingControlMutex);
   return StopRecordingInternal();
 }
@@ -2959,6 +2999,9 @@ bool AudioDeviceWindowsWasapi::PlayoutIsInitialized() const {
 //  StartPlayout
 // ----------------------------------------------------------------------------
 int32_t AudioDeviceWindowsWasapi::StartPlayout() {
+  if (!_playoutEnabled) {
+    return 0;
+  }
   rtc::CritScope lock(&_playoutControlMutex);
   return StartPlayoutInternal();
 }
@@ -3016,6 +3059,9 @@ int32_t AudioDeviceWindowsWasapi::StartPlayoutInternal() {
 //  StopPlayout
 // ----------------------------------------------------------------------------
 int32_t AudioDeviceWindowsWasapi::StopPlayout() {
+  if (!_playoutEnabled) {
+    return 0;
+  }
   rtc::CritScope lock(&_playoutControlMutex);
   return StopPlayoutInternal();
 }
@@ -4224,7 +4270,11 @@ bool AudioDeviceWindowsWasapi::BuiltInAECIsAvailable() const {
   // There is a bug in the OS preventing the Effects detection (Noise SUppression and AEC) to work for Win10 Phones.
   // The bug is severe enough that it's not only the detection that doesn't work but the activation of the effect.
   // For Windows phone (until the bug is solved at the OS level, it will return false, and the software AEC will be used
-  return CheckBuiltInCaptureCapability(Windows::Media::Effects::AudioEffectType::AcousticEchoCancellation);
+  if (_recordingEnabled)
+    return CheckBuiltInCaptureCapability(
+        Windows::Media::Effects::AudioEffectType::AcousticEchoCancellation);
+  else
+    return false;
 }
 
 int32_t AudioDeviceWindowsWasapi::EnableBuiltInNS(bool enable) {
@@ -4239,7 +4289,11 @@ int32_t AudioDeviceWindowsWasapi::EnableBuiltInNS(bool enable) {
 }
 
 bool AudioDeviceWindowsWasapi::BuiltInNSIsAvailable() const {
-  return CheckBuiltInCaptureCapability(Windows::Media::Effects::AudioEffectType::NoiseSuppression);
+  if (_recordingEnabled)
+    return CheckBuiltInCaptureCapability(
+        Windows::Media::Effects::AudioEffectType::NoiseSuppression);
+  else
+    return false;
 }
 
 int32_t AudioDeviceWindowsWasapi::EnableBuiltInAGC(bool enable) {
@@ -4254,7 +4308,11 @@ int32_t AudioDeviceWindowsWasapi::EnableBuiltInAGC(bool enable) {
 }
 
 bool AudioDeviceWindowsWasapi::BuiltInAGCIsAvailable() const {
-  return CheckBuiltInRenderCapability(Windows::Media::Effects::AudioEffectType::AutomaticGainControl);
+  if (_playoutEnabled)
+    return CheckBuiltInRenderCapability(
+        Windows::Media::Effects::AudioEffectType::AutomaticGainControl);
+  else
+    return false;
 }
 
 bool AudioDeviceWindowsWasapi::CheckBuiltInCaptureCapability(Windows::Media::Effects::AudioEffectType effect) const {
@@ -4549,7 +4607,7 @@ Platform::String^ AudioDeviceWindowsWasapi::_GetDeviceID(
 DeviceInformation^ AudioDeviceWindowsWasapi::_GetDefaultDevice(
   DeviceClass cls, AudioDeviceRole role) {
   WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "%s", __FUNCTION__);
-  if (cls == DeviceClass::AudioRender) {
+  if (cls == DeviceClass::AudioRender && _playoutEnabled) {
     DeviceInformation^ defaultRenderDevice = nullptr;
     Concurrency::create_task(
       Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
@@ -4559,7 +4617,7 @@ DeviceInformation^ AudioDeviceWindowsWasapi::_GetDefaultDevice(
       defaultRenderDevice = deviceInformation;
     }, concurrency::task_continuation_context::use_arbitrary()).wait();
     return defaultRenderDevice;
-  } else if (cls == DeviceClass::AudioCapture) {
+  } else if (cls == DeviceClass::AudioCapture && _recordingEnabled) {
     DeviceInformation^ defaultCaptureDevice = nullptr;
     Concurrency::create_task(Windows::Devices::Enumeration::
       DeviceInformation::CreateFromIdAsync(MediaDevice::
