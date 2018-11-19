@@ -71,5 +71,6 @@
 /chromium
 !webrtc/*
 /WEBRTC_BUILD
+/OUTPUT
 sdk/windows/
 sdk/idl/
