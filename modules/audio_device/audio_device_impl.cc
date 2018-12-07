@@ -18,7 +18,7 @@
 #include "rtc_base/refcountedobject.h"
 #include "system_wrappers/include/metrics.h"
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined (WINUWP)
 #if defined(WEBRTC_WINDOWS_CORE_AUDIO_BUILD)
 #include "modules/audio_device/win/audio_device_core_win.h"
 #endif
@@ -127,7 +127,7 @@ int32_t AudioDeviceModuleImpl::CheckPlatform() {
   RTC_LOG(INFO) << __FUNCTION__;
   // Ensure that the current platform is supported
   PlatformType platform(kPlatformNotSupported);
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined (WINUWP)
   platform = kPlatformWin32;
   RTC_LOG(INFO) << "current platform is Win32";
 #elif defined(WEBRTC_ANDROID)
