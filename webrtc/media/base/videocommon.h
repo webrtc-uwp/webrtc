@@ -146,6 +146,7 @@ struct VideoFormatPod {
   int height;  // Number of pixels.
   int64_t interval;  // Nanoseconds.
   uint32_t fourcc;  // Color space. FOURCC_ANY means that any color space is OK.
+  bool mrcEnabled; // Mixed Reality Capture used on HoloLens device.
 };
 
 struct VideoFormat : VideoFormatPod {
@@ -153,22 +154,24 @@ struct VideoFormat : VideoFormatPod {
       rtc::kNumNanosecsPerSec / 10000;  // 10k fps.
 
   VideoFormat() {
-    Construct(0, 0, 0, 0);
+    Construct(0, 0, 0, 0, false);
   }
 
-  VideoFormat(int w, int h, int64_t interval_ns, uint32_t cc) {
-    Construct(w, h, interval_ns, cc);
+  VideoFormat(int w, int h, int64_t interval_ns, uint32_t cc, bool mrc) {
+    Construct(w, h, interval_ns, cc, mrc);
   }
 
   explicit VideoFormat(const VideoFormatPod& format) {
-    Construct(format.width, format.height, format.interval, format.fourcc);
+    Construct(format.width, format.height, format.interval, format.fourcc,
+              format.mrcEnabled);
   }
 
-  void Construct(int w, int h, int64_t interval_ns, uint32_t cc) {
+  void Construct(int w, int h, int64_t interval_ns, uint32_t cc, bool mrc) {
     width = w;
     height = h;
     interval = interval_ns;
     fourcc = cc;
+    mrcEnabled = mrc;
   }
 
   static int64_t FpsToInterval(int fps) {
@@ -192,7 +195,8 @@ struct VideoFormat : VideoFormatPod {
 
   bool operator==(const VideoFormat& format) const {
     return width == format.width && height == format.height &&
-        interval == format.interval && fourcc == format.fourcc;
+        interval == format.interval && fourcc == format.fourcc &&
+        mrcEnabled == format.mrcEnabled;
   }
 
   bool operator!=(const VideoFormat& format) const {

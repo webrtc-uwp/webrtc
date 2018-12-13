@@ -33,6 +33,7 @@ struct VideoCaptureCapability
     int32_t maxFPS;
     VideoType videoType;
     bool interlaced;
+    bool mrcEnabled;
 
     VideoCaptureCapability()
     {
@@ -41,6 +42,7 @@ struct VideoCaptureCapability
         maxFPS = 0;
         videoType = VideoType::kUnknown;
         interlaced = false;
+        mrcEnabled = false;
     }
     ;
     bool operator!=(const VideoCaptureCapability &other) const
@@ -55,6 +57,8 @@ struct VideoCaptureCapability
           return true;
         if (interlaced != other.interlaced)
             return true;
+        if (mrcEnabled != other.mrcEnabled)
+          return true;
         return false;
     }
     bool operator==(const VideoCaptureCapability &other) const

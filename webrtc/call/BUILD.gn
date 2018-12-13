@@ -47,7 +47,7 @@ rtc_source_set("rtp_interfaces") {
   ]
 }
 
-rtc_source_set("rtp_receiver") {
+rtc_static_library("rtp_receiver") {
   sources = [
     "rtcp_demuxer.cc",
     "rtcp_demuxer.h",
@@ -69,7 +69,7 @@ rtc_source_set("rtp_receiver") {
   ]
 }
 
-rtc_source_set("rtp_sender") {
+rtc_static_library("rtp_sender") {
   sources = [
     "rtp_transport_controller_send.cc",
     "rtp_transport_controller_send.h",
@@ -125,7 +125,7 @@ rtc_static_library("call") {
   ]
 }
 
-rtc_source_set("video_stream_api") {
+rtc_static_library("video_stream_api") {
   sources = [
     "video_receive_stream.cc",
     "video_receive_stream.h",

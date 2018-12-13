@@ -62,6 +62,7 @@ bool CapabilityToFormat(const webrtc::VideoCaptureCapability& cap,
   format->width = cap.width;
   format->height = cap.height;
   format->interval = VideoFormat::FpsToInterval(cap.maxFPS);
+  format->mrcEnabled = cap.mrcEnabled;
   return true;
 }
 
@@ -83,6 +84,7 @@ bool FormatToCapability(const VideoFormat& format,
   cap->maxFPS = VideoFormat::IntervalToFps(format.interval);
   cap->videoType = webrtc_type;
   cap->interlaced = false;
+  cap->mrcEnabled = format.mrcEnabled;
   return true;
 }
 

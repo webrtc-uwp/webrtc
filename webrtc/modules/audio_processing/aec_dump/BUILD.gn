@@ -55,7 +55,7 @@ rtc_source_set("mock_aec_dump_unittests") {
 }
 
 if (rtc_enable_protobuf) {
-  rtc_source_set("aec_dump_impl") {
+  rtc_static_library("aec_dump_impl") {
     sources = [
       "aec_dump_impl.cc",
       "aec_dump_impl.h",

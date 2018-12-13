@@ -139,6 +139,11 @@ if (!build_with_chromium) {
           "windows/video_capture_sink_winuwp.h",
           "windows/video_capture_winuwp.cc",
           "windows/video_capture_winuwp.h",
+          "windows/mrc_audio_effect_definition.h",
+          "windows/mrc_audio_effect_definition.cc",
+          "windows/mrc_video_effect_definition.h",
+          "windows/mrc_video_effect_definition.cc",
+          "windows/mrc_effect_template.h",
         ]
 
         deps += [ "//third_party/libyuv" ]

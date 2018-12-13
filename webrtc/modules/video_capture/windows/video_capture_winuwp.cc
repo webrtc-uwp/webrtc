@@ -19,6 +19,8 @@
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/system_wrappers/include/event_wrapper.h"
 #include "webrtc/modules/video_capture/windows/video_capture_sink_winuwp.h"
+#include "webrtc/modules/video_capture/windows/mrc_audio_effect_definition.h"
+#include "webrtc/modules/video_capture/windows/mrc_video_effect_definition.h"
 #include "webrtc/rtc_base/Win32.h"
 #include "libyuv/planar_functions.h"
 #include "webrtc/common_video/video_common_winuwp.h"
@@ -46,6 +48,7 @@ using Windows::UI::Core::CoreDispatcherPriority;
 using Windows::Foundation::IAsyncAction;
 using Windows::Foundation::TypedEventHandler;
 
+using Windows::System::Profile::AnalyticsInfo;
 using Windows::System::Threading::TimerElapsedHandler;
 using Windows::System::Threading::ThreadPoolTimer;
 
@@ -91,6 +94,20 @@ void AppStateDispatcher::DisplayOrientationChanged(
     (*obs_it)->DisplayOrientationChanged(display_orientation);
   }
 }
+
+void AppStateDispatcher::VideoFrameReceived(void* pSample)
+{
+  for (auto obs_it = observers.begin(); obs_it != observers.end(); ++obs_it) {
+    (*obs_it)->VideoFrameReceived(pSample);
+  }
+}
+
+// void AppStateDispatcher::MixedRealityCaptureChanged(
+// 	MrcEffectDefinitions::MrcVideoEffectDefinition video_effect_definition,
+// 	MrcEffectDefinitions::MrcAudioEffectDefinition audio_effect_definition) {
+//   video_effect_definition_ = video_effect_definition;
+//   audio_effect_definition_ = audio_effect_definition;
+// }
 
 DisplayOrientations AppStateDispatcher::GetOrientation() const {
   return display_orientation_;
@@ -182,7 +199,8 @@ ref class CaptureDevice sealed {
   void Cleanup();
 
   void StartCapture(MediaEncodingProfile^ media_encoding_profile,
-                    IVideoEncodingProperties^ video_encoding_properties);
+                    IVideoEncodingProperties^ video_encoding_properties,
+                    bool mrc_enabled);
 
   void StopCapture();
 
@@ -199,6 +217,18 @@ ref class CaptureDevice sealed {
     Platform::Agile<Windows::Media::Capture::MediaCapture> get();
   }
 
+  void CleanupMixedRealityCapture();
+
+  bool hasVideoCaptureHolographicCapabilities() {
+	  if (audio_effect_added_) {
+		  return true;
+	  }
+	  if (video_effect_added_) {
+		  return true;
+	  }
+	  return false;
+  }
+
  private:
   void RemovePaddingPixels(uint8_t* video_frame, size_t& video_frame_length);
 
@@ -213,9 +243,11 @@ ref class CaptureDevice sealed {
 
   CaptureDeviceListener* capture_device_listener_;
 
+  bool audio_effect_added_;
+  bool video_effect_added_;
   bool capture_started_;
   VideoCaptureCapability frame_info_;
-  std::unique_ptr<webrtc::EventWrapper> _stopped;
+  std::unique_ptr<webrtc::EventWrapper> stopped_;
 };
 
 CaptureDevice::CaptureDevice(
@@ -224,9 +256,11 @@ CaptureDevice::CaptureDevice(
     device_id_(nullptr),
     media_sink_(nullptr),
     capture_device_listener_(capture_device_listener),
-    capture_started_(false) {
-  _stopped.reset(webrtc::EventWrapper::Create());
-  _stopped->Set();
+    capture_started_(false),
+	audio_effect_added_(false),
+	video_effect_added_(false) {
+  stopped_.reset(webrtc::EventWrapper::Create());
+  stopped_->Set();
 }
 
 CaptureDevice::~CaptureDevice() {
@@ -250,6 +284,7 @@ void CaptureDevice::CleanupSink() {
 void CaptureDevice::CleanupMediaCapture() {
   Windows::Media::Capture::MediaCapture^ media_capture = media_capture_.Get();
   if (media_capture != nullptr) {
+	CleanupMixedRealityCapture();
     media_capture->Failed -= media_capture_failed_event_registration_token_;
     MediaCaptureDevicesWinUWP::Instance()->RemoveMediaCapture(device_id_);
     media_capture_ = nullptr;
@@ -267,7 +302,7 @@ void CaptureDevice::Cleanup() {
     return;
   }
   if (capture_started_) {
-    if (_stopped->Wait(5000) == kEventTimeout) {
+    if (stopped_->Wait(5000) == kEventTimeout) {
       Concurrency::create_task(
         media_capture->StopRecordAsync()).
         then([this](Concurrency::task<void> async_info) {
@@ -276,12 +311,12 @@ void CaptureDevice::Cleanup() {
           CleanupSink();
           CleanupMediaCapture();
           device_id_ = nullptr;
-          _stopped->Set();
+          stopped_->Set();
         } catch (Platform::Exception^ e) {
           CleanupSink();
           CleanupMediaCapture();
           device_id_ = nullptr;
-          _stopped->Set();
+          stopped_->Set();
           throw;
         }
       }).wait();
@@ -293,15 +328,31 @@ void CaptureDevice::Cleanup() {
   }
 }
 
+void CaptureDevice::CleanupMixedRealityCapture() {
+	Concurrency::task<void> cleanEffectTask;
+	if (video_effect_added_) {
+		// Clear effects in videoRecord stream
+		cleanEffectTask = Concurrency::create_task(media_capture_->ClearEffectsAsync(Windows::Media::Capture::MediaStreamType::VideoRecord)).then([this]()
+		{
+			OutputDebugString(L"VideoEffect removed\n");
+			video_effect_added_ = false;
+		});
+		cleanEffectTask.wait();
+	}
+	return;
+}
+
+
 void CaptureDevice::StartCapture(
-  MediaEncodingProfile^ media_encoding_profile,
-  IVideoEncodingProperties^ video_encoding_properties) {
+    MediaEncodingProfile^ media_encoding_profile,
+    IVideoEncodingProperties^ video_encoding_properties,
+    bool mrc_enabled) { 	
   if (capture_started_) {
     throw ref new Platform::Exception(
       __HRESULT_FROM_WIN32(ERROR_INVALID_STATE));
   }
 
-  if (_stopped->Wait(5000) == kEventTimeout) {
+  if (stopped_->Wait(5000) == kEventTimeout) {
     throw ref new Platform::Exception(
       __HRESULT_FROM_WIN32(ERROR_INVALID_STATE));
   }
@@ -369,15 +420,27 @@ void CaptureDevice::StartCapture(
   auto initOp = media_sink_->InitializeAsync(media_encoding_profile->Video);
   auto initTask = Concurrency::create_task(initOp)
     .then([this, media_encoding_profile,
-      video_encoding_properties](IMediaExtension^ media_extension) {
+      video_encoding_properties, mrc_enabled](IMediaExtension^ media_extension) {
+
+      Platform::String^ deviceFamily = Windows::System::Profile::AnalyticsInfo::VersionInfo->DeviceFamily;
+      if (deviceFamily->Equals(L"Windows.Holographic") && mrc_enabled) {
+        auto mrcVideoEffectDefinition = ref new MrcVideoEffectDefinition;
+        mrcVideoEffectDefinition->StreamType = MediaStreamType::VideoRecord;
+        auto addEffectTask = Concurrency::create_task(media_capture_->AddVideoEffectAsync(mrcVideoEffectDefinition, MediaStreamType::VideoRecord)).then([this](IMediaExtension ^videoExtension)
+        {
+          OutputDebugString(L"VideoEffect Added\n");
+          video_effect_added_ = true;
+        });
+        Concurrency::create_task(addEffectTask).wait();
+      }
       auto setPropOp =
         media_capture_->VideoDeviceController->SetMediaStreamPropertiesAsync(
         MediaStreamType::VideoRecord, video_encoding_properties);
       return Concurrency::create_task(setPropOp)
         .then([this, media_encoding_profile, media_extension]() {
-          auto startRecordOp = media_capture_->StartRecordToCustomSinkAsync(
-            media_encoding_profile, media_extension);
-          return Concurrency::create_task(startRecordOp);
+		  auto startRecordOp = media_capture_->StartRecordToCustomSinkAsync(
+			  media_encoding_profile, media_extension);
+		  return Concurrency::create_task(startRecordOp);
         });
       });
 
@@ -408,11 +471,11 @@ void CaptureDevice::StopCapture() {
       async_info.get();
       CleanupSink();
       CleanupMediaCapture();
-      _stopped->Set();
+      stopped_->Set();
     } catch (Platform::Exception^ e) {
       CleanupSink();
       CleanupMediaCapture();
-      _stopped->Set();
+      stopped_->Set();
         LOG(LS_ERROR) <<
           "CaptureDevice::StopCapture: Stop failed, reason: '" <<
           rtc::ToUtf8(e->Message->Data()) << "'";
@@ -466,6 +529,8 @@ void CaptureDevice::OnMediaSample(Object^ sender, MediaSampleEventArgs^ args) {
                                                 frame_info_);
 
       hr = spMediaBuffer->Unlock();
+      
+      AppStateDispatcher::Instance()->VideoFrameReceived(spMediaSample.Get());
     }
     if (FAILED(hr)) {
       LOG(LS_ERROR) << "Failed to send media sample. " << hr;
@@ -673,6 +738,15 @@ VideoCaptureWinUWP::VideoCaptureWinUWP()
     last_frame_info_(),
     video_encoding_properties_(nullptr),
     media_encoding_profile_(nullptr) {
+		// audio_effect_definition_ = MrcEffectDefinitions::MrcAudioEffectDefinition { 2 };
+		// video_effect_definition_ = MrcEffectDefinitions::MrcVideoEffectDefinition{
+		//   1, //VideoRecord
+		//   false, //No MRC
+		//   false, // No recording indicator
+		//   false, // No stabilizations
+		//   0, //buffer length
+		//   0.9f //90% opacity
+		// };
   if (VideoCommonWinUWP::GetCoreDispatcher() == nullptr) {
     LOG(LS_INFO) << "Using AppStateDispatcher as orientation source";
     AppStateDispatcher::Instance()->AddObserver(this);
@@ -758,6 +832,7 @@ int32_t VideoCaptureWinUWP::Init(const char* device_unique_id) {
 int32_t VideoCaptureWinUWP::StartCapture(
   const VideoCaptureCapability& capability) {
   rtc::CritScope cs(&_apiCs);
+  _requestedCapability = capability;
   Platform::String^ subtype;
   switch (capability.videoType) {
   case VideoType::kYV12:
@@ -850,8 +925,9 @@ int32_t VideoCaptureWinUWP::StartCapture(
       ApplyDisplayOrientation(AppStateDispatcher::Instance()->GetOrientation());
     }
     device_->StartCapture(media_encoding_profile_,
-                          video_encoding_properties_);
-    last_frame_info_ = capability;
+                          video_encoding_properties_,
+                          capability.mrcEnabled);
+    last_frame_info_ = capability ;
   } catch (Platform::Exception^ e) {
     LOG(LS_ERROR) << "Failed to start capture. "
       << rtc::ToUtf8(e->Message->Data());
@@ -936,7 +1012,7 @@ bool VideoCaptureWinUWP::ResumeCapture() {
     LOG(LS_INFO) << "ResumeCapture";
     fake_device_->StopCapture();
     device_->StartCapture(media_encoding_profile_,
-      video_encoding_properties_);
+      video_encoding_properties_, _requestedCapability.mrcEnabled);
     return true;
   }
   LOG(LS_INFO) << "ResumeCapture, capture is not started";
@@ -956,6 +1032,12 @@ void VideoCaptureWinUWP::DisplayOrientationChanged(
   }
   ApplyDisplayOrientation(display_orientation);
 }
+
+// void VideoCaptureWinUWP::MixedRealityCaptureChanged(
+// 	MrcEffectDefinitions::MrcVideoEffectDefinition video_effect_definition,
+// 	MrcEffectDefinitions::MrcAudioEffectDefinition audio_effect_definition) {
+// 	ApplyMixedRealityCapture(video_effect_definition_, audio_effect_definition_);
+// }
 
 void VideoCaptureWinUWP::OnDisplayOrientationChanged(
   DisplayOrientations orientation) {

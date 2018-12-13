@@ -11,11 +11,11 @@
 #include "webrtc/modules/video_capture/windows/device_info_winuwp.h"
 
 #include <windows.media.h>
-
 #include <string>
 
 #include "webrtc/rtc_base/logging.h"
 #include "webrtc/rtc_base/win32.h"
+#include "webrtc/typedefs.h"
 #include "webrtc/common_video/video_common_winuwp.h"
 
 using Windows::Devices::Enumeration::DeviceClass;
@@ -89,6 +89,7 @@ MediaCaptureDevicesWinUWP::GetMediaCapture(Platform::String^ device_id) {
 
       // settings->MediaCategory =
       //  Windows::Media::Capture::MediaCategory::Communications;
+
       auto initOp = media_capture_agile->InitializeAsync(settings);
       initialize_async_task = Concurrency::create_task(initOp).
         then([this, media_capture_agile](Concurrency::task<void> initTask) {
@@ -313,6 +314,7 @@ int32_t DeviceInfoWinUWP::CreateCapabilityMap(
           capability.videoType = VideoType::kNV12;
         else
           capability.videoType = VideoType::kUnknown;
+        capability.mrcEnabled = false;
         _captureCapabilities.push_back(capability);
       }
     } catch (Platform::Exception^ e) {
