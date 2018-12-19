@@ -60,133 +60,132 @@
 #include "mrc_effect_template.h"
 #include "webrtc/typedefs.h"
 namespace webrtc {
-	namespace videocapturemodule {
-		ref class MrcVideoEffectDefinition sealed : public Windows::Media::Effects::IVideoEffectDefinition
-		{
-		public:
-			MrcVideoEffectDefinition();
+  namespace videocapturemodule {
+    ref class MrcVideoEffectDefinition sealed : public Windows::Media::Effects::IVideoEffectDefinition
+    {
+    public:
+      MrcVideoEffectDefinition();
 
-			//
-			// IVideoEffectDefinition
-			//
-			property Platform::String^ ActivatableClassId
-			{
-				virtual Platform::String^ get()
-				{
-					return m_activatableClassId;
-				}
-			}
+      //
+      // IVideoEffectDefinition
+      //
+      property Platform::String^ ActivatableClassId
+      {
+        virtual Platform::String^ get()
+        {
+          return m_activatableClassId;
+        }
+      }
 
-			property Windows::Foundation::Collections::IPropertySet^ Properties
-			{
-				virtual Windows::Foundation::Collections::IPropertySet^ get()
-				{
-					return m_propertySet;
-				}
-			}
+      property Windows::Foundation::Collections::IPropertySet^ Properties
+      {
+        virtual Windows::Foundation::Collections::IPropertySet^ get()
+        {
+          return m_propertySet;
+        }
+      }
 
-			//
-			// Mixed Reality Capture effect properties
-			//
-			property Windows::Media::Capture::MediaStreamType StreamType
-			{
-				Windows::Media::Capture::MediaStreamType get()
-				{
-					return GetValueFromPropertySet<uint32_t>(m_propertySet, PROPERTY_STREAMTYPE, DefaultStreamType);
-				}
+      //
+      // Mixed Reality Capture effect properties
+      //
+      property Windows::Media::Capture::MediaStreamType StreamType
+      {
+        Windows::Media::Capture::MediaStreamType get()
+        {
+          return GetValueFromPropertySet<uint32_t>(m_propertySet, PROPERTY_STREAMTYPE, DefaultStreamType);
+        }
 
-				void set(Windows::Media::Capture::MediaStreamType newValue)
-				{
-					m_propertySet->Insert(PROPERTY_STREAMTYPE, static_cast<uint32_t>(newValue));
-				}
-			}
+        void set(Windows::Media::Capture::MediaStreamType newValue)
+        {
+          m_propertySet->Insert(PROPERTY_STREAMTYPE, static_cast<uint32_t>(newValue));
+        }
+      }
 
-			property bool HologramCompositionEnabled
-			{
-				bool get()
-				{
-					return GetValueFromPropertySet<bool>(m_propertySet, PROPERTY_HOLOGRAMCOMPOSITIONENABLED, DefaultHologramCompositionEnabled);
-				}
+      property bool HologramCompositionEnabled
+      {
+        bool get()
+        {
+          return GetValueFromPropertySet<bool>(m_propertySet, PROPERTY_HOLOGRAMCOMPOSITIONENABLED, DefaultHologramCompositionEnabled);
+        }
 
-				void set(bool newValue)
-				{
-					m_propertySet->Insert(PROPERTY_HOLOGRAMCOMPOSITIONENABLED, newValue);
-				}
-			}
+        void set(bool newValue)
+        {
+          m_propertySet->Insert(PROPERTY_HOLOGRAMCOMPOSITIONENABLED, newValue);
+        }
+      }
 
-			property bool RecordingIndicatorEnabled
-			{
-				bool get()
-				{
-					return GetValueFromPropertySet<bool>(m_propertySet, PROPERTY_RECORDINGINDICATORENABLED, DefaultRecordingIndicatorEnabled);
-				}
+      property bool RecordingIndicatorEnabled
+      {
+        bool get()
+        {
+          return GetValueFromPropertySet<bool>(m_propertySet, PROPERTY_RECORDINGINDICATORENABLED, DefaultRecordingIndicatorEnabled);
+        }
 
-				void set(bool newValue)
-				{
-					m_propertySet->Insert(PROPERTY_RECORDINGINDICATORENABLED, newValue);
-				}
-			}
+        void set(bool newValue)
+        {
+          m_propertySet->Insert(PROPERTY_RECORDINGINDICATORENABLED, newValue);
+        }
+      }
 
-			property bool VideoStabilizationEnabled
-			{
-				bool get()
-				{
-					return GetValueFromPropertySet<bool>(m_propertySet, PROPERTY_VIDEOSTABILIZATIONENABLED, DefaultVideoStabilizationEnabled);
-				}
+      property bool VideoStabilizationEnabled
+      {
+        bool get()
+        {
+          return GetValueFromPropertySet<bool>(m_propertySet, PROPERTY_VIDEOSTABILIZATIONENABLED, DefaultVideoStabilizationEnabled);
+        }
 
-				void set(bool newValue)
-				{
-					m_propertySet->Insert(PROPERTY_VIDEOSTABILIZATIONENABLED, newValue);
-				}
-			}
+        void set(bool newValue)
+        {
+          m_propertySet->Insert(PROPERTY_VIDEOSTABILIZATIONENABLED, newValue);
+        }
+      }
 
-			property uint32_t VideoStabilizationBufferLength
-			{
-				uint32_t get()
-				{
-					return GetValueFromPropertySet<uint32_t>(m_propertySet, PROPERTY_VIDEOSTABILIZATIONBUFFERLENGTH, DefaultVideoStabilizationBufferLength);
-				}
+      property uint32_t VideoStabilizationBufferLength
+      {
+        uint32_t get()
+        {
+          return GetValueFromPropertySet<uint32_t>(m_propertySet, PROPERTY_VIDEOSTABILIZATIONBUFFERLENGTH, DefaultVideoStabilizationBufferLength);
+        }
 
-				void set(uint32_t newValue)
-				{
-					m_propertySet->Insert(PROPERTY_VIDEOSTABILIZATIONBUFFERLENGTH, (std::min)(newValue, PROPERTY_MAX_VSBUFFER));
-				}
-			}
+        void set(uint32_t newValue)
+        {
+          m_propertySet->Insert(PROPERTY_VIDEOSTABILIZATIONBUFFERLENGTH, (std::min)(newValue, PROPERTY_MAX_VSBUFFER));
+        }
+      }
 
-			property float GlobalOpacityCoefficient
-			{
-				float get()
-				{
-					return GetValueFromPropertySet<float>(m_propertySet, PROPERTY_GLOBALOPACITYCOEFFICIENT, DefaultGlobalOpacityCoefficient);
-				}
+      property float GlobalOpacityCoefficient
+      {
+        float get()
+        {
+          return GetValueFromPropertySet<float>(m_propertySet, PROPERTY_GLOBALOPACITYCOEFFICIENT, DefaultGlobalOpacityCoefficient);
+        }
 
-				void set(float newValue)
-				{
-					m_propertySet->Insert(PROPERTY_GLOBALOPACITYCOEFFICIENT, newValue);
-				}
-			}
+        void set(float newValue)
+        {
+          m_propertySet->Insert(PROPERTY_GLOBALOPACITYCOEFFICIENT, newValue);
+        }
+      }
 
+      property uint32_t VideoStabilizationMaximumBufferLength
+      {
+        uint32_t get()
+        {
+          return PROPERTY_MAX_VSBUFFER;
+        }
+      }
 
-			property uint32_t VideoStabilizationMaximumBufferLength
-			{
-				uint32_t get()
-				{
-					return PROPERTY_MAX_VSBUFFER;
-				}
-			}
-
-		private:
-			static constexpr Windows::Media::Capture::MediaStreamType DefaultStreamType = Windows::Media::Capture::MediaStreamType::VideoRecord;
-			static constexpr bool DefaultHologramCompositionEnabled = true;
-			static constexpr bool DefaultRecordingIndicatorEnabled = true;
-			static constexpr bool DefaultVideoStabilizationEnabled = false;
-			static constexpr uint32_t DefaultVideoStabilizationBufferLength = 0U;
-			static constexpr float DefaultGlobalOpacityCoefficient = 0.9f;
-		private:
-			Platform::String^ m_activatableClassId = ref new Platform::String(RUNTIMECLASS_MIXEDREALITYCAPTURE_VIDEO_EFFECT);
-			Windows::Foundation::Collections::PropertySet^ m_propertySet = ref new Windows::Foundation::Collections::PropertySet();
-		};
-	}
+    private:
+      static constexpr Windows::Media::Capture::MediaStreamType DefaultStreamType = Windows::Media::Capture::MediaStreamType::VideoRecord;
+      static constexpr bool DefaultHologramCompositionEnabled = true;
+      static constexpr bool DefaultRecordingIndicatorEnabled = true;
+      static constexpr bool DefaultVideoStabilizationEnabled = false;
+      static constexpr uint32_t DefaultVideoStabilizationBufferLength = 0U;
+      static constexpr float DefaultGlobalOpacityCoefficient = 0.9f;
+    private:
+      Platform::String^ m_activatableClassId = ref new Platform::String(RUNTIMECLASS_MIXEDREALITYCAPTURE_VIDEO_EFFECT);
+      Windows::Foundation::Collections::PropertySet^ m_propertySet = ref new Windows::Foundation::Collections::PropertySet();
+    };
+  }
 }
 
 #endif //WEBRTC_MODULES_VIDEO_CAPTURE_WINDOWS_MRC_VIDEO_EFFECT_DEFINITION_H_

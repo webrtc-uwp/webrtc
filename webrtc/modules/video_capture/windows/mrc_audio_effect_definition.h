@@ -21,61 +21,61 @@
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
-	namespace videocapturemodule {
-		private enum class AudioMixerMode
-		{
-			Mic = 0,
-			Loopback = 1,
-			MicAndLoopback = 2
-		};
+  namespace videocapturemodule {
+    private enum class AudioMixerMode
+    {
+      Mic = 0,
+      Loopback = 1,
+      MicAndLoopback = 2
+    };
 
-		ref class MrcAudioEffectDefinition sealed : public Windows::Media::Effects::IAudioEffectDefinition
-		{
-		public:
-			MrcAudioEffectDefinition();
+    ref class MrcAudioEffectDefinition sealed : public Windows::Media::Effects::IAudioEffectDefinition
+    {
+    public:
+      MrcAudioEffectDefinition();
 
-			//
-			// IAudioEffectDefinition
-			//
-			property Platform::String^ ActivatableClassId
-			{
-				virtual Platform::String^ get()
-				{
-					return m_activatableClassId;
-				}
-			}
+      //
+      // IAudioEffectDefinition
+      //
+      property Platform::String^ ActivatableClassId
+      {
+        virtual Platform::String^ get()
+        {
+          return m_activatableClassId;
+        }
+      }
 
-			property Windows::Foundation::Collections::IPropertySet^ Properties
-			{
-				virtual Windows::Foundation::Collections::IPropertySet^ get()
-				{
-					return m_propertySet;
-				}
-			}
+      property Windows::Foundation::Collections::IPropertySet^ Properties
+      {
+        virtual Windows::Foundation::Collections::IPropertySet^ get()
+        {
+          return m_propertySet;
+        }
+      }
 
-			//
-			// Mixed Reality Capture effect properties
-			//
-			property AudioMixerMode MixerMode
-			{
-				AudioMixerMode get()
-				{
-					return GetValueFromPropertySet<uint32_t>(m_propertySet, PROPERTY_MIXERMODE, DefaultAudioMixerMode);
-				}
+      //
+      // Mixed Reality Capture effect properties
+      //
+      property AudioMixerMode MixerMode
+      {
+        AudioMixerMode get()
+        {
+          return GetValueFromPropertySet<uint32_t>(m_propertySet, PROPERTY_MIXERMODE, DefaultAudioMixerMode);
+        }
 
-				void set(AudioMixerMode newValue)
-				{
-					m_propertySet->Insert(PROPERTY_MIXERMODE, static_cast<uint32_t>(newValue));
-				}
-			}
+        void set(AudioMixerMode newValue)
+        {
+          m_propertySet->Insert(PROPERTY_MIXERMODE, static_cast<uint32_t>(newValue));
+        }
+      }
 
-		private:
-			static constexpr AudioMixerMode DefaultAudioMixerMode = AudioMixerMode::MicAndLoopback;
-		private:
-			Platform::String^ m_activatableClassId = ref new Platform::String(RUNTIMECLASS_MIXEDREALITYCAPTURE_AUDIO_EFFECT);
-			Windows::Foundation::Collections::PropertySet^ m_propertySet = ref new Windows::Foundation::Collections::PropertySet();
-		};
-	}
+    private:
+      static constexpr AudioMixerMode DefaultAudioMixerMode = AudioMixerMode::MicAndLoopback;
+    private:
+      Platform::String^ m_activatableClassId = ref new Platform::String(RUNTIMECLASS_MIXEDREALITYCAPTURE_AUDIO_EFFECT);
+      Windows::Foundation::Collections::PropertySet^ m_propertySet = ref new Windows::Foundation::Collections::PropertySet();
+    };
+  }
 }
 
 #endif //WEBRTC_MODULES_VIDEO_CAPTURE_WINDOWS_MRC_AUDIO_EFFECT_DEFINITION_H_

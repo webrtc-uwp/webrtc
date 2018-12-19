@@ -438,9 +438,9 @@ void CaptureDevice::StartCapture(
         MediaStreamType::VideoRecord, video_encoding_properties);
       return Concurrency::create_task(setPropOp)
         .then([this, media_encoding_profile, media_extension]() {
-		  auto startRecordOp = media_capture_->StartRecordToCustomSinkAsync(
-			  media_encoding_profile, media_extension);
-		  return Concurrency::create_task(startRecordOp);
+          auto startRecordOp = media_capture_->StartRecordToCustomSinkAsync(
+            media_encoding_profile, media_extension);
+          return Concurrency::create_task(startRecordOp);
         });
       });
 
