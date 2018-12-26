@@ -100,9 +100,11 @@ if (current_cpu == "arm") {
       "-o",
       rebase_path("$target_gen_dir/{{source_file_part}}.obj"),
       "-p",
-      "environment.store_arm",
+      "environment.store_" + current_cpu,
       "-l",
       "../../",
+      "-a",
+      current_cpu
     ]
   }
 

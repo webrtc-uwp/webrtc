@@ -17,16 +17,22 @@ parser.add_option('-i', '--input', help='file passed to stdin.')
 parser.add_option('-o', '--output', help='file saved from stdout.')
 parser.add_option('-p', '--path', help='path')
 parser.add_option('-l', '--include', help='include')
+parser.add_option('-a', '--arch', help='cpu architecture')
 
 
 options, args = parser.parse_args()
-if (not options.script or not options.input or not options.output):
-  parser.error('Must specify arguments for script, input and output.')
+if (not options.script or not options.arch or not options.input or not options.output):
+  parser.error('Must specify arguments for script, arch, input and output.')
   sys.exit(1)
 
 pairs = open(options.path).read()[:-2].split('\0')
-kvs = [item.split('=', 1) for item in pairs]    
+kvs = [item.split('=', 1) for item in pairs]
+if options.arch == 'arm':
+  arm_compiler = 'armasm.exe'
+else:
+  arm_compiler = 'armasm64.exe'
+asm_type = 'armasm'
 with open(options.output, 'w') as fo, open(options.input, 'r') as fi:
-  subprocess.check_call(['perl', options.script, '-arch', 'arm', '-as-type', 'armasm', '-force-thumb', '--', 'armasm.exe', '-oldit', '-I' + options.include, options.input, '-o', options.output ], env=dict(kvs))
+  subprocess.check_call(['perl', options.script, '-arch', options.arch, '-as-type', asm_type, '-force-thumb', '--', arm_compiler, '-oldit', '-I' + options.include, options.input, '-o', options.output ], env=dict(kvs))
 
 sys.exit(0)
