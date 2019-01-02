@@ -8,7 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <arm_neon.h>
+# if !defined(__clang__) && defined(_MSC_VER) && defined(_M_ARM64)
+#   include <arm64_neon.h>
+# endif
+#   include <arm_neon.h>
+
+
 #include <stdlib.h>
 
 #include "rtc_base/checks.h"

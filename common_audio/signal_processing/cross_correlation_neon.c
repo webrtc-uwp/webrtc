@@ -11,7 +11,11 @@
 #include "common_audio/signal_processing/include/signal_processing_library.h"
 #include "rtc_base/system/arch.h"
 
-#include <arm_neon.h>
+# if !defined(__clang__) && defined(_MSC_VER) && defined(_M_ARM64)
+#   include <arm64_neon.h>
+# else
+#   include <arm_neon.h>
+# endif
 
 #ifdef _MSC_VER
 #define inline __inline
