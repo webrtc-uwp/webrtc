@@ -17,7 +17,7 @@ enum { GET_MIC_VOLUME_INTERVAL_MS = 1000 };
 
 // Platform specifics
 //
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined (WINUWP)
 #if (_MSC_VER >= 1400)
 #if !defined(WEBRTC_DUMMY_FILE_DEVICES)
 // Windows Core Audio is the default audio layer in Windows.

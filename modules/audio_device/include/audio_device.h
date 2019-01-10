@@ -29,7 +29,6 @@ class AudioDeviceModule : public rtc::RefCountInterface {
     kPlatformDefaultAudio = 0,
     kWindowsCoreAudio,
     kWindowsCoreAudio2,  // experimental
-    kWindowsWasapiAudio,
     kLinuxAlsaAudio,
     kLinuxPulseAudio,
     kAndroidJavaAudio,

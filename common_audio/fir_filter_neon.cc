@@ -10,7 +10,11 @@
 
 #include "common_audio/fir_filter_neon.h"
 
-#include <arm_neon.h>
+# if !defined(__clang__) && defined(_MSC_VER) && defined(_M_ARM64)
+#   include <arm64_neon.h>
+# else
+#   include <arm_neon.h>
+# endif
 #include <string.h>
 
 #include "rtc_base/checks.h"
