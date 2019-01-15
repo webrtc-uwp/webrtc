@@ -893,11 +893,64 @@ if (is_win || is_android) {
       ]
     }
   }
+
+  rtc_shared_library("remoting") {
+    sources = [
+      "remoting/simple_peer_connection.cc",
+      "remoting/simple_peer_connection.h",
+      "remoting/unity_plugin_apis.cc",
+      "remoting/unity_plugin_apis.h",
+      "remoting/video_observer.cc",
+      "remoting/video_observer.h",
+    ]
+
+    if (is_android) {
+      sources += [
+        "remoting/classreferenceholder.cc",
+        "remoting/classreferenceholder.h",
+        "remoting/jni_onload.cc",
+      ]
+      suppressed_configs += [ "//build/config/android:hide_all_but_jni_onload" ]
+    }
+
+    if (!build_with_chromium && is_clang) {
+      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+    if (is_win) {
+      configs += [ "//build/config/win:windowed" ]
+    }
+    deps = [
+      "../api:libjingle_peerconnection_api",
+      "../api/audio_codecs:builtin_audio_decoder_factory",
+      "../api/audio_codecs:builtin_audio_encoder_factory",
+      "../api/video:video_frame",
+      "../media:rtc_audio_video",
+      "../media:rtc_internal_video_codecs",
+      "../media:rtc_media",
+      "../media:rtc_media_base",
+      "../modules/audio_device:audio_device",
+      "../modules/audio_processing:audio_processing",
+      "../modules/video_capture:video_capture_module",
+      "../pc:libjingle_peerconnection",
+      "../rtc_base:rtc_base",
+      "../system_wrappers:field_trial_default",
+      "../system_wrappers:metrics_default",
+      "../system_wrappers:runtime_enabled_features_default",
+      "//third_party/abseil-cpp/absl/memory",
+    ]
+    if (is_android) {
+      deps += [
+        "../modules/utility:utility",
+        "../sdk/android:libjingle_peerconnection_jni",
+      ]
+    }
+  }
 }
 
 if (is_android) {
   rtc_android_library("webrtc_unity_java") {
-    java_files = [ "unityplugin/java/src/org/webrtc/UnityUtility.java" ]
+    java_files = [ "remoting/java/src/org/webrtc/UnityUtility.java" ]
     deps = [
       "../rtc_base:base_java",
       "../sdk/android:libjingle_peerconnection_java",
