@@ -41,7 +41,11 @@ class DisplayOrientationListener {
 class AppStateObserver {
  public:
   virtual void DisplayOrientationChanged(
-    Windows::Graphics::Display::DisplayOrientations display_orientation) = 0;
+    Windows::Graphics::Display::DisplayOrientations display_orientation) { };
+  virtual void VideoFrameReceived(void* pSample) { };
+  // virtual void MixedRealityCaptureChanged(
+	//   MrcEffectDefinitions::MrcVideoEffectDefinition video_effect_definition,
+	//   MrcEffectDefinitions::MrcAudioEffectDefinition audio_effect_definition) = 0;
 };
 
 class AppStateDispatcher : public AppStateObserver {
@@ -51,6 +55,11 @@ class AppStateDispatcher : public AppStateObserver {
   void DisplayOrientationChanged(
     Windows::Graphics::Display::DisplayOrientations display_orientation);
   Windows::Graphics::Display::DisplayOrientations GetOrientation() const;
+  void VideoFrameReceived(void* pSample);
+  // void MixedRealityCaptureChanged(
+	// MrcEffectDefinitions::MrcVideoEffectDefinition video_effect_definition,
+	// MrcEffectDefinitions::MrcAudioEffectDefinition audio_effect_definition);
+
   void AddObserver(AppStateObserver* observer);
   void RemoveObserver(AppStateObserver* observer);
 
@@ -85,6 +94,10 @@ class VideoCaptureWinUWP
   // Overrides from AppStateObserver
   void DisplayOrientationChanged(
     Windows::Graphics::Display::DisplayOrientations display_orientation) override;
+
+  // void MixedRealityCaptureChanged(
+	//   MrcEffectDefinitions::MrcVideoEffectDefinition video_effect_definition,
+	//   MrcEffectDefinitions::MrcAudioEffectDefinition audio_effect_definition) override;
 
   // Overrides from DisplayOrientationListener
   void OnDisplayOrientationChanged(

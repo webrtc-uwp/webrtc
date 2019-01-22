@@ -33,7 +33,7 @@ config("rtc_media_warnings_config") {
   }
 }
 
-rtc_source_set("rtc_h264_profile_id") {
+rtc_static_library("rtc_h264_profile_id") {
   sources = [
     "base/h264_profile_level_id.cc",
     "base/h264_profile_level_id.h",
@@ -214,13 +214,6 @@ rtc_static_library("rtc_audio_video") {
   if (current_os == "winuwp") {
     deps += [ "//third_party/winuwp_h264:winuwp_h264" ]
   }
-  #if (current_os == "winuwp") {
-  #  sources += [
-  #    "devices/winuwpdevicemanager.cc",
-  #    "devices/winuwpdevicemanager.h",
-  #  ]
-  #}
-
   public_configs = []
   if (build_with_chromium) {
     deps += [ "../modules/video_capture:video_capture" ]
