@@ -32,7 +32,7 @@
 #define WEBRTC_ARCH_X86
 #define WEBRTC_ARCH_32_BITS
 #define WEBRTC_ARCH_LITTLE_ENDIAN
-#elif defined(__ARMEL__)
+#elif defined(__ARMEL__) || defined(__arm__) || defined(_M_ARM)
 #define WEBRTC_ARCH_ARM_FAMILY
 #define WEBRTC_ARCH_32_BITS
 #define WEBRTC_ARCH_LITTLE_ENDIAN
