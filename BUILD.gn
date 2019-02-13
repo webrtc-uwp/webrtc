@@ -381,7 +381,7 @@ if (!build_with_chromium) {
 
     deps = [
       ":webrtc_common",
-      "api:transport_api",
+"//third_party/idl:idl",      "api:transport_api",
       "audio",
       "call",
       "common_audio",
