@@ -14,26 +14,12 @@ namespace hololight {
 
     D3D11VideoFrameSource::D3D11VideoFrameSource(ID3D11Device* device, ID3D11DeviceContext* context, D3D11_TEXTURE2D_DESC* desc, rtc::Thread* signaling_thread)
     : signaling_thread_(signaling_thread), is_screencast_(false)  {
-        //create own internal backing texture (or copy to CPU for easy first test)
-        //actually this dumb test might be pretty smart for starters.
-
-        //so we create our own videoframebuffer from an existing one and convert to i420
-        //with libyuv for example to check if it passes the image down the pipeline which it should.
-        //later we can try keeping the frame on the gpu and pass it to the mf encoder.
-
-        //OnFrameCaptured should get a pointer to id3d11texture2d.
-
-        //not sure if this can be done directly or if we need temporaries.
         device_.copy_from(device);
         context_.copy_from(context);
 
-        //we don't need multisampling here I guess...that's the app's job.
         DXGI_SAMPLE_DESC sampleDesc;
         sampleDesc.Count = 1;
         sampleDesc.Quality = 0;
-
-        //TODO: what about texture arrays? not sure if unity uses them in XR mode,
-        //but e.g. PerceptionSimulation uses them.
 
         //the braces make sure sure the struct is zero-initialized
         D3D11_TEXTURE2D_DESC stagingDesc = {};
@@ -64,7 +50,7 @@ namespace hololight {
         if (FAILED(hr)) {
             //TODO: something sensible, but constructors can't return values...meh.
             //maybe we should write a static Create method that can fail instead.
-            RTC_LOG(LS_ERROR) << "Failed creating the staging texture. The D3D11 frame source will not work.";
+            RTC_LOG_GLE_EX(LS_ERROR, hr) << "Failed creating the staging texture. The D3D11 frame source will not work.";
         }
 
         //not sure if we need to notify...but maybe we could call setstate from the outside.
@@ -108,13 +94,11 @@ namespace hololight {
     }
 
     bool D3D11VideoFrameSource::is_screencast() const {
-        //this needs to be tested how well it works with remoting content
         return is_screencast_;
     }
 
     rtc::AdaptedVideoTrackSource::SourceState D3D11VideoFrameSource::state() const {
-        // return state_;
-        return rtc::AdaptedVideoTrackSource::SourceState::kLive; //TODO: revert and test this
+        return state_;
     }
 
     bool D3D11VideoFrameSource::remote() const {
