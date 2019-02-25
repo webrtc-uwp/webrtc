@@ -19,6 +19,7 @@ namespace hololight {
         return VideoFrameBuffer::Type::kNative;
     }
 
+    //I think this constructor can be deleted.
     D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(ID3D11DeviceContext* context, ID3D11Texture2D* staging_texture, ID3D11Texture2D* rendered_image, int width, int height) 
     : width_(width), height_(height) {
         staging_texture_.copy_from(staging_texture);

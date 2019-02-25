@@ -14,6 +14,10 @@ namespace hololight {
 
     D3D11VideoFrameSource::D3D11VideoFrameSource(ID3D11Device* device, ID3D11DeviceContext* context, D3D11_TEXTURE2D_DESC* desc, rtc::Thread* signaling_thread)
     : signaling_thread_(signaling_thread), is_screencast_(false)  {
+        assert(device);
+        assert(context);
+        assert(desc);
+
         device_.copy_from(device);
         context_.copy_from(context);
 
