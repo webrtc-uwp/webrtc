@@ -904,14 +904,6 @@ if (is_win || is_android) {
       "remoting/video_observer.h"
     ]
 
-    if (is_win) {
-      sources += [
-        "remoting/d3d11_frame_source.h",
-        "remoting/d3d11_frame_source.cc",
-        "remoting/d3d11_frame_buffer.h",
-        "remoting/d3d11_frame_buffer.cc"
-      ]
-    }
     if (is_android) {
       sources += [
         "remoting/classreferenceholder.cc",
