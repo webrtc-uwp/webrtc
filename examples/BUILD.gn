@@ -906,6 +906,8 @@ if (is_win || is_android) {
       "remoting/remoting_api.cc",
       "remoting/connection.h",
       "remoting/connection.cc",
+      "remoting/config.h",
+      "remoting/error.h",
     ]
 
     if (is_android) {
