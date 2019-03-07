@@ -116,81 +116,91 @@ bool AddIceCandidate(const int peer_connection_id,
 
 // Register callback functions.
 bool RegisterOnLocalI420FrameReady(int peer_connection_id,
-                                   I420FRAMEREADY_CALLBACK callback) {
+                                   I420FRAMEREADY_CALLBACK callback,
+                                   const void* p_user_data = nullptr) {
   if (!g_peer_connection_map.count(peer_connection_id))
     return false;
 
   g_peer_connection_map[peer_connection_id]->RegisterOnLocalI420FrameReady(
-      callback);
+      callback,
+      p_user_data);
   return true;
 }
 
 bool RegisterOnRemoteI420FrameReady(int peer_connection_id,
-                                    I420FRAMEREADY_CALLBACK callback) {
+                                    I420FRAMEREADY_CALLBACK callback,
+                                    const void* p_user_data = nullptr) {
   if (!g_peer_connection_map.count(peer_connection_id))
     return false;
 
   g_peer_connection_map[peer_connection_id]->RegisterOnRemoteI420FrameReady(
-      callback);
+      callback, p_user_data);
   return true;
 }
 
 bool RegisterOnLocalDataChannelReady(int peer_connection_id,
-                                     LOCALDATACHANNELREADY_CALLBACK callback) {
+                                     LOCALDATACHANNELREADY_CALLBACK callback,
+                                     const void* p_user_data = nullptr) {
   if (!g_peer_connection_map.count(peer_connection_id))
     return false;
 
   g_peer_connection_map[peer_connection_id]->RegisterOnLocalDataChannelReady(
-      callback);
+      callback, p_user_data);
   return true;
 }
 
 bool RegisterOnDataFromDataChannelReady(
     int peer_connection_id,
-    DATAFROMEDATECHANNELREADY_CALLBACK callback) {
+    DATAFROMEDATECHANNELREADY_CALLBACK callback,
+    const void* p_user_data = nullptr) {
   if (!g_peer_connection_map.count(peer_connection_id))
     return false;
 
   g_peer_connection_map[peer_connection_id]->RegisterOnDataFromDataChannelReady(
-      callback);
+      callback, p_user_data);
   return true;
 }
 
-bool RegisterOnFailure(int peer_connection_id, FAILURE_CALLBACK callback) {
+bool RegisterOnFailure(int peer_connection_id,
+                       FAILURE_CALLBACK callback,
+                       const void* p_user_data = nullptr) {
   if (!g_peer_connection_map.count(peer_connection_id))
     return false;
 
-  g_peer_connection_map[peer_connection_id]->RegisterOnFailure(callback);
+  g_peer_connection_map[peer_connection_id]->RegisterOnFailure(callback, p_user_data);
   return true;
 }
 
 bool RegisterOnAudioBusReady(int peer_connection_id,
-                             AUDIOBUSREADY_CALLBACK callback) {
+                             AUDIOBUSREADY_CALLBACK callback,
+                             const void* p_user_data = nullptr) {
   if (!g_peer_connection_map.count(peer_connection_id))
     return false;
 
-  g_peer_connection_map[peer_connection_id]->RegisterOnAudioBusReady(callback);
+  g_peer_connection_map[peer_connection_id]->RegisterOnAudioBusReady(callback, p_user_data);
   return true;
 }
 
 // Singnaling channel related functions.
 bool RegisterOnLocalSdpReadytoSend(int peer_connection_id,
-                                   LOCALSDPREADYTOSEND_CALLBACK callback) {
+                                   LOCALSDPREADYTOSEND_CALLBACK callback,
+                                   const void* p_user_data = nullptr) {
   if (!g_peer_connection_map.count(peer_connection_id))
     return false;
 
   g_peer_connection_map[peer_connection_id]->RegisterOnLocalSdpReadytoSend(
-      callback);
+      callback, p_user_data);
   return true;
 }
 
 bool RegisterOnIceCandiateReadytoSend(
     int peer_connection_id,
-    ICECANDIDATEREADYTOSEND_CALLBACK callback) {
+    ICECANDIDATEREADYTOSEND_CALLBACK callback,
+    const void* p_user_data = nullptr) {
   if (!g_peer_connection_map.count(peer_connection_id))
     return false;
 
   g_peer_connection_map[peer_connection_id]->RegisterOnIceCandiateReadytoSend(
-      callback);
+      callback, p_user_data);
   return true;
 }

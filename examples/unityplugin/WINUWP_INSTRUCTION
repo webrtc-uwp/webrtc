@@ -1,0 +1,13 @@
+Instruction of running webrtc_unity_plugin on Winuwp Unity
+
+Compilation must be done using visual-studio wrapper project at this time, with `WINUWP` preprocessor definition.
+To learn more, and to find an existing visual studio wrapper, see https://github.com/webrtc-uwp/webrtc-windows/tree/master/projects/msvc.
+
+After building, copy webrtc_unity_plugin under Assets/Plugins/WSA/x86_64 (or x86, depending on target architecture)
+
+In Unity winuwp player settings, ensure the following capabilities are allowed:
++ InternetClient
++ InternetClientServer
++ PrivateNetworkClientServer
++ Webcam
++ Microphone

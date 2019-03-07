@@ -33,6 +33,17 @@
 #include "sdk/android/src/jni/jni_helpers.h"
 #endif
 
+#if defined(WINUWP)
+#include <winrt/windows.applicationmodel.core.h>
+#include "../windows/wrapper/impl_org_webRtc_EventQueue.h"
+#include "../windows/wrapper/impl_org_webRtc_VideoCapturer.h"
+#include "../windows/wrapper/impl_org_webRtc_VideoDeviceInfo.h"
+#include "../windows/wrapper/impl_org_webRtc_WebRtcFactory.h"
+#include "../windows/wrapper/impl_org_webRtc_WebRtcFactoryConfiguration.h"
+#include "../windows/wrapper/impl_org_webRtc_WebRtcLib.h"
+#include "../windows/wrapper/impl_org_webRtc_WebRtcLibConfiguration.h"
+#endif
+
 // Names used for media stream ids.
 const char kAudioLabel[] = "audio_label";
 const char kVideoLabel[] = "video_label";
@@ -49,6 +60,9 @@ static rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
 // relies on the app to dispose the capturer when the peerconnection
 // shuts down.
 static jobject g_camera = nullptr;
+#elif defined(WINUWP)
+// Winuwp relies on a global-scoped factory wrapper
+static std::unique_ptr<wrapper::impl::org::webRtc::WebRtcFactory> g_winuwp_factory;
 #endif
 
 std::string GetEnvVarOrDefault(const char* env_var_name,
@@ -95,6 +109,40 @@ bool SimplePeerConnection::InitializePeerConnection(const char** turn_urls,
   RTC_DCHECK(peer_connection_.get() == nullptr);
 
   if (g_peer_connection_factory == nullptr) {
+#if defined(WINUWP)
+	  // note: this must be done in the ui thread - so up in managed land, call us there first
+      auto mw =
+          winrt::Windows::ApplicationModel::Core::CoreApplication::MainView();
+      auto cw = mw.CoreWindow();
+      auto dispatcher = cw.Dispatcher();
+      auto dispatcherQueue =
+          wrapper::impl::org::webRtc::EventQueue::toWrapper(dispatcher);
+
+      // create the lib configuration
+      auto libConfig = std::make_shared<
+          wrapper::impl::org::webRtc::WebRtcLibConfiguration>();
+      libConfig->queue = dispatcherQueue;
+
+      // setup the lib
+      wrapper::impl::org::webRtc::WebRtcLib::setup(libConfig);
+
+      // create the factory configuration
+      auto factoryConfig = std::make_shared<
+          wrapper::impl::org::webRtc::WebRtcFactoryConfiguration>();
+      factoryConfig->audioCapturingEnabled = true;
+      factoryConfig->audioRenderingEnabled = true;
+      factoryConfig->enableAudioBufferEvents = true;
+
+      // setup the factory
+      g_winuwp_factory =
+          std::make_unique<wrapper::impl::org::webRtc::WebRtcFactory>();
+
+      g_winuwp_factory->wrapper_init_org_webRtc_WebRtcFactory(factoryConfig);
+      g_winuwp_factory->setup();
+      
+      // capture the factory from the setup helper
+      g_peer_connection_factory = g_winuwp_factory->peerConnectionFactory();
+#else
     g_worker_thread.reset(new rtc::Thread());
     g_worker_thread->Start();
     g_signaling_thread.reset(new rtc::Thread());
@@ -111,6 +159,7 @@ bool SimplePeerConnection::InitializePeerConnection(const char** turn_urls,
             new webrtc::MultiplexDecoderFactory(
                 absl::make_unique<webrtc::InternalDecoderFactory>())),
         nullptr, nullptr);
+#endif
   }
   if (!g_peer_connection_factory.get()) {
     DeletePeerConnection();
@@ -196,8 +245,12 @@ void SimplePeerConnection::DeletePeerConnection() {
 
   if (g_peer_count == 0) {
     g_peer_connection_factory = nullptr;
+#if defined(WINUWP)
+    g_winuwp_factory = nullptr;
+#else
     g_signaling_thread.reset();
     g_worker_thread.reset();
+#endif
   }
 }
 
@@ -236,7 +289,7 @@ void SimplePeerConnection::OnSuccess(
   desc->ToString(&sdp);
 
   if (OnLocalSdpReady)
-    OnLocalSdpReady(desc->type().c_str(), sdp.c_str());
+    OnLocalSdpReady(desc->type().c_str(), sdp.c_str(), OnLocalSdpReady_userData);
 }
 
 void SimplePeerConnection::OnFailure(webrtc::RTCError error) {
@@ -244,7 +297,7 @@ void SimplePeerConnection::OnFailure(webrtc::RTCError error) {
 
   // TODO(hta): include error.type in the message
   if (OnFailureMessage)
-    OnFailureMessage(error.message());
+    OnFailureMessage(error.message(), OnFailureMessage_userData);
 }
 
 void SimplePeerConnection::OnIceCandidate(
@@ -259,48 +312,62 @@ void SimplePeerConnection::OnIceCandidate(
 
   if (OnIceCandiateReady)
     OnIceCandiateReady(sdp.c_str(), candidate->sdp_mline_index(),
-                       candidate->sdp_mid().c_str());
+                       candidate->sdp_mid().c_str(), OnIceCandiateReady_userData);
 }
 
 void SimplePeerConnection::RegisterOnLocalI420FrameReady(
-    I420FRAMEREADY_CALLBACK callback) {
+    I420FRAMEREADY_CALLBACK callback,
+    const void* p_user_data = nullptr) {
   if (local_video_observer_)
-    local_video_observer_->SetVideoCallback(callback);
+    local_video_observer_->SetVideoCallback(callback, p_user_data);
 }
 
 void SimplePeerConnection::RegisterOnRemoteI420FrameReady(
-    I420FRAMEREADY_CALLBACK callback) {
+    I420FRAMEREADY_CALLBACK callback,
+    const void* p_user_data = nullptr) {
   if (remote_video_observer_)
-    remote_video_observer_->SetVideoCallback(callback);
+    remote_video_observer_->SetVideoCallback(callback, p_user_data);
 }
 
 void SimplePeerConnection::RegisterOnLocalDataChannelReady(
-    LOCALDATACHANNELREADY_CALLBACK callback) {
+    LOCALDATACHANNELREADY_CALLBACK callback,
+    const void* p_user_data = nullptr) {
   OnLocalDataChannelReady = callback;
+  OnLocalDataChannelReady_userData = p_user_data;
 }
 
 void SimplePeerConnection::RegisterOnDataFromDataChannelReady(
-    DATAFROMEDATECHANNELREADY_CALLBACK callback) {
+    DATAFROMEDATECHANNELREADY_CALLBACK callback,
+    const void* p_user_data = nullptr) {
   OnDataFromDataChannelReady = callback;
+  OnDataFromDataChannelReady_userData = p_user_data;
 }
 
-void SimplePeerConnection::RegisterOnFailure(FAILURE_CALLBACK callback) {
+void SimplePeerConnection::RegisterOnFailure(FAILURE_CALLBACK callback,
+                                             const void* p_user_data = nullptr) {
   OnFailureMessage = callback;
+  OnFailureMessage_userData = p_user_data;
 }
 
 void SimplePeerConnection::RegisterOnAudioBusReady(
-    AUDIOBUSREADY_CALLBACK callback) {
+    AUDIOBUSREADY_CALLBACK callback,
+    const void* p_user_data = nullptr) {
   OnAudioReady = callback;
+  OnAudioReady_userData = p_user_data;
 }
 
 void SimplePeerConnection::RegisterOnLocalSdpReadytoSend(
-    LOCALSDPREADYTOSEND_CALLBACK callback) {
+    LOCALSDPREADYTOSEND_CALLBACK callback,
+    const void* p_user_data = nullptr) {
   OnLocalSdpReady = callback;
+  OnLocalSdpReady_userData = p_user_data;
 }
 
 void SimplePeerConnection::RegisterOnIceCandiateReadytoSend(
-    ICECANDIDATEREADYTOSEND_CALLBACK callback) {
+    ICECANDIDATEREADYTOSEND_CALLBACK callback,
+    const void* p_user_data = nullptr) {
   OnIceCandiateReady = callback;
+  OnIceCandiateReady_userData = p_user_data;
 }
 
 bool SimplePeerConnection::SetRemoteDescription(const char* type,
@@ -389,6 +456,32 @@ void SimplePeerConnection::OnAddStream(
 
 std::unique_ptr<cricket::VideoCapturer>
 SimplePeerConnection::OpenVideoCaptureDevice() {
+#if defined(WINUWP)
+  // get devices
+  rtc::Event blockOnDevicesEvent(true, false);
+  auto vci = wrapper::impl::org::webRtc::VideoCapturer::getDevices();
+  vci->thenClosure([&blockOnDevicesEvent] { blockOnDevicesEvent.Set(); });
+  blockOnDevicesEvent.Wait(rtc::Event::kForever);
+  auto deviceList = vci->value();
+
+  for (auto it = deviceList->begin(); it != deviceList->end(); ++it) {
+    auto vdi = *it;
+    auto devInfo =
+        wrapper::impl::org::webRtc::VideoDeviceInfo::toNative_winrt(vdi);
+    auto name = devInfo.Name().c_str();
+    auto id = devInfo.Id().c_str();
+
+    auto vcd =
+        wrapper::impl::org::webRtc::VideoCapturer::create(name, id, false);
+
+    if (vcd != nullptr) {
+      auto nativeVcd = wrapper::impl::org::webRtc::VideoCapturer::toNative(vcd);
+
+      return nativeVcd;
+    }
+  }
+  return nullptr;
+#else
   std::vector<std::string> device_names;
   {
     std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
@@ -416,6 +509,7 @@ SimplePeerConnection::OpenVideoCaptureDevice() {
     }
   }
   return capturer;
+#endif
 }
 
 void SimplePeerConnection::AddStreams(bool audio_only) {
@@ -538,7 +632,7 @@ void SimplePeerConnection::OnStateChange() {
     webrtc::DataChannelInterface::DataState state = data_channel_->state();
     if (state == webrtc::DataChannelInterface::kOpen) {
       if (OnLocalDataChannelReady)
-        OnLocalDataChannelReady();
+        OnLocalDataChannelReady(OnLocalDataChannelReady_userData);
       RTC_LOG(LS_INFO) << "Data channel is open";
     }
   }
@@ -551,7 +645,7 @@ void SimplePeerConnection::OnMessage(const webrtc::DataBuffer& buffer) {
   memcpy(msg, buffer.data.data(), size);
   msg[size] = 0;
   if (OnDataFromDataChannelReady)
-    OnDataFromDataChannelReady(msg);
+    OnDataFromDataChannelReady(msg, OnDataFromDataChannelReady_userData);
   delete[] msg;
 }
 
@@ -564,7 +658,7 @@ void SimplePeerConnection::OnData(const void* audio_data,
   if (OnAudioReady)
     OnAudioReady(audio_data, bits_per_sample, sample_rate,
                  static_cast<int>(number_of_channels),
-                 static_cast<int>(number_of_frames));
+                 static_cast<int>(number_of_frames), OnAudioReady_userData);
 }
 
 std::vector<uint32_t> SimplePeerConnection::GetRemoteAudioTrackSsrcs() {

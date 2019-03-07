@@ -44,16 +44,23 @@ class SimplePeerConnection : public webrtc::PeerConnectionObserver,
   void SetAudioControl(bool is_mute, bool is_record);
 
   // Register callback functions.
-  void RegisterOnLocalI420FrameReady(I420FRAMEREADY_CALLBACK callback);
-  void RegisterOnRemoteI420FrameReady(I420FRAMEREADY_CALLBACK callback);
-  void RegisterOnLocalDataChannelReady(LOCALDATACHANNELREADY_CALLBACK callback);
+  void RegisterOnLocalI420FrameReady(I420FRAMEREADY_CALLBACK callback,
+                                     const void* p_user_data);
+  void RegisterOnRemoteI420FrameReady(I420FRAMEREADY_CALLBACK callback,
+                                      const void* p_user_data);
+  void RegisterOnLocalDataChannelReady(LOCALDATACHANNELREADY_CALLBACK callback,
+                                       const void* p_user_data);
   void RegisterOnDataFromDataChannelReady(
-      DATAFROMEDATECHANNELREADY_CALLBACK callback);
-  void RegisterOnFailure(FAILURE_CALLBACK callback);
-  void RegisterOnAudioBusReady(AUDIOBUSREADY_CALLBACK callback);
-  void RegisterOnLocalSdpReadytoSend(LOCALSDPREADYTOSEND_CALLBACK callback);
+      DATAFROMEDATECHANNELREADY_CALLBACK callback,
+      const void* p_user_data);
+  void RegisterOnFailure(FAILURE_CALLBACK callback, const void* p_user_data);
+  void RegisterOnAudioBusReady(AUDIOBUSREADY_CALLBACK callback,
+                               const void* p_user_data);
+  void RegisterOnLocalSdpReadytoSend(LOCALSDPREADYTOSEND_CALLBACK callback,
+                                     const void* p_user_data);
   void RegisterOnIceCandiateReadytoSend(
-      ICECANDIDATEREADYTOSEND_CALLBACK callback);
+      ICECANDIDATEREADYTOSEND_CALLBACK callback,
+      const void* p_user_data);
   bool SetRemoteDescription(const char* type, const char* sdp);
   bool AddIceCandidate(const char* sdp,
                        const int sdp_mlineindex,
@@ -115,14 +122,20 @@ class SimplePeerConnection : public webrtc::PeerConnectionObserver,
 
   webrtc::MediaStreamInterface* remote_stream_ = nullptr;
   webrtc::PeerConnectionInterface::RTCConfiguration config_;
-
+  
   LOCALDATACHANNELREADY_CALLBACK OnLocalDataChannelReady = nullptr;
+  const void* OnLocalDataChannelReady_userData = nullptr;
   DATAFROMEDATECHANNELREADY_CALLBACK OnDataFromDataChannelReady = nullptr;
+  const void* OnDataFromDataChannelReady_userData = nullptr;
   FAILURE_CALLBACK OnFailureMessage = nullptr;
+  const void* OnFailureMessage_userData = nullptr;
   AUDIOBUSREADY_CALLBACK OnAudioReady = nullptr;
+  const void* OnAudioReady_userData = nullptr;
 
   LOCALSDPREADYTOSEND_CALLBACK OnLocalSdpReady = nullptr;
+  const void* OnLocalSdpReady_userData = nullptr;
   ICECANDIDATEREADYTOSEND_CALLBACK OnIceCandiateReady = nullptr;
+  const void* OnIceCandiateReady_userData = nullptr;
 
   bool is_mute_audio_ = false;
   bool is_record_audio_ = false;

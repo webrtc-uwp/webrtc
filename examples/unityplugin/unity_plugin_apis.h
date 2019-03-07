@@ -25,19 +25,26 @@ typedef void (*I420FRAMEREADY_CALLBACK)(const uint8_t* data_y,
                                         int stride_v,
                                         int stride_a,
                                         uint32_t width,
-                                        uint32_t height);
-typedef void (*LOCALDATACHANNELREADY_CALLBACK)();
-typedef void (*DATAFROMEDATECHANNELREADY_CALLBACK)(const char* msg);
-typedef void (*FAILURE_CALLBACK)(const char* msg);
-typedef void (*LOCALSDPREADYTOSEND_CALLBACK)(const char* type, const char* sdp);
+                                        uint32_t height,
+                                        const void* p_user_data);
+typedef void (*LOCALDATACHANNELREADY_CALLBACK)(const void* p_user_data);
+typedef void (*DATAFROMEDATECHANNELREADY_CALLBACK)(
+    const char* msg,
+    const void* p_user_data);
+typedef void (*FAILURE_CALLBACK)(const char* msg, const void* p_user_data);
+typedef void (*LOCALSDPREADYTOSEND_CALLBACK)(const char* type,
+                                             const char* sdp,
+                                             const void* p_user_data);
 typedef void (*ICECANDIDATEREADYTOSEND_CALLBACK)(const char* candidate,
                                                  const int sdp_mline_index,
-                                                 const char* sdp_mid);
+                                                 const char* sdp_mid,
+                                                 const void* p_user_data);
 typedef void (*AUDIOBUSREADY_CALLBACK)(const void* audio_data,
                                        int bits_per_sample,
                                        int sample_rate,
                                        int number_of_channels,
-                                       int number_of_frames);
+                                       int number_of_frames,
+                                       const void* p_user_data);
 
 #if defined(WEBRTC_WIN)
 #define WEBRTC_PLUGIN_API __declspec(dllexport)
@@ -83,26 +90,34 @@ WEBRTC_PLUGIN_API bool AddIceCandidate(const int peer_connection_id,
 // Register callback functions.
 WEBRTC_PLUGIN_API bool RegisterOnLocalI420FrameReady(
     int peer_connection_id,
-    I420FRAMEREADY_CALLBACK callback);
+    I420FRAMEREADY_CALLBACK callback,
+    const void* p_user_data);
 WEBRTC_PLUGIN_API bool RegisterOnRemoteI420FrameReady(
     int peer_connection_id,
-    I420FRAMEREADY_CALLBACK callback);
+    I420FRAMEREADY_CALLBACK callback,
+    const void* p_user_data);
 WEBRTC_PLUGIN_API bool RegisterOnLocalDataChannelReady(
     int peer_connection_id,
-    LOCALDATACHANNELREADY_CALLBACK callback);
+    LOCALDATACHANNELREADY_CALLBACK callback,
+    const void* p_user_data);
 WEBRTC_PLUGIN_API bool RegisterOnDataFromDataChannelReady(
     int peer_connection_id,
-    DATAFROMEDATECHANNELREADY_CALLBACK callback);
+    DATAFROMEDATECHANNELREADY_CALLBACK callback,
+    const void* p_user_data);
 WEBRTC_PLUGIN_API bool RegisterOnFailure(int peer_connection_id,
-                                         FAILURE_CALLBACK callback);
+                                         FAILURE_CALLBACK callback,
+                                         const void* p_user_data);
 WEBRTC_PLUGIN_API bool RegisterOnAudioBusReady(int peer_connection_id,
-                                               AUDIOBUSREADY_CALLBACK callback);
+                                               AUDIOBUSREADY_CALLBACK callback,
+                                               const void* p_user_data);
 WEBRTC_PLUGIN_API bool RegisterOnLocalSdpReadytoSend(
     int peer_connection_id,
-    LOCALSDPREADYTOSEND_CALLBACK callback);
+    LOCALSDPREADYTOSEND_CALLBACK callback,
+    const void* p_user_data);
 WEBRTC_PLUGIN_API bool RegisterOnIceCandiateReadytoSend(
     int peer_connection_id,
-    ICECANDIDATEREADYTOSEND_CALLBACK callback);
+    ICECANDIDATEREADYTOSEND_CALLBACK callback,
+    const void* p_user_data);
 }
 
 #endif  // EXAMPLES_UNITYPLUGIN_UNITY_PLUGIN_APIS_H_
