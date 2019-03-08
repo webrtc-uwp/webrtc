@@ -12,11 +12,9 @@
 #include "third_party/libyuv/include/libyuv/convert.h"
 
 #include "d3d11_frame_source.h"
-#include "d3d11_frame_buffer.h"
+#include "api/video/d3d11_frame_buffer.h"
 
-using webrtc::VideoFrame;
-
-namespace hololight {
+namespace webrtc {
     rtc::scoped_refptr<D3D11VideoFrameSource> 
         D3D11VideoFrameSource::Create(ID3D11Device* device, ID3D11DeviceContext* context, D3D11_TEXTURE2D_DESC* desc, rtc::Thread* signaling_thread) {
             return new rtc::RefCountedObject<D3D11VideoFrameSource>(device, context, desc, signaling_thread);

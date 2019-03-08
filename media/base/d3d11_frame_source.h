@@ -8,8 +8,8 @@
 *  be found in the AUTHORS file in the root of the source tree.
 */
 
-#ifndef HOLOLIGHT_D3D11VIDEOFRAMESOURCE
-#define HOLOLIGHT_D3D11VIDEOFRAMESOURCE
+#ifndef WEBRTC_D3D11VIDEOFRAMESOURCE
+#define WEBRTC_D3D11VIDEOFRAMESOURCE
 
 #include "media/base/adaptedvideotracksource.h"
 #include "rtc_base/asyncinvoker.h"
@@ -17,12 +17,12 @@
 #include <winrt/base.h>
 #include <d3d11.h>
 
-namespace hololight {
+namespace webrtc {
     class D3D11VideoFrameSource : public rtc::AdaptedVideoTrackSource {
         //Threading in this lib is all over the place, and engines have their own threading considerations
         //so let's not forget this. We might need a thread checker like android or other impls.
         public:
-        static rtc::scoped_refptr<hololight::D3D11VideoFrameSource> 
+        static rtc::scoped_refptr<webrtc::D3D11VideoFrameSource> 
             Create(ID3D11Device* device, ID3D11DeviceContext* context, D3D11_TEXTURE2D_DESC* desc, rtc::Thread* signaling_thread);
         
         void OnFrameCaptured(ID3D11Texture2D* rendered_image);
@@ -58,4 +58,4 @@ namespace hololight {
     };
 }
 
-#endif // HOLOLIGHT_D3D11VIDEOFRAMESOURCE
+#endif // WEBRTC_D3D11VIDEOFRAMESOURCE

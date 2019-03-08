@@ -113,13 +113,14 @@ rtc_static_library("rtc_media_base") {
     "base/videocommon.h",
     "base/videosourcebase.cc",
     "base/videosourcebase.h",
-
-    #d3d11 frame source files, move these where it makes sense
-    "base/d3d11_frame_buffer.h",
-    "base/d3d11_frame_buffer.cc",
-    "base/d3d11_frame_source.cc",
-    "base/d3d11_frame_source.h",
   ]
+
+  if (is_win) {
+    sources += [
+      "base/d3d11_frame_source.cc",
+      "base/d3d11_frame_source.h",
+    ]
+  }
 
   if (!build_with_chromium && is_clang) {
     # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).

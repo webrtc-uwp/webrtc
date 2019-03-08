@@ -8,8 +8,8 @@
 *  be found in the AUTHORS file in the root of the source tree.
 */
 
-#ifndef HOLOLIGHT_D3D11VIDEOFRAMEBUFFER
-#define HOLOLIGHT_D3D11VIDEOFRAMEBUFFER
+#ifndef WEBRTC_D3D11VIDEOFRAMEBUFFER
+#define WEBRTC_D3D11VIDEOFRAMEBUFFER
 
 #include <d3d11.h>
 #include <winrt/base.h>
@@ -17,7 +17,7 @@
 #include "api/video/video_frame_buffer.h"
 #include "rtc_base/refcountedobject.h"
 
-namespace hololight {
+namespace webrtc {
     class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
         public:
         //TODO: look up if refcounting is needed/common for buffers. It is for sources but
@@ -47,4 +47,4 @@ namespace hololight {
     };
 }
 
-#endif // HOLOLIGHT_D3D11VIDEOFRAMEBUFFER
+#endif // WEBRTC_D3D11VIDEOFRAMEBUFFER

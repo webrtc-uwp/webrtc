@@ -182,3 +182,16 @@ rtc_source_set("video_stream_encoder_create") {
     "//third_party/abseil-cpp/absl/memory",
   ]
 }
+
+if (is_win) {
+  rtc_source_set("d3d11_frame_buffer") {
+    sources = [
+      "d3d11_frame_buffer.h",
+      "d3d11_frame_buffer.cc",
+    ]
+
+    deps = [
+      "//third_party/libyuv"
+    ]
+  }
+}

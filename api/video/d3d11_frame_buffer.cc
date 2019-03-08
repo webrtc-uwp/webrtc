@@ -13,9 +13,7 @@
 #include "rtc_base/logging.h"
 #include "api/video/i420_buffer.h"
 
-using namespace webrtc;
-
-namespace hololight {
+namespace webrtc {
     rtc::scoped_refptr<D3D11VideoFrameBuffer> D3D11VideoFrameBuffer::Create(ID3D11DeviceContext* context, ID3D11Texture2D* staging_texture, ID3D11Texture2D* rendered_image, int width, int height) {
         return new rtc::RefCountedObject<D3D11VideoFrameBuffer>(context, staging_texture, rendered_image, width, height);
     }
