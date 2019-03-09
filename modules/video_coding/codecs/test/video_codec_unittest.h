@@ -99,6 +99,10 @@ class VideoCodecUnitTest : public ::testing::Test {
   bool WaitForDecodedFrame(std::unique_ptr<VideoFrame>* frame,
                            absl::optional<uint8_t>* qp);
 
+  bool TryWaitForDecodedFrame(
+      std::unique_ptr<VideoFrame>* frame,
+      absl::optional<uint8_t>* qp);
+
   size_t GetNumEncodedFrames();
 
   VideoCodec codec_settings_;
@@ -108,6 +112,9 @@ class VideoCodecUnitTest : public ::testing::Test {
   std::unique_ptr<test::FrameGenerator> input_frame_generator_;
 
  private:
+  bool ReadDecodedFrame(std::unique_ptr<VideoFrame>* frame,
+                        absl::optional<uint8_t>* qp);
+
   FakeEncodeCompleteCallback encode_complete_callback_;
   FakeDecodeCompleteCallback decode_complete_callback_;
 
