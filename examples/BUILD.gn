@@ -907,7 +907,9 @@ if (is_win || is_android) {
       "remoting/connection.h",
       "remoting/connection.cc",
       "remoting/config.h",
+      "remoting/config.cc",
       "remoting/error.h",
+      "remoting/tl/expected.hpp"
     ]
 
     if (is_android) {
@@ -924,7 +926,7 @@ if (is_win || is_android) {
       suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
     }
     if (is_win) {
-      cflags = [ "/std:c++17" ]
+      cflags = [ "/std:c++17", "/EHsc" ] # exceptions are used in cppwinrt lib, warning as error doesn't let us build, so here goes...
       configs += [ "//build/config/win:windowed" ]
     }
     deps = [
@@ -957,7 +959,7 @@ if (is_win || is_android) {
 
 if (is_android) {
   rtc_android_library("webrtc_unity_java") {
-    java_files = [ "remoting/java/src/org/webrtc/UnityUtility.java" ]
+    java_files = [ "unityplugin/java/src/org/webrtc/UnityUtility.java" ]
     deps = [
       "../rtc_base:base_java",
       "../sdk/android:libjingle_peerconnection_java",
