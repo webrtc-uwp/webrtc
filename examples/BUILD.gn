@@ -897,7 +897,7 @@ if (is_win || is_android) {
 
 if (is_android) {
   rtc_android_library("webrtc_unity_java") {
-    java_files = [ "remoting/java/src/org/webrtc/UnityUtility.java" ]
+    java_files = [ "unityplugin/java/src/org/webrtc/UnityUtility.java" ]
     deps = [
       "../rtc_base:base_java",
       "../sdk/android:libjingle_peerconnection_java",

@@ -119,6 +119,8 @@ rtc_static_library("rtc_media_base") {
     sources += [
       "base/d3d11_frame_source.cc",
       "base/d3d11_frame_source.h",
+      "base/d3d11_frame_buffer.h",
+      "base/d3d11_frame_buffer.cc",
     ]
   }
 

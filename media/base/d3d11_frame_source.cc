@@ -12,7 +12,7 @@
 #include "third_party/libyuv/include/libyuv/convert.h"
 
 #include "d3d11_frame_source.h"
-#include "api/video/d3d11_frame_buffer.h"
+#include "d3d11_frame_buffer.h"
 
 namespace webrtc {
     rtc::scoped_refptr<D3D11VideoFrameSource> 
