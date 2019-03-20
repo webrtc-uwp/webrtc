@@ -115,17 +115,6 @@ rtc_static_library("rtc_media_base") {
     "base/videosourcebase.h",
   ]
 
-  if (is_win) {
-    cflags = [ "/std:c++17", "/EHsc" ] #EHsc needed because cppwinrt uses exceptions
-    sources += [
-      #d3d11 frame source files, move these where it makes sense
-      "base/d3d11_frame_buffer.h",
-      "base/d3d11_frame_buffer.cc",
-      "base/d3d11_frame_source.cc",
-      "base/d3d11_frame_source.h",
-    ]
-  }
-
   if (!build_with_chromium && is_clang) {
     # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
     suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
@@ -157,6 +146,29 @@ rtc_static_library("rtc_media_base") {
 
   if (is_nacl) {
     deps += [ "//native_client_sdk/src/libraries/nacl_io" ]
+  }
+
+  if (is_win) {
+    deps += [ ":d3d_frame_source" ]
+  }
+}
+
+#actually it's better having this as a separate target because setting c++17 for rtc_media_base fucks up
+#something else in the lib and gives us link errors. not sure if this'll cause some explosions
+#at runtime, but it links fine.
+#also, we should maybe do that for the upstream version too.
+rtc_source_set("d3d_frame_source") {
+  if (is_win) {
+    cflags = [ "/std:c++17", "/EHsc" ] #EHsc needed because cppwinrt uses exceptions
+    sources = [
+      "base/d3d11_frame_buffer.h",
+      "base/d3d11_frame_buffer.cc",
+      "base/d3d11_frame_source.cc",
+      "base/d3d11_frame_source.h",
+    ]
+    deps = [
+      "//third_party/libyuv",
+    ]
   }
 }
 
