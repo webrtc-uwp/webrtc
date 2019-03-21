@@ -894,7 +894,8 @@ if (is_win || is_android) {
     }
   }
 
-  rtc_shared_library("remoting") {
+  #TODO: create separate target for rtc_shared_library as tests don't like dlls.
+  rtc_static_library("remoting") {
     sources = [
       #"remoting/simple_peer_connection.cc",
       #"remoting/simple_peer_connection.h",
@@ -963,10 +964,14 @@ if (is_win || is_android) {
   }
 
   rtc_test("remoting_tests") {
+    testonly = true
+    # test code needs to access real code which is c++17. well, fuck.
+    cflags = [ "/std:c++17", "/EHsc" ]
     sources = [
       "remoting/test/connection_unittest.cc",
     ]
     deps = [
+      "//examples:remoting",
       "//rtc_base:rtc_base_tests_main", #this one provides the main method for tests to run, otherwise the compiler cries
       "//testing/gmock",
       "//testing/gtest",
