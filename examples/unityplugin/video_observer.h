@@ -21,7 +21,7 @@ class VideoObserver : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
   VideoObserver() {}
   ~VideoObserver() {}
-  void SetVideoCallback(I420FRAMEREADY_CALLBACK callback);
+  void SetVideoCallback(I420FRAMEREADY_CALLBACK callback, const void* p_user_data);
 
  protected:
   // VideoSinkInterface implementation
@@ -29,6 +29,7 @@ class VideoObserver : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
 
  private:
   I420FRAMEREADY_CALLBACK OnI420FrameReady = nullptr;
+  const void* OnI420FrameReady_userData = nullptr;
   std::mutex mutex;
 };
 

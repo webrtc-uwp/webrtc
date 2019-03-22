@@ -10,9 +10,10 @@
 
 #include "examples/unityplugin/video_observer.h"
 
-void VideoObserver::SetVideoCallback(I420FRAMEREADY_CALLBACK callback) {
+void VideoObserver::SetVideoCallback(I420FRAMEREADY_CALLBACK callback, const void* p_user_data = nullptr) {
   std::lock_guard<std::mutex> lock(mutex);
   OnI420FrameReady = callback;
+  OnI420FrameReady_userData = p_user_data;
 }
 
 void VideoObserver::OnFrame(const webrtc::VideoFrame& frame) {
@@ -29,7 +30,7 @@ void VideoObserver::OnFrame(const webrtc::VideoFrame& frame) {
     OnI420FrameReady(i420_buffer->DataY(), i420_buffer->DataU(),
                      i420_buffer->DataV(), nullptr, i420_buffer->StrideY(),
                      i420_buffer->StrideU(), i420_buffer->StrideV(), 0,
-                     frame.width(), frame.height());
+                     frame.width(), frame.height(), OnI420FrameReady_userData);
 
   } else {
     // The buffer has alpha channel.
@@ -39,6 +40,6 @@ void VideoObserver::OnFrame(const webrtc::VideoFrame& frame) {
                      i420a_buffer->DataV(), i420a_buffer->DataA(),
                      i420a_buffer->StrideY(), i420a_buffer->StrideU(),
                      i420a_buffer->StrideV(), i420a_buffer->StrideA(),
-                     frame.width(), frame.height());
+                     frame.width(), frame.height(), OnI420FrameReady_userData);
   }
 }
