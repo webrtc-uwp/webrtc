@@ -329,7 +329,7 @@ rtc_static_library("rtc_audio_video") {
     "../system_wrappers:metrics_api",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
-  if (current_os == "winuwp") {
+  if (is_win) {
     deps += [ "//third_party/winuwp_h264:winuwp_h264" ]
   }
 }
