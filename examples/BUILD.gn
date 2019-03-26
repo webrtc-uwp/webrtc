@@ -910,7 +910,19 @@ if (is_win || is_android) {
       "remoting/config.h",
       "remoting/config.cc",
       "remoting/error.h",
-      "remoting/tl/expected.hpp"
+      "remoting/tl/expected.hpp",
+      # this could become a separate target at some point
+      "remoting/signaling/factories/signaling_factory.h",
+      "remoting/signaling/factories/signaling_factory.cc",
+      "remoting/signaling/impl/json_serializer.h",
+      "remoting/signaling/impl/json_serializer.cc",
+      "remoting/signaling/impl/uwp_tcp_relay.h",
+      "remoting/signaling/impl/uwp_tcp_relay.cc",
+      "remoting/signaling/serializer.h",
+      "remoting/signaling/signaling_relay.h",
+      "remoting/util/string_utils.h",
+      "remoting/signaling/webrtc/webrtc_signaling_relay.h",
+      "remoting/signaling/webrtc/webrtc_signaling_relay.cc",
     ]
 
     if (is_android) {
@@ -945,6 +957,7 @@ if (is_win || is_android) {
       "../system_wrappers:metrics_default",
       "../system_wrappers:runtime_enabled_features_default",
       "//third_party/abseil-cpp/absl/memory",
+      "//third_party/jsoncpp",
     ]
 
     if (is_win) {
