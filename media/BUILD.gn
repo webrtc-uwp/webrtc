@@ -140,6 +140,10 @@ rtc_static_library("rtc_media_base") {
     "//third_party/abseil-cpp/absl/types:optional",
   ]
 
+  if (is_win) {
+    deps += [ "//third_party/winuwp_h264:winuwp_h264" ]
+  }
+
   if (!build_with_mozilla) {
     deps += [ "../p2p" ]
   }

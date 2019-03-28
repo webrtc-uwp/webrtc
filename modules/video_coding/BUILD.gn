@@ -700,6 +700,7 @@ if (rtc_include_tests) {
 
     sources = [
       "codecs/h264/test/h264_impl_unittest.cc",
+      "codecs/h264/test/h264_impl_win_unittest.cc",
       "codecs/multiplex/test/multiplex_adapter_unittest.cc",
       "codecs/test/video_encoder_decoder_instantiation_tests.cc",
       "codecs/test/videocodec_test_libvpx.cc",

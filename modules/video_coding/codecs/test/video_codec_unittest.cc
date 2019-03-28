@@ -138,10 +138,9 @@ bool VideoCodecUnitTest::WaitForEncodedFrames(
   }
 }
 
-bool VideoCodecUnitTest::WaitForDecodedFrame(std::unique_ptr<VideoFrame>* frame,
-                                             absl::optional<uint8_t>* qp) {
-  bool ret = decoded_frame_event_.Wait(kDecodeTimeoutMs);
-  EXPECT_TRUE(ret) << "Timed out while waiting for a decoded frame.";
+bool VideoCodecUnitTest::ReadDecodedFrame(std::unique_ptr<VideoFrame>* frame,
+	absl::optional<uint8_t>* qp) {
+
   // This becomes unsafe if there are multiple threads waiting for frames.
   rtc::CritScope lock(&decoded_frame_section_);
   EXPECT_TRUE(decoded_frame_);
@@ -153,6 +152,19 @@ bool VideoCodecUnitTest::WaitForDecodedFrame(std::unique_ptr<VideoFrame>* frame,
   } else {
     return false;
   }
+}
+
+bool VideoCodecUnitTest::TryWaitForDecodedFrame(std::unique_ptr<VideoFrame>* frame,
+                                             absl::optional<uint8_t>* qp) {
+  bool ret = decoded_frame_event_.Wait(kDecodeTimeoutMs);
+  return ret && ReadDecodedFrame(frame, qp);
+}
+
+bool VideoCodecUnitTest::WaitForDecodedFrame(std::unique_ptr<VideoFrame>* frame,
+                                             absl::optional<uint8_t>* qp) {
+  bool ret = decoded_frame_event_.Wait(kDecodeTimeoutMs);
+  EXPECT_TRUE(ret) << "Timed out while waiting for a decoded frame.";
+  return ReadDecodedFrame(frame, qp);
 }
 
 size_t VideoCodecUnitTest::GetNumEncodedFrames() {

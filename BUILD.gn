@@ -419,6 +419,7 @@ if (!build_with_chromium) {
         "logging",
         "p2p",
         "pc",
+        "//third_party/idl:idl",
         "stats",
       ]
     }
