@@ -147,7 +147,7 @@ std::string ProjectRootPath() {
 #if defined(WEBRTC_IOS)
   return IOSRootPath();
 #else
-  std::string path = WorkingDir();
+  std::string path = WorkingDir() + "\\..\\..\\..\\..";
   if (path == kFallbackPath) {
     return kCannotFindProjectRootDir;
   }
