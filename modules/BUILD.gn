@@ -97,7 +97,7 @@ if (rtc_include_tests) {
       "//testing/gtest",
     ]
 
-    if (rtc_desktop_capture_supported) {
+    if (rtc_desktop_capture_supported && current_os != "winuwp") {
       deps += [ "desktop_capture:desktop_capture_modules_tests" ]
     }
 
@@ -117,6 +117,7 @@ if (rtc_include_tests) {
     if (is_ios) {
       deps += [ ":modules_tests_bundle_data" ]
     }
+    
   }
 
   modules_unittests_resources = [
@@ -277,6 +278,13 @@ if (rtc_include_tests) {
       deps += [ ":modules_unittests_bundle_data" ]
       configs += [ "..:common_objc" ]
       ldflags = [ "-ObjC" ]
+    }
+    
+    if ( current_os == "winuwp" ) {
+      deps -= [ 
+        "audio_device:audio_device_unittests",
+        "desktop_capture:desktop_capture_unittests" 
+      ]
     }
   }
 }

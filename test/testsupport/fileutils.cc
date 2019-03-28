@@ -33,6 +33,9 @@
 #ifdef WINUWP
 #include <objbase.h>
 
+#include <Windows.Foundation.h>
+#include <winrt/Windows.Storage.h>
+
 #include "rtc_base/pathutils.h"
 #endif // WINUWP
 
@@ -174,10 +177,12 @@ std::string ProjectRootPath() {
 
 std::string OutputPath() {
 #if defined(WINUWP)
-  auto folder = Windows::Storage::ApplicationData::Current->LocalFolder;
+  //auto folder = Windows::Storage::ApplicationData::Current->LocalFolder;
+  auto folder = winrt::Windows::Storage::ApplicationData::Current().LocalFolder();
   wchar_t buffer[255];
-  wcsncpy_s(buffer, 255, folder->Path->Data(), _TRUNCATE);
-  return ToUtf8(buffer) + kPathDelimiter;
+  //wcsncpy_s(buffer, 255, folder->Path->Data(), _TRUNCATE);
+  wcsncpy_s(buffer, 255, folder.Path().c_str(), _TRUNCATE);
+  return rtc::ToUtf8(buffer) + kPathDelimiter;
 #elif defined(WEBRTC_IOS)
   return IOSOutputPath();
 #else
@@ -216,14 +221,14 @@ std::string TempFilename(const std::string& dir, const std::string& prefix) {
 
   // printf format for the filename, consists of prefix followed by guid.
   wchar_t* maskForFN = L"%s_%08x_%04x_%04x_%02x%02x_%02x%02x%02x%02x%02x%02x";
-  swprintf(filename, maskForFN, ToUtf16(prefix).c_str(), g.Data1, g.Data2, g.Data3,
+  swprintf(filename, maskForFN, rtc::ToUtf16(prefix).c_str(), g.Data1, g.Data2, g.Data3,
     UINT(g.Data4[0]), UINT(g.Data4[1]), UINT(g.Data4[2]), UINT(g.Data4[3]),
     UINT(g.Data4[4]), UINT(g.Data4[5]), UINT(g.Data4[6]), UINT(g.Data4[7]));
 
-  fullpath.AppendPathname(ToUtf8(filename));
+  fullpath.AppendPathname(rtc::ToUtf8(filename));
   // make sure to create the file
   ::CreateFile2(
-    ToUtf16(fullpath.pathname()).c_str(),
+    rtc::ToUtf16(fullpath.pathname()).c_str(),
     GENERIC_READ | GENERIC_WRITE,
     FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
     CREATE_NEW,

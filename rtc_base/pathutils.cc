@@ -150,6 +150,11 @@ bool Pathname::SetFilename(const std::string& filename) {
   }
 }
 
+void Pathname::AppendPathname(const std::string& pathname) {
+  std::string full_pathname(folder_);
+  full_pathname.append(pathname);
+  SetPathname(full_pathname);
+}
 ///////////////////////////////////////////////////////////////////////////////
 
 } // namespace rtc
