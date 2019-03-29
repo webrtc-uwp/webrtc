@@ -910,6 +910,7 @@ if (is_win || is_android) {
       "remoting/config.h",
       "remoting/config.cc",
       "remoting/error.h",
+      "remoting/sdp_observers.h",
       "remoting/tl/expected.hpp",
       # this could become a separate target at some point
       "remoting/signaling/factories/signaling_factory.h",
