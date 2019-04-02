@@ -178,12 +178,9 @@ std::string ProjectRootPath() {
 
 std::string OutputPath() {
 #if defined(WINUWP)
-  //auto folder = Windows::Storage::ApplicationData::Current->LocalFolder;
-  auto folder = winrt::Windows::Storage::ApplicationData::Current().LocalFolder();
-  wchar_t buffer[255];
-  //wcsncpy_s(buffer, 255, folder->Path->Data(), _TRUNCATE);
-  wcsncpy_s(buffer, 255, folder.Path().c_str(), _TRUNCATE);
-  return rtc::ToUtf8(buffer) + kPathDelimiter;
+  std::string path = WorkingDir() + kPathDelimiter;
+
+  return path;
 #elif defined(WEBRTC_IOS)
   return IOSOutputPath();
 #else
@@ -201,6 +198,7 @@ std::string OutputPath() {
 
 std::string WorkingDir() {
   char path_buffer[FILENAME_MAX];
+
   if (!GET_CURRENT_DIR(path_buffer, sizeof(path_buffer))) {
     fprintf(stderr, "Cannot get current directory!\n");
     return kFallbackPath;
