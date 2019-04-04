@@ -95,6 +95,19 @@ bool relative_dir_path_set = false;
 
 const char* kCannotFindProjectRootDir = "ERROR_CANNOT_FIND_PROJECT_ROOT_DIR";
 
+std::string DirName(const std::string& path) {
+  if (path.empty())
+    return "";
+  if (path == kPathDelimiter)
+    return path;
+
+  std::string result = path;
+  if (result.back() == *kPathDelimiter)
+    result.pop_back();  // Remove trailing separator.
+
+  return result.substr(0, result.find_last_of(kPathDelimiter));
+}
+
 void SetExecutablePath(const std::string& path) {
   std::string working_dir = WorkingDir();
   std::string temp_path = path;
@@ -146,25 +159,31 @@ std::string WorkingDir() {
 std::string ProjectRootPath() {
 #if defined(WEBRTC_IOS)
   return IOSRootPath();
-#else
+#endif //WEBRTC_IOS
+#if defined(WEBRTC_WIN) && !defined(WINUWP)
+  wchar_t buf[MAX_PATH];
+  buf[0] = 0;
+  if (GetModuleFileName(NULL, buf, MAX_PATH) == 0)
+    return kCannotFindProjectRootDir;
+
+  std::string exe_path = rtc::ToUtf8(std::wstring(buf));
+  std::string exe_dir = DirName(exe_path);
+  return DirName(DirName(exe_dir)) + kPathDelimiter;
+#else //defined(WEBRTC_WIN) && !defined(WINUWP)
   std::string path = WorkingDir() + "\\..\\..";
   printf("%s\n", path.c_str());
   if (path == kFallbackPath) {
     return kCannotFindProjectRootDir;
   }
-#ifdef WINUWP
+#if defined(WINUWP)
   return path + kPathDelimiter;
-#else // WINUWP
+#else // defined(WINUWP)
   if (relative_dir_path_set) {
     path = path + kPathDelimiter + relative_dir_path;
   }
   path = path + kPathDelimiter + ".." + kPathDelimiter + "..";
   char canonical_path[FILENAME_MAX];
-#ifdef WIN32
-  BOOL succeeded = PathCanonicalizeA(canonical_path, path.c_str());
-#else
   bool succeeded = realpath(path.c_str(), canonical_path) != NULL;
-#endif
   if (succeeded) {
     path = std::string(canonical_path) + kPathDelimiter;
     return path;
@@ -173,7 +192,7 @@ std::string ProjectRootPath() {
     return kCannotFindProjectRootDir;
   }
 #endif /* WINUWP */
-#endif
+#endif // //defined(WEBRTC_WIN) && !defined(WINUWP)
 }
 
 std::string OutputPath() {
