@@ -74,7 +74,7 @@ const char* kPathDelimiter = "/";
 
 #ifdef WEBRTC_ANDROID
 const char* kRootDirName = "/sdcard/chromium_tests_root/";
-#elif WINUWP
+#elif defined(WINUWP)
 const char* kProjectRootFileName = "";
 const char* kFallbackPath = "./";
 #else
