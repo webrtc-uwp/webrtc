@@ -275,6 +275,25 @@ std::string TempFilename(const std::string& dir, const std::string& prefix) {
   return ret;
 #endif
 }
+#if defined(WINUWP)
+std::string TempFilename2(const std::string& dir, const std::string& prefix) {
+  rtc::Pathname fullpath = dir;
+  GUID g;
+  CoCreateGuid(&g);
+  wchar_t filename[MAX_PATH];
+
+  // printf format for the filename, consists of prefix followed by guid.
+  wchar_t* maskForFN = L"%s_%08x_%04x_%04x_%02x%02x_%02x%02x%02x%02x%02x%02x";
+  swprintf(filename, maskForFN, rtc::ToUtf16(prefix).c_str(), g.Data1, g.Data2,
+           g.Data3, UINT(g.Data4[0]), UINT(g.Data4[1]), UINT(g.Data4[2]),
+           UINT(g.Data4[3]), UINT(g.Data4[4]), UINT(g.Data4[5]),
+           UINT(g.Data4[6]), UINT(g.Data4[7]));
+
+  fullpath.AppendPathname(rtc::ToUtf8(filename));
+
+  return fullpath.pathname();
+}
+#endif
 
 std::string GenerateTempFilename(const std::string& dir,
                                  const std::string& prefix) {
@@ -283,6 +302,12 @@ std::string GenerateTempFilename(const std::string& dir,
   return filename;
 }
 
+#if defined(WINUWP)
+std::string GenerateTempFilename2(const std::string& dir,
+                                 const std::string& prefix) {
+  return TempFilename2(dir, prefix);
+}
+#endif
 absl::optional<std::vector<std::string>> ReadDirectory(std::string path) {
   if (path.length() == 0)
     return absl::optional<std::vector<std::string>>();
@@ -365,7 +390,7 @@ bool RemoveDir(const std::string& directory_name) {
 
 bool RemoveFile(const std::string& file_name) {
 #ifdef WIN32
-  return DeleteFileA(file_name.c_str()) != FALSE;
+  return  DeleteFileA(file_name.c_str());
 #else
   return unlink(file_name.c_str()) == 0;
 #endif

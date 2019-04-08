@@ -241,6 +241,7 @@ std::string ResourceFilePath(const std::string& name, int sample_rate_hz) {
   rtc::StringBuilder ss;
   // Resource files are all stereo.
   ss << name << sample_rate_hz / 1000 << "_stereo";
+  std::string testPathMy = test::ResourcePath(ss.str(), "pcm");
   return test::ResourcePath(ss.str(), "pcm");
 }
 
