@@ -37,18 +37,12 @@ const double kOverUsingTimeThreshold = 10;
 const int kMinNumDeltas = 60;
 
 bool AdaptiveThresholdExperimentIsDisabled() {
-#ifdef WINUWP
-  // Don't use the Adaptive Threshold on WinUWP.
-  (void)kDisabledPrefixLength;
-  return true;
-#else // WINUWP
   std::string experiment_string =
       webrtc::field_trial::FindFullName(kAdaptiveThresholdExperiment);
   const size_t kMinExperimentLength = kDisabledPrefixLength;
   if (experiment_string.length() < kMinExperimentLength)
     return false;
   return experiment_string.substr(0, kDisabledPrefixLength) == kDisabledPrefix;
-#endif // WINUWP
 }
 
 // Gets thresholds from the experiment name following the format
