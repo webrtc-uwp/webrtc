@@ -964,7 +964,8 @@ void SocketTest::UdpReadyToSend(const IPAddress& loopback) {
   uint32_t start_ms = Time();
   int sent_packet_num = 0;
   int expected_error = EWOULDBLOCK;
-  while (start_ms + kTimeout > Time()) {
+  
+  while (start_ms + kTimeout > (uint32_t)Time()) {
     int ret = client->SendTo(test_packet.get(), test_packet_size, test_addr);
     ++sent_packet_num;
     if (ret != test_packet_size) {
