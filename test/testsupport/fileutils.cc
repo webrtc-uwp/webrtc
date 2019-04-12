@@ -75,7 +75,7 @@ const char* kPathDelimiter = "/";
 #ifdef WEBRTC_ANDROID
 const char* kRootDirName = "/sdcard/chromium_tests_root/";
 #elif defined(WINUWP)
-const char* kProjectRootFileName = "";
+//const char* kProjectRootFileName = "";
 const char* kFallbackPath = "./";
 #else
 #if !defined(WEBRTC_IOS)
@@ -238,7 +238,7 @@ std::string TempFilename(const std::string& dir, const std::string& prefix) {
   wchar_t filename[MAX_PATH];
 
   // printf format for the filename, consists of prefix followed by guid.
-  wchar_t* maskForFN = L"%s_%08x_%04x_%04x_%02x%02x_%02x%02x%02x%02x%02x%02x";
+  const wchar_t* maskForFN = L"%s_%08x_%04x_%04x_%02x%02x_%02x%02x%02x%02x%02x%02x";
   swprintf(filename, maskForFN, rtc::ToUtf16(prefix).c_str(), g.Data1, g.Data2, g.Data3,
     UINT(g.Data4[0]), UINT(g.Data4[1]), UINT(g.Data4[2]), UINT(g.Data4[3]),
     UINT(g.Data4[4]), UINT(g.Data4[5]), UINT(g.Data4[6]), UINT(g.Data4[7]));
@@ -283,7 +283,7 @@ std::string TempFilename2(const std::string& dir, const std::string& prefix) {
   wchar_t filename[MAX_PATH];
 
   // printf format for the filename, consists of prefix followed by guid.
-  wchar_t* maskForFN = L"%s_%08x_%04x_%04x_%02x%02x_%02x%02x%02x%02x%02x%02x";
+  const wchar_t* maskForFN = L"%s_%08x_%04x_%04x_%02x%02x_%02x%02x%02x%02x%02x%02x";
   swprintf(filename, maskForFN, rtc::ToUtf16(prefix).c_str(), g.Data1, g.Data2,
            g.Data3, UINT(g.Data4[0]), UINT(g.Data4[1]), UINT(g.Data4[2]),
            UINT(g.Data4[3]), UINT(g.Data4[4]), UINT(g.Data4[5]),
