@@ -460,5 +460,8 @@ if (rtc_include_tests) {
     sources = [
       "test/fake_network_pipe_unittest.cc",
     ]
+    if (current_os == "winuwp") {
+      deps += [ "../modules/video_capture:video_capture" ]
+    }
   }
 }

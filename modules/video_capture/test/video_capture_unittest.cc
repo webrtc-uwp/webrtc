@@ -192,6 +192,9 @@ class VideoCaptureTest : public testing::Test {
 // Currently fails on Mac 64-bit, see
 // https://bugs.chromium.org/p/webrtc/issues/detail?id=5406
 #define MAYBE_CreateDelete DISABLED_CreateDelete
+#elif defined(WINUWP)
+// There's no internal capture device implementation for UWP platform
+#define MAYBE_CreateDelete DISABLED_CreateDelete
 #else
 #define MAYBE_CreateDelete CreateDelete
 #endif
@@ -233,6 +236,9 @@ TEST_F(VideoCaptureTest, MAYBE_CreateDelete) {
 #ifdef WEBRTC_MAC
 // Currently fails on Mac 64-bit, see
 // https://bugs.chromium.org/p/webrtc/issues/detail?id=5406
+#define MAYBE_Capabilities DISABLED_Capabilities
+#elif defined(WINUWP)
+// There's no internal capture device implementation for UWP platform
 #define MAYBE_Capabilities DISABLED_Capabilities
 #else
 #define MAYBE_Capabilities Capabilities

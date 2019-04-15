@@ -460,7 +460,7 @@ if (rtc_include_tests) {
     if (is_linux || is_mac || is_win) {
       sources += [ "audio_device_unittest.cc" ]
     }
-    if (is_win) {
+    if (is_win && current_os != "winuwp" ) {
       sources += [ "win/core_audio_utility_win_unittest.cc" ]
       deps += [
         ":audio_device_module_from_input_and_output",

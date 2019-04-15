@@ -71,6 +71,10 @@ class Pathname {
   std::string filename() const;
   bool SetFilename(const std::string& filename);
 
+  // Append pathname to the current folder (if any).  Any existing filename
+  // will be discarded.
+  void AppendPathname(const std::string& pathname);
+  
  private:
   std::string folder_, basename_, extension_;
   char folder_delimiter_;

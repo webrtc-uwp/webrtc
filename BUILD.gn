@@ -79,6 +79,13 @@ if (!build_with_chromium) {
           "logging:rtc_event_log2rtp_dump",
         ]
       }
+      if (current_os == "winuwp") {
+        deps -= [
+          "video:screenshare_loopback",
+          "video:sv_loopback",
+          "video:video_loopback",
+        ]
+      } 
     }
   }
 }
@@ -598,6 +605,11 @@ if (rtc_include_tests) {
     }
     if (is_ios) {
       deps += [ ":webrtc_perf_tests_bundle_data" ]
+    }
+    if ( current_os == "winuwp" ) {
+      deps -= [ 
+        "video:video_full_stack_tests" 
+      ]
     }
   }
 
