@@ -89,6 +89,8 @@ class EncodedImage {
     int64_t receive_finish_ms = 0;
   } timing_;
 
+  XRTimestamp xr_timestamp_;
+
  private:
   uint32_t timestamp_rtp_ = 0;
   // -1 means not set. Use a plain int rather than optional, to keep this class

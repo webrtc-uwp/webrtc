@@ -1,5 +1,6 @@
 {
     "files.associations": {
         "xtree": "cpp"
-    }
+    },
+    "clang-format.executable": "C:/webrtc-uwp-sdk/webrtc/xplatform/webrtc/buildtools/win/clang-format.exe"
 }
