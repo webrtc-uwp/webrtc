@@ -59,7 +59,7 @@ void AddRtpHeaderExtensions(const RTPVideoHeader& video_header,
     packet->SetExtension<VideoOrientation>(video_header.rotation);
 
   if (last_packet) {
-    packet->SetExtension<XRTimestampExtension>(video_header.xr_timestamp);
+    packet->SetExtension<XRTimestampExtension>(video_header.xr_timestamp.prediction);
   }
 
   // Report content type only for key frames.
