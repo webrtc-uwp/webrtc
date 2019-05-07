@@ -30,6 +30,7 @@ class SimplePeerConnection : public webrtc::PeerConnectionObserver,
   SimplePeerConnection() {}
   ~SimplePeerConnection() {}
 
+  // On UWP this will throw an exception if called from the main UI thread.
   bool InitializePeerConnection(const char** turn_urls,
                                 const int no_of_urls,
                                 const char* username,

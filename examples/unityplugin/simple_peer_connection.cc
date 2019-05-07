@@ -110,11 +110,16 @@ bool SimplePeerConnection::InitializePeerConnection(const char** turn_urls,
 
   if (g_peer_connection_factory == nullptr) {
 #if defined(WINUWP)
-	  // note: this must be done in the ui thread - so up in managed land, call us there first
       auto mw =
           winrt::Windows::ApplicationModel::Core::CoreApplication::MainView();
       auto cw = mw.CoreWindow();
       auto dispatcher = cw.Dispatcher();
+      if (dispatcher.HasThreadAccess()) {
+        // WebRtcFactory::setup() will deadlock if called from main UI thread
+        // See https://github.com/webrtc-uwp/webrtc-uwp-sdk/issues/143
+        throw winrt::hresult_wrong_thread(winrt::to_hstring(
+            L"Cannot setup the WebRTC factory from the UI thread on UWP."));
+      }
       auto dispatcherQueue =
           wrapper::impl::org::webRtc::EventQueue::toWrapper(dispatcher);
 
