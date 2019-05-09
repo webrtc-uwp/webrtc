@@ -84,7 +84,7 @@ namespace hololight {
         }
     }
 
-    void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* rendered_image) {
+    void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* rendered_image, webrtc::XRTimestamp timestamp) {
         //TODO: this should get its config from somewhere else
         //also, right now we should copy to staging, download to cpu,
         //convert with libyuv and then call OnFrame. I think that'd be the
@@ -99,7 +99,7 @@ namespace hololight {
 
         //TODO: set more stuff if needed, such as ntp timestamp
         auto frame = VideoFrame::Builder().set_video_frame_buffer(i420Buffer).set_timestamp_us(time_us).build();
-
+        frame.set_xr_timestamp(timestamp);
         OnFrame(frame);
     }
 

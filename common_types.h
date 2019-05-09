@@ -410,6 +410,13 @@ struct PlayoutDelay {
   int max_ms;
 };
 
+struct XRTimestamp {
+  XRTimestamp() = default;
+  XRTimestamp(uint64_t timestamp) : prediction(timestamp) {}
+
+  uint64_t prediction;
+};
+
 }  // namespace webrtc
 
 #endif  // COMMON_TYPES_H_

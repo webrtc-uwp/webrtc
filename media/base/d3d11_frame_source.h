@@ -13,6 +13,7 @@
 
 #include "media/base/adaptedvideotracksource.h"
 #include "rtc_base/asyncinvoker.h"
+#include "common_types.h"
 
 #include <winrt/base.h>
 #include <d3d11.h>
@@ -25,7 +26,7 @@ namespace hololight {
         static rtc::scoped_refptr<hololight::D3D11VideoFrameSource> 
             Create(ID3D11Device* device, ID3D11DeviceContext* context, D3D11_TEXTURE2D_DESC* desc, rtc::Thread* signaling_thread);
         
-        void OnFrameCaptured(ID3D11Texture2D* rendered_image);
+        void OnFrameCaptured(ID3D11Texture2D* rendered_image, webrtc::XRTimestamp timestamp = webrtc::XRTimestamp());
 
         absl::optional<bool> needs_denoising() const override;
 

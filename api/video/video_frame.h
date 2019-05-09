@@ -17,6 +17,7 @@
 #include "api/video/color_space.h"
 #include "api/video/video_frame_buffer.h"
 #include "api/video/video_rotation.h"
+#include "common_types.h"
 
 namespace webrtc {
 
@@ -127,6 +128,9 @@ class VideoFrame {
     return video_frame_buffer()->type() == VideoFrameBuffer::Type::kNative;
   }
 
+  XRTimestamp xr_timestamp() const { return xr_timestamp_; }
+  void set_xr_timestamp(XRTimestamp timestamp) { xr_timestamp_ = timestamp; }
+
  private:
   VideoFrame(const rtc::scoped_refptr<VideoFrameBuffer>& buffer,
              int64_t timestamp_us,
@@ -141,6 +145,7 @@ class VideoFrame {
   int64_t ntp_time_ms_;
   int64_t timestamp_us_;
   VideoRotation rotation_;
+  XRTimestamp xr_timestamp_;
   absl::optional<ColorSpace> color_space_;
 };
 

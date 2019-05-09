@@ -115,6 +115,29 @@ class PlayoutDelayLimits {
                     const PlayoutDelay& playout_delay);
 };
 
+// This represents a timestamp obtained from the Windows Holographic API
+// (and maybe other such APIs in the future) so we can correlate frame
+// data with other data we receive via DataChannel.
+class XRTimestampExtension {
+  public:
+    static constexpr RTPExtensionType kId = kRtpExtensionXRTimestamp;
+    static constexpr uint8_t kValueSizeBytes = 8;
+    // TODO: change this to something meaningful
+    static constexpr const char kUri[] =
+      "http://www.holo-light.com/404";
+
+    //TODO: also, this might be extended to hold a focus point, so an additional
+    //3 floats.
+
+    static bool Parse(rtc::ArrayView<const uint8_t> data,
+                      uint64_t* timestamp);
+    static size_t ValueSize(const uint64_t&) {
+      return kValueSizeBytes;
+    }
+    static bool Write(rtc::ArrayView<uint8_t> data,
+                      const uint64_t& timestamp);
+};
+
 class VideoContentTypeExtension {
  public:
   static constexpr RTPExtensionType kId = kRtpExtensionVideoContentType;

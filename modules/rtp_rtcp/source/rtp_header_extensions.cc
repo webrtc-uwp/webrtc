@@ -227,6 +227,22 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
   return true;
 }
 
+// XR Timestamp.
+//
+// To correlate a frame to a point in time in the XR framework of choice (e.g. Windows Holographic or OpenXR).
+bool XRTimestampExtension::Parse(rtc::ArrayView<const uint8_t> data,
+                      uint64_t* timestamp) {
+  uint64_t raw = ByteReader<uint64_t>::ReadBigEndian(data.data());
+  *timestamp = raw;
+  return true;
+}
+
+bool XRTimestampExtension::Write(rtc::ArrayView<uint8_t> data,
+                      const uint64_t& timestamp) {
+  ByteWriter<uint64_t>::WriteBigEndian(data.data(), timestamp);
+  return true;
+}
+
 // Video Content Type.
 //
 // E.g. default video or screenshare.
