@@ -414,7 +414,7 @@ struct XRTimestamp {
   XRTimestamp() = default;
   XRTimestamp(uint64_t timestamp) : prediction(timestamp) {}
 
-  uint64_t prediction;
+  uint64_t prediction = 0;
 };
 
 }  // namespace webrtc
