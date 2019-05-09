@@ -74,3 +74,4 @@
 sdk/windows/
 sdk/idl/
 **/.vscode
+/remoting
