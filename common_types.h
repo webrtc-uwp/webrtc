@@ -410,11 +410,17 @@ struct PlayoutDelay {
   int max_ms;
 };
 
+// TODO: maybe rename this XRFrameData or something, because it's more than a
+// timestamp
 struct XRTimestamp {
   XRTimestamp() = default;
-  XRTimestamp(uint64_t timestamp) : prediction(timestamp) {}
+  XRTimestamp(int64_t timestamp, float fx, float fy, float fz)
+      : prediction(timestamp), focus_x(fx), focus_y(fy), focus_z(fz) {}
 
-  uint64_t prediction = 0;
+  int64_t prediction = 0;
+  float focus_x = 0;
+  float focus_y = 0;
+  float focus_z = 0;
 };
 
 }  // namespace webrtc

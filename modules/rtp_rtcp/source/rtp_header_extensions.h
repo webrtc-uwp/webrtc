@@ -108,9 +108,7 @@ class PlayoutDelayLimits {
 
   static bool Parse(rtc::ArrayView<const uint8_t> data,
                     PlayoutDelay* playout_delay);
-  static size_t ValueSize(const PlayoutDelay&) {
-    return kValueSizeBytes;
-  }
+  static size_t ValueSize(const PlayoutDelay&) { return kValueSizeBytes; }
   static bool Write(rtc::ArrayView<uint8_t> data,
                     const PlayoutDelay& playout_delay);
 };
@@ -119,23 +117,25 @@ class PlayoutDelayLimits {
 // (and maybe other such APIs in the future) so we can correlate frame
 // data with other data we receive via DataChannel.
 class XRTimestampExtension {
-  public:
-    static constexpr RTPExtensionType kId = kRtpExtensionXRTimestamp;
-    static constexpr uint8_t kValueSizeBytes = 8;
-    // TODO: change this to something meaningful
-    static constexpr const char kUri[] =
-      "http://www.holo-light.com/404";
+ public:
+  static constexpr RTPExtensionType kId = kRtpExtensionXRTimestamp;
 
-    //TODO: also, this might be extended to hold a focus point, so an additional
-    //3 floats.
+  // Note carefully that the one-byte header form allows for data lengths
+  // between 1 and 16 bytes, by adding 1 to the signaled length value
+  // (thus, 0 in the length field indicates 1 byte of data follows).
+  // from https://tools.ietf.org/html/rfc5285
+  // That means our size is not what we might expect.
 
-    static bool Parse(rtc::ArrayView<const uint8_t> data,
-                      uint64_t* timestamp);
-    static size_t ValueSize(const uint64_t&) {
-      return kValueSizeBytes;
-    }
-    static bool Write(rtc::ArrayView<uint8_t> data,
-                      const uint64_t& timestamp);
+  //Also, we have a int64_t (8 bytes) for the time and three 2-byte floating point values
+  //on the wire because full floats are too damn big for the extension and the
+  //writing code just silently fails.
+  static constexpr uint8_t kValueSizeBytes = 13;
+  // TODO: change this to something meaningful
+  static constexpr const char kUri[] = "http://www.holo-light.com/404";
+
+  static bool Parse(rtc::ArrayView<const uint8_t> data, XRTimestamp* timestamp);
+  static size_t ValueSize(const XRTimestamp&) { return kValueSizeBytes; }
+  static bool Write(rtc::ArrayView<uint8_t> data, const XRTimestamp& timestamp);
 };
 
 class VideoContentTypeExtension {
@@ -147,9 +147,7 @@ class VideoContentTypeExtension {
 
   static bool Parse(rtc::ArrayView<const uint8_t> data,
                     VideoContentType* content_type);
-  static size_t ValueSize(VideoContentType) {
-    return kValueSizeBytes;
-  }
+  static size_t ValueSize(VideoContentType) { return kValueSizeBytes; }
   static bool Write(rtc::ArrayView<uint8_t> data,
                     VideoContentType content_type);
 };

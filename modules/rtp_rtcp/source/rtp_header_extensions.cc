@@ -15,6 +15,9 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
+// This is for focus point in XR data extension.
+#include "half.h"
+
 namespace webrtc {
 // Absolute send time in RTP streams.
 //
@@ -229,17 +232,39 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
 
 // XR Timestamp.
 //
-// To correlate a frame to a point in time in the XR framework of choice (e.g. Windows Holographic or OpenXR).
+// To correlate a frame to a point in time in the XR framework of choice (e.g.
+// Windows Holographic or OpenXR).
+
 bool XRTimestampExtension::Parse(rtc::ArrayView<const uint8_t> data,
-                      uint64_t* timestamp) {
-  uint64_t raw = ByteReader<uint64_t>::ReadBigEndian(data.data());
-  *timestamp = raw;
+                                 XRTimestamp* timestamp) {
+  timestamp->prediction = ByteReader<int64_t>::ReadBigEndian(data.data());
+
+  // TODO: replace manual offsets with constants like in videotiming or
+  // somewhere else. it's less fugly.
+
+  auto half_x = ByteReader<uint16_t>::ReadBigEndian(data.data() + 8);
+  auto half_y = ByteReader<uint16_t>::ReadBigEndian(data.data() + 10);
+  auto half_z = ByteReader<uint16_t>::ReadBigEndian(data.data() + 12);
+
+  timestamp->focus_x = half_to_float(half_x);
+  timestamp->focus_y = half_to_float(half_y);
+  timestamp->focus_z = half_to_float(half_z);
+
   return true;
 }
 
 bool XRTimestampExtension::Write(rtc::ArrayView<uint8_t> data,
-                      const uint64_t& timestamp) {
-  ByteWriter<uint64_t>::WriteBigEndian(data.data(), timestamp);
+                                 const XRTimestamp& timestamp) {
+  ByteWriter<int64_t>::WriteBigEndian(data.data(), timestamp.prediction);
+
+  auto half_x = half_from_float(timestamp.focus_x);
+  auto half_y = half_from_float(timestamp.focus_y);
+  auto half_z = half_from_float(timestamp.focus_z);
+
+  ByteWriter<uint16_t>::WriteBigEndian(data.data() + 8, half_x);
+  ByteWriter<uint16_t>::WriteBigEndian(data.data() + 10, half_y);
+  ByteWriter<uint16_t>::WriteBigEndian(data.data() + 12, half_z);
+
   return true;
 }
 

@@ -467,7 +467,7 @@ void RtpVideoStreamReceiver::ReceivePacket(const RtpPacketReceived& packet) {
       &webrtc_rtp_header.video_header().playout_delay);
 
   packet.GetExtension<XRTimestampExtension>(
-    &webrtc_rtp_header.video_header().xr_timestamp.prediction);
+    &webrtc_rtp_header.video_header().xr_timestamp);
 
   RtpGenericFrameDescriptor generic_descriptor_wire;
   if (packet.GetExtension<RtpGenericFrameDescriptorExtension>(
