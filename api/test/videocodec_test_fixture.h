@@ -22,11 +22,11 @@
 namespace webrtc {
 namespace test {
 
-// Rates for the encoder and the frame number when to change profile.
+// Rates for the encoder and the frame number when to apply profile.
 struct RateProfile {
   size_t target_kbps;
   size_t input_fps;
-  size_t frame_index_rate_update;
+  size_t frame_num;
 };
 
 struct RateControlThresholds {
@@ -82,6 +82,9 @@ class VideoCodecTestFixture {
     std::string ToString() const;
     std::string CodecName() const;
 
+    // Name of this config, to be used for accounting by the test runner.
+    std::string test_name;
+
     // Plain name of YUV file to process without file extension.
     std::string filename;
 
@@ -107,9 +110,6 @@ class VideoCodecTestFixture {
     // Simulate frames arriving in real-time by adding delays between frames.
     bool encode_in_real_time = false;
 
-    // If > 0: forces the encoder to create a keyframe every Nth frame.
-    size_t keyframe_interval = 0;
-
     // Codec settings to use.
     webrtc::VideoCodec codec_settings;
 
@@ -122,10 +122,6 @@ class VideoCodecTestFixture {
       H264PacketizationMode packetization_mode =
           webrtc::H264PacketizationMode::NonInterleaved;
     } h264_codec_settings;
-
-    // Should hardware accelerated codecs be used?
-    bool hw_encoder = false;
-    bool hw_decoder = false;
 
     // Custom checker that will be called for each frame.
     const EncodedFrameChecker* encoded_frame_checker = nullptr;

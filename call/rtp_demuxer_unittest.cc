@@ -17,7 +17,6 @@
 #include "absl/memory/memory.h"
 #include "call/ssrc_binding_observer.h"
 #include "call/test/mock_rtp_packet_sink_interface.h"
-#include "common_types.h"  // NOLINT(build/include)
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
@@ -49,7 +48,7 @@ class MockSsrcBindingObserver : public SsrcBindingObserver {
                void(uint8_t payload_type, uint32_t ssrc));
 };
 
-class RtpDemuxerTest : public testing::Test {
+class RtpDemuxerTest : public ::testing::Test {
  protected:
   ~RtpDemuxerTest() {
     for (auto* sink : sinks_to_tear_down_) {
@@ -1498,13 +1497,13 @@ TEST_F(RtpDemuxerTest, MidMustBeToken) {
 
 TEST_F(RtpDemuxerTest, RsidMustNotExceedMaximumLength) {
   MockRtpPacketSink sink;
-  std::string rsid(StreamId::kMaxSize + 1, 'a');
+  std::string rsid(BaseRtpStringExtension::kMaxValueSizeBytes + 1, 'a');
   EXPECT_DEATH(AddSinkOnlyRsid(rsid, &sink), "");
 }
 
 TEST_F(RtpDemuxerTest, MidMustNotExceedMaximumLength) {
   MockRtpPacketSink sink;
-  std::string mid(Mid::kMaxSize + 1, 'a');
+  std::string mid(BaseRtpStringExtension::kMaxValueSizeBytes + 1, 'a');
   EXPECT_DEATH(AddSinkOnlyMid(mid, &sink), "");
 }
 

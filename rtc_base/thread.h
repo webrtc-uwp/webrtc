@@ -11,19 +11,22 @@
 #ifndef RTC_BASE_THREAD_H_
 #define RTC_BASE_THREAD_H_
 
-#include <algorithm>
+#include <stdint.h>
 #include <list>
 #include <memory>
 #include <string>
-#include <utility>
-#include <vector>
+#include <type_traits>
 
 #if defined(WEBRTC_POSIX)
 #include <pthread.h>
 #endif
-#include "rtc_base/constructormagic.h"
-#include "rtc_base/messagequeue.h"
+#include "rtc_base/constructor_magic.h"
+#include "rtc_base/location.h"
+#include "rtc_base/message_handler.h"
+#include "rtc_base/message_queue.h"
 #include "rtc_base/platform_thread_types.h"
+#include "rtc_base/socket_server.h"
+#include "rtc_base/thread_annotations.h"
 
 #if defined(WEBRTC_WIN)
 #include "rtc_base/win32.h"
@@ -32,6 +35,29 @@
 namespace rtc {
 
 class Thread;
+
+namespace rtc_thread_internal {
+
+template <class FunctorT>
+class SingleMessageHandlerWithFunctor final : public MessageHandler {
+ public:
+  explicit SingleMessageHandlerWithFunctor(FunctorT&& functor)
+      : functor_(std::forward<FunctorT>(functor)) {}
+
+  void OnMessage(Message* msg) override {
+    functor_();
+    delete this;
+  }
+
+ private:
+  ~SingleMessageHandlerWithFunctor() override {}
+
+  typename std::remove_reference<FunctorT>::type functor_;
+
+  RTC_DISALLOW_COPY_AND_ASSIGN(SingleMessageHandlerWithFunctor);
+};
+
+}  // namespace rtc_thread_internal
 
 class ThreadManager {
  public:
@@ -134,6 +160,9 @@ class RTC_LOCKABLE Thread : public MessageQueue {
   class ScopedDisallowBlockingCalls {
    public:
     ScopedDisallowBlockingCalls();
+    ScopedDisallowBlockingCalls(const ScopedDisallowBlockingCalls&) = delete;
+    ScopedDisallowBlockingCalls& operator=(const ScopedDisallowBlockingCalls&) =
+        delete;
     ~ScopedDisallowBlockingCalls();
 
    private:
@@ -180,12 +209,52 @@ class RTC_LOCKABLE Thread : public MessageQueue {
   // &MyFunctionReturningBool);
   // NOTE: This function can only be called when synchronous calls are allowed.
   // See ScopedDisallowBlockingCalls for details.
+  // NOTE: Blocking invokes are DISCOURAGED, consider if what you're doing can
+  // be achieved with PostTask() and callbacks instead.
   template <class ReturnT, class FunctorT>
   ReturnT Invoke(const Location& posted_from, FunctorT&& functor) {
     FunctorMessageHandler<ReturnT, FunctorT> handler(
         std::forward<FunctorT>(functor));
     InvokeInternal(posted_from, &handler);
     return handler.MoveResult();
+  }
+
+  // Posts a task to invoke the functor on |this| thread asynchronously, i.e.
+  // without blocking the thread that invoked PostTask(). Ownership of |functor|
+  // is passed and destroyed on |this| thread after it is invoked.
+  // Requirements of FunctorT:
+  // - FunctorT is movable.
+  // - FunctorT implements "T operator()()" or "T operator()() const" for some T
+  //   (if T is not void, the return value is discarded on |this| thread).
+  // - FunctorT has a public destructor that can be invoked from |this| thread
+  //   after operation() has been invoked.
+  // - The functor must not cause the thread to quit before PostTask() is done.
+  //
+  // Example - Calling a class method:
+  // class Foo {
+  //  public:
+  //   void DoTheThing();
+  // };
+  // Foo foo;
+  // thread->PostTask(RTC_FROM_HERE, Bind(&Foo::DoTheThing, &foo));
+  //
+  // Example - Calling a lambda function:
+  // thread->PostTask(RTC_FROM_HERE,
+  //                  [&x, &y] { x.TrackComputations(y.Compute()); });
+  template <class FunctorT>
+  void PostTask(const Location& posted_from, FunctorT&& functor) {
+    Post(posted_from,
+         new rtc_thread_internal::SingleMessageHandlerWithFunctor<FunctorT>(
+             std::forward<FunctorT>(functor)));
+    // This DCHECK guarantees that the post was successful.
+    // Post() doesn't say whether it succeeded, but it will only fail if the
+    // thread is quitting. DCHECKing that the thread is not quitting *after*
+    // posting might yield some false positives (where the thread did in fact
+    // quit, but only after posting), but if we have false positives here then
+    // we have a race condition anyway.
+    // TODO(https://crbug.com/webrtc/10364): When Post() returns a bool we can
+    // DCHECK the result instead of inferring success from IsQuitting().
+    RTC_DCHECK(!IsQuitting());
   }
 
   // From MessageQueue
@@ -216,10 +285,6 @@ class RTC_LOCKABLE Thread : public MessageQueue {
   // of whatever code is conditionally executing because of the return value!
   bool RunningForTest() { return IsRunning(); }
 
-  // Sets the per-thread allow-blocking-calls flag and returns the previous
-  // value. Must be called on this thread.
-  bool SetAllowBlockingCalls(bool allow);
-
   // These functions are public to avoid injecting test hooks. Don't call them
   // outside of tests.
   // This method should be called when thread is created using non standard
@@ -228,6 +293,17 @@ class RTC_LOCKABLE Thread : public MessageQueue {
   // owned to false. This must be called from the current thread.
   bool WrapCurrent();
   void UnwrapCurrent();
+
+  // Sets the per-thread allow-blocking-calls flag to false; this is
+  // irrevocable. Must be called on this thread.
+  void DisallowBlockingCalls() { SetAllowBlockingCalls(false); }
+
+#ifdef WEBRTC_ANDROID
+  // Sets the per-thread allow-blocking-calls flag to true, sidestepping the
+  // invariants upheld by DisallowBlockingCalls() and
+  // ScopedDisallowBlockingCalls. Must be called on this thread.
+  void DEPRECATED_AllowBlockingCalls() { SetAllowBlockingCalls(true); }
+#endif
 
  protected:
   // Same as WrapCurrent except that it never fails as it does not try to
@@ -247,6 +323,10 @@ class RTC_LOCKABLE Thread : public MessageQueue {
     Thread* thread;
     Runnable* runnable;
   };
+
+  // Sets the per-thread allow-blocking-calls flag and returns the previous
+  // value. Must be called on this thread.
+  bool SetAllowBlockingCalls(bool allow);
 
 #if defined(WEBRTC_WIN)
   static DWORD WINAPI PreRun(LPVOID context);

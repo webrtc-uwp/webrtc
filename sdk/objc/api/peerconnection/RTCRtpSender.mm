@@ -13,10 +13,11 @@
 #import "RTCDtmfSender+Private.h"
 #import "RTCMediaStreamTrack+Private.h"
 #import "RTCRtpParameters+Private.h"
+#import "RTCRtpSender+Native.h"
 #import "base/RTCLogging.h"
 #import "helpers/NSString+StdString.h"
 
-#include "api/mediastreaminterface.h"
+#include "api/media_stream_interface.h"
 
 @implementation RTCRtpSender {
   RTCPeerConnectionFactory *_factory;
@@ -77,6 +78,12 @@
 
 - (NSUInteger)hash {
   return (NSUInteger)_nativeRtpSender.get();
+}
+
+#pragma mark - Native
+
+- (void)setFrameEncryptor:(rtc::scoped_refptr<webrtc::FrameEncryptorInterface>)frameEncryptor {
+  _nativeRtpSender->SetFrameEncryptor(frameEncryptor);
 }
 
 #pragma mark - Private

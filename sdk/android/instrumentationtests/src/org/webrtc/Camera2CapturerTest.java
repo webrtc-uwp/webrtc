@@ -21,13 +21,13 @@ import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.Nullable;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.LargeTest;
 import android.support.test.filters.MediumTest;
 import android.support.test.filters.SmallTest;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
-import javax.annotation.Nullable;
 import org.chromium.base.test.BaseJUnit4ClassRunner;
 import org.junit.After;
 import org.junit.Before;
@@ -300,6 +300,14 @@ public class Camera2CapturerTest {
   @MediumTest
   public void testScaleCameraOutput() throws InterruptedException {
     fixtures.scaleCameraOutput();
+  }
+
+  // This test that frames forwarded to a renderer is cropped to a new orientation if
+  // adaptOutputFormat is called in such a way. This test both Java and C++ parts of of the stack.
+  @Test
+  @MediumTest
+  public void testCropCameraOutput() throws InterruptedException {
+    fixtures.cropCameraOutput();
   }
 
   // This test that an error is reported if the camera is already opened

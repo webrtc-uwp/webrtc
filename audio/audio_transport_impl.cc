@@ -17,7 +17,7 @@
 #include "audio/remix_resample.h"
 #include "audio/utility/audio_frame_operations.h"
 #include "call/audio_send_stream.h"
-#include "rtc_base/logging.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 
@@ -50,8 +50,6 @@ void ProcessCaptureFrame(uint32_t delay_ms,
                          AudioFrame* audio_frame) {
   RTC_DCHECK(audio_processing);
   RTC_DCHECK(audio_frame);
-  RTC_DCHECK(
-      !audio_processing->echo_cancellation()->is_drift_compensation_enabled());
   audio_processing->set_stream_delay_ms(delay_ms);
   audio_processing->set_stream_key_pressed(key_pressed);
   int error = audio_processing->ProcessStream(audio_frame);
@@ -135,9 +133,9 @@ int32_t AudioTransportImpl::RecordedDataIsAvailable(
 
   // Typing detection (utilizes the APM/VAD decision). We let the VAD determine
   // if we're using this feature or not.
-  // TODO(solenberg): is_enabled() takes a lock. Work around that.
+  // TODO(solenberg): GetConfig() takes a lock. Work around that.
   bool typing_detected = false;
-  if (audio_processing_->voice_detection()->is_enabled()) {
+  if (audio_processing_->GetConfig().voice_detection.enabled) {
     if (audio_frame->vad_activity_ != AudioFrame::kVadUnknown) {
       bool vad_active = audio_frame->vad_activity_ == AudioFrame::kVadActive;
       typing_detected = typing_detection_.Process(key_pressed, vad_active);
@@ -146,7 +144,7 @@ int32_t AudioTransportImpl::RecordedDataIsAvailable(
 
   // Measure audio level of speech after all processing.
   double sample_duration = static_cast<double>(number_of_frames) / sample_rate;
-  audio_level_.ComputeLevel(*audio_frame.get(), sample_duration);
+  audio_level_.ComputeLevel(*audio_frame, sample_duration);
 
   // Copy frame and push to each sending stream. The copy is required since an
   // encoding task will be posted internally to each stream.
@@ -159,7 +157,7 @@ int32_t AudioTransportImpl::RecordedDataIsAvailable(
       auto it = sending_streams_.begin();
       while (++it != sending_streams_.end()) {
         std::unique_ptr<AudioFrame> audio_frame_copy(new AudioFrame());
-        audio_frame_copy->CopyFrom(*audio_frame.get());
+        audio_frame_copy->CopyFrom(*audio_frame);
         (*it)->SendAudioData(std::move(audio_frame_copy));
       }
       // Send the original frame to the first stream w/o copying.
@@ -216,7 +214,6 @@ void AudioTransportImpl::PullRenderData(int bits_per_sample,
                                         int64_t* ntp_time_ms) {
   RTC_DCHECK_EQ(bits_per_sample, 16);
   RTC_DCHECK_GE(number_of_channels, 1);
-  RTC_DCHECK_LE(number_of_channels, 2);
   RTC_DCHECK_GE(sample_rate, AudioProcessing::NativeRate::kSampleRate8kHz);
 
   // 100 = 1 second / data duration (10 ms).

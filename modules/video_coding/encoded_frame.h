@@ -13,8 +13,7 @@
 
 #include <vector>
 
-#include "common_types.h"  // NOLINT(build/include)
-#include "common_video/include/video_frame.h"
+#include "api/video/encoded_image.h"
 #include "modules/include/module_common_types.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/include/video_coding_defines.h"
@@ -27,10 +26,6 @@ class VCMEncodedFrame : protected EncodedImage {
   VCMEncodedFrame(const VCMEncodedFrame&) = delete;
 
   ~VCMEncodedFrame();
-  /**
-   *   Delete VideoFrame and resets members to zero
-   */
-  void Free();
   /**
    *   Set render time in milliseconds
    */
@@ -56,20 +51,14 @@ class VCMEncodedFrame : protected EncodedImage {
   const webrtc::EncodedImage& EncodedImage() const {
     return static_cast<const webrtc::EncodedImage&>(*this);
   }
-  /**
-   *   Get pointer to frame buffer
-   */
-  const uint8_t* Buffer() const { return _buffer; }
-  /**
-   *   Get frame length
-   */
-  size_t Length() const { return _length; }
 
-  /**
-   *   Frame RTP timestamp (90kHz)
-   */
-  using EncodedImage::Timestamp;
+  using EncodedImage::data;
+  using EncodedImage::set_size;
+  using EncodedImage::SetSpatialIndex;
   using EncodedImage::SetTimestamp;
+  using EncodedImage::size;
+  using EncodedImage::Timestamp;
+
   /**
    *   Get render time in milliseconds
    */
@@ -77,7 +66,7 @@ class VCMEncodedFrame : protected EncodedImage {
   /**
    *   Get frame type
    */
-  webrtc::FrameType FrameType() const { return _frameType; }
+  webrtc::VideoFrameType FrameType() const { return _frameType; }
   /**
    *   Get frame rotation
    */
@@ -90,6 +79,7 @@ class VCMEncodedFrame : protected EncodedImage {
    * Get video timing
    */
   EncodedImage::Timing video_timing() const { return timing_; }
+  EncodedImage::Timing* video_timing_mutable() { return &timing_; }
   /**
    *   True if this frame is complete, false otherwise
    */
@@ -109,8 +99,10 @@ class VCMEncodedFrame : protected EncodedImage {
    *   the object.
    */
   const CodecSpecificInfo* CodecSpecific() const { return &_codecSpecificInfo; }
+  void SetCodecSpecific(const CodecSpecificInfo* codec_specific) {
+    _codecSpecificInfo = *codec_specific;
+  }
 
- protected:
   /**
    * Verifies that current allocated buffer size is larger than or equal to the
    * input size.
@@ -121,6 +113,7 @@ class VCMEncodedFrame : protected EncodedImage {
    */
   void VerifyAndAllocate(size_t minimumSize);
 
+ protected:
   void Reset();
 
   void CopyCodecSpecific(const RTPVideoHeader* header);

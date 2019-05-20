@@ -10,8 +10,13 @@
 
 #include "modules/audio_processing/low_cut_filter.h"
 
+#include <stdint.h>
+#include <cstring>
+
 #include "common_audio/signal_processing/include/signal_processing_library.h"
 #include "modules/audio_processing/audio_buffer.h"
+#include "modules/audio_processing/include/audio_processing.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 namespace {
@@ -74,7 +79,7 @@ class LowCutFilter::BiquadFilter {
   }
 
  private:
-  const int16_t* const ba_ = nullptr;
+  const int16_t* const ba_;
   int16_t x_[2];
   int16_t y_[4];
 };

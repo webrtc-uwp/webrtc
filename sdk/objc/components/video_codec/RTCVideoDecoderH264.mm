@@ -26,7 +26,7 @@
 #include "modules/video_coding/include/video_error_codes.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/timeutils.h"
+#include "rtc_base/time_utils.h"
 #include "sdk/objc/components/video_codec/nalu_rewriter.h"
 
 // Struct that we pass to the decoder per frame to decode. We receive it again
@@ -71,12 +71,23 @@ void decompressionOutputCallback(void *decoderRef,
 // Decoder.
 @implementation RTCVideoDecoderH264 {
   CMVideoFormatDescriptionRef _videoFormat;
+  CMMemoryPoolRef _memoryPool;
   VTDecompressionSessionRef _decompressionSession;
   RTCVideoDecoderCallback _callback;
   OSStatus _error;
 }
 
+- (instancetype)init {
+  self = [super init];
+  if (self) {
+    _memoryPool = CMMemoryPoolCreate(nil);
+  }
+  return self;
+}
+
 - (void)dealloc {
+  CMMemoryPoolInvalidate(_memoryPool);
+  CFRelease(_memoryPool);
   [self destroyDecompressionSession];
   [self setVideoFormat:nullptr];
 }
@@ -129,7 +140,8 @@ void decompressionOutputCallback(void *decoderRef,
   if (!webrtc::H264AnnexBBufferToCMSampleBuffer((uint8_t *)inputImage.buffer.bytes,
                                                 inputImage.buffer.length,
                                                 _videoFormat,
-                                                &sampleBuffer)) {
+                                                &sampleBuffer,
+                                                _memoryPool)) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
   RTC_DCHECK(sampleBuffer);

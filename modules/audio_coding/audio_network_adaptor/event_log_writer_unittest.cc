@@ -13,6 +13,7 @@
 #include "logging/rtc_event_log/events/rtc_event_audio_network_adaptation.h"
 #include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
 #include "modules/audio_coding/audio_network_adaptor/event_log_writer.h"
+#include "rtc_base/checks.h"
 #include "test/gtest.h"
 
 namespace webrtc {
@@ -36,7 +37,7 @@ MATCHER_P(IsRtcEventAnaConfigEqualTo, config, "") {
     return false;
   }
   auto ana_event = static_cast<RtcEventAudioNetworkAdaptation*>(arg);
-  return *ana_event->config_ == config;
+  return ana_event->config() == config;
 }
 
 struct EventLogWriterStates {
@@ -47,7 +48,7 @@ struct EventLogWriterStates {
 
 EventLogWriterStates CreateEventLogWriter() {
   EventLogWriterStates state;
-  state.event_log.reset(new testing::StrictMock<MockRtcEventLog>());
+  state.event_log.reset(new ::testing::StrictMock<MockRtcEventLog>());
   state.event_log_writer.reset(new EventLogWriter(
       state.event_log.get(), kMinBitrateChangeBps, kMinBitrateChangeFraction,
       kMinPacketLossChangeFraction));

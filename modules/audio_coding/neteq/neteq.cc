@@ -10,8 +10,6 @@
 
 #include "modules/audio_coding/neteq/include/neteq.h"
 
-#include <memory>
-
 #include "modules/audio_coding/neteq/neteq_impl.h"
 #include "rtc_base/strings/string_builder.h"
 
@@ -30,9 +28,10 @@ std::string NetEq::Config::ToString() const {
   ss << "sample_rate_hz=" << sample_rate_hz << ", enable_post_decode_vad="
      << (enable_post_decode_vad ? "true" : "false")
      << ", max_packets_in_buffer=" << max_packets_in_buffer
-     << ", enable_fast_accelerate="
-     << (enable_fast_accelerate ? " true" : "false")
-     << ", enable_muted_state=" << (enable_muted_state ? " true" : "false");
+     << ", min_delay_ms=" << min_delay_ms << ", enable_fast_accelerate="
+     << (enable_fast_accelerate ? "true" : "false")
+     << ", enable_muted_state=" << (enable_muted_state ? "true" : "false")
+     << ", enable_rtx_handling=" << (enable_rtx_handling ? "true" : "false");
   return ss.str();
 }
 

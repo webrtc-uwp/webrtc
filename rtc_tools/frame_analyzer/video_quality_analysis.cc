@@ -11,11 +11,13 @@
 #include "rtc_tools/frame_analyzer/video_quality_analysis.h"
 
 #include <algorithm>
-#include <numeric>
+#include <array>
+#include <cstddef>
 
+#include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
 #include "test/testsupport/perf_test.h"
 #include "third_party/libyuv/include/libyuv/compare.h"
-#include "third_party/libyuv/include/libyuv/convert.h"
 
 namespace webrtc {
 namespace test {
@@ -56,16 +58,11 @@ std::vector<AnalysisResult> RunAnalysis(
     const rtc::scoped_refptr<webrtc::test::Video>& test_video,
     const std::vector<size_t>& test_frame_indices) {
   std::vector<AnalysisResult> results;
-  for (size_t i = 0; i < test_frame_indices.size(); ++i) {
-    // Ignore duplicated frames in the test video.
-    if (i > 0 && test_frame_indices[i] == test_frame_indices[i - 1])
-      continue;
-
+  for (size_t i = 0; i < test_video->number_of_frames(); ++i) {
     const rtc::scoped_refptr<I420BufferInterface>& test_frame =
         test_video->GetFrame(i);
     const rtc::scoped_refptr<I420BufferInterface>& reference_frame =
-        reference_video->GetFrame(test_frame_indices[i] %
-                                  reference_video->number_of_frames());
+        reference_video->GetFrame(i);
 
     // Fill in the result struct.
     AnalysisResult result;

@@ -12,7 +12,6 @@
 #include <memory>
 #include <vector>
 
-#include "modules/bitrate_controller/include/mock/mock_bitrate_controller.h"
 #include "modules/congestion_controller/rtp/congestion_controller_unittests_helper.h"
 #include "modules/congestion_controller/transport_feedback_adapter.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -52,7 +51,7 @@ class LegacyTransportFeedbackAdapterTest : public ::testing::Test {
   virtual ~LegacyTransportFeedbackAdapterTest() {}
 
   virtual void SetUp() {
-    adapter_.reset(new TransportFeedbackAdapter(&clock_));
+    adapter_.reset(new LegacyTransportFeedbackAdapter(&clock_));
   }
 
   virtual void TearDown() { adapter_.reset(); }
@@ -75,7 +74,7 @@ class LegacyTransportFeedbackAdapterTest : public ::testing::Test {
   static constexpr uint32_t kSsrc = 8492;
 
   SimulatedClock clock_;
-  std::unique_ptr<TransportFeedbackAdapter> adapter_;
+  std::unique_ptr<LegacyTransportFeedbackAdapter> adapter_;
 };
 
 TEST_F(LegacyTransportFeedbackAdapterTest, ObserverSanity) {

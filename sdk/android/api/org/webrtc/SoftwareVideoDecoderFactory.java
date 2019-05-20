@@ -10,10 +10,10 @@
 
 package org.webrtc;
 
+import android.support.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import javax.annotation.Nullable;
 
 public class SoftwareVideoDecoderFactory implements VideoDecoderFactory {
   @Deprecated
@@ -27,10 +27,10 @@ public class SoftwareVideoDecoderFactory implements VideoDecoderFactory {
   @Override
   public VideoDecoder createDecoder(VideoCodecInfo codecType) {
     if (codecType.getName().equalsIgnoreCase("VP8")) {
-      return new VP8Decoder();
+      return new LibvpxVp8Decoder();
     }
-    if (codecType.getName().equalsIgnoreCase("VP9") && VP9Decoder.nativeIsSupported()) {
-      return new VP9Decoder();
+    if (codecType.getName().equalsIgnoreCase("VP9") && LibvpxVp9Decoder.nativeIsSupported()) {
+      return new LibvpxVp9Decoder();
     }
 
     return null;
@@ -45,7 +45,7 @@ public class SoftwareVideoDecoderFactory implements VideoDecoderFactory {
     List<VideoCodecInfo> codecs = new ArrayList<VideoCodecInfo>();
 
     codecs.add(new VideoCodecInfo("VP8", new HashMap<>()));
-    if (VP9Decoder.nativeIsSupported()) {
+    if (LibvpxVp9Decoder.nativeIsSupported()) {
       codecs.add(new VideoCodecInfo("VP9", new HashMap<>()));
     }
 

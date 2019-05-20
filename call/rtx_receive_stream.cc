@@ -8,11 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <string.h>
 #include <utility>
 
+#include "api/array_view.h"
 #include "call/rtx_receive_stream.h"
 #include "modules/rtp_rtcp/include/receive_statistics.h"
+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {
@@ -36,9 +40,7 @@ RtxReceiveStream::~RtxReceiveStream() = default;
 
 void RtxReceiveStream::OnRtpPacket(const RtpPacketReceived& rtx_packet) {
   if (rtp_receive_statistics_) {
-    RTPHeader header;
-    rtx_packet.GetHeader(&header);
-    rtp_receive_statistics_->IncomingPacket(header, rtx_packet.size());
+    rtp_receive_statistics_->OnRtpPacket(rtx_packet);
   }
   rtc::ArrayView<const uint8_t> payload = rtx_packet.payload();
 

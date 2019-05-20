@@ -10,6 +10,8 @@
 
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 
+#include <stddef.h>
+#include <cstdint>
 #include <vector>
 
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
@@ -50,6 +52,9 @@ void RtpPacketReceived::GetHeader(RTPHeader* header) const {
   header->extension.hasAbsoluteSendTime =
       GetExtension<AbsoluteSendTime>(&header->extension.absoluteSendTime);
   header->extension.hasTransportSequenceNumber =
+      GetExtension<TransportSequenceNumberV2>(
+          &header->extension.transportSequenceNumber,
+          &header->extension.feedback_request) ||
       GetExtension<TransportSequenceNumber>(
           &header->extension.transportSequenceNumber);
   header->extension.hasAudioLevel = GetExtension<AudioLevel>(
@@ -67,6 +72,7 @@ void RtpPacketReceived::GetHeader(RTPHeader* header) const {
   GetExtension<RepairedRtpStreamId>(&header->extension.repaired_stream_id);
   GetExtension<RtpMid>(&header->extension.mid);
   GetExtension<PlayoutDelayLimits>(&header->extension.playout_delay);
+  header->extension.color_space = GetExtension<ColorSpaceExtension>();
 }
 
 }  // namespace webrtc

@@ -11,10 +11,13 @@
 #ifndef RTC_BASE_PLATFORM_THREAD_H_
 #define RTC_BASE_PLATFORM_THREAD_H_
 
+#ifndef WEBRTC_WIN
+#include <pthread.h>
+#endif
 #include <string>
 
-#include "rtc_base/constructormagic.h"
-#include "rtc_base/event.h"
+#include "absl/strings/string_view.h"
+#include "rtc_base/constructor_magic.h"
 #include "rtc_base/platform_thread_types.h"
 #include "rtc_base/thread_checker.h"
 
@@ -49,10 +52,10 @@ class PlatformThread {
  public:
   PlatformThread(ThreadRunFunctionDeprecated func,
                  void* obj,
-                 const char* thread_name);
+                 absl::string_view thread_name);
   PlatformThread(ThreadRunFunction func,
                  void* obj,
-                 const char* thread_name,
+                 absl::string_view thread_name,
                  ThreadPriority priority = kNormalPriority);
   virtual ~PlatformThread();
 

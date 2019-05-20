@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <numeric>
 
 #include "rtc_base/checks.h"
@@ -21,8 +22,85 @@ namespace webrtc {
 const float kSpatialLayeringRateScalingFactor = 0.55f;
 const float kTemporalLayeringRateScalingFactor = 0.55f;
 
+static size_t GetNumActiveSpatialLayers(const VideoCodec& codec) {
+  RTC_DCHECK_EQ(codec.codecType, kVideoCodecVP9);
+  RTC_DCHECK_GT(codec.VP9().numberOfSpatialLayers, 0u);
+
+  size_t num_spatial_layers = 0;
+  for (; num_spatial_layers < codec.VP9().numberOfSpatialLayers;
+       ++num_spatial_layers) {
+    if (!codec.spatialLayers[num_spatial_layers].active) {
+      // TODO(bugs.webrtc.org/9350): Deactivation of middle layer is not
+      // implemented. For now deactivation of a VP9 layer deactivates all
+      // layers above the deactivated one.
+      break;
+    }
+  }
+
+  return num_spatial_layers;
+}
+
+static bool AdjustAndVerify(const VideoCodec& codec,
+                            std::vector<size_t>* spatial_layer_bitrate_bps) {
+  bool enough_bitrate = true;
+  size_t excess_rate = 0;
+  for (size_t sl_idx = 0;
+       sl_idx < spatial_layer_bitrate_bps->size() && enough_bitrate; ++sl_idx) {
+    RTC_DCHECK_GT(codec.spatialLayers[sl_idx].maxBitrate, 0);
+    RTC_DCHECK_GE(codec.spatialLayers[sl_idx].maxBitrate,
+                  codec.spatialLayers[sl_idx].minBitrate);
+
+    const size_t min_bitrate_bps =
+        codec.spatialLayers[sl_idx].minBitrate * 1000;
+    const size_t max_bitrate_bps =
+        codec.spatialLayers[sl_idx].maxBitrate * 1000;
+
+    spatial_layer_bitrate_bps->at(sl_idx) += excess_rate;
+    if (spatial_layer_bitrate_bps->at(sl_idx) < max_bitrate_bps) {
+      excess_rate = 0;
+    } else {
+      excess_rate = spatial_layer_bitrate_bps->at(sl_idx) - max_bitrate_bps;
+      spatial_layer_bitrate_bps->at(sl_idx) = max_bitrate_bps;
+    }
+
+    size_t bitrate_bps = spatial_layer_bitrate_bps->at(sl_idx);
+    enough_bitrate = (bitrate_bps >= min_bitrate_bps);
+  }
+
+  return enough_bitrate;
+}
+
+static std::vector<size_t> SplitBitrate(size_t num_layers,
+                                        size_t total_bitrate,
+                                        float rate_scaling_factor) {
+  std::vector<size_t> bitrates;
+
+  double denominator = 0.0;
+  for (size_t layer_idx = 0; layer_idx < num_layers; ++layer_idx) {
+    denominator += std::pow(rate_scaling_factor, layer_idx);
+  }
+
+  double numerator = std::pow(rate_scaling_factor, num_layers - 1);
+  for (size_t layer_idx = 0; layer_idx < num_layers; ++layer_idx) {
+    bitrates.push_back(numerator * total_bitrate / denominator);
+    numerator /= rate_scaling_factor;
+  }
+
+  const size_t sum = std::accumulate(bitrates.begin(), bitrates.end(), 0);
+  // Ensure the sum of split bitrates doesn't exceed the total bitrate.
+  RTC_DCHECK_LE(sum, total_bitrate);
+
+  // Keep the sum of split bitrates equal to the total bitrate by adding bits,
+  // which were lost due to rounding, to the latest layer.
+  bitrates.back() += total_bitrate - sum;
+
+  return bitrates;
+}
+
 SvcRateAllocator::SvcRateAllocator(const VideoCodec& codec) : codec_(codec) {
   RTC_DCHECK_EQ(codec.codecType, kVideoCodecVP9);
+  RTC_DCHECK_GT(codec.VP9().numberOfSpatialLayers, 0u);
+  RTC_DCHECK_GT(codec.VP9().numberOfTemporalLayers, 0u);
 }
 
 VideoBitrateAllocation SvcRateAllocator::GetAllocation(
@@ -34,24 +112,27 @@ VideoBitrateAllocation SvcRateAllocator::GetAllocation(
 
   if (codec_.spatialLayers[0].targetBitrate == 0) {
     // Delegate rate distribution to VP9 encoder wrapper if bitrate thresholds
-    // are not initialized.
+    // are not set.
     VideoBitrateAllocation bitrate_allocation;
     bitrate_allocation.SetBitrate(0, 0, total_bitrate_bps);
     return bitrate_allocation;
-  } else if (codec_.mode == VideoCodecMode::kRealtimeVideo) {
-    return GetAllocationNormalVideo(total_bitrate_bps);
+  }
+
+  size_t num_spatial_layers = GetNumActiveSpatialLayers(codec_);
+  if (num_spatial_layers == 0) {
+    return VideoBitrateAllocation();  // All layers are deactivated.
+  }
+
+  if (codec_.mode == VideoCodecMode::kRealtimeVideo) {
+    return GetAllocationNormalVideo(total_bitrate_bps, num_spatial_layers);
   } else {
-    return GetAllocationScreenSharing(total_bitrate_bps);
+    return GetAllocationScreenSharing(total_bitrate_bps, num_spatial_layers);
   }
 }
 
 VideoBitrateAllocation SvcRateAllocator::GetAllocationNormalVideo(
-    uint32_t total_bitrate_bps) const {
-  size_t num_spatial_layers = codec_.VP9().numberOfSpatialLayers;
-  RTC_CHECK(num_spatial_layers > 0);
-  size_t num_temporal_layers = codec_.VP9().numberOfTemporalLayers;
-  RTC_CHECK(num_temporal_layers > 0);
-
+    uint32_t total_bitrate_bps,
+    size_t num_spatial_layers) const {
   std::vector<size_t> spatial_layer_bitrate_bps;
 
   // Distribute total bitrate across spatial layers. If there is not enough
@@ -63,7 +144,8 @@ VideoBitrateAllocation SvcRateAllocator::GetAllocationNormalVideo(
         SplitBitrate(num_spatial_layers, total_bitrate_bps,
                      kSpatialLayeringRateScalingFactor);
 
-    const bool enough_bitrate = AdjustAndVerify(&spatial_layer_bitrate_bps);
+    const bool enough_bitrate =
+        AdjustAndVerify(codec_, &spatial_layer_bitrate_bps);
     if (enough_bitrate || num_spatial_layers == 1) {
       break;
     }
@@ -71,6 +153,7 @@ VideoBitrateAllocation SvcRateAllocator::GetAllocationNormalVideo(
 
   VideoBitrateAllocation bitrate_allocation;
 
+  const size_t num_temporal_layers = codec_.VP9().numberOfTemporalLayers;
   for (size_t sl_idx = 0; sl_idx < num_spatial_layers; ++sl_idx) {
     std::vector<size_t> temporal_layer_bitrate_bps =
         SplitBitrate(num_temporal_layers, spatial_layer_bitrate_bps[sl_idx],
@@ -100,52 +183,28 @@ VideoBitrateAllocation SvcRateAllocator::GetAllocationNormalVideo(
   return bitrate_allocation;
 }
 
-bool SvcRateAllocator::AdjustAndVerify(
-    std::vector<size_t>* spatial_layer_bitrate_bps) const {
-  bool enough_bitrate = true;
-  size_t excess_rate = 0;
-  for (size_t sl_idx = 0;
-       sl_idx < spatial_layer_bitrate_bps->size() && enough_bitrate; ++sl_idx) {
-    RTC_DCHECK_GT(codec_.spatialLayers[sl_idx].maxBitrate, 0);
-    RTC_DCHECK_GE(codec_.spatialLayers[sl_idx].maxBitrate,
-                  codec_.spatialLayers[sl_idx].minBitrate);
-
-    const size_t min_bitrate_bps =
-        codec_.spatialLayers[sl_idx].minBitrate * 1000;
-    const size_t max_bitrate_bps =
-        codec_.spatialLayers[sl_idx].maxBitrate * 1000;
-
-    spatial_layer_bitrate_bps->at(sl_idx) += excess_rate;
-    if (spatial_layer_bitrate_bps->at(sl_idx) < max_bitrate_bps) {
-      excess_rate = 0;
-    } else {
-      excess_rate = spatial_layer_bitrate_bps->at(sl_idx) - max_bitrate_bps;
-      spatial_layer_bitrate_bps->at(sl_idx) = max_bitrate_bps;
-    }
-
-    enough_bitrate = (spatial_layer_bitrate_bps->at(sl_idx) >= min_bitrate_bps);
-  }
-
-  return enough_bitrate;
-}
-
+// Bit-rate is allocated in such a way, that the highest enabled layer will have
+// between min and max bitrate, and all others will have exactly target
+// bit-rate allocated.
 VideoBitrateAllocation SvcRateAllocator::GetAllocationScreenSharing(
-    uint32_t total_bitrate_bps) const {
-  const size_t num_spatial_layers = codec_.VP9().numberOfSpatialLayers;
-  RTC_CHECK(num_spatial_layers > 0);
-  RTC_CHECK_EQ(codec_.VP9().numberOfTemporalLayers, 1U);
-
+    uint32_t total_bitrate_bps,
+    size_t num_spatial_layers) const {
+  if (num_spatial_layers == 0 ||
+      total_bitrate_bps < codec_.spatialLayers[0].minBitrate * 1000) {
+    return VideoBitrateAllocation();
+  }
   VideoBitrateAllocation bitrate_allocation;
 
-  // Add next layer after bitrate of previous layer has reached its maximum.
   size_t left_bitrate_bps = total_bitrate_bps;
-  for (size_t sl_idx = 0; sl_idx < num_spatial_layers; ++sl_idx) {
+  size_t sl_idx;
+  for (sl_idx = 0; sl_idx < num_spatial_layers; ++sl_idx) {
     const size_t min_bitrate_bps =
         codec_.spatialLayers[sl_idx].minBitrate * 1000;
-    const size_t max_bitrate_bps =
-        codec_.spatialLayers[sl_idx].maxBitrate * 1000;
+    const size_t target_bitrate_bps =
+        codec_.spatialLayers[sl_idx].targetBitrate * 1000;
+    RTC_DCHECK_LE(min_bitrate_bps, target_bitrate_bps);
 
-    const size_t bitrate_bps = std::min(left_bitrate_bps, max_bitrate_bps);
+    const size_t bitrate_bps = std::min(left_bitrate_bps, target_bitrate_bps);
     if (bitrate_bps >= min_bitrate_bps) {
       bitrate_allocation.SetBitrate(sl_idx, 0, bitrate_bps);
     } else {
@@ -155,35 +214,60 @@ VideoBitrateAllocation SvcRateAllocator::GetAllocationScreenSharing(
     left_bitrate_bps -= bitrate_bps;
   }
 
+  if (left_bitrate_bps > 0 && sl_idx > 0) {
+    // Add leftover to the last allocated layer.
+    const size_t max_bitrate_bps =
+        codec_.spatialLayers[sl_idx - 1].maxBitrate * 1000;
+
+    const size_t bitrate_bps = std::min(
+        bitrate_allocation.GetBitrate(sl_idx - 1, 0) + left_bitrate_bps,
+        max_bitrate_bps);
+    bitrate_allocation.SetBitrate(sl_idx - 1, 0, bitrate_bps);
+  }
+
   return bitrate_allocation;
 }
 
-std::vector<size_t> SvcRateAllocator::SplitBitrate(
-    size_t num_layers,
-    size_t total_bitrate,
-    float rate_scaling_factor) const {
-  std::vector<size_t> bitrates;
+uint32_t SvcRateAllocator::GetMaxBitrateBps(const VideoCodec& codec) {
+  const size_t num_spatial_layers = GetNumActiveSpatialLayers(codec);
 
-  double denominator = 0.0;
-  for (size_t layer_idx = 0; layer_idx < num_layers; ++layer_idx) {
-    denominator += std::pow(rate_scaling_factor, layer_idx);
+  uint32_t max_bitrate_kbps = 0;
+  for (size_t sl_idx = 0; sl_idx < num_spatial_layers; ++sl_idx) {
+    max_bitrate_kbps += codec.spatialLayers[sl_idx].maxBitrate;
   }
 
-  double numerator = std::pow(rate_scaling_factor, num_layers - 1);
-  for (size_t layer_idx = 0; layer_idx < num_layers; ++layer_idx) {
-    bitrates.push_back(numerator * total_bitrate / denominator);
-    numerator /= rate_scaling_factor;
+  if (codec.maxBitrate != 0) {
+    max_bitrate_kbps = std::min(max_bitrate_kbps, codec.maxBitrate);
   }
 
-  const size_t sum = std::accumulate(bitrates.begin(), bitrates.end(), 0);
-  // Ensure the sum of split bitrates doesn't exceed the total bitrate.
-  RTC_DCHECK_LE(sum, total_bitrate);
+  return max_bitrate_kbps * 1000;
+}
 
-  // Keep the sum of split bitrates equal to the total bitrate by adding bits,
-  // which were lost due to rounding, to the latest layer.
-  bitrates.back() += total_bitrate - sum;
+uint32_t SvcRateAllocator::GetPaddingBitrateBps(const VideoCodec& codec) {
+  const size_t num_spatial_layers = GetNumActiveSpatialLayers(codec);
+  if (num_spatial_layers == 0) {
+    return 0;  // All layers are deactivated.
+  }
 
-  return bitrates;
+  if (codec.mode == VideoCodecMode::kRealtimeVideo) {
+    float scale_factor = 0.0;
+    for (size_t sl_idx = 0; sl_idx < num_spatial_layers; ++sl_idx) {
+      scale_factor += std::pow(kSpatialLayeringRateScalingFactor, sl_idx);
+    }
+    uint32_t min_bitrate_bps =
+        codec.spatialLayers[num_spatial_layers - 1].minBitrate * 1000;
+    return static_cast<uint32_t>(min_bitrate_bps * scale_factor);
+  }
+
+  RTC_DCHECK(codec.mode == VideoCodecMode::kScreensharing);
+
+  uint32_t min_bitrate_kbps = 0;
+  for (size_t sl_idx = 0; sl_idx < num_spatial_layers - 1; ++sl_idx) {
+    min_bitrate_kbps += codec.spatialLayers[sl_idx].targetBitrate;
+  }
+  min_bitrate_kbps += codec.spatialLayers[num_spatial_layers - 1].minBitrate;
+
+  return min_bitrate_kbps * 1000;
 }
 
 }  // namespace webrtc

@@ -10,11 +10,12 @@
 
 #include "api/units/time_delta.h"
 
+#include "api/array_view.h"
 #include "rtc_base/strings/string_builder.h"
 
 namespace webrtc {
 
-std::string ToString(const TimeDelta& value) {
+std::string ToString(TimeDelta value) {
   char buf[64];
   rtc::SimpleStringBuilder sb(buf);
   if (value.IsPlusInfinity()) {

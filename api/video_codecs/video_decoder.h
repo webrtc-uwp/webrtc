@@ -15,9 +15,10 @@
 #include <string>
 #include <vector>
 
+#include "api/video/encoded_image.h"
 #include "api/video/video_frame.h"
 #include "api/video_codecs/video_codec.h"
-#include "common_video/include/video_frame.h"
+#include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
 
@@ -25,7 +26,7 @@ namespace webrtc {
 struct CodecSpecificInfo;
 class VideoCodec;
 
-class DecodedImageCallback {
+class RTC_EXPORT DecodedImageCallback {
  public:
   virtual ~DecodedImageCallback() {}
 
@@ -47,7 +48,7 @@ class DecodedImageCallback {
   virtual int32_t ReceivedDecodedFrame(const uint64_t pictureId);
 };
 
-class VideoDecoder {
+class RTC_EXPORT VideoDecoder {
  public:
   virtual ~VideoDecoder() {}
 
@@ -56,8 +57,14 @@ class VideoDecoder {
 
   virtual int32_t Decode(const EncodedImage& input_image,
                          bool missing_frames,
+                         int64_t render_time_ms);
+
+  // TODO(bugs.webrtc.org/10379): Deprecated. Delete, and make above method pure
+  // virtual, as soon as downstream applications are updated.
+  virtual int32_t Decode(const EncodedImage& input_image,
+                         bool missing_frames,
                          const CodecSpecificInfo* codec_specific_info,
-                         int64_t render_time_ms) = 0;
+                         int64_t render_time_ms);
 
   virtual int32_t RegisterDecodeCompleteCallback(
       DecodedImageCallback* callback) = 0;

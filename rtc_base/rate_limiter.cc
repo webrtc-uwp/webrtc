@@ -9,11 +9,15 @@
  */
 
 #include "rtc_base/rate_limiter.h"
+
+#include <limits>
+
+#include "absl/types/optional.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 
-RateLimiter::RateLimiter(const Clock* clock, int64_t max_window_ms)
+RateLimiter::RateLimiter(Clock* clock, int64_t max_window_ms)
     : clock_(clock),
       current_rate_(max_window_ms, RateStatistics::kBpsScale),
       window_size_ms_(max_window_ms),

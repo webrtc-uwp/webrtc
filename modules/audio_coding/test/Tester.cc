@@ -23,14 +23,10 @@
 #include "modules/audio_coding/test/iSACTest.h"
 #include "modules/audio_coding/test/opus_test.h"
 #include "test/gtest.h"
-#include "test/testsupport/fileutils.h"
-
-// This parameter is used to describe how to run the tests. It is normally
-// set to 0, and all tests are run in quite mode.
-#define ACM_TEST_MODE 0
+#include "test/testsupport/file_utils.h"
 
 TEST(AudioCodingModuleTest, TestAllCodecs) {
-  webrtc::TestAllCodecs(ACM_TEST_MODE).Perform();
+  webrtc::TestAllCodecs().Perform();
 }
 
 #if defined(WEBRTC_ANDROID)
@@ -38,28 +34,20 @@ TEST(AudioCodingModuleTest, DISABLED_TestEncodeDecode) {
 #else
 TEST(AudioCodingModuleTest, TestEncodeDecode) {
 #endif
-  webrtc::EncodeDecodeTest(ACM_TEST_MODE).Perform();
+  webrtc::EncodeDecodeTest().Perform();
 }
 
-#if defined(WEBRTC_CODEC_RED)
-#if defined(WEBRTC_ANDROID)
-TEST(AudioCodingModuleTest, DISABLED_TestRedFec) {
-#else
 TEST(AudioCodingModuleTest, TestRedFec) {
-#endif
   webrtc::TestRedFec().Perform();
 }
-#endif
 
-#if defined(WEBRTC_CODEC_ISAC) || defined(WEBRTC_CODEC_ISACFX)
 #if defined(WEBRTC_ANDROID)
 TEST(AudioCodingModuleTest, DISABLED_TestIsac) {
 #else
 TEST(AudioCodingModuleTest, TestIsac) {
 #endif
-  webrtc::ISACTest(ACM_TEST_MODE).Perform();
+  webrtc::ISACTest().Perform();
 }
-#endif
 
 #if (defined(WEBRTC_CODEC_ISAC) || defined(WEBRTC_CODEC_ISACFX)) && \
     defined(WEBRTC_CODEC_ILBC)
@@ -68,7 +56,7 @@ TEST(AudioCodingModuleTest, DISABLED_TwoWayCommunication) {
 #else
 TEST(AudioCodingModuleTest, TwoWayCommunication) {
 #endif
-  webrtc::TwoWayCommunication(ACM_TEST_MODE).Perform();
+  webrtc::TwoWayCommunication().Perform();
 }
 #endif
 
@@ -78,15 +66,10 @@ TEST(AudioCodingModuleTest, DISABLED_TestStereo) {
 #else
 TEST(AudioCodingModuleTest, TestStereo) {
 #endif
-  webrtc::TestStereo(ACM_TEST_MODE).Perform();
+  webrtc::TestStereo().Perform();
 }
 
-// Disabled on ios as flaky, see https://crbug.com/webrtc/7057
-#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
-TEST(AudioCodingModuleTest, DISABLED_TestWebRtcVadDtx) {
-#else
 TEST(AudioCodingModuleTest, TestWebRtcVadDtx) {
-#endif
   webrtc::TestWebRtcVadDtx().Perform();
 }
 

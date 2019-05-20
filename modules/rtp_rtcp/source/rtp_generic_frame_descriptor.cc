@@ -10,6 +10,8 @@
 
 #include "modules/rtp_rtcp/source/rtp_generic_frame_descriptor.h"
 
+#include <cstdint>
+
 #include "rtc_base/checks.h"
 
 namespace webrtc {
@@ -19,6 +21,9 @@ constexpr int RtpGenericFrameDescriptor::kMaxTemporalLayers;
 constexpr int RtpGenericFrameDescriptor::kMaxSpatialLayers;
 
 RtpGenericFrameDescriptor::RtpGenericFrameDescriptor() = default;
+RtpGenericFrameDescriptor::RtpGenericFrameDescriptor(
+    const RtpGenericFrameDescriptor&) = default;
+RtpGenericFrameDescriptor::~RtpGenericFrameDescriptor() = default;
 
 int RtpGenericFrameDescriptor::TemporalLayer() const {
   RTC_DCHECK(FirstPacketInSubFrame());
@@ -31,6 +36,17 @@ void RtpGenericFrameDescriptor::SetTemporalLayer(int temporal_layer) {
   temporal_layer_ = temporal_layer;
 }
 
+int RtpGenericFrameDescriptor::SpatialLayer() const {
+  RTC_DCHECK(FirstPacketInSubFrame());
+  int layer = 0;
+  uint8_t spatial_layers = spatial_layers_;
+  while (spatial_layers_ != 0 && !(spatial_layers & 1)) {
+    spatial_layers >>= 1;
+    layer++;
+  }
+  return layer;
+}
+
 uint8_t RtpGenericFrameDescriptor::SpatialLayersBitmask() const {
   RTC_DCHECK(FirstPacketInSubFrame());
   return spatial_layers_;
@@ -40,6 +56,16 @@ void RtpGenericFrameDescriptor::SetSpatialLayersBitmask(
     uint8_t spatial_layers) {
   RTC_DCHECK(FirstPacketInSubFrame());
   spatial_layers_ = spatial_layers;
+}
+
+void RtpGenericFrameDescriptor::SetResolution(int width, int height) {
+  RTC_DCHECK(FirstPacketInSubFrame());
+  RTC_DCHECK_GE(width, 0);
+  RTC_DCHECK_LE(width, 0xFFFF);
+  RTC_DCHECK_GE(height, 0);
+  RTC_DCHECK_LE(height, 0xFFFF);
+  width_ = width;
+  height_ = height;
 }
 
 uint16_t RtpGenericFrameDescriptor::FrameId() const {
@@ -69,6 +95,24 @@ bool RtpGenericFrameDescriptor::AddFrameDependencyDiff(uint16_t fdiff) {
   frame_deps_id_diffs_[num_frame_deps_] = fdiff;
   num_frame_deps_++;
   return true;
+}
+
+void RtpGenericFrameDescriptor::SetByteRepresentation(
+    rtc::ArrayView<const uint8_t> byte_representation) {
+  RTC_CHECK(!byte_representation.empty());
+  byte_representation_.assign(byte_representation.begin(),
+                              byte_representation.end());
+  // Clear end_of_subframe bit.
+  // Because ByteRepresentation is used for frame authentication, bit describing
+  // position of the packet in the frame shouldn't be part of it.
+  // This match RtpVideoSender where descriptor is passed for authentication
+  // before end_of_subframe bit is decided and set, i.e. it is always 0.
+  byte_representation_[0] &= ~0x40;
+}
+
+rtc::ArrayView<const uint8_t>
+RtpGenericFrameDescriptor::GetByteRepresentation() {
+  return byte_representation_;
 }
 
 }  // namespace webrtc

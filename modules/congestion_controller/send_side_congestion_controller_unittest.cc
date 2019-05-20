@@ -18,19 +18,19 @@
 #include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
-#include "rtc_base/socket.h"
+#include "rtc_base/network/sent_packet.h"
 #include "system_wrappers/include/clock.h"
 #include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
-using testing::_;
-using testing::AtLeast;
-using testing::Ge;
-using testing::NiceMock;
-using testing::Return;
-using testing::SaveArg;
-using testing::StrictMock;
+using ::testing::_;
+using ::testing::AtLeast;
+using ::testing::Ge;
+using ::testing::NiceMock;
+using ::testing::Return;
+using ::testing::SaveArg;
+using ::testing::StrictMock;
 
 namespace webrtc {
 
@@ -54,7 +54,7 @@ class LegacySendSideCongestionControllerTest : public ::testing::Test {
 
   void SetUp() override {
     pacer_.reset(new NiceMock<MockPacedSender>());
-    controller_.reset(new SendSideCongestionController(
+    controller_.reset(new DEPRECATED_SendSideCongestionController(
         &clock_, &observer_, &event_log_, pacer_.get()));
     bandwidth_observer_ = controller_->GetBandwidthObserver();
 
@@ -62,8 +62,8 @@ class LegacySendSideCongestionControllerTest : public ::testing::Test {
     // to be updated.
     EXPECT_CALL(observer_, OnNetworkChanged(kInitialBitrateBps, _, _, _));
     EXPECT_CALL(*pacer_, SetEstimatedBitrate(kInitialBitrateBps));
-    EXPECT_CALL(*pacer_, CreateProbeCluster(kInitialBitrateBps * 3));
-    EXPECT_CALL(*pacer_, CreateProbeCluster(kInitialBitrateBps * 5));
+    EXPECT_CALL(*pacer_, CreateProbeCluster(kInitialBitrateBps * 3, 1));
+    EXPECT_CALL(*pacer_, CreateProbeCluster(kInitialBitrateBps * 5, 2));
     controller_->SetBweBitrates(0, kInitialBitrateBps, 5 * kInitialBitrateBps);
   }
 
@@ -71,7 +71,7 @@ class LegacySendSideCongestionControllerTest : public ::testing::Test {
   // prescribing on which iterations it must change (like a mock would).
   void TargetBitrateTrackingSetup() {
     pacer_.reset(new NiceMock<MockPacedSender>());
-    controller_.reset(new SendSideCongestionController(
+    controller_.reset(new DEPRECATED_SendSideCongestionController(
         &clock_, &target_bitrate_observer_, &event_log_, pacer_.get()));
     controller_->SetBweBitrates(0, kInitialBitrateBps, 5 * kInitialBitrateBps);
   }
@@ -140,7 +140,7 @@ class LegacySendSideCongestionControllerTest : public ::testing::Test {
   RtcpBandwidthObserver* bandwidth_observer_;
   PacketRouter packet_router_;
   std::unique_ptr<NiceMock<MockPacedSender>> pacer_;
-  std::unique_ptr<SendSideCongestionController> controller_;
+  std::unique_ptr<DEPRECATED_SendSideCongestionController> controller_;
 
   absl::optional<uint32_t> target_bitrate_bps_;
 };
@@ -216,7 +216,7 @@ TEST_F(LegacySendSideCongestionControllerTest, SignalNetworkState) {
 
 TEST_F(LegacySendSideCongestionControllerTest, OnNetworkRouteChanged) {
   int new_bitrate = 200000;
-  testing::Mock::VerifyAndClearExpectations(pacer_.get());
+  ::testing::Mock::VerifyAndClearExpectations(pacer_.get());
   EXPECT_CALL(observer_, OnNetworkChanged(new_bitrate, _, _, _));
   EXPECT_CALL(*pacer_, SetEstimatedBitrate(new_bitrate));
   rtc::NetworkRoute route;
@@ -236,7 +236,7 @@ TEST_F(LegacySendSideCongestionControllerTest, OnNetworkRouteChanged) {
 
 TEST_F(LegacySendSideCongestionControllerTest, OldFeedback) {
   int new_bitrate = 200000;
-  testing::Mock::VerifyAndClearExpectations(pacer_.get());
+  ::testing::Mock::VerifyAndClearExpectations(pacer_.get());
   EXPECT_CALL(observer_, OnNetworkChanged(new_bitrate, _, _, _));
   EXPECT_CALL(*pacer_, SetEstimatedBitrate(new_bitrate));
 
@@ -326,7 +326,7 @@ TEST_F(LegacySendSideCongestionControllerTest, GetProbingInterval) {
   clock_.AdvanceTimeMilliseconds(25);
   controller_->Process();
 
-  EXPECT_CALL(observer_, OnNetworkChanged(_, _, _, testing::Ne(0)));
+  EXPECT_CALL(observer_, OnNetworkChanged(_, _, _, ::testing::Ne(0)));
   EXPECT_CALL(*pacer_, SetEstimatedBitrate(_));
   bandwidth_observer_->OnReceivedEstimatedBitrate(kInitialBitrateBps * 2);
   clock_.AdvanceTimeMilliseconds(25);
@@ -334,105 +334,14 @@ TEST_F(LegacySendSideCongestionControllerTest, GetProbingInterval) {
 }
 
 TEST_F(LegacySendSideCongestionControllerTest, ProbeOnRouteChange) {
-  testing::Mock::VerifyAndClearExpectations(pacer_.get());
-  EXPECT_CALL(*pacer_, CreateProbeCluster(kInitialBitrateBps * 6));
-  EXPECT_CALL(*pacer_, CreateProbeCluster(kInitialBitrateBps * 12));
+  ::testing::Mock::VerifyAndClearExpectations(pacer_.get());
+  EXPECT_CALL(*pacer_, CreateProbeCluster(kInitialBitrateBps * 6, _));
+  EXPECT_CALL(*pacer_, CreateProbeCluster(kInitialBitrateBps * 12, _));
   EXPECT_CALL(observer_, OnNetworkChanged(kInitialBitrateBps * 2, _, _, _));
   rtc::NetworkRoute route;
   route.local_network_id = 1;
   controller_->OnNetworkRouteChanged(route, 2 * kInitialBitrateBps, 0,
                                      20 * kInitialBitrateBps);
-}
-
-// Estimated bitrate reduced when the feedbacks arrive with such a long delay,
-// that the send-time-history no longer holds the feedbacked packets.
-TEST_F(LegacySendSideCongestionControllerTest, LongFeedbackDelays) {
-  TargetBitrateTrackingSetup();
-
-  const int64_t kFeedbackTimeoutMs = 60001;
-  const int kMaxConsecutiveFailedLookups = 5;
-  for (int i = 0; i < kMaxConsecutiveFailedLookups; ++i) {
-    std::vector<PacketFeedback> packets;
-    packets.push_back(
-        PacketFeedback(i * 100, 2 * i * 100, 0, 1500, kPacingInfo0));
-    packets.push_back(
-        PacketFeedback(i * 100 + 10, 2 * i * 100 + 10, 1, 1500, kPacingInfo0));
-    packets.push_back(
-        PacketFeedback(i * 100 + 20, 2 * i * 100 + 20, 2, 1500, kPacingInfo0));
-    packets.push_back(
-        PacketFeedback(i * 100 + 30, 2 * i * 100 + 30, 3, 1500, kPacingInfo1));
-    packets.push_back(
-        PacketFeedback(i * 100 + 40, 2 * i * 100 + 40, 4, 1500, kPacingInfo1));
-
-    for (const PacketFeedback& packet : packets)
-      OnSentPacket(packet);
-
-    rtcp::TransportFeedback feedback;
-    feedback.SetBase(packets[0].sequence_number,
-                     packets[0].arrival_time_ms * 1000);
-
-    for (const PacketFeedback& packet : packets) {
-      EXPECT_TRUE(feedback.AddReceivedPacket(packet.sequence_number,
-                                             packet.arrival_time_ms * 1000));
-    }
-
-    feedback.Build();
-
-    clock_.AdvanceTimeMilliseconds(kFeedbackTimeoutMs);
-    PacketFeedback later_packet(kFeedbackTimeoutMs + i * 100 + 40,
-                                kFeedbackTimeoutMs + i * 200 + 40, 5, 1500,
-                                kPacingInfo1);
-    OnSentPacket(later_packet);
-
-    controller_->OnTransportFeedback(feedback);
-
-    // Check that packets have timed out.
-    for (PacketFeedback& packet : packets) {
-      packet.send_time_ms = PacketFeedback::kNoSendTime;
-      packet.payload_size = 0;
-      packet.pacing_info = PacedPacketInfo();
-    }
-    ComparePacketFeedbackVectors(packets,
-                                 controller_->GetTransportFeedbackVector());
-  }
-
-  controller_->Process();
-
-  EXPECT_EQ(kInitialBitrateBps / 2, target_bitrate_bps_);
-
-  // Test with feedback that isn't late enough to time out.
-  {
-    std::vector<PacketFeedback> packets;
-    packets.push_back(PacketFeedback(100, 200, 0, 1500, kPacingInfo0));
-    packets.push_back(PacketFeedback(110, 210, 1, 1500, kPacingInfo0));
-    packets.push_back(PacketFeedback(120, 220, 2, 1500, kPacingInfo0));
-    packets.push_back(PacketFeedback(130, 230, 3, 1500, kPacingInfo1));
-    packets.push_back(PacketFeedback(140, 240, 4, 1500, kPacingInfo1));
-
-    for (const PacketFeedback& packet : packets)
-      OnSentPacket(packet);
-
-    rtcp::TransportFeedback feedback;
-    feedback.SetBase(packets[0].sequence_number,
-                     packets[0].arrival_time_ms * 1000);
-
-    for (const PacketFeedback& packet : packets) {
-      EXPECT_TRUE(feedback.AddReceivedPacket(packet.sequence_number,
-                                             packet.arrival_time_ms * 1000));
-    }
-
-    feedback.Build();
-
-    clock_.AdvanceTimeMilliseconds(kFeedbackTimeoutMs - 1);
-    PacketFeedback later_packet(kFeedbackTimeoutMs + 140,
-                                kFeedbackTimeoutMs + 240, 5, 1500,
-                                kPacingInfo1);
-    OnSentPacket(later_packet);
-
-    controller_->OnTransportFeedback(feedback);
-    ComparePacketFeedbackVectors(packets,
-                                 controller_->GetTransportFeedbackVector());
-  }
 }
 
 // Bandwidth estimation is updated when feedbacks are received.
@@ -454,44 +363,6 @@ TEST_F(LegacySendSideCongestionControllerTest, UpdatesDelayBasedEstimate) {
   uint32_t bitrate_before_delay = *target_bitrate_bps_;
   PacketTransmissionAndFeedbackBlock(&seq_num, kRunTimeMs, 50);
   EXPECT_LT(*target_bitrate_bps_, bitrate_before_delay);
-}
-
-TEST_F(LegacySendSideCongestionControllerTest, PacerQueueEncodeRatePushback) {
-  ScopedFieldTrials pushback_field_trial(
-      "WebRTC-PacerPushbackExperiment/Enabled/");
-  SetUp();
-
-  EXPECT_CALL(*pacer_, ExpectedQueueTimeMs()).WillOnce(Return(0));
-  controller_->Process();
-
-  EXPECT_CALL(*pacer_, ExpectedQueueTimeMs()).WillOnce(Return(100));
-  EXPECT_CALL(observer_, OnNetworkChanged(kInitialBitrateBps * 0.9, _, _, _));
-  controller_->Process();
-
-  EXPECT_CALL(*pacer_, ExpectedQueueTimeMs()).WillOnce(Return(50));
-  controller_->Process();
-
-  EXPECT_CALL(*pacer_, ExpectedQueueTimeMs()).WillOnce(Return(0));
-  EXPECT_CALL(observer_, OnNetworkChanged(kInitialBitrateBps, _, _, _));
-  controller_->Process();
-
-  const uint32_t kMinAdjustedBps = 50000;
-  int expected_queue_threshold =
-      1000 - kMinAdjustedBps * 1000.0 / kInitialBitrateBps;
-
-  EXPECT_CALL(*pacer_, ExpectedQueueTimeMs())
-      .WillOnce(Return(expected_queue_threshold));
-  EXPECT_CALL(observer_, OnNetworkChanged(Ge(kMinAdjustedBps), _, _, _));
-  controller_->Process();
-
-  EXPECT_CALL(*pacer_, ExpectedQueueTimeMs())
-      .WillOnce(Return(expected_queue_threshold + 1));
-  EXPECT_CALL(observer_, OnNetworkChanged(0, _, _, _));
-  controller_->Process();
-
-  EXPECT_CALL(*pacer_, ExpectedQueueTimeMs()).WillOnce(Return(0));
-  EXPECT_CALL(observer_, OnNetworkChanged(kInitialBitrateBps, _, _, _));
-  controller_->Process();
 }
 
 }  // namespace test

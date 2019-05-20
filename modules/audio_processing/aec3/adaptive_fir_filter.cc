@@ -24,7 +24,6 @@
 
 #include "modules/audio_processing/aec3/fft_data.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
 
 namespace webrtc {
 
@@ -455,20 +454,18 @@ AdaptiveFirFilter::~AdaptiveFirFilter() = default;
 void AdaptiveFirFilter::HandleEchoPathChange() {
   size_t current_h_size = h_.size();
   h_.resize(GetTimeDomainLength(max_size_partitions_));
-  std::fill(h_.begin(), h_.end(), 0.f);
+  std::fill(h_.begin() + current_h_size, h_.end(), 0.f);
   h_.resize(current_h_size);
 
   size_t current_size_partitions = H_.size();
   H_.resize(max_size_partitions_);
-  for (auto& H_j : H_) {
-    H_j.Clear();
+  H2_.resize(max_size_partitions_);
+
+  for (size_t k = current_size_partitions; k < max_size_partitions_; ++k) {
+    H_[k].Clear();
+    H2_[k].fill(0.f);
   }
   H_.resize(current_size_partitions);
-
-  H2_.resize(max_size_partitions_);
-  for (auto& H2_k : H2_) {
-    H2_k.fill(0.f);
-  }
   H2_.resize(current_size_partitions);
 
   erl_.fill(0.f);

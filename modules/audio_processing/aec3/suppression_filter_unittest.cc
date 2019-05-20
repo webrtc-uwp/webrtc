@@ -12,6 +12,7 @@
 
 #include <math.h>
 #include <algorithm>
+#include <cmath>
 #include <numeric>
 
 #include "test/gtest.h"
@@ -28,8 +29,8 @@ void ProduceSinusoid(int sample_rate_hz,
   // Produce a sinusoid of the specified frequency.
   for (size_t k = *sample_counter, j = 0; k < (*sample_counter + kBlockSize);
        ++k, ++j) {
-    x[j] =
-        32767.f * sin(2.f * kPi * sinusoidal_frequency_hz * k / sample_rate_hz);
+    x[j] = 32767.f *
+           std::sin(2.f * kPi * sinusoidal_frequency_hz * k / sample_rate_hz);
   }
   *sample_counter = *sample_counter + kBlockSize;
 }
@@ -45,21 +46,21 @@ TEST(SuppressionFilter, NullOutput) {
   FftData E;
   std::array<float, kFftLengthBy2Plus1> gain;
 
-  EXPECT_DEATH(SuppressionFilter(16000).ApplyGain(cn, cn_high_bands, gain, 1.0f,
-                                                  E, nullptr),
+  EXPECT_DEATH(SuppressionFilter(Aec3Optimization::kNone, 16000)
+                   .ApplyGain(cn, cn_high_bands, gain, 1.0f, E, nullptr),
                "");
 }
 
 // Verifies the check for allowed sample rate.
 TEST(SuppressionFilter, ProperSampleRate) {
-  EXPECT_DEATH(SuppressionFilter(16001), "");
+  EXPECT_DEATH(SuppressionFilter(Aec3Optimization::kNone, 16001), "");
 }
 
 #endif
 
 // Verifies that no comfort noise is added when the gain is 1.
 TEST(SuppressionFilter, ComfortNoiseInUnityGain) {
-  SuppressionFilter filter(48000);
+  SuppressionFilter filter(Aec3Optimization::kNone, 48000);
   FftData cn;
   FftData cn_high_bands;
   std::array<float, kFftLengthBy2Plus1> gain;
@@ -89,7 +90,7 @@ TEST(SuppressionFilter, ComfortNoiseInUnityGain) {
 
 // Verifies that the suppressor is able to suppress a signal.
 TEST(SuppressionFilter, SignalSuppression) {
-  SuppressionFilter filter(48000);
+  SuppressionFilter filter(Aec3Optimization::kNone, 48000);
   FftData cn;
   FftData cn_high_bands;
   std::array<float, kFftLengthBy2> e_old_;
@@ -131,7 +132,7 @@ TEST(SuppressionFilter, SignalSuppression) {
 // Verifies that the suppressor is able to pass through a desired signal while
 // applying suppressing for some frequencies.
 TEST(SuppressionFilter, SignalTransparency) {
-  SuppressionFilter filter(48000);
+  SuppressionFilter filter(Aec3Optimization::kNone, 48000);
   FftData cn;
   std::array<float, kFftLengthBy2> e_old_;
   Aec3Fft fft;
@@ -171,7 +172,7 @@ TEST(SuppressionFilter, SignalTransparency) {
 
 // Verifies that the suppressor delay.
 TEST(SuppressionFilter, Delay) {
-  SuppressionFilter filter(48000);
+  SuppressionFilter filter(Aec3Optimization::kNone, 48000);
   FftData cn;
   FftData cn_high_bands;
   std::array<float, kFftLengthBy2> e_old_;

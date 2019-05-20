@@ -16,8 +16,8 @@
 #include <vector>
 
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "rtc_base/constructormagic.h"
-#include "rtc_base/criticalsection.h"
+#include "rtc_base/constructor_magic.h"
+#include "rtc_base/critical_section.h"
 #include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
@@ -44,7 +44,7 @@ class RtpPacketHistory {
     absl::optional<int64_t> send_time_ms;
     int64_t capture_time_ms = 0;
     uint32_t ssrc = 0;
-    size_t payload_size = 0;
+    size_t packet_size = 0;
     // Number of times RE-transmitted, ie not including the first transmission.
     size_t times_retransmitted = 0;
   };
@@ -76,16 +76,13 @@ class RtpPacketHistory {
                     absl::optional<int64_t> send_time_ms);
 
   // Gets stored RTP packet corresponding to the input |sequence number|.
-  // Returns nullptr if packet is not found. If |verify_rtt| is true, doesn't
-  // return packet that was (re)sent too recently.
+  // Returns nullptr if packet is not found or was (re)sent too recently.
   std::unique_ptr<RtpPacketToSend> GetPacketAndSetSendTime(
-      uint16_t sequence_number,
-      bool verify_rtt);
+      uint16_t sequence_number);
 
   // Similar to GetPacketAndSetSendTime(), but only returns a snapshot of the
   // current state for packet, and never updates internal state.
-  absl::optional<PacketState> GetPacketState(uint16_t sequence_number,
-                                             bool verify_rtt) const;
+  absl::optional<PacketState> GetPacketState(uint16_t sequence_number) const;
 
   // Get the packet (if any) from the history, with size closest to
   // |packet_size|. The exact size of the packet is not guaranteed.

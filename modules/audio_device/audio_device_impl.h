@@ -13,12 +13,12 @@
 
 #if defined(WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE)
 
+#include <stdint.h>
 #include <memory>
 
+#include "api/task_queue/task_queue_factory.h"
 #include "modules/audio_device/audio_device_buffer.h"
 #include "modules/audio_device/include/audio_device.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/criticalsection.h"
 
 namespace webrtc {
 
@@ -41,7 +41,8 @@ class AudioDeviceModuleImpl : public AudioDeviceModuleForTest {
   int32_t CreatePlatformSpecificObjects();
   int32_t AttachAudioBuffer();
 
-  AudioDeviceModuleImpl(const AudioLayer audioLayer);
+  AudioDeviceModuleImpl(AudioLayer audio_layer,
+                        TaskQueueFactory* task_queue_factory);
   ~AudioDeviceModuleImpl() override;
 
   // Retrieve the currently utilized audio layer

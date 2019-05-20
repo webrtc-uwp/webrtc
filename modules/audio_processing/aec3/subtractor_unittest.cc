@@ -41,7 +41,6 @@ float RunSubtractorTest(int num_blocks_to_process,
   std::vector<float> y(kBlockSize, 0.f);
   std::array<float, kBlockSize> x_old;
   SubtractorOutput output;
-  config.delay.min_echo_path_delay_blocks = 0;
   config.delay.default_delay = 1;
   std::unique_ptr<RenderDelayBuffer> render_delay_buffer(
       RenderDelayBuffer::Create(config, 3));
@@ -206,23 +205,6 @@ TEST(Subtractor, NonConvergenceOnUncorrelatedSignals) {
           300, delay_samples, filter_length_blocks, filter_length_blocks, true,
           blocks_with_echo_path_changes);
       EXPECT_NEAR(1.f, echo_to_nearend_power, 0.1);
-    }
-  }
-}
-
-// Verifies that the subtractor is properly reset when there is an echo path
-// change.
-TEST(Subtractor, EchoPathChangeReset) {
-  std::vector<int> blocks_with_echo_path_changes;
-  blocks_with_echo_path_changes.push_back(99);
-  for (size_t filter_length_blocks : {12, 20, 30}) {
-    for (size_t delay_samples : {0, 64, 150, 200, 301}) {
-      SCOPED_TRACE(ProduceDebugText(delay_samples, filter_length_blocks));
-
-      float echo_to_nearend_power = RunSubtractorTest(
-          100, delay_samples, filter_length_blocks, filter_length_blocks, false,
-          blocks_with_echo_path_changes);
-      EXPECT_NEAR(1.f, echo_to_nearend_power, 0.0000001f);
     }
   }
 }

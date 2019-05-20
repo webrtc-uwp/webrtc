@@ -13,26 +13,25 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/types/optional.h"
 #include "api/audio_codecs/audio_decoder_factory.h"
 #include "api/audio_codecs/audio_encoder.h"
-#include "common_types.h"  // NOLINT(build/include)
+#include "api/function_view.h"
 #include "modules/audio_coding/include/audio_coding_module_typedefs.h"
 #include "modules/audio_coding/neteq/include/neteq.h"
-#include "rtc_base/function_view.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 
 // forward declarations
-struct CodecInst;
-struct WebRtcRTPHeader;
 class AudioDecoder;
 class AudioEncoder;
 class AudioFrame;
 class RTPFragmentationHeader;
+struct RTPHeader;
 
 #define WEBRTC_10MS_PCM_AUDIO 960  // 16 bits super wideband 48 kHz
 
@@ -41,7 +40,7 @@ class AudioPacketizationCallback {
  public:
   virtual ~AudioPacketizationCallback() {}
 
-  virtual int32_t SendData(FrameType frame_type,
+  virtual int32_t SendData(AudioFrameType frame_type,
                            uint8_t payload_type,
                            uint32_t timestamp,
                            const uint8_t* payload_data,
@@ -54,7 +53,7 @@ class ACMVADCallback {
  public:
   virtual ~ACMVADCallback() {}
 
-  virtual int32_t InFrameType(FrameType frame_type) = 0;
+  virtual int32_t InFrameType(AudioFrameType frame_type) = 0;
 };
 
 class AudioCodingModule {
@@ -77,116 +76,8 @@ class AudioCodingModule {
   virtual ~AudioCodingModule() = default;
 
   ///////////////////////////////////////////////////////////////////////////
-  //   Utility functions
-  //
-
-  ///////////////////////////////////////////////////////////////////////////
-  // uint8_t NumberOfCodecs()
-  // Returns number of supported codecs.
-  //
-  // Return value:
-  //   number of supported codecs.
-  ///
-  static int NumberOfCodecs();
-
-  ///////////////////////////////////////////////////////////////////////////
-  // int32_t Codec()
-  // Get supported codec with list number.
-  //
-  // Input:
-  //   -list_id             : list number.
-  //
-  // Output:
-  //   -codec              : a structure where the parameters of the codec,
-  //                         given by list number is written to.
-  //
-  // Return value:
-  //   -1 if the list number (list_id) is invalid.
-  //    0 if succeeded.
-  //
-  static int Codec(int list_id, CodecInst* codec);
-
-  ///////////////////////////////////////////////////////////////////////////
-  // int32_t Codec()
-  // Get supported codec with the given codec name, sampling frequency, and
-  // a given number of channels.
-  //
-  // Input:
-  //   -payload_name       : name of the codec.
-  //   -sampling_freq_hz   : sampling frequency of the codec. Note! for RED
-  //                         a sampling frequency of -1 is a valid input.
-  //   -channels           : number of channels ( 1 - mono, 2 - stereo).
-  //
-  // Output:
-  //   -codec              : a structure where the function returns the
-  //                         default parameters of the codec.
-  //
-  // Return value:
-  //   -1 if no codec matches the given parameters.
-  //    0 if succeeded.
-  //
-  static int Codec(const char* payload_name,
-                   CodecInst* codec,
-                   int sampling_freq_hz,
-                   size_t channels);
-
-  ///////////////////////////////////////////////////////////////////////////
-  // int32_t Codec()
-  //
-  // Returns the list number of the given codec name, sampling frequency, and
-  // a given number of channels.
-  //
-  // Input:
-  //   -payload_name        : name of the codec.
-  //   -sampling_freq_hz    : sampling frequency of the codec. Note! for RED
-  //                          a sampling frequency of -1 is a valid input.
-  //   -channels            : number of channels ( 1 - mono, 2 - stereo).
-  //
-  // Return value:
-  //   if the codec is found, the index of the codec in the list,
-  //   -1 if the codec is not found.
-  //
-  static int Codec(const char* payload_name,
-                   int sampling_freq_hz,
-                   size_t channels);
-
-  ///////////////////////////////////////////////////////////////////////////
   //   Sender
   //
-
-  ///////////////////////////////////////////////////////////////////////////
-  // int32_t RegisterSendCodec()
-  // Registers a codec, specified by |send_codec|, as sending codec.
-  // This API can be called multiple of times to register Codec. The last codec
-  // registered overwrites the previous ones.
-  // The API can also be used to change payload type for CNG and RED, which are
-  // registered by default to default payload types.
-  // Note that registering CNG and RED won't overwrite speech codecs.
-  // This API can be called to set/change the send payload-type, frame-size
-  // or encoding rate (if applicable for the codec).
-  //
-  // Note: If a stereo codec is registered as send codec, VAD/DTX will
-  // automatically be turned off, since it is not supported for stereo sending.
-  //
-  // Note: If a secondary encoder is already registered, and the new send-codec
-  // has a sampling rate that does not match the secondary encoder, the
-  // secondary encoder will be unregistered.
-  //
-  // Input:
-  //   -send_codec         : Parameters of the codec to be registered, c.f.
-  //                         common_types.h for the definition of
-  //                         CodecInst.
-  //
-  // Return value:
-  //   -1 if failed to initialize,
-  //    0 if succeeded.
-  //
-  virtual int32_t RegisterSendCodec(const CodecInst& send_codec) = 0;
-
-  // Registers |external_speech_encoder| as encoder. The new encoder will
-  // replace any previously registered speech encoder (internal or external).
-  virtual void RegisterExternalSendCodec(
-      AudioEncoder* external_speech_encoder) = 0;
 
   // |modifier| is called exactly once with one argument: a pointer to the
   // unique_ptr that holds the current encoder (which is null if there is no
@@ -202,15 +93,6 @@ class AudioCodingModule {
       *encoder = std::move(new_encoder);
     });
   }
-
-  ///////////////////////////////////////////////////////////////////////////
-  // int32_t SendCodec()
-  // Get parameters for the codec currently registered as send codec.
-  //
-  // Return value:
-  //   The send codec, or nothing if we don't have one
-  //
-  virtual absl::optional<CodecInst> SendCodec() const = 0;
 
   ///////////////////////////////////////////////////////////////////////////
   // Sets the bitrate to the specified value in bits/sec. If the value is not
@@ -258,71 +140,6 @@ class AudioCodingModule {
   virtual int32_t Add10MsData(const AudioFrame& audio_frame) = 0;
 
   ///////////////////////////////////////////////////////////////////////////
-  // (RED) Redundant Coding
-  //
-
-  ///////////////////////////////////////////////////////////////////////////
-  // int32_t SetREDStatus()
-  // configure RED status i.e. on/off.
-  //
-  // RFC 2198 describes a solution which has a single payload type which
-  // signifies a packet with redundancy. That packet then becomes a container,
-  // encapsulating multiple payloads into a single RTP packet.
-  // Such a scheme is flexible, since any amount of redundancy may be
-  // encapsulated within a single packet.  There is, however, a small overhead
-  // since each encapsulated payload must be preceded by a header indicating
-  // the type of data enclosed.
-  //
-  // Input:
-  //   -enable_red         : if true RED is enabled, otherwise RED is
-  //                         disabled.
-  //
-  // Return value:
-  //   -1 if failed to set RED status,
-  //    0 if succeeded.
-  //
-  virtual int32_t SetREDStatus(bool enable_red) = 0;
-
-  ///////////////////////////////////////////////////////////////////////////
-  // bool REDStatus()
-  // Get RED status
-  //
-  // Return value:
-  //   true if RED is enabled,
-  //   false if RED is disabled.
-  //
-  virtual bool REDStatus() const = 0;
-
-  ///////////////////////////////////////////////////////////////////////////
-  // (FEC) Forward Error Correction (codec internal)
-  //
-
-  ///////////////////////////////////////////////////////////////////////////
-  // int32_t SetCodecFEC()
-  // Configures codec internal FEC status i.e. on/off. No effects on codecs that
-  // do not provide internal FEC.
-  //
-  // Input:
-  //   -enable_fec         : if true FEC will be enabled otherwise the FEC is
-  //                         disabled.
-  //
-  // Return value:
-  //   -1 if failed, or the codec does not support FEC
-  //    0 if succeeded.
-  //
-  virtual int SetCodecFEC(bool enable_codec_fec) = 0;
-
-  ///////////////////////////////////////////////////////////////////////////
-  // bool CodecFEC()
-  // Gets status of codec internal FEC.
-  //
-  // Return value:
-  //   true if FEC is enabled,
-  //   false if FEC is disabled.
-  //
-  virtual bool CodecFEC() const = 0;
-
-  ///////////////////////////////////////////////////////////////////////////
   // int SetPacketLossRate()
   // Sets expected packet loss rate for encoding. Some encoders provide packet
   // loss gnostic encoding to make stream less sensitive to packet losses,
@@ -342,55 +159,6 @@ class AudioCodingModule {
   ///////////////////////////////////////////////////////////////////////////
   //   (VAD) Voice Activity Detection
   //
-
-  ///////////////////////////////////////////////////////////////////////////
-  // int32_t SetVAD()
-  // If DTX is enabled & the codec does not have internal DTX/VAD
-  // WebRtc VAD will be automatically enabled and |enable_vad| is ignored.
-  //
-  // If DTX is disabled but VAD is enabled no DTX packets are send,
-  // regardless of whether the codec has internal DTX/VAD or not. In this
-  // case, WebRtc VAD is running to label frames as active/in-active.
-  //
-  // NOTE! VAD/DTX is not supported when sending stereo.
-  //
-  // Inputs:
-  //   -enable_dtx         : if true DTX is enabled,
-  //                         otherwise DTX is disabled.
-  //   -enable_vad         : if true VAD is enabled,
-  //                         otherwise VAD is disabled.
-  //   -vad_mode           : determines the aggressiveness of VAD. A more
-  //                         aggressive mode results in more frames labeled
-  //                         as in-active, c.f. definition of
-  //                         ACMVADMode in audio_coding_module_typedefs.h
-  //                         for valid values.
-  //
-  // Return value:
-  //   -1 if failed to set up VAD/DTX,
-  //    0 if succeeded.
-  //
-  virtual int32_t SetVAD(const bool enable_dtx = true,
-                         const bool enable_vad = false,
-                         const ACMVADMode vad_mode = VADNormal) = 0;
-
-  ///////////////////////////////////////////////////////////////////////////
-  // int32_t VAD()
-  // Get VAD status.
-  //
-  // Outputs:
-  //   -dtx_enabled        : is set to true if DTX is enabled, otherwise
-  //                         is set to false.
-  //   -vad_enabled        : is set to true if VAD is enabled, otherwise
-  //                         is set to false.
-  //   -vad_mode            : is set to the current aggressiveness of VAD.
-  //
-  // Return value:
-  //   -1 if fails to retrieve the setting of DTX/VAD,
-  //    0 if succeeded.
-  //
-  virtual int32_t VAD(bool* dtx_enabled,
-                      bool* vad_enabled,
-                      ACMVADMode* vad_mode) const = 0;
 
   ///////////////////////////////////////////////////////////////////////////
   // int32_t RegisterVADCallback()
@@ -450,83 +218,17 @@ class AudioCodingModule {
   virtual void SetReceiveCodecs(
       const std::map<int, SdpAudioFormat>& codecs) = 0;
 
-  // Registers a decoder for the given payload type. Returns true iff
-  // successful.
-  virtual bool RegisterReceiveCodec(int rtp_payload_type,
-                                    const SdpAudioFormat& audio_format) = 0;
-
   ///////////////////////////////////////////////////////////////////////////
-  // int32_t RegisterReceiveCodec()
-  // Register possible decoders, can be called multiple times for
-  // codecs, CNG-NB, CNG-WB, CNG-SWB, AVT and RED.
-  //
-  // Input:
-  //   -receive_codec      : parameters of the codec to be registered, c.f.
-  //                         common_types.h for the definition of
-  //                         CodecInst.
+  // absl::optional<std::pair<int, SdpAudioFormat>> ReceiveCodec()
+  // Get the codec info associated with last received payload.
   //
   // Return value:
-  //   -1 if failed to register the codec
-  //    0 if the codec registered successfully.
-  //
-  virtual int RegisterReceiveCodec(const CodecInst& receive_codec) = 0;
-
-  // Register a decoder; call repeatedly to register multiple decoders. |df| is
-  // a decoder factory that returns an iSAC decoder; it will be called once if
-  // the decoder being registered is iSAC.
-  virtual int RegisterReceiveCodec(
-      const CodecInst& receive_codec,
-      rtc::FunctionView<std::unique_ptr<AudioDecoder>()> isac_factory) = 0;
-
-  // Registers an external decoder. The name is only used to provide information
-  // back to the caller about the decoder. Hence, the name is arbitrary, and may
-  // be empty.
-  virtual int RegisterExternalReceiveCodec(int rtp_payload_type,
-                                           AudioDecoder* external_decoder,
-                                           int sample_rate_hz,
-                                           int num_channels,
-                                           const std::string& name) = 0;
-
-  ///////////////////////////////////////////////////////////////////////////
-  // int32_t UnregisterReceiveCodec()
-  // Unregister the codec currently registered with a specific payload type
-  // from the list of possible receive codecs.
-  //
-  // Input:
-  //   -payload_type        : The number representing the payload type to
-  //                         unregister.
-  //
-  // Output:
-  //   -1 if fails to unregister.
-  //    0 if the given codec is successfully unregistered.
-  //
-  virtual int UnregisterReceiveCodec(uint8_t payload_type) = 0;
-
-  ///////////////////////////////////////////////////////////////////////////
-  // int32_t ReceiveCodec()
-  // Get the codec associated with last received payload.
-  //
-  // Output:
-  //   -curr_receive_codec : parameters of the codec associated with the last
-  //                         received payload, c.f. common_types.h for
-  //                         the definition of CodecInst.
-  //
-  // Return value:
-  //   -1 if failed to retrieve the codec,
-  //    0 if the codec is successfully retrieved.
-  //
-  virtual int32_t ReceiveCodec(CodecInst* curr_receive_codec) const = 0;
-
-  ///////////////////////////////////////////////////////////////////////////
-  // absl::optional<SdpAudioFormat> ReceiveFormat()
-  // Get the format associated with last received payload.
-  //
-  // Return value:
-  //    An SdpAudioFormat describing the format associated with the last
-  //    received payload.
+  //    A payload type and SdpAudioFormat describing the format associated with
+  //    the last received payload.
   //    An empty Optional if no payload has yet been received.
   //
-  virtual absl::optional<SdpAudioFormat> ReceiveFormat() const = 0;
+  virtual absl::optional<std::pair<int, SdpAudioFormat>>
+      ReceiveCodec() const = 0;
 
   ///////////////////////////////////////////////////////////////////////////
   // int32_t IncomingPacket()
@@ -544,7 +246,7 @@ class AudioCodingModule {
   //
   virtual int32_t IncomingPacket(const uint8_t* incoming_payload,
                                  const size_t payload_len_bytes,
-                                 const WebRtcRTPHeader& rtp_info) = 0;
+                                 const RTPHeader& rtp_header) = 0;
 
   ///////////////////////////////////////////////////////////////////////////
   // int SetMinimumPlayoutDelay()
@@ -572,6 +274,15 @@ class AudioCodingModule {
   //    0 if the maximum delay is set.
   //
   virtual int SetMaximumPlayoutDelay(int time_ms) = 0;
+
+  // Sets a base minimum for the playout delay. Base minimum delay sets lower
+  // bound minimum delay value which is set via SetMinimumPlayoutDelay.
+  //
+  // Returns true if value was successfully set, false overwise.
+  virtual bool SetBaseMinimumPlayoutDelayMs(int delay_ms) = 0;
+
+  // Returns current value of base minimum delay in milliseconds.
+  virtual int GetBaseMinimumPlayoutDelayMs() const = 0;
 
   ///////////////////////////////////////////////////////////////////////////
   // int32_t PlayoutTimestamp()
@@ -624,22 +335,6 @@ class AudioCodingModule {
   ///////////////////////////////////////////////////////////////////////////
   //   Codec specific
   //
-
-  ///////////////////////////////////////////////////////////////////////////
-  // int SetOpusApplication()
-  // Sets the intended application if current send codec is Opus. Opus uses this
-  // to optimize the encoding for applications like VOIP and music. Currently,
-  // two modes are supported: kVoip and kAudio.
-  //
-  // Input:
-  //   - application            : intended application.
-  //
-  // Return value:
-  //   -1 if current send codec is not Opus or error occurred in setting the
-  //      Opus application mode.
-  //    0 if the Opus application mode is successfully set.
-  //
-  virtual int SetOpusApplication(OpusApplicationMode application) = 0;
 
   ///////////////////////////////////////////////////////////////////////////
   // int SetOpusMaxPlaybackRate()

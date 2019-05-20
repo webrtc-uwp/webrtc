@@ -61,21 +61,14 @@ class H264EncoderImpl : public H264Encoder {
 
   int32_t RegisterEncodeCompleteCallback(
       EncodedImageCallback* callback) override;
-  int32_t SetRateAllocation(const VideoBitrateAllocation& bitrate_allocation,
-                            uint32_t framerate) override;
+  void SetRates(const RateControlParameters& parameters) override;
 
   // The result of encoding - an EncodedImage and RTPFragmentationHeader - are
   // passed to the encode complete callback.
   int32_t Encode(const VideoFrame& frame,
-                 const CodecSpecificInfo* codec_specific_info,
-                 const std::vector<FrameType>* frame_types) override;
+                 const std::vector<VideoFrameType>* frame_types) override;
 
-  const char* ImplementationName() const override;
-
-  VideoEncoder::ScalingSettings GetScalingSettings() const override;
-
-  // Unsupported / Do nothing.
-  int32_t SetChannelParameters(uint32_t packet_loss, int64_t rtt) override;
+  EncoderInfo GetEncoderInfo() const override;
 
   // Exposed for testing.
   H264PacketizationMode PacketizationModeForTesting() const {
@@ -95,7 +88,6 @@ class H264EncoderImpl : public H264Encoder {
   std::vector<rtc::scoped_refptr<I420Buffer>> downscaled_buffers_;
   std::vector<LayerConfig> configurations_;
   std::vector<EncodedImage> encoded_images_;
-  std::vector<std::unique_ptr<uint8_t[]>> encoded_image_buffers_;
 
   VideoCodec codec_;
   H264PacketizationMode packetization_mode_;
@@ -105,6 +97,9 @@ class H264EncoderImpl : public H264Encoder {
 
   bool has_reported_init_;
   bool has_reported_error_;
+
+  int num_temporal_layers_;
+  uint8_t tl0sync_limit_;
 };
 
 }  // namespace webrtc

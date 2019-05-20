@@ -10,9 +10,14 @@
 
 #include "modules/video_coding/frame_object.h"
 
-#include "common_video/h264/h264_common.h"
+#include <string.h>
+
+#include "api/video/encoded_image.h"
+#include "api/video/video_timing.h"
+#include "modules/video_coding/packet.h"
 #include "modules/video_coding/packet_buffer.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/critical_section.h"
 
 namespace webrtc {
 namespace video_coding {
@@ -22,18 +27,19 @@ RtpFrameObject::RtpFrameObject(PacketBuffer* packet_buffer,
                                uint16_t last_seq_num,
                                size_t frame_size,
                                int times_nacked,
-                               int64_t received_time)
+                               int64_t first_packet_received_time,
+                               int64_t last_packet_received_time)
     : packet_buffer_(packet_buffer),
       first_seq_num_(first_seq_num),
       last_seq_num_(last_seq_num),
-      received_time_(received_time),
+      last_packet_received_time_(last_packet_received_time),
       times_nacked_(times_nacked) {
   VCMPacket* first_packet = packet_buffer_->GetPacket(first_seq_num);
   RTC_CHECK(first_packet);
 
   // EncodedFrame members
   frame_type_ = first_packet->frameType;
-  codec_type_ = first_packet->codec;
+  codec_type_ = first_packet->codec();
 
   // TODO(philipel): Remove when encoded image is replaced by EncodedFrame.
   // VCMEncodedFrame members
@@ -48,31 +54,18 @@ RtpFrameObject::RtpFrameObject(PacketBuffer* packet_buffer,
   // as of the first packet's.
   SetPlayoutDelay(first_packet->video_header.playout_delay);
 
-  // Since FFmpeg use an optimized bitstream reader that reads in chunks of
-  // 32/64 bits we have to add at least that much padding to the buffer
-  // to make sure the decoder doesn't read out of bounds.
-  // NOTE! EncodedImage::_size is the size of the buffer (think capacity of
-  //       an std::vector) and EncodedImage::_length is the actual size of
-  //       the bitstream (think size of an std::vector).
-  if (codec_type_ == kVideoCodecH264)
-    _size = frame_size + EncodedImage::kBufferPaddingBytesH264;
-  else
-    _size = frame_size;
-
-  _buffer = new uint8_t[_size];
-  _length = frame_size;
-
-  bool bitstream_copied = GetBitstream(_buffer);
+  AllocateBitstreamBuffer(frame_size);
+  bool bitstream_copied = packet_buffer_->GetBitstream(*this, data());
   RTC_DCHECK(bitstream_copied);
-  _encodedWidth = first_packet->width;
-  _encodedHeight = first_packet->height;
+  _encodedWidth = first_packet->width();
+  _encodedHeight = first_packet->height();
 
   // EncodedFrame members
   SetTimestamp(first_packet->timestamp);
 
   VCMPacket* last_packet = packet_buffer_->GetPacket(last_seq_num);
   RTC_CHECK(last_packet);
-  RTC_CHECK(last_packet->is_last_packet_in_frame);
+  RTC_CHECK(last_packet->is_last_packet_in_frame());
   // http://www.etsi.org/deliver/etsi_ts/126100_126199/126114/12.07.00_60/
   // ts_126114v120700p.pdf Section 7.4.5.
   // The MTSI client shall add the payload bytes as defined in this clause
@@ -80,6 +73,7 @@ RtpFrameObject::RtpFrameObject(PacketBuffer* packet_buffer,
   // frame (I-frame or IDR frame in H.264 (AVC), or an IRAP picture in H.265
   // (HEVC)).
   rotation_ = last_packet->video_header.rotation;
+  SetColorSpace(last_packet->video_header.color_space);
   _rotation_set = true;
   content_type_ = last_packet->video_header.content_type;
   if (last_packet->video_header.video_timing.flags !=
@@ -104,11 +98,11 @@ RtpFrameObject::RtpFrameObject(PacketBuffer* packet_buffer,
     timing_.network2_timestamp_ms =
         ntp_time_ms_ +
         last_packet->video_header.video_timing.network2_timestamp_delta_ms;
-
-    timing_.receive_start_ms = first_packet->receive_time_ms;
-    timing_.receive_finish_ms = last_packet->receive_time_ms;
   }
+  timing_.receive_start_ms = first_packet_received_time;
+  timing_.receive_finish_ms = last_packet_received_time;
   timing_.flags = last_packet->video_header.video_timing.flags;
+  is_last_spatial_layer = last_packet->markerBit;
 }
 
 RtpFrameObject::~RtpFrameObject() {
@@ -127,7 +121,7 @@ int RtpFrameObject::times_nacked() const {
   return times_nacked_;
 }
 
-FrameType RtpFrameObject::frame_type() const {
+VideoFrameType RtpFrameObject::frame_type() const {
   return frame_type_;
 }
 
@@ -135,12 +129,8 @@ VideoCodecType RtpFrameObject::codec_type() const {
   return codec_type_;
 }
 
-bool RtpFrameObject::GetBitstream(uint8_t* destination) const {
-  return packet_buffer_->GetBitstream(*this, destination);
-}
-
 int64_t RtpFrameObject::ReceivedTime() const {
-  return received_time_;
+  return last_packet_received_time_;
 }
 
 int64_t RtpFrameObject::RenderTime() const {
@@ -159,12 +149,29 @@ absl::optional<RTPVideoHeader> RtpFrameObject::GetRtpVideoHeader() const {
   return packet->video_header;
 }
 
+absl::optional<RtpGenericFrameDescriptor>
+RtpFrameObject::GetGenericFrameDescriptor() const {
+  rtc::CritScope lock(&packet_buffer_->crit_);
+  VCMPacket* packet = packet_buffer_->GetPacket(first_seq_num_);
+  if (!packet)
+    return absl::nullopt;
+  return packet->generic_descriptor;
+}
+
 absl::optional<FrameMarking> RtpFrameObject::GetFrameMarking() const {
   rtc::CritScope lock(&packet_buffer_->crit_);
   VCMPacket* packet = packet_buffer_->GetPacket(first_seq_num_);
   if (!packet)
     return absl::nullopt;
   return packet->video_header.frame_marking;
+}
+
+void RtpFrameObject::AllocateBitstreamBuffer(size_t frame_size) {
+  if (capacity() < frame_size) {
+    Allocate(frame_size);
+  }
+
+  set_size(frame_size);
 }
 
 }  // namespace video_coding

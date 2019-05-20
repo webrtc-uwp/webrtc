@@ -47,19 +47,22 @@
   if (_captureSession == captureSession) {
     return;
   }
-  [RTCDispatcher dispatchAsyncOnType:RTCDispatcherTypeMain
-                               block:^{
-    _captureSession = captureSession;
-    AVCaptureVideoPreviewLayer *previewLayer = [self previewLayer];
-    [RTCDispatcher dispatchAsyncOnType:RTCDispatcherTypeCaptureSession
-                                 block:^{
-      previewLayer.session = captureSession;
-      [RTCDispatcher dispatchAsyncOnType:RTCDispatcherTypeMain
-                               block:^{
-        [self setCorrectVideoOrientation];
-      }];
-    }];
-  }];
+  _captureSession = captureSession;
+  [RTCDispatcher
+      dispatchAsyncOnType:RTCDispatcherTypeMain
+                    block:^{
+                      AVCaptureVideoPreviewLayer *previewLayer = [self previewLayer];
+                      [RTCDispatcher
+                          dispatchAsyncOnType:RTCDispatcherTypeCaptureSession
+                                        block:^{
+                                          previewLayer.session = captureSession;
+                                          [RTCDispatcher
+                                              dispatchAsyncOnType:RTCDispatcherTypeMain
+                                                            block:^{
+                                                              [self setCorrectVideoOrientation];
+                                                            }];
+                                        }];
+                    }];
 }
 
 - (void)layoutSubviews {

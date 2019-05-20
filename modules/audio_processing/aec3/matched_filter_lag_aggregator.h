@@ -17,7 +17,7 @@
 #include "api/audio/echo_canceller3_config.h"
 #include "modules/audio_processing/aec3/delay_estimate.h"
 #include "modules/audio_processing/aec3/matched_filter.h"
-#include "rtc_base/constructormagic.h"
+#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
@@ -34,7 +34,7 @@ class MatchedFilterLagAggregator {
   ~MatchedFilterLagAggregator();
 
   // Resets the aggregator.
-  void Reset();
+  void Reset(bool hard_reset);
 
   // Aggregates the provided lag estimates.
   absl::optional<DelayEstimate> Aggregate(

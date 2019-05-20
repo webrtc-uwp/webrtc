@@ -17,6 +17,7 @@ import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.opengl.GLES20;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.view.Surface;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -25,10 +26,13 @@ import java.util.Map;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nullable;
 import org.webrtc.ThreadUtils.ThreadChecker;
 
-/** Android hardware video encoder. */
+/**
+ * Android hardware video encoder.
+ *
+ * @note This class is only supported on Android Kitkat and above.
+ */
 @TargetApi(19)
 @SuppressWarnings("deprecation") // Cannot support API level 19 without using deprecated methods.
 class HardwareVideoEncoder implements VideoEncoder {
@@ -211,7 +215,7 @@ class HardwareVideoEncoder implements VideoEncoder {
           format, null /* surface */, null /* crypto */, MediaCodec.CONFIGURE_FLAG_ENCODE);
 
       if (useSurfaceMode) {
-        textureEglBase = new EglBase14(sharedContext, EglBase.CONFIG_RECORDABLE);
+        textureEglBase = EglBase.createEgl14(sharedContext, EglBase.CONFIG_RECORDABLE);
         textureInputSurface = codec.createInputSurface();
         textureEglBase.createSurface(textureInputSurface);
         textureEglBase.makeCurrent();
@@ -397,12 +401,6 @@ class HardwareVideoEncoder implements VideoEncoder {
       return VideoCodecStatus.ERROR;
     }
     return VideoCodecStatus.OK;
-  }
-
-  @Override
-  public VideoCodecStatus setChannelParameters(short packetLoss, long roundTripTimeMs) {
-    encodeThreadChecker.checkIsOnValidThread();
-    return VideoCodecStatus.OK; // No op.
   }
 
   @Override

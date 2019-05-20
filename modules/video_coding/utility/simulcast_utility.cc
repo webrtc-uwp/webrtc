@@ -8,7 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <algorithm>
+
+#include <cmath>
+
 #include "modules/video_coding/utility/simulcast_utility.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 
@@ -31,8 +36,9 @@ int SimulcastUtility::NumberOfSimulcastStreams(const VideoCodec& codec) {
   return streams;
 }
 
-bool SimulcastUtility::ValidSimulcastResolutions(const VideoCodec& codec,
-                                                 int num_streams) {
+bool SimulcastUtility::ValidSimulcastParameters(const VideoCodec& codec,
+                                                int num_streams) {
+  // Check resolution.
   if (codec.width != codec.simulcastStream[num_streams - 1].width ||
       codec.height != codec.simulcastStream[num_streams - 1].height) {
     return false;
@@ -43,23 +49,63 @@ bool SimulcastUtility::ValidSimulcastResolutions(const VideoCodec& codec,
       return false;
     }
   }
+  if (codec.codecType == webrtc::kVideoCodecVP8) {
+    for (int i = 1; i < num_streams; ++i) {
+      if (codec.simulcastStream[i].width < codec.simulcastStream[i - 1].width) {
+        return false;
+      }
+    }
+  } else {
+    // TODO(mirtad): H264 encoder implementation still assumes the default
+    // resolution downscaling is used.
+    for (int i = 1; i < num_streams; ++i) {
+      if (codec.simulcastStream[i].width !=
+          codec.simulcastStream[i - 1].width * 2) {
+        return false;
+      }
+    }
+  }
+
+  // Check frame-rate.
   for (int i = 1; i < num_streams; ++i) {
-    if (codec.simulcastStream[i].width !=
-        codec.simulcastStream[i - 1].width * 2) {
+    if (fabs(codec.simulcastStream[i].maxFramerate -
+             codec.simulcastStream[i - 1].maxFramerate) > 1e-9) {
       return false;
     }
   }
-  return true;
-}
 
-bool SimulcastUtility::ValidSimulcastTemporalLayers(const VideoCodec& codec,
-                                                    int num_streams) {
+  // Check temporal layers.
   for (int i = 0; i < num_streams - 1; ++i) {
     if (codec.simulcastStream[i].numberOfTemporalLayers !=
         codec.simulcastStream[i + 1].numberOfTemporalLayers)
       return false;
   }
   return true;
+}
+
+bool SimulcastUtility::IsConferenceModeScreenshare(const VideoCodec& codec) {
+  if (codec.mode != VideoCodecMode::kScreensharing ||
+      NumberOfTemporalLayers(codec, 0) != 2) {
+    return false;
+  }
+  // Fixed default bitrates for legacy screenshare layers mode.
+  return (codec.numberOfSimulcastStreams == 0 && codec.maxBitrate == 1000) ||
+         (codec.numberOfSimulcastStreams >= 1 &&
+          codec.simulcastStream[0].maxBitrate == 1000 &&
+          codec.simulcastStream[0].targetBitrate == 200);
+}
+
+int SimulcastUtility::NumberOfTemporalLayers(const VideoCodec& codec,
+                                             int spatial_id) {
+  uint8_t num_temporal_layers =
+      std::max<uint8_t>(1, codec.VP8().numberOfTemporalLayers);
+  if (codec.numberOfSimulcastStreams > 0) {
+    RTC_DCHECK_LT(spatial_id, codec.numberOfSimulcastStreams);
+    num_temporal_layers =
+        std::max(num_temporal_layers,
+                 codec.simulcastStream[spatial_id].numberOfTemporalLayers);
+  }
+  return num_temporal_layers;
 }
 
 }  // namespace webrtc

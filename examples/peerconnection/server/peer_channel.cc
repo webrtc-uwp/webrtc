@@ -10,18 +10,13 @@
 
 #include "examples/peerconnection/server/peer_channel.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-
 #include <algorithm>
 
 #include "examples/peerconnection/server/data_socket.h"
 #include "examples/peerconnection/server/utils.h"
-#include "rtc_base/stringencode.h"
-#include "rtc_base/stringutils.h"
-
-using rtc::sprintfn;
 
 // Set to the peer id of the originator when messages are being
 // exchanged between peers, but set to the id of the receiving peer
@@ -37,7 +32,9 @@ using rtc::sprintfn;
 static const char kPeerIdHeader[] = "Pragma: ";
 
 static const char* kRequestPaths[] = {
-    "/wait", "/sign_out", "/message",
+    "/wait",
+    "/sign_out",
+    "/message",
 };
 
 enum RequestPathIndex {
@@ -62,7 +59,7 @@ ChannelMember::ChannelMember(DataSocket* socket)
   assert(socket);
   assert(socket->method() == DataSocket::GET);
   assert(socket->PathEquals("/sign_in"));
-  name_ = rtc::s_url_decode(socket->request_arguments());
+  name_ = socket->request_arguments();
   if (name_.empty())
     name_ = "peer_" + int2str(id_);
   else if (name_.length() > kMaxNameLength)
@@ -98,7 +95,7 @@ std::string ChannelMember::GetEntry() const {
 
   // name, 11-digit int, 1-digit bool, newline, null
   char entry[kMaxNameLength + 15];
-  sprintfn(entry, sizeof(entry), "%s,%d,%d\n",
+  snprintf(entry, sizeof(entry), "%s,%d,%d\n",
            name_.substr(0, kMaxNameLength).c_str(), id_, connected_);
   return entry;
 }
@@ -131,7 +128,7 @@ void ChannelMember::QueueResponse(const std::string& status,
                                   const std::string& extra_headers,
                                   const std::string& data) {
   if (waiting_socket_) {
-    assert(queue_.size() == 0);
+    assert(queue_.empty());
     assert(waiting_socket_->method() == DataSocket::GET);
     bool ok =
         waiting_socket_->Send(status, true, content_type, extra_headers, data);

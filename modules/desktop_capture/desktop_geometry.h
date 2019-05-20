@@ -13,7 +13,7 @@
 
 #include <stdint.h>
 
-#include "rtc_base/constructormagic.h"
+#include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
 
@@ -74,7 +74,7 @@ class DesktopSize {
 };
 
 // Represents a rectangle on the screen.
-class DesktopRect {
+class RTC_EXPORT DesktopRect {
  public:
   static DesktopRect MakeSize(const DesktopSize& size) {
     return DesktopRect(0, 0, size.width(), size.height());
@@ -136,7 +136,7 @@ class DesktopRect {
 
   // Adds (dx, dy) to the position of the rectangle.
   void Translate(int32_t dx, int32_t dy);
-  void Translate(DesktopVector d) { Translate(d.x(), d.y()); };
+  void Translate(DesktopVector d) { Translate(d.x(), d.y()); }
 
   // Enlarges current DesktopRect by subtracting |left_offset| and |top_offset|
   // from |left_| and |top_|, and adding |right_offset| and |bottom_offset| to

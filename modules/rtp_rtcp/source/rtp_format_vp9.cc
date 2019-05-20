@@ -12,10 +12,9 @@
 
 #include <string.h>
 
-#include <cmath>
-
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
-#include "rtc_base/bitbuffer.h"
+#include "modules/video_coding/codecs/interface/common_constants.h"
+#include "rtc_base/bit_buffer.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
@@ -451,6 +450,7 @@ RtpPacketizerVp9::RtpPacketizerVp9(rtc::ArrayView<const uint8_t> payload,
       remaining_payload_(payload) {
   limits.max_payload_len -= header_size_;
   limits.first_packet_reduction_len += first_packet_extra_header_size_;
+  limits.single_packet_reduction_len += first_packet_extra_header_size_;
 
   payload_sizes_ = SplitAboutEqually(payload.size(), limits);
   current_packet_ = payload_sizes_.begin();
@@ -607,7 +607,8 @@ bool RtpDepacketizerVp9::Parse(ParsedPayload* parsed_payload,
   parsed_payload->video_header().simulcastIdx = 0;
   parsed_payload->video_header().codec = kVideoCodecVP9;
 
-  parsed_payload->frame_type = p_bit ? kVideoFrameDelta : kVideoFrameKey;
+  parsed_payload->frame_type =
+      p_bit ? VideoFrameType::kVideoFrameDelta : VideoFrameType::kVideoFrameKey;
 
   auto& vp9_header = parsed_payload->video_header()
                          .video_type_header.emplace<RTPVideoHeaderVP9>();

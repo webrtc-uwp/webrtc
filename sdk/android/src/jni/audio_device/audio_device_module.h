@@ -14,10 +14,13 @@
 #include <memory>
 
 #include "absl/types/optional.h"
-#include "modules/audio_device/audio_device_buffer.h"
+#include "modules/audio_device/include/audio_device.h"
 #include "sdk/android/native_api/jni/scoped_java_ref.h"
 
 namespace webrtc {
+
+class AudioDeviceBuffer;
+
 namespace jni {
 
 class AudioInput {
@@ -75,7 +78,8 @@ int GetDefaultSampleRate(JNIEnv* env, const JavaRef<jobject>& j_audio_manager);
 void GetAudioParameters(JNIEnv* env,
                         const JavaRef<jobject>& j_context,
                         const JavaRef<jobject>& j_audio_manager,
-                        int sample_rate,
+                        int input_sample_rate,
+                        int output_sample_rate,
                         bool use_stereo_input,
                         bool use_stereo_output,
                         AudioParameters* input_parameters,

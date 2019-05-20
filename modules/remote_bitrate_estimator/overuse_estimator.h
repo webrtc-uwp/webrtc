@@ -10,11 +10,12 @@
 #ifndef MODULES_REMOTE_BITRATE_ESTIMATOR_OVERUSE_ESTIMATOR_H_
 #define MODULES_REMOTE_BITRATE_ESTIMATOR_OVERUSE_ESTIMATOR_H_
 
+#include <stdint.h>
 #include <deque>
 
 #include "common_types.h"  // NOLINT(build/include)
 #include "modules/remote_bitrate_estimator/include/bwe_defines.h"
-#include "rtc_base/constructormagic.h"
+#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 

@@ -11,9 +11,10 @@
 #include "modules/pacing/round_robin_packet_queue.h"
 
 #include <algorithm>
+#include <cstdint>
+#include <utility>
 
 #include "rtc_base/checks.h"
-#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 
@@ -53,8 +54,8 @@ RoundRobinPacketQueue::Stream::Stream() : bytes(0), ssrc(0) {}
 RoundRobinPacketQueue::Stream::Stream(const Stream& stream) = default;
 RoundRobinPacketQueue::Stream::~Stream() {}
 
-RoundRobinPacketQueue::RoundRobinPacketQueue(const Clock* clock)
-    : time_last_updated_(clock->TimeInMilliseconds()) {}
+RoundRobinPacketQueue::RoundRobinPacketQueue(int64_t start_time_us)
+    : time_last_updated_ms_(start_time_us / 1000) {}
 
 RoundRobinPacketQueue::~RoundRobinPacketQueue() {}
 
@@ -68,22 +69,22 @@ void RoundRobinPacketQueue::Push(const Packet& packet_to_insert) {
     stream_info_it->second.ssrc = packet.ssrc;
   }
 
-  Stream* streams_ = &stream_info_it->second;
+  Stream* stream = &stream_info_it->second;
 
-  if (streams_->priority_it == stream_priorities_.end()) {
+  if (stream->priority_it == stream_priorities_.end()) {
     // If the SSRC is not currently scheduled, add it to |stream_priorities_|.
-    RTC_CHECK(!IsSsrcScheduled(streams_->ssrc));
-    streams_->priority_it = stream_priorities_.emplace(
-        StreamPrioKey(packet.priority, streams_->bytes), packet.ssrc);
-  } else if (packet.priority < streams_->priority_it->first.priority) {
+    RTC_CHECK(!IsSsrcScheduled(stream->ssrc));
+    stream->priority_it = stream_priorities_.emplace(
+        StreamPrioKey(packet.priority, stream->bytes), packet.ssrc);
+  } else if (packet.priority < stream->priority_it->first.priority) {
     // If the priority of this SSRC increased, remove the outdated StreamPrioKey
     // and insert a new one with the new priority. Note that
     // RtpPacketSender::Priority uses lower ordinal for higher priority.
-    stream_priorities_.erase(streams_->priority_it);
-    streams_->priority_it = stream_priorities_.emplace(
-        StreamPrioKey(packet.priority, streams_->bytes), packet.ssrc);
+    stream_priorities_.erase(stream->priority_it);
+    stream->priority_it = stream_priorities_.emplace(
+        StreamPrioKey(packet.priority, stream->bytes), packet.ssrc);
   }
-  RTC_CHECK(streams_->priority_it != stream_priorities_.end());
+  RTC_CHECK(stream->priority_it != stream_priorities_.end());
 
   packet.enqueue_time_it = enqueue_times_.insert(packet.enqueue_time_ms);
 
@@ -95,7 +96,7 @@ void RoundRobinPacketQueue::Push(const Packet& packet_to_insert) {
   // in a paused state.
   UpdateQueueTime(packet.enqueue_time_ms);
   packet.enqueue_time_ms -= pause_time_sum_ms_;
-  streams_->packet_queue.push(packet);
+  stream->packet_queue.push(packet);
 
   size_packets_ += 1;
   size_bytes_ += packet.bytes;
@@ -132,7 +133,7 @@ void RoundRobinPacketQueue::FinalizePop(const Packet& packet) {
     // by subtracting it now we effectively remove the time spent in in the
     // queue while in a paused state.
     int64_t time_in_non_paused_state_ms =
-        time_last_updated_ - packet.enqueue_time_ms - pause_time_sum_ms_;
+        time_last_updated_ms_ - packet.enqueue_time_ms - pause_time_sum_ms_;
     queue_time_sum_ms_ -= time_in_non_paused_state_ms;
 
     RTC_CHECK(packet.enqueue_time_it != enqueue_times_.end());
@@ -189,11 +190,11 @@ int64_t RoundRobinPacketQueue::OldestEnqueueTimeMs() const {
 }
 
 void RoundRobinPacketQueue::UpdateQueueTime(int64_t timestamp_ms) {
-  RTC_CHECK_GE(timestamp_ms, time_last_updated_);
-  if (timestamp_ms == time_last_updated_)
+  RTC_CHECK_GE(timestamp_ms, time_last_updated_ms_);
+  if (timestamp_ms == time_last_updated_ms_)
     return;
 
-  int64_t delta_ms = timestamp_ms - time_last_updated_;
+  int64_t delta_ms = timestamp_ms - time_last_updated_ms_;
 
   if (paused_) {
     pause_time_sum_ms_ += delta_ms;
@@ -201,7 +202,7 @@ void RoundRobinPacketQueue::UpdateQueueTime(int64_t timestamp_ms) {
     queue_time_sum_ms_ += delta_ms * size_packets_;
   }
 
-  time_last_updated_ = timestamp_ms;
+  time_last_updated_ms_ = timestamp_ms;
 }
 
 void RoundRobinPacketQueue::SetPauseState(bool paused, int64_t timestamp_ms) {

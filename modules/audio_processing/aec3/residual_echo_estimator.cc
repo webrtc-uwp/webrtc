@@ -1,4 +1,3 @@
-
 /*
  *  Copyright (c) 2017 The WebRTC project authors. All Rights Reserved.
  *
@@ -11,29 +10,17 @@
 
 #include "modules/audio_processing/aec3/residual_echo_estimator.h"
 
-#include <numeric>
+#include <stddef.h>
+#include <algorithm>
 #include <vector>
 
+#include "api/array_view.h"
 #include "modules/audio_processing/aec3/reverb_model.h"
 #include "modules/audio_processing/aec3/reverb_model_fallback.h"
 #include "rtc_base/checks.h"
-#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace {
-
-bool EnableSoftTransparentMode() {
-  return !field_trial::IsEnabled("WebRTC-Aec3SoftTransparentModeKillSwitch");
-}
-
-bool OverrideEstimatedEchoPathGain() {
-  return !field_trial::IsEnabled("WebRTC-Aec3OverrideEchoPathGainKillSwitch");
-}
-
-bool UseFixedNonLinearReverbModel() {
-  return field_trial::IsEnabled(
-      "WebRTC-Aec3StandardNonlinearReverbModelKillSwitch");
-}
 
 // Computes the indexes that will be used for computing spectral power over
 // the blocks surrounding the delay.
@@ -41,46 +28,25 @@ void GetRenderIndexesToAnalyze(
     const VectorBuffer& spectrum_buffer,
     const EchoCanceller3Config::EchoModel& echo_model,
     int filter_delay_blocks,
-    bool gain_limiter_running,
-    int headroom,
     int* idx_start,
     int* idx_stop) {
   RTC_DCHECK(idx_start);
   RTC_DCHECK(idx_stop);
-  if (gain_limiter_running) {
-    if (static_cast<size_t>(headroom) >
-        echo_model.render_post_window_size_init) {
-      *idx_start = spectrum_buffer.OffsetIndex(
-          spectrum_buffer.read,
-          -static_cast<int>(echo_model.render_post_window_size_init));
-    } else {
-      *idx_start = spectrum_buffer.IncIndex(spectrum_buffer.write);
-    }
-
-    *idx_stop = spectrum_buffer.OffsetIndex(
-        spectrum_buffer.read, echo_model.render_pre_window_size_init);
-  } else {
-    size_t window_start;
-    size_t window_end;
-    window_start =
-        std::max(0, filter_delay_blocks -
-                        static_cast<int>(echo_model.render_pre_window_size));
-    window_end = filter_delay_blocks +
-                 static_cast<int>(echo_model.render_post_window_size);
-    *idx_start =
-        spectrum_buffer.OffsetIndex(spectrum_buffer.read, window_start);
-    *idx_stop =
-        spectrum_buffer.OffsetIndex(spectrum_buffer.read, window_end + 1);
-  }
+  size_t window_start;
+  size_t window_end;
+  window_start =
+      std::max(0, filter_delay_blocks -
+                      static_cast<int>(echo_model.render_pre_window_size));
+  window_end = filter_delay_blocks +
+               static_cast<int>(echo_model.render_post_window_size);
+  *idx_start = spectrum_buffer.OffsetIndex(spectrum_buffer.read, window_start);
+  *idx_stop = spectrum_buffer.OffsetIndex(spectrum_buffer.read, window_end + 1);
 }
 
 }  // namespace
 
 ResidualEchoEstimator::ResidualEchoEstimator(const EchoCanceller3Config& config)
-    : config_(config),
-      soft_transparent_mode_(EnableSoftTransparentMode()),
-      override_estimated_echo_path_gain_(OverrideEstimatedEchoPathGain()),
-      use_fixed_nonlinear_reverb_model_(UseFixedNonLinearReverbModel()) {
+    : config_(config) {
   if (config_.ep_strength.reverb_based_on_render) {
     echo_reverb_.reset(new ReverbModel());
   } else {
@@ -105,9 +71,15 @@ void ResidualEchoEstimator::Estimate(
 
   // Estimate the residual echo power.
   if (aec_state.UsableLinearEstimate()) {
-    RTC_DCHECK(!aec_state.SaturatedEcho());
     LinearEstimate(S2_linear, aec_state.Erle(), aec_state.ErleUncertainty(),
                    R2);
+
+    // When there is saturated echo, assume the same spectral content as is
+    // present in the microphone signal.
+    if (aec_state.SaturatedEcho()) {
+      std::copy(Y2.begin(), Y2.end(), R2->begin());
+    }
+
     // Adds the estimated unmodelled echo power to the residual echo power
     // estimate.
     if (echo_reverb_) {
@@ -127,8 +99,7 @@ void ResidualEchoEstimator::Estimate(
     std::array<float, kFftLengthBy2Plus1> X2;
 
     EchoGeneratingPower(render_buffer.GetSpectrumBuffer(), config_.echo_model,
-                        render_buffer.Headroom(), aec_state.FilterDelayBlocks(),
-                        aec_state.IsSuppressionGainLimitActive(),
+                        aec_state.FilterDelayBlocks(),
                         !aec_state.UseStationaryProperties(), &X2);
 
     // Subtract the stationary noise power to avoid stationary noise causing
@@ -140,24 +111,17 @@ void ResidualEchoEstimator::Estimate(
                    });
 
     float echo_path_gain;
-    if (override_estimated_echo_path_gain_) {
-      echo_path_gain = aec_state.TransparentMode() && soft_transparent_mode_
-                           ? 0.01f
-                           : config_.ep_strength.lf;
-    } else {
-      echo_path_gain = aec_state.TransparentMode() && soft_transparent_mode_
-                           ? 0.01f
-                           : aec_state.EchoPathGain();
-    }
-    NonLinearEstimate(echo_path_gain, X2, Y2, R2);
+    echo_path_gain =
+        aec_state.TransparentMode() ? 0.01f : config_.ep_strength.default_gain;
+    NonLinearEstimate(echo_path_gain, X2, R2);
 
-    // If the echo is saturated, estimate the echo power as the maximum echo
-    // power with a leakage factor.
+    // When there is saturated echo, assume the same spectral content as is
+    // present in the microphone signal.
     if (aec_state.SaturatedEcho()) {
-      R2->fill((*std::max_element(R2->begin(), R2->end())) * 100.f);
+      std::copy(Y2.begin(), Y2.end(), R2->begin());
     }
 
-    if (!(aec_state.TransparentMode() && soft_transparent_mode_)) {
+    if (!(aec_state.TransparentMode())) {
       if (echo_reverb_) {
         echo_reverb_->AddReverbNoFreqShaping(
             render_buffer.Spectrum(aec_state.FilterDelayBlocks() + 1),
@@ -177,21 +141,8 @@ void ResidualEchoEstimator::Estimate(
     aec_state.GetResidualEchoScaling(residual_scaling);
     for (size_t k = 0; k < R2->size(); ++k) {
       (*R2)[k] *= residual_scaling[k];
-      if (residual_scaling[k] == 0.f) {
-        R2_hold_counter_[k] = 0;
-      }
     }
   }
-  if (!soft_transparent_mode_) {
-    // If the echo is deemed inaudible, set the residual echo to zero.
-    if (aec_state.TransparentMode()) {
-      R2->fill(0.f);
-      R2_old_.fill(0.f);
-      R2_hold_counter_.fill(0.f);
-    }
-  }
-
-  std::copy(R2->begin(), R2->end(), R2_old_.begin());
 }
 
 void ResidualEchoEstimator::Reset() {
@@ -203,8 +154,6 @@ void ResidualEchoEstimator::Reset() {
   }
   X2_noise_floor_counter_.fill(config_.echo_model.noise_floor_hold);
   X2_noise_floor_.fill(config_.echo_model.min_noise_floor_power);
-  R2_old_.fill(0.f);
-  R2_hold_counter_.fill(0.f);
 }
 
 void ResidualEchoEstimator::LinearEstimate(
@@ -212,7 +161,6 @@ void ResidualEchoEstimator::LinearEstimate(
     const std::array<float, kFftLengthBy2Plus1>& erle,
     absl::optional<float> erle_uncertainty,
     std::array<float, kFftLengthBy2Plus1>* R2) {
-  std::fill(R2_hold_counter_.begin(), R2_hold_counter_.end(), 10.f);
   if (erle_uncertainty) {
     for (size_t k = 0; k < R2->size(); ++k) {
       (*R2)[k] = S2_linear[k] * *erle_uncertainty;
@@ -229,44 +177,24 @@ void ResidualEchoEstimator::LinearEstimate(
 void ResidualEchoEstimator::NonLinearEstimate(
     float echo_path_gain,
     const std::array<float, kFftLengthBy2Plus1>& X2,
-    const std::array<float, kFftLengthBy2Plus1>& Y2,
     std::array<float, kFftLengthBy2Plus1>* R2) {
   // Compute preliminary residual echo.
   std::transform(X2.begin(), X2.end(), R2->begin(), [echo_path_gain](float a) {
     return a * echo_path_gain * echo_path_gain;
   });
-
-  if (use_fixed_nonlinear_reverb_model_) {
-    for (size_t k = 0; k < R2->size(); ++k) {
-      // Update hold counter.
-      R2_hold_counter_[k] = R2_old_[k] < (*R2)[k] ? 0 : R2_hold_counter_[k] + 1;
-
-      // Compute the residual echo by holding a maximum echo powers and an echo
-      // fading corresponding to a room with an RT60 value of about 50 ms.
-      (*R2)[k] =
-          R2_hold_counter_[k] < config_.echo_model.nonlinear_hold
-              ? std::max((*R2)[k], R2_old_[k])
-              : std::min((*R2)[k] +
-                             R2_old_[k] * config_.echo_model.nonlinear_release,
-                         Y2[k]);
-    }
-  }
 }
 
 void ResidualEchoEstimator::EchoGeneratingPower(
     const VectorBuffer& spectrum_buffer,
     const EchoCanceller3Config::EchoModel& echo_model,
-    int headroom_spectrum_buffer,
     int filter_delay_blocks,
-    bool gain_limiter_running,
     bool apply_noise_gating,
     std::array<float, kFftLengthBy2Plus1>* X2) const {
   int idx_stop, idx_start;
 
   RTC_DCHECK(X2);
   GetRenderIndexesToAnalyze(spectrum_buffer, config_.echo_model,
-                            filter_delay_blocks, gain_limiter_running,
-                            headroom_spectrum_buffer, &idx_start, &idx_stop);
+                            filter_delay_blocks, &idx_start, &idx_stop);
 
   X2->fill(0.f);
   for (int k = idx_start; k != idx_stop; k = spectrum_buffer.IncIndex(k)) {

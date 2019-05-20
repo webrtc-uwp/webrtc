@@ -9,16 +9,29 @@
  */
 
 #include "absl/types/optional.h"
+#include "api/test/video/function_video_encoder_factory.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "system_wrappers/include/metrics.h"
-#include "system_wrappers/include/metrics_default.h"
 #include "test/call_test.h"
-#include "test/function_video_encoder_factory.h"
 #include "test/gtest.h"
 
 namespace webrtc {
+namespace {
+enum : int {  // The first valid value is 1.
+  kTransportSequenceNumberExtensionId = 1,
+  kVideoContentTypeExtensionId,
+};
+}  // namespace
 
 class HistogramTest : public test::CallTest {
+ public:
+  HistogramTest() {
+    RegisterRtpExtension(RtpExtension(RtpExtension::kTransportSequenceNumberUri,
+                                      kTransportSequenceNumberExtensionId));
+    RegisterRtpExtension(RtpExtension(RtpExtension::kVideoContentTypeUri,
+                                      kVideoContentTypeExtensionId));
+  }
+
  protected:
   void VerifyHistogramStats(bool use_rtx, bool use_fec, bool screenshare);
 };

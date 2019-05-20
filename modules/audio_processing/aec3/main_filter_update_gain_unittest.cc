@@ -63,7 +63,6 @@ void RunFilterUpdateTest(int num_blocks_to_process,
   Random random_generator(42U);
   std::vector<std::vector<float>> x(3, std::vector<float>(kBlockSize, 0.f));
   std::vector<float> y(kBlockSize, 0.f);
-  config.delay.min_echo_path_delay_blocks = 0;
   config.delay.default_delay = 1;
   std::unique_ptr<RenderDelayBuffer> render_delay_buffer(
       RenderDelayBuffer::Create(config, 3));

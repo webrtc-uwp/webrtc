@@ -13,15 +13,13 @@
 #if defined(WEBRTC_LINUX)
 #include <unistd.h>
 #include <cstdio>
-#include <cstdlib>
-#include <cstring>
 #elif defined(WEBRTC_MAC)
 #include <mach/mach.h>
 #elif defined(WEBRTC_WIN)
 // clang-format off
 // clang formating would change include order.
 #include <windows.h>
-#include <psapi.h> // must come after windows.h
+#include <psapi.h>  // must come after windows.h
 // clang-format on
 #endif
 
@@ -61,6 +59,9 @@ int64_t GetProcessResidentSizeBytes() {
     return -1;
   }
   return pmc.WorkingSetSize;
+#elif defined(WEBRTC_FUCHSIA)
+  RTC_LOG_ERR(LS_ERROR) << "GetProcessResidentSizeBytes() not implemented";
+  return 0;
 #else
   // Not implemented yet.
   static_assert(false,

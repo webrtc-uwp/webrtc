@@ -10,14 +10,18 @@
 #ifndef MODULES_RTP_RTCP_SOURCE_RTP_FORMAT_VIDEO_GENERIC_H_
 #define MODULES_RTP_RTCP_SOURCE_RTP_FORMAT_VIDEO_GENERIC_H_
 
+#include <stdint.h>
 #include <vector>
 
 #include "api/array_view.h"
-#include "common_types.h"  // NOLINT(build/include)
 #include "modules/rtp_rtcp/source/rtp_format.h"
-#include "rtc_base/constructormagic.h"
+#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
+
+class RtpPacketToSend;
+struct RTPVideoHeader;
+
 namespace RtpFormatVideoGeneric {
 static const uint8_t kKeyFrameBit = 0x01;
 static const uint8_t kFirstPacketBit = 0x02;
@@ -33,7 +37,7 @@ class RtpPacketizerGeneric : public RtpPacketizer {
   RtpPacketizerGeneric(rtc::ArrayView<const uint8_t> payload,
                        PayloadSizeLimits limits,
                        const RTPVideoHeader& rtp_video_header,
-                       FrameType frametype);
+                       VideoFrameType frametype);
 
   ~RtpPacketizerGeneric() override;
 
@@ -47,7 +51,7 @@ class RtpPacketizerGeneric : public RtpPacketizer {
  private:
   // Fills header_ and header_size_ members.
   void BuildHeader(const RTPVideoHeader& rtp_video_header,
-                   FrameType frame_type);
+                   VideoFrameType frame_type);
 
   uint8_t header_[3];
   size_t header_size_;

@@ -12,6 +12,9 @@
 #ifndef MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_PSFB_H_
 #define MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_PSFB_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "modules/rtp_rtcp/source/rtcp_packet.h"
 
 namespace webrtc {
@@ -22,6 +25,7 @@ namespace rtcp {
 class Psfb : public RtcpPacket {
  public:
   static constexpr uint8_t kPacketType = 206;
+  static constexpr uint8_t kAfbMessageType = 15;
 
   Psfb() : sender_ssrc_(0), media_ssrc_(0) {}
   ~Psfb() override {}

@@ -10,13 +10,17 @@
 
 package org.webrtc;
 
+import static com.google.common.truth.Truth.assertThat;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import android.support.annotation.Nullable;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.MediumTest;
 import android.support.test.filters.SmallTest;
@@ -27,6 +31,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -35,7 +40,6 @@ import java.util.Queue;
 import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nullable;
 import org.chromium.base.test.BaseJUnit4ClassRunner;
 import org.chromium.base.test.util.DisabledTest;
 import org.junit.Before;
@@ -44,7 +48,13 @@ import org.junit.runner.RunWith;
 import org.webrtc.Metrics.HistogramInfo;
 import org.webrtc.PeerConnection.IceConnectionState;
 import org.webrtc.PeerConnection.IceGatheringState;
+import org.webrtc.PeerConnection.PeerConnectionState;
 import org.webrtc.PeerConnection.SignalingState;
+import org.webrtc.PeerConnection.TlsCertPolicy;
+import org.webrtc.RtpParameters;
+import org.webrtc.RtpParameters.Encoding;
+import org.webrtc.RtpTransceiver;
+import org.webrtc.RtpTransceiver.RtpTransceiverInit;
 
 /** End-to-end tests for PeerConnection.java. */
 @RunWith(BaseJUnit4ClassRunner.class)
@@ -73,6 +83,7 @@ public class PeerConnectionTest {
     private int expectedTracksAdded;
     private Queue<SignalingState> expectedSignalingChanges = new ArrayDeque<>();
     private Queue<IceConnectionState> expectedIceConnectionChanges = new ArrayDeque<>();
+    private Queue<PeerConnectionState> expectedConnectionChanges = new ArrayDeque<>();
     private Queue<IceGatheringState> expectedIceGatheringChanges = new ArrayDeque<>();
     private Queue<String> expectedAddStreamLabels = new ArrayDeque<>();
     private Queue<String> expectedRemoveStreamLabels = new ArrayDeque<>();
@@ -143,6 +154,9 @@ public class PeerConnectionTest {
     // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
     @SuppressWarnings("NoSynchronizedMethodCheck")
     public synchronized void onFrame(VideoFrame frame) {
+      if (expectedFramesDelivered <= 0) {
+        return;
+      }
       assertTrue(expectedWidth > 0);
       assertTrue(expectedHeight > 0);
       assertEquals(expectedWidth, frame.getRotatedWidth());
@@ -187,11 +201,29 @@ public class PeerConnectionTest {
       assertEquals(expectedIceConnectionChanges.remove(), newState);
     }
 
+    // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
+    @SuppressWarnings("NoSynchronizedMethodCheck")
+    public synchronized void expectConnectionChange(PeerConnectionState newState) {
+      expectedConnectionChanges.add(newState);
+    }
+
+    @Override
+    // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
+    @SuppressWarnings("NoSynchronizedMethodCheck")
+    public synchronized void onConnectionChange(PeerConnectionState newState) {
+      if (expectedConnectionChanges.isEmpty()) {
+        System.out.println(name + " got an unexpected DTLS connection change " + newState);
+        return;
+      }
+
+      assertEquals(expectedConnectionChanges.remove(), newState);
+    }
+
     @Override
     // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
     @SuppressWarnings("NoSynchronizedMethodCheck")
     public synchronized void onIceConnectionReceivingChange(boolean receiving) {
-      System.out.println(name + "Got an ICE connection receiving change " + receiving);
+      System.out.println(name + " got an ICE connection receiving change " + receiving);
     }
 
     // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
@@ -630,6 +662,109 @@ public class PeerConnectionTest {
     // Thread.sleep(100);
   }
 
+  @Test
+  @SmallTest
+  public void testIceServerChanged() throws Exception {
+    PeerConnection.IceServer iceServer1 =
+        PeerConnection.IceServer.builder("turn:fake.example.com")
+            .setUsername("fakeUsername")
+            .setPassword("fakePassword")
+            .setTlsCertPolicy(TlsCertPolicy.TLS_CERT_POLICY_SECURE)
+            .setHostname("fakeHostname")
+            .setTlsAlpnProtocols(singletonList("fakeTlsAlpnProtocol"))
+            .setTlsEllipticCurves(singletonList("fakeTlsEllipticCurve"))
+            .createIceServer();
+    // Same as iceServer1.
+    PeerConnection.IceServer iceServer2 =
+        PeerConnection.IceServer.builder("turn:fake.example.com")
+            .setUsername("fakeUsername")
+            .setPassword("fakePassword")
+            .setTlsCertPolicy(TlsCertPolicy.TLS_CERT_POLICY_SECURE)
+            .setHostname("fakeHostname")
+            .setTlsAlpnProtocols(singletonList("fakeTlsAlpnProtocol"))
+            .setTlsEllipticCurves(singletonList("fakeTlsEllipticCurve"))
+            .createIceServer();
+    // Differs from iceServer1 by the url.
+    PeerConnection.IceServer iceServer3 =
+        PeerConnection.IceServer.builder("turn:fake.example2.com")
+            .setUsername("fakeUsername")
+            .setPassword("fakePassword")
+            .setTlsCertPolicy(TlsCertPolicy.TLS_CERT_POLICY_SECURE)
+            .setHostname("fakeHostname")
+            .setTlsAlpnProtocols(singletonList("fakeTlsAlpnProtocol"))
+            .setTlsEllipticCurves(singletonList("fakeTlsEllipticCurve"))
+            .createIceServer();
+    // Differs from iceServer1 by the username.
+    PeerConnection.IceServer iceServer4 =
+        PeerConnection.IceServer.builder("turn:fake.example.com")
+            .setUsername("fakeUsername2")
+            .setPassword("fakePassword")
+            .setTlsCertPolicy(TlsCertPolicy.TLS_CERT_POLICY_SECURE)
+            .setHostname("fakeHostname")
+            .setTlsAlpnProtocols(singletonList("fakeTlsAlpnProtocol"))
+            .setTlsEllipticCurves(singletonList("fakeTlsEllipticCurve"))
+            .createIceServer();
+    // Differs from iceServer1 by the password.
+    PeerConnection.IceServer iceServer5 =
+        PeerConnection.IceServer.builder("turn:fake.example.com")
+            .setUsername("fakeUsername")
+            .setPassword("fakePassword2")
+            .setTlsCertPolicy(TlsCertPolicy.TLS_CERT_POLICY_SECURE)
+            .setHostname("fakeHostname")
+            .setTlsAlpnProtocols(singletonList("fakeTlsAlpnProtocol"))
+            .setTlsEllipticCurves(singletonList("fakeTlsEllipticCurve"))
+            .createIceServer();
+    // Differs from iceServer1 by the TLS certificate policy.
+    PeerConnection.IceServer iceServer6 =
+        PeerConnection.IceServer.builder("turn:fake.example.com")
+            .setUsername("fakeUsername")
+            .setPassword("fakePassword")
+            .setTlsCertPolicy(TlsCertPolicy.TLS_CERT_POLICY_INSECURE_NO_CHECK)
+            .setHostname("fakeHostname")
+            .setTlsAlpnProtocols(singletonList("fakeTlsAlpnProtocol"))
+            .setTlsEllipticCurves(singletonList("fakeTlsEllipticCurve"))
+            .createIceServer();
+    // Differs from iceServer1 by the hostname.
+    PeerConnection.IceServer iceServer7 =
+        PeerConnection.IceServer.builder("turn:fake.example.com")
+            .setUsername("fakeUsername")
+            .setPassword("fakePassword")
+            .setTlsCertPolicy(TlsCertPolicy.TLS_CERT_POLICY_INSECURE_NO_CHECK)
+            .setHostname("fakeHostname2")
+            .setTlsAlpnProtocols(singletonList("fakeTlsAlpnProtocol"))
+            .setTlsEllipticCurves(singletonList("fakeTlsEllipticCurve"))
+            .createIceServer();
+    // Differs from iceServer1 by the TLS ALPN.
+    PeerConnection.IceServer iceServer8 =
+        PeerConnection.IceServer.builder("turn:fake.example.com")
+            .setUsername("fakeUsername")
+            .setPassword("fakePassword")
+            .setTlsCertPolicy(TlsCertPolicy.TLS_CERT_POLICY_INSECURE_NO_CHECK)
+            .setHostname("fakeHostname")
+            .setTlsAlpnProtocols(singletonList("fakeTlsAlpnProtocol2"))
+            .setTlsEllipticCurves(singletonList("fakeTlsEllipticCurve"))
+            .createIceServer();
+    // Differs from iceServer1 by the TLS elliptic curve.
+    PeerConnection.IceServer iceServer9 =
+        PeerConnection.IceServer.builder("turn:fake.example.com")
+            .setUsername("fakeUsername")
+            .setPassword("fakePassword")
+            .setTlsCertPolicy(TlsCertPolicy.TLS_CERT_POLICY_INSECURE_NO_CHECK)
+            .setHostname("fakeHostname")
+            .setTlsAlpnProtocols(singletonList("fakeTlsAlpnProtocol"))
+            .setTlsEllipticCurves(singletonList("fakeTlsEllipticCurve2"))
+            .createIceServer();
+
+    assertTrue(iceServer1.equals(iceServer2));
+    assertFalse(iceServer1.equals(iceServer3));
+    assertFalse(iceServer1.equals(iceServer4));
+    assertFalse(iceServer1.equals(iceServer5));
+    assertFalse(iceServer1.equals(iceServer6));
+    assertFalse(iceServer1.equals(iceServer7));
+    assertFalse(iceServer1.equals(iceServer8));
+    assertFalse(iceServer1.equals(iceServer9));
+  }
+
   // TODO(fischman) MOAR test ideas:
   // - Test that PC.removeStream() works; requires a second
   //   createOffer/createAnswer dance.
@@ -661,6 +796,72 @@ public class PeerConnectionTest {
     ObserverExpectations offeringExpectations = new ObserverExpectations("PCTest:offerer");
     PeerConnection offeringPC = factory.createPeerConnection(config, offeringExpectations);
     assertNotNull(offeringPC);
+  }
+
+  @Test
+  @SmallTest
+  public void testCreationWithCertificate() throws Exception {
+    PeerConnectionFactory factory = PeerConnectionFactory.builder().createPeerConnectionFactory();
+    PeerConnection.RTCConfiguration config = new PeerConnection.RTCConfiguration(Arrays.asList());
+
+    // Test certificate.
+    RtcCertificatePem originalCert = RtcCertificatePem.generateCertificate();
+    config.certificate = originalCert;
+
+    ObserverExpectations offeringExpectations = new ObserverExpectations("PCTest:offerer");
+    PeerConnection offeringPC = factory.createPeerConnection(config, offeringExpectations);
+
+    RtcCertificatePem restoredCert = offeringPC.getCertificate();
+    assertEquals(originalCert.privateKey, restoredCert.privateKey);
+    assertEquals(originalCert.certificate, restoredCert.certificate);
+  }
+
+  @Test
+  @SmallTest
+  public void testCreationWithCryptoOptions() throws Exception {
+    PeerConnectionFactory factory = PeerConnectionFactory.builder().createPeerConnectionFactory();
+    PeerConnection.RTCConfiguration config = new PeerConnection.RTCConfiguration(Arrays.asList());
+
+    assertNull(config.cryptoOptions);
+
+    CryptoOptions cryptoOptions = CryptoOptions.builder()
+                                      .setEnableGcmCryptoSuites(true)
+                                      .setEnableAes128Sha1_32CryptoCipher(true)
+                                      .setEnableEncryptedRtpHeaderExtensions(true)
+                                      .setRequireFrameEncryption(true)
+                                      .createCryptoOptions();
+    config.cryptoOptions = cryptoOptions;
+
+    ObserverExpectations offeringExpectations = new ObserverExpectations("PCTest:offerer");
+    PeerConnection offeringPC = factory.createPeerConnection(config, offeringExpectations);
+    assertNotNull(offeringPC);
+  }
+
+  // Test that RIDs get set in the RTP sender when passed in through an RtpTransceiverInit.
+  @Test
+  @SmallTest
+  public void testSetRidInSimulcast() throws Exception {
+    PeerConnectionFactory factory = PeerConnectionFactory.builder().createPeerConnectionFactory();
+    PeerConnection.RTCConfiguration config = new PeerConnection.RTCConfiguration(Arrays.asList());
+    config.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
+    ObserverExpectations expectations = new ObserverExpectations("PCTest:simulcast_rids");
+    expectations.expectRenegotiationNeeded();
+    PeerConnection pc = factory.createPeerConnection(config, expectations);
+    List<Encoding> encodings = new ArrayList<Encoding>();
+    encodings.add(new Encoding("F", true, null));
+    encodings.add(new Encoding("H", true, null));
+    RtpTransceiverInit init = new RtpTransceiverInit(
+        RtpTransceiver.RtpTransceiverDirection.SEND_ONLY, Collections.emptyList(), encodings);
+    RtpTransceiver transceiver =
+        pc.addTransceiver(MediaStreamTrack.MediaType.MEDIA_TYPE_VIDEO, init);
+    RtpSender sender = transceiver.getSender();
+    RtpParameters parameters = sender.getParameters();
+    assertNotNull(parameters);
+    List<Encoding> sendEncodings = parameters.getEncodings();
+    assertNotNull(sendEncodings);
+    assertEquals(2, sendEncodings.size());
+    assertEquals("F", sendEncodings.get(0).getRid());
+    assertEquals("H", sendEncodings.get(1).getRid());
   }
 
   @Test
@@ -759,12 +960,14 @@ public class PeerConnectionTest {
 
     sdpLatch = new SdpObserverLatch();
     answeringExpectations.expectSignalingChange(SignalingState.STABLE);
+    answeringExpectations.expectConnectionChange(PeerConnectionState.CONNECTING);
     answeringPC.setLocalDescription(sdpLatch, answerSdp);
     assertTrue(sdpLatch.await());
     assertNull(sdpLatch.getSdp());
 
     sdpLatch = new SdpObserverLatch();
     offeringExpectations.expectSignalingChange(SignalingState.HAVE_LOCAL_OFFER);
+    offeringExpectations.expectConnectionChange(PeerConnectionState.CONNECTING);
     offeringPC.setLocalDescription(sdpLatch, offerSdp);
     assertTrue(sdpLatch.await());
     assertNull(sdpLatch.getSdp());
@@ -774,6 +977,7 @@ public class PeerConnectionTest {
 
     offeringExpectations.expectIceConnectionChange(IceConnectionState.CHECKING);
     offeringExpectations.expectIceConnectionChange(IceConnectionState.CONNECTED);
+    offeringExpectations.expectConnectionChange(PeerConnectionState.CONNECTED);
     // TODO(bemasc): uncomment once delivery of ICECompleted is reliable
     // (https://code.google.com/p/webrtc/issues/detail?id=3021).
     //
@@ -781,6 +985,7 @@ public class PeerConnectionTest {
     //     IceConnectionState.COMPLETED);
     answeringExpectations.expectIceConnectionChange(IceConnectionState.CHECKING);
     answeringExpectations.expectIceConnectionChange(IceConnectionState.CONNECTED);
+    answeringExpectations.expectConnectionChange(PeerConnectionState.CONNECTED);
 
     offeringPC.setRemoteDescription(sdpLatch, answerSdp);
     assertTrue(sdpLatch.await());
@@ -855,10 +1060,15 @@ public class PeerConnectionTest {
     assertNull(rtpParameters.encodings.get(0).maxBitrateBps);
     assertNull(rtpParameters.encodings.get(0).minBitrateBps);
     assertNull(rtpParameters.encodings.get(0).maxFramerate);
+    assertNull(rtpParameters.encodings.get(0).numTemporalLayers);
+    assertNull(rtpParameters.encodings.get(0).scaleResolutionDownBy);
+    assertTrue(rtpParameters.encodings.get(0).rid.isEmpty());
 
     rtpParameters.encodings.get(0).maxBitrateBps = 300000;
     rtpParameters.encodings.get(0).minBitrateBps = 100000;
     rtpParameters.encodings.get(0).maxFramerate = 20;
+    rtpParameters.encodings.get(0).numTemporalLayers = 2;
+    rtpParameters.encodings.get(0).scaleResolutionDownBy = 2.0;
     assertTrue(videoSender.setParameters(rtpParameters));
 
     // Create a DTMF sender.
@@ -872,6 +1082,8 @@ public class PeerConnectionTest {
     assertEquals(300000, (int) rtpParameters.encodings.get(0).maxBitrateBps);
     assertEquals(100000, (int) rtpParameters.encodings.get(0).minBitrateBps);
     assertEquals(20, (int) rtpParameters.encodings.get(0).maxFramerate);
+    assertEquals(2, (int) rtpParameters.encodings.get(0).numTemporalLayers);
+    assertThat(rtpParameters.encodings.get(0).scaleResolutionDownBy).isEqualTo(2.0);
 
     // Test send & receive UTF-8 text.
     answeringExpectations.expectMessage(
@@ -986,12 +1198,14 @@ public class PeerConnectionTest {
 
     sdpLatch = new SdpObserverLatch();
     answeringExpectations.expectSignalingChange(SignalingState.STABLE);
+    answeringExpectations.expectConnectionChange(PeerConnectionState.CONNECTING);
     answeringPC.setLocalDescription(sdpLatch, answerSdp);
     assertTrue(sdpLatch.await());
     assertNull(sdpLatch.getSdp());
 
     sdpLatch = new SdpObserverLatch();
     offeringExpectations.expectSignalingChange(SignalingState.HAVE_LOCAL_OFFER);
+    offeringExpectations.expectConnectionChange(PeerConnectionState.CONNECTING);
     offeringPC.setLocalDescription(sdpLatch, offerSdp);
     assertTrue(sdpLatch.await());
     assertNull(sdpLatch.getSdp());
@@ -1000,10 +1214,12 @@ public class PeerConnectionTest {
 
     offeringExpectations.expectIceConnectionChange(IceConnectionState.CHECKING);
     offeringExpectations.expectIceConnectionChange(IceConnectionState.CONNECTED);
+    offeringExpectations.expectConnectionChange(PeerConnectionState.CONNECTED);
     // TODO(bemasc): uncomment once delivery of ICECompleted is reliable
     // (https://code.google.com/p/webrtc/issues/detail?id=3021).
     answeringExpectations.expectIceConnectionChange(IceConnectionState.CHECKING);
     answeringExpectations.expectIceConnectionChange(IceConnectionState.CONNECTED);
+    answeringExpectations.expectConnectionChange(PeerConnectionState.CONNECTED);
 
     offeringPC.setRemoteDescription(sdpLatch, answerSdp);
     assertTrue(sdpLatch.await());
@@ -1136,6 +1352,7 @@ public class PeerConnectionTest {
     offeringExpectations.expectSignalingChange(SignalingState.HAVE_LOCAL_OFFER);
     offeringExpectations.expectIceCandidates(2);
     offeringExpectations.expectIceGatheringChange(IceGatheringState.COMPLETE);
+    offeringExpectations.expectConnectionChange(PeerConnectionState.CONNECTING);
     offeringPC.setLocalDescription(sdpLatch, offerSdp);
     assertTrue(sdpLatch.await());
     assertNull(sdpLatch.getSdp());
@@ -1167,6 +1384,7 @@ public class PeerConnectionTest {
     answeringExpectations.expectSignalingChange(SignalingState.STABLE);
     answeringExpectations.expectIceCandidates(2);
     answeringExpectations.expectIceGatheringChange(IceGatheringState.COMPLETE);
+    answeringExpectations.expectConnectionChange(PeerConnectionState.CONNECTING);
     answeringPC.setLocalDescription(sdpLatch, answerSdp);
     assertTrue(sdpLatch.await());
     assertNull(sdpLatch.getSdp());
@@ -1178,6 +1396,7 @@ public class PeerConnectionTest {
 
     offeringExpectations.expectIceConnectionChange(IceConnectionState.CHECKING);
     offeringExpectations.expectIceConnectionChange(IceConnectionState.CONNECTED);
+    offeringExpectations.expectConnectionChange(PeerConnectionState.CONNECTED);
     // TODO(bemasc): uncomment once delivery of ICECompleted is reliable
     // (https://code.google.com/p/webrtc/issues/detail?id=3021).
     //
@@ -1185,6 +1404,7 @@ public class PeerConnectionTest {
     //     IceConnectionState.COMPLETED);
     answeringExpectations.expectIceConnectionChange(IceConnectionState.CHECKING);
     answeringExpectations.expectIceConnectionChange(IceConnectionState.CONNECTED);
+    answeringExpectations.expectConnectionChange(PeerConnectionState.CONNECTED);
 
     offeringPC.setRemoteDescription(sdpLatch, answerSdp);
     assertTrue(sdpLatch.await());
@@ -1570,6 +1790,7 @@ public class PeerConnectionTest {
     assertTrue(expectations.waitForAllExpectationsToBeSatisfied(TIMEOUT_SECONDS));
 
     expectations.expectIceConnectionChange(IceConnectionState.CLOSED);
+    expectations.expectConnectionChange(PeerConnectionState.CLOSED);
     expectations.expectSignalingChange(SignalingState.CLOSED);
     pc.close();
     assertTrue(expectations.waitForAllExpectationsToBeSatisfied(TIMEOUT_SECONDS));

@@ -11,9 +11,11 @@
 #ifndef MODULES_AUDIO_PROCESSING_AGC2_BIQUAD_FILTER_H_
 #define MODULES_AUDIO_PROCESSING_AGC2_BIQUAD_FILTER_H_
 
+#include <algorithm>
+
 #include "api/array_view.h"
 #include "rtc_base/arraysize.h"
-#include "rtc_base/constructormagic.h"
+#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 

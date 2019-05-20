@@ -18,6 +18,7 @@
 #include <Cocoa/Cocoa.h>
 #include <CoreFoundation/CoreFoundation.h>
 
+#include "api/scoped_refptr.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capture_types.h"
 #include "modules/desktop_capture/desktop_frame.h"
@@ -26,8 +27,7 @@
 #include "modules/desktop_capture/mac/full_screen_chrome_window_detector.h"
 #include "modules/desktop_capture/mac/window_list_utils.h"
 #include "modules/desktop_capture/mouse_cursor.h"
-#include "rtc_base/macutils.h"
-#include "rtc_base/scoped_ref_ptr.h"
+#include "rtc_base/mac_utils.h"
 
 namespace webrtc {
 
@@ -117,10 +117,8 @@ void MouseCursorMonitorMac::Capture() {
 
   DesktopVector position(gc_position.x, gc_position.y);
 
-  configuration_monitor_->Lock();
   MacDesktopConfiguration configuration =
       configuration_monitor_->desktop_configuration();
-  configuration_monitor_->Unlock();
   float scale = GetScaleFactorAtPosition(configuration, position);
 
   CaptureImage(scale);

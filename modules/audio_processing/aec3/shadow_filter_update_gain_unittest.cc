@@ -50,7 +50,6 @@ void RunFilterUpdateTest(int num_blocks_to_process,
                                   DetectOptimization(), &data_dumper);
   Aec3Fft fft;
 
-  config.delay.min_echo_path_delay_blocks = 0;
   config.delay.default_delay = 1;
   std::unique_ptr<RenderDelayBuffer> render_delay_buffer(
       RenderDelayBuffer::Create(config, 3));

@@ -11,13 +11,12 @@
 #ifndef MODULES_AUDIO_PROCESSING_AEC3_REVERB_FREQUENCY_RESPONSE_H_
 #define MODULES_AUDIO_PROCESSING_AEC3_REVERB_FREQUENCY_RESPONSE_H_
 
-#include <memory>
+#include <array>
 #include <vector>
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "modules/audio_processing/aec3/aec3_common.h"
-#include "modules/audio_processing/logging/apm_data_dumper.h"
 
 namespace webrtc {
 
@@ -45,7 +44,6 @@ class ReverbFrequencyResponse {
               int filter_delay_blocks,
               float linear_filter_quality);
 
-  const bool enable_smooth_tail_response_updates_;
   float average_decay_ = 0.f;
   std::array<float, kFftLengthBy2Plus1> tail_response_;
 };

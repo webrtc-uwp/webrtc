@@ -17,7 +17,8 @@
 #include <vector>
 
 #include "api/bitrate_constraints.h"
-#include "api/mediatypes.h"
+#include "api/fec_controller.h"
+#include "api/media_types.h"
 #include "api/test/simulated_network.h"
 #include "api/video_codecs/video_encoder_config.h"
 
@@ -34,6 +35,7 @@ class VideoQualityTestFixtureInterface {
     ~Params();
     struct CallConfig {
       bool send_side_bwe;
+      bool generic_descriptor;
       BitrateConstraints call_bitrate_config;
       int num_thumbnails;
       // Indicates if secondary_(video|ss|screenshare) structures are used.
@@ -55,15 +57,17 @@ class VideoQualityTestFixtureInterface {
       bool ulpfec;
       bool flexfec;
       bool automatic_scaling;
-      std::string clip_name;  // "Generator" to generate frames instead.
+      std::string clip_path;  // "Generator" to generate frames instead.
       size_t capture_device_index;
       SdpVideoFormat::Parameters sdp_params;
+      double encoder_overshoot_factor;
     } video[2];
     struct Audio {
       bool enabled;
       bool sync_video;
       bool dtx;
       bool use_real_adm;
+      absl::optional<std::string> ana_config;
     } audio;
     struct Screenshare {
       bool enabled;
@@ -80,15 +84,11 @@ class VideoQualityTestFixtureInterface {
       std::string graph_data_output_filename;
       std::string graph_title;
     } analyzer;
-    // Deprecated. DO NOT USE. Use config instead. This is not pipe actually,
-    // it is just configuration, that will be passed to default implementation
-    // of simulation layer.
-    DefaultNetworkSimulationConfig pipe;
     // Config for default simulation implementation. Must be nullopt if
     // `sender_network` and `receiver_network` in InjectionComponents are
     // non-null. May be nullopt even if `sender_network` and `receiver_network`
     // are null; in that case, a default config will be used.
-    absl::optional<DefaultNetworkSimulationConfig> config;
+    absl::optional<BuiltInNetworkBehaviorConfig> config;
     struct SS {                          // Spatial scalability.
       std::vector<VideoStream> streams;  // If empty, one stream is assumed.
       size_t selected_stream;
@@ -116,8 +116,8 @@ class VideoQualityTestFixtureInterface {
     // Simulations of sender and receiver networks. They must either both be
     // null (in which case `config` from Params is used), or both be non-null
     // (in which case `config` from Params must be nullopt).
-    std::unique_ptr<NetworkSimulationInterface> sender_network;
-    std::unique_ptr<NetworkSimulationInterface> receiver_network;
+    std::unique_ptr<NetworkBehaviorInterface> sender_network;
+    std::unique_ptr<NetworkBehaviorInterface> receiver_network;
 
     std::unique_ptr<FecControllerFactoryInterface> fec_controller_factory;
   };

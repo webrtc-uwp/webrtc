@@ -126,7 +126,10 @@ StatisticsCalculator::StatisticsCalculator()
           100),
       excess_buffer_delay_("WebRTC.Audio.AverageExcessBufferDelayMs",
                            60000,  // 60 seconds report interval.
-                           1000) {}
+                           1000),
+      buffer_full_counter_("WebRTC.Audio.JitterBufferFullPerMinute",
+                           60000,  // 60 seconds report interval.
+                           100) {}
 
 StatisticsCalculator::~StatisticsCalculator() = default;
 
@@ -213,7 +216,7 @@ void StatisticsCalculator::AddZeros(size_t num_samples) {
 }
 
 void StatisticsCalculator::PacketsDiscarded(size_t num_packets) {
-  discarded_packets_ += num_packets;
+  operations_and_state_.discarded_primary_packets += num_packets;
 }
 
 void StatisticsCalculator::SecondaryPacketsDiscarded(size_t num_packets) {
@@ -229,6 +232,7 @@ void StatisticsCalculator::IncreaseCounter(size_t num_samples, int fs_hz) {
       rtc::CheckedDivExact(static_cast<int>(1000 * num_samples), fs_hz);
   delayed_packet_outage_counter_.AdvanceClock(time_step_ms);
   excess_buffer_delay_.AdvanceClock(time_step_ms);
+  buffer_full_counter_.AdvanceClock(time_step_ms);
   timestamps_since_last_report_ += static_cast<uint32_t>(num_samples);
   if (timestamps_since_last_report_ >
       static_cast<uint32_t>(fs_hz * kMaxReportPeriod)) {
@@ -242,17 +246,34 @@ void StatisticsCalculator::IncreaseCounter(size_t num_samples, int fs_hz) {
 void StatisticsCalculator::JitterBufferDelay(size_t num_samples,
                                              uint64_t waiting_time_ms) {
   lifetime_stats_.jitter_buffer_delay_ms += waiting_time_ms * num_samples;
+  lifetime_stats_.jitter_buffer_emitted_count += num_samples;
 }
 
 void StatisticsCalculator::SecondaryDecodedSamples(int num_samples) {
   secondary_decoded_samples_ += num_samples;
 }
 
-void StatisticsCalculator::LogDelayedPacketOutageEvent(int outage_duration_ms) {
+void StatisticsCalculator::FlushedPacketBuffer() {
+  operations_and_state_.packet_buffer_flushes++;
+  buffer_full_counter_.RegisterSample();
+}
+
+void StatisticsCalculator::ReceivedPacket() {
+  ++lifetime_stats_.jitter_buffer_packets_received;
+}
+
+void StatisticsCalculator::RelativePacketArrivalDelay(size_t delay_ms) {
+  lifetime_stats_.relative_packet_arrival_delay_ms += delay_ms;
+}
+
+void StatisticsCalculator::LogDelayedPacketOutageEvent(int num_samples,
+                                                       int fs_hz) {
+  int outage_duration_ms = num_samples / (fs_hz / 1000);
   RTC_HISTOGRAM_COUNTS("WebRTC.Audio.DelayedPacketOutageEventMs",
                        outage_duration_ms, 1 /* min */, 2000 /* max */,
                        100 /* bucket count */);
   delayed_packet_outage_counter_.RegisterSample();
+  lifetime_stats_.delayed_packet_outage_samples += num_samples;
 }
 
 void StatisticsCalculator::StoreWaitingTime(int waiting_time_ms) {

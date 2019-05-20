@@ -9,7 +9,11 @@
  */
 #include "modules/audio_processing/aec3/matched_filter_lag_aggregator.h"
 
+#include <algorithm>
+#include <iterator>
+
 #include "modules/audio_processing/logging/apm_data_dumper.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 
@@ -27,11 +31,13 @@ MatchedFilterLagAggregator::MatchedFilterLagAggregator(
 
 MatchedFilterLagAggregator::~MatchedFilterLagAggregator() = default;
 
-void MatchedFilterLagAggregator::Reset() {
+void MatchedFilterLagAggregator::Reset(bool hard_reset) {
   std::fill(histogram_.begin(), histogram_.end(), 0);
   histogram_data_.fill(0);
   histogram_data_index_ = 0;
-  significant_candidate_found_ = false;
+  if (hard_reset) {
+    significant_candidate_found_ = false;
+  }
 }
 
 absl::optional<DelayEstimate> MatchedFilterLagAggregator::Aggregate(
@@ -51,6 +57,7 @@ absl::optional<DelayEstimate> MatchedFilterLagAggregator::Aggregate(
   // TODO(peah): Remove this logging once all development is done.
   data_dumper_->DumpRaw("aec3_echo_path_delay_estimator_best_index",
                         best_lag_estimate_index);
+  data_dumper_->DumpRaw("aec3_echo_path_delay_estimator_histogram", histogram_);
 
   if (best_lag_estimate_index != -1) {
     RTC_DCHECK_GT(histogram_.size(), histogram_data_[histogram_data_index_]);
@@ -77,9 +84,13 @@ absl::optional<DelayEstimate> MatchedFilterLagAggregator::Aggregate(
     if (histogram_[candidate] > thresholds_.converged ||
         (histogram_[candidate] > thresholds_.initial &&
          !significant_candidate_found_)) {
-      return DelayEstimate(DelayEstimate::Quality::kRefined, candidate);
+      DelayEstimate::Quality quality = significant_candidate_found_
+                                           ? DelayEstimate::Quality::kRefined
+                                           : DelayEstimate::Quality::kCoarse;
+      return DelayEstimate(quality, candidate);
     }
   }
+
   return absl::nullopt;
 }
 

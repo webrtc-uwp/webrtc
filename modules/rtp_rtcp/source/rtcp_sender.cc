@@ -10,12 +10,12 @@
 
 #include "modules/rtp_rtcp/source/rtcp_sender.h"
 
-#include <string.h>  // memcpy
+#include <string.h>   // memcpy
+#include <algorithm>  // std::min
 
 #include <utility>
 
 #include "absl/memory/memory.h"
-#include "common_types.h"  // NOLINT(build/include)
 #include "logging/rtc_event_log/events/rtc_event_rtcp_packet_outgoing.h"
 #include "logging/rtc_event_log/rtc_event_log.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/app.h"
@@ -23,6 +23,7 @@
 #include "modules/rtp_rtcp/source/rtcp_packet/compound_packet.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/extended_reports.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/fir.h"
+#include "modules/rtp_rtcp/source/rtcp_packet/loss_notification.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/nack.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/pli.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/receiver_report.h"
@@ -36,7 +37,7 @@
 #include "modules/rtp_rtcp/source/time_util.h"
 #include "modules/rtp_rtcp/source/tmmbr_help.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/constructormagic.h"
+#include "rtc_base/constructor_magic.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/trace_event.h"
@@ -44,9 +45,9 @@
 namespace webrtc {
 
 namespace {
-const uint32_t kRtcpAnyExtendedReports =
-    kRtcpXrVoipMetric | kRtcpXrReceiverReferenceTime | kRtcpXrDlrrReportBlock |
-    kRtcpXrTargetBitrate;
+const uint32_t kRtcpAnyExtendedReports = kRtcpXrReceiverReferenceTime |
+                                         kRtcpXrDlrrReportBlock |
+                                         kRtcpXrTargetBitrate;
 }  // namespace
 
 RTCPSender::FeedbackState::FeedbackState()
@@ -99,16 +100,16 @@ class RTCPSender::RtcpContext {
   RtcpContext(const FeedbackState& feedback_state,
               int32_t nack_size,
               const uint16_t* nack_list,
-              NtpTime now)
+              int64_t now_us)
       : feedback_state_(feedback_state),
         nack_size_(nack_size),
         nack_list_(nack_list),
-        now_(now) {}
+        now_us_(now_us) {}
 
   const FeedbackState& feedback_state_;
   const int32_t nack_size_;
   const uint16_t* nack_list_;
-  const NtpTime now_;
+  const int64_t now_us_;
 };
 
 RTCPSender::RTCPSender(
@@ -118,15 +119,14 @@ RTCPSender::RTCPSender(
     RtcpPacketTypeCounterObserver* packet_type_counter_observer,
     RtcEventLog* event_log,
     Transport* outgoing_transport,
-    RtcpIntervalConfig interval_config)
+    int report_interval_ms)
     : audio_(audio),
       clock_(clock),
       random_(clock_->TimeInMicroseconds()),
       method_(RtcpMode::kOff),
       event_log_(event_log),
       transport_(outgoing_transport),
-      interval_config_(interval_config),
-      using_nack_(false),
+      report_interval_ms_(report_interval_ms),
       sending_(false),
       next_time_to_send_rtcp_(0),
       timestamp_offset_(0),
@@ -150,7 +150,9 @@ RTCPSender::RTCPSender(
       app_length_(0),
 
       xr_send_receiver_reference_time_enabled_(false),
-      packet_type_counter_observer_(packet_type_counter_observer) {
+      packet_type_counter_observer_(packet_type_counter_observer),
+      send_video_bitrate_allocation_(false),
+      last_payload_type_(-1) {
   RTC_DCHECK(transport_ != nullptr);
 
   builders_[kRtcpSr] = &RTCPSender::BuildSR;
@@ -161,6 +163,7 @@ RTCPSender::RTCPSender(
   builders_[kRtcpRemb] = &RTCPSender::BuildREMB;
   builders_[kRtcpBye] = &RTCPSender::BuildBYE;
   builders_[kRtcpApp] = &RTCPSender::BuildAPP;
+  builders_[kRtcpLossNotification] = &RTCPSender::BuildLossNotification;
   builders_[kRtcpTmmbr] = &RTCPSender::BuildTMMBR;
   builders_[kRtcpTmmbn] = &RTCPSender::BuildTMMBN;
   builders_[kRtcpNack] = &RTCPSender::BuildNACK;
@@ -179,9 +182,8 @@ void RTCPSender::SetRTCPStatus(RtcpMode new_method) {
 
   if (method_ == RtcpMode::kOff && new_method != RtcpMode::kOff) {
     // When switching on, reschedule the next packet
-    int64_t interval_ms = audio_ ? interval_config_.audio_interval_ms
-                                 : interval_config_.video_interval_ms;
-    next_time_to_send_rtcp_ = clock_->TimeInMilliseconds() + (interval_ms / 2);
+    next_time_to_send_rtcp_ =
+        clock_->TimeInMilliseconds() + (report_interval_ms_ / 2);
   }
   method_ = new_method;
 }
@@ -208,6 +210,23 @@ int32_t RTCPSender::SetSendingStatus(const FeedbackState& feedback_state,
   if (sendRTCPBye)
     return SendRTCP(feedback_state, kRtcpBye);
   return 0;
+}
+
+int32_t RTCPSender::SendLossNotification(const FeedbackState& feedback_state,
+                                         uint16_t last_decoded_seq_num,
+                                         uint16_t last_received_seq_num,
+                                         bool decodability_flag) {
+  rtc::CritScope lock(&critical_section_rtcp_sender_);
+
+  loss_notification_state_.last_decoded_seq_num = last_decoded_seq_num;
+  loss_notification_state_.last_received_seq_num = last_received_seq_num;
+  loss_notification_state_.decodability_flag = decodability_flag;
+
+  SetFlag(kRtcpLossNotification, /*is_volatile=*/true);
+
+  // Send immediately.
+  return SendCompoundRTCP(feedback_state,
+                          {RTCPPacketType::kRtcpLossNotification});
 }
 
 void RTCPSender::SetRemb(int64_t bitrate_bps, std::vector<uint32_t> ssrcs) {
@@ -253,8 +272,14 @@ void RTCPSender::SetTimestampOffset(uint32_t timestamp_offset) {
 }
 
 void RTCPSender::SetLastRtpTime(uint32_t rtp_timestamp,
-                                int64_t capture_time_ms) {
+                                int64_t capture_time_ms,
+                                int8_t payload_type) {
   rtc::CritScope lock(&critical_section_rtcp_sender_);
+  // For compatibility with clients who don't set payload type correctly on all
+  // calls.
+  if (payload_type != -1) {
+    last_payload_type_ = payload_type;
+  }
   last_rtp_timestamp_ = rtp_timestamp;
   if (capture_time_ms < 0) {
     // We don't currently get a capture time from VoiceEngine.
@@ -262,6 +287,11 @@ void RTCPSender::SetLastRtpTime(uint32_t rtp_timestamp,
   } else {
     last_frame_capture_time_ms_ = capture_time_ms;
   }
+}
+
+void RTCPSender::SetRtpClockRate(int8_t payload_type, int rtp_clock_rate_hz) {
+  rtc::CritScope lock(&critical_section_rtcp_sender_);
+  rtp_clock_rates_khz_[payload_type] = rtp_clock_rate_hz / 1000;
 }
 
 uint32_t RTCPSender::SSRC() const {
@@ -410,15 +440,21 @@ std::unique_ptr<rtcp::RtcpPacket> RTCPSender::BuildSR(const RtcpContext& ctx) {
   // the frame being captured at this moment. We are calculating that
   // timestamp as the last frame's timestamp + the time since the last frame
   // was captured.
-  uint32_t rtp_rate =
-      (audio_ ? kBogusRtpRateForAudioRtcp : kVideoPayloadTypeFrequency) / 1000;
+  int rtp_rate = rtp_clock_rates_khz_[last_payload_type_];
+  if (rtp_rate <= 0) {
+    rtp_rate =
+        (audio_ ? kBogusRtpRateForAudioRtcp : kVideoPayloadTypeFrequency) /
+        1000;
+  }
+  // Round now_us_ to the closest millisecond, because Ntp time is rounded
+  // when converted to milliseconds,
   uint32_t rtp_timestamp =
       timestamp_offset_ + last_rtp_timestamp_ +
-      (clock_->TimeInMilliseconds() - last_frame_capture_time_ms_) * rtp_rate;
+      ((ctx.now_us_ + 500) / 1000 - last_frame_capture_time_ms_) * rtp_rate;
 
   rtcp::SenderReport* report = new rtcp::SenderReport();
   report->SetSenderSsrc(ssrc_);
-  report->SetNtp(ctx.now_);
+  report->SetNtp(TimeMicrosToNtp(ctx.now_us_));
   report->SetRtpTimestamp(rtp_timestamp);
   report->SetPacketCount(ctx.feedback_state_.packets_sent);
   report->SetOctetCount(ctx.feedback_state_.media_bytes_sent);
@@ -565,6 +601,17 @@ std::unique_ptr<rtcp::RtcpPacket> RTCPSender::BuildAPP(const RtcpContext& ctx) {
   return std::unique_ptr<rtcp::RtcpPacket>(app);
 }
 
+std::unique_ptr<rtcp::RtcpPacket> RTCPSender::BuildLossNotification(
+    const RtcpContext& ctx) {
+  auto loss_notification = absl::make_unique<rtcp::LossNotification>(
+      loss_notification_state_.last_decoded_seq_num,
+      loss_notification_state_.last_received_seq_num,
+      loss_notification_state_.decodability_flag);
+  loss_notification->SetSenderSsrc(ssrc_);
+  loss_notification->SetMediaSsrc(remote_ssrc_);
+  return std::move(loss_notification);
+}
+
 std::unique_ptr<rtcp::RtcpPacket> RTCPSender::BuildNACK(
     const RtcpContext& ctx) {
   rtcp::Nack* nack = new rtcp::Nack();
@@ -599,7 +646,7 @@ std::unique_ptr<rtcp::RtcpPacket> RTCPSender::BuildExtendedReports(
 
   if (!sending_ && xr_send_receiver_reference_time_enabled_) {
     rtcp::Rrtr rrtr;
-    rrtr.SetNtp(ctx.now_);
+    rrtr.SetNtp(TimeMicrosToNtp(ctx.now_us_));
     xr->SetRrtr(rrtr);
   }
 
@@ -607,29 +654,20 @@ std::unique_ptr<rtcp::RtcpPacket> RTCPSender::BuildExtendedReports(
     xr->AddDlrrItem(rti);
   }
 
-  if (video_bitrate_allocation_) {
+  if (send_video_bitrate_allocation_) {
     rtcp::TargetBitrate target_bitrate;
 
     for (int sl = 0; sl < kMaxSpatialLayers; ++sl) {
       for (int tl = 0; tl < kMaxTemporalStreams; ++tl) {
-        if (video_bitrate_allocation_->HasBitrate(sl, tl)) {
+        if (video_bitrate_allocation_.HasBitrate(sl, tl)) {
           target_bitrate.AddTargetBitrate(
-              sl, tl, video_bitrate_allocation_->GetBitrate(sl, tl) / 1000);
+              sl, tl, video_bitrate_allocation_.GetBitrate(sl, tl) / 1000);
         }
       }
     }
 
     xr->SetTargetBitrate(target_bitrate);
-    video_bitrate_allocation_.reset();
-  }
-
-  if (xr_voip_metric_) {
-    rtcp::VoipMetric voip;
-    voip.SetMediaSsrc(remote_ssrc_);
-    voip.SetVoipMetric(*xr_voip_metric_);
-    xr_voip_metric_.reset();
-
-    xr->SetVoipMetric(voip);
+    send_video_bitrate_allocation_ = false;
   }
 
   return std::move(xr);
@@ -683,7 +721,7 @@ int32_t RTCPSender::SendCompoundRTCP(
 
     // We need to send our NTP even if we haven't received any reports.
     RtcpContext context(feedback_state, nack_size, nack_list,
-                        clock_->CurrentNtpTime());
+                        clock_->TimeInMicroseconds());
 
     PrepareReport(feedback_state);
 
@@ -750,33 +788,30 @@ void RTCPSender::PrepareReport(const FeedbackState& feedback_state) {
 
   if (generate_report) {
     if ((!sending_ && xr_send_receiver_reference_time_enabled_) ||
-        !feedback_state.last_xr_rtis.empty() || video_bitrate_allocation_) {
+        !feedback_state.last_xr_rtis.empty() ||
+        send_video_bitrate_allocation_) {
       SetFlag(kRtcpAnyExtendedReports, true);
     }
 
     // generate next time to send an RTCP report
-    uint32_t minIntervalMs =
-        rtc::dchecked_cast<uint32_t>(interval_config_.audio_interval_ms);
+    int min_interval_ms = report_interval_ms_;
 
-    if (!audio_) {
-      if (sending_) {
-        // Calculate bandwidth for video; 360 / send bandwidth in kbit/s.
-        uint32_t send_bitrate_kbit = feedback_state.send_bitrate / 1000;
-        if (send_bitrate_kbit != 0)
-          minIntervalMs = 360000 / send_bitrate_kbit;
-      }
-      if (minIntervalMs >
-          rtc::dchecked_cast<uint32_t>(interval_config_.video_interval_ms)) {
-        minIntervalMs =
-            rtc::dchecked_cast<uint32_t>(interval_config_.video_interval_ms);
+    if (!audio_ && sending_) {
+      // Calculate bandwidth for video; 360 / send bandwidth in kbit/s.
+      int send_bitrate_kbit = feedback_state.send_bitrate / 1000;
+      if (send_bitrate_kbit != 0) {
+        min_interval_ms = 360000 / send_bitrate_kbit;
+        min_interval_ms = std::min(min_interval_ms, report_interval_ms_);
       }
     }
 
     // The interval between RTCP packets is varied randomly over the
     // range [1/2,3/2] times the calculated interval.
-    uint32_t timeToNext =
-        random_.Rand(minIntervalMs * 1 / 2, minIntervalMs * 3 / 2);
-    next_time_to_send_rtcp_ = clock_->TimeInMilliseconds() + timeToNext;
+    int time_to_next =
+        random_.Rand(min_interval_ms * 1 / 2, min_interval_ms * 3 / 2);
+
+    RTC_DCHECK_GT(time_to_next, 0);
+    next_time_to_send_rtcp_ = clock_->TimeInMilliseconds() + time_to_next;
 
     // RtcpSender expected to be used for sending either just sender reports
     // or just receiver reports.
@@ -798,7 +833,7 @@ std::vector<rtcp::ReportBlock> RTCPSender::CreateReportBlocks(
   if (!result.empty() && ((feedback_state.last_rr_ntp_secs != 0) ||
                           (feedback_state.last_rr_ntp_frac != 0))) {
     // Get our NTP as late as possible to avoid a race.
-    uint32_t now = CompactNtp(clock_->CurrentNtpTime());
+    uint32_t now = CompactNtp(TimeMicrosToNtp(clock_->TimeInMicroseconds()));
 
     uint32_t receive_time = feedback_state.last_rr_ntp_secs & 0x0000FFFF;
     receive_time <<= 16;
@@ -838,15 +873,6 @@ int32_t RTCPSender::SetApplicationSpecificData(uint8_t subType,
   app_data_.reset(new uint8_t[length]);
   app_length_ = length;
   memcpy(app_data_.get(), data, length);
-  return 0;
-}
-
-// TODO(sprang): Remove support for VoIP metrics? (Not used in receiver.)
-int32_t RTCPSender::SetRTCPVoIPMetrics(const RTCPVoIPMetric* VoIPMetric) {
-  rtc::CritScope lock(&critical_section_rtcp_sender_);
-  xr_voip_metric_.emplace(*VoIPMetric);
-
-  SetFlag(kRtcpAnyExtendedReports, true);
   return 0;
 }
 
@@ -904,8 +930,46 @@ bool RTCPSender::AllVolatileFlagsConsumed() const {
 void RTCPSender::SetVideoBitrateAllocation(
     const VideoBitrateAllocation& bitrate) {
   rtc::CritScope lock(&critical_section_rtcp_sender_);
-  video_bitrate_allocation_.emplace(bitrate);
+  // Check if this allocation is first ever, or has a different set of
+  // spatial/temporal layers signaled and enabled, if so trigger an rtcp report
+  // as soon as possible.
+  absl::optional<VideoBitrateAllocation> new_bitrate =
+      CheckAndUpdateLayerStructure(bitrate);
+  if (new_bitrate) {
+    video_bitrate_allocation_ = *new_bitrate;
+    RTC_LOG(LS_INFO) << "Emitting TargetBitrate XR for SSRC " << ssrc_
+                     << " with new layers enabled/disabled: "
+                     << video_bitrate_allocation_.ToString();
+    next_time_to_send_rtcp_ = clock_->TimeInMilliseconds();
+  } else {
+    video_bitrate_allocation_ = bitrate;
+  }
+
+  send_video_bitrate_allocation_ = true;
   SetFlag(kRtcpAnyExtendedReports, true);
+}
+
+absl::optional<VideoBitrateAllocation> RTCPSender::CheckAndUpdateLayerStructure(
+    const VideoBitrateAllocation& bitrate) const {
+  absl::optional<VideoBitrateAllocation> updated_bitrate;
+  for (size_t si = 0; si < kMaxSpatialLayers; ++si) {
+    for (size_t ti = 0; ti < kMaxTemporalStreams; ++ti) {
+      if (!updated_bitrate &&
+          (bitrate.HasBitrate(si, ti) !=
+               video_bitrate_allocation_.HasBitrate(si, ti) ||
+           (bitrate.GetBitrate(si, ti) == 0) !=
+               (video_bitrate_allocation_.GetBitrate(si, ti) == 0))) {
+        updated_bitrate = bitrate;
+      }
+      if (video_bitrate_allocation_.GetBitrate(si, ti) > 0 &&
+          bitrate.GetBitrate(si, ti) == 0) {
+        // Make sure this stream disabling is explicitly signaled.
+        updated_bitrate->SetBitrate(si, ti, 0);
+      }
+    }
+  }
+
+  return updated_bitrate;
 }
 
 bool RTCPSender::SendFeedbackPacket(const rtcp::TransportFeedback& packet) {
@@ -928,14 +992,6 @@ bool RTCPSender::SendFeedbackPacket(const rtcp::TransportFeedback& packet) {
     }
   };
   return packet.Build(max_packet_size, callback) && !send_failure;
-}
-
-int64_t RTCPSender::RtcpAudioReportInverval() const {
-  return interval_config_.audio_interval_ms;
-}
-
-int64_t RTCPSender::RtcpVideoReportInverval() const {
-  return interval_config_.video_interval_ms;
 }
 
 }  // namespace webrtc

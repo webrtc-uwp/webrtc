@@ -8,31 +8,30 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <assert.h>
+#include <string.h>
 
-#include "modules/audio_device/audio_device_config.h"
 #include "modules/audio_device/linux/audio_device_pulse_linux.h"
+#include "modules/audio_device/linux/latebindingsymboltable_linux.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "system_wrappers/include/event_wrapper.h"
 
-webrtc::adm_linux_pulse::PulseAudioSymbolTable PaSymbolTable;
+WebRTCPulseSymbolTable* GetPulseSymbolTable() {
+  static WebRTCPulseSymbolTable* pulse_symbol_table =
+      new WebRTCPulseSymbolTable();
+  return pulse_symbol_table;
+}
 
 // Accesses Pulse functions through our late-binding symbol table instead of
 // directly. This way we don't have to link to libpulse, which means our binary
 // will work on systems that don't have it.
-#define LATE(sym)                                                             \
-  LATESYM_GET(webrtc::adm_linux_pulse::PulseAudioSymbolTable, &PaSymbolTable, \
-              sym)
+#define LATE(sym)                                             \
+  LATESYM_GET(webrtc::adm_linux_pulse::PulseAudioSymbolTable, \
+              GetPulseSymbolTable(), sym)
 
 namespace webrtc {
 
 AudioDeviceLinuxPulse::AudioDeviceLinuxPulse()
     : _ptrAudioBuffer(NULL),
-      _timeEventRec(*EventWrapper::Create()),
-      _timeEventPlay(*EventWrapper::Create()),
-      _recStartEvent(*EventWrapper::Create()),
-      _playStartEvent(*EventWrapper::Create()),
       _inputDeviceIndex(0),
       _outputDeviceIndex(0),
       _inputDeviceIsSpecified(false),
@@ -90,7 +89,7 @@ AudioDeviceLinuxPulse::AudioDeviceLinuxPulse()
 
 AudioDeviceLinuxPulse::~AudioDeviceLinuxPulse() {
   RTC_LOG(LS_INFO) << __FUNCTION__ << " destroyed";
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   Terminate();
 
   if (_recBuffer) {
@@ -109,15 +108,10 @@ AudioDeviceLinuxPulse::~AudioDeviceLinuxPulse() {
     delete[] _recDeviceName;
     _recDeviceName = NULL;
   }
-
-  delete &_recStartEvent;
-  delete &_playStartEvent;
-  delete &_timeEventRec;
-  delete &_timeEventPlay;
 }
 
 void AudioDeviceLinuxPulse::AttachAudioBuffer(AudioDeviceBuffer* audioBuffer) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
 
   _ptrAudioBuffer = audioBuffer;
 
@@ -141,7 +135,7 @@ int32_t AudioDeviceLinuxPulse::ActiveAudioLayer(
 }
 
 AudioDeviceGeneric::InitStatus AudioDeviceLinuxPulse::Init() {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   if (_initialized) {
     return InitStatus::OK;
   }
@@ -183,7 +177,7 @@ AudioDeviceGeneric::InitStatus AudioDeviceLinuxPulse::Init() {
 }
 
 int32_t AudioDeviceLinuxPulse::Terminate() {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   if (!_initialized) {
     return 0;
   }
@@ -229,12 +223,12 @@ int32_t AudioDeviceLinuxPulse::Terminate() {
 }
 
 bool AudioDeviceLinuxPulse::Initialized() const {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   return (_initialized);
 }
 
 int32_t AudioDeviceLinuxPulse::InitSpeaker() {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
 
   if (_playing) {
     return -1;
@@ -272,7 +266,7 @@ int32_t AudioDeviceLinuxPulse::InitSpeaker() {
 }
 
 int32_t AudioDeviceLinuxPulse::InitMicrophone() {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   if (_recording) {
     return -1;
   }
@@ -309,17 +303,17 @@ int32_t AudioDeviceLinuxPulse::InitMicrophone() {
 }
 
 bool AudioDeviceLinuxPulse::SpeakerIsInitialized() const {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   return (_mixerManager.SpeakerIsInitialized());
 }
 
 bool AudioDeviceLinuxPulse::MicrophoneIsInitialized() const {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   return (_mixerManager.MicrophoneIsInitialized());
 }
 
 int32_t AudioDeviceLinuxPulse::SpeakerVolumeIsAvailable(bool& available) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   bool wasInitialized = _mixerManager.SpeakerIsInitialized();
 
   // Make an attempt to open up the
@@ -343,7 +337,7 @@ int32_t AudioDeviceLinuxPulse::SpeakerVolumeIsAvailable(bool& available) {
 }
 
 int32_t AudioDeviceLinuxPulse::SetSpeakerVolume(uint32_t volume) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   if (!_playing) {
     // Only update the volume if it's been set while we weren't playing.
     update_speaker_volume_at_startup_ = true;
@@ -352,7 +346,7 @@ int32_t AudioDeviceLinuxPulse::SetSpeakerVolume(uint32_t volume) {
 }
 
 int32_t AudioDeviceLinuxPulse::SpeakerVolume(uint32_t& volume) const {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   uint32_t level(0);
 
   if (_mixerManager.SpeakerVolume(level) == -1) {
@@ -365,7 +359,7 @@ int32_t AudioDeviceLinuxPulse::SpeakerVolume(uint32_t& volume) const {
 }
 
 int32_t AudioDeviceLinuxPulse::MaxSpeakerVolume(uint32_t& maxVolume) const {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   uint32_t maxVol(0);
 
   if (_mixerManager.MaxSpeakerVolume(maxVol) == -1) {
@@ -378,7 +372,7 @@ int32_t AudioDeviceLinuxPulse::MaxSpeakerVolume(uint32_t& maxVolume) const {
 }
 
 int32_t AudioDeviceLinuxPulse::MinSpeakerVolume(uint32_t& minVolume) const {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   uint32_t minVol(0);
 
   if (_mixerManager.MinSpeakerVolume(minVol) == -1) {
@@ -391,7 +385,7 @@ int32_t AudioDeviceLinuxPulse::MinSpeakerVolume(uint32_t& minVolume) const {
 }
 
 int32_t AudioDeviceLinuxPulse::SpeakerMuteIsAvailable(bool& available) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   bool isAvailable(false);
   bool wasInitialized = _mixerManager.SpeakerIsInitialized();
 
@@ -420,12 +414,12 @@ int32_t AudioDeviceLinuxPulse::SpeakerMuteIsAvailable(bool& available) {
 }
 
 int32_t AudioDeviceLinuxPulse::SetSpeakerMute(bool enable) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   return (_mixerManager.SetSpeakerMute(enable));
 }
 
 int32_t AudioDeviceLinuxPulse::SpeakerMute(bool& enabled) const {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   bool muted(0);
   if (_mixerManager.SpeakerMute(muted) == -1) {
     return -1;
@@ -436,7 +430,7 @@ int32_t AudioDeviceLinuxPulse::SpeakerMute(bool& enabled) const {
 }
 
 int32_t AudioDeviceLinuxPulse::MicrophoneMuteIsAvailable(bool& available) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   bool isAvailable(false);
   bool wasInitialized = _mixerManager.MicrophoneIsInitialized();
 
@@ -466,12 +460,12 @@ int32_t AudioDeviceLinuxPulse::MicrophoneMuteIsAvailable(bool& available) {
 }
 
 int32_t AudioDeviceLinuxPulse::SetMicrophoneMute(bool enable) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   return (_mixerManager.SetMicrophoneMute(enable));
 }
 
 int32_t AudioDeviceLinuxPulse::MicrophoneMute(bool& enabled) const {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   bool muted(0);
   if (_mixerManager.MicrophoneMute(muted) == -1) {
     return -1;
@@ -482,7 +476,7 @@ int32_t AudioDeviceLinuxPulse::MicrophoneMute(bool& enabled) const {
 }
 
 int32_t AudioDeviceLinuxPulse::StereoRecordingIsAvailable(bool& available) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   if (_recChannels == 2 && _recording) {
     available = true;
     return 0;
@@ -513,7 +507,7 @@ int32_t AudioDeviceLinuxPulse::StereoRecordingIsAvailable(bool& available) {
 }
 
 int32_t AudioDeviceLinuxPulse::SetStereoRecording(bool enable) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   if (enable)
     _recChannels = 2;
   else
@@ -523,7 +517,7 @@ int32_t AudioDeviceLinuxPulse::SetStereoRecording(bool enable) {
 }
 
 int32_t AudioDeviceLinuxPulse::StereoRecording(bool& enabled) const {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   if (_recChannels == 2)
     enabled = true;
   else
@@ -533,7 +527,7 @@ int32_t AudioDeviceLinuxPulse::StereoRecording(bool& enabled) const {
 }
 
 int32_t AudioDeviceLinuxPulse::StereoPlayoutIsAvailable(bool& available) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   if (_playChannels == 2 && _playing) {
     available = true;
     return 0;
@@ -563,7 +557,7 @@ int32_t AudioDeviceLinuxPulse::StereoPlayoutIsAvailable(bool& available) {
 }
 
 int32_t AudioDeviceLinuxPulse::SetStereoPlayout(bool enable) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   if (enable)
     _playChannels = 2;
   else
@@ -573,7 +567,7 @@ int32_t AudioDeviceLinuxPulse::SetStereoPlayout(bool enable) {
 }
 
 int32_t AudioDeviceLinuxPulse::StereoPlayout(bool& enabled) const {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   if (_playChannels == 2)
     enabled = true;
   else
@@ -583,7 +577,7 @@ int32_t AudioDeviceLinuxPulse::StereoPlayout(bool& enabled) const {
 }
 
 int32_t AudioDeviceLinuxPulse::MicrophoneVolumeIsAvailable(bool& available) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   bool wasInitialized = _mixerManager.MicrophoneIsInitialized();
 
   // Make an attempt to open up the
@@ -666,7 +660,7 @@ int16_t AudioDeviceLinuxPulse::PlayoutDevices() {
 }
 
 int32_t AudioDeviceLinuxPulse::SetPlayoutDevice(uint16_t index) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   if (_playIsInitialized) {
     return -1;
   }
@@ -697,7 +691,7 @@ int32_t AudioDeviceLinuxPulse::PlayoutDeviceName(
     uint16_t index,
     char name[kAdmMaxDeviceNameSize],
     char guid[kAdmMaxGuidSize]) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   const uint16_t nDevices = PlayoutDevices();
 
   if ((index > (nDevices - 1)) || (name == NULL)) {
@@ -735,7 +729,7 @@ int32_t AudioDeviceLinuxPulse::RecordingDeviceName(
     uint16_t index,
     char name[kAdmMaxDeviceNameSize],
     char guid[kAdmMaxGuidSize]) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   const uint16_t nDevices(RecordingDevices());
 
   if ((index > (nDevices - 1)) || (name == NULL)) {
@@ -787,7 +781,7 @@ int16_t AudioDeviceLinuxPulse::RecordingDevices() {
 }
 
 int32_t AudioDeviceLinuxPulse::SetRecordingDevice(uint16_t index) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   if (_recIsInitialized) {
     return -1;
   }
@@ -815,7 +809,7 @@ int32_t AudioDeviceLinuxPulse::SetRecordingDevice(
 }
 
 int32_t AudioDeviceLinuxPulse::PlayoutIsAvailable(bool& available) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   available = false;
 
   // Try to initialize the playout side
@@ -832,7 +826,7 @@ int32_t AudioDeviceLinuxPulse::PlayoutIsAvailable(bool& available) {
 }
 
 int32_t AudioDeviceLinuxPulse::RecordingIsAvailable(bool& available) {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   available = false;
 
   // Try to initialize the playout side
@@ -849,7 +843,7 @@ int32_t AudioDeviceLinuxPulse::RecordingIsAvailable(bool& available) {
 }
 
 int32_t AudioDeviceLinuxPulse::InitPlayout() {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
 
   if (_playing) {
     return -1;
@@ -953,7 +947,7 @@ int32_t AudioDeviceLinuxPulse::InitPlayout() {
 }
 
 int32_t AudioDeviceLinuxPulse::InitRecording() {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
 
   if (_recording) {
     return -1;
@@ -1049,7 +1043,7 @@ int32_t AudioDeviceLinuxPulse::InitRecording() {
 }
 
 int32_t AudioDeviceLinuxPulse::StartRecording() {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   if (!_recIsInitialized) {
     return -1;
   }
@@ -1063,7 +1057,7 @@ int32_t AudioDeviceLinuxPulse::StartRecording() {
 
   // The audio thread will signal when recording has started.
   _timeEventRec.Set();
-  if (kEventTimeout == _recStartEvent.Wait(10000)) {
+  if (!_recStartEvent.Wait(10000)) {
     {
       rtc::CritScope lock(&_critSect);
       _startRec = false;
@@ -1088,7 +1082,7 @@ int32_t AudioDeviceLinuxPulse::StartRecording() {
 }
 
 int32_t AudioDeviceLinuxPulse::StopRecording() {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   rtc::CritScope lock(&_critSect);
 
   if (!_recIsInitialized) {
@@ -1142,22 +1136,22 @@ int32_t AudioDeviceLinuxPulse::StopRecording() {
 }
 
 bool AudioDeviceLinuxPulse::RecordingIsInitialized() const {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   return (_recIsInitialized);
 }
 
 bool AudioDeviceLinuxPulse::Recording() const {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   return (_recording);
 }
 
 bool AudioDeviceLinuxPulse::PlayoutIsInitialized() const {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   return (_playIsInitialized);
 }
 
 int32_t AudioDeviceLinuxPulse::StartPlayout() {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
 
   if (!_playIsInitialized) {
     return -1;
@@ -1178,7 +1172,7 @@ int32_t AudioDeviceLinuxPulse::StartPlayout() {
 
   // The audio thread will signal when playout has started.
   _timeEventPlay.Set();
-  if (kEventTimeout == _playStartEvent.Wait(10000)) {
+  if (!_playStartEvent.Wait(10000)) {
     {
       rtc::CritScope lock(&_critSect);
       _startPlay = false;
@@ -1203,7 +1197,7 @@ int32_t AudioDeviceLinuxPulse::StartPlayout() {
 }
 
 int32_t AudioDeviceLinuxPulse::StopPlayout() {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   rtc::CritScope lock(&_critSect);
 
   if (!_playIsInitialized) {
@@ -1265,7 +1259,7 @@ int32_t AudioDeviceLinuxPulse::PlayoutDelay(uint16_t& delayMS) const {
 }
 
 bool AudioDeviceLinuxPulse::Playing() const {
-  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  RTC_DCHECK(thread_checker_.IsCurrent());
   return (_playing);
 }
 
@@ -1547,7 +1541,7 @@ int32_t AudioDeviceLinuxPulse::InitPulseAudio() {
   int retVal = 0;
 
   // Load libpulse
-  if (!PaSymbolTable.Load()) {
+  if (!GetPulseSymbolTable()->Load()) {
     // Most likely the Pulse library and sound server are not installed on
     // this system
     RTC_LOG(LS_ERROR) << "failed to load symbol table";
@@ -1658,7 +1652,7 @@ int32_t AudioDeviceLinuxPulse::InitPulseAudio() {
 
 int32_t AudioDeviceLinuxPulse::TerminatePulseAudio() {
   // Do nothing if the instance doesn't exist
-  // likely PaSymbolTable.Load() fails
+  // likely GetPulseSymbolTable.Load() fails
   if (!_paMainloop) {
     return 0;
   }
@@ -1992,14 +1986,8 @@ bool AudioDeviceLinuxPulse::RecThreadFunc(void* pThis) {
 }
 
 bool AudioDeviceLinuxPulse::PlayThreadProcess() {
-  switch (_timeEventPlay.Wait(1000)) {
-    case kEventSignaled:
-      break;
-    case kEventError:
-      RTC_LOG(LS_WARNING) << "EventWrapper::Wait() failed";
-      return true;
-    case kEventTimeout:
-      return true;
+  if (!_timeEventPlay.Wait(1000)) {
+    return true;
   }
 
   rtc::CritScope lock(&_critSect);
@@ -2166,14 +2154,8 @@ bool AudioDeviceLinuxPulse::PlayThreadProcess() {
 }
 
 bool AudioDeviceLinuxPulse::RecThreadProcess() {
-  switch (_timeEventRec.Wait(1000)) {
-    case kEventSignaled:
-      break;
-    case kEventError:
-      RTC_LOG(LS_WARNING) << "EventWrapper::Wait() failed";
-      return true;
-    case kEventTimeout:
-      return true;
+  if (!_timeEventRec.Wait(1000)) {
+    return true;
   }
 
   rtc::CritScope lock(&_critSect);

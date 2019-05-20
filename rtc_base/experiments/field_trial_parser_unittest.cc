@@ -8,9 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 #include "rtc_base/experiments/field_trial_parser.h"
+
+#include "rtc_base/experiments/field_trial_list.h"
 #include "rtc_base/gunit.h"
 #include "system_wrappers/include/field_trial.h"
 #include "test/field_trial.h"
+#include "test/gmock.h"
 
 namespace webrtc {
 namespace {
@@ -38,6 +41,7 @@ enum class CustomEnum {
   kRed = 1,
   kBlue = 2,
 };
+
 }  // namespace
 
 TEST(FieldTrialParserTest, ParsesValidParameters) {
@@ -99,6 +103,27 @@ TEST(FieldTrialParserTest, IgnoresInvalid) {
   EXPECT_EQ(exp.ping.Get(), false);
   EXPECT_EQ(exp.hash.Get(), "a80");
 }
+TEST(FieldTrialParserTest, IgnoresOutOfRange) {
+  FieldTrialConstrained<double> low("low", 10, absl::nullopt, 100);
+  FieldTrialConstrained<double> high("high", 10, 5, absl::nullopt);
+  ParseFieldTrial({&low, &high}, "low:1000,high:0");
+  EXPECT_EQ(low.Get(), 10);
+  EXPECT_EQ(high.Get(), 10);
+  ParseFieldTrial({&low, &high}, "low:inf,high:nan");
+  EXPECT_EQ(low.Get(), 10);
+  EXPECT_EQ(high.Get(), 10);
+  ParseFieldTrial({&low, &high}, "low:20,high:20");
+  EXPECT_EQ(low.Get(), 20);
+  EXPECT_EQ(high.Get(), 20);
+}
+TEST(FieldTrialParserTest, ReadsValuesFromFieldWithoutKey) {
+  FieldTrialFlag enabled("Enabled");
+  FieldTrialParameter<int> req("", 10);
+  ParseFieldTrial({&enabled, &req}, "Enabled,20");
+  EXPECT_EQ(req.Get(), 20);
+  ParseFieldTrial({&req}, "30");
+  EXPECT_EQ(req.Get(), 30);
+}
 TEST(FieldTrialParserTest, ParsesOptionalParameters) {
   FieldTrialOptional<int> max_count("c", absl::nullopt);
   ParseFieldTrial({&max_count}, "");
@@ -131,4 +156,5 @@ TEST(FieldTrialParserTest, ParsesCustomEnumParameter) {
   ParseFieldTrial({&my_enum}, "e:5");
   EXPECT_EQ(my_enum.Get(), CustomEnum::kBlue);
 }
+
 }  // namespace webrtc

@@ -10,12 +10,15 @@
 
 #include "media/base/vp9_profile.h"
 
+#include <map>
+#include <utility>
+
 #include "rtc_base/string_to_number.h"
 
 namespace webrtc {
 
 // Profile information for VP9 video.
-const char kVP9FmtpProfileId[] = "x-google-profile-id";
+const char kVP9FmtpProfileId[] = "profile-id";
 
 std::string VP9ProfileToString(VP9Profile profile) {
   switch (profile) {

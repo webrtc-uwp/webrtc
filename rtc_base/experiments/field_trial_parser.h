@@ -11,10 +11,13 @@
 #define RTC_BASE_EXPERIMENTS_FIELD_TRIAL_PARSER_H_
 
 #include <stdint.h>
+
 #include <initializer_list>
 #include <map>
 #include <set>
 #include <string>
+#include <vector>
+
 #include "absl/types/optional.h"
 
 // Field trial parser functionality. Provides funcitonality to parse field trial
@@ -24,7 +27,7 @@
 // ignored. Parameters are declared with a given type for which an
 // implementation of ParseTypedParameter should be provided. The
 // ParseTypedParameter implementation is given whatever is between the : and the
-// ,. FieldTrialOptional will use nullopt if the key is provided without :.
+// ,. If the key is provided without : a FieldTrialOptional will use nullopt.
 
 // Example string: "my_optional,my_int:3,my_string:hello"
 
@@ -37,21 +40,29 @@ class FieldTrialParameterInterface {
   virtual ~FieldTrialParameterInterface();
 
  protected:
+  // Protected to allow implementations to provide assignment and copy.
+  FieldTrialParameterInterface(const FieldTrialParameterInterface&) = default;
+  FieldTrialParameterInterface& operator=(const FieldTrialParameterInterface&) =
+      default;
   explicit FieldTrialParameterInterface(std::string key);
   friend void ParseFieldTrial(
       std::initializer_list<FieldTrialParameterInterface*> fields,
       std::string raw_string);
   void MarkAsUsed() { used_ = true; }
   virtual bool Parse(absl::optional<std::string> str_value) = 0;
-  std::string Key() const;
+
+  virtual void ParseDone() {}
+
+  std::vector<FieldTrialParameterInterface*> sub_parameters_;
+
+  std::string key_;
 
  private:
-  const std::string key_;
   bool used_ = false;
 };
 
 // ParseFieldTrial function parses the given string and fills the given fields
-// with extrated values if available.
+// with extracted values if available.
 void ParseFieldTrial(
     std::initializer_list<FieldTrialParameterInterface*> fields,
     std::string raw_string);
@@ -72,6 +83,8 @@ class FieldTrialParameter : public FieldTrialParameterInterface {
   operator T() const { return Get(); }
   const T* operator->() const { return &value_; }
 
+  void SetForTest(T value) { value_ = value; }
+
  protected:
   bool Parse(absl::optional<std::string> str_value) override {
     if (str_value) {
@@ -86,6 +99,43 @@ class FieldTrialParameter : public FieldTrialParameterInterface {
 
  private:
   T value_;
+};
+
+// This class uses the ParseTypedParameter function to implement a parameter
+// implementation with an enforced default value and a range constraint. Values
+// outside the configured range will be ignored.
+template <typename T>
+class FieldTrialConstrained : public FieldTrialParameterInterface {
+ public:
+  FieldTrialConstrained(std::string key,
+                        T default_value,
+                        absl::optional<T> lower_limit,
+                        absl::optional<T> upper_limit)
+      : FieldTrialParameterInterface(key),
+        value_(default_value),
+        lower_limit_(lower_limit),
+        upper_limit_(upper_limit) {}
+  T Get() const { return value_; }
+  operator T() const { return Get(); }
+  const T* operator->() const { return &value_; }
+
+ protected:
+  bool Parse(absl::optional<std::string> str_value) override {
+    if (str_value) {
+      absl::optional<T> value = ParseTypedParameter<T>(*str_value);
+      if (value && (!lower_limit_ || *value >= *lower_limit_) &&
+          (!upper_limit_ || *value <= *upper_limit_)) {
+        value_ = *value;
+        return true;
+      }
+    }
+    return false;
+  }
+
+ private:
+  T value_;
+  absl::optional<T> lower_limit_;
+  absl::optional<T> upper_limit_;
 };
 
 class AbstractFieldTrialEnum : public FieldTrialParameterInterface {
@@ -142,7 +192,7 @@ class FieldTrialOptional : public FieldTrialParameterInterface {
   const T& Value() const { return value_.value(); }
   const T& operator*() const { return value_.value(); }
   const T* operator->() const { return &value_.value(); }
-  operator bool() const { return value_.has_value(); }
+  explicit operator bool() const { return value_.has_value(); }
 
  protected:
   bool Parse(absl::optional<std::string> str_value) override {
@@ -186,6 +236,9 @@ extern template class FieldTrialParameter<double>;
 extern template class FieldTrialParameter<int>;
 // Using the given value as is.
 extern template class FieldTrialParameter<std::string>;
+
+extern template class FieldTrialConstrained<double>;
+extern template class FieldTrialConstrained<int>;
 
 extern template class FieldTrialOptional<double>;
 extern template class FieldTrialOptional<int>;

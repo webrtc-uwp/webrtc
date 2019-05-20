@@ -10,6 +10,7 @@
 
 #include "api/audio_options.h"
 
+#include "api/array_view.h"
 #include "rtc_base/strings/string_builder.h"
 
 namespace cricket {
@@ -49,8 +50,11 @@ void AudioOptions::SetAll(const AudioOptions& change) {
           change.audio_jitter_buffer_max_packets);
   SetFrom(&audio_jitter_buffer_fast_accelerate,
           change.audio_jitter_buffer_fast_accelerate);
+  SetFrom(&audio_jitter_buffer_min_delay_ms,
+          change.audio_jitter_buffer_min_delay_ms);
+  SetFrom(&audio_jitter_buffer_enable_rtx_handling,
+          change.audio_jitter_buffer_enable_rtx_handling);
   SetFrom(&typing_detection, change.typing_detection);
-  SetFrom(&aecm_generate_comfort_noise, change.aecm_generate_comfort_noise);
   SetFrom(&experimental_agc, change.experimental_agc);
   SetFrom(&extended_filter_aec, change.extended_filter_aec);
   SetFrom(&delay_agnostic_aec, change.delay_agnostic_aec);
@@ -77,8 +81,11 @@ bool AudioOptions::operator==(const AudioOptions& o) const {
          audio_jitter_buffer_max_packets == o.audio_jitter_buffer_max_packets &&
          audio_jitter_buffer_fast_accelerate ==
              o.audio_jitter_buffer_fast_accelerate &&
+         audio_jitter_buffer_min_delay_ms ==
+             o.audio_jitter_buffer_min_delay_ms &&
+         audio_jitter_buffer_enable_rtx_handling ==
+             o.audio_jitter_buffer_enable_rtx_handling &&
          typing_detection == o.typing_detection &&
-         aecm_generate_comfort_noise == o.aecm_generate_comfort_noise &&
          experimental_agc == o.experimental_agc &&
          extended_filter_aec == o.extended_filter_aec &&
          delay_agnostic_aec == o.delay_agnostic_aec &&
@@ -109,8 +116,11 @@ std::string AudioOptions::ToString() const {
                 audio_jitter_buffer_max_packets);
   ToStringIfSet(&result, "audio_jitter_buffer_fast_accelerate",
                 audio_jitter_buffer_fast_accelerate);
+  ToStringIfSet(&result, "audio_jitter_buffer_min_delay_ms",
+                audio_jitter_buffer_min_delay_ms);
+  ToStringIfSet(&result, "audio_jitter_buffer_enable_rtx_handling",
+                audio_jitter_buffer_enable_rtx_handling);
   ToStringIfSet(&result, "typing", typing_detection);
-  ToStringIfSet(&result, "comfort_noise", aecm_generate_comfort_noise);
   ToStringIfSet(&result, "experimental_agc", experimental_agc);
   ToStringIfSet(&result, "extended_filter_aec", extended_filter_aec);
   ToStringIfSet(&result, "delay_agnostic_aec", delay_agnostic_aec);

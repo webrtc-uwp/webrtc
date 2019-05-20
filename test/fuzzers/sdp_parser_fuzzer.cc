@@ -11,10 +11,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "api/jsepsessiondescription.h"
+#include "api/jsep_session_description.h"
 
 namespace webrtc {
 void FuzzOneInput(const uint8_t* data, size_t size) {
+  if (size > 16384) {
+    return;
+  }
   std::string message(reinterpret_cast<const char*>(data), size);
   webrtc::SdpParseError error;
 

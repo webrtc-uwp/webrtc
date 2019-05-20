@@ -80,7 +80,20 @@ class FuzzyPacketBuffer : public video_coding::PacketBuffer {
       return &packet_it->second;
 
     VCMPacket* packet = &packets[seq_num];
-    packet->codec = codec;
+    packet->video_header.codec = codec;
+    switch (codec) {
+      case kVideoCodecVP8:
+        packet->video_header.video_type_header.emplace<RTPVideoHeaderVP8>();
+        break;
+      case kVideoCodecVP9:
+        packet->video_header.video_type_header.emplace<RTPVideoHeaderVP9>();
+        break;
+      case kVideoCodecH264:
+        packet->video_header.video_type_header.emplace<RTPVideoHeaderH264>();
+        break;
+      default:
+        RTC_NOTREACHED();
+    }
     packet->markerBit = true;
     reader->CopyTo(packet, sizeof(packet));
     return packet;
@@ -101,6 +114,9 @@ class FuzzyPacketBuffer : public video_coding::PacketBuffer {
 }  // namespace
 
 void FuzzOneInput(const uint8_t* data, size_t size) {
+  if (size > 20000) {
+    return;
+  }
   DataReader reader(data, size);
   rtc::scoped_refptr<FuzzyPacketBuffer> pb(new FuzzyPacketBuffer(&reader));
   NullCallback cb;
@@ -108,7 +124,7 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
 
   while (reader.MoreToRead()) {
     auto frame = absl::make_unique<video_coding::RtpFrameObject>(
-        pb, reader.GetNum<uint16_t>(), reader.GetNum<uint16_t>(), 0, 0, 0);
+        pb, reader.GetNum<uint16_t>(), reader.GetNum<uint16_t>(), 0, 0, 0, 0);
     reference_finder.ManageFrame(std::move(frame));
   }
 }

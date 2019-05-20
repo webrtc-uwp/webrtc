@@ -8,22 +8,39 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "absl/memory/memory.h"
 #include "api/test/simulated_network.h"
+#include "api/test/video/function_video_encoder_factory.h"
 #include "call/fake_network_pipe.h"
 #include "call/simulated_network.h"
+#include "media/engine/internal_decoder_factory.h"
 #include "modules/rtp_rtcp/source/byte_io.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "test/call_test.h"
 #include "test/field_trial.h"
-#include "test/function_video_encoder_factory.h"
+#include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/rtcp_packet_parser.h"
 
+using ::testing::Contains;
+using ::testing::Not;
+
 namespace webrtc {
+namespace {
+enum : int {  // The first valid value is 1.
+  kTransportSequenceNumberExtensionId = 1,
+  kVideoRotationExtensionId,
+};
+}  // namespace
 
 class FecEndToEndTest : public test::CallTest {
  public:
-  FecEndToEndTest() = default;
+  FecEndToEndTest() {
+    RegisterRtpExtension(RtpExtension(RtpExtension::kTransportSequenceNumberUri,
+                                      kTransportSequenceNumberExtensionId));
+    RegisterRtpExtension(RtpExtension(RtpExtension::kVideoRotationUri,
+                                      kVideoRotationExtensionId));
+  }
 };
 
 TEST_F(FecEndToEndTest, ReceivesUlpfec) {
@@ -98,7 +115,7 @@ TEST_F(FecEndToEndTest, ReceivesUlpfec) {
       encoder_config->codec_type = kVideoCodecVP8;
       VideoReceiveStream::Decoder decoder =
           test::CreateMatchingDecoder(*send_config);
-      decoder_.reset(decoder.decoder);
+      decoder.decoder_factory = &decoder_factory_;
       (*receive_configs)[0].decoders.clear();
       (*receive_configs)[0].decoders.push_back(decoder);
 
@@ -119,7 +136,7 @@ TEST_F(FecEndToEndTest, ReceivesUlpfec) {
     rtc::CriticalSection crit_;
     std::unique_ptr<VideoEncoder> encoder_;
     test::FunctionVideoEncoderFactory encoder_factory_;
-    std::unique_ptr<VideoDecoder> decoder_;
+    InternalDecoderFactory decoder_factory_;
     std::set<uint32_t> dropped_sequence_numbers_ RTC_GUARDED_BY(crit_);
     // Several packets can have the same timestamp.
     std::multiset<uint32_t> dropped_timestamps_ RTC_GUARDED_BY(crit_);
@@ -233,7 +250,7 @@ class FlexfecRenderObserver : public test::EndToEndTest,
       Call* sender_call) override {
     // At low RTT (< kLowRttNackMs) -> NACK only, no FEC.
     const int kNetworkDelayMs = 100;
-    DefaultNetworkSimulationConfig config;
+    BuiltInNetworkBehaviorConfig config;
     config.queue_delay_ms = kNetworkDelayMs;
     return new test::PacketTransport(
         task_queue, sender_call, this, test::PacketTransport::kSender,
@@ -329,8 +346,7 @@ TEST_F(FecEndToEndTest, ReceivedUlpfecPacketsNotNacked) {
           ulpfec_sequence_number_(0),
           has_last_sequence_number_(false),
           last_sequence_number_(0),
-          encoder_factory_([]() { return VP8Encoder::Create(); }),
-          decoder_(VP8Decoder::Create()) {}
+          encoder_factory_([]() { return VP8Encoder::Create(); }) {}
 
    private:
     Action OnSendRtp(const uint8_t* packet, size_t length) override {
@@ -404,8 +420,7 @@ TEST_F(FecEndToEndTest, ReceivedUlpfecPacketsNotNacked) {
         test::RtcpPacketParser rtcp_parser;
         rtcp_parser.Parse(packet, length);
         const std::vector<uint16_t>& nacks = rtcp_parser.nack()->packet_ids();
-        EXPECT_TRUE(std::find(nacks.begin(), nacks.end(),
-                              ulpfec_sequence_number_) == nacks.end())
+        EXPECT_THAT(nacks, Not(Contains(ulpfec_sequence_number_)))
             << "Got nack for ULPFEC packet";
         if (!nacks.empty() &&
             IsNewerSequenceNumber(nacks.back(), ulpfec_sequence_number_)) {
@@ -421,7 +436,7 @@ TEST_F(FecEndToEndTest, ReceivedUlpfecPacketsNotNacked) {
       // At low RTT (< kLowRttNackMs) -> NACK only, no FEC.
       // Configure some network delay.
       const int kNetworkDelayMs = 50;
-      DefaultNetworkSimulationConfig config;
+      BuiltInNetworkBehaviorConfig config;
       config.queue_delay_ms = kNetworkDelayMs;
       return new test::PacketTransport(
           task_queue, sender_call, this, test::PacketTransport::kSender,
@@ -433,9 +448,10 @@ TEST_F(FecEndToEndTest, ReceivedUlpfecPacketsNotNacked) {
 
     // TODO(holmer): Investigate why we don't send FEC packets when the bitrate
     // is 10 kbps.
-    void ModifySenderCallConfig(Call::Config* config) override {
+    void ModifySenderBitrateConfig(
+        BitrateConstraints* bitrate_config) override {
       const int kMinBitrateBps = 30000;
-      config->bitrate_config.min_bitrate_bps = kMinBitrateBps;
+      bitrate_config->min_bitrate_bps = kMinBitrateBps;
     }
 
     void ModifyVideoConfigs(
@@ -461,7 +477,7 @@ TEST_F(FecEndToEndTest, ReceivedUlpfecPacketsNotNacked) {
           send_config->rtp.payload_type;
       (*receive_configs)[0].decoders[0].video_format =
           SdpVideoFormat(send_config->rtp.payload_name);
-      (*receive_configs)[0].decoders[0].decoder = decoder_.get();
+      (*receive_configs)[0].decoders[0].decoder_factory = &decoder_factory_;
     }
 
     void PerformTest() override {
@@ -482,9 +498,8 @@ TEST_F(FecEndToEndTest, ReceivedUlpfecPacketsNotNacked) {
     uint16_t ulpfec_sequence_number_ RTC_GUARDED_BY(&crit_);
     bool has_last_sequence_number_;
     uint16_t last_sequence_number_;
-    std::unique_ptr<webrtc::VideoEncoder> encoder_;
     test::FunctionVideoEncoderFactory encoder_factory_;
-    std::unique_ptr<webrtc::VideoDecoder> decoder_;
+    InternalDecoderFactory decoder_factory_;
   } test;
 
   RunBaseTest(&test);

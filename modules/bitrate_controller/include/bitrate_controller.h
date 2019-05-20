@@ -15,15 +15,17 @@
 #ifndef MODULES_BITRATE_CONTROLLER_INCLUDE_BITRATE_CONTROLLER_H_
 #define MODULES_BITRATE_CONTROLLER_INCLUDE_BITRATE_CONTROLLER_H_
 
-#include <map>
+#include <stddef.h>
+#include <stdint.h>
 
 #include "modules/congestion_controller/goog_cc/delay_based_bwe.h"
 #include "modules/include/module.h"
-#include "modules/pacing/paced_sender.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "rtc_base/deprecation.h"
 
 namespace webrtc {
 
+class Clock;
 class RtcEventLog;
 
 // Deprecated
@@ -60,11 +62,11 @@ class BitrateController : public Module, public RtcpBandwidthObserver {
   // Deprecated:
   // TODO(perkj): BitrateObserver has been deprecated and is not used in WebRTC.
   // Remove this method once other other projects does not use it.
-  static BitrateController* CreateBitrateController(const Clock* clock,
+  static BitrateController* CreateBitrateController(Clock* clock,
                                                     BitrateObserver* observer,
                                                     RtcEventLog* event_log);
 
-  static BitrateController* CreateBitrateController(const Clock* clock,
+  static BitrateController* CreateBitrateController(Clock* clock,
                                                     RtcEventLog* event_log);
 
   ~BitrateController() override {}

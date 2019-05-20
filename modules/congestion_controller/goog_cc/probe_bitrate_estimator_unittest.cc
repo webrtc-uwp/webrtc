@@ -10,11 +10,9 @@
 
 #include "modules/congestion_controller/goog_cc/probe_bitrate_estimator.h"
 
-#include <utility>
-#include <vector>
+#include <stddef.h>
 
-#include "modules/remote_bitrate_estimator/aimd_rate_control.h"
-#include "test/gmock.h"
+#include "api/transport/network_types.h"
 #include "test/gtest.h"
 
 namespace webrtc {
@@ -202,7 +200,7 @@ TEST_F(TestProbeBitrateEstimator, IgnoreSizeFirstReceivePacket) {
 }
 
 TEST_F(TestProbeBitrateEstimator, NoLastEstimatedBitrateBps) {
-  EXPECT_FALSE(probe_bitrate_estimator_.FetchAndResetLastEstimatedBitrateBps());
+  EXPECT_FALSE(probe_bitrate_estimator_.FetchAndResetLastEstimatedBitrate());
 }
 
 TEST_F(TestProbeBitrateEstimator, FetchLastEstimatedBitrateBps) {
@@ -211,11 +209,11 @@ TEST_F(TestProbeBitrateEstimator, FetchLastEstimatedBitrateBps) {
   AddPacketFeedback(0, 1000, 20, 30);
   AddPacketFeedback(0, 1000, 30, 40);
 
-  auto estimated_bitrate_bps =
-      probe_bitrate_estimator_.FetchAndResetLastEstimatedBitrateBps();
-  EXPECT_TRUE(estimated_bitrate_bps);
-  EXPECT_NEAR(*estimated_bitrate_bps, 800000, 10);
-  EXPECT_FALSE(probe_bitrate_estimator_.FetchAndResetLastEstimatedBitrateBps());
+  auto estimated_bitrate =
+      probe_bitrate_estimator_.FetchAndResetLastEstimatedBitrate();
+  EXPECT_TRUE(estimated_bitrate);
+  EXPECT_NEAR(estimated_bitrate->bps(), 800000, 10);
+  EXPECT_FALSE(probe_bitrate_estimator_.FetchAndResetLastEstimatedBitrate());
 }
 
 }  // namespace webrtc

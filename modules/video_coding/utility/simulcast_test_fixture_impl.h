@@ -14,14 +14,14 @@
 #include <memory>
 #include <vector>
 
+#include "api/test/mock_video_decoder.h"
+#include "api/test/mock_video_encoder.h"
 #include "api/test/simulcast_test_fixture.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/video_frame.h"
 #include "api/video_codecs/video_decoder_factory.h"
 #include "api/video_codecs/video_encoder_factory.h"
-#include "common_types.h"  // NOLINT(build/include)
 #include "modules/video_coding/utility/simulcast_rate_allocator.h"
-#include "modules/video_coding/include/mock/mock_video_codec_interface.h"
 
 namespace webrtc {
 namespace test {
@@ -50,10 +50,12 @@ class SimulcastTestFixtureImpl final : public SimulcastTestFixture {
   void TestSpatioTemporalLayers333PatternEncoder() override;
   void TestSpatioTemporalLayers321PatternEncoder() override;
   void TestStrideEncodeDecode() override;
+  void TestDecodeWidthHeightSet() override;
 
   static void DefaultSettings(VideoCodec* settings,
                               const int* temporal_layer_profile,
-                              VideoCodecType codec_type);
+                              VideoCodecType codec_type,
+                              bool reverse_layer_order = false);
 
  private:
   class TestEncodedImageCallback;
@@ -64,9 +66,9 @@ class SimulcastTestFixtureImpl final : public SimulcastTestFixture {
   void SetRates(uint32_t bitrate_kbps, uint32_t fps);
   void RunActiveStreamsTest(const std::vector<bool> active_streams);
   void UpdateActiveStreams(const std::vector<bool> active_streams);
-  void ExpectStreams(FrameType frame_type,
+  void ExpectStreams(VideoFrameType frame_type,
                      const std::vector<bool> expected_streams_active);
-  void ExpectStreams(FrameType frame_type, int expected_video_streams);
+  void ExpectStreams(VideoFrameType frame_type, int expected_video_streams);
   void VerifyTemporalIdxAndSyncForAllSpatialLayers(
       TestEncodedImageCallback* encoder_callback,
       const int* expected_temporal_idx,

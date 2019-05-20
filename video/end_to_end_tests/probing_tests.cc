@@ -8,30 +8,28 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "absl/memory/memory.h"
 #include "api/test/simulated_network.h"
 #include "call/fake_network_pipe.h"
 #include "call/simulated_network.h"
 #include "test/call_test.h"
 #include "test/field_trial.h"
 #include "test/gtest.h"
+
 namespace webrtc {
-
-class ProbingEndToEndTest : public test::CallTest,
-                            public testing::WithParamInterface<std::string> {
- public:
-  ProbingEndToEndTest() : field_trial_(GetParam()) {}
-
-  virtual ~ProbingEndToEndTest() {
-  }
-
- private:
-  test::ScopedFieldTrials field_trial_;
+namespace {
+enum : int {  // The first valid value is 1.
+  kTransportSequenceNumberExtensionId = 1,
 };
-INSTANTIATE_TEST_CASE_P(
-    FieldTrials,
-    ProbingEndToEndTest,
-    ::testing::Values("WebRTC-TaskQueueCongestionControl/Enabled/",
-                      "WebRTC-TaskQueueCongestionControl/Disabled/"));
+}  // namespace
+
+class ProbingEndToEndTest : public test::CallTest {
+ public:
+  ProbingEndToEndTest() {
+    RegisterRtpExtension(RtpExtension(RtpExtension::kTransportSequenceNumberUri,
+                                      kTransportSequenceNumberExtensionId));
+  }
+};
 
 class ProbingTest : public test::EndToEndTest {
  public:
@@ -41,8 +39,8 @@ class ProbingTest : public test::EndToEndTest {
         state_(0),
         sender_call_(nullptr) {}
 
-  void ModifySenderCallConfig(Call::Config* config) override {
-    config->bitrate_config.start_bitrate_bps = start_bitrate_bps_;
+  void ModifySenderBitrateConfig(BitrateConstraints* bitrate_config) override {
+    bitrate_config->start_bitrate_bps = start_bitrate_bps_;
   }
 
   void OnCallsCreated(Call* sender_call, Call* receiver_call) override {
@@ -59,11 +57,11 @@ class ProbingTest : public test::EndToEndTest {
 // Flaky under MemorySanitizer: bugs.webrtc.org/7419
 // Flaky on iOS bots: bugs.webrtc.org/7851
 #if defined(MEMORY_SANITIZER)
-TEST_P(ProbingEndToEndTest, DISABLED_InitialProbing) {
+TEST_F(ProbingEndToEndTest, DISABLED_InitialProbing) {
 #elif defined(TARGET_IPHONE_SIMULATOR) && TARGET_IPHONE_SIMULATOR
-TEST_P(ProbingEndToEndTest, DISABLED_InitialProbing) {
+TEST_F(ProbingEndToEndTest, DISABLED_InitialProbing) {
 #else
-TEST_P(ProbingEndToEndTest, InitialProbing) {
+TEST_F(ProbingEndToEndTest, InitialProbing) {
 #endif
   class InitialProbingTest : public ProbingTest {
    public:
@@ -107,12 +105,12 @@ TEST_P(ProbingEndToEndTest, InitialProbing) {
 
 // Fails on Linux MSan: bugs.webrtc.org/7428
 #if defined(MEMORY_SANITIZER)
-TEST_P(ProbingEndToEndTest, DISABLED_TriggerMidCallProbing) {
+TEST_F(ProbingEndToEndTest, DISABLED_TriggerMidCallProbing) {
 // Fails on iOS bots: bugs.webrtc.org/7851
 #elif defined(TARGET_IPHONE_SIMULATOR) && TARGET_IPHONE_SIMULATOR
-TEST_P(ProbingEndToEndTest, DISABLED_TriggerMidCallProbing) {
+TEST_F(ProbingEndToEndTest, DISABLED_TriggerMidCallProbing) {
 #else
-TEST_P(ProbingEndToEndTest, TriggerMidCallProbing) {
+TEST_F(ProbingEndToEndTest, TriggerMidCallProbing) {
 #endif
 
   class TriggerMidCallProbingTest : public ProbingTest {
@@ -186,11 +184,11 @@ TEST_P(ProbingEndToEndTest, TriggerMidCallProbing) {
 }
 
 #if defined(MEMORY_SANITIZER)
-TEST_P(ProbingEndToEndTest, DISABLED_ProbeOnVideoEncoderReconfiguration) {
+TEST_F(ProbingEndToEndTest, DISABLED_ProbeOnVideoEncoderReconfiguration) {
 #elif defined(TARGET_IPHONE_SIMULATOR) && TARGET_IPHONE_SIMULATOR
-TEST_P(ProbingEndToEndTest, DISABLED_ProbeOnVideoEncoderReconfiguration) {
+TEST_F(ProbingEndToEndTest, DISABLED_ProbeOnVideoEncoderReconfiguration) {
 #else
-TEST_P(ProbingEndToEndTest, ProbeOnVideoEncoderReconfiguration) {
+TEST_F(ProbingEndToEndTest, ProbeOnVideoEncoderReconfiguration) {
 #endif
 
   class ReconfigureTest : public ProbingTest {
@@ -212,16 +210,11 @@ TEST_P(ProbingEndToEndTest, ProbeOnVideoEncoderReconfiguration) {
       send_stream_ = send_stream;
     }
 
-    void OnRtpTransportControllerSendCreated(
-        RtpTransportControllerSend* transport_controller) override {
-      transport_controller_ = transport_controller;
-    }
-
     test::PacketTransport* CreateSendTransport(
         test::SingleThreadedTaskQueueForTesting* task_queue,
         Call* sender_call) override {
       auto network =
-          absl::make_unique<SimulatedNetwork>(DefaultNetworkSimulationConfig());
+          absl::make_unique<SimulatedNetwork>(BuiltInNetworkBehaviorConfig());
       send_simulated_network_ = network.get();
       return new test::PacketTransport(
           task_queue, sender_call, this, test::PacketTransport::kSender,
@@ -245,22 +238,24 @@ TEST_P(ProbingEndToEndTest, ProbeOnVideoEncoderReconfiguration) {
             // bitrate).
             if (stats.send_bandwidth_bps >= 250000 &&
                 stats.send_bandwidth_bps <= 350000) {
-              DefaultNetworkSimulationConfig config;
+              BuiltInNetworkBehaviorConfig config;
               config.link_capacity_kbps = 200;
               send_simulated_network_->SetConfig(config);
 
               // In order to speed up the test we can interrupt exponential
               // probing by toggling the network availability. The alternative
               // is to wait for it to time out (1000 ms).
-              transport_controller_->OnNetworkAvailability(false);
-              transport_controller_->OnNetworkAvailability(true);
+              sender_call_->GetTransportControllerSend()->OnNetworkAvailability(
+                  false);
+              sender_call_->GetTransportControllerSend()->OnNetworkAvailability(
+                  true);
 
               ++state_;
             }
             break;
           case 1:
             if (stats.send_bandwidth_bps <= 210000) {
-              DefaultNetworkSimulationConfig config;
+              BuiltInNetworkBehaviorConfig config;
               config.link_capacity_kbps = 5000;
               send_simulated_network_->SetConfig(config);
 
@@ -290,7 +285,6 @@ TEST_P(ProbingEndToEndTest, ProbeOnVideoEncoderReconfiguration) {
     SimulatedNetwork* send_simulated_network_;
     VideoSendStream* send_stream_;
     VideoEncoderConfig* encoder_config_;
-    RtpTransportControllerSend* transport_controller_;
   };
 
   bool success = false;

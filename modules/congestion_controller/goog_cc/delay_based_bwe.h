@@ -11,17 +11,22 @@
 #ifndef MODULES_CONGESTION_CONTROLLER_GOOG_CC_DELAY_BASED_BWE_H_
 #define MODULES_CONGESTION_CONTROLLER_GOOG_CC_DELAY_BASED_BWE_H_
 
+#include <stddef.h>
+#include <stdint.h>
 #include <memory>
-#include <utility>
 #include <vector>
 
+#include "absl/types/optional.h"
+#include "api/network_state_predictor.h"
+#include "api/transport/network_types.h"
+#include "api/transport/webrtc_key_value_config.h"
 #include "modules/congestion_controller/goog_cc/delay_increase_detector_interface.h"
 #include "modules/congestion_controller/goog_cc/probe_bitrate_estimator.h"
 #include "modules/remote_bitrate_estimator/aimd_rate_control.h"
-#include "modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
+#include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 #include "modules/remote_bitrate_estimator/inter_arrival.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/constructormagic.h"
+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"  // For PacketFeedback
+#include "rtc_base/constructor_magic.h"
 #include "rtc_base/race_checker.h"
 
 namespace webrtc {
@@ -31,56 +36,65 @@ class DelayBasedBwe {
  public:
   struct Result {
     Result();
-    Result(bool probe, uint32_t target_bitrate_bps);
+    Result(bool probe, DataRate target_bitrate);
     ~Result();
     bool updated;
     bool probe;
-    uint32_t target_bitrate_bps;
+    DataRate target_bitrate = DataRate::Zero();
     bool recovered_from_overuse;
+    bool backoff_in_alr;
   };
 
-  explicit DelayBasedBwe(RtcEventLog* event_log);
+  explicit DelayBasedBwe(const WebRtcKeyValueConfig* key_value_config,
+                         RtcEventLog* event_log,
+                         NetworkStatePredictor* network_state_predictor);
   virtual ~DelayBasedBwe();
 
   Result IncomingPacketFeedbackVector(
       const std::vector<PacketFeedback>& packet_feedback_vector,
-      absl::optional<uint32_t> acked_bitrate_bps,
-      int64_t at_time_ms);
-  void OnRttUpdate(int64_t avg_rtt_ms);
-  bool LatestEstimate(std::vector<uint32_t>* ssrcs,
-                      uint32_t* bitrate_bps) const;
-  void SetStartBitrate(int start_bitrate_bps);
-  void SetMinBitrate(int min_bitrate_bps);
-  int64_t GetExpectedBwePeriodMs() const;
+      absl::optional<DataRate> acked_bitrate,
+      absl::optional<DataRate> probe_bitrate,
+      absl::optional<NetworkStateEstimate> network_estimate,
+      bool in_alr,
+      Timestamp at_time);
+  void OnRttUpdate(TimeDelta avg_rtt);
+  bool LatestEstimate(std::vector<uint32_t>* ssrcs, DataRate* bitrate) const;
+  void SetStartBitrate(DataRate start_bitrate);
+  void SetMinBitrate(DataRate min_bitrate);
+  TimeDelta GetExpectedBwePeriod() const;
+  void SetAlrLimitedBackoffExperiment(bool enabled);
 
  private:
   friend class GoogCcStatePrinter;
   void IncomingPacketFeedback(const PacketFeedback& packet_feedback,
-                              int64_t at_time_ms);
-  Result OnLongFeedbackDelay(int64_t arrival_time_ms);
-  Result MaybeUpdateEstimate(absl::optional<uint32_t> acked_bitrate_bps,
-                             bool request_probe,
-                             int64_t at_time_ms);
+                              Timestamp at_time);
+  Result MaybeUpdateEstimate(
+      absl::optional<DataRate> acked_bitrate,
+      absl::optional<DataRate> probe_bitrate,
+      absl::optional<NetworkStateEstimate> state_estimate,
+      bool recovered_from_overuse,
+      bool in_alr,
+      Timestamp at_time);
   // Updates the current remote rate estimate and returns true if a valid
   // estimate exists.
-  bool UpdateEstimate(int64_t now_ms,
-                      absl::optional<uint32_t> acked_bitrate_bps,
-                      uint32_t* target_bitrate_bps);
+  bool UpdateEstimate(Timestamp now,
+                      absl::optional<DataRate> acked_bitrate,
+                      DataRate* target_bitrate);
 
   rtc::RaceChecker network_race_;
   RtcEventLog* const event_log_;
   std::unique_ptr<InterArrival> inter_arrival_;
   std::unique_ptr<DelayIncreaseDetectorInterface> delay_detector_;
-  int64_t last_seen_packet_ms_;
+  Timestamp last_seen_packet_;
   bool uma_recorded_;
   AimdRateControl rate_control_;
-  ProbeBitrateEstimator probe_bitrate_estimator_;
   size_t trendline_window_size_;
   double trendline_smoothing_coeff_;
   double trendline_threshold_gain_;
-  int consecutive_delayed_feedbacks_;
-  uint32_t prev_bitrate_;
+  DataRate prev_bitrate_;
   BandwidthUsage prev_state_;
+  bool alr_limited_backoff_enabled_;
+  NetworkStatePredictor* network_state_predictor_;
 
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(DelayBasedBwe);
 };

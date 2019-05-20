@@ -10,7 +10,7 @@
 
 #include "rtc_base/location.h"
 
-#include "rtc_base/stringutils.h"
+#include <stdio.h>
 
 namespace rtc {
 
@@ -31,7 +31,7 @@ Location& Location::operator=(const Location& other) {
 
 std::string Location::ToString() const {
   char buf[256];
-  sprintfn(buf, sizeof(buf), "%s@%s", function_name_, file_and_line_);
+  snprintf(buf, sizeof(buf), "%s@%s", function_name_, file_and_line_);
   return buf;
 }
 

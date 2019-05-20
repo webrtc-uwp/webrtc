@@ -12,6 +12,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/memory/memory.h"
 #include "call/call.h"
 #include "call/fake_network_pipe.h"
 #include "call/simulated_network.h"
@@ -46,8 +47,6 @@ class LogObserver {
  private:
   class Callback : public rtc::LogSink {
    public:
-    Callback() : done_(false, false) {}
-
     void OnLogMessage(const std::string& message) override {
       rtc::CritScope lock(&crit_sect_);
       // Ignore log lines that are due to missing AST extensions, these are
@@ -67,7 +66,7 @@ class LogObserver {
         num_popped++;
         EXPECT_TRUE(a.find(b) != std::string::npos) << a << " != " << b;
       }
-      if (expected_log_lines_.size() <= 0) {
+      if (expected_log_lines_.empty()) {
         if (num_popped > 0) {
           done_.Set();
         }
@@ -111,14 +110,14 @@ class BitrateEstimatorTest : public test::CallTest {
           &task_queue_,
           absl::make_unique<FakeNetworkPipe>(
               Clock::GetRealTimeClock(), absl::make_unique<SimulatedNetwork>(
-                                             DefaultNetworkSimulationConfig())),
+                                             BuiltInNetworkBehaviorConfig())),
           sender_call_.get(), payload_type_map_));
       send_transport_->SetReceiver(receiver_call_->Receiver());
       receive_transport_.reset(new test::DirectTransport(
           &task_queue_,
           absl::make_unique<FakeNetworkPipe>(
               Clock::GetRealTimeClock(), absl::make_unique<SimulatedNetwork>(
-                                             DefaultNetworkSimulationConfig())),
+                                             BuiltInNetworkBehaviorConfig())),
           receiver_call_.get(), payload_type_map_));
       receive_transport_->SetReceiver(sender_call_->Receiver());
 
@@ -126,6 +125,8 @@ class BitrateEstimatorTest : public test::CallTest {
       video_send_config.rtp.ssrcs.push_back(kVideoSendSsrcs[0]);
       video_send_config.encoder_settings.encoder_factory =
           &fake_encoder_factory_;
+      video_send_config.encoder_settings.bitrate_allocator_factory =
+          bitrate_allocator_factory_.get();
       video_send_config.rtp.payload_name = "FAKE";
       video_send_config.rtp.payload_type = kFakeVideoSendPayloadType;
       SetVideoSendConfig(video_send_config);
@@ -170,7 +171,8 @@ class BitrateEstimatorTest : public test::CallTest {
           is_sending_receiving_(false),
           send_stream_(nullptr),
           frame_generator_capturer_(),
-          fake_decoder_() {
+          decoder_factory_(
+              []() { return absl::make_unique<test::FakeDecoder>(); }) {
       test_->GetVideoSendConfig()->rtp.ssrcs[0]++;
       send_stream_ = test_->sender_call_->CreateVideoSendStream(
           test_->GetVideoSendConfig()->Copy(),
@@ -182,10 +184,9 @@ class BitrateEstimatorTest : public test::CallTest {
       send_stream_->SetSource(frame_generator_capturer_.get(),
                               DegradationPreference::MAINTAIN_FRAMERATE);
       send_stream_->Start();
-      frame_generator_capturer_->Start();
 
       VideoReceiveStream::Decoder decoder;
-      decoder.decoder = &fake_decoder_;
+      decoder.decoder_factory = &decoder_factory_;
       decoder.payload_type = test_->GetVideoSendConfig()->rtp.payload_type;
       decoder.video_format =
           SdpVideoFormat(test_->GetVideoSendConfig()->rtp.payload_name);
@@ -214,7 +215,6 @@ class BitrateEstimatorTest : public test::CallTest {
 
     void StopSending() {
       if (is_sending_receiving_) {
-        frame_generator_capturer_->Stop();
         send_stream_->Stop();
         if (video_receive_stream_) {
           video_receive_stream_->Stop();
@@ -229,7 +229,8 @@ class BitrateEstimatorTest : public test::CallTest {
     VideoSendStream* send_stream_;
     VideoReceiveStream* video_receive_stream_;
     std::unique_ptr<test::FrameGeneratorCapturer> frame_generator_capturer_;
-    test::FakeDecoder fake_decoder_;
+
+    test::FunctionVideoDecoderFactory decoder_factory_;
   };
 
   LogObserver receiver_log_;

@@ -9,10 +9,18 @@
  */
 
 #include "api/units/data_rate.h"
+#include "rtc_base/logging.h"
 #include "test/gtest.h"
 
 namespace webrtc {
 namespace test {
+
+TEST(DataRateTest, CompilesWithChecksAndLogs) {
+  DataRate a = DataRate::kbps(300);
+  DataRate b = DataRate::kbps(210);
+  RTC_CHECK_GT(a, b);
+  RTC_LOG(LS_INFO) << a;
+}
 
 TEST(DataRateTest, ConstExpr) {
   constexpr int64_t kValue = 12345;
@@ -92,6 +100,26 @@ TEST(DataRateTest, ConvertsToAndFromDouble) {
   EXPECT_TRUE(DataRate::bps(kInfinity).IsInfinite());
   EXPECT_TRUE(DataRate::kbps(kInfinity).IsInfinite());
 }
+TEST(DataRateTest, Clamping) {
+  const DataRate upper = DataRate::kbps(800);
+  const DataRate lower = DataRate::kbps(100);
+  const DataRate under = DataRate::kbps(100);
+  const DataRate inside = DataRate::kbps(500);
+  const DataRate over = DataRate::kbps(1000);
+  EXPECT_EQ(under.Clamped(lower, upper), lower);
+  EXPECT_EQ(inside.Clamped(lower, upper), inside);
+  EXPECT_EQ(over.Clamped(lower, upper), upper);
+
+  DataRate mutable_rate = lower;
+  mutable_rate.Clamp(lower, upper);
+  EXPECT_EQ(mutable_rate, lower);
+  mutable_rate = inside;
+  mutable_rate.Clamp(lower, upper);
+  EXPECT_EQ(mutable_rate, inside);
+  mutable_rate = over;
+  mutable_rate.Clamp(lower, upper);
+  EXPECT_EQ(mutable_rate, upper);
+}
 
 TEST(DataRateTest, MathOperations) {
   const int64_t kValueA = 450;
@@ -109,6 +137,9 @@ TEST(DataRateTest, MathOperations) {
   EXPECT_EQ((rate_a * kFloatValue).bps(), kValueA * kFloatValue);
 
   EXPECT_EQ(rate_a / rate_b, static_cast<double>(kValueA) / kValueB);
+
+  EXPECT_EQ((rate_a / 10).bps(), kValueA / 10);
+  EXPECT_NEAR((rate_a / 0.5).bps(), kValueA * 2, 1);
 
   DataRate mutable_rate = DataRate::bps(kValueA);
   mutable_rate += rate_b;

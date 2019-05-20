@@ -11,10 +11,11 @@
 #ifndef MODULES_AUDIO_PROCESSING_AEC3_SKEW_ESTIMATOR_H_
 #define MODULES_AUDIO_PROCESSING_AEC3_SKEW_ESTIMATOR_H_
 
+#include <stddef.h>
 #include <vector>
 
 #include "absl/types/optional.h"
-#include "rtc_base/constructormagic.h"
+#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 

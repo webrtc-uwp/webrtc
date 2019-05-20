@@ -18,8 +18,8 @@ import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+import android.support.annotation.Nullable;
 import android.view.Surface;
-import javax.annotation.Nullable;
 
 /**
  * An implementation of VideoCapturer to capture the screen content as a video stream.
@@ -31,6 +31,8 @@ import javax.annotation.Nullable;
  * place on the HandlerThread of the given {@code SurfaceTextureHelper}. When done with each frame,
  * the native code returns the buffer to the  {@code SurfaceTextureHelper} to be used for new
  * frames. At any time, at most one frame is being processed.
+ *
+ * @note This class is only supported on Android Lollipop and above.
  */
 @TargetApi(21)
 public class ScreenCapturerAndroid implements VideoCapturer, VideoSink {

@@ -10,10 +10,13 @@
 
 #include "modules/congestion_controller/goog_cc/acknowledged_bitrate_estimator.h"
 
+#include <stddef.h>
+#include <algorithm>
 #include <utility>
 
 #include "absl/memory/memory.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/numerics/safe_conversions.h"
 
 namespace webrtc {
@@ -24,12 +27,16 @@ bool IsInSendTimeHistory(const PacketFeedback& packet) {
 }
 }  // namespace
 
-AcknowledgedBitrateEstimator::AcknowledgedBitrateEstimator()
-    : AcknowledgedBitrateEstimator(absl::make_unique<BitrateEstimator>()) {}
+AcknowledgedBitrateEstimator::AcknowledgedBitrateEstimator(
+    const WebRtcKeyValueConfig* key_value_config)
+    : AcknowledgedBitrateEstimator(
+          key_value_config,
+          absl::make_unique<BitrateEstimator>(key_value_config)) {}
 
 AcknowledgedBitrateEstimator::~AcknowledgedBitrateEstimator() {}
 
 AcknowledgedBitrateEstimator::AcknowledgedBitrateEstimator(
+    const WebRtcKeyValueConfig* key_value_config,
     std::unique_ptr<BitrateEstimator> bitrate_estimator)
     : bitrate_estimator_(std::move(bitrate_estimator)) {}
 
@@ -41,28 +48,36 @@ void AcknowledgedBitrateEstimator::IncomingPacketFeedbackVector(
   for (const auto& packet : packet_feedback_vector) {
     if (IsInSendTimeHistory(packet)) {
       MaybeExpectFastRateChange(packet.send_time_ms);
-      bitrate_estimator_->Update(packet.arrival_time_ms,
-                                 rtc::dchecked_cast<int>(packet.payload_size));
+      int acknowledged_estimate = rtc::dchecked_cast<int>(packet.payload_size);
+      acknowledged_estimate += packet.unacknowledged_data;
+      bitrate_estimator_->Update(packet.arrival_time_ms, acknowledged_estimate);
     }
   }
 }
 
 absl::optional<uint32_t> AcknowledgedBitrateEstimator::bitrate_bps() const {
-  auto estimated_bitrate = bitrate_estimator_->bitrate_bps();
-  return estimated_bitrate
-             ? *estimated_bitrate +
-                   allocated_bitrate_without_feedback_bps_.value_or(0)
-             : estimated_bitrate;
+  return bitrate_estimator_->bitrate_bps();
+}
+
+absl::optional<uint32_t> AcknowledgedBitrateEstimator::PeekBps() const {
+  return bitrate_estimator_->PeekBps();
+}
+
+absl::optional<DataRate> AcknowledgedBitrateEstimator::bitrate() const {
+  if (bitrate_bps())
+    return DataRate::bps(*bitrate_bps());
+  return absl::nullopt;
+}
+
+absl::optional<DataRate> AcknowledgedBitrateEstimator::PeekRate() const {
+  if (PeekBps())
+    return DataRate::bps(*PeekBps());
+  return absl::nullopt;
 }
 
 void AcknowledgedBitrateEstimator::SetAlrEndedTimeMs(
     int64_t alr_ended_time_ms) {
   alr_ended_time_ms_.emplace(alr_ended_time_ms);
-}
-
-void AcknowledgedBitrateEstimator::SetAllocatedBitrateWithoutFeedback(
-    uint32_t bitrate_bps) {
-  allocated_bitrate_without_feedback_bps_.emplace(bitrate_bps);
 }
 
 void AcknowledgedBitrateEstimator::MaybeExpectFastRateChange(

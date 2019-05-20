@@ -11,7 +11,6 @@
 #ifndef MODULES_AUDIO_PROCESSING_AEC3_SUBTRACTOR_OUTPUT_ANALYZER_H_
 #define MODULES_AUDIO_PROCESSING_AEC3_SUBTRACTOR_OUTPUT_ANALYZER_H_
 
-#include "api/array_view.h"
 #include "modules/audio_processing/aec3/subtractor_output.h"
 
 namespace webrtc {
@@ -35,7 +34,6 @@ class SubtractorOutputAnalyzer {
   void HandleEchoPathChange();
 
  private:
-  const bool strict_divergence_check_;
   bool shadow_filter_converged_ = false;
   bool main_filter_converged_ = false;
   bool filter_diverged_ = false;

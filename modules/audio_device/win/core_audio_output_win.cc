@@ -16,6 +16,7 @@
 #include "rtc_base/bind.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/time_utils.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -28,7 +29,7 @@ CoreAudioOutput::CoreAudioOutput()
                     [this](ErrorType err) { return OnErrorCallback(err); }) {
   RTC_DLOG(INFO) << __FUNCTION__;
   RTC_DCHECK_RUN_ON(&thread_checker_);
-  thread_checker_audio_.DetachFromThread();
+  thread_checker_audio_.Detach();
 }
 
 CoreAudioOutput::~CoreAudioOutput() {
@@ -359,8 +360,9 @@ int CoreAudioOutput::EstimateOutputLatencyMillis(uint64_t device_frequency) {
     const uint64_t delay_frames = num_frames_written_ - num_played_out_frames;
 
     // Convert latency in number of frames into milliseconds.
-    webrtc::TimeDelta delay = webrtc::TimeDelta::us(
-        delay_frames * kNumMicrosecsPerSec / format_.Format.nSamplesPerSec);
+    webrtc::TimeDelta delay =
+        webrtc::TimeDelta::us(delay_frames * rtc::kNumMicrosecsPerSec /
+                              format_.Format.nSamplesPerSec);
     delay_ms = delay.ms();
   }
   return delay_ms;

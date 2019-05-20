@@ -53,11 +53,19 @@
 #define API_PROXY_H_
 
 #include <memory>
+#include <string>
 #include <utility>
 
+#include "api/scoped_refptr.h"
 #include "rtc_base/event.h"
-#include "rtc_base/refcountedobject.h"
+#include "rtc_base/message_handler.h"
+#include "rtc_base/message_queue.h"
+#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/thread.h"
+
+namespace rtc {
+class Location;
+}
 
 namespace webrtc {
 
@@ -143,7 +151,7 @@ class SynchronousMethodCall : public rtc::MessageData,
  private:
   void OnMessage(rtc::Message*) override;
 
-  std::unique_ptr<rtc::Event> e_;
+  rtc::Event e_;
   rtc::MessageHandler* proxy_;
 };
 

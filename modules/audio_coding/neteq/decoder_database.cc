@@ -10,8 +10,13 @@
 
 #include "modules/audio_coding/neteq/decoder_database.h"
 
-#include <utility>  // pair
+#include <stddef.h>
+#include <cstdint>
+#include <list>
+#include <type_traits>
+#include <utility>
 
+#include "absl/strings/match.h"
 #include "api/audio_codecs/audio_decoder.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -38,7 +43,6 @@ DecoderDatabase::DecoderInfo::DecoderInfo(
       audio_format_(audio_format),
       codec_pair_id_(codec_pair_id),
       factory_(factory),
-      external_decoder_(nullptr),
       cng_decoder_(CngDecoder::Create(audio_format)),
       subtype_(SubtypeFromFormat(audio_format)) {}
 
@@ -48,47 +52,13 @@ DecoderDatabase::DecoderInfo::DecoderInfo(
     AudioDecoderFactory* factory)
     : DecoderInfo(audio_format, codec_pair_id, factory, audio_format.name) {}
 
-DecoderDatabase::DecoderInfo::DecoderInfo(
-    NetEqDecoder ct,
-    absl::optional<AudioCodecPairId> codec_pair_id,
-    AudioDecoderFactory* factory)
-    : DecoderInfo(*NetEqDecoderToSdpAudioFormat(ct), codec_pair_id, factory) {}
-
-DecoderDatabase::DecoderInfo::DecoderInfo(const SdpAudioFormat& audio_format,
-                                          AudioDecoder* ext_dec,
-                                          const std::string& codec_name)
-    : name_(codec_name),
-      audio_format_(audio_format),
-      codec_pair_id_(absl::nullopt),
-      factory_(nullptr),
-      external_decoder_(ext_dec),
-      subtype_(Subtype::kNormal) {
-  RTC_CHECK(ext_dec);
-}
-
 DecoderDatabase::DecoderInfo::DecoderInfo(DecoderInfo&&) = default;
 DecoderDatabase::DecoderInfo::~DecoderInfo() = default;
-
-bool DecoderDatabase::DecoderInfo::CanGetDecoder() const {
-  if (subtype_ == Subtype::kNormal && !external_decoder_ && !decoder_) {
-    // TODO(ossu): Keep a check here for now, since a number of tests create
-    // DecoderInfos without factories.
-    RTC_DCHECK(factory_);
-    return factory_->IsSupportedDecoder(audio_format_);
-  } else {
-    return true;
-  }
-}
 
 AudioDecoder* DecoderDatabase::DecoderInfo::GetDecoder() const {
   if (subtype_ != Subtype::kNormal) {
     // These are handled internally, so they have no AudioDecoder objects.
     return nullptr;
-  }
-  if (external_decoder_) {
-    RTC_DCHECK(!decoder_);
-    RTC_DCHECK(!cng_decoder_);
-    return external_decoder_;
   }
   if (!decoder_) {
     // TODO(ossu): Keep a check here for now, since a number of tests create
@@ -101,7 +71,7 @@ AudioDecoder* DecoderDatabase::DecoderInfo::GetDecoder() const {
 }
 
 bool DecoderDatabase::DecoderInfo::IsType(const char* name) const {
-  return STR_CASE_CMP(audio_format_.name.c_str(), name) == 0;
+  return absl::EqualsIgnoreCase(audio_format_.name, name);
 }
 
 bool DecoderDatabase::DecoderInfo::IsType(const std::string& name) const {
@@ -110,7 +80,7 @@ bool DecoderDatabase::DecoderInfo::IsType(const std::string& name) const {
 
 absl::optional<DecoderDatabase::DecoderInfo::CngDecoder>
 DecoderDatabase::DecoderInfo::CngDecoder::Create(const SdpAudioFormat& format) {
-  if (STR_CASE_CMP(format.name.c_str(), "CN") == 0) {
+  if (absl::EqualsIgnoreCase(format.name, "CN")) {
     // CN has a 1:1 RTP clock rate to sample rate ratio.
     const int sample_rate_hz = format.clockrate_hz;
     RTC_DCHECK(sample_rate_hz == 8000 || sample_rate_hz == 16000 ||
@@ -123,11 +93,11 @@ DecoderDatabase::DecoderInfo::CngDecoder::Create(const SdpAudioFormat& format) {
 
 DecoderDatabase::DecoderInfo::Subtype
 DecoderDatabase::DecoderInfo::SubtypeFromFormat(const SdpAudioFormat& format) {
-  if (STR_CASE_CMP(format.name.c_str(), "CN") == 0) {
+  if (absl::EqualsIgnoreCase(format.name, "CN")) {
     return Subtype::kComfortNoise;
-  } else if (STR_CASE_CMP(format.name.c_str(), "telephone-event") == 0) {
+  } else if (absl::EqualsIgnoreCase(format.name, "telephone-event")) {
     return Subtype::kDtmf;
-  } else if (STR_CASE_CMP(format.name.c_str(), "red") == 0) {
+  } else if (absl::EqualsIgnoreCase(format.name, "red")) {
     return Subtype::kRed;
   }
 
@@ -181,32 +151,6 @@ std::vector<int> DecoderDatabase::SetCodecs(
   return changed_payload_types;
 }
 
-int DecoderDatabase::RegisterPayload(uint8_t rtp_payload_type,
-                                     NetEqDecoder codec_type,
-                                     const std::string& name) {
-  if (rtp_payload_type > 0x7F) {
-    return kInvalidRtpPayloadType;
-  }
-  if (codec_type == NetEqDecoder::kDecoderArbitrary) {
-    return kCodecNotSupported;  // Only supported through InsertExternal.
-  }
-  const auto opt_format = NetEqDecoderToSdpAudioFormat(codec_type);
-  if (!opt_format) {
-    return kCodecNotSupported;
-  }
-  DecoderInfo info(*opt_format, codec_pair_id_, decoder_factory_, name);
-  if (!info.CanGetDecoder()) {
-    return kCodecNotSupported;
-  }
-  auto ret =
-      decoders_.insert(std::make_pair(rtp_payload_type, std::move(info)));
-  if (ret.second == false) {
-    // Database already contains a decoder with type |rtp_payload_type|.
-    return kDecoderExists;
-  }
-  return kOK;
-}
-
 int DecoderDatabase::RegisterPayload(int rtp_payload_type,
                                      const SdpAudioFormat& audio_format) {
   if (rtp_payload_type < 0 || rtp_payload_type > 0x7f) {
@@ -215,31 +159,6 @@ int DecoderDatabase::RegisterPayload(int rtp_payload_type,
   const auto ret = decoders_.insert(std::make_pair(
       rtp_payload_type,
       DecoderInfo(audio_format, codec_pair_id_, decoder_factory_.get())));
-  if (ret.second == false) {
-    // Database already contains a decoder with type |rtp_payload_type|.
-    return kDecoderExists;
-  }
-  return kOK;
-}
-
-int DecoderDatabase::InsertExternal(uint8_t rtp_payload_type,
-                                    NetEqDecoder codec_type,
-                                    const std::string& codec_name,
-                                    AudioDecoder* decoder) {
-  if (rtp_payload_type > 0x7F) {
-    return kInvalidRtpPayloadType;
-  }
-  if (!decoder) {
-    return kInvalidPointer;
-  }
-
-  const auto opt_db_format = NetEqDecoderToSdpAudioFormat(codec_type);
-  const SdpAudioFormat format =
-      opt_db_format.value_or(SdpAudioFormat("arbitrary", 0, 0));
-
-  std::pair<DecoderMap::iterator, bool> ret;
-  DecoderInfo info(format, decoder, codec_name);
-  ret = decoders_.insert(std::make_pair(rtp_payload_type, std::move(info)));
   if (ret.second == false) {
     // Database already contains a decoder with type |rtp_payload_type|.
     return kDecoderExists;

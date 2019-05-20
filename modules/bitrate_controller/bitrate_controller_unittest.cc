@@ -8,14 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <algorithm>
-#include <vector>
+#include <stdint.h>
+#include <memory>
 
 #include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
 #include "modules/bitrate_controller/include/bitrate_controller.h"
-#include "modules/pacing/mock/mock_paced_sender.h"
+#include "modules/congestion_controller/goog_cc/delay_based_bwe.h"
+#include "modules/pacing/paced_sender.h"
 #include "modules/remote_bitrate_estimator/include/bwe_defines.h"
+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "system_wrappers/include/clock.h"
 #include "test/field_trial.h"
+#include "test/gmock.h"
 #include "test/gtest.h"
 
 using ::testing::Exactly;
@@ -90,7 +94,7 @@ class BitrateControllerTest : public ::testing::Test {
   TestBitrateObserver bitrate_observer_;
   std::unique_ptr<BitrateController> controller_;
   RtcpBandwidthObserver* bandwidth_observer_;
-  testing::NiceMock<webrtc::MockRtcEventLog> event_log_;
+  ::testing::NiceMock<webrtc::MockRtcEventLog> event_log_;
 };
 
 TEST_F(BitrateControllerTest, DefaultMinMaxBitrate) {
@@ -169,7 +173,7 @@ TEST_F(BitrateControllerTest, OneBitrateObserverOneRtcpObserver) {
   EXPECT_EQ(300000, bitrate_observer_.last_bitrate_);
 
   // Test that a low delay-based estimate limits the combined estimate.
-  webrtc::DelayBasedBwe::Result result(false, 280000);
+  webrtc::DelayBasedBwe::Result result(false, webrtc::DataRate::kbps(280));
   controller_->OnDelayBasedBweResult(result);
   EXPECT_EQ(280000, bitrate_observer_.last_bitrate_);
 

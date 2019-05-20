@@ -13,8 +13,7 @@
 
 #include <memory>
 
-#include "modules/audio_coding/test/ACMTest.h"
-#include "modules/audio_coding/test/Channel.h"
+#include "modules/audio_coding/include/audio_coding_module.h"
 #include "modules/audio_coding/test/PCMFile.h"
 
 namespace webrtc {
@@ -26,7 +25,7 @@ class TestPack : public AudioPacketizationCallback {
 
   void RegisterReceiverACM(AudioCodingModule* acm);
 
-  int32_t SendData(FrameType frame_type,
+  int32_t SendData(AudioFrameType frame_type,
                    uint8_t payload_type,
                    uint32_t timestamp,
                    const uint8_t* payload_data,
@@ -47,12 +46,12 @@ class TestPack : public AudioPacketizationCallback {
   size_t payload_size_;
 };
 
-class TestAllCodecs : public ACMTest {
+class TestAllCodecs {
  public:
-  explicit TestAllCodecs(int test_mode);
+  TestAllCodecs();
   ~TestAllCodecs();
 
-  void Perform() override;
+  void Perform();
 
  private:
   // The default value of '-1' indicates that the registration is based only on
@@ -68,9 +67,7 @@ class TestAllCodecs : public ACMTest {
 
   void Run(TestPack* channel);
   void OpenOutFile(int test_number);
-  void DisplaySendReceiveCodec();
 
-  int test_mode_;
   std::unique_ptr<AudioCodingModule> acm_a_;
   std::unique_ptr<AudioCodingModule> acm_b_;
   TestPack* channel_a_to_b_;

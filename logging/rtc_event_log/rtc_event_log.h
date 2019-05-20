@@ -11,13 +11,12 @@
 #ifndef LOGGING_RTC_EVENT_LOG_RTC_EVENT_LOG_H_
 #define LOGGING_RTC_EVENT_LOG_RTC_EVENT_LOG_H_
 
+#include <stdint.h>
 #include <memory>
-#include <string>
-#include <utility>
 
-#include "api/rtceventlogoutput.h"
+#include "api/rtc_event_log_output.h"
+#include "api/task_queue/task_queue_factory.h"
 #include "logging/rtc_event_log/events/rtc_event.h"
-#include "rtc_base/task_queue.h"
 
 namespace webrtc {
 
@@ -29,21 +28,16 @@ class RtcEventLog {
   enum : size_t { kUnlimitedOutput = 0 };
   enum : int64_t { kImmediateOutput = 0 };
 
-  // TODO(eladalon): Two stages are upcoming.
-  // 1. Extend this to actually support the new encoding.
-  // 2. Get rid of the legacy encoding, allowing us to get rid of this enum.
-  enum class EncodingType { Legacy };
+  // TODO(eladalon):  Get rid of the legacy encoding and this enum once all
+  // clients have migrated to the new format.
+  enum class EncodingType { Legacy, NewFormat };
 
   virtual ~RtcEventLog() {}
 
   // Factory method to create an RtcEventLog object.
-  static std::unique_ptr<RtcEventLog> Create(EncodingType encoding_type);
-
-  // Factory method to create an RtcEventLog object which uses the given
-  // rtc::TaskQueue for emitting output.
   static std::unique_ptr<RtcEventLog> Create(
       EncodingType encoding_type,
-      std::unique_ptr<rtc::TaskQueue> task_queue);
+      TaskQueueFactory* task_queue_factory);
 
   // Create an RtcEventLog object that does nothing.
   static std::unique_ptr<RtcEventLog> CreateNull();

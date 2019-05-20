@@ -14,12 +14,17 @@
 
 #include "modules/audio_coding/neteq/packet_buffer.h"
 
-#include <algorithm>  // find_if()
+#include <algorithm>
+#include <list>
+#include <memory>
+#include <type_traits>
+#include <utility>
 
 #include "api/audio_codecs/audio_decoder.h"
 #include "modules/audio_coding/neteq/decoder_database.h"
 #include "modules/audio_coding/neteq/statistics_calculator.h"
 #include "modules/audio_coding/neteq/tick_timer.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {
@@ -91,6 +96,7 @@ int PacketBuffer::InsertPacket(Packet&& packet, StatisticsCalculator* stats) {
   if (buffer_.size() >= max_number_of_packets_) {
     // Buffer is full. Flush it.
     Flush();
+    stats->FlushedPacketBuffer();
     RTC_LOG(LS_WARNING) << "Packet buffer flushed";
     return_val = kFlushed;
   }
@@ -281,6 +287,20 @@ size_t PacketBuffer::NumSamplesInBuffer(size_t last_decoded_length) const {
   return num_samples;
 }
 
+size_t PacketBuffer::GetSpanSamples(size_t last_decoded_length) const {
+  if (buffer_.size() == 0) {
+    return 0;
+  }
+
+  size_t span = buffer_.back().timestamp - buffer_.front().timestamp;
+  if (buffer_.back().frame && buffer_.back().frame->Duration() > 0) {
+    span += buffer_.back().frame->Duration();
+  } else {
+    span += last_decoded_length;
+  }
+  return span;
+}
+
 bool PacketBuffer::ContainsDtxOrCngPacket(
     const DecoderDatabase* decoder_database) const {
   RTC_DCHECK(decoder_database);
@@ -291,11 +311,6 @@ bool PacketBuffer::ContainsDtxOrCngPacket(
     }
   }
   return false;
-}
-
-void PacketBuffer::BufferStat(int* num_packets, int* max_num_packets) const {
-  *num_packets = static_cast<int>(buffer_.size());
-  *max_num_packets = static_cast<int>(max_number_of_packets_);
 }
 
 }  // namespace webrtc

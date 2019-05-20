@@ -9,8 +9,10 @@
  */
 
 #include "modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream.h"
+
 #include "modules/remote_bitrate_estimator/remote_bitrate_estimator_unittest_helper.h"
-#include "rtc_base/constructormagic.h"
+#include "rtc_base/constructor_magic.h"
+#include "test/gtest.h"
 
 namespace webrtc {
 
@@ -55,7 +57,7 @@ TEST_F(RemoteBitrateEstimatorSingleTest, CapacityDropThreeStreamsWrap) {
 }
 
 TEST_F(RemoteBitrateEstimatorSingleTest, CapacityDropThirteenStreamsWrap) {
-  CapacityDropTestHelper(13, true, 733, 0);
+  CapacityDropTestHelper(13, true, 567, 0);
 }
 
 TEST_F(RemoteBitrateEstimatorSingleTest, CapacityDropNineteenStreamsWrap) {

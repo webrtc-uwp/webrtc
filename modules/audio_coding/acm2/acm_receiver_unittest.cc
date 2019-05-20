@@ -14,7 +14,8 @@
 #include <memory>
 
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
-#include "modules/audio_coding/acm2/rent_a_codec.h"
+#include "api/audio_codecs/builtin_audio_encoder_factory.h"
+#include "modules/audio_coding/codecs/cng/audio_encoder_cng.h"
 #include "modules/audio_coding/include/audio_coding_module.h"
 #include "modules/audio_coding/neteq/tools/rtp_generator.h"
 #include "modules/include/module_common_types.h"
@@ -22,35 +23,11 @@
 #include "rtc_base/numerics/safe_conversions.h"
 #include "system_wrappers/include/clock.h"
 #include "test/gtest.h"
-#include "test/testsupport/fileutils.h"
+#include "test/testsupport/file_utils.h"
 
 namespace webrtc {
 
 namespace acm2 {
-namespace {
-
-bool CodecsEqual(const CodecInst& codec_a, const CodecInst& codec_b) {
-  if (strcmp(codec_a.plname, codec_b.plname) != 0 ||
-      codec_a.plfreq != codec_b.plfreq || codec_a.pltype != codec_b.pltype ||
-      codec_b.channels != codec_a.channels)
-    return false;
-  return true;
-}
-
-struct CodecIdInst {
-  explicit CodecIdInst(RentACodec::CodecId codec_id) {
-    const auto codec_ix = RentACodec::CodecIndexFromId(codec_id);
-    EXPECT_TRUE(codec_ix);
-    id = *codec_ix;
-    const auto codec_inst = RentACodec::CodecInstById(codec_id);
-    EXPECT_TRUE(codec_inst);
-    inst = *codec_inst;
-  }
-  int id;
-  CodecInst inst;
-};
-
-}  // namespace
 
 class AcmReceiverTestOldApi : public AudioPacketizationCallback,
                               public ::testing::Test {
@@ -59,8 +36,8 @@ class AcmReceiverTestOldApi : public AudioPacketizationCallback,
       : timestamp_(0),
         packet_sent_(false),
         last_packet_send_timestamp_(timestamp_),
-        last_frame_type_(kEmptyFrame) {
-    config_.decoder_factory = CreateBuiltinAudioDecoderFactory();
+        last_frame_type_(AudioFrameType::kEmptyFrame) {
+    config_.decoder_factory = decoder_factory_;
   }
 
   ~AcmReceiverTestOldApi() {}
@@ -70,71 +47,73 @@ class AcmReceiverTestOldApi : public AudioPacketizationCallback,
     receiver_.reset(new AcmReceiver(config_));
     ASSERT_TRUE(receiver_.get() != NULL);
     ASSERT_TRUE(acm_.get() != NULL);
-    codecs_ = RentACodec::Database();
-
     acm_->InitializeReceiver();
     acm_->RegisterTransportCallback(this);
 
-    rtp_header_.header.sequenceNumber = 0;
-    rtp_header_.header.timestamp = 0;
-    rtp_header_.header.markerBit = false;
-    rtp_header_.header.ssrc = 0x12345678;  // Arbitrary.
-    rtp_header_.header.numCSRCs = 0;
-    rtp_header_.header.payloadType = 0;
-    rtp_header_.frameType = kAudioFrameSpeech;
+    rtp_header_.sequenceNumber = 0;
+    rtp_header_.timestamp = 0;
+    rtp_header_.markerBit = false;
+    rtp_header_.ssrc = 0x12345678;  // Arbitrary.
+    rtp_header_.numCSRCs = 0;
+    rtp_header_.payloadType = 0;
   }
 
   void TearDown() override {}
 
-  void InsertOnePacketOfSilence(int codec_id) {
-    CodecInst codec =
-        *RentACodec::CodecInstById(*RentACodec::CodecIdFromIndex(codec_id));
-    if (timestamp_ == 0) {  // This is the first time inserting audio.
-      ASSERT_EQ(0, acm_->RegisterSendCodec(codec));
-    } else {
-      auto current_codec = acm_->SendCodec();
-      ASSERT_TRUE(current_codec);
-      if (!CodecsEqual(codec, *current_codec))
-        ASSERT_EQ(0, acm_->RegisterSendCodec(codec));
+  AudioCodecInfo SetEncoder(int payload_type,
+                            const SdpAudioFormat& format,
+                            const std::map<int, int> cng_payload_types = {}) {
+    // Create the speech encoder.
+    AudioCodecInfo info = encoder_factory_->QueryAudioEncoder(format).value();
+    std::unique_ptr<AudioEncoder> enc =
+        encoder_factory_->MakeAudioEncoder(payload_type, format, absl::nullopt);
+
+    // If we have a compatible CN specification, stack a CNG on top.
+    auto it = cng_payload_types.find(info.sample_rate_hz);
+    if (it != cng_payload_types.end()) {
+      AudioEncoderCngConfig config;
+      config.speech_encoder = std::move(enc);
+      config.num_channels = 1;
+      config.payload_type = it->second;
+      config.vad_mode = Vad::kVadNormal;
+      enc = CreateComfortNoiseEncoder(std::move(config));
     }
-    AudioFrame frame;
+
+    // Actually start using the new encoder.
+    acm_->SetEncoder(std::move(enc));
+    return info;
+  }
+
+  int InsertOnePacketOfSilence(const AudioCodecInfo& info) {
     // Frame setup according to the codec.
-    frame.sample_rate_hz_ = codec.plfreq;
-    frame.samples_per_channel_ = codec.plfreq / 100;  // 10 ms.
-    frame.num_channels_ = codec.channels;
+    AudioFrame frame;
+    frame.sample_rate_hz_ = info.sample_rate_hz;
+    frame.samples_per_channel_ = info.sample_rate_hz / 100;  // 10 ms.
+    frame.num_channels_ = info.num_channels;
     frame.Mute();
     packet_sent_ = false;
     last_packet_send_timestamp_ = timestamp_;
+    int num_10ms_frames = 0;
     while (!packet_sent_) {
       frame.timestamp_ = timestamp_;
       timestamp_ += rtc::checked_cast<uint32_t>(frame.samples_per_channel_);
-      ASSERT_GE(acm_->Add10MsData(frame), 0);
+      EXPECT_GE(acm_->Add10MsData(frame), 0);
+      ++num_10ms_frames;
     }
+    return num_10ms_frames;
   }
 
-  template <size_t N>
-  void AddSetOfCodecs(const RentACodec::CodecId (&ids)[N]) {
-    for (auto id : ids) {
-      const auto i = RentACodec::CodecIndexFromId(id);
-      ASSERT_TRUE(i);
-      ASSERT_EQ(0, receiver_->AddCodec(*i, codecs_[*i].pltype,
-                                       codecs_[*i].channels, codecs_[*i].plfreq,
-                                       nullptr, codecs_[*i].plname));
-    }
-  }
-
-  int SendData(FrameType frame_type,
+  int SendData(AudioFrameType frame_type,
                uint8_t payload_type,
                uint32_t timestamp,
                const uint8_t* payload_data,
                size_t payload_len_bytes,
                const RTPFragmentationHeader* fragmentation) override {
-    if (frame_type == kEmptyFrame)
+    if (frame_type == AudioFrameType::kEmptyFrame)
       return 0;
 
-    rtp_header_.header.payloadType = payload_type;
-    rtp_header_.frameType = frame_type;
-    rtp_header_.header.timestamp = timestamp;
+    rtp_header_.payloadType = payload_type;
+    rtp_header_.timestamp = timestamp;
 
     int ret_val = receiver_->InsertPacket(
         rtp_header_,
@@ -143,127 +122,25 @@ class AcmReceiverTestOldApi : public AudioPacketizationCallback,
       assert(false);
       return -1;
     }
-    rtp_header_.header.sequenceNumber++;
+    rtp_header_.sequenceNumber++;
     packet_sent_ = true;
     last_frame_type_ = frame_type;
     return 0;
   }
 
+  const rtc::scoped_refptr<AudioEncoderFactory> encoder_factory_ =
+      CreateBuiltinAudioEncoderFactory();
+  const rtc::scoped_refptr<AudioDecoderFactory> decoder_factory_ =
+      CreateBuiltinAudioDecoderFactory();
   AudioCodingModule::Config config_;
   std::unique_ptr<AcmReceiver> receiver_;
-  rtc::ArrayView<const CodecInst> codecs_;
   std::unique_ptr<AudioCodingModule> acm_;
-  WebRtcRTPHeader rtp_header_;
+  RTPHeader rtp_header_;
   uint32_t timestamp_;
   bool packet_sent_;  // Set when SendData is called reset when inserting audio.
   uint32_t last_packet_send_timestamp_;
-  FrameType last_frame_type_;
+  AudioFrameType last_frame_type_;
 };
-
-#if defined(WEBRTC_ANDROID)
-#define MAYBE_AddCodecGetCodec DISABLED_AddCodecGetCodec
-#else
-#define MAYBE_AddCodecGetCodec AddCodecGetCodec
-#endif
-TEST_F(AcmReceiverTestOldApi, MAYBE_AddCodecGetCodec) {
-  // Add codec.
-  for (size_t n = 0; n < codecs_.size(); ++n) {
-    if (n & 0x1) {  // Just add codecs with odd index.
-      EXPECT_EQ(
-          0, receiver_->AddCodec(rtc::checked_cast<int>(n), codecs_[n].pltype,
-                                 codecs_[n].channels, codecs_[n].plfreq, NULL,
-                                 codecs_[n].plname));
-    }
-  }
-  // Get codec and compare.
-  for (size_t n = 0; n < codecs_.size(); ++n) {
-    CodecInst my_codec;
-    if (n & 0x1) {
-      // Codecs with odd index should match the reference.
-      EXPECT_EQ(0,
-                receiver_->DecoderByPayloadType(codecs_[n].pltype, &my_codec));
-      EXPECT_TRUE(CodecsEqual(codecs_[n], my_codec));
-    } else {
-      // Codecs with even index are not registered.
-      EXPECT_EQ(-1,
-                receiver_->DecoderByPayloadType(codecs_[n].pltype, &my_codec));
-    }
-  }
-}
-
-#if defined(WEBRTC_ANDROID)
-#define MAYBE_AddCodecChangePayloadType DISABLED_AddCodecChangePayloadType
-#else
-#define MAYBE_AddCodecChangePayloadType AddCodecChangePayloadType
-#endif
-TEST_F(AcmReceiverTestOldApi, MAYBE_AddCodecChangePayloadType) {
-  const CodecIdInst codec1(RentACodec::CodecId::kPCMA);
-  CodecInst codec2 = codec1.inst;
-  ++codec2.pltype;
-  CodecInst test_codec;
-
-  // Register the same codec with different payloads.
-  EXPECT_EQ(0, receiver_->AddCodec(codec1.id, codec1.inst.pltype,
-                                   codec1.inst.channels, codec1.inst.plfreq,
-                                   nullptr, codec1.inst.plname));
-  EXPECT_EQ(0, receiver_->AddCodec(codec1.id, codec2.pltype, codec2.channels,
-                                   codec2.plfreq, NULL, codec2.plname));
-
-  // Both payload types should exist.
-  EXPECT_EQ(0,
-            receiver_->DecoderByPayloadType(codec1.inst.pltype, &test_codec));
-  EXPECT_EQ(true, CodecsEqual(codec1.inst, test_codec));
-  EXPECT_EQ(0, receiver_->DecoderByPayloadType(codec2.pltype, &test_codec));
-  EXPECT_EQ(true, CodecsEqual(codec2, test_codec));
-}
-
-#if defined(WEBRTC_ANDROID)
-#define MAYBE_AddCodecChangeCodecId DISABLED_AddCodecChangeCodecId
-#else
-#define MAYBE_AddCodecChangeCodecId AddCodecChangeCodecId
-#endif
-TEST_F(AcmReceiverTestOldApi, AddCodecChangeCodecId) {
-  const CodecIdInst codec1(RentACodec::CodecId::kPCMU);
-  CodecIdInst codec2(RentACodec::CodecId::kPCMA);
-  codec2.inst.pltype = codec1.inst.pltype;
-  CodecInst test_codec;
-
-  // Register the same payload type with different codec ID.
-  EXPECT_EQ(0, receiver_->AddCodec(codec1.id, codec1.inst.pltype,
-                                   codec1.inst.channels, codec1.inst.plfreq,
-                                   nullptr, codec1.inst.plname));
-  EXPECT_EQ(0, receiver_->AddCodec(codec2.id, codec2.inst.pltype,
-                                   codec2.inst.channels, codec2.inst.plfreq,
-                                   nullptr, codec2.inst.plname));
-
-  // Make sure that the last codec is used.
-  EXPECT_EQ(0,
-            receiver_->DecoderByPayloadType(codec2.inst.pltype, &test_codec));
-  EXPECT_EQ(true, CodecsEqual(codec2.inst, test_codec));
-}
-
-#if defined(WEBRTC_ANDROID)
-#define MAYBE_AddCodecRemoveCodec DISABLED_AddCodecRemoveCodec
-#else
-#define MAYBE_AddCodecRemoveCodec AddCodecRemoveCodec
-#endif
-TEST_F(AcmReceiverTestOldApi, MAYBE_AddCodecRemoveCodec) {
-  const CodecIdInst codec(RentACodec::CodecId::kPCMA);
-  const int payload_type = codec.inst.pltype;
-  EXPECT_EQ(
-      0, receiver_->AddCodec(codec.id, codec.inst.pltype, codec.inst.channels,
-                             codec.inst.plfreq, nullptr, codec.inst.plname));
-
-  // Remove non-existing codec should not fail. ACM1 legacy.
-  EXPECT_EQ(0, receiver_->RemoveCodec(payload_type + 1));
-
-  // Remove an existing codec.
-  EXPECT_EQ(0, receiver_->RemoveCodec(payload_type));
-
-  // Ask for the removed codec, must fail.
-  CodecInst ci;
-  EXPECT_EQ(-1, receiver_->DecoderByPayloadType(payload_type, &ci));
-}
 
 #if defined(WEBRTC_ANDROID)
 #define MAYBE_SampleRate DISABLED_SampleRate
@@ -271,21 +148,22 @@ TEST_F(AcmReceiverTestOldApi, MAYBE_AddCodecRemoveCodec) {
 #define MAYBE_SampleRate SampleRate
 #endif
 TEST_F(AcmReceiverTestOldApi, MAYBE_SampleRate) {
-  const RentACodec::CodecId kCodecId[] = {RentACodec::CodecId::kISAC,
-                                          RentACodec::CodecId::kISACSWB};
-  AddSetOfCodecs(kCodecId);
+  const std::map<int, SdpAudioFormat> codecs = {{0, {"ISAC", 16000, 1}},
+                                                {1, {"ISAC", 32000, 1}}};
+  receiver_->SetCodecs(codecs);
 
-  AudioFrame frame;
-  const int kOutSampleRateHz = 8000;  // Different than codec sample rate.
-  for (const auto codec_id : kCodecId) {
-    const CodecIdInst codec(codec_id);
-    const int num_10ms_frames = codec.inst.pacsize / (codec.inst.plfreq / 100);
-    InsertOnePacketOfSilence(codec.id);
+  constexpr int kOutSampleRateHz = 8000;  // Different than codec sample rate.
+  for (size_t i = 0; i < codecs.size(); ++i) {
+    const int payload_type = rtc::checked_cast<int>(i);
+    const int num_10ms_frames =
+        InsertOnePacketOfSilence(SetEncoder(payload_type, codecs.at(i)));
     for (int k = 0; k < num_10ms_frames; ++k) {
+      AudioFrame frame;
       bool muted;
       EXPECT_EQ(0, receiver_->GetAudio(kOutSampleRateHz, &frame, &muted));
     }
-    EXPECT_EQ(codec.inst.plfreq, receiver_->last_output_sample_rate_hz());
+    EXPECT_EQ(encoder_factory_->QueryAudioEncoder(codecs.at(i))->sample_rate_hz,
+              receiver_->last_output_sample_rate_hz());
   }
 }
 
@@ -295,7 +173,7 @@ class AcmReceiverTestFaxModeOldApi : public AcmReceiverTestOldApi {
     config_.neteq_config.for_test_no_time_stretching = true;
   }
 
-  void RunVerifyAudioFrame(RentACodec::CodecId codec_id) {
+  void RunVerifyAudioFrame(const SdpAudioFormat& codec) {
     // Make sure "fax mode" is enabled. This will avoid delay changes unless the
     // packet-loss concealment is made. We do this in order to make the
     // timestamp increments predictable; in normal mode, NetEq may decide to do
@@ -303,16 +181,14 @@ class AcmReceiverTestFaxModeOldApi : public AcmReceiverTestOldApi {
     // the timestamp.
     EXPECT_TRUE(config_.neteq_config.for_test_no_time_stretching);
 
-    const RentACodec::CodecId kCodecId[] = {codec_id};
-    AddSetOfCodecs(kCodecId);
+    constexpr int payload_type = 17;
+    receiver_->SetCodecs({{payload_type, codec}});
 
-    const CodecIdInst codec(codec_id);
-    const int output_sample_rate_hz = codec.inst.plfreq;
-    const size_t output_channels = codec.inst.channels;
+    const AudioCodecInfo info = SetEncoder(payload_type, codec);
+    const int output_sample_rate_hz = info.sample_rate_hz;
+    const size_t output_channels = info.num_channels;
     const size_t samples_per_ms = rtc::checked_cast<size_t>(
         rtc::CheckedDivExact(output_sample_rate_hz, 1000));
-    const int num_10ms_frames = rtc::CheckedDivExact(
-        codec.inst.pacsize, rtc::checked_cast<int>(10 * samples_per_ms));
     const AudioFrame::VADActivity expected_vad_activity =
         output_sample_rate_hz > 16000 ? AudioFrame::kVadActive
                                       : AudioFrame::kVadPassive;
@@ -330,7 +206,7 @@ class AcmReceiverTestFaxModeOldApi : public AcmReceiverTestOldApi {
     // Expect timestamp = 0 before first packet is inserted.
     EXPECT_EQ(0u, frame.timestamp_);
     for (int i = 0; i < 5; ++i) {
-      InsertOnePacketOfSilence(codec.id);
+      const int num_10ms_frames = InsertOnePacketOfSilence(info);
       for (int k = 0; k < num_10ms_frames; ++k) {
         EXPECT_EQ(0,
                   receiver_->GetAudio(output_sample_rate_hz, &frame, &muted));
@@ -353,7 +229,7 @@ class AcmReceiverTestFaxModeOldApi : public AcmReceiverTestOldApi {
 #define MAYBE_VerifyAudioFramePCMU VerifyAudioFramePCMU
 #endif
 TEST_F(AcmReceiverTestFaxModeOldApi, MAYBE_VerifyAudioFramePCMU) {
-  RunVerifyAudioFrame(RentACodec::CodecId::kPCMU);
+  RunVerifyAudioFrame({"PCMU", 8000, 1});
 }
 
 #if defined(WEBRTC_ANDROID)
@@ -362,7 +238,7 @@ TEST_F(AcmReceiverTestFaxModeOldApi, MAYBE_VerifyAudioFramePCMU) {
 #define MAYBE_VerifyAudioFrameISAC VerifyAudioFrameISAC
 #endif
 TEST_F(AcmReceiverTestFaxModeOldApi, MAYBE_VerifyAudioFrameISAC) {
-  RunVerifyAudioFrame(RentACodec::CodecId::kISAC);
+  RunVerifyAudioFrame({"ISAC", 16000, 1});
 }
 
 #if defined(WEBRTC_ANDROID)
@@ -371,7 +247,7 @@ TEST_F(AcmReceiverTestFaxModeOldApi, MAYBE_VerifyAudioFrameISAC) {
 #define MAYBE_VerifyAudioFrameOpus VerifyAudioFrameOpus
 #endif
 TEST_F(AcmReceiverTestFaxModeOldApi, MAYBE_VerifyAudioFrameOpus) {
-  RunVerifyAudioFrame(RentACodec::CodecId::kOpus);
+  RunVerifyAudioFrame({"opus", 48000, 2});
 }
 
 #if defined(WEBRTC_ANDROID)
@@ -381,18 +257,17 @@ TEST_F(AcmReceiverTestFaxModeOldApi, MAYBE_VerifyAudioFrameOpus) {
 #endif
 TEST_F(AcmReceiverTestOldApi, MAYBE_PostdecodingVad) {
   EXPECT_TRUE(config_.neteq_config.enable_post_decode_vad);
-  const CodecIdInst codec(RentACodec::CodecId::kPCM16Bwb);
-  ASSERT_EQ(
-      0, receiver_->AddCodec(codec.id, codec.inst.pltype, codec.inst.channels,
-                             codec.inst.plfreq, nullptr, ""));
-  const int kNumPackets = 5;
-  const int num_10ms_frames = codec.inst.pacsize / (codec.inst.plfreq / 100);
+  constexpr int payload_type = 34;
+  const SdpAudioFormat codec = {"L16", 16000, 1};
+  const AudioCodecInfo info = SetEncoder(payload_type, codec);
+  receiver_->SetCodecs({{payload_type, codec}});
+  constexpr int kNumPackets = 5;
   AudioFrame frame;
   for (int n = 0; n < kNumPackets; ++n) {
-    InsertOnePacketOfSilence(codec.id);
+    const int num_10ms_frames = InsertOnePacketOfSilence(info);
     for (int k = 0; k < num_10ms_frames; ++k) {
       bool muted;
-      ASSERT_EQ(0, receiver_->GetAudio(codec.inst.plfreq, &frame, &muted));
+      ASSERT_EQ(0, receiver_->GetAudio(info.sample_rate_hz, &frame, &muted));
     }
   }
   EXPECT_EQ(AudioFrame::kVadPassive, frame.vad_activity_);
@@ -412,18 +287,18 @@ class AcmReceiverTestPostDecodeVadPassiveOldApi : public AcmReceiverTestOldApi {
 #endif
 TEST_F(AcmReceiverTestPostDecodeVadPassiveOldApi, MAYBE_PostdecodingVad) {
   EXPECT_FALSE(config_.neteq_config.enable_post_decode_vad);
-  const CodecIdInst codec(RentACodec::CodecId::kPCM16Bwb);
-  ASSERT_EQ(
-      0, receiver_->AddCodec(codec.id, codec.inst.pltype, codec.inst.channels,
-                             codec.inst.plfreq, nullptr, ""));
+  constexpr int payload_type = 34;
+  const SdpAudioFormat codec = {"L16", 16000, 1};
+  const AudioCodecInfo info = SetEncoder(payload_type, codec);
+  encoder_factory_->QueryAudioEncoder(codec).value();
+  receiver_->SetCodecs({{payload_type, codec}});
   const int kNumPackets = 5;
-  const int num_10ms_frames = codec.inst.pacsize / (codec.inst.plfreq / 100);
   AudioFrame frame;
   for (int n = 0; n < kNumPackets; ++n) {
-    InsertOnePacketOfSilence(codec.id);
+    const int num_10ms_frames = InsertOnePacketOfSilence(info);
     for (int k = 0; k < num_10ms_frames; ++k) {
       bool muted;
-      ASSERT_EQ(0, receiver_->GetAudio(codec.inst.plfreq, &frame, &muted));
+      ASSERT_EQ(0, receiver_->GetAudio(info.sample_rate_hz, &frame, &muted));
     }
   }
   EXPECT_EQ(AudioFrame::kVadUnknown, frame.vad_activity_);
@@ -436,64 +311,64 @@ TEST_F(AcmReceiverTestPostDecodeVadPassiveOldApi, MAYBE_PostdecodingVad) {
 #endif
 #if defined(WEBRTC_CODEC_ISAC)
 TEST_F(AcmReceiverTestOldApi, MAYBE_LastAudioCodec) {
-  const RentACodec::CodecId kCodecId[] = {
-      RentACodec::CodecId::kISAC, RentACodec::CodecId::kPCMA,
-      RentACodec::CodecId::kISACSWB, RentACodec::CodecId::kPCM16Bswb32kHz};
-  AddSetOfCodecs(kCodecId);
+  const std::map<int, SdpAudioFormat> codecs = {{0, {"ISAC", 16000, 1}},
+                                                {1, {"PCMA", 8000, 1}},
+                                                {2, {"ISAC", 32000, 1}},
+                                                {3, {"L16", 32000, 1}}};
+  const std::map<int, int> cng_payload_types = {{8000, 100},
+                                                {16000, 101},
+                                                {32000, 102}};
+  {
+    std::map<int, SdpAudioFormat> receive_codecs = codecs;
+    for (const auto& cng_type : cng_payload_types) {
+      receive_codecs.emplace(
+          std::make_pair(cng_type.second, SdpAudioFormat("CN", cng_type.first, 1)));
+    }
+    receiver_->SetCodecs(receive_codecs);
+  }
 
-  const RentACodec::CodecId kCngId[] = {
-      // Not including full-band.
-      RentACodec::CodecId::kCNNB, RentACodec::CodecId::kCNWB,
-      RentACodec::CodecId::kCNSWB};
-  AddSetOfCodecs(kCngId);
-
-  // Register CNG at sender side.
-  for (auto id : kCngId)
-    ASSERT_EQ(0, acm_->RegisterSendCodec(CodecIdInst(id).inst));
-
-  CodecInst codec;
   // No audio payload is received.
-  EXPECT_EQ(-1, receiver_->LastAudioCodec(&codec));
+  EXPECT_EQ(absl::nullopt, receiver_->LastDecoder());
 
   // Start with sending DTX.
-  ASSERT_EQ(0, acm_->SetVAD(true, true, VADVeryAggr));
   packet_sent_ = false;
-  InsertOnePacketOfSilence(CodecIdInst(kCodecId[0]).id);  // Enough to test
-                                                          // with one codec.
+  InsertOnePacketOfSilence(
+      SetEncoder(0, codecs.at(0), cng_payload_types));  // Enough to test
+                                                     // with one codec.
   ASSERT_TRUE(packet_sent_);
-  EXPECT_EQ(kAudioFrameCN, last_frame_type_);
+  EXPECT_EQ(AudioFrameType::kAudioFrameCN, last_frame_type_);
 
   // Has received, only, DTX. Last Audio codec is undefined.
-  EXPECT_EQ(-1, receiver_->LastAudioCodec(&codec));
-  EXPECT_FALSE(receiver_->last_packet_sample_rate_hz());
+  EXPECT_EQ(absl::nullopt, receiver_->LastDecoder());
+  EXPECT_EQ(absl::nullopt, receiver_->last_packet_sample_rate_hz());
 
-  for (auto id : kCodecId) {
-    const CodecIdInst c(id);
-
+  for (size_t i = 0; i < codecs.size(); ++i) {
     // Set DTX off to send audio payload.
-    acm_->SetVAD(false, false, VADAggr);
     packet_sent_ = false;
-    InsertOnePacketOfSilence(c.id);
+    const int payload_type = rtc::checked_cast<int>(i);
+    const AudioCodecInfo info_without_cng =
+        SetEncoder(payload_type, codecs.at(i));
+    InsertOnePacketOfSilence(info_without_cng);
 
     // Sanity check if Actually an audio payload received, and it should be
     // of type "speech."
     ASSERT_TRUE(packet_sent_);
-    ASSERT_EQ(kAudioFrameSpeech, last_frame_type_);
-    EXPECT_EQ(c.inst.plfreq, receiver_->last_packet_sample_rate_hz());
+    ASSERT_EQ(AudioFrameType::kAudioFrameSpeech, last_frame_type_);
+    EXPECT_EQ(info_without_cng.sample_rate_hz,
+              receiver_->last_packet_sample_rate_hz());
 
     // Set VAD on to send DTX. Then check if the "Last Audio codec" returns
-    // the expected codec.
-    acm_->SetVAD(true, true, VADAggr);
-
-    // Do as many encoding until a DTX is sent.
-    while (last_frame_type_ != kAudioFrameCN) {
+    // the expected codec. Encode repeatedly until a DTX is sent.
+    const AudioCodecInfo info_with_cng =
+        SetEncoder(payload_type, codecs.at(i), cng_payload_types);
+    while (last_frame_type_ != AudioFrameType::kAudioFrameCN) {
       packet_sent_ = false;
-      InsertOnePacketOfSilence(c.id);
+      InsertOnePacketOfSilence(info_with_cng);
       ASSERT_TRUE(packet_sent_);
     }
-    EXPECT_EQ(c.inst.plfreq, receiver_->last_packet_sample_rate_hz());
-    EXPECT_EQ(0, receiver_->LastAudioCodec(&codec));
-    EXPECT_TRUE(CodecsEqual(c.inst, codec));
+    EXPECT_EQ(info_with_cng.sample_rate_hz,
+              receiver_->last_packet_sample_rate_hz());
+    EXPECT_EQ(codecs.at(i), receiver_->LastDecoder()->second);
   }
 }
 #endif

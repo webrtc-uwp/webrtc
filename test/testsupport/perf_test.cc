@@ -9,9 +9,11 @@
  */
 
 #include "test/testsupport/perf_test.h"
-#include "rtc_base/criticalsection.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/critical_section.h"
 
 #include <stdio.h>
+#include <cmath>
 #include <fstream>
 #include <map>
 #include <sstream>
@@ -44,6 +46,10 @@ class PerfResultsLogger {
                  const double value,
                  const std::string& units,
                  const bool important) {
+    RTC_CHECK(std::isfinite(value))
+        << "Expected finite value for graph " << graph_name << ", trace name "
+        << trace_name << ", units " << units << ", got " << value;
+
     std::ostringstream value_stream;
     value_stream.precision(8);
     value_stream << value;
@@ -64,6 +70,9 @@ class PerfResultsLogger {
                              const double error,
                              const std::string& units,
                              const bool important) {
+    RTC_CHECK(std::isfinite(mean));
+    RTC_CHECK(std::isfinite(error));
+
     std::ostringstream value_stream;
     value_stream.precision(8);
     value_stream << '{' << mean << ',' << error << '}';
@@ -84,6 +93,10 @@ class PerfResultsLogger {
                      const rtc::ArrayView<const double> values,
                      const std::string& units,
                      const bool important) {
+    for (double v : values) {
+      RTC_CHECK(std::isfinite(v));
+    }
+
     std::ostringstream value_stream;
     value_stream.precision(8);
     value_stream << '[';

@@ -16,7 +16,7 @@
 
 #include "api/transport/network_types.h"
 #include "modules/congestion_controller/rtp/send_time_history.h"
-#include "rtc_base/criticalsection.h"
+#include "rtc_base/critical_section.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/thread_checker.h"
 #include "system_wrappers/include/clock.h"
@@ -29,10 +29,12 @@ namespace rtcp {
 class TransportFeedback;
 }  // namespace rtcp
 
-class TransportFeedbackAdapter {
+// Deprecated, use version in
+// modules/congeestion_controller/rtp/transport_feedback_adapter.h
+class LegacyTransportFeedbackAdapter {
  public:
-  explicit TransportFeedbackAdapter(const Clock* clock);
-  virtual ~TransportFeedbackAdapter();
+  explicit LegacyTransportFeedbackAdapter(Clock* clock);
+  virtual ~LegacyTransportFeedbackAdapter();
 
   void RegisterPacketFeedbackObserver(PacketFeedbackObserver* observer);
   void DeRegisterPacketFeedbackObserver(PacketFeedbackObserver* observer);
@@ -62,7 +64,7 @@ class TransportFeedbackAdapter {
 
   rtc::CriticalSection lock_;
   SendTimeHistory send_time_history_ RTC_GUARDED_BY(&lock_);
-  const Clock* const clock_;
+  Clock* const clock_;
   int64_t current_offset_ms_;
   int64_t last_timestamp_us_;
   std::vector<PacketFeedback> last_packet_feedback_vector_;

@@ -9,8 +9,9 @@
  */
 
 #include "rtc_base/event.h"
-#include "rtc_base/gunit.h"
+
 #include "rtc_base/platform_thread.h"
+#include "test/gtest.h"
 
 namespace rtc {
 
@@ -32,7 +33,7 @@ TEST(EventTest, ManualReset) {
 }
 
 TEST(EventTest, AutoReset) {
-  Event event(false, false);
+  Event event;
   ASSERT_FALSE(event.Wait(0));
 
   event.Set();
@@ -59,7 +60,7 @@ class SignalerThread {
       me->reader_->Wait(Event::kForever);
     }
   }
-  Event stop_event_{false, false};
+  Event stop_event_;
   Event* writer_;
   Event* reader_;
   PlatformThread thread_;
@@ -68,7 +69,7 @@ class SignalerThread {
 // These tests are disabled by default and only intended to be run manually.
 TEST(EventTest, DISABLED_PerformanceSingleThread) {
   static const int kNumIterations = 10000000;
-  Event event(false, false);
+  Event event;
   for (int i = 0; i < kNumIterations; ++i) {
     event.Set();
     event.Wait(0);
@@ -77,8 +78,8 @@ TEST(EventTest, DISABLED_PerformanceSingleThread) {
 
 TEST(EventTest, DISABLED_PerformanceMultiThread) {
   static const int kNumIterations = 10000;
-  Event read(false, false);
-  Event write(false, false);
+  Event read;
+  Event write;
   SignalerThread thread;
   thread.Start(&read, &write);
 

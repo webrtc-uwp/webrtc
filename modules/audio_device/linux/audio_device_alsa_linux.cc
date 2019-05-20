@@ -14,13 +14,19 @@
 #include "modules/audio_device/linux/audio_device_alsa_linux.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/system/arch.h"
-#include "system_wrappers/include/event_wrapper.h"
 #include "system_wrappers/include/sleep.h"
 
 WebRTCAlsaSymbolTable* GetAlsaSymbolTable() {
   static WebRTCAlsaSymbolTable* alsa_symbol_table = new WebRTCAlsaSymbolTable();
   return alsa_symbol_table;
 }
+
+// Accesses ALSA functions through our late-binding symbol table instead of
+// directly. This way we don't have to link to libasound, which means our binary
+// will work on systems that don't have it.
+#define LATE(sym)                                                            \
+  LATESYM_GET(webrtc::adm_linux_alsa::AlsaSymbolTable, GetAlsaSymbolTable(), \
+              sym)
 
 // Redefine these here to be able to do late-binding
 #undef snd_ctl_card_info_alloca
@@ -44,7 +50,7 @@ void WebrtcAlsaErrorHandler(const char* file,
                             const char* function,
                             int err,
                             const char* fmt,
-                            ...){};
+                            ...) {}
 
 namespace webrtc {
 static const unsigned int ALSA_PLAYOUT_FREQ = 48000;

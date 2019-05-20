@@ -11,10 +11,12 @@
 #ifndef MODULES_CONGESTION_CONTROLLER_GOOG_CC_ALR_DETECTOR_H_
 #define MODULES_CONGESTION_CONTROLLER_GOOG_CC_ALR_DETECTOR_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "absl/types/optional.h"
-#include "common_types.h"  // NOLINT(build/include)
+#include "api/transport/webrtc_key_value_config.h"
 #include "modules/pacing/interval_budget.h"
-#include "rtc_base/rate_statistics.h"
 
 namespace webrtc {
 
@@ -29,8 +31,9 @@ class RtcEventLog;
 // Note: This class is not thread-safe.
 class AlrDetector {
  public:
-  AlrDetector();
-  explicit AlrDetector(RtcEventLog* event_log);
+  explicit AlrDetector(const WebRtcKeyValueConfig* key_value_config);
+  AlrDetector(const WebRtcKeyValueConfig* key_value_config,
+              RtcEventLog* event_log);
   ~AlrDetector();
 
   void OnBytesSent(size_t bytes_sent, int64_t send_time_ms);

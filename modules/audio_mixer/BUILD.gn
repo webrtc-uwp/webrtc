@@ -16,6 +16,7 @@ group("audio_mixer") {
 }
 
 rtc_static_library("audio_mixer_impl") {
+  visibility = [ "*" ]
   sources = [
     "audio_mixer_impl.cc",
     "audio_mixer_impl.h",
@@ -36,8 +37,8 @@ rtc_static_library("audio_mixer_impl") {
 
   deps = [
     ":audio_frame_manipulator",
-    "../..:webrtc_common",
     "../../api:array_view",
+    "../../api:scoped_refptr",
     "../../api/audio:audio_frame_api",
     "../../api/audio:audio_mixer_api",
     "../../audio/utility:audio_frame_operations",
@@ -45,12 +46,13 @@ rtc_static_library("audio_mixer_impl") {
     "../../rtc_base:checks",
     "../../rtc_base:rtc_base_approved",
     "../../system_wrappers",
-    "../../system_wrappers:field_trial_api",
-    "../../system_wrappers:metrics_api",
+    "../../system_wrappers:metrics",
     "../audio_processing",
+    "../audio_processing:api",
     "../audio_processing:apm_logging",
     "../audio_processing:audio_frame_view",
     "../audio_processing/agc2:fixed_digital",
+    "//third_party/abseil-cpp/absl/memory",
   ]
 }
 
@@ -96,8 +98,9 @@ if (rtc_include_tests) {
       "../../audio/utility:audio_frame_operations",
       "../../rtc_base:checks",
       "../../rtc_base:rtc_base_approved",
-      "../../rtc_base:rtc_task_queue_for_test",
+      "../../rtc_base:task_queue_for_test",
       "../../test:test_support",
+      "//third_party/abseil-cpp/absl/memory",
     ]
   }
 
@@ -112,7 +115,6 @@ if (rtc_include_tests) {
       "../../api/audio:audio_mixer_api",
       "../../common_audio",
       "../../rtc_base:rtc_base_approved",
-      "../../system_wrappers:system_wrappers_default",
     ]
   }
 }

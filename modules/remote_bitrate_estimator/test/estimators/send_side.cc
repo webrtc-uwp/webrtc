@@ -10,9 +10,13 @@
 
 #include "modules/remote_bitrate_estimator/test/estimators/send_side.h"
 
+#include <assert.h>
+#include <stddef.h>
 #include <algorithm>
 
 #include "absl/memory/memory.h"
+#include "api/rtp_headers.h"
+#include "api/transport/network_types.h"
 #include "modules/congestion_controller/goog_cc/delay_based_bwe.h"
 #include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
 #include "rtc_base/logging.h"
@@ -31,11 +35,13 @@ SendSideBweSender::SendSideBweSender(int kbps,
                                                      observer,
                                                      &event_log_)),
       acknowledged_bitrate_estimator_(
-          absl::make_unique<AcknowledgedBitrateEstimator>()),
-      bwe_(new DelayBasedBwe(nullptr)),
+          absl::make_unique<AcknowledgedBitrateEstimator>(
+              &field_trial_config_)),
+      probe_bitrate_estimator_(new ProbeBitrateEstimator(nullptr)),
+      bwe_(new DelayBasedBwe(&field_trial_config_, nullptr, nullptr)),
       feedback_observer_(bitrate_controller_.get()),
       clock_(clock),
-      send_time_history_(clock_, 10000),
+      send_time_history_(10000),
       has_received_ack_(false),
       last_acked_seq_num_(0),
       last_log_time_ms_(0) {
@@ -44,7 +50,7 @@ SendSideBweSender::SendSideBweSender(int kbps,
   bitrate_controller_->SetStartBitrate(1000 * kbps);
   bitrate_controller_->SetMinMaxBitrate(1000 * kMinBitrateKbps,
                                         1000 * kMaxBitrateKbps);
-  bwe_->SetMinBitrate(1000 * kMinBitrateKbps);
+  bwe_->SetMinBitrate(DataRate::kbps(kMinBitrateKbps));
 }
 
 SendSideBweSender::~SendSideBweSender() {}
@@ -72,16 +78,22 @@ void SendSideBweSender::GiveFeedback(const FeedbackPacket& feedback) {
 
   int64_t rtt_ms =
       clock_->TimeInMilliseconds() - feedback.latest_send_time_ms();
-  bwe_->OnRttUpdate(rtt_ms);
+  bwe_->OnRttUpdate(TimeDelta::ms(rtt_ms));
   BWE_TEST_LOGGING_PLOT(1, "RTT", clock_->TimeInMilliseconds(), rtt_ms);
 
   std::sort(packet_feedback_vector.begin(), packet_feedback_vector.end(),
             PacketFeedbackComparator());
   acknowledged_bitrate_estimator_->IncomingPacketFeedbackVector(
       packet_feedback_vector);
+  for (PacketFeedback& packet : packet_feedback_vector) {
+    if (packet.send_time_ms != PacketFeedback::kNoSendTime &&
+        packet.pacing_info.probe_cluster_id != PacedPacketInfo::kNotAProbe)
+      probe_bitrate_estimator_->HandleProbeAndEstimateBitrate(packet);
+  }
   DelayBasedBwe::Result result = bwe_->IncomingPacketFeedbackVector(
-      packet_feedback_vector, acknowledged_bitrate_estimator_->bitrate_bps(),
-      clock_->TimeInMilliseconds());
+      packet_feedback_vector, acknowledged_bitrate_estimator_->bitrate(),
+      probe_bitrate_estimator_->FetchAndResetLastEstimatedBitrate(),
+      absl::nullopt, false, Timestamp::ms(clock_->TimeInMilliseconds()));
   if (result.updated)
     bitrate_controller_->OnDelayBasedBweResult(result);
 
@@ -122,7 +134,8 @@ void SendSideBweSender::OnPacketsSent(const Packets& packets) {
       PacketFeedback packet_feedback(
           clock_->TimeInMilliseconds(), media_packet->header().sequenceNumber,
           media_packet->payload_size(), 0, 0, PacedPacketInfo());
-      send_time_history_.AddAndRemoveOld(packet_feedback);
+      send_time_history_.AddAndRemoveOld(packet_feedback,
+                                         clock_->TimeInMilliseconds());
       send_time_history_.OnSentPacket(media_packet->header().sequenceNumber,
                                       media_packet->sender_timestamp_ms());
     }

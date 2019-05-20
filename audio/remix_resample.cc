@@ -13,10 +13,7 @@
 #include "api/audio/audio_frame.h"
 #include "audio/utility/audio_frame_operations.h"
 #include "common_audio/resampler/include/push_resampler.h"
-#include "common_audio/signal_processing/include/signal_processing_library.h"
-#include "common_types.h"  // NOLINT(build/include)
 #include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
 
 namespace webrtc {
 namespace voe {
@@ -83,7 +80,7 @@ void RemixAndResample(const int16_t* src_data,
     // The audio in dst_frame really is mono at this point; MonoToStereo will
     // set this back to stereo.
     dst_frame->num_channels_ = 1;
-    AudioFrameOperations::MonoToStereo(dst_frame);
+    AudioFrameOperations::UpmixChannels(2, dst_frame);
   }
 }
 

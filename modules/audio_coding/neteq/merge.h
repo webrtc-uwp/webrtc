@@ -11,10 +11,8 @@
 #ifndef MODULES_AUDIO_CODING_NETEQ_MERGE_H_
 #define MODULES_AUDIO_CODING_NETEQ_MERGE_H_
 
-#include <assert.h>
-
 #include "modules/audio_coding/neteq/audio_multi_vector.h"
-#include "rtc_base/constructormagic.h"
+#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 

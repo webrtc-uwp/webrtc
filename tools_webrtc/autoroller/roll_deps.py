@@ -29,7 +29,6 @@ def FindSrcDirPath():
 # Skip these dependencies (list without solution name prefix).
 DONT_AUTOROLL_THESE = [
   'src/examples/androidtests/third_party/gradle',
-  'src/third_party/ffmpeg',
 ]
 
 # These dependencies are missing in chromium/src/DEPS, either unused or already
@@ -39,21 +38,16 @@ DONT_AUTOROLL_THESE = [
 WEBRTC_ONLY_DEPS = [
   'src/base',
   'src/build',
+  'src/buildtools',
   'src/ios',
   'src/testing',
   'src/third_party',
   'src/third_party/findbugs',
   'src/third_party/gtest-parallel',
-  'src/third_party/winsdk_samples',
   'src/third_party/yasm/binaries',
   'src/tools',
 ]
 
-
-# Run these CQ trybots in addition to the default ones in infra/config/cq.cfg.
-EXTRA_TRYBOTS = (
-  'master.internal.tryserver.corp.webrtc:linux_internal'
-)
 
 WEBRTC_URL = 'https://webrtc.googlesource.com/src'
 CHROMIUM_SRC_URL = 'https://chromium.googlesource.com/chromium/src'
@@ -74,6 +68,8 @@ ANDROID_DEPS_START = r'=== ANDROID_DEPS Generated Code Start ==='
 ANDROID_DEPS_END = r'=== ANDROID_DEPS Generated Code End ==='
 # Location of automically gathered android deps.
 ANDROID_DEPS_PATH = 'src/third_party/android_deps/'
+
+NOTIFY_EMAIL = 'webrtc-trooper@grotations.appspotmail.com'
 
 
 sys.path.append(os.path.join(CHECKOUT_SRC_DIR, 'build'))
@@ -251,6 +247,8 @@ def BuildDepsentryDict(deps_dict):
       if dep.get('dep_type') == 'cipd':
         result[path] = CipdDepsEntry(path, dep['packages'])
       else:
+        if '@' not in dep['url']:
+          continue
         url, revision = dep['url'].split('@')
         result[path] = DepsEntry(path, url, revision)
 
@@ -261,8 +259,9 @@ def BuildDepsentryDict(deps_dict):
 
 
 def _FindChangedCipdPackages(path, old_pkgs, new_pkgs):
-  assert ({p['package'] for p in old_pkgs} ==
-          {p['package'] for p in new_pkgs})
+  pkgs_equal = ({p['package'] for p in old_pkgs} ==
+      {p['package'] for p in new_pkgs})
+  assert pkgs_equal, 'Old: %s\n New: %s' % (old_pkgs, new_pkgs)
   for old_pkg in old_pkgs:
     for new_pkg in new_pkgs:
       old_version = old_pkg['version']
@@ -452,7 +451,7 @@ def GenerateCommitMessage(rev_update, current_commit_pos, new_commit_pos,
                                                     c.current_rev[0:10],
                                                     c.new_rev[0:10]))
       if 'libvpx' in c.path:
-        tbr_authors += 'marpan@webrtc.org, '
+        tbr_authors += 'marpan@webrtc.org, jianj@chromium.org, '
 
   if added_deps_paths:
     Section('Added', added_deps_paths)
@@ -486,7 +485,6 @@ def GenerateCommitMessage(rev_update, current_commit_pos, new_commit_pos,
 
   commit_msg.append('TBR=%s' % tbr_authors)
   commit_msg.append('BUG=None')
-  commit_msg.append('CQ_INCLUDE_TRYBOTS=%s' % EXTRA_TRYBOTS)
   return '\n'.join(commit_msg)
 
 
@@ -598,10 +596,11 @@ def _UploadCL(commit_queue_mode):
     - 1: Run trybots but do not submit to CQ.
     - 0: Skip CQ, upload only.
   """
-  cmd = ['git', 'cl', 'upload', '-f', '--gerrit']
+  cmd = ['git', 'cl', 'upload', '--force', '--bypass-hooks', '--send-mail']
+  cmd.extend(['--cc', NOTIFY_EMAIL])
   if commit_queue_mode >= 2:
     logging.info('Sending the CL to the CQ...')
-    cmd.extend(['--use-commit-queue', '--send-mail'])
+    cmd.extend(['--use-commit-queue'])
   elif commit_queue_mode >= 1:
     logging.info('Starting CQ dry run...')
     cmd.extend(['--cq-dry-run'])
@@ -633,10 +632,6 @@ def main():
   p.add_argument('-r', '--revision',
                  help=('Chromium Git revision to roll to. Defaults to the '
                        'Chromium HEAD revision if omitted.'))
-  p.add_argument('-u', '--rietveld-email',
-                 help=('E-mail address to use for creating the CL at Rietveld'
-                       'If omitted a previously cached one will be used or an '
-                       'error will be thrown during upload.'))
   p.add_argument('--dry-run', action='store_true', default=False,
                  help=('Calculate changes and modify DEPS, but don\'t create '
                        'any local branch, commit, upload CL or send any '

@@ -9,6 +9,8 @@
  *
  */
 
+#ifdef RTC_ENABLE_VP9
+
 #include "modules/video_coding/codecs/vp9/vp9_frame_buffer_pool.h"
 
 #include "vpx/vpx_codec.h"
@@ -17,7 +19,7 @@
 
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/refcountedobject.h"
+#include "rtc_base/ref_counted_object.h"
 
 namespace webrtc {
 
@@ -138,3 +140,5 @@ int32_t Vp9FrameBufferPool::VpxReleaseFrameBuffer(void* user_priv,
 }
 
 }  // namespace webrtc
+
+#endif  // RTC_ENABLE_VP9

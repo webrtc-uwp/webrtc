@@ -16,13 +16,11 @@
 #include "modules/utility/include/process_thread.h"
 #include "rtc_base/event.h"
 #include "rtc_base/location.h"
-#include "rtc_base/task_queue.h"
+#include "rtc_base/task_utils/to_queued_task.h"
 #include "system_wrappers/include/metrics.h"
-#include "system_wrappers/include/metrics_default.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
-using ::testing::_;
 using ::testing::AnyNumber;
 using ::testing::InvokeWithoutArgs;
 using ::testing::Return;
@@ -56,7 +54,7 @@ class CallStatsTest : public ::testing::Test {
 };
 
 TEST_F(CallStatsTest, AddAndTriggerCallback) {
-  rtc::Event event(false, false);
+  rtc::Event event;
 
   static constexpr const int64_t kRtt = 25;
 
@@ -78,7 +76,7 @@ TEST_F(CallStatsTest, AddAndTriggerCallback) {
 }
 
 TEST_F(CallStatsTest, ProcessTime) {
-  rtc::Event event(false, false);
+  rtc::Event event;
 
   static constexpr const int64_t kRtt = 100;
   static constexpr const int64_t kRtt2 = 80;
@@ -129,8 +127,8 @@ TEST_F(CallStatsTest, MultipleObservers) {
   static constexpr const int64_t kRtt = 100;
 
   // Verify both observers are updated.
-  rtc::Event ev1(false, false);
-  rtc::Event ev2(false, false);
+  rtc::Event ev1;
+  rtc::Event ev2;
   EXPECT_CALL(stats_observer_1, OnRttUpdate(kRtt, kRtt))
       .Times(AnyNumber())
       .WillOnce(InvokeWithoutArgs([&ev1] { ev1.Set(); }))
@@ -168,8 +166,8 @@ TEST_F(CallStatsTest, MultipleObservers) {
 
   // Flush the queue on the process thread to make sure we return after
   // Process() has been called.
-  rtc::Event event(false, false);
-  process_thread_->PostTask(rtc::NewClosure([&event]() { event.Set(); }));
+  rtc::Event event;
+  process_thread_->PostTask(ToQueuedTask([&event] { event.Set(); }));
   event.Wait(rtc::Event::kForever);
 }
 
@@ -184,7 +182,7 @@ TEST_F(CallStatsTest, ChangeRtt) {
   call_stats_.RegisterStatsObserver(&stats_observer);
   RtcpRttStats* rtcp_rtt_stats = &call_stats_;
 
-  rtc::Event event(false, false);
+  rtc::Event event;
 
   static constexpr const int64_t kFirstRtt = 100;
   static constexpr const int64_t kLowRtt = kFirstRtt - 20;
@@ -241,7 +239,7 @@ TEST_F(CallStatsTest, ChangeRtt) {
 }
 
 TEST_F(CallStatsTest, LastProcessedRtt) {
-  rtc::Event event(false, false);
+  rtc::Event event;
   MockStatsObserver stats_observer;
   call_stats_.RegisterStatsObserver(&stats_observer);
   RtcpRttStats* rtcp_rtt_stats = &call_stats_;
@@ -290,7 +288,7 @@ TEST_F(CallStatsTest, LastProcessedRtt) {
 
 TEST_F(CallStatsTest, ProducesHistogramMetrics) {
   metrics::Reset();
-  rtc::Event event(false, false);
+  rtc::Event event;
   static constexpr const int64_t kRtt = 123;
   RtcpRttStats* rtcp_rtt_stats = &call_stats_;
   MockStatsObserver stats_observer;

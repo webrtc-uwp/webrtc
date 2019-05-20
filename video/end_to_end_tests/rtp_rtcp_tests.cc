@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "absl/memory/memory.h"
 #include "api/test/simulated_network.h"
 #include "call/fake_network_pipe.h"
 #include "call/simulated_network.h"
@@ -17,6 +18,11 @@
 #include "test/rtcp_packet_parser.h"
 
 namespace webrtc {
+namespace {
+enum : int {  // The first valid value is 1.
+  kTransportSequenceNumberExtensionId = 1,
+};
+}  // namespace
 
 class RtpRtcpEndToEndTest : public test::CallTest {
  protected:
@@ -282,13 +288,13 @@ void RtpRtcpEndToEndTest::TestRtpStatePreservation(
         test::PacketTransport::kSender, payload_type_map_,
         absl::make_unique<FakeNetworkPipe>(
             Clock::GetRealTimeClock(), absl::make_unique<SimulatedNetwork>(
-                                           DefaultNetworkSimulationConfig())));
+                                           BuiltInNetworkBehaviorConfig())));
     receive_transport = absl::make_unique<test::PacketTransport>(
         &task_queue_, nullptr, &observer, test::PacketTransport::kReceiver,
         payload_type_map_,
         absl::make_unique<FakeNetworkPipe>(
             Clock::GetRealTimeClock(), absl::make_unique<SimulatedNetwork>(
-                                           DefaultNetworkSimulationConfig())));
+                                           BuiltInNetworkBehaviorConfig())));
     send_transport->SetReceiver(receiver_call_->Receiver());
     receive_transport->SetReceiver(sender_call_->Receiver());
 
@@ -323,7 +329,6 @@ void RtpRtcpEndToEndTest::TestRtpStatePreservation(
   // get set once (this could be due to using std::map::insert for instance).
   for (size_t i = 0; i < 3; ++i) {
     task_queue_.SendTask([&]() {
-      frame_generator_capturer_->Stop();
       DestroyVideoSendStreams();
 
       // Re-create VideoSendStream with only one stream.
@@ -339,7 +344,6 @@ void RtpRtcpEndToEndTest::TestRtpStatePreservation(
             ->SendRtcp(packet.data(), packet.size());
       }
       CreateFrameGeneratorCapturer(30, 1280, 720);
-      frame_generator_capturer_->Start();
     });
 
     observer.ResetExpectedSsrcs(1);
@@ -474,7 +478,7 @@ TEST_F(RtpRtcpEndToEndTest, DISABLED_TestFlexfecRtpStatePreservation) {
   task_queue_.SendTask([&]() {
     CreateCalls();
 
-    DefaultNetworkSimulationConfig lossy_delayed_link;
+    BuiltInNetworkBehaviorConfig lossy_delayed_link;
     lossy_delayed_link.loss_percent = 2;
     lossy_delayed_link.queue_delay_ms = 50;
 
@@ -486,7 +490,7 @@ TEST_F(RtpRtcpEndToEndTest, DISABLED_TestFlexfecRtpStatePreservation) {
             absl::make_unique<SimulatedNetwork>(lossy_delayed_link)));
     send_transport->SetReceiver(receiver_call_->Receiver());
 
-    DefaultNetworkSimulationConfig flawless_link;
+    BuiltInNetworkBehaviorConfig flawless_link;
     receive_transport = absl::make_unique<test::PacketTransport>(
         &task_queue_, nullptr, &observer, test::PacketTransport::kReceiver,
         payload_type_map_,
@@ -531,7 +535,7 @@ TEST_F(RtpRtcpEndToEndTest, DISABLED_TestFlexfecRtpStatePreservation) {
     flexfec_receive_config.transport_cc = true;
     flexfec_receive_config.rtp_header_extensions.emplace_back(
         RtpExtension::kTransportSequenceNumberUri,
-        test::kTransportSequenceNumberExtensionId);
+        kTransportSequenceNumberExtensionId);
     flexfec_receive_configs_.push_back(flexfec_receive_config);
 
     CreateFlexfecStreams();
@@ -560,13 +564,11 @@ TEST_F(RtpRtcpEndToEndTest, DISABLED_TestFlexfecRtpStatePreservation) {
 
   task_queue_.SendTask([this, &observer]() {
     // Ensure monotonicity when the VideoSendStream is recreated.
-    frame_generator_capturer_->Stop();
     DestroyVideoSendStreams();
     observer.ResetPacketCount();
     CreateVideoSendStreams();
     GetVideoSendStream()->Start();
     CreateFrameGeneratorCapturer(kFrameRate, kFrameMaxWidth, kFrameMaxHeight);
-    frame_generator_capturer_->Start();
   });
 
   EXPECT_TRUE(observer.Wait()) << "Timed out waiting for packets.";

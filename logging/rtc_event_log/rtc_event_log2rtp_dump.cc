@@ -8,55 +8,59 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <stdint.h>
 #include <string.h>
-
 #include <iostream>
 #include <memory>
-#include <sstream>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "absl/memory/memory.h"
 #include "absl/types/optional.h"
+#include "api/array_view.h"
+#include "api/rtp_headers.h"
 #include "logging/rtc_event_log/rtc_event_log.h"
-#include "logging/rtc_event_log/rtc_event_log_parser_new.h"
+#include "logging/rtc_event_log/rtc_event_log_parser.h"
 #include "logging/rtc_event_log/rtc_event_processor.h"
-#include "modules/rtp_rtcp/source/byte_io.h"
+#include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
-#include "modules/rtp_rtcp/source/rtp_utility.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/flags.h"
+#include "test/rtp_file_reader.h"
 #include "test/rtp_file_writer.h"
 
 namespace {
 
-using MediaType = webrtc::ParsedRtcEventLogNew::MediaType;
+using MediaType = webrtc::ParsedRtcEventLog::MediaType;
 
-DEFINE_bool(
+WEBRTC_DEFINE_bool(
     audio,
     true,
     "Use --noaudio to exclude audio packets from the converted RTPdump file.");
-DEFINE_bool(
+WEBRTC_DEFINE_bool(
     video,
     true,
     "Use --novideo to exclude video packets from the converted RTPdump file.");
-DEFINE_bool(
+WEBRTC_DEFINE_bool(
     data,
     true,
     "Use --nodata to exclude data packets from the converted RTPdump file.");
-DEFINE_bool(
+WEBRTC_DEFINE_bool(
     rtp,
     true,
     "Use --nortp to exclude RTP packets from the converted RTPdump file.");
-DEFINE_bool(
+WEBRTC_DEFINE_bool(
     rtcp,
     true,
     "Use --nortcp to exclude RTCP packets from the converted RTPdump file.");
-DEFINE_string(ssrc,
-              "",
-              "Store only packets with this SSRC (decimal or hex, the latter "
-              "starting with 0x).");
-DEFINE_bool(help, false, "Prints this message.");
+WEBRTC_DEFINE_string(
+    ssrc,
+    "",
+    "Store only packets with this SSRC (decimal or hex, the latter "
+    "starting with 0x).");
+WEBRTC_DEFINE_bool(help, false, "Prints this message.");
 
 // Parses the input string for a valid SSRC. If a valid SSRC is found, it is
 // written to the output variable |ssrc|, and true is returned. Otherwise,
@@ -97,9 +101,10 @@ bool ShouldSkipStream(MediaType media_type,
 // Convert a LoggedRtpPacketIncoming to a test::RtpPacket. Header extension IDs
 // are allocated according to the provided extension map. This might not match
 // the extension map used in the actual call.
-void ConvertRtpPacket(const webrtc::LoggedRtpPacketIncoming& incoming,
-                      const webrtc::RtpHeaderExtensionMap default_extension_map,
-                      webrtc::test::RtpPacket* packet) {
+void ConvertRtpPacket(
+    const webrtc::LoggedRtpPacketIncoming& incoming,
+    const webrtc::RtpHeaderExtensionMap& default_extension_map,
+    webrtc::test::RtpPacket* packet) {
   webrtc::RtpPacket reconstructed_packet(&default_extension_map);
 
   reconstructed_packet.SetMarker(incoming.rtp.header.markerBit);
@@ -180,7 +185,7 @@ int main(int argc, char* argv[]) {
     RTC_CHECK(ssrc_filter.has_value()) << "Failed to read SSRC filter flag.";
   }
 
-  webrtc::ParsedRtcEventLogNew parsed_stream;
+  webrtc::ParsedRtcEventLog parsed_stream;
   if (!parsed_stream.ParseFile(input_file)) {
     std::cerr << "Error while parsing input file: " << input_file << std::endl;
     return -1;
@@ -190,19 +195,17 @@ int main(int argc, char* argv[]) {
       webrtc::test::RtpFileWriter::Create(
           webrtc::test::RtpFileWriter::FileFormat::kRtpDump, output_file));
 
-  if (!rtp_writer.get()) {
+  if (!rtp_writer) {
     std::cerr << "Error while opening output file: " << output_file
               << std::endl;
     return -1;
   }
 
-  std::cout << "Found " << parsed_stream.GetNumberOfEvents()
-            << " events in the input file." << std::endl;
   int rtp_counter = 0, rtcp_counter = 0;
   bool header_only = false;
 
   webrtc::RtpHeaderExtensionMap default_extension_map =
-      webrtc::ParsedRtcEventLogNew::GetDefaultHeaderExtensionMap();
+      webrtc::ParsedRtcEventLog::GetDefaultHeaderExtensionMap();
   auto handle_rtp = [&default_extension_map, &rtp_writer, &rtp_counter](
                         const webrtc::LoggedRtpPacketIncoming& incoming) {
     webrtc::test::RtpPacket packet;
@@ -233,21 +236,13 @@ int main(int argc, char* argv[]) {
         parsed_stream.GetMediaType(stream.ssrc, webrtc::kIncomingPacket);
     if (ShouldSkipStream(media_type, stream.ssrc, ssrc_filter))
       continue;
-    auto rtp_view = absl::make_unique<
-        webrtc::ProcessableEventList<webrtc::LoggedRtpPacketIncoming>>(
-        stream.incoming_packets.begin(), stream.incoming_packets.end(),
-        handle_rtp);
-    event_processor.AddEvents(std::move(rtp_view));
+    event_processor.AddEvents(stream.incoming_packets, handle_rtp);
   }
   // Note that |packet_ssrc| is the sender SSRC. An RTCP message may contain
   // report blocks for many streams, thus several SSRCs and they don't
   // necessarily have to be of the same media type. We therefore don't
   // support filtering of RTCP based on SSRC and media type.
-  auto rtcp_view = absl::make_unique<
-      webrtc::ProcessableEventList<webrtc::LoggedRtcpPacketIncoming>>(
-      parsed_stream.incoming_rtcp_packets().begin(),
-      parsed_stream.incoming_rtcp_packets().end(), handle_rtcp);
-  event_processor.AddEvents(std::move(rtcp_view));
+  event_processor.AddEvents(parsed_stream.incoming_rtcp_packets(), handle_rtcp);
 
   event_processor.ProcessEventsInOrder();
 

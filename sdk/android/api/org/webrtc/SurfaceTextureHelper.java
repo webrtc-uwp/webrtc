@@ -18,9 +18,9 @@ import android.opengl.GLES20;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.support.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Callable;
-import javax.annotation.Nullable;
 import org.webrtc.EglBase;
 import org.webrtc.VideoFrame.TextureBuffer;
 
@@ -36,10 +36,15 @@ public class SurfaceTextureHelper {
   /**
    * Construct a new SurfaceTextureHelper sharing OpenGL resources with |sharedContext|. A dedicated
    * thread and handler is created for handling the SurfaceTexture. May return null if EGL fails to
-   * initialize a pixel buffer surface and make it current.
+   * initialize a pixel buffer surface and make it current. If alignTimestamps is true, the frame
+   * timestamps will be aligned to rtc::TimeNanos(). If frame timestamps are aligned to
+   * rtc::TimeNanos() there is no need for aligning timestamps again in
+   * PeerConnectionFactory.createVideoSource(). This makes the timestamps more accurate and
+   * closer to actual creation time.
    */
-  public static SurfaceTextureHelper create(
-      final String threadName, final EglBase.Context sharedContext) {
+  public static SurfaceTextureHelper create(final String threadName,
+      final EglBase.Context sharedContext, boolean alignTimestamps,
+      final YuvConverter yuvConverter) {
     final HandlerThread thread = new HandlerThread(threadName);
     thread.start();
     final Handler handler = new Handler(thread.getLooper());
@@ -53,7 +58,7 @@ public class SurfaceTextureHelper {
       @Override
       public SurfaceTextureHelper call() {
         try {
-          return new SurfaceTextureHelper(sharedContext, handler);
+          return new SurfaceTextureHelper(sharedContext, handler, alignTimestamps, yuvConverter);
         } catch (RuntimeException e) {
           Logging.e(TAG, threadName + " create failure", e);
           return null;
@@ -62,11 +67,32 @@ public class SurfaceTextureHelper {
     });
   }
 
+  /**
+   * Same as above with alignTimestamps set to false and yuvConverter set to new YuvConverter.
+   *
+   * @see #create(String, EglBase.Context, boolean, YuvConverter)
+   */
+  public static SurfaceTextureHelper create(
+      final String threadName, final EglBase.Context sharedContext) {
+    return create(threadName, sharedContext, /* alignTimestamps= */ false, new YuvConverter());
+  }
+
+  /**
+   * Same as above with yuvConverter set to new YuvConverter.
+   *
+   * @see #create(String, EglBase.Context, boolean, YuvConverter)
+   */
+  public static SurfaceTextureHelper create(
+      final String threadName, final EglBase.Context sharedContext, boolean alignTimestamps) {
+    return create(threadName, sharedContext, alignTimestamps, new YuvConverter());
+  }
+
   private final Handler handler;
   private final EglBase eglBase;
   private final SurfaceTexture surfaceTexture;
   private final int oesTextureId;
-  private final YuvConverter yuvConverter = new YuvConverter();
+  private final YuvConverter yuvConverter;
+  @Nullable private final TimestampAligner timestampAligner;
 
   // These variables are only accessed from the |handler| thread.
   @Nullable private VideoSink listener;
@@ -95,11 +121,14 @@ public class SurfaceTextureHelper {
     }
   };
 
-  private SurfaceTextureHelper(EglBase.Context sharedContext, Handler handler) {
+  private SurfaceTextureHelper(EglBase.Context sharedContext, Handler handler,
+      boolean alignTimestamps, YuvConverter yuvConverter) {
     if (handler.getLooper().getThread() != Thread.currentThread()) {
       throw new IllegalStateException("SurfaceTextureHelper must be created on the handler thread");
     }
     this.handler = handler;
+    this.timestampAligner = alignTimestamps ? new TimestampAligner() : null;
+    this.yuvConverter = yuvConverter;
 
     eglBase = EglBase.create(sharedContext, EglBase.CONFIG_PIXEL_BUFFER);
     try {
@@ -264,7 +293,10 @@ public class SurfaceTextureHelper {
 
     final float[] transformMatrix = new float[16];
     surfaceTexture.getTransformMatrix(transformMatrix);
-    final long timestampNs = surfaceTexture.getTimestamp();
+    long timestampNs = surfaceTexture.getTimestamp();
+    if (timestampAligner != null) {
+      timestampNs = timestampAligner.translateTimestamp(timestampNs);
+    }
     if (textureWidth == 0 || textureHeight == 0) {
       throw new RuntimeException("Texture size has not been set.");
     }
@@ -289,5 +321,8 @@ public class SurfaceTextureHelper {
     surfaceTexture.release();
     eglBase.release();
     handler.getLooper().quit();
+    if (timestampAligner != null) {
+      timestampAligner.dispose();
+    }
   }
 }

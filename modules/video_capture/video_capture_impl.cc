@@ -9,29 +9,21 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "api/video/i420_buffer.h"
+#include "api/video/video_frame_buffer.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "modules/include/module_common_types.h"
 #include "modules/video_capture/video_capture_config.h"
 #include "modules/video_capture/video_capture_impl.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/refcount.h"
-#include "rtc_base/refcountedobject.h"
-#include "rtc_base/timeutils.h"
+#include "rtc_base/ref_counted_object.h"
+#include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
-#include "system_wrappers/include/clock.h"
 #include "third_party/libyuv/include/libyuv.h"
 
 namespace webrtc {
 namespace videocapturemodule {
-rtc::scoped_refptr<VideoCaptureModule> VideoCaptureImpl::Create(
-    VideoCaptureExternal*& externalCapture) {
-  rtc::scoped_refptr<VideoCaptureImpl> implementation(
-      new rtc::RefCountedObject<VideoCaptureImpl>());
-  externalCapture = implementation.get();
-  return implementation;
-}
 
 const char* VideoCaptureImpl::CurrentDeviceName() const {
   return _deviceUniqueId;
@@ -143,7 +135,7 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
   int stride_y = width;
   int stride_uv = (width + 1) / 2;
   int target_width = width;
-  int target_height = height;
+  int target_height = abs(height);
 
   // SetApplyRotation doesn't take any lock. Make a local copy here.
   bool apply_rotation = apply_rotation_;
@@ -163,7 +155,7 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
 
   // TODO(nisse): Use a pool?
   rtc::scoped_refptr<I420Buffer> buffer = I420Buffer::Create(
-      target_width, abs(target_height), stride_y, stride_uv, stride_uv);
+      target_width, target_height, stride_y, stride_uv, stride_uv);
 
   libyuv::RotationMode rotation_mode = libyuv::kRotate0;
   if (apply_rotation) {
@@ -196,8 +188,13 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
     return -1;
   }
 
-  VideoFrame captureFrame(buffer, 0, rtc::TimeMillis(),
-                          !apply_rotation ? _rotateFrame : kVideoRotation_0);
+  VideoFrame captureFrame =
+      VideoFrame::Builder()
+          .set_video_frame_buffer(buffer)
+          .set_timestamp_rtp(0)
+          .set_timestamp_ms(rtc::TimeMillis())
+          .set_rotation(!apply_rotation ? _rotateFrame : kVideoRotation_0)
+          .build();
   captureFrame.set_ntp_time_ms(captureTime);
 
   DeliverCapturedFrame(captureFrame);

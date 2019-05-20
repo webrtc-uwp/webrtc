@@ -17,16 +17,15 @@
 #include <string>
 
 #include "modules/audio_device/audio_device_generic.h"
-#include "rtc_base/criticalsection.h"
+#include "rtc_base/critical_section.h"
 #include "rtc_base/system/file_wrapper.h"
-#include "rtc_base/timeutils.h"
+#include "rtc_base/time_utils.h"
 
 namespace rtc {
 class PlatformThread;
 }  // namespace rtc
 
 namespace webrtc {
-class EventWrapper;
 
 // This is a fake audio device which plays audio from a file as its microphone
 // and plays out into a file.
@@ -155,8 +154,8 @@ class FileAudioDevice : public AudioDeviceGeneric {
   int64_t _lastCallPlayoutMillis;
   int64_t _lastCallRecordMillis;
 
-  FileWrapper& _outputFile;
-  FileWrapper& _inputFile;
+  FileWrapper _outputFile;
+  FileWrapper _inputFile;
   std::string _outputFilename;
   std::string _inputFilename;
 };

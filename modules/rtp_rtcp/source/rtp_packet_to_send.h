@@ -10,9 +10,12 @@
 #ifndef MODULES_RTP_RTCP_SOURCE_RTP_PACKET_TO_SEND_H_
 #define MODULES_RTP_RTCP_SOURCE_RTP_PACKET_TO_SEND_H_
 
+#include <stddef.h>
+#include <stdint.h>
 #include <vector>
 
 #include "api/array_view.h"
+#include "api/video/video_timing.h"
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
 
@@ -34,6 +37,10 @@ class RtpPacketToSend : public RtpPacket {
   int64_t capture_time_ms() const { return capture_time_ms_; }
 
   void set_capture_time_ms(int64_t time) { capture_time_ms_ = time; }
+
+  bool is_fec() const { return is_fec_; }
+
+  void set_is_fec(bool fec) { is_fec_ = fec; }
 
   // Additional data bound to the RTP packet for use in application code,
   // outside of WebRTC.
@@ -71,6 +78,8 @@ class RtpPacketToSend : public RtpPacket {
 
  private:
   int64_t capture_time_ms_ = 0;
+  // Used for accounting purposes
+  bool is_fec_ = false;
   std::vector<uint8_t> application_data_;
 };
 

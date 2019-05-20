@@ -11,12 +11,12 @@
 #ifndef SYSTEM_WRAPPERS_INCLUDE_METRICS_H_
 #define SYSTEM_WRAPPERS_INCLUDE_METRICS_H_
 
+#include <stddef.h>
 #include <map>
 #include <memory>
 #include <string>
 
-#include "common_types.h"  // NOLINT(build/include)
-#include "rtc_base/atomicops.h"
+#include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 
 // Macros for allowing WebRTC clients (e.g. Chrome) to gather and aggregate
@@ -134,7 +134,7 @@
 // TODO(qingsi): Refactor the default implementation given by RtcHistogram,
 // which is already sparse, and remove the boundary argument from the macro.
 #define RTC_HISTOGRAM_ENUMERATION_SPARSE(name, sample, boundary) \
-  RTC_HISTOGRAM_COMMON_BLOCK(                                    \
+  RTC_HISTOGRAM_COMMON_BLOCK_SLOW(                               \
       name, sample,                                              \
       webrtc::metrics::SparseHistogramFactoryGetEnumeration(name, boundary))
 
@@ -149,7 +149,7 @@
 // Histogram for enumerators (evenly spaced buckets).
 // |boundary| should be above the max enumerator sample.
 #define RTC_HISTOGRAM_ENUMERATION(name, sample, boundary) \
-  RTC_HISTOGRAM_COMMON_BLOCK(                             \
+  RTC_HISTOGRAM_COMMON_BLOCK_SLOW(                        \
       name, sample,                                       \
       webrtc::metrics::HistogramFactoryGetEnumeration(name, boundary))
 
@@ -176,7 +176,6 @@
     }                                                                      \
   } while (0)
 
-// Deprecated.
 // The histogram is constructed/found for each call.
 // May be used for histograms with infrequent updates.`
 #define RTC_HISTOGRAM_COMMON_BLOCK_SLOW(name, sample, factory_get_invocation) \
@@ -309,6 +308,10 @@ int NumSamples(const std::string& name);
 
 // Returns the minimum sample value (or -1 if the histogram has no samples).
 int MinSample(const std::string& name);
+
+// Returns a map with keys the samples with at least one event and values the
+// number of events for that sample.
+std::map<int, int> Samples(const std::string& name);
 
 }  // namespace metrics
 }  // namespace webrtc

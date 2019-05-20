@@ -15,7 +15,7 @@
 
 #include "modules/audio_device/audio_device_generic.h"
 #include "modules/audio_device/linux/audio_mixer_manager_alsa_linux.h"
-#include "rtc_base/criticalsection.h"
+#include "rtc_base/critical_section.h"
 #include "rtc_base/platform_thread.h"
 
 #if defined(WEBRTC_USE_X11)
@@ -28,15 +28,7 @@
 typedef webrtc::adm_linux_alsa::AlsaSymbolTable WebRTCAlsaSymbolTable;
 WebRTCAlsaSymbolTable* GetAlsaSymbolTable();
 
-// Accesses ALSA functions through our late-binding symbol table instead of
-// directly. This way we don't have to link to libasound, which means our binary
-// will work on systems that don't have it.
-#define LATE(sym)                                                            \
-  LATESYM_GET(webrtc::adm_linux_alsa::AlsaSymbolTable, GetAlsaSymbolTable(), \
-              sym)
-
 namespace webrtc {
-class EventWrapper;
 
 class AudioDeviceLinuxALSA : public AudioDeviceGeneric {
  public:
@@ -139,8 +131,8 @@ class AudioDeviceLinuxALSA : public AudioDeviceGeneric {
 
   bool KeyPressed() const;
 
-  void Lock() RTC_EXCLUSIVE_LOCK_FUNCTION(_critSect) { _critSect.Enter(); };
-  void UnLock() RTC_UNLOCK_FUNCTION(_critSect) { _critSect.Leave(); };
+  void Lock() RTC_EXCLUSIVE_LOCK_FUNCTION(_critSect) { _critSect.Enter(); }
+  void UnLock() RTC_UNLOCK_FUNCTION(_critSect) { _critSect.Leave(); }
 
   inline int32_t InputSanityCheckAfterUnlockedPeriod() const;
   inline int32_t OutputSanityCheckAfterUnlockedPeriod() const;

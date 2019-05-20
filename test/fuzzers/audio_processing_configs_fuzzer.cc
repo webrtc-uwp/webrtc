@@ -13,11 +13,13 @@
 
 #include "absl/memory/memory.h"
 #include "api/audio/echo_canceller3_factory.h"
-#include "modules/audio_processing/aec_dump/mock_aec_dump.h"
+#include "modules/audio_processing/aec_dump/aec_dump_factory.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/numerics/safe_minmax.h"
-#include "system_wrappers/include/field_trial_default.h"
+#include "rtc_base/task_queue.h"
+#include "rtc_base/task_queue_stdlib.h"
+#include "system_wrappers/include/field_trial.h"
 #include "test/fuzzers/audio_processing_fuzzer_helper.h"
 #include "test/fuzzers/fuzz_data_helper.h"
 
@@ -25,36 +27,15 @@ namespace webrtc {
 namespace {
 
 const std::string kFieldTrialNames[] = {
-    "WebRTC-Aec3TransparentModeKillSwitch",
-    "WebRTC-Aec3StationaryRenderImprovementsKillSwitch",
-    "WebRTC-Aec3EnforceDelayAfterRealignmentKillSwitch",
-    "WebRTC-Aec3UseShortDelayEstimatorWindow",
-    "WebRTC-Aec3ReverbBasedOnRenderKillSwitch",
-    "WebRTC-Aec3ReverbModellingKillSwitch",
-    "WebRTC-Aec3FilterAnalyzerPreprocessorKillSwitch",
-    "WebRTC-Aec3TransparencyImprovementsKillSwitch",
-    "WebRTC-Aec3SoftTransparentModeKillSwitch",
-    "WebRTC-Aec3OverrideEchoPathGainKillSwitch",
-    "WebRTC-Aec3ZeroExternalDelayHeadroomKillSwitch",
-    "WebRTC-Aec3DownSamplingFactor8KillSwitch",
-    "WebRTC-Aec3EnforceSkewHysteresis1",
-    "WebRTC-Aec3EnforceSkewHysteresis2",
-    "WebRTC-Aec3NewSuppressionKillSwitch",
-    "WebRTC-Aec3LinearModeWithDivergedFilterKillSwitch",
-    "WebRTC-Aec3MisadjustmentEstimatorKillSwitch",
-    "WebRTC-Aec3RapidAgcGainRecoveryKillSwitch",
-    "WebRTC-Aec3SlowFilterAdaptationKillSwitch",
-    "WebRTC-Aec3SmoothUpdatesTailFreqRespKillSwitch",
-    "WebRTC-Aec3SuppressorNearendAveragingKillSwitch",
-    "WebRTC-Aec3AgcGainChangeResponseKillSwitch",
-    "WebRTC-Aec3ShadowFilterJumpstartKillSwitch",
-    "WebRTC-Aec3EarlyLinearFilterUsageKillSwitch",
-    "WebRTC-Aec3ShortInitialStateKillSwitch",
-    "WebRTC-Aec3StandardNonlinearReverbModelKillSwitch",
-    "WebRTC-Aec3EnableAdaptiveEchoReverbEstimation"};
+    "WebRTC-Audio-Agc2ForceExtraSaturationMargin",
+    "WebRTC-Audio-Agc2ForceInitialSaturationMargin",
+    "WebRTC-Aec3MinErleDuringOnsetsKillSwitch",
+    "WebRTC-Aec3ShortHeadroomKillSwitch",
+};
 
 std::unique_ptr<AudioProcessing> CreateApm(test::FuzzDataHelper* fuzz_data,
-                                           std::string* field_trial_string) {
+                                           std::string* field_trial_string,
+                                           rtc::TaskQueue* worker_queue) {
   // Parse boolean values for optionally enabling different
   // configurable public components of APM.
   bool exp_agc = fuzz_data->ReadOrDefaultValue(true);
@@ -75,16 +56,17 @@ std::unique_ptr<AudioProcessing> CreateApm(test::FuzzDataHelper* fuzz_data,
   bool use_le = fuzz_data->ReadOrDefaultValue(true);
   bool use_vad = fuzz_data->ReadOrDefaultValue(true);
   bool use_agc_limiter = fuzz_data->ReadOrDefaultValue(true);
-  bool use_agc2_limiter = fuzz_data->ReadOrDefaultValue(true);
+  bool use_agc2 = fuzz_data->ReadOrDefaultValue(true);
 
   // Read an int8 value, but don't let it be too large or small.
   const float gain_controller2_gain_db =
-      rtc::SafeClamp<int>(fuzz_data->ReadOrDefaultValue<int8_t>(0), -50, 50);
+      rtc::SafeClamp<int>(fuzz_data->ReadOrDefaultValue<int8_t>(0), -40, 40);
 
   constexpr size_t kNumFieldTrials = arraysize(kFieldTrialNames);
   // Verify that the read data type has enough bits to fuzz the field trials.
-  using FieldTrialBitmaskType = uint32_t;
-  RTC_DCHECK_LE(kNumFieldTrials, sizeof(FieldTrialBitmaskType) * 8);
+  using FieldTrialBitmaskType = uint64_t;
+  static_assert(kNumFieldTrials <= sizeof(FieldTrialBitmaskType) * 8,
+                "FieldTrialBitmaskType is not large enough.");
   std::bitset<kNumFieldTrials> field_trial_bitmask(
       fuzz_data->ReadOrDefaultValue<FieldTrialBitmaskType>(0));
   for (size_t i = 0; i < kNumFieldTrials; ++i) {
@@ -93,6 +75,12 @@ std::unique_ptr<AudioProcessing> CreateApm(test::FuzzDataHelper* fuzz_data,
     }
   }
   field_trial::InitFieldTrialsFromString(field_trial_string->c_str());
+
+  bool use_agc2_adaptive_digital = fuzz_data->ReadOrDefaultValue(true);
+  bool use_agc2_adaptive_digital_rms_estimator =
+      fuzz_data->ReadOrDefaultValue(true);
+  bool use_agc2_adaptive_digital_saturation_protector =
+      fuzz_data->ReadOrDefaultValue(true);
 
   // Ignore a few bytes. Bytes from this segment will be used for
   // future config flag changes. We assume 40 bytes is enough for
@@ -129,36 +117,65 @@ std::unique_ptr<AudioProcessing> CreateApm(test::FuzzDataHelper* fuzz_data,
           .SetEchoControlFactory(std::move(echo_control_factory))
           .Create(config));
 
-  apm->AttachAecDump(
-      absl::make_unique<testing::NiceMock<webrtc::test::MockAecDump>>());
+#ifdef WEBRTC_LINUX
+  apm->AttachAecDump(AecDumpFactory::Create("/dev/null", -1, worker_queue));
+#endif
 
   webrtc::AudioProcessing::Config apm_config;
+  apm_config.echo_canceller.enabled = use_aec || use_aecm;
+  apm_config.echo_canceller.mobile_mode = use_aecm;
   apm_config.residual_echo_detector.enabled = red;
   apm_config.high_pass_filter.enabled = hpf;
-  apm_config.gain_controller2.enabled = use_agc2_limiter;
-
-  apm_config.gain_controller2.fixed_gain_db = gain_controller2_gain_db;
-
+  apm_config.gain_controller1.enabled = use_agc;
+  apm_config.gain_controller1.enable_limiter = use_agc_limiter;
+  apm_config.gain_controller2.enabled = use_agc2;
+  apm_config.gain_controller2.fixed_digital.gain_db = gain_controller2_gain_db;
+  apm_config.gain_controller2.adaptive_digital.enabled =
+      use_agc2_adaptive_digital;
+  apm_config.gain_controller2.adaptive_digital.level_estimator =
+      use_agc2_adaptive_digital_rms_estimator
+          ? webrtc::AudioProcessing::Config::GainController2::LevelEstimator::
+                kRms
+          : webrtc::AudioProcessing::Config::GainController2::LevelEstimator::
+                kPeak;
+  apm_config.gain_controller2.adaptive_digital.use_saturation_protector =
+      use_agc2_adaptive_digital_saturation_protector;
+  apm_config.noise_suppression.enabled = use_ns;
+  apm_config.voice_detection.enabled = use_vad;
   apm->ApplyConfig(apm_config);
 
-  apm->echo_cancellation()->Enable(use_aec);
-  apm->echo_control_mobile()->Enable(use_aecm);
-  apm->gain_control()->Enable(use_agc);
-  apm->noise_suppression()->Enable(use_ns);
   apm->level_estimator()->Enable(use_le);
   apm->voice_detection()->Enable(use_vad);
-  apm->gain_control()->enable_limiter(use_agc_limiter);
 
   return apm;
 }
+
+TaskQueueFactory* GetTaskQueueFactory() {
+  // Chromium hijacked DefaultTaskQueueFactory with own implementation, but
+  // unable to use it without base::test::ScopedTaskEnvironment. Actual used
+  // task queue implementation shouldn't matter for the purpose of this fuzzer,
+  // so use stdlib implementation: that one is multiplatform.
+  // When bugs.webrtc.org/10284 is resolved and chromium stops hijacking
+  // DefaultTaskQueueFactory, Stdlib can be replaced with default one.
+  static TaskQueueFactory* const factory =
+      CreateTaskQueueStdlibFactory().release();
+  return factory;
+}
+
 }  // namespace
 
 void FuzzOneInput(const uint8_t* data, size_t size) {
+  if (size > 400000) {
+    return;
+  }
   test::FuzzDataHelper fuzz_data(rtc::ArrayView<const uint8_t>(data, size));
   // This string must be in scope during execution, according to documentation
-  // for field_trial_default.h. Hence it's created here and not in CreateApm.
+  // for field_trial.h. Hence it's created here and not in CreateApm.
   std::string field_trial_string = "";
-  auto apm = CreateApm(&fuzz_data, &field_trial_string);
+
+  rtc::TaskQueue worker_queue(GetTaskQueueFactory()->CreateTaskQueue(
+      "rtc-low-prio", rtc::TaskQueue::Priority::LOW));
+  auto apm = CreateApm(&fuzz_data, &field_trial_string, &worker_queue);
 
   if (apm) {
     FuzzAudioProcessing(&fuzz_data, std::move(apm));

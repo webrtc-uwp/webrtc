@@ -16,7 +16,7 @@
 
 #include "modules/audio_processing/agc2/agc2_common.h"
 #include "modules/audio_processing/include/audio_frame_view.h"
-#include "rtc_base/constructormagic.h"
+#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
@@ -47,6 +47,8 @@ class FixedDigitalLevelEstimator {
 
   // Resets the level estimator internal state.
   void Reset();
+
+  float LastAudioLevel() const { return filter_state_level_; }
 
  private:
   void CheckParameterCombination();

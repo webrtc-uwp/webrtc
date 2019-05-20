@@ -11,12 +11,16 @@
 #ifndef MODULES_VIDEO_CODING_FEC_CONTROLLER_DEFAULT_H_
 #define MODULES_VIDEO_CODING_FEC_CONTROLLER_DEFAULT_H_
 
+#include <stddef.h>
+#include <stdint.h>
 #include <memory>
 #include <vector>
+
 #include "api/fec_controller.h"
-#include "modules/include/module_common_types.h"
 #include "modules/video_coding/media_opt_util.h"
-#include "rtc_base/criticalsection.h"
+#include "rtc_base/constructor_magic.h"
+#include "rtc_base/critical_section.h"
+#include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {
@@ -39,9 +43,11 @@ class FecControllerDefault : public FecController {
                           uint8_t fraction_lost,
                           std::vector<bool> loss_mask_vector,
                           int64_t round_trip_time_ms) override;
-  void UpdateWithEncodedData(const size_t encoded_image_length,
-                             const FrameType encoded_image_frametype) override;
+  void UpdateWithEncodedData(
+      const size_t encoded_image_length,
+      const VideoFrameType encoded_image_frametype) override;
   bool UseLossVectorMask() override;
+  float GetProtectionOverheadRateThreshold();
 
  private:
   enum { kBitrateAverageWinMs = 1000 };
@@ -52,6 +58,7 @@ class FecControllerDefault : public FecController {
       RTC_GUARDED_BY(crit_sect_);
   size_t max_payload_size_ RTC_GUARDED_BY(crit_sect_);
   RTC_DISALLOW_COPY_AND_ASSIGN(FecControllerDefault);
+  const float overhead_threshold_;
 };
 
 }  // namespace webrtc

@@ -11,6 +11,7 @@
 #ifndef API_AUDIO_OPTIONS_H_
 #define API_AUDIO_OPTIONS_H_
 
+#include <stdint.h>
 #include <string>
 
 #include "absl/types/optional.h"
@@ -53,9 +54,12 @@ struct AudioOptions {
   absl::optional<int> audio_jitter_buffer_max_packets;
   // Audio receiver jitter buffer (NetEq) fast accelerate mode.
   absl::optional<bool> audio_jitter_buffer_fast_accelerate;
+  // Audio receiver jitter buffer (NetEq) minimum target delay in milliseconds.
+  absl::optional<int> audio_jitter_buffer_min_delay_ms;
+  // Audio receiver jitter buffer (NetEq) should handle retransmitted packets.
+  absl::optional<bool> audio_jitter_buffer_enable_rtx_handling;
   // Audio processing to detect typing.
   absl::optional<bool> typing_detection;
-  absl::optional<bool> aecm_generate_comfort_noise;
   absl::optional<bool> experimental_agc;
   absl::optional<bool> extended_filter_aec;
   absl::optional<bool> delay_agnostic_aec;

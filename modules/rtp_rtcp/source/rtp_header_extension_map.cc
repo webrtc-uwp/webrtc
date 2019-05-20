@@ -35,6 +35,7 @@ constexpr ExtensionInfo kExtensions[] = {
     CreateExtensionInfo<AbsoluteSendTime>(),
     CreateExtensionInfo<VideoOrientation>(),
     CreateExtensionInfo<TransportSequenceNumber>(),
+    CreateExtensionInfo<TransportSequenceNumberV2>(),
     CreateExtensionInfo<PlayoutDelayLimits>(),
     CreateExtensionInfo<VideoContentTypeExtension>(),
     CreateExtensionInfo<VideoTimingExtension>(),
@@ -42,7 +43,9 @@ constexpr ExtensionInfo kExtensions[] = {
     CreateExtensionInfo<RtpStreamId>(),
     CreateExtensionInfo<RepairedRtpStreamId>(),
     CreateExtensionInfo<RtpMid>(),
-    CreateExtensionInfo<RtpGenericFrameDescriptorExtension>(),
+    CreateExtensionInfo<RtpGenericFrameDescriptorExtension00>(),
+    CreateExtensionInfo<RtpGenericFrameDescriptorExtension01>(),
+    CreateExtensionInfo<ColorSpaceExtension>(),
 };
 
 // Because of kRtpExtensionNone, NumberOfExtension is 1 bigger than the actual
@@ -55,17 +58,18 @@ static_assert(arraysize(kExtensions) ==
 
 constexpr RTPExtensionType RtpHeaderExtensionMap::kInvalidType;
 constexpr int RtpHeaderExtensionMap::kInvalidId;
-constexpr int RtpHeaderExtensionMap::kMinId;
-constexpr int RtpHeaderExtensionMap::kMaxId;
 
-RtpHeaderExtensionMap::RtpHeaderExtensionMap() {
+RtpHeaderExtensionMap::RtpHeaderExtensionMap() : RtpHeaderExtensionMap(false) {}
+
+RtpHeaderExtensionMap::RtpHeaderExtensionMap(bool extmap_allow_mixed)
+    : extmap_allow_mixed_(extmap_allow_mixed) {
   for (auto& id : ids_)
     id = kInvalidId;
 }
 
 RtpHeaderExtensionMap::RtpHeaderExtensionMap(
     rtc::ArrayView<const RtpExtension> extensions)
-    : RtpHeaderExtensionMap() {
+    : RtpHeaderExtensionMap(false) {
   for (const RtpExtension& extension : extensions)
     RegisterByUri(extension.id, extension.uri);
 }
@@ -88,8 +92,8 @@ bool RtpHeaderExtensionMap::RegisterByUri(int id, const std::string& uri) {
 }
 
 RTPExtensionType RtpHeaderExtensionMap::GetType(int id) const {
-  RTC_DCHECK_GE(id, kMinId);
-  RTC_DCHECK_LE(id, kMaxId);
+  RTC_DCHECK_GE(id, RtpExtension::kMinId);
+  RTC_DCHECK_LE(id, RtpExtension::kMaxId);
   for (int type = kRtpExtensionNone + 1; type < kRtpExtensionNumberOfExtensions;
        ++type) {
     if (ids_[type] == id) {
@@ -97,25 +101,6 @@ RTPExtensionType RtpHeaderExtensionMap::GetType(int id) const {
     }
   }
   return kInvalidType;
-}
-
-size_t RtpHeaderExtensionMap::GetTotalLengthInBytes(
-    rtc::ArrayView<const RtpExtensionSize> extensions) const {
-  // Header size of the extension block, see RFC3550 Section 5.3.1
-  static constexpr size_t kRtpOneByteHeaderLength = 4;
-  // Header size of each individual extension, see RFC5285 Section 4.2
-  static constexpr size_t kExtensionHeaderLength = 1;
-  size_t values_size = 0;
-  for (const RtpExtensionSize& extension : extensions) {
-    if (IsRegistered(extension.type))
-      values_size += extension.value_size + kExtensionHeaderLength;
-  }
-  if (values_size == 0)
-    return 0;
-  size_t size = kRtpOneByteHeaderLength + values_size;
-  // Round up to the nearest size that is a multiple of 4.
-  // Which is same as round down (size + 3).
-  return size + 3 - (size + 3) % 4;
 }
 
 int32_t RtpHeaderExtensionMap::Deregister(RTPExtensionType type) {
@@ -131,7 +116,7 @@ bool RtpHeaderExtensionMap::Register(int id,
   RTC_DCHECK_GT(type, kRtpExtensionNone);
   RTC_DCHECK_LT(type, kRtpExtensionNumberOfExtensions);
 
-  if (id < kMinId || id > kMaxId) {
+  if (id < RtpExtension::kMinId || id > RtpExtension::kMaxId) {
     RTC_LOG(LS_WARNING) << "Failed to register extension uri:'" << uri
                         << "' with invalid id:" << id << ".";
     return false;

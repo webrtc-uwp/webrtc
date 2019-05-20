@@ -12,15 +12,16 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <deque>
+#include <iterator>
 #include <limits>
 #include <vector>
 
 #include "api/video/i420_buffer.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/refcountedobject.h"
+#include "api/video/video_frame_buffer.h"
+#include "rtc_base/ref_counted_object.h"
 #include "rtc_tools/frame_analyzer/video_quality_analysis.h"
-#include "third_party/libyuv/include/libyuv/compare.h"
 
 namespace webrtc {
 namespace test {
@@ -83,9 +84,9 @@ class DownscaledVideo : public rtc::RefCountedObject<Video> {
  public:
   DownscaledVideo(float scale_factor, const rtc::scoped_refptr<Video>& video)
       : downscaled_width_(
-            static_cast<int>(round(scale_factor * video->width()))),
+            static_cast<int>(std::round(scale_factor * video->width()))),
         downscaled_height_(
-            static_cast<int>(round(scale_factor * video->height()))),
+            static_cast<int>(std::round(scale_factor * video->height()))),
         video_(video) {}
 
   int width() const override { return downscaled_width_; }
@@ -215,7 +216,7 @@ std::vector<size_t> FindMatchingFrameIndices(
 
 rtc::scoped_refptr<Video> ReorderVideo(const rtc::scoped_refptr<Video>& video,
                                        const std::vector<size_t>& indices) {
-  return new ReorderedVideo(video, indices);
+  return new ReorderedVideo(new LoopingVideo(video), indices);
 }
 
 rtc::scoped_refptr<Video> GenerateAlignedReferenceVideo(
@@ -228,7 +229,7 @@ rtc::scoped_refptr<Video> GenerateAlignedReferenceVideo(
 rtc::scoped_refptr<Video> GenerateAlignedReferenceVideo(
     const rtc::scoped_refptr<Video>& reference_video,
     const std::vector<size_t>& indices) {
-  return ReorderVideo(new LoopingVideo(reference_video), indices);
+  return ReorderVideo(reference_video, indices);
 }
 
 }  // namespace test

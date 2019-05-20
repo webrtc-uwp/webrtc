@@ -10,7 +10,9 @@
 
 #include "api/audio_codecs/audio_format.h"
 
-#include "common_types.h"  // NOLINT(build/include)
+#include <utility>
+
+#include "absl/strings/match.h"
 
 namespace webrtc {
 
@@ -31,8 +33,17 @@ SdpAudioFormat::SdpAudioFormat(absl::string_view name,
       num_channels(num_channels),
       parameters(param) {}
 
+SdpAudioFormat::SdpAudioFormat(absl::string_view name,
+                               int clockrate_hz,
+                               size_t num_channels,
+                               Parameters&& param)
+    : name(name),
+      clockrate_hz(clockrate_hz),
+      num_channels(num_channels),
+      parameters(std::move(param)) {}
+
 bool SdpAudioFormat::Matches(const SdpAudioFormat& o) const {
-  return STR_CASE_CMP(name.c_str(), o.name.c_str()) == 0 &&
+  return absl::EqualsIgnoreCase(name, o.name) &&
          clockrate_hz == o.clockrate_hz && num_channels == o.num_channels;
 }
 
@@ -41,17 +52,9 @@ SdpAudioFormat& SdpAudioFormat::operator=(const SdpAudioFormat&) = default;
 SdpAudioFormat& SdpAudioFormat::operator=(SdpAudioFormat&&) = default;
 
 bool operator==(const SdpAudioFormat& a, const SdpAudioFormat& b) {
-  return STR_CASE_CMP(a.name.c_str(), b.name.c_str()) == 0 &&
+  return absl::EqualsIgnoreCase(a.name, b.name) &&
          a.clockrate_hz == b.clockrate_hz && a.num_channels == b.num_channels &&
          a.parameters == b.parameters;
-}
-
-void swap(SdpAudioFormat& a, SdpAudioFormat& b) {
-  using std::swap;
-  swap(a.name, b.name);
-  swap(a.clockrate_hz, b.clockrate_hz);
-  swap(a.num_channels, b.num_channels);
-  swap(a.parameters, b.parameters);
 }
 
 AudioCodecInfo::AudioCodecInfo(int sample_rate_hz,

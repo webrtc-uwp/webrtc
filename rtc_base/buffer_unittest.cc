@@ -10,11 +10,11 @@
 
 #include "rtc_base/buffer.h"
 
-#include "api/array_view.h"
-#include "rtc_base/gunit.h"
-
-#include <type_traits>
+#include <cstdint>
 #include <utility>
+
+#include "api/array_view.h"
+#include "test/gtest.h"
 
 namespace rtc {
 
@@ -183,6 +183,17 @@ TEST(BufferTest, TestMoveAssign) {
   EXPECT_EQ(buf1.capacity(), 0u);
   EXPECT_EQ(buf1.data(), nullptr);
   EXPECT_TRUE(buf1.empty());
+}
+
+TEST(BufferTest, TestMoveAssignSelf) {
+  // Move self-assignment isn't required to produce a meaningful state, but
+  // should not leave the object in an inconsistent state. (Such inconsistent
+  // state could be caught by the DCHECKs and/or by the leak checker.) We need
+  // to be sneaky when testing this; if we're doing a too-obvious
+  // move-assign-to-self, clang's -Wself-move triggers at compile time.
+  Buffer buf(kTestData, 3, 40);
+  Buffer* buf_ptr = &buf;
+  buf = std::move(*buf_ptr);
 }
 
 TEST(BufferTest, TestSwap) {
@@ -432,6 +443,19 @@ TEST(BufferTest, TestStruct) {
   static const char kObsidian[] = "obsidian";
   buf2[2]->stone = kObsidian;
   EXPECT_EQ(kObsidian, buf[2].stone);
+}
+
+TEST(BufferTest, DieOnUseAfterMove) {
+  Buffer buf(17);
+  Buffer buf2 = std::move(buf);
+  EXPECT_EQ(buf2.size(), 17u);
+#if RTC_DCHECK_IS_ON
+#if GTEST_HAS_DEATH_TEST && !defined(WEBRTC_ANDROID)
+  EXPECT_DEATH(buf.empty(), "");
+#endif
+#else
+  EXPECT_TRUE(buf.empty());
+#endif
 }
 
 TEST(ZeroOnFreeBufferTest, TestZeroOnSetData) {

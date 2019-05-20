@@ -11,8 +11,8 @@
 #include "modules/audio_coding/neteq/decision_logic.h"
 
 #include <assert.h>
-#include <algorithm>
-#include <limits>
+#include <stdio.h>
+#include <string>
 
 #include "modules/audio_coding/neteq/buffer_level_filter.h"
 #include "modules/audio_coding/neteq/decoder_database.h"
@@ -20,8 +20,15 @@
 #include "modules/audio_coding/neteq/expand.h"
 #include "modules/audio_coding/neteq/packet_buffer.h"
 #include "modules/audio_coding/neteq/sync_buffer.h"
-#include "modules/include/module_common_types.h"
-#include "system_wrappers/include/field_trial.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/numerics/safe_conversions.h"
+
+namespace {
+
+constexpr int kPostponeDecodingLevel = 50;
+
+}  // namespace
 
 namespace webrtc {
 
@@ -58,9 +65,7 @@ DecisionLogic::DecisionLogic(int fs_hz,
       disallow_time_stretching_(disallow_time_stretching),
       timescale_countdown_(
           tick_timer_->GetNewCountdown(kMinTimescaleInterval + 1)),
-      num_consecutive_expands_(0),
-      postpone_decoding_after_expand_(field_trial::IsEnabled(
-          "WebRTC-Audio-NetEqPostponeDecodingAfterExpand")) {
+      num_consecutive_expands_(0) {
   delay_manager_->set_streaming_mode(false);
   SetSampleRate(fs_hz, output_size_samples);
 }
@@ -111,6 +116,7 @@ Operations DecisionLogic::GetDecision(const SyncBuffer& sync_buffer,
 
   const size_t samples_left =
       sync_buffer.FutureLength() - expand.overlap_length();
+  // TODO(jakobi): Use buffer span instead of num samples.
   const size_t cur_size_samples =
       samples_left + packet_buffer_.NumSamplesInBuffer(decoder_frame_length);
 
@@ -120,7 +126,13 @@ Operations DecisionLogic::GetDecision(const SyncBuffer& sync_buffer,
                            prev_mode == kModePreemptiveExpandSuccess ||
                            prev_mode == kModePreemptiveExpandLowEnergy);
 
-  FilterBufferLevel(cur_size_samples, prev_mode);
+  // Do not update buffer history if currently playing CNG since it will bias
+  // the filtered buffer level.
+  if ((prev_mode != kModeRfc3389Cng) && (prev_mode != kModeCodecInternalCng) &&
+      !(next_packet && next_packet->frame &&
+        next_packet->frame->IsDtxPacket())) {
+    FilterBufferLevel(cur_size_samples);
+  }
 
   // Guard for errors, to avoid getting stuck in error mode.
   if (prev_mode == kModeError) {
@@ -164,12 +176,14 @@ Operations DecisionLogic::GetDecision(const SyncBuffer& sync_buffer,
   // if the mute factor is low enough (otherwise the expansion was short enough
   // to not be noticable).
   // Note that the MuteFactor is in Q14, so a value of 16384 corresponds to 1.
-  if (postpone_decoding_after_expand_ &&
-      (prev_mode == kModeExpand || prev_mode == kModeCodecPlc) &&
-      !packet_buffer_.ContainsDtxOrCngPacket(decoder_database_) &&
-      cur_size_samples<static_cast<size_t>(delay_manager_->TargetLevel() *
-                                           packet_length_samples_)>> 8 &&
-      expand.MuteFactor(0) < 16384 / 2) {
+  size_t current_span =
+      samples_left + packet_buffer_.GetSpanSamples(decoder_frame_length);
+  if ((prev_mode == kModeExpand || prev_mode == kModeCodecPlc) &&
+      expand.MuteFactor(0) < 16384 / 2 &&
+      current_span < static_cast<size_t>(delay_manager_->TargetLevel() *
+                                         packet_length_samples_ *
+                                         kPostponeDecodingLevel / 100)>> 8 &&
+      !packet_buffer_.ContainsDtxOrCngPacket(decoder_database_)) {
     return kExpand;
   }
 
@@ -198,29 +212,24 @@ void DecisionLogic::ExpandDecision(Operations operation) {
   }
 }
 
-void DecisionLogic::FilterBufferLevel(size_t buffer_size_samples,
-                                      Modes prev_mode) {
-  // Do not update buffer history if currently playing CNG since it will bias
-  // the filtered buffer level.
-  if ((prev_mode != kModeRfc3389Cng) && (prev_mode != kModeCodecInternalCng)) {
-    buffer_level_filter_->SetTargetBufferLevel(
-        delay_manager_->base_target_level());
+void DecisionLogic::FilterBufferLevel(size_t buffer_size_samples) {
+  buffer_level_filter_->SetTargetBufferLevel(
+      delay_manager_->base_target_level());
 
-    size_t buffer_size_packets = 0;
-    if (packet_length_samples_ > 0) {
-      // Calculate size in packets.
-      buffer_size_packets = buffer_size_samples / packet_length_samples_;
-    }
-    int sample_memory_local = 0;
-    if (prev_time_scale_) {
-      sample_memory_local = sample_memory_;
-      timescale_countdown_ =
-          tick_timer_->GetNewCountdown(kMinTimescaleInterval);
-    }
-    buffer_level_filter_->Update(buffer_size_packets, sample_memory_local,
-                                 packet_length_samples_);
-    prev_time_scale_ = false;
+  size_t buffer_size_packets = 0;
+  if (packet_length_samples_ > 0) {
+    // Calculate size in packets.
+    buffer_size_packets = buffer_size_samples / packet_length_samples_;
   }
+  int sample_memory_local = 0;
+  if (prev_time_scale_) {
+    sample_memory_local = sample_memory_;
+    timescale_countdown_ = tick_timer_->GetNewCountdown(kMinTimescaleInterval);
+  }
+
+  buffer_level_filter_->Update(buffer_size_packets, sample_memory_local,
+                               packet_length_samples_);
+  prev_time_scale_ = false;
 }
 
 Operations DecisionLogic::CngOperation(Modes prev_mode,

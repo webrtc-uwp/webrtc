@@ -64,12 +64,9 @@ TEST(EchoPathDelayEstimator, DelayEstimation) {
     config.delay.num_filters = 10;
     for (size_t delay_samples : {30, 64, 150, 200, 800, 4000}) {
       SCOPED_TRACE(ProduceDebugText(delay_samples, down_sampling_factor));
-
-      config.delay.api_call_jitter_blocks = 5;
       std::unique_ptr<RenderDelayBuffer> render_delay_buffer(
           RenderDelayBuffer::Create(config, 3));
-      DelayBuffer<float> signal_delay_buffer(
-          delay_samples + 2 * config.delay.api_call_jitter_blocks * 64);
+      DelayBuffer<float> signal_delay_buffer(delay_samples);
       EchoPathDelayEstimator estimator(&data_dumper, config);
 
       absl::optional<DelayEstimate> estimated_delay_samples;
@@ -97,9 +94,7 @@ TEST(EchoPathDelayEstimator, DelayEstimation) {
         // domain.
         size_t delay_ds = delay_samples / down_sampling_factor;
         size_t estimated_delay_ds =
-            (estimated_delay_samples->delay -
-             (config.delay.api_call_jitter_blocks + 1) * 64) /
-            down_sampling_factor;
+            estimated_delay_samples->delay / down_sampling_factor;
         EXPECT_NEAR(delay_ds, estimated_delay_ds, 1);
       } else {
         ADD_FAILURE();

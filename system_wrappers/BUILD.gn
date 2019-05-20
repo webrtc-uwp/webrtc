@@ -17,14 +17,12 @@ rtc_static_library("system_wrappers") {
   sources = [
     "include/clock.h",
     "include/cpu_info.h",
-    "include/event_wrapper.h",
     "include/ntp_time.h",
     "include/rtp_to_ntp_estimator.h",
     "include/sleep.h",
     "source/clock.cc",
     "source/cpu_features.cc",
     "source/cpu_info.cc",
-    "source/event.cc",
     "source/rtp_to_ntp_estimator.cc",
     "source/sleep.cc",
   ]
@@ -33,10 +31,7 @@ rtc_static_library("system_wrappers") {
   libs = []
   deps = [
     ":cpu_features_api",
-    ":field_trial_api",
-    ":metrics_api",
-    ":runtime_enabled_features_api",
-    "..:webrtc_common",
+    "../api:array_view",
     "../modules:module_api_public",
     "../rtc_base:checks",
     "../rtc_base/synchronization:rw_lock_wrapper",
@@ -45,8 +40,6 @@ rtc_static_library("system_wrappers") {
   ]
 
   if (is_android) {
-    defines += [ "WEBRTC_THREAD_RR" ]
-
     if (build_with_mozilla) {
       include_dirs = [
         "/config/external/nspr",
@@ -61,8 +54,6 @@ rtc_static_library("system_wrappers") {
   }
 
   if (is_linux) {
-    defines += [ "WEBRTC_THREAD_RR" ]
-
     if (!build_with_chromium) {
       deps += [ ":cpu_features_linux" ]
     }
@@ -70,18 +61,14 @@ rtc_static_library("system_wrappers") {
     libs += [ "rt" ]
   }
 
-  if (is_ios || is_mac) {
-    defines += [ "WEBRTC_THREAD_RR" ]
-  }
-
   if (is_win) {
     if (current_cpu != "arm" && current_cpu != "arm64") {
       libs += [ "winmm.lib" ]
     }
 
-    # Windows needs ../rtc_base:rtc_base due to include of
+    # Windows needs ../rtc_base due to include of
     # webrtc/rtc_base/win32.h in source/clock.cc.
-    deps += [ "../rtc_base:rtc_base" ]
+    deps += [ "../rtc_base" ]
   }
 
   deps += [
@@ -94,16 +81,12 @@ rtc_source_set("cpu_features_api") {
   sources = [
     "include/cpu_features_wrapper.h",
   ]
-  deps = [
-    "..:webrtc_common",
-  ]
 }
 
 rtc_source_set("field_trial") {
   visibility = [ "*" ]
   public = [
     "include/field_trial.h",
-    "include/field_trial_default.h",
   ]
   sources = [
     "source/field_trial.cc",
@@ -111,41 +94,29 @@ rtc_source_set("field_trial") {
   if (rtc_exclude_field_trial_default) {
     defines = [ "WEBRTC_EXCLUDE_FIELD_TRIAL_DEFAULT" ]
   }
+  if (build_with_chromium) {
+    # When WebRTC is built as part of Chromium it should exclude the default
+    # implementation of field_trial unless it is building for NACL or
+    # Chromecast.
+    if (!is_nacl && !is_chromecast) {
+      deps = [
+        "../../webrtc_overrides:field_trial",
+      ]
+    }
+  }
 }
 
-# TODO(bugs.webrtc.org/9631): Remove this as soon as Chromium stop depending
-# on it.
-rtc_source_set("field_trial_api") {
-  public_deps = [  # no-presubmit-check TODO(webrtc:8603)
-    ":field_trial",
+rtc_source_set("event_wrapper") {
+  visibility = [
+    "../modules/video_coding",
+    "../modules/video_coding:video_coding_unittests",
   ]
-}
-
-# TODO(bugs.webrtc.org/9631): Remove this as soon as Chromium stop depending
-# on it.
-rtc_source_set("field_trial_default") {
-  public_deps = [  # no-presubmit-check TODO(webrtc:8603)
-    ":field_trial",
-  ]
-  visibility = [ "*" ]
-}
-
-rtc_source_set("runtime_enabled_features_api") {
-  visibility = [ "*" ]
   sources = [
-    "include/runtime_enabled_features.h",
-  ]
-}
-
-rtc_source_set("runtime_enabled_features_default") {
-  visibility = [ "*" ]
-  configs += [ "..:no_global_constructors" ]
-  sources = [
-    "source/runtime_enabled_features_default.cc",
+    "include/event_wrapper.h",
+    "source/event.cc",
   ]
   deps = [
-    ":runtime_enabled_features_api",
-    "../rtc_base:rtc_base_approved",
+    "../rtc_base:rtc_event",
   ]
 }
 
@@ -153,7 +124,6 @@ rtc_source_set("metrics") {
   visibility = [ "*" ]
   public = [
     "include/metrics.h",
-    "include/metrics_default.h",
   ]
   sources = [
     "source/metrics.cc",
@@ -162,37 +132,12 @@ rtc_source_set("metrics") {
     defines = [ "WEBRTC_EXCLUDE_METRICS_DEFAULT" ]
   }
   deps = [
-    "..:webrtc_common",
     "../rtc_base:checks",
     "../rtc_base:rtc_base_approved",
   ]
-}
-
-# TODO(bugs.webrtc.org/9631): Remove this as soon as Chromium stops depending
-# on it.
-rtc_source_set("metrics_api") {
-  visibility = [ "*" ]
-  public_deps = [  # no-presubmit-check TODO(webrtc:8603)
-    ":metrics",
-  ]
-}
-
-# TODO(bugs.webrtc.org/9631): Remove this as soon as Chromium stops depending
-# on it.
-rtc_source_set("metrics_default") {
-  visibility = [ "*" ]
-  public_deps = [  # no-presubmit-check TODO(webrtc:8603)
-    ":metrics",
-  ]
-}
-
-group("system_wrappers_default") {
-  deps = [
-    ":field_trial_default",
-    ":metrics_default",
-    ":runtime_enabled_features_default",
-    ":system_wrappers",
-  ]
+  if (build_with_chromium) {
+    deps += [ "../../webrtc_overrides:metrics" ]
+  }
 }
 
 if (is_android && !build_with_mozilla) {
@@ -202,7 +147,7 @@ if (is_android && !build_with_mozilla) {
     ]
 
     deps = [
-      "//third_party/android_tools:cpu_features",
+      "//third_party/android_sdk:cpu_features",
     ]
   }
 }
@@ -231,12 +176,12 @@ if (rtc_include_tests) {
     ]
 
     deps = [
-      ":metrics_api",
-      ":metrics_default",
+      ":metrics",
       ":system_wrappers",
-      "..:webrtc_common",
+      "../rtc_base:checks",
       "../rtc_base:rtc_base_approved",
       "../test:test_main",
+      "../test:test_support",
       "//testing/gtest",
     ]
 

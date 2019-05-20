@@ -10,6 +10,7 @@
 
 #include "modules/audio_processing/test/debug_dump_replayer.h"
 
+#include "modules/audio_processing/echo_cancellation_impl.h"
 #include "modules/audio_processing/test/protobuf_utils.h"
 #include "modules/audio_processing/test/runtime_setting_util.h"
 #include "rtc_base/checks.h"
@@ -214,20 +215,29 @@ void DebugDumpReplayer::ConfigureApm(const audioproc::Config& msg) {
 
   RTC_CHECK(msg.has_aec_suppression_level());
   apm_config.echo_canceller.legacy_moderate_suppression_level =
-      static_cast<EchoCancellation::SuppressionLevel>(
+      static_cast<EchoCancellationImpl::SuppressionLevel>(
           msg.aec_suppression_level()) ==
-      EchoCancellation::SuppressionLevel::kModerateSuppression;
+      EchoCancellationImpl::SuppressionLevel::kModerateSuppression;
 
-  RTC_CHECK(msg.has_aecm_comfort_noise_enabled());
-  RTC_CHECK_EQ(AudioProcessing::kNoError,
-               apm_->echo_control_mobile()->enable_comfort_noise(
-                   msg.aecm_comfort_noise_enabled()));
+  // HPF configs.
+  RTC_CHECK(msg.has_hpf_enabled());
+  apm_config.high_pass_filter.enabled = msg.hpf_enabled();
 
-  RTC_CHECK(msg.has_aecm_routing_mode());
-  RTC_CHECK_EQ(AudioProcessing::kNoError,
-               apm_->echo_control_mobile()->set_routing_mode(
-                   static_cast<EchoControlMobile::RoutingMode>(
-                       msg.aecm_routing_mode())));
+  // Preamp configs.
+  RTC_CHECK(msg.has_pre_amplifier_enabled());
+  apm_config.pre_amplifier.enabled = msg.pre_amplifier_enabled();
+  apm_config.pre_amplifier.fixed_gain_factor =
+      msg.pre_amplifier_fixed_gain_factor();
+
+  // NS configs.
+  RTC_CHECK(msg.has_ns_enabled());
+  RTC_CHECK(msg.has_ns_level());
+  apm_config.noise_suppression.enabled = msg.ns_enabled();
+  apm_config.noise_suppression.level =
+      static_cast<AudioProcessing::Config::NoiseSuppression::Level>(
+          msg.ns_level());
+
+  apm_->ApplyConfig(apm_config);
 
   // AGC configs.
   RTC_CHECK(msg.has_agc_enabled());
@@ -242,27 +252,6 @@ void DebugDumpReplayer::ConfigureApm(const audioproc::Config& msg) {
   RTC_CHECK(msg.has_agc_limiter_enabled());
   RTC_CHECK_EQ(AudioProcessing::kNoError,
                apm_->gain_control()->enable_limiter(msg.agc_limiter_enabled()));
-
-  // HPF configs.
-  RTC_CHECK(msg.has_hpf_enabled());
-  apm_config.high_pass_filter.enabled = msg.hpf_enabled();
-
-  // NS configs.
-  RTC_CHECK(msg.has_ns_enabled());
-  RTC_CHECK_EQ(AudioProcessing::kNoError,
-               apm_->noise_suppression()->Enable(msg.ns_enabled()));
-
-  RTC_CHECK(msg.has_ns_level());
-  RTC_CHECK_EQ(AudioProcessing::kNoError,
-               apm_->noise_suppression()->set_level(
-                   static_cast<NoiseSuppression::Level>(msg.ns_level())));
-
-  RTC_CHECK(msg.has_pre_amplifier_enabled());
-  apm_config.pre_amplifier.enabled = msg.pre_amplifier_enabled();
-  apm_config.pre_amplifier.fixed_gain_factor =
-      msg.pre_amplifier_fixed_gain_factor();
-
-  apm_->ApplyConfig(apm_config);
 }
 
 void DebugDumpReplayer::LoadNextMessage() {

@@ -158,11 +158,10 @@ TEST(EchoRemover, BasicEchoRemoval) {
     for (size_t delay_samples : {0, 64, 150, 200, 301}) {
       SCOPED_TRACE(ProduceDebugText(rate, delay_samples));
       EchoCanceller3Config config;
-      config.delay.min_echo_path_delay_blocks = 0;
       std::unique_ptr<EchoRemover> remover(EchoRemover::Create(config, rate));
       std::unique_ptr<RenderDelayBuffer> render_buffer(
           RenderDelayBuffer::Create(config, NumBandsForRate(rate)));
-      render_buffer->SetDelay(delay_samples / kBlockSize);
+      render_buffer->AlignFromDelay(delay_samples / kBlockSize);
 
       std::vector<std::unique_ptr<DelayBuffer<float>>> delay_buffers(x.size());
       for (size_t j = 0; j < x.size(); ++j) {

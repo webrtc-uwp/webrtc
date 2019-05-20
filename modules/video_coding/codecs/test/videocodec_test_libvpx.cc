@@ -12,16 +12,16 @@
 
 #include "absl/memory/memory.h"
 #include "api/test/create_videocodec_test_fixture.h"
+#include "api/test/video/function_video_encoder_factory.h"
 #include "api/video_codecs/sdp_video_format.h"
-#include "media/base/mediaconstants.h"
-#include "media/engine/internaldecoderfactory.h"
-#include "media/engine/internalencoderfactory.h"
+#include "media/base/media_constants.h"
+#include "media/engine/internal_decoder_factory.h"
+#include "media/engine/internal_encoder_factory.h"
 #include "media/engine/simulcast_encoder_adapter.h"
 #include "modules/video_coding/utility/vp8_header_parser.h"
 #include "modules/video_coding/utility/vp9_uncompressed_header_parser.h"
-#include "test/function_video_encoder_factory.h"
 #include "test/gtest.h"
-#include "test/testsupport/fileutils.h"
+#include "test/testsupport/file_utils.h"
 
 namespace webrtc {
 namespace test {
@@ -45,11 +45,9 @@ class QpFrameChecker : public VideoCodecTestFixture::EncodedFrameChecker {
                          const EncodedImage& encoded_frame) const override {
     int qp;
     if (codec == kVideoCodecVP8) {
-      EXPECT_TRUE(
-          vp8::GetQp(encoded_frame._buffer, encoded_frame._length, &qp));
+      EXPECT_TRUE(vp8::GetQp(encoded_frame.data(), encoded_frame.size(), &qp));
     } else if (codec == kVideoCodecVP9) {
-      EXPECT_TRUE(
-          vp9::GetQp(encoded_frame._buffer, encoded_frame._length, &qp));
+      EXPECT_TRUE(vp9::GetQp(encoded_frame.data(), encoded_frame.size(), &qp));
     } else {
       RTC_NOTREACHED();
     }
@@ -63,8 +61,6 @@ VideoCodecTestFixture::Config CreateConfig() {
   config.filepath = ResourcePath(config.filename, "yuv");
   config.num_frames = kNumFramesLong;
   config.use_single_core = true;
-  config.hw_encoder = false;
-  config.hw_decoder = false;
   return config;
 }
 
@@ -92,7 +88,7 @@ void PrintRdPerf(std::map<size_t, std::vector<VideoStatistics>> rd_stats) {
 }
 }  // namespace
 
-#if !defined(RTC_DISABLE_VP9)
+#if defined(RTC_ENABLE_VP9)
 TEST(VideoCodecTestLibvpx, HighBitrateVP9) {
   auto config = CreateConfig();
   config.SetCodecSettings(cricket::kVp9CodecName, 1, 1, 1, false, true, false,
@@ -102,10 +98,10 @@ TEST(VideoCodecTestLibvpx, HighBitrateVP9) {
   config.encoded_frame_checker = frame_checker.get();
   auto fixture = CreateVideoCodecTestFixture(config);
 
-  std::vector<RateProfile> rate_profiles = {{500, 30, kNumFramesShort}};
+  std::vector<RateProfile> rate_profiles = {{500, 30, 0}};
 
   std::vector<RateControlThresholds> rc_thresholds = {
-      {5, 1, 0, 0.11, 0.3, 0.1, 0, 1}};
+      {5, 1, 0, 1, 0.3, 0.1, 0, 1}};
 
   std::vector<QualityThresholds> quality_thresholds = {{37, 36, 0.94, 0.92}};
 
@@ -121,14 +117,14 @@ TEST(VideoCodecTestLibvpx, ChangeBitrateVP9) {
   auto fixture = CreateVideoCodecTestFixture(config);
 
   std::vector<RateProfile> rate_profiles = {
-      {200, 30, 100},  // target_kbps, input_fps, frame_index_rate_update
-      {700, 30, 200},
-      {500, 30, kNumFramesLong}};
+      {200, 30, 0},  // target_kbps, input_fps, frame_num
+      {700, 30, 100},
+      {500, 30, 200}};
 
   std::vector<RateControlThresholds> rc_thresholds = {
-      {5, 1, 0, 0.15, 0.5, 0.1, 0, 1},
-      {15, 2, 0, 0.2, 0.5, 0.1, 0, 0},
-      {10, 1, 0, 0.3, 0.5, 0.1, 0, 0}};
+      {5, 2, 0, 1, 0.5, 0.1, 0, 1},
+      {15, 3, 0, 1, 0.5, 0.1, 0, 0},
+      {11, 2, 0, 1, 0.5, 0.1, 0, 0}};
 
   std::vector<QualityThresholds> quality_thresholds = {
       {34, 33, 0.90, 0.88}, {38, 35, 0.95, 0.91}, {35, 34, 0.93, 0.90}};
@@ -145,19 +141,19 @@ TEST(VideoCodecTestLibvpx, ChangeFramerateVP9) {
   auto fixture = CreateVideoCodecTestFixture(config);
 
   std::vector<RateProfile> rate_profiles = {
-      {100, 24, 100},  // target_kbps, input_fps, frame_index_rate_update
-      {100, 15, 200},
-      {100, 10, kNumFramesLong}};
+      {100, 24, 0},  // target_kbps, input_fps, frame_num
+      {100, 15, 100},
+      {100, 10, 200}};
 
   // Framerate mismatch should be lower for lower framerate.
   std::vector<RateControlThresholds> rc_thresholds = {
-      {10, 2, 40, 0.4, 0.5, 0.2, 0, 1},
-      {8, 2, 5, 0.2, 0.5, 0.2, 0, 0},
-      {5, 2, 0, 0.21, 0.5, 0.3, 0, 0}};
+      {10, 2, 40, 1, 0.5, 0.2, 0, 1},
+      {8, 2, 5, 1, 0.5, 0.2, 0, 0},
+      {5, 2, 0, 1, 0.5, 0.3, 0, 0}};
 
   // Quality should be higher for lower framerates for the same content.
   std::vector<QualityThresholds> quality_thresholds = {
-      {33, 32, 0.89, 0.87}, {33.5, 32, 0.90, 0.86}, {33.5, 31.5, 0.90, 0.85}};
+      {33, 32, 0.88, 0.86}, {33.5, 32, 0.90, 0.86}, {33.5, 31.5, 0.90, 0.85}};
 
   fixture->RunTest(rate_profiles, &rc_thresholds, &quality_thresholds, nullptr);
 }
@@ -171,10 +167,10 @@ TEST(VideoCodecTestLibvpx, DenoiserOnVP9) {
   config.encoded_frame_checker = frame_checker.get();
   auto fixture = CreateVideoCodecTestFixture(config);
 
-  std::vector<RateProfile> rate_profiles = {{500, 30, kNumFramesShort}};
+  std::vector<RateProfile> rate_profiles = {{500, 30, 0}};
 
   std::vector<RateControlThresholds> rc_thresholds = {
-      {5, 1, 0, 0.11, 0.3, 0.1, 0, 1}};
+      {5, 1, 0, 1, 0.3, 0.1, 0, 1}};
 
   std::vector<QualityThresholds> quality_thresholds = {{37.5, 36, 0.94, 0.93}};
 
@@ -189,10 +185,10 @@ TEST(VideoCodecTestLibvpx, VeryLowBitrateVP9) {
   config.encoded_frame_checker = frame_checker.get();
   auto fixture = CreateVideoCodecTestFixture(config);
 
-  std::vector<RateProfile> rate_profiles = {{50, 30, kNumFramesLong}};
+  std::vector<RateProfile> rate_profiles = {{50, 30, 0}};
 
   std::vector<RateControlThresholds> rc_thresholds = {
-      {15, 3, 75, 1.0, 0.5, 0.4, 1, 1}};
+      {15, 3, 75, 1, 0.5, 0.4, 1, 1}};
 
   std::vector<QualityThresholds> quality_thresholds = {{28, 25, 0.80, 0.65}};
 
@@ -202,7 +198,7 @@ TEST(VideoCodecTestLibvpx, VeryLowBitrateVP9) {
 // TODO(marpan): Add temporal layer test for VP9, once changes are in
 // vp9 wrapper for this.
 
-#endif  // !defined(RTC_DISABLE_VP9)
+#endif  // defined(RTC_ENABLE_VP9)
 
 TEST(VideoCodecTestLibvpx, HighBitrateVP8) {
   auto config = CreateConfig();
@@ -213,10 +209,10 @@ TEST(VideoCodecTestLibvpx, HighBitrateVP8) {
   config.encoded_frame_checker = frame_checker.get();
   auto fixture = CreateVideoCodecTestFixture(config);
 
-  std::vector<RateProfile> rate_profiles = {{500, 30, kNumFramesShort}};
+  std::vector<RateProfile> rate_profiles = {{500, 30, 0}};
 
   std::vector<RateControlThresholds> rc_thresholds = {
-      {5, 1, 0, 0.1, 0.2, 0.1, 0, 1}};
+      {5, 1, 0, 1, 0.2, 0.1, 0, 1}};
 
 #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64)
   std::vector<QualityThresholds> quality_thresholds = {{35, 33, 0.91, 0.89}};
@@ -250,14 +246,14 @@ TEST(VideoCodecTestLibvpx, MAYBE_ChangeBitrateVP8) {
   auto fixture = CreateVideoCodecTestFixture(config);
 
   std::vector<RateProfile> rate_profiles = {
-      {200, 30, 100},  // target_kbps, input_fps, frame_index_rate_update
-      {800, 30, 200},
-      {500, 30, kNumFramesLong}};
+      {200, 30, 0},  // target_kbps, input_fps, frame_num
+      {800, 30, 100},
+      {500, 30, 200}};
 
   std::vector<RateControlThresholds> rc_thresholds = {
-      {5, 1, 0, 0.1, 0.2, 0.1, 0, 1},
-      {15.5, 1, 0, 0.1, 0.2, 0.1, 0, 0},
-      {15, 1, 0, 0.3, 0.2, 0.1, 0, 0}};
+      {5, 1, 0, 1, 0.2, 0.1, 0, 1},
+      {15.5, 1, 0, 1, 0.2, 0.1, 0, 0},
+      {15, 1, 0, 1, 0.2, 0.1, 0, 0}};
 
 #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64)
   std::vector<QualityThresholds> quality_thresholds = {
@@ -284,20 +280,20 @@ TEST(VideoCodecTestLibvpx, MAYBE_ChangeFramerateVP8) {
   auto fixture = CreateVideoCodecTestFixture(config);
 
   std::vector<RateProfile> rate_profiles = {
-      {80, 24, 100},  // target_kbps, input_fps, frame_index_rate_update
-      {80, 15, 200},
-      {80, 10, kNumFramesLong}};
+      {80, 24, 0},  // target_kbps, input_fps, frame_index_rate_update
+      {80, 15, 100},
+      {80, 10, 200}};
 
 #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64)
   std::vector<RateControlThresholds> rc_thresholds = {
-      {10, 2, 60, 0.5, 0.3, 0.3, 0, 1},
-      {10, 2, 30, 0.3, 0.3, 0.3, 0, 0},
-      {10, 2, 10, 0.2, 0.3, 0.2, 0, 0}};
+      {10, 2, 60, 1, 0.3, 0.3, 0, 1},
+      {10, 2, 30, 1, 0.3, 0.3, 0, 0},
+      {10, 2, 10, 1, 0.3, 0.2, 0, 0}};
 #else
   std::vector<RateControlThresholds> rc_thresholds = {
-      {10, 2, 20, 0.4, 0.3, 0.1, 0, 1},
-      {5, 2, 5, 0.3, 0.3, 0.1, 0, 0},
-      {4, 2, 1, 0.2, 0.3, 0.2, 0, 0}};
+      {10, 2, 20, 1, 0.3, 0.15, 0, 1},
+      {5, 2, 5, 1, 0.3, 0.15, 0, 0},
+      {4, 2, 1, 1, 0.3, 0.2, 0, 0}};
 #endif
 
 #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64)
@@ -323,15 +319,14 @@ TEST(VideoCodecTestLibvpx, MAYBE_TemporalLayersVP8) {
   config.encoded_frame_checker = frame_checker.get();
   auto fixture = CreateVideoCodecTestFixture(config);
 
-  std::vector<RateProfile> rate_profiles = {{200, 30, 150},
-                                            {400, 30, kNumFramesLong}};
+  std::vector<RateProfile> rate_profiles = {{200, 30, 0}, {400, 30, 150}};
 
 #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64)
   std::vector<RateControlThresholds> rc_thresholds = {
-      {10, 1, 2, 0.3, 0.2, 0.1, 0, 1}, {12, 2, 3, 0.1, 0.2, 0.1, 0, 1}};
+      {10, 1, 2.1, 1, 0.2, 0.1, 0, 1}, {12, 2, 3, 1, 0.2, 0.1, 0, 1}};
 #else
   std::vector<RateControlThresholds> rc_thresholds = {
-      {5, 1, 0, 0.1, 0.2, 0.1, 0, 1}, {10, 2, 0, 0.1, 0.2, 0.1, 0, 1}};
+      {5, 1, 0, 1, 0.2, 0.1, 0, 1}, {10, 2, 0, 1, 0.2, 0.1, 0, 1}};
 #endif
 // Min SSIM drops because of high motion scene with complex backgound (trees).
 #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64)
@@ -344,8 +339,7 @@ TEST(VideoCodecTestLibvpx, MAYBE_TemporalLayersVP8) {
   fixture->RunTest(rate_profiles, &rc_thresholds, &quality_thresholds, nullptr);
 }
 
-// TODO(webrtc:9267): Fails on iOS
-#if defined(WEBRTC_ANDROID) || defined(WEBRTC_IOS)
+#if defined(WEBRTC_ANDROID)
 #define MAYBE_MultiresVP8 DISABLED_MultiresVP8
 #else
 #define MAYBE_MultiresVP8 MultiresVP8
@@ -361,10 +355,14 @@ TEST(VideoCodecTestLibvpx, MAYBE_MultiresVP8) {
   config.encoded_frame_checker = frame_checker.get();
   auto fixture = CreateVideoCodecTestFixture(config);
 
-  std::vector<RateProfile> rate_profiles = {{1500, 30, config.num_frames}};
-
+  std::vector<RateProfile> rate_profiles = {{1500, 30, 0}};
+#if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64)
   std::vector<RateControlThresholds> rc_thresholds = {
-      {5, 1, 5, 0.2, 0.3, 0.1, 0, 1}};
+      {4.1, 1.04, 6, 0.18, 0.14, 0.08, 0, 1}};
+#else
+  std::vector<RateControlThresholds> rc_thresholds = {
+      {5, 1, 5, 1, 0.3, 0.1, 0, 1}};
+#endif
   std::vector<QualityThresholds> quality_thresholds = {{34, 32, 0.90, 0.88}};
 
   fixture->RunTest(rate_profiles, &rc_thresholds, &quality_thresholds, nullptr);
@@ -398,10 +396,10 @@ TEST(VideoCodecTestLibvpx, MAYBE_SimulcastVP8) {
       CreateVideoCodecTestFixture(config, std::move(internal_decoder_factory),
                                   std::move(adapted_encoder_factory));
 
-  std::vector<RateProfile> rate_profiles = {{1500, 30, config.num_frames}};
+  std::vector<RateProfile> rate_profiles = {{1500, 30, 0}};
 
   std::vector<RateControlThresholds> rc_thresholds = {
-      {20, 5, 90, 0.8, 0.5, 0.3, 0, 1}};
+      {20, 5, 90, 1, 0.5, 0.3, 0, 1}};
   std::vector<QualityThresholds> quality_thresholds = {{34, 32, 0.90, 0.88}};
 
   fixture->RunTest(rate_profiles, &rc_thresholds, &quality_thresholds, nullptr);
@@ -423,10 +421,10 @@ TEST(VideoCodecTestLibvpx, MAYBE_SvcVP9) {
   config.encoded_frame_checker = frame_checker.get();
   auto fixture = CreateVideoCodecTestFixture(config);
 
-  std::vector<RateProfile> rate_profiles = {{1500, 30, config.num_frames}};
+  std::vector<RateProfile> rate_profiles = {{1500, 30, 0}};
 
   std::vector<RateControlThresholds> rc_thresholds = {
-      {5, 1, 5, 0.2, 0.3, 0.1, 0, 1}};
+      {5, 1, 5, 1, 0.3, 0.1, 0, 1}};
   std::vector<QualityThresholds> quality_thresholds = {{36, 34, 0.93, 0.90}};
 
   fixture->RunTest(rate_profiles, &rc_thresholds, &quality_thresholds, nullptr);
@@ -446,8 +444,7 @@ TEST(VideoCodecTestLibvpx, DISABLED_MultiresVP8RdPerf) {
 
   std::map<size_t, std::vector<VideoStatistics>> rd_stats;
   for (size_t bitrate_kbps : kBitrateRdPerfKbps) {
-    std::vector<RateProfile> rate_profiles = {
-        {bitrate_kbps, 30, config.num_frames}};
+    std::vector<RateProfile> rate_profiles = {{bitrate_kbps, 30, 0}};
 
     fixture->RunTest(rate_profiles, nullptr, nullptr, nullptr);
 
@@ -473,8 +470,7 @@ TEST(VideoCodecTestLibvpx, DISABLED_SvcVP9RdPerf) {
 
   std::map<size_t, std::vector<VideoStatistics>> rd_stats;
   for (size_t bitrate_kbps : kBitrateRdPerfKbps) {
-    std::vector<RateProfile> rate_profiles = {
-        {bitrate_kbps, 30, config.num_frames}};
+    std::vector<RateProfile> rate_profiles = {{bitrate_kbps, 30, 0}};
 
     fixture->RunTest(rate_profiles, nullptr, nullptr, nullptr);
 

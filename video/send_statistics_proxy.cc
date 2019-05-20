@@ -15,7 +15,7 @@
 #include <limits>
 #include <utility>
 
-#include "common_types.h"  // NOLINT(build/include)
+#include "absl/algorithm/container.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -502,7 +502,7 @@ void SendStatisticsProxy::UmaSamplesContainer::UpdateHistograms(
         RTC_HISTOGRAMS_PERCENTAGE(
             kIndex, uma_prefix_ + "SentPacketsLostInPercent", fraction_lost);
         log_stream << uma_prefix_ << "SentPacketsLostInPercent "
-                   << fraction_lost;
+                   << fraction_lost << "\n";
       }
 
       // The RTCP packet type counters, delivered via the
@@ -674,10 +674,12 @@ void SendStatisticsProxy::OnEncoderReconfigured(
 
 void SendStatisticsProxy::OnEncodedFrameTimeMeasured(int encode_time_ms,
                                                      int encode_usage_percent) {
+  RTC_DCHECK_GE(encode_time_ms, 0);
   rtc::CritScope lock(&crit_);
   uma_container_->encode_time_counter_.Add(encode_time_ms);
   encode_time_.Apply(1.0f, encode_time_ms);
   stats_.avg_encode_time_ms = round(encode_time_.filtered());
+  stats_.total_encode_time_ms += encode_time_ms;
   stats_.encode_usage_percent = encode_usage_percent;
 }
 
@@ -750,13 +752,10 @@ VideoSendStream::StreamStats* SendStatisticsProxy::GetStatsEntry(
   if (it != stats_.substreams.end())
     return &it->second;
 
-  bool is_media = std::find(rtp_config_.ssrcs.begin(), rtp_config_.ssrcs.end(),
-                            ssrc) != rtp_config_.ssrcs.end();
+  bool is_media = absl::c_linear_search(rtp_config_.ssrcs, ssrc);
   bool is_flexfec = rtp_config_.flexfec.payload_type != -1 &&
                     ssrc == rtp_config_.flexfec.ssrc;
-  bool is_rtx =
-      std::find(rtp_config_.rtx.ssrcs.begin(), rtp_config_.rtx.ssrcs.end(),
-                ssrc) != rtp_config_.rtx.ssrcs.end();
+  bool is_rtx = absl::c_linear_search(rtp_config_.rtx.ssrcs, ssrc);
   if (!is_media && !is_flexfec && !is_rtx)
     return nullptr;
 
@@ -823,10 +822,13 @@ void SendStatisticsProxy::UpdateEncoderFallbackStats(
 
   const int64_t now_ms = clock_->TimeInMilliseconds();
   bool is_active = fallback_info->is_active;
-  if (codec_info->codec_name != stats_.encoder_implementation_name) {
+  if (encoder_changed_) {
     // Implementation changed.
-    is_active = strcmp(codec_info->codec_name, kVp8SwCodecName) == 0;
-    if (!is_active && stats_.encoder_implementation_name != kVp8SwCodecName) {
+    const bool last_was_vp8_software =
+        encoder_changed_->previous_encoder_implementation == kVp8SwCodecName;
+    is_active = encoder_changed_->new_encoder_implementation == kVp8SwCodecName;
+    encoder_changed_.reset();
+    if (!is_active && !last_was_vp8_software) {
       // First or not a VP8 SW change, update stats on next call.
       return;
     }
@@ -865,7 +867,7 @@ void SendStatisticsProxy::UpdateFallbackDisabledStats(
   }
 
   if (!IsForcedFallbackPossible(codec_info, simulcast_index) ||
-      strcmp(codec_info->codec_name, kVp8SwCodecName) == 0) {
+      stats_.encoder_implementation_name == kVp8SwCodecName) {
     uma_container_->fallback_info_disabled_.is_possible = false;
     return;
   }
@@ -895,13 +897,9 @@ void SendStatisticsProxy::OnSendEncodedImage(
   rtc::CritScope lock(&crit_);
   ++stats_.frames_encoded;
   if (codec_info) {
-    if (codec_info->codec_name) {
-      UpdateEncoderFallbackStats(
-          codec_info,
-          encoded_image._encodedWidth * encoded_image._encodedHeight,
-          simulcast_idx);
-      stats_.encoder_implementation_name = codec_info->codec_name;
-    }
+    UpdateEncoderFallbackStats(
+        codec_info, encoded_image._encodedWidth * encoded_image._encodedHeight,
+        simulcast_idx);
   }
 
   if (static_cast<size_t>(simulcast_idx) >= rtp_config_.ssrcs.size()) {
@@ -929,7 +927,7 @@ void SendStatisticsProxy::OnSendEncodedImage(
   }
 
   uma_container_->key_frame_counter_.Add(encoded_image._frameType ==
-                                         kVideoFrameKey);
+                                         VideoFrameType::kVideoFrameKey);
 
   if (encoded_image.qp_ != -1) {
     if (!stats_.qp_sum)
@@ -961,7 +959,7 @@ void SendStatisticsProxy::OnSendEncodedImage(
     }
   }
 
-  media_byte_rate_tracker_.AddSamples(encoded_image._length);
+  media_byte_rate_tracker_.AddSamples(encoded_image.size());
 
   // Initialize to current since |is_limited_in_resolution| is only updated
   // when an encoded frame is removed from the EncodedFrameMap.
@@ -979,6 +977,14 @@ void SendStatisticsProxy::OnSendEncodedImage(
     if (quality_downscales_ > 0)
       uma_container_->quality_downscales_counter_.Add(quality_downscales_);
   }
+}
+
+void SendStatisticsProxy::OnEncoderImplementationChanged(
+    const std::string& implementation_name) {
+  rtc::CritScope lock(&crit_);
+  encoder_changed_ = EncoderChangeEvent{stats_.encoder_implementation_name,
+                                        implementation_name};
+  stats_.encoder_implementation_name = implementation_name;
 }
 
 int SendStatisticsProxy::GetInputFrameRate() const {

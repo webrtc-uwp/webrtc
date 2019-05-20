@@ -184,6 +184,16 @@ public class PeerConnectionClientTest implements PeerConnectionEvents {
   }
 
   @Override
+  public void onConnected() {
+    Log.d(TAG, "DTLS Connected");
+  }
+
+  @Override
+  public void onDisconnected() {
+    Log.d(TAG, "DTLS Disconnected");
+  }
+
+  @Override
   public void onPeerConnectionClosed() {
     Log.d(TAG, "PeerConnection closed");
     synchronized (closeEvent) {
@@ -299,7 +309,7 @@ public class PeerConnectionClientTest implements PeerConnectionEvents {
         false, /* saveInputAudioToFile */
         false /* useOpenSLES */, false /* disableBuiltInAEC */, false /* disableBuiltInAGC */,
         false /* disableBuiltInNS */, false /* disableWebRtcAGC */, false /* enableRtcEventLog */,
-        false /* useLegacyAudioDevice */, null /* dataChannelParameters */);
+        null /* dataChannelParameters */);
   }
 
   private VideoCapturer createCameraCapturer(boolean captureToTexture) {
@@ -336,7 +346,7 @@ public class PeerConnectionClientTest implements PeerConnectionEvents {
         false, /* saveInputAudioToFile */
         false /* useOpenSLES */, false /* disableBuiltInAEC */, false /* disableBuiltInAGC */,
         false /* disableBuiltInNS */, false /* disableWebRtcAGC */, false /* enableRtcEventLog */,
-        false /* useLegacyAudioDevice */, null /* dataChannelParameters */);
+        null /* dataChannelParameters */);
   }
 
   @Before

@@ -10,6 +10,8 @@
 
 #include "api/candidate.h"
 
+#include "rtc_base/helpers.h"
+#include "rtc_base/ip_address.h"
 #include "rtc_base/strings/string_builder.h"
 
 namespace cricket {
@@ -121,6 +123,21 @@ bool Candidate::operator==(const Candidate& o) const {
 
 bool Candidate::operator!=(const Candidate& o) const {
   return !(*this == o);
+}
+
+Candidate Candidate::ToSanitizedCopy(bool use_hostname_address,
+                                     bool filter_related_address) const {
+  Candidate copy(*this);
+  if (use_hostname_address) {
+    rtc::SocketAddress hostname_only_addr(address().hostname(),
+                                          address().port());
+    copy.set_address(hostname_only_addr);
+  }
+  if (filter_related_address) {
+    copy.set_related_address(
+        rtc::EmptySocketAddressWithFamily(copy.address().family()));
+  }
+  return copy;
 }
 
 }  // namespace cricket

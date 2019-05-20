@@ -10,14 +10,14 @@
 
 #import "base/RTCEncodedImage.h"
 
-#include "common_video/include/video_frame.h"
+#include "api/video/encoded_image.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 /* Interfaces for converting to/from internal C++ formats. */
 @interface RTCEncodedImage (Private)
 
-- (instancetype)initWithNativeEncodedImage:(webrtc::EncodedImage)encodedImage;
+- (instancetype)initWithNativeEncodedImage:(const webrtc::EncodedImage &)encodedImage;
 - (webrtc::EncodedImage)nativeEncodedImage;
 
 @end

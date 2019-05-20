@@ -12,27 +12,28 @@
 
 #include <assert.h>
 #include <math.h>
-#include <stdlib.h>
 #include <string.h>
-#include <string>
+#include <algorithm>
+#include <cstdint>
 
+#include "absl/types/optional.h"
 #include "modules/video_coding/internal_defines.h"
 #include "modules/video_coding/rtt_filter.h"
+#include "rtc_base/experiments/jitter_upper_bound_experiment.h"
+#include "rtc_base/numerics/safe_conversions.h"
 #include "system_wrappers/include/clock.h"
-#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
+namespace {
+static constexpr uint32_t kStartupDelaySamples = 30;
+static constexpr int64_t kFsAccuStartupSamples = 5;
+static constexpr double kMaxFramerateEstimate = 200.0;
+static constexpr int64_t kNackCountTimeoutMs = 60000;
+static constexpr double kDefaultMaxTimestampDeviationInSigmas = 3.5;
+}  // namespace
 
-enum { kStartupDelaySamples = 30 };
-enum { kFsAccuStartupSamples = 5 };
-enum { kMaxFramerateEstimate = 200 };
-
-VCMJitterEstimator::VCMJitterEstimator(const Clock* clock,
-                                       int32_t vcmId,
-                                       int32_t receiverId)
-    : _vcmId(vcmId),
-      _receiverId(receiverId),
-      _phi(0.97),
+VCMJitterEstimator::VCMJitterEstimator(Clock* clock)
+    : _phi(0.97),
       _psi(0.9999),
       _alphaCountMax(400),
       _thetaLow(0.000001),
@@ -45,7 +46,9 @@ VCMJitterEstimator::VCMJitterEstimator(const Clock* clock,
       _rttFilter(),
       fps_counter_(30),  // TODO(sprang): Use an estimator with limit based on
                          // time, rather than number of samples.
-      low_rate_experiment_(kInit),
+      time_deviation_upper_bound_(
+          JitterUpperBoundExperiment::GetUpperBoundSigmas().value_or(
+              kDefaultMaxTimestampDeviationInSigmas)),
       clock_(clock) {
   Reset();
 }
@@ -58,8 +61,6 @@ VCMJitterEstimator& VCMJitterEstimator::operator=(
     memcpy(_thetaCov, rhs._thetaCov, sizeof(_thetaCov));
     memcpy(_Qcov, rhs._Qcov, sizeof(_Qcov));
 
-    _vcmId = rhs._vcmId;
-    _receiverId = rhs._receiverId;
     _avgFrameSize = rhs._avgFrameSize;
     _varFrameSize = rhs._varFrameSize;
     _maxFrameSize = rhs._maxFrameSize;
@@ -75,11 +76,12 @@ VCMJitterEstimator& VCMJitterEstimator::operator=(
     _latestNackTimestamp = rhs._latestNackTimestamp;
     _nackCount = rhs._nackCount;
     _rttFilter = rhs._rttFilter;
+    clock_ = rhs.clock_;
   }
   return *this;
 }
 
-// Resets the JitterEstimate
+// Resets the JitterEstimate.
 void VCMJitterEstimator::Reset() {
   _theta[0] = 1 / (512e3 / 8);
   _theta[1] = 0;
@@ -102,6 +104,7 @@ void VCMJitterEstimator::Reset() {
   _filterJitterEstimate = 0.0;
   _latestNackTimestamp = 0;
   _nackCount = 0;
+  _latestNackTimestamp = 0;
   _fsSum = 0;
   _fsCount = 0;
   _startupCount = 0;
@@ -113,7 +116,7 @@ void VCMJitterEstimator::ResetNackCount() {
   _nackCount = 0;
 }
 
-// Updates the estimates with the new measurements
+// Updates the estimates with the new measurements.
 void VCMJitterEstimator::UpdateEstimate(int64_t frameDelayMS,
                                         uint32_t frameSizeBytes,
                                         bool incompleteFrame /* = false */) {
@@ -125,27 +128,25 @@ void VCMJitterEstimator::UpdateEstimate(int64_t frameDelayMS,
     _fsSum += frameSizeBytes;
     _fsCount++;
   } else if (_fsCount == kFsAccuStartupSamples) {
-    // Give the frame size filter
+    // Give the frame size filter.
     _avgFrameSize = static_cast<double>(_fsSum) / static_cast<double>(_fsCount);
     _fsCount++;
   }
   if (!incompleteFrame || frameSizeBytes > _avgFrameSize) {
     double avgFrameSize = _phi * _avgFrameSize + (1 - _phi) * frameSizeBytes;
     if (frameSizeBytes < _avgFrameSize + 2 * sqrt(_varFrameSize)) {
-      // Only update the average frame size if this sample wasn't a
-      // key frame
+      // Only update the average frame size if this sample wasn't a key frame.
       _avgFrameSize = avgFrameSize;
     }
     // Update the variance anyway since we want to capture cases where we only
-    // get
-    // key frames.
+    // get key frames.
     _varFrameSize = VCM_MAX(
         _phi * _varFrameSize + (1 - _phi) * (frameSizeBytes - avgFrameSize) *
                                    (frameSizeBytes - avgFrameSize),
         1.0);
   }
 
-  // Update max frameSize estimate
+  // Update max frameSize estimate.
   _maxFrameSize =
       VCM_MAX(_psi * _maxFrameSize, static_cast<double>(frameSizeBytes));
 
@@ -155,24 +156,30 @@ void VCMJitterEstimator::UpdateEstimate(int64_t frameDelayMS,
   }
   _prevFrameSize = frameSizeBytes;
 
-  // Only update the Kalman filter if the sample is not considered
-  // an extreme outlier. Even if it is an extreme outlier from a
-  // delay point of view, if the frame size also is large the
-  // deviation is probably due to an incorrect line slope.
+  // Cap frameDelayMS based on the current time deviation noise.
+  int64_t max_time_deviation_ms =
+      static_cast<int64_t>(time_deviation_upper_bound_ * sqrt(_varNoise) + 0.5);
+  frameDelayMS = std::max(std::min(frameDelayMS, max_time_deviation_ms),
+                          -max_time_deviation_ms);
+
+  // Only update the Kalman filter if the sample is not considered an extreme
+  // outlier. Even if it is an extreme outlier from a delay point of view, if
+  // the frame size also is large the deviation is probably due to an incorrect
+  // line slope.
   double deviation = DeviationFromExpectedDelay(frameDelayMS, deltaFS);
 
   if (fabs(deviation) < _numStdDevDelayOutlier * sqrt(_varNoise) ||
       frameSizeBytes >
           _avgFrameSize + _numStdDevFrameSizeOutlier * sqrt(_varFrameSize)) {
-    // Update the variance of the deviation from the
-    // line given by the Kalman filter
+    // Update the variance of the deviation from the line given by the Kalman
+    // filter.
     EstimateRandomJitter(deviation, incompleteFrame);
-    // Prevent updating with frames which have been congested by a large
-    // frame, and therefore arrives almost at the same time as that frame.
-    // This can occur when we receive a large frame (key frame) which
-    // has been delayed. The next frame is of normal size (delta frame),
-    // and thus deltaFS will be << 0. This removes all frame samples
-    // which arrives after a key frame.
+    // Prevent updating with frames which have been congested by a large frame,
+    // and therefore arrives almost at the same time as that frame.
+    // This can occur when we receive a large frame (key frame) which has been
+    // delayed. The next frame is of normal size (delta frame), and thus deltaFS
+    // will be << 0. This removes all frame samples which arrives after a key
+    // frame.
     if ((!incompleteFrame || deviation >= 0.0) &&
         static_cast<double>(deltaFS) > -0.25 * _maxFrameSize) {
       // Update the Kalman filter with the new data
@@ -191,20 +198,15 @@ void VCMJitterEstimator::UpdateEstimate(int64_t frameDelayMS,
   }
 }
 
-// Updates the nack/packet ratio
+// Updates the nack/packet ratio.
 void VCMJitterEstimator::FrameNacked() {
-  // Wait until _nackLimit retransmissions has been received,
-  // then always add ~1 RTT delay.
-  // TODO(holmer): Should we ever remove the additional delay if the
-  // the packet losses seem to have stopped? We could for instance scale
-  // the number of RTTs to add with the amount of retransmissions in a given
-  // time interval, or similar.
   if (_nackCount < _nackLimit) {
     _nackCount++;
   }
+  _latestNackTimestamp = clock_->TimeInMicroseconds();
 }
 
-// Updates Kalman estimate of the channel
+// Updates Kalman estimate of the channel.
 // The caller is expected to sanity check the inputs.
 void VCMJitterEstimator::KalmanEstimateChannel(int64_t frameDelayMS,
                                                int32_t deltaFSBytes) {
@@ -273,7 +275,7 @@ void VCMJitterEstimator::KalmanEstimateChannel(int64_t frameDelayMS,
   _thetaCov[1][1] = _thetaCov[1][1] * (1 - kalmanGain[1]) -
                     kalmanGain[1] * deltaFSBytes * t01;
 
-  // Covariance matrix, must be positive semi-definite
+  // Covariance matrix, must be positive semi-definite.
   assert(_thetaCov[0][0] + _thetaCov[1][1] >= 0 &&
          _thetaCov[0][0] * _thetaCov[1][1] -
                  _thetaCov[0][1] * _thetaCov[1][0] >=
@@ -281,16 +283,16 @@ void VCMJitterEstimator::KalmanEstimateChannel(int64_t frameDelayMS,
          _thetaCov[0][0] >= 0);
 }
 
-// Calculate difference in delay between a sample and the
-// expected delay estimated by the Kalman filter
+// Calculate difference in delay between a sample and the expected delay
+// estimated by the Kalman filter
 double VCMJitterEstimator::DeviationFromExpectedDelay(
     int64_t frameDelayMS,
     int32_t deltaFSBytes) const {
   return frameDelayMS - (_theta[0] * deltaFSBytes + _theta[1]);
 }
 
-// Estimates the random jitter by calculating the variance of the
-// sample distance from the line given by theta.
+// Estimates the random jitter by calculating the variance of the sample
+// distance from the line given by theta.
 void VCMJitterEstimator::EstimateRandomJitter(double d_dT,
                                               bool incompleteFrame) {
   uint64_t now = clock_->TimeInMicroseconds();
@@ -309,22 +311,20 @@ void VCMJitterEstimator::EstimateRandomJitter(double d_dT,
   if (_alphaCount > _alphaCountMax)
     _alphaCount = _alphaCountMax;
 
-  if (LowRateExperimentEnabled()) {
-    // In order to avoid a low frame rate stream to react slower to changes,
-    // scale the alpha weight relative a 30 fps stream.
-    double fps = GetFrameRate();
-    if (fps > 0.0) {
-      double rate_scale = 30.0 / fps;
-      // At startup, there can be a lot of noise in the fps estimate.
-      // Interpolate rate_scale linearly, from 1.0 at sample #1, to 30.0 / fps
-      // at sample #kStartupDelaySamples.
-      if (_alphaCount < kStartupDelaySamples) {
-        rate_scale =
-            (_alphaCount * rate_scale + (kStartupDelaySamples - _alphaCount)) /
-            kStartupDelaySamples;
-      }
-      alpha = pow(alpha, rate_scale);
+  // In order to avoid a low frame rate stream to react slower to changes,
+  // scale the alpha weight relative a 30 fps stream.
+  double fps = GetFrameRate();
+  if (fps > 0.0) {
+    double rate_scale = 30.0 / fps;
+    // At startup, there can be a lot of noise in the fps estimate.
+    // Interpolate rate_scale linearly, from 1.0 at sample #1, to 30.0 / fps
+    // at sample #kStartupDelaySamples.
+    if (_alphaCount < kStartupDelaySamples) {
+      rate_scale =
+          (_alphaCount * rate_scale + (kStartupDelaySamples - _alphaCount)) /
+          kStartupDelaySamples;
     }
+    alpha = pow(alpha, rate_scale);
   }
 
   double avgNoise = alpha * _avgNoise + (1 - alpha) * d_dT;
@@ -335,8 +335,8 @@ void VCMJitterEstimator::EstimateRandomJitter(double d_dT,
     _varNoise = varNoise;
   }
   if (_varNoise < 1.0) {
-    // The variance should never be zero, since we might get
-    // stuck and consider all samples as outliers.
+    // The variance should never be zero, since we might get stuck and consider
+    // all samples as outliers.
     _varNoise = 1.0;
   }
 }
@@ -349,11 +349,11 @@ double VCMJitterEstimator::NoiseThreshold() const {
   return noiseThreshold;
 }
 
-// Calculates the current jitter estimate from the filtered estimates
+// Calculates the current jitter estimate from the filtered estimates.
 double VCMJitterEstimator::CalculateEstimate() {
   double ret = _theta[0] * (_maxFrameSize - _avgFrameSize) + NoiseThreshold();
 
-  // A very low estimate (or negative) is neglected
+  // A very low estimate (or negative) is neglected.
   if (ret < 1.0) {
     if (_prevEstimate <= 0.01) {
       ret = 1.0;
@@ -386,46 +386,35 @@ void VCMJitterEstimator::UpdateMaxFrameSize(uint32_t frameSizeBytes) {
 // otherwise tries to calculate an estimate.
 int VCMJitterEstimator::GetJitterEstimate(double rttMultiplier) {
   double jitterMS = CalculateEstimate() + OPERATING_SYSTEM_JITTER;
+  uint64_t now = clock_->TimeInMicroseconds();
+
+  if (now - _latestNackTimestamp > kNackCountTimeoutMs * 1000)
+    _nackCount = 0;
+
   if (_filterJitterEstimate > jitterMS)
     jitterMS = _filterJitterEstimate;
   if (_nackCount >= _nackLimit)
     jitterMS += _rttFilter.RttMs() * rttMultiplier;
 
-  if (LowRateExperimentEnabled()) {
-    static const double kJitterScaleLowThreshold = 5.0;
-    static const double kJitterScaleHighThreshold = 10.0;
-    double fps = GetFrameRate();
-    // Ignore jitter for very low fps streams.
-    if (fps < kJitterScaleLowThreshold) {
-      if (fps == 0.0) {
-        return jitterMS;
-      }
-      return 0;
+  static const double kJitterScaleLowThreshold = 5.0;
+  static const double kJitterScaleHighThreshold = 10.0;
+  double fps = GetFrameRate();
+  // Ignore jitter for very low fps streams.
+  if (fps < kJitterScaleLowThreshold) {
+    if (fps == 0.0) {
+      return rtc::checked_cast<int>(std::max(0.0, jitterMS) + 0.5);
     }
-
-    // Semi-low frame rate; scale by factor linearly interpolated from 0.0 at
-    // kJitterScaleLowThreshold to 1.0 at kJitterScaleHighThreshold.
-    if (fps < kJitterScaleHighThreshold) {
-      jitterMS =
-          (1.0 / (kJitterScaleHighThreshold - kJitterScaleLowThreshold)) *
-          (fps - kJitterScaleLowThreshold) * jitterMS;
-    }
+    return 0;
   }
 
-  return static_cast<uint32_t>(jitterMS + 0.5);
-}
-
-bool VCMJitterEstimator::LowRateExperimentEnabled() {
-  if (low_rate_experiment_ == kInit) {
-    std::string group =
-        webrtc::field_trial::FindFullName("WebRTC-ReducedJitterDelay");
-    if (group == "Disabled") {
-      low_rate_experiment_ = kDisabled;
-    } else {
-      low_rate_experiment_ = kEnabled;
-    }
+  // Semi-low frame rate; scale by factor linearly interpolated from 0.0 at
+  // kJitterScaleLowThreshold to 1.0 at kJitterScaleHighThreshold.
+  if (fps < kJitterScaleHighThreshold) {
+    jitterMS = (1.0 / (kJitterScaleHighThreshold - kJitterScaleLowThreshold)) *
+               (fps - kJitterScaleLowThreshold) * jitterMS;
   }
-  return low_rate_experiment_ == kEnabled ? true : false;
+
+  return rtc::checked_cast<int>(std::max(0.0, jitterMS) + 0.5);
 }
 
 double VCMJitterEstimator::GetFrameRate() const {

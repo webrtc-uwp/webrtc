@@ -15,8 +15,8 @@
 #include <vector>
 
 #include "api/audio_codecs/audio_decoder_factory.h"
-#include "rtc_base/refcountedobject.h"
-#include "rtc_base/scoped_ref_ptr.h"
+#include "api/scoped_refptr.h"
+#include "rtc_base/ref_counted_object.h"
 
 namespace webrtc {
 
@@ -111,8 +111,6 @@ class AudioDecoderFactoryT : public AudioDecoderFactory {
 // Whenever it tries to do something, the new factory will try each of the
 // decoder types in the order they were specified in the template argument
 // list, stopping at the first one that claims to be able to do the job.
-//
-// NOTE: This function is still under development and may change without notice.
 //
 // TODO(kwiberg): Point at CreateBuiltinAudioDecoderFactory() for an example of
 // how it is used.

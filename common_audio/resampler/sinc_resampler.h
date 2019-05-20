@@ -14,9 +14,10 @@
 #ifndef COMMON_AUDIO_RESAMPLER_SINC_RESAMPLER_H_
 #define COMMON_AUDIO_RESAMPLER_SINC_RESAMPLER_H_
 
+#include <stddef.h>
 #include <memory>
 
-#include "rtc_base/constructormagic.h"
+#include "rtc_base/constructor_magic.h"
 #include "rtc_base/gtest_prod_util.h"
 #include "rtc_base/memory/aligned_malloc.h"
 #include "rtc_base/system/arch.h"

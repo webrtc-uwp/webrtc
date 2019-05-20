@@ -12,10 +12,10 @@
 
 #include <string.h>
 
-#include "rtc_base/file.h"
 #include "rtc_base/flags.h"
 #include "rtc_base/logging.h"
-#include "test/testsupport/fileutils.h"
+#include "rtc_base/system/file_wrapper.h"
+#include "test/testsupport/file_utils.h"
 
 namespace {
 const std::string& DefaultArtifactPath() {
@@ -24,9 +24,9 @@ const std::string& DefaultArtifactPath() {
 }
 }  // namespace
 
-DEFINE_string(test_artifacts_dir,
-              DefaultArtifactPath().c_str(),
-              "The output folder where test output should be saved.");
+WEBRTC_DEFINE_string(test_artifacts_dir,
+                     DefaultArtifactPath().c_str(),
+                     "The output folder where test output should be saved.");
 
 namespace webrtc {
 namespace test {
@@ -53,10 +53,10 @@ bool WriteToTestArtifactsDir(const char* filename,
     return false;
   }
 
-  rtc::File output =
-      rtc::File::Create(JoinFilename(FLAG_test_artifacts_dir, filename));
+  FileWrapper output = FileWrapper::OpenWriteOnly(
+      JoinFilename(FLAG_test_artifacts_dir, filename));
 
-  return output.IsOpen() && output.Write(buffer, length) == length;
+  return output.is_open() && output.Write(buffer, length);
 }
 
 bool WriteToTestArtifactsDir(const char* filename, const std::string& content) {

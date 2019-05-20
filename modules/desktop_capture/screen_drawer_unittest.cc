@@ -14,12 +14,12 @@
 #include <atomic>
 
 #include "absl/memory/memory.h"
+#include "api/function_view.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/function_view.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/random.h"
-#include "rtc_base/timeutils.h"
+#include "rtc_base/time_utils.h"
 #include "system_wrappers/include/sleep.h"
 #include "test/gtest.h"
 
@@ -140,7 +140,12 @@ TEST(ScreenDrawerTest, DISABLED_DrawRectangles) {
   SleepMs(10000);
 }
 
-TEST(ScreenDrawerTest, TwoScreenDrawerLocks) {
+#if defined(THREAD_SANITIZER)  // bugs.webrtc.org/10019
+#define MAYBE_TwoScreenDrawerLocks DISABLED_TwoScreenDrawerLocks
+#else
+#define MAYBE_TwoScreenDrawerLocks TwoScreenDrawerLocks
+#endif
+TEST(ScreenDrawerTest, MAYBE_TwoScreenDrawerLocks) {
 #if defined(WEBRTC_POSIX)
   // ScreenDrawerLockPosix won't be able to unlink the named semaphore. So use a
   // different semaphore name here to avoid deadlock.

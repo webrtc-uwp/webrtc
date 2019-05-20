@@ -13,7 +13,7 @@
 
 #include <jni.h>
 
-#include "rtc_base/scoped_ref_ptr.h"
+#include "api/scoped_refptr.h"
 #include "rtc_base/thread.h"
 #include "sdk/android/native_api/jni/scoped_java_ref.h"
 
@@ -36,7 +36,8 @@ VideoDecoderFactory* CreateVideoDecoderFactory(
 void* CreateVideoSource(JNIEnv* env,
                         rtc::Thread* signaling_thread,
                         rtc::Thread* worker_thread,
-                        jboolean is_screencast);
+                        jboolean is_screencast,
+                        jboolean align_timestamps);
 
 }  // namespace jni
 }  // namespace webrtc

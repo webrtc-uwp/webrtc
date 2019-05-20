@@ -153,8 +153,6 @@ TEST(MatchedFilter, LagEstimation) {
       EchoCanceller3Config config;
       config.delay.down_sampling_factor = down_sampling_factor;
       config.delay.num_filters = kNumMatchedFilters;
-      config.delay.min_echo_path_delay_blocks = 0;
-      config.delay.api_call_jitter_blocks = 0;
       Decimator capture_decimator(down_sampling_factor);
       DelayBuffer<float> signal_delay_buffer(down_sampling_factor *
                                              delay_samples);
@@ -306,7 +304,7 @@ TEST(MatchedFilter, LagNotUpdatedForLowLevelRender) {
                          config.delay.delay_estimate_smoothing,
                          config.delay.delay_candidate_detection_threshold);
     std::unique_ptr<RenderDelayBuffer> render_delay_buffer(
-        RenderDelayBuffer::Create(config, 3));
+        RenderDelayBuffer::Create(EchoCanceller3Config(), 3));
     Decimator capture_decimator(down_sampling_factor);
 
     // Analyze the correlation between render and capture.

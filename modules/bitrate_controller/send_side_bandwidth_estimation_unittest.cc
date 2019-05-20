@@ -8,12 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <algorithm>
-#include <vector>
-
+#include "modules/bitrate_controller/send_side_bandwidth_estimation.h"
+#include "logging/rtc_event_log/events/rtc_event.h"
 #include "logging/rtc_event_log/events/rtc_event_bwe_update_loss_based.h"
 #include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
-#include "modules/bitrate_controller/send_side_bandwidth_estimation.h"
+#include "test/gmock.h"
 #include "test/gtest.h"
 
 namespace webrtc {
@@ -23,7 +22,7 @@ MATCHER(LossBasedBweUpdateWithBitrateOnly, "") {
     return false;
   }
   auto bwe_event = static_cast<RtcEventBweUpdateLossBased*>(arg);
-  return bwe_event->bitrate_bps_ > 0 && bwe_event->fraction_loss_ == 0;
+  return bwe_event->bitrate_bps() > 0 && bwe_event->fraction_loss() == 0;
 }
 
 MATCHER(LossBasedBweUpdateWithBitrateAndLossFraction, "") {
@@ -31,28 +30,29 @@ MATCHER(LossBasedBweUpdateWithBitrateAndLossFraction, "") {
     return false;
   }
   auto bwe_event = static_cast<RtcEventBweUpdateLossBased*>(arg);
-  return bwe_event->bitrate_bps_ > 0 && bwe_event->fraction_loss_ > 0;
+  return bwe_event->bitrate_bps() > 0 && bwe_event->fraction_loss() > 0;
 }
 
 void TestProbing(bool use_delay_based) {
-  MockRtcEventLog event_log;
+  ::testing::NiceMock<MockRtcEventLog> event_log;
   SendSideBandwidthEstimation bwe(&event_log);
-  bwe.SetMinMaxBitrate(100000, 1500000);
-  bwe.SetSendBitrate(200000);
+  int64_t now_ms = 0;
+  bwe.SetMinMaxBitrate(DataRate::bps(100000), DataRate::bps(1500000));
+  bwe.SetSendBitrate(DataRate::bps(200000), Timestamp::ms(now_ms));
 
   const int kRembBps = 1000000;
   const int kSecondRembBps = kRembBps + 500000;
-  int64_t now_ms = 0;
 
-  bwe.UpdateReceiverBlock(0, 50, 1, now_ms);
+  bwe.UpdateReceiverBlock(0, TimeDelta::ms(50), 1, Timestamp::ms(now_ms));
 
   // Initial REMB applies immediately.
   if (use_delay_based) {
-    bwe.UpdateDelayBasedEstimate(now_ms, kRembBps);
+    bwe.UpdateDelayBasedEstimate(Timestamp::ms(now_ms),
+                                 DataRate::bps(kRembBps));
   } else {
-    bwe.UpdateReceiverEstimate(now_ms, kRembBps);
+    bwe.UpdateReceiverEstimate(Timestamp::ms(now_ms), DataRate::bps(kRembBps));
   }
-  bwe.UpdateEstimate(now_ms);
+  bwe.UpdateEstimate(Timestamp::ms(now_ms));
   int bitrate;
   uint8_t fraction_loss;
   int64_t rtt;
@@ -62,11 +62,13 @@ void TestProbing(bool use_delay_based) {
   // Second REMB doesn't apply immediately.
   now_ms += 2001;
   if (use_delay_based) {
-    bwe.UpdateDelayBasedEstimate(now_ms, kSecondRembBps);
+    bwe.UpdateDelayBasedEstimate(Timestamp::ms(now_ms),
+                                 DataRate::bps(kSecondRembBps));
   } else {
-    bwe.UpdateReceiverEstimate(now_ms, kSecondRembBps);
+    bwe.UpdateReceiverEstimate(Timestamp::ms(now_ms),
+                               DataRate::bps(kSecondRembBps));
   }
-  bwe.UpdateEstimate(now_ms);
+  bwe.UpdateEstimate(Timestamp::ms(now_ms));
   bitrate = 0;
   bwe.CurrentEstimate(&bitrate, &fraction_loss, &rtt);
   EXPECT_EQ(kRembBps, bitrate);
@@ -86,17 +88,18 @@ TEST(SendSideBweTest, DoesntReapplyBitrateDecreaseWithoutFollowingRemb) {
       .Times(1);
   EXPECT_CALL(event_log,
               LogProxy(LossBasedBweUpdateWithBitrateAndLossFraction()))
-      .Times(2);
+      .Times(1);
   SendSideBandwidthEstimation bwe(&event_log);
   static const int kMinBitrateBps = 100000;
   static const int kInitialBitrateBps = 1000000;
-  bwe.SetMinMaxBitrate(kMinBitrateBps, 1500000);
-  bwe.SetSendBitrate(kInitialBitrateBps);
+  int64_t now_ms = 1000;
+  bwe.SetMinMaxBitrate(DataRate::bps(kMinBitrateBps), DataRate::bps(1500000));
+  bwe.SetSendBitrate(DataRate::bps(kInitialBitrateBps), Timestamp::ms(now_ms));
 
   static const uint8_t kFractionLoss = 128;
   static const int64_t kRttMs = 50;
+  now_ms += 10000;
 
-  int64_t now_ms = 0;
   int bitrate_bps;
   uint8_t fraction_loss;
   int64_t rtt_ms;
@@ -106,10 +109,11 @@ TEST(SendSideBweTest, DoesntReapplyBitrateDecreaseWithoutFollowingRemb) {
   EXPECT_EQ(0, rtt_ms);
 
   // Signal heavy loss to go down in bitrate.
-  bwe.UpdateReceiverBlock(kFractionLoss, kRttMs, 100, now_ms);
+  bwe.UpdateReceiverBlock(kFractionLoss, TimeDelta::ms(kRttMs), 100,
+                          Timestamp::ms(now_ms));
   // Trigger an update 2 seconds later to not be rate limited.
   now_ms += 1000;
-  bwe.UpdateEstimate(now_ms);
+  bwe.UpdateEstimate(Timestamp::ms(now_ms));
 
   bwe.CurrentEstimate(&bitrate_bps, &fraction_loss, &rtt_ms);
   EXPECT_LT(bitrate_bps, kInitialBitrateBps);
@@ -127,7 +131,7 @@ TEST(SendSideBweTest, DoesntReapplyBitrateDecreaseWithoutFollowingRemb) {
   // Trigger an update 2 seconds later to not be rate limited (but it still
   // shouldn't update).
   now_ms += 1000;
-  bwe.UpdateEstimate(now_ms);
+  bwe.UpdateEstimate(Timestamp::ms(now_ms));
   bwe.CurrentEstimate(&bitrate_bps, &fraction_loss, &rtt_ms);
 
   EXPECT_EQ(last_bitrate_bps, bitrate_bps);
@@ -150,16 +154,18 @@ TEST(SendSideBweTest, SettingSendBitrateOverridesDelayBasedEstimate) {
   uint8_t fraction_loss;
   int64_t rtt_ms;
 
-  bwe.SetMinMaxBitrate(kMinBitrateBps, kMaxBitrateBps);
-  bwe.SetSendBitrate(kInitialBitrateBps);
+  bwe.SetMinMaxBitrate(DataRate::bps(kMinBitrateBps),
+                       DataRate::bps(kMaxBitrateBps));
+  bwe.SetSendBitrate(DataRate::bps(kInitialBitrateBps), Timestamp::ms(now_ms));
 
-  bwe.UpdateDelayBasedEstimate(now_ms, kDelayBasedBitrateBps);
-  bwe.UpdateEstimate(now_ms);
+  bwe.UpdateDelayBasedEstimate(Timestamp::ms(now_ms),
+                               DataRate::bps(kDelayBasedBitrateBps));
+  bwe.UpdateEstimate(Timestamp::ms(now_ms));
   bwe.CurrentEstimate(&bitrate_bps, &fraction_loss, &rtt_ms);
   EXPECT_GE(bitrate_bps, kInitialBitrateBps);
   EXPECT_LE(bitrate_bps, kDelayBasedBitrateBps);
 
-  bwe.SetSendBitrate(kForcedHighBitrate);
+  bwe.SetSendBitrate(DataRate::bps(kForcedHighBitrate), Timestamp::ms(now_ms));
   bwe.CurrentEstimate(&bitrate_bps, &fraction_loss, &rtt_ms);
   EXPECT_EQ(bitrate_bps, kForcedHighBitrate);
 }

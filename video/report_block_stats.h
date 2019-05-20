@@ -11,10 +11,11 @@
 #ifndef VIDEO_REPORT_BLOCK_STATS_H_
 #define VIDEO_REPORT_BLOCK_STATS_H_
 
+#include <stdint.h>
 #include <map>
 #include <vector>
 
-#include "common_types.h"  // NOLINT(build/include)
+#include "modules/rtp_rtcp/include/rtcp_statistics.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
 namespace webrtc {

@@ -68,6 +68,7 @@
 /xcodebuild
 /third_party/ortc
 /chromium
+/.vscode
 !webrtc/*
 /WEBRTC_BUILD
 /OUTPUT

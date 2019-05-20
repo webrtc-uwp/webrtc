@@ -10,6 +10,7 @@
 
 #include <algorithm>
 
+#include "absl/memory/memory.h"
 #include "audio/test/audio_end_to_end_test.h"
 #include "call/fake_network_pipe.h"
 #include "call/simulated_network.h"
@@ -28,8 +29,8 @@ constexpr int kSampleRate = 48000;
 AudioEndToEndTest::AudioEndToEndTest()
     : EndToEndTest(CallTest::kDefaultTimeoutMs) {}
 
-DefaultNetworkSimulationConfig AudioEndToEndTest::GetNetworkPipeConfig() const {
-  return DefaultNetworkSimulationConfig();
+BuiltInNetworkBehaviorConfig AudioEndToEndTest::GetNetworkPipeConfig() const {
+  return BuiltInNetworkBehaviorConfig();
 }
 
 size_t AudioEndToEndTest::GetNumVideoStreams() const {

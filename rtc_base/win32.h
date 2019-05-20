@@ -49,24 +49,13 @@ int win32_inet_pton(int af, const char* src, void* dst);
 // Convert a Utf8 path representation to a non-length-limited Unicode pathname.
 bool Utf8ToWindowsFilename(const std::string& utf8, std::wstring* filename);
 
-#ifdef WINUWP
-inline bool IsWindowsVistaOrLater() {
-    return true;
-}
-
-inline bool IsWindowsXpOrLater() {
-    return true;
-}
-
-inline bool IsWindows8OrLater() {
-    return true;
-}
-#else /* WINUWP */
 enum WindowsMajorVersions {
   kWindows2000 = 5,
   kWindowsVista = 6,
   kWindows10 = 10,
 };
+
+#if !defined(WINUWP)
 bool GetOsVersion(int* major, int* minor, int* build);
 
 inline bool IsWindowsVistaOrLater() {
@@ -85,9 +74,6 @@ inline bool IsWindows8OrLater() {
   return (GetOsVersion(&major, &minor, nullptr) &&
           (major > kWindowsVista || (major == kWindowsVista && minor >= 2)));
 }
-#endif /* WINUWP */
-
-#ifndef WINUWP
 
 inline bool IsWindows10OrLater() {
   int major;
@@ -103,15 +89,35 @@ inline bool IsCurrentProcessLowIntegrity() {
           level < SECURITY_MANDATORY_MEDIUM_RID);
 }
 
-#else /* ndef WINUWP */
+#else
 
-inline bool IsCurrentProcessLowIntegrity() {
-  // Assume this is NOT a low integrity level run as application privileges
-  // can be requested in manifest as appropriate.
-  return false;
+
+// When targetting WinUWP the OS must be Windows 10 (or greater) as lesser
+// Windows OS targets are not supported.
+inline bool IsWindowsVistaOrLater() {
+  return true;
 }
 
-#endif /* ndef WINUWP */
+inline bool IsWindowsXpOrLater() {
+  return true;
+}
+
+inline bool IsWindows8OrLater() {
+  return true;
+}
+
+inline bool IsWindows10OrLater() {
+  return true;
+}
+
+inline bool IsCurrentProcessLowIntegrity() {
+  // For WinUWP sandboxed store assume this is NOT a low integrity level run
+  // as application privileges can be requested in manifest as appropriate.
+  return true;
+}
+
+#endif  // !defined(WINUWP)
+
 
 }  // namespace rtc
 

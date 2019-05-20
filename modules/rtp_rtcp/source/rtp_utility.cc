@@ -10,11 +10,21 @@
 
 #include "modules/rtp_rtcp/source/rtp_utility.h"
 
+#include <assert.h>
+#include <stddef.h>
+#include <string>
+
+#include "api/array_view.h"
+#include "api/video/video_content_type.h"
+#include "api/video/video_frame_marking.h"
+#include "api/video/video_rotation.h"
+#include "api/video/video_timing.h"
 #include "modules/rtp_rtcp/include/rtp_cvo.h"
 #include "modules/rtp_rtcp/source/byte_io.h"
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
+#include "modules/video_coding/codecs/interface/common_constants.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/stringutils.h"
 
 namespace webrtc {
 
@@ -32,10 +42,6 @@ enum {
 /*
  * Misc utility routines
  */
-
-bool StringCompare(const char* str1, const char* str2, const uint32_t length) {
-  return _strnicmp(str1, str2, length) == 0;
-}
 
 size_t Word32Align(size_t size) {
   uint32_t remainder = size % 4;
@@ -151,9 +157,9 @@ bool RtpHeaderParser::ParseRtcp(RTPHeader* header) const {
   return true;
 }
 
-bool RtpHeaderParser::Parse(
-    RTPHeader* header,
-    const RtpHeaderExtensionMap* ptrExtensionMap) const {
+bool RtpHeaderParser::Parse(RTPHeader* header,
+                            const RtpHeaderExtensionMap* ptrExtensionMap,
+                            bool header_only) const {
   const ptrdiff_t length = _ptrRTPDataEnd - _ptrRTPDataBegin;
   if (length < kRtpMinParseLength) {
     return false;
@@ -197,7 +203,7 @@ bool RtpHeaderParser::Parse(
   header->timestamp = RTPTimestamp;
   header->ssrc = SSRC;
   header->numCSRCs = CC;
-  if (!P) {
+  if (!P || header_only) {
     header->paddingLength = 0;
   }
 
@@ -281,7 +287,7 @@ bool RtpHeaderParser::Parse(
   if (header->headerLength > static_cast<size_t>(length))
     return false;
 
-  if (P) {
+  if (P && !header_only) {
     // Packet has padding.
     if (header->headerLength != static_cast<size_t>(length)) {
       // Packet is not header only. We can parse padding length now.
@@ -428,6 +434,10 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
           header->extension.hasTransportSequenceNumber = true;
           break;
         }
+        case kRtpExtensionTransportSequenceNumber02:
+          RTC_LOG(WARNING) << "TransportSequenceNumberV2 unsupported by rtp "
+                              "header parser.";
+          break;
         case kRtpExtensionPlayoutDelay: {
           if (len != 2) {
             RTC_LOG(LS_WARNING) << "Incorrect playout delay len: " << len;
@@ -485,21 +495,40 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
           break;
         }
         case kRtpExtensionRtpStreamId: {
-          header->extension.stream_id.Set(rtc::MakeArrayView(ptr, len + 1));
+          std::string name(reinterpret_cast<const char*>(ptr), len + 1);
+          if (IsLegalRsidName(name)) {
+            header->extension.stream_id = name;
+          } else {
+            RTC_LOG(LS_WARNING) << "Incorrect RtpStreamId";
+          }
           break;
         }
         case kRtpExtensionRepairedRtpStreamId: {
-          header->extension.repaired_stream_id.Set(
-              rtc::MakeArrayView(ptr, len + 1));
+          std::string name(reinterpret_cast<const char*>(ptr), len + 1);
+          if (IsLegalRsidName(name)) {
+            header->extension.repaired_stream_id = name;
+          } else {
+            RTC_LOG(LS_WARNING) << "Incorrect RepairedRtpStreamId";
+          }
           break;
         }
         case kRtpExtensionMid: {
-          header->extension.mid.Set(rtc::MakeArrayView(ptr, len + 1));
+          std::string name(reinterpret_cast<const char*>(ptr), len + 1);
+          if (IsLegalMidName(name)) {
+            header->extension.mid = name;
+          } else {
+            RTC_LOG(LS_WARNING) << "Incorrect Mid";
+          }
           break;
         }
-        case kRtpExtensionGenericFrameDescriptor:
+        case kRtpExtensionGenericFrameDescriptor00:
+        case kRtpExtensionGenericFrameDescriptor01:
           RTC_LOG(WARNING)
               << "RtpGenericFrameDescriptor unsupported by rtp header parser.";
+          break;
+        case kRtpExtensionColorSpace:
+          RTC_LOG(WARNING)
+              << "RtpExtensionColorSpace unsupported by rtp header parser.";
           break;
         case kRtpExtensionNone:
         case kRtpExtensionNumberOfExtensions: {

@@ -44,7 +44,6 @@ TEST(ResidualEchoEstimator, NullResidualEchoPowerOutput) {
 TEST(ResidualEchoEstimator, DISABLED_BasicTest) {
   EchoCanceller3Config config;
   config.ep_strength.default_len = 0.f;
-  config.delay.min_echo_path_delay_blocks = 0;
   ResidualEchoEstimator estimator(config);
   AecState aec_state(config);
   std::unique_ptr<RenderDelayBuffer> render_delay_buffer(

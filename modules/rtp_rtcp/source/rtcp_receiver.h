@@ -17,10 +17,11 @@
 #include <string>
 #include <vector>
 
+#include "modules/rtp_rtcp/include/rtcp_statistics.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtcp_nack_stats.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/dlrr.h"
-#include "rtc_base/criticalsection.h"
+#include "rtc_base/critical_section.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/ntp_time.h"
 
@@ -54,8 +55,10 @@ class RTCPReceiver {
                RtcpPacketTypeCounterObserver* packet_type_counter_observer,
                RtcpBandwidthObserver* rtcp_bandwidth_observer,
                RtcpIntraFrameObserver* rtcp_intra_frame_observer,
+               RtcpLossNotificationObserver* rtcp_loss_notification_observer,
                TransportFeedbackObserver* transport_feedback_observer,
                VideoBitrateAllocationObserver* bitrate_allocation_observer,
+               int report_interval_ms,
                ModuleRtpRtcp* owner);
   virtual ~RTCPReceiver();
 
@@ -94,13 +97,13 @@ class RTCPReceiver {
 
   // Returns true if we haven't received an RTCP RR for several RTCP
   // intervals, but only triggers true once.
-  bool RtcpRrTimeout(int64_t rtcp_interval_ms);
+  bool RtcpRrTimeout();
 
   // Returns true if we haven't received an RTCP RR telling the receive side
   // has not received RTP packets for too long, i.e. extended highest sequence
   // number hasn't increased for several RTCP intervals. The function only
   // returns true once until a new RR is received.
-  bool RtcpRrSequenceNumberTimeout(int64_t rtcp_interval_ms);
+  bool RtcpRrSequenceNumberTimeout();
 
   std::vector<rtcp::TmmbItem> TmmbrReceived();
   // Return true if new bandwidth should be set.
@@ -213,8 +216,10 @@ class RTCPReceiver {
   rtc::CriticalSection feedbacks_lock_;
   RtcpBandwidthObserver* const rtcp_bandwidth_observer_;
   RtcpIntraFrameObserver* const rtcp_intra_frame_observer_;
+  RtcpLossNotificationObserver* const rtcp_loss_notification_observer_;
   TransportFeedbackObserver* const transport_feedback_observer_;
   VideoBitrateAllocationObserver* const bitrate_allocation_observer_;
+  const int report_interval_ms_;
 
   rtc::CriticalSection rtcp_receiver_lock_;
   uint32_t main_ssrc_ RTC_GUARDED_BY(rtcp_receiver_lock_);
