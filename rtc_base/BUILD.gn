@@ -377,7 +377,6 @@ rtc_source_set("deprecation") {
   ]
 }
 
-<<<<<<< HEAD
 # The subset of rtc_base approved for use outside of libjingle.
 rtc_source_set("rtc_base_approved_generic") {
   visibility = [
@@ -397,7 +396,6 @@ rtc_source_set("rtc_base_approved_generic") {
     ":macromagic",
     ":platform_thread",
     ":platform_thread_types",
-    ":ptr_util",
     ":refcount",
     ":rtc_event",
     ":rtc_task_queue",
@@ -495,8 +493,6 @@ rtc_source_set("rtc_base_approved_generic") {
   }
 }
 
-=======
->>>>>>> webrtc/m75-patched
 if (is_mac && !build_with_chromium) {
   rtc_source_set("logging_mac") {
     visibility = [ ":logging" ]
@@ -1026,8 +1022,8 @@ rtc_static_library("rtc_base") {
     ]
     if (current_os == "winuwp") {
       sources -= [
-        "win32window.cc",
-        "win32window.h",
+        "win32_window.cc",
+        "win32_window.h",
       ]
     }
 

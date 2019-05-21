@@ -28,10 +28,6 @@ group("modules") {
   if (rtc_desktop_capture_supported) {
     deps += [ "desktop_capture" ]
   }
-  
-  if (current_os == "winuwp") {
-    deps -= [ "desktop_capture" ]
-  }
 }
 
 rtc_source_set("module_api_public") {

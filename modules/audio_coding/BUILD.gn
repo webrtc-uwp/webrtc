@@ -1059,8 +1059,6 @@ rtc_static_library("neteq") {
     "../../rtc_base:safe_minmax",
     "../../rtc_base:sanitizer",
     "../../rtc_base/system:fallthrough",
-    "../../system_wrappers:field_trial_api",
-    "../../system_wrappers:metrics_api",
     rtc_opus_dir,
     "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/strings",
