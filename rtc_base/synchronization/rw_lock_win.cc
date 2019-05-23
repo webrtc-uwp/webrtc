@@ -55,7 +55,6 @@ void RWLockWin::ReleaseLockShared() {
   release_srw_lock_shared(&lock_);
 }
 
-#ifndef WINUWP
 bool RWLockWin::LoadModule() {
   static bool module_load_attempted = false;
   static bool native_rw_locks_supported = false;
@@ -103,23 +102,5 @@ bool RWLockWin::LoadModule() {
 #endif  // !defined(WINUWP)
   return native_rw_locks_supported;
 }
-#else // ndef WINUWP
-// Those symbols are present on WinUWP, map them directly.
-bool RWLockWin::LoadModule() {
-  if (module_load_attempted) {
-    return native_rw_locks_supported;
-  }
-  module_load_attempted = true;
-
-  initialize_srw_lock = InitializeSRWLock;
-  acquire_srw_lock_exclusive = AcquireSRWLockExclusive;
-  release_srw_lock_exclusive = ReleaseSRWLockExclusive;
-  acquire_srw_lock_shared = AcquireSRWLockShared;
-  release_srw_lock_shared = ReleaseSRWLockShared;
-
-  native_rw_locks_supported = true;
-  return native_rw_locks_supported;
-}
-#endif // ndef WINUWP
 
 }  // namespace webrtc

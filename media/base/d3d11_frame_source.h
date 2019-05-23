@@ -11,8 +11,8 @@
 #ifndef WEBRTC_D3D11VIDEOFRAMESOURCE
 #define WEBRTC_D3D11VIDEOFRAMESOURCE
 
-#include "media/base/adaptedvideotracksource.h"
-#include "rtc_base/asyncinvoker.h"
+#include "media/base/adapted_video_track_source.h"
+#include "rtc_base/async_invoker.h"
 
 #include <winrt/base.h>
 #include <d3d11.h>

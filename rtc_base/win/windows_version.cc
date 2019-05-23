@@ -22,8 +22,6 @@
 
 #if !defined(WINUWP)
 
-#ifndef WINUWP
-
 namespace {
 
 typedef BOOL(WINAPI* GetProductInfoPtr)(DWORD, DWORD, DWORD, DWORD, PDWORD);
@@ -167,11 +165,7 @@ class RegKey {
 
 }  // namespace
 
-<<<<<<< HEAD
-#endif // ndef WINUWP
-=======
 #endif  // !defined(WINUWP)
->>>>>>> webrtc/m75-patched
 
 namespace rtc {
 namespace rtc_win {
@@ -223,16 +217,10 @@ Version MajorMinorBuildToVersion(int major, int minor, int build) {
 // this undocumented value appears to be similar to a patch number.
 // Returns 0 if the value does not exist or it could not be read.
 int GetUBR() {
-<<<<<<< HEAD
-#ifdef WINUWP
-  return 0;
-#else // WINUWP
-=======
 #if defined(WINUWP)
   // The registry is not accessible for WinUWP sandboxed store applications.
   return 0;
 #else
->>>>>>> webrtc/m75-patched
   // The values under the CurrentVersion registry hive are mirrored under
   // the corresponding Wow6432 hive.
   static constexpr wchar_t kRegKeyWindowsNTCurrentVersion[] =
@@ -248,11 +236,7 @@ int GetUBR() {
   key.ReadValueDW(L"UBR", &ubr);
 
   return static_cast<int>(ubr);
-<<<<<<< HEAD
-#endif // WINUWP
-=======
 #endif  // defined(WINUWP)
->>>>>>> webrtc/m75-patched
 }
 
 }  // namespace
@@ -310,7 +294,6 @@ OSInfo::OSInfo()
   }
   processors_ = system_info.dwNumberOfProcessors;
   allocation_granularity_ = system_info.dwAllocationGranularity;
-
 
 #if !defined(WINUWP)
   GetProductInfoPtr get_product_info;
@@ -425,6 +408,7 @@ OSInfo::WOW64Status OSInfo::GetWOW64StatusForProcess(HANDLE process_handle) {
   if (!is_wow64_process)
     return WOW64_DISABLED;
   if (!(*is_wow64_process)(process_handle, &is_wow64))
+    return WOW64_UNKNOWN;
 #endif  // defined(WINUWP)
   return is_wow64 ? WOW64_ENABLED : WOW64_DISABLED;
 }

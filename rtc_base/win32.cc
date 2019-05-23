@@ -366,7 +366,6 @@ bool Utf8ToWindowsFilename(const std::string& utf8, std::wstring* filename) {
   }
   filename->assign(start);
 #endif  // defined(WINUWP)
->>>>>>> webrtc/m75-patched
 
   return true;
 }
@@ -413,8 +412,6 @@ bool GetCurrentProcessIntegrityLevel(int* level) {
   }
   return ret;
 }
-#endif //ndef WINUWP
-
 #endif  // !defined(WINUWP)
 
 }  // namespace rtc

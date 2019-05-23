@@ -15,7 +15,7 @@
 #include <winrt/base.h>
 
 #include "api/video/video_frame_buffer.h"
-#include "rtc_base/refcountedobject.h"
+#include "rtc_base/ref_counted_object.h"
 
 namespace webrtc {
     class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {

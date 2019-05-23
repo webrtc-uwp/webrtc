@@ -26,6 +26,9 @@
 #include <mmsystem.h>
 #include <sys/timeb.h>
 // clang-format on
+#if defined(WINUWP)
+#include "rtc_base/numerics/safe_conversions.h"
+#endif
 #endif
 
 #include "rtc_base/checks.h"

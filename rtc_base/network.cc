@@ -9,7 +9,7 @@
  */
 
 #include "rtc_base/network.h"
-#include "rtc_base/nethelpers.h"
+//#include "rtc_base/nethelpers.h"
 
 #if defined(WEBRTC_POSIX)
 // linux/if.h can't be included at the same time as the posix sys/if.h, and
@@ -763,7 +763,6 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
   }
   return true;
 }
-
 #endif  // WEBRTC_WIN
 
 #if defined(WEBRTC_LINUX)
