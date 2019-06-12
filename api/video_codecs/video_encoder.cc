@@ -146,4 +146,6 @@ VideoEncoder::EncoderInfo VideoEncoder::GetEncoderInfo() const {
   return EncoderInfo();
 }
 
+VideoEncoder::LossNotification::LossNotification() {}
+VideoEncoder::LossNotification::~LossNotification() {}
 }  // namespace webrtc

@@ -36,6 +36,8 @@ RTPHeaderExtension::RTPHeaderExtension(const RTPHeaderExtension& other) =
 RTPHeaderExtension& RTPHeaderExtension::operator=(
     const RTPHeaderExtension& other) = default;
 
+RTPHeaderExtension::~RTPHeaderExtension() { }
+
 RTPHeader::RTPHeader()
     : markerBit(false),
       payloadType(0),

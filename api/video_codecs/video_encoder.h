@@ -217,6 +217,8 @@ class RTC_EXPORT VideoEncoder {
   };
 
   struct LossNotification {
+    LossNotification();
+    ~LossNotification();
     // The timestamp of the last decodable frame *prior* to the last received.
     // (The last received - described below - might itself be decodable or not.)
     uint32_t timestamp_of_last_decodable;

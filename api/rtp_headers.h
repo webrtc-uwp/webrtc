@@ -39,6 +39,7 @@ struct FeedbackRequest {
 
 struct RTPHeaderExtension {
   RTPHeaderExtension();
+  ~RTPHeaderExtension();
   RTPHeaderExtension(const RTPHeaderExtension& other);
   RTPHeaderExtension& operator=(const RTPHeaderExtension& other);
 
