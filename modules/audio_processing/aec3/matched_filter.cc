@@ -13,7 +13,11 @@
 #include "rtc_base/system/arch.h"
 
 #if defined(WEBRTC_HAS_NEON)
-#include <arm_neon.h>
+# if !defined(__clang__) && defined(_MSC_VER) && defined(_M_ARM64)
+#   include <arm64_neon.h>
+# else
+#   include <arm_neon.h>
+# endif
 #endif
 #if defined(WEBRTC_ARCH_X86_FAMILY)
 #include <emmintrin.h>

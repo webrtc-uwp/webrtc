@@ -10,7 +10,11 @@
 
 #include "modules/audio_processing/aecm/aecm_core.h"
 
-#include <arm_neon.h>
+# if !defined(__clang__) && defined(_MSC_VER) && defined(_M_ARM64)
+#   include <arm64_neon.h>
+# else
+#   include <arm_neon.h>
+# endif
 
 #include "common_audio/signal_processing/include/real_fft.h"
 #include "rtc_base/checks.h"

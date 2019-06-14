@@ -14,7 +14,12 @@
  * Based on aec_core_sse2.c.
  */
 
-#include <arm_neon.h>
+# if !defined(__clang__) && defined(_MSC_VER) && defined(_M_ARM64)
+#   include <arm64_neon.h>
+# else
+#   include <arm_neon.h>
+# endif
+
 #include <math.h>
 #include <string.h>  // memset
 

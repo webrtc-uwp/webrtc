@@ -13,7 +13,11 @@
 // WebRtcIsacfix_AllpassFilter2FixDec16C() in filterbanks.c. Prototype
 // C code is at end of this file.
 
-#include <arm_neon.h>
+# if !defined(__clang__) && defined(_MSC_VER) && defined(_M_ARM64)
+#   include <arm64_neon.h>
+# else
+#   include <arm_neon.h>
+# endif
 
 #include "modules/audio_coding/codecs/isac/fix/source/filterbank_internal.h"
 #include "rtc_base/checks.h"

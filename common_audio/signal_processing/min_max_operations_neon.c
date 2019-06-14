@@ -10,8 +10,9 @@
 
 # if !defined(__clang__) && defined(_MSC_VER) && defined(_M_ARM64)
 #   include <arm64_neon.h>
-# endif
+# else
 #   include <arm_neon.h>
+# endif
 
 
 #include <stdlib.h>
