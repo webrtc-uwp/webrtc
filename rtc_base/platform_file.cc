@@ -49,18 +49,45 @@ bool RemoveFile(const std::string& path) {
 
 PlatformFile OpenPlatformFile(const std::string& path) {
   //TODO: Check if FILE_SHARE_READ | FILE_SHARE_WRITE, is required for unit tests
+#ifdef WINUWP
+  CREATEFILE2_EXTENDED_PARAMETERS params;
+  memset(&params, 0, sizeof(params));
+  params.dwSize = sizeof(CREATEFILE2_EXTENDED_PARAMETERS);
+  params.dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
+  return ::CreateFile2(ToUtf16(path).c_str(), GENERIC_READ | GENERIC_WRITE, 0,
+                     OPEN_EXISTING, &params);
+#else
   return ::CreateFileW(ToUtf16(path).c_str(), GENERIC_READ | GENERIC_WRITE, 0,
                        nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+#endif //WINUWP
 }
 
 PlatformFile OpenPlatformFileReadOnly(const std::string& path) {
+#ifdef WINUWP
+  CREATEFILE2_EXTENDED_PARAMETERS params;
+  memset(&params, 0, sizeof(params));
+  params.dwSize = sizeof(CREATEFILE2_EXTENDED_PARAMETERS);
+  params.dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
+  return ::CreateFile2(ToUtf16(path).c_str(), GENERIC_READ, FILE_SHARE_READ,
+                     OPEN_EXISTING, &params);
+#else
   return ::CreateFileW(ToUtf16(path).c_str(), GENERIC_READ, FILE_SHARE_READ,
                        nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+#endif //WINUWP
 }
 
 PlatformFile CreatePlatformFile(const std::string& path) {
+#ifdef WINUWP
+  CREATEFILE2_EXTENDED_PARAMETERS params;
+  memset(&params, 0, sizeof(params));
+  params.dwSize = sizeof(CREATEFILE2_EXTENDED_PARAMETERS);
+  params.dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
+  return ::CreateFile2(ToUtf16(path).c_str(), GENERIC_READ | GENERIC_WRITE, 0,
+                     CREATE_ALWAYS, &params);
+#else
   return ::CreateFileW(ToUtf16(path).c_str(), GENERIC_READ | GENERIC_WRITE, 0,
                        nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+#endif //WINUWP
 }
 
 #else  // defined(WEBRTC_WIN)
