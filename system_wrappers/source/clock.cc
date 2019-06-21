@@ -95,8 +95,8 @@ class WinUwpRealTimeClock final : public RealTimeClock {
 
     struct timeval tv;
 
-    tv.tv_sec = rtc::dchecked_cast<long>(nanos / 1000000000);
-    tv.tv_usec = rtc::dchecked_cast<long>(nanos / 1000);
+    tv.tv_sec = static_cast<long>(nanos / 1000000000);
+    tv.tv_usec = static_cast<long>(nanos / 1000);
 
     return tv;
   }
