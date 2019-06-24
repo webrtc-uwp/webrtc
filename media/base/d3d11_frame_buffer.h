@@ -83,7 +83,7 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
   // This texture holds the actual contents
   winrt::com_ptr<ID3D11Texture2D> rendered_image_;
   winrt::com_ptr<ID3D11DeviceContext> context_;
-  uint32_t subresource_index_;
+  uint32_t subresource_index_ = 0;
 
   // i guess these don't really need to be members and could be passed as
   // parameters instead
