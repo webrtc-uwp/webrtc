@@ -10,6 +10,7 @@
 
 #include "d3d11_frame_buffer.h"
 #include "api/video/i420_buffer.h"
+#include "common_video/include/video_frame_buffer.h"
 #include "rtc_base/logging.h"
 #include "third_party/libyuv/include/libyuv/convert.h"
 
@@ -85,7 +86,8 @@ D3D11VideoFrameBuffer::ToI420() {
   // allow passing in a config struct into this method. Or rather class, since
   // this is an override, so we can't pass params.
   context_->CopySubresourceRegion(staging_texture_.get(), 0, 0, 0, 0,
-                                  rendered_image_.get(), subresource_index_, nullptr);
+                                  rendered_image_.get(), subresource_index_,
+                                  nullptr);
 
   D3D11_MAPPED_SUBRESOURCE mapped;
   HRESULT hr =
@@ -108,8 +110,11 @@ D3D11VideoFrameBuffer::ToI420() {
       RTC_LOG(LS_ERROR) << "i420 conversion failed with error code" << result;
     }
 
-    return I420Buffer::Copy(width_, height_, dst_y_, stride_y, dst_u_,
-                            stride_uv, dst_v_, stride_uv);
+    // return I420Buffer::Copy(width_, height_, dst_y_, stride_y, dst_u_,
+    //                         stride_uv, dst_v_, stride_uv);
+    rtc::Callback0<void> unused;
+    return webrtc::WrapI420Buffer(width_, height_, dst_y_, stride_y, dst_u_,
+                                  stride_uv, dst_v_, stride_uv, unused);
   }
 
   return nullptr;
