@@ -21,13 +21,8 @@ void FillWithDummyDataAndClose(FILE* const file, const std::string& filename) {
 }
 
 TEST(PlatformFileTest, CreateWriteAndDelete) {
-#if defined(WINUWP)
-  const std::string filename = webrtc::test::GenerateTempFilename2	(
-      webrtc::test::OutputPath(), ".testfile");
-#else
   const std::string filename = webrtc::test::GenerateTempFilename(
       webrtc::test::OutputPath(), ".testfile");
-#endif
   const PlatformFile fd = rtc::CreatePlatformFile(filename);
   ASSERT_NE(fd, rtc::kInvalidPlatformFileValue)
       << "Failed to create file descriptor for file: " << filename;
@@ -38,13 +33,8 @@ TEST(PlatformFileTest, CreateWriteAndDelete) {
 }
 
 TEST(PlatformFileTest, OpenExistingWriteAndDelete) {
-#if defined(WINUWP)
-  const std::string filename = webrtc::test::GenerateTempFilename2(
-      webrtc::test::OutputPath(), ".testfile");
-#else
   const std::string filename = webrtc::test::GenerateTempFilename(
       webrtc::test::OutputPath(), ".testfile");
-#endif
 
   // Create file with dummy data.
   FILE* file = fopen(filename.c_str(), "wb");
@@ -62,13 +52,8 @@ TEST(PlatformFileTest, OpenExistingWriteAndDelete) {
 }
 
 TEST(PlatformFileTest, OpenExistingReadOnlyAndDelete) {
-#if defined(WINUWP)
-  const std::string filename = webrtc::test::GenerateTempFilename2(
-      webrtc::test::OutputPath(), ".testfile");
-#else
   const std::string filename = webrtc::test::GenerateTempFilename(
       webrtc::test::OutputPath(), ".testfile");
-#endif
 
   // Create file with dummy data.
   FILE* file = fopen(filename.c_str(), "wb");

@@ -57,7 +57,7 @@ group("examples") {
     }
   }
 
-  if (is_android || is_win) {
+  if (is_android || (is_win && current_os != "winuwp")) {
     deps += [ ":webrtc_unity_plugin" ]
   }
 }

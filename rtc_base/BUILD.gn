@@ -1408,7 +1408,7 @@ if (rtc_include_tests) {
         "win32_window_unittest.cc",
       ]
       if (current_os == "winuwp") {
-        sources -= [ "win32window_unittest.cc" ]
+        sources -= [ "win32_window_unittest.cc" ]
       }
     }
     if (is_posix || is_fuchsia) {

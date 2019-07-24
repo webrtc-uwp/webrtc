@@ -2073,6 +2073,9 @@ if (rtc_include_tests) {
 
     defines = audio_coding_defines
 
+    if ( is_clang && current_os == "winuwp")
+      cflags_cc = ["-Wno-unused-variable"]
+      
     if (rtc_enable_protobuf) {
       defines += [ "WEBRTC_NETEQ_UNITTEST_BITEXACT" ]
       deps += [

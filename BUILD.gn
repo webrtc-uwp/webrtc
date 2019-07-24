@@ -69,7 +69,7 @@ if (!build_with_chromium) {
           ":android_junit_tests",
           "sdk/android:android_instrumentation_test_apk",
         ]
-      } else {
+      } else if (current_os != "winuwp"){
         deps += [ "modules/video_capture:video_capture_tests" ]
       }
       if (rtc_enable_protobuf) {
