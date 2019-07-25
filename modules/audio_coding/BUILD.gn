@@ -2073,7 +2073,7 @@ if (rtc_include_tests) {
 
     defines = audio_coding_defines
 
-    if ( is_clang && current_os == "winuwp") {
+    if ( is_clang && is_win) {
       cflags_cc = ["-Wno-unused-variable"]
     }
     
