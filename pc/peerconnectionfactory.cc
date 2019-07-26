@@ -452,9 +452,15 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
     RtcEventLog* event_log) {
   RTC_DCHECK_RUN_ON(worker_thread_);
 
-  const int kMinBandwidthBps = 30000;
-  const int kStartBandwidthBps = 300000;
-  const int kMaxBandwidthBps = 2000000;
+  // original values
+  //const int kMinBandwidthBps = 30000;
+  //const int kStartBandwidthBps = 300000;
+  //const int kMaxBandwidthBps = 2000000;
+
+  // te, set higher values than current default to avoid slow startbitrate
+  const int kMinBandwidthBps = 150000;
+  const int kStartBandwidthBps = 4000000;
+  const int kMaxBandwidthBps = 10000000;
 
   webrtc::Call::Config call_config(event_log);
   if (!channel_manager_->media_engine() || !call_factory_) {
