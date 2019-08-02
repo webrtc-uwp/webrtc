@@ -53,12 +53,7 @@ class RealTimeClock : public Clock {
 
   // Retrieve an NTP absolute timestamp in milliseconds.
   int64_t CurrentNtpInMilliseconds() override {
-    timeval tv = CurrentTimeVal();
-    uint32_t seconds;
-    double microseconds_in_seconds;
-    Adjust(tv, &seconds, &microseconds_in_seconds);
-    return 1000 * static_cast<int64_t>(seconds) +
-           static_cast<int64_t>(1000.0 * microseconds_in_seconds + 0.5);
+    return CurrentNtpTime().ToMs();
   }
 
  protected:
@@ -91,12 +86,18 @@ class WinUwpRealTimeClock final : public RealTimeClock {
     // The rtc::SystemTimeNanos() method is already time offset from a base
     // epoch value and might as be synchronized against an NTP time server as
     // an added bonus.
-    auto nanos = rtc::SystemTimeNanos();
+    int64_t timestamp_ms = rtc::TimeMillis();
+
+	//Get time zone offset in milliseconds
+	TIME_ZONE_INFORMATION time_zone;
+    GetTimeZoneInformation(&time_zone);
+    int64_t time_zone_bias_ms = rtc::dchecked_cast<int64_t>(time_zone.Bias) * 60 * 1000;
+
+	timestamp_ms += time_zone_bias_ms;
 
     struct timeval tv;
-
-    tv.tv_sec = static_cast<long>(nanos / 1000000000);
-    tv.tv_usec = static_cast<long>(nanos / 1000);
+    tv.tv_sec = (uint32_t)(timestamp_ms / (uint64_t)1000);
+    tv.tv_usec = (uint32_t)((timestamp_ms % (uint64_t)1000) * 1000);
 
     return tv;
   }
