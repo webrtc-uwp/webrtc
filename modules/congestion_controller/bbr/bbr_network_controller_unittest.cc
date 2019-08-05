@@ -154,7 +154,7 @@ TEST_F(BbrNetworkControllerTest, UpdatesTargetSendRate) {
     c->delay = TimeDelta::ms(200);
   });
   ret_net->UpdateConfig(
-      [](NetworkSimulationConfig* c) { c->delay = TimeDelta::ms(200); });
+      [](NetworkSimulationConfig* c) { c->delay = TimeDelta::ms(199); });
 
   s.RunFor(TimeDelta::seconds(40));
   EXPECT_NEAR(client->send_bandwidth().kbps(), 200, 40);
