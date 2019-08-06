@@ -513,8 +513,5 @@ if (rtc_include_tests) {
       "//third_party/abseil-cpp/absl/algorithm:container",
       "//third_party/abseil-cpp/absl/memory",
     ]
-    if (current_os == "winuwp") {
-      deps += [ "../modules/video_capture:video_capture" ]
-    }
   }
 }

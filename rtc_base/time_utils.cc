@@ -80,9 +80,9 @@ class TimeHelper final {
     LARGE_INTEGER qpcnt;
     QueryPerformanceCounter(&qpcnt);
     result = rtc::dchecked_cast<int64_t>(
-        (rtc::dchecked_cast<uint64_t>(qpcnt.QuadPart) * 100000 /
+        (rtc::dchecked_cast<uint64_t>(qpcnt.QuadPart) * 100000ull /
          rtc::dchecked_cast<uint64_t>(singleton.os_ticks_per_second_)) *
-        10000);
+        10000ull);
     result = singleton.app_start_time_ns_ + result -
              singleton.time_since_os_start_ns_;
     return result;
@@ -119,8 +119,9 @@ class TimeHelper final {
 
     LARGE_INTEGER qpcnt;
     QueryPerformanceCounter(&qpcnt);
-    time_since_os_start_ns_ = rtc::dchecked_cast<int64_t>(
-        (rtc::dchecked_cast<uint64_t>(qpcnt.QuadPart) * 100000 /
+
+	time_since_os_start_ns_ = rtc::dchecked_cast<int64_t>(
+        (rtc::dchecked_cast<uint64_t>(qpcnt.QuadPart) * 100000ull /
          rtc::dchecked_cast<uint64_t>(os_ticks_per_second_)) *
         10000);
   }

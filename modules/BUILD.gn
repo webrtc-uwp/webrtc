@@ -281,7 +281,6 @@ if (rtc_include_tests) {
     if ( current_os == "winuwp" ) {
       deps -= [ 
         "audio_device:audio_device_unittests",
-        "desktop_capture:desktop_capture_unittests" 
       ]
     }
   }

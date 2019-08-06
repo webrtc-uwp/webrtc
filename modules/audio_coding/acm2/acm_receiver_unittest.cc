@@ -290,7 +290,7 @@ TEST_F(AcmReceiverTestPostDecodeVadPassiveOldApi, MAYBE_PostdecodingVad) {
   constexpr int payload_type = 34;
   const SdpAudioFormat codec = {"L16", 16000, 1};
   const AudioCodecInfo info = SetEncoder(payload_type, codec);
-  encoder_factory_->QueryAudioEncoder(codec).value();
+  auto dummy = encoder_factory_->QueryAudioEncoder(codec).value();
   receiver_->SetCodecs({{payload_type, codec}});
   const int kNumPackets = 5;
   AudioFrame frame;
