@@ -25,6 +25,8 @@ namespace hololight {
         public:
         static rtc::scoped_refptr<hololight::D3D11VideoFrameSource> 
             Create(ID3D11Device* device, ID3D11DeviceContext* context, D3D11_TEXTURE2D_DESC* desc, rtc::Thread* signaling_thread);
+
+        ~D3D11VideoFrameSource();
         
         void OnFrameCaptured(ID3D11Texture2D* rendered_image, webrtc::XRTimestamp timestamp = webrtc::XRTimestamp());
 
@@ -48,9 +50,9 @@ namespace hololight {
         int width_;
         int height_;
 
-        uint8_t* dst_y_;
-        uint8_t* dst_u_;
-        uint8_t* dst_v_;
+        uint8_t* dst_y_ = nullptr;
+        uint8_t* dst_u_ = nullptr;
+        uint8_t* dst_v_ = nullptr;
 
         rtc::Thread* signaling_thread_;
         rtc::AdaptedVideoTrackSource::SourceState state_ = rtc::AdaptedVideoTrackSource::SourceState::kInitializing;

@@ -100,6 +100,20 @@ void D3D11VideoFrameSource::SetState(
   }
 }
 
+D3D11VideoFrameSource::~D3D11VideoFrameSource() {
+  if (dst_y_ != nullptr) {
+    free(dst_y_);
+  }
+
+  if (dst_u_ != nullptr) {
+    free(dst_u_);
+  }
+
+  if (dst_v_ != nullptr) {
+    free(dst_v_);
+  }
+}
+
 void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* rendered_image,
                                             webrtc::XRTimestamp timestamp) {
   // TODO: this should get its config from somewhere else
