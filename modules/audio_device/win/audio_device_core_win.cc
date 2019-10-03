@@ -491,6 +491,7 @@ AudioDeviceWindowsCore::AudioDeviceWindowsCore()
   _recChannelsPrioList[0] = 2;  // stereo is prio 1
   _recChannelsPrioList[1] = 1;  // mono is prio 2
   _recChannelsPrioList[2] = 4;  // quad is prio 3
+  _recChannelsPrioList[3] = 7;  // azure kinect have 7
 
   // list of number of channels to use on playout side
   _playChannelsPrioList[0] = 2;  // stereo is prio 1
