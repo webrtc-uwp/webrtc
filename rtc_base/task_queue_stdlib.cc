@@ -30,26 +30,11 @@
 namespace rtc {
 namespace {
 
-struct ThreadStartupData {
-  Event* started;
-  void* thread_context;
-};
-
 using Priority = TaskQueue::Priority;
 static thread_local void* g_thread_context{};
 
 static void* GetQueuePtrTls() {
   return g_thread_context;
-}
-
-static void SetQueuePtr(void* context) {
-  g_thread_context = context;
-}
-
-static void CALLBACK InitializeQueueThread(ULONG_PTR param) {
-  ThreadStartupData* data = reinterpret_cast<ThreadStartupData*>(param);
-  SetQueuePtr(data->thread_context);
-  data->started->Set();
 }
 
 static ThreadPriority TaskQueuePriorityToThreadPriority(Priority priority) {
@@ -135,8 +120,11 @@ class TaskQueue::Impl : public RefCountInterface {
 
   TaskQueue* const queue_;
 
-  std::mutex flag_lock_;
-  std::condition_variable flag_notify_;
+  // Indicates if the thread has started.
+  rtc::Event started_;
+
+  // Signaled whenever a new task is pending.
+  rtc::Event flag_notify_;
 
   WorkerThread thread_;
   std::atomic<bool> thread_should_quit_{};
@@ -153,17 +141,15 @@ TaskQueue::Impl::Impl(const char* queue_name,
                       TaskQueue* queue,
                       Priority priority)
     : queue_(queue),
+      started_(/*manual_reset=*/false, /*initially_signaled=*/false),
+      flag_notify_(/*manual_reset=*/false, /*initially_signaled=*/false),
       thread_(&TaskQueue::Impl::ThreadMain,
               this,
               queue_name,
               TaskQueuePriorityToThreadPriority(priority)) {
   RTC_DCHECK(queue_name);
   thread_.Start();
-  Event event(false, false);
-  ThreadStartupData startup = {&event, this};
-  RTC_CHECK(thread_.QueueAPC(&InitializeQueueThread,
-                             reinterpret_cast<ULONG_PTR>(&startup)));
-  event.Wait(Event::kForever);
+  started_.Wait(rtc::Event::kForever);
 }
 
 TaskQueue::Impl::~Impl() {
@@ -239,9 +225,12 @@ void TaskQueue::Impl::PostTaskAndReply(std::unique_ptr<QueuedTask> task,
 // static
 void TaskQueue::Impl::ThreadMain(void* context) {
   TaskQueue::Impl* me = static_cast<TaskQueue::Impl*>(context);
+  g_thread_context = me;
+
+  me->started_.Set();
 
   do {
-    Microseconds sleep_time{};
+    Microseconds sleep_time_us{};
     QueueTasksUniPtr run_task;
 
     auto tick = std::chrono::system_clock::now();
@@ -270,7 +259,7 @@ void TaskQueue::Impl::ThreadMain(void* context) {
           goto process;
         }
 
-        sleep_time = std::chrono::duration_cast<Microseconds>(
+        sleep_time_us = std::chrono::duration_cast<Microseconds>(
             delay_info.next_fire_at_ - tick);
       }
 
@@ -297,11 +286,14 @@ void TaskQueue::Impl::ThreadMain(void* context) {
     if (me->thread_should_quit_)
       break;
 
-    std::unique_lock<std::mutex> flag_lock(me->flag_lock_);
-    if (Microseconds() == sleep_time)
-      me->flag_notify_.wait(flag_lock);
-    else
-      me->flag_notify_.wait_for(flag_lock, sleep_time);
+    if (Microseconds{} == sleep_time_us) {
+      me->flag_notify_.Wait(rtc::Event::kForever);
+    }
+    else {
+      auto sleep_time_ms =
+          std::chrono::duration_cast<Milliseconds>(sleep_time_us);
+      me->flag_notify_.Wait(sleep_time_ms.count());
+    }
   }
   } while (true);
 
@@ -309,7 +301,7 @@ void TaskQueue::Impl::ThreadMain(void* context) {
 }
 
 void TaskQueue::Impl::notifyWake() {
-  flag_notify_.notify_one();
+  flag_notify_.Set();
 }
 
 // Boilerplate for the PIMPL pattern.
