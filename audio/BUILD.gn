@@ -200,6 +200,10 @@ if (rtc_include_tests) {
         # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163)
         suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
       }
+      
+      if (current_os == "winuwp") {
+        deps += [ "../modules/video_capture:video_capture" ]
+      }
     }
 
     group("low_bandwidth_audio_perf_test") {

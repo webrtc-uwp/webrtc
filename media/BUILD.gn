@@ -115,6 +115,15 @@ rtc_static_library("rtc_media_base") {
     "base/videosourcebase.h",
   ]
 
+  if (current_os == "winuwp") {
+    sources += [
+      "base/d3d11_frame_source.cc",
+      "base/d3d11_frame_source.h",
+      "base/d3d11_frame_buffer.h",
+      "base/d3d11_frame_buffer.cc",
+    ]
+  }
+
   if (!build_with_chromium && is_clang) {
     # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
     suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
@@ -352,7 +361,7 @@ rtc_static_library("rtc_audio_video") {
     "../system_wrappers:metrics_api",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
-  if (current_os == "winuwp") {
+  if (is_win) {
     deps += [ "//third_party/winuwp_h264:winuwp_h264" ]
   }
 }

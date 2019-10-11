@@ -68,6 +68,7 @@ class PerfTest : public ::testing::Test {
 #else
 #define MAYBE_TestPrintResult TestPrintResult
 #endif
+#if GTEST_HAS_STREAM_REDIRECTION
 TEST_F(PerfTest, MAYBE_TestPrintResult) {
   testing::internal::CaptureStdout();
   std::string expected;
@@ -87,7 +88,7 @@ TEST_F(PerfTest, MAYBE_TestPrintResult) {
 
   EXPECT_EQ(expected, testing::internal::GetCapturedStdout());
 }
-
+#endif //GTEST_HAS_STREAM_REDIRECTION
 TEST_F(PerfTest, TestGetPerfResultsJSON) {
   PrintResult("measurement", "modifier", "trace", 42, "units", false);
   PrintResult("foo", "bar", "baz_v", 7, "widgets", true);

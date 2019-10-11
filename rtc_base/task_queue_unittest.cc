@@ -12,6 +12,7 @@
 // clang-format off
 #include <windows.h>  // Must come first.
 #include <mmsystem.h>
+#include <timeapi.h>
 // clang-format on
 #endif
 
@@ -34,7 +35,7 @@ namespace {
 // scope.
 class EnableHighResTimers {
  public:
-#if !defined(WEBRTC_WIN)
+#if !defined(WEBRTC_WIN) || defined(WINUWP)
   EnableHighResTimers() {}
 #else
   EnableHighResTimers() : enabled_(timeBeginPeriod(1) == TIMERR_NOERROR) {}

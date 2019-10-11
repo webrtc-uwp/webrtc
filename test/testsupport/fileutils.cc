@@ -33,6 +33,9 @@
 #ifdef WINUWP
 #include <objbase.h>
 
+#include <Windows.Foundation.h>
+#include <winrt/Windows.Storage.h>
+
 #include "rtc_base/pathutils.h"
 #endif // WINUWP
 
@@ -71,8 +74,8 @@ const char* kPathDelimiter = "/";
 
 #ifdef WEBRTC_ANDROID
 const char* kRootDirName = "/sdcard/chromium_tests_root/";
-#elif WINUWP
-const char* kProjectRootFileName = "";
+#elif defined(WINUWP)
+//const char* kProjectRootFileName = "";
 const char* kFallbackPath = "./";
 #else
 #if !defined(WEBRTC_IOS)
@@ -91,6 +94,19 @@ bool relative_dir_path_set = false;
 }  // namespace
 
 const char* kCannotFindProjectRootDir = "ERROR_CANNOT_FIND_PROJECT_ROOT_DIR";
+
+std::string DirName(const std::string& path) {
+  if (path.empty())
+    return "";
+  if (path == kPathDelimiter)
+    return path;
+
+  std::string result = path;
+  if (result.back() == *kPathDelimiter)
+    result.pop_back();  // Remove trailing separator.
+
+  return result.substr(0, result.find_last_of(kPathDelimiter));
+}
 
 void SetExecutablePath(const std::string& path) {
   std::string working_dir = WorkingDir();
@@ -143,24 +159,31 @@ std::string WorkingDir() {
 std::string ProjectRootPath() {
 #if defined(WEBRTC_IOS)
   return IOSRootPath();
-#else
-  std::string path = WorkingDir();
+#endif //WEBRTC_IOS
+#if defined(WEBRTC_WIN) && !defined(WINUWP)
+  wchar_t buf[MAX_PATH];
+  buf[0] = 0;
+  if (GetModuleFileName(NULL, buf, MAX_PATH) == 0)
+    return kCannotFindProjectRootDir;
+
+  std::string exe_path = rtc::ToUtf8(std::wstring(buf));
+  std::string exe_dir = DirName(exe_path);
+  return DirName(DirName(exe_dir)) + kPathDelimiter;
+#else //defined(WEBRTC_WIN) && !defined(WINUWP)
+  std::string path = WorkingDir() + "\\..\\..";
+  printf("%s\n", path.c_str());
   if (path == kFallbackPath) {
     return kCannotFindProjectRootDir;
   }
-#ifdef WINUWP
+#if defined(WINUWP)
   return path + kPathDelimiter;
-#else // WINUWP
+#else // defined(WINUWP)
   if (relative_dir_path_set) {
     path = path + kPathDelimiter + relative_dir_path;
   }
   path = path + kPathDelimiter + ".." + kPathDelimiter + "..";
   char canonical_path[FILENAME_MAX];
-#ifdef WIN32
-  BOOL succeeded = PathCanonicalizeA(canonical_path, path.c_str());
-#else
   bool succeeded = realpath(path.c_str(), canonical_path) != NULL;
-#endif
   if (succeeded) {
     path = std::string(canonical_path) + kPathDelimiter;
     return path;
@@ -169,15 +192,14 @@ std::string ProjectRootPath() {
     return kCannotFindProjectRootDir;
   }
 #endif /* WINUWP */
-#endif
+#endif // //defined(WEBRTC_WIN) && !defined(WINUWP)
 }
 
 std::string OutputPath() {
 #if defined(WINUWP)
-  auto folder = Windows::Storage::ApplicationData::Current->LocalFolder;
-  wchar_t buffer[255];
-  wcsncpy_s(buffer, 255, folder->Path->Data(), _TRUNCATE);
-  return ToUtf8(buffer) + kPathDelimiter;
+  std::string path = WorkingDir() + kPathDelimiter;
+
+  return path;
 #elif defined(WEBRTC_IOS)
   return IOSOutputPath();
 #else
@@ -195,6 +217,7 @@ std::string OutputPath() {
 
 std::string WorkingDir() {
   char path_buffer[FILENAME_MAX];
+
   if (!GET_CURRENT_DIR(path_buffer, sizeof(path_buffer))) {
     fprintf(stderr, "Cannot get current directory!\n");
     return kFallbackPath;
@@ -215,15 +238,15 @@ std::string TempFilename(const std::string& dir, const std::string& prefix) {
   wchar_t filename[MAX_PATH];
 
   // printf format for the filename, consists of prefix followed by guid.
-  wchar_t* maskForFN = L"%s_%08x_%04x_%04x_%02x%02x_%02x%02x%02x%02x%02x%02x";
-  swprintf(filename, maskForFN, ToUtf16(prefix).c_str(), g.Data1, g.Data2, g.Data3,
+  const wchar_t* maskForFN = L"%s_%08x_%04x_%04x_%02x%02x_%02x%02x%02x%02x%02x%02x";
+  swprintf(filename, maskForFN, rtc::ToUtf16(prefix).c_str(), g.Data1, g.Data2, g.Data3,
     UINT(g.Data4[0]), UINT(g.Data4[1]), UINT(g.Data4[2]), UINT(g.Data4[3]),
     UINT(g.Data4[4]), UINT(g.Data4[5]), UINT(g.Data4[6]), UINT(g.Data4[7]));
 
-  fullpath.AppendPathname(ToUtf8(filename));
+  fullpath.AppendPathname(rtc::ToUtf8(filename));
   // make sure to create the file
   ::CreateFile2(
-    ToUtf16(fullpath.pathname()).c_str(),
+    rtc::ToUtf16(fullpath.pathname()).c_str(),
     GENERIC_READ | GENERIC_WRITE,
     FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
     CREATE_NEW,
@@ -252,6 +275,25 @@ std::string TempFilename(const std::string& dir, const std::string& prefix) {
   return ret;
 #endif
 }
+#if defined(WINUWP)
+std::string TempFilename2(const std::string& dir, const std::string& prefix) {
+  rtc::Pathname fullpath = dir;
+  GUID g;
+  CoCreateGuid(&g);
+  wchar_t filename[MAX_PATH];
+
+  // printf format for the filename, consists of prefix followed by guid.
+  const wchar_t* maskForFN = L"%s_%08x_%04x_%04x_%02x%02x_%02x%02x%02x%02x%02x%02x";
+  swprintf(filename, maskForFN, rtc::ToUtf16(prefix).c_str(), g.Data1, g.Data2,
+           g.Data3, UINT(g.Data4[0]), UINT(g.Data4[1]), UINT(g.Data4[2]),
+           UINT(g.Data4[3]), UINT(g.Data4[4]), UINT(g.Data4[5]),
+           UINT(g.Data4[6]), UINT(g.Data4[7]));
+
+  fullpath.AppendPathname(rtc::ToUtf8(filename));
+
+  return fullpath.pathname();
+}
+#endif
 
 std::string GenerateTempFilename(const std::string& dir,
                                  const std::string& prefix) {
@@ -260,6 +302,12 @@ std::string GenerateTempFilename(const std::string& dir,
   return filename;
 }
 
+#if defined(WINUWP)
+std::string GenerateTempFilename2(const std::string& dir,
+                                 const std::string& prefix) {
+  return TempFilename2(dir, prefix);
+}
+#endif
 absl::optional<std::vector<std::string>> ReadDirectory(std::string path) {
   if (path.length() == 0)
     return absl::optional<std::vector<std::string>>();
@@ -342,7 +390,7 @@ bool RemoveDir(const std::string& directory_name) {
 
 bool RemoveFile(const std::string& file_name) {
 #ifdef WIN32
-  return DeleteFileA(file_name.c_str()) != FALSE;
+  return  DeleteFileA(file_name.c_str());
 #else
   return unlink(file_name.c_str()) == 0;
 #endif

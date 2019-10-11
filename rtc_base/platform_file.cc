@@ -49,8 +49,11 @@ bool RemoveFile(const std::string& path) {
 }
 
 PlatformFile OpenPlatformFile(const std::string& path) {
-  return ::CreateFile(ToUtf16(path).c_str(), GENERIC_READ | GENERIC_WRITE, 0,
-                      nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+  HANDLE testHandle = ::CreateFile(ToUtf16(path).c_str(), GENERIC_READ | GENERIC_WRITE,
+                   FILE_SHARE_READ | FILE_SHARE_WRITE,
+                   nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+
+  return testHandle;
 }
 
 PlatformFile OpenPlatformFileReadOnly(const std::string& path) {

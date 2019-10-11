@@ -30,6 +30,12 @@ group("test") {
       ":test_support_unittests",
     ]
   }
+  
+  if ( current_os == "winuwp" ) {
+    deps -= [ 
+      ":test_renderer" 
+    ]
+  }
 }
 
 rtc_source_set("video_test_common") {
