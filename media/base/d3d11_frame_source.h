@@ -23,11 +23,11 @@ namespace hololight {
         //Threading in this lib is all over the place, and engines have their own threading considerations
         //so let's not forget this. We might need a thread checker like android or other impls.
         public:
-        static rtc::scoped_refptr<hololight::D3D11VideoFrameSource> 
+        static rtc::scoped_refptr<hololight::D3D11VideoFrameSource>
             Create(ID3D11Device* device, ID3D11DeviceContext* context, D3D11_TEXTURE2D_DESC* desc, rtc::Thread* signaling_thread);
 
-        ~D3D11VideoFrameSource();
-        
+        ~D3D11VideoFrameSource() override;
+
         void OnFrameCaptured(ID3D11Texture2D* rendered_image, webrtc::XRTimestamp timestamp = webrtc::XRTimestamp());
 
         absl::optional<bool> needs_denoising() const override;

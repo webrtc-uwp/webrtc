@@ -80,6 +80,18 @@ D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(ID3D11DeviceContext* context,
   rendered_image_.copy_from(rendered_image);
 }
 
+D3D11VideoFrameBuffer::~D3D11VideoFrameBuffer() {
+
+}
+
+int D3D11VideoFrameBuffer::width() const {
+  return width_;
+}
+
+int D3D11VideoFrameBuffer::height() const {
+  return height_;
+}
+
 rtc::scoped_refptr<webrtc::I420BufferInterface>
 D3D11VideoFrameBuffer::ToI420() {
   // TODO: what if we need subresource indices or something? maybe we should

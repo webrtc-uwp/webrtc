@@ -29,6 +29,7 @@
 namespace hololight {
 class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
  public:
+ ~D3D11VideoFrameBuffer() override;
   // TODO: look up if refcounting is needed/common for buffers. It is for
   // sources but maybe I mixed it up.
   static rtc::scoped_refptr<D3D11VideoFrameBuffer> Create(
@@ -46,9 +47,9 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
       uint8_t* dst_y,
       uint8_t* dst_u,
       uint8_t* dst_v);
-  virtual webrtc::VideoFrameBuffer::Type type() const override;
-  int width() const override { return width_; }
-  int height() const override { return height_; }
+  webrtc::VideoFrameBuffer::Type type() const override;
+  int width() const override;
+  int height() const override;
 
   // Returns the subresource index for rendered_image_.
   // This is needed because the decoder MFT allocates a texture array, so the
