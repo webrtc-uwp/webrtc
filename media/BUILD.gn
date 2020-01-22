@@ -115,14 +115,6 @@ rtc_static_library("rtc_media_base") {
     "base/videosourcebase.h",
   ]
 
-  if (current_os == "winuwp") {
-    sources += [
-      "base/d3d11_frame_source.cc",
-      "base/d3d11_frame_source.h",
-      "base/d3d11_frame_buffer.h",
-      "base/d3d11_frame_buffer.cc",
-    ]
-  }
 
   if (!build_with_chromium && is_clang) {
     # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
