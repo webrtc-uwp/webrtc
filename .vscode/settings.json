@@ -1,0 +1,52 @@
+{
+    "files.associations": {
+        "api.h": "c",
+        "api_types.h": "c",
+        "cassert": "c",
+        "__config": "c",
+        "assert.h": "c",
+        "*.idl": "cpp",
+        "*.mm": "cpp",
+        "xiosbase": "cpp",
+        "mutex": "cpp",
+        "export.h": "c",
+        "graphics_api_config.h": "c",
+        "version.h": "c"
+    },
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/node_modules/*/**": true,
+        "**/remoting/external/webrtc-uwp-sdk/**": true
+    },
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/remoting/external/webrtc-uwp-sdk/**": true
+    },
+    "editor.tokenColorCustomizations": {
+        "textMateRules": [
+            {
+                "scope": "googletest.failed",
+                "settings": {
+                    "foreground": "#f00"
+                }
+            },
+            {
+                "scope": "googletest.passed",
+                "settings": {
+                    "foreground": "#0f0"
+                }
+            },
+            {
+                "scope": "googletest.run",
+                "settings": {
+                    "foreground": "#0f0"
+                }
+            }
+        ]
+    }
+}
