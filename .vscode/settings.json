@@ -11,7 +11,15 @@
         "mutex": "cpp",
         "export.h": "c",
         "graphics_api_config.h": "c",
-        "version.h": "c"
+        "version.h": "c",
+        "functional": "cpp",
+        "map": "cpp",
+        "memory": "cpp",
+        "type_traits": "cpp",
+        "vector": "cpp",
+        "xmemory": "cpp",
+        "xstddef": "cpp",
+        "xstring": "cpp"
     },
     "files.watcherExclude": {
         "**/.git/objects/**": true,
