@@ -1,0 +1,846 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "inputs": [
+        {
+            "id": "run_action",
+            "type": "pickString",
+            "options": [
+                "prepare", "build", "clean"
+            ],
+            "description": "select the action for run.py"
+        },
+        {
+            "id": "run_platform",
+            "type": "pickString",
+            "options": [
+                "win", "winuwp"
+            ],
+            "description": "select the platform for run.py"
+        },
+        {
+            "id": "run_arch",
+            "type": "pickString",
+            "options": [
+                "x86", "x64", "arm", "arm64"
+            ],
+            "description": "select the CPU architecture for run.py"
+        }
+    ],
+    // default values
+    // "group": "build",
+    "type": "shell",
+    // "problemMatcher": "$gcc",
+    // "problemMatcher": []
+    "command": "python",
+    "options": {
+        "cwd": "${workspaceFolder}/../../../scripts"
+    },
+    "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true,
+        "revealProblems": "onProblem",
+    },
+    "tasks": [
+        {
+            "label": "echo",
+            "type": "shell",
+            // "options": {"cwd": "${workspaceFolder}"},
+            "command": "echo ${workspaceFolder}",
+        },
+        {
+            "label": "run interactive (webrtc)",
+            "args": [
+                "./run.py", "-a", "${input:run_action}", "-t", "webrtc", "-p", "${input:run_platform}", "-x", "${input:run_arch}", "-c", "debug", "--noWrapper"
+            ],
+        },
+        {
+            "label": "run interactive (hlr)",
+            "args": [
+                "./run.py", "-a", "${input:run_action}", "-u", "hlr", "-p", "${input:run_platform}", "-x", "${input:run_arch}", "-c", "debug", "--noWrapper", "--", "hlr_userdef.py"
+            ],
+        },
+        // -----------------------------------------------------
+        // webrtc
+        // win x86 debug
+        {
+            "label": "webrtc dbg (x86): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-t", "webrtc", "-p", "win", "-x", "x86", "-c", "debug", "--noWrapper"
+            ],
+        },
+        {
+            "label": "webrtc dbg (x86): Prepare & Build",
+            "dependsOn": [
+                "webrtc dbg (x86): Prepare"
+            ],
+            "args": [
+                "./run.py", "-a", "build", "-t", "webrtc", "-p", "win", "-x", "x86", "-c", "debug", "--noWrapper"
+            ],
+        },
+        // win x64 debug
+        {
+            "label": "webrtc dbg (x64): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-t", "webrtc", "-p", "win", "-x", "x64", "-c", "debug", "--noWrapper"
+            ],
+        },
+        {
+            "label": "webrtc dbg (x64): Prepare & Build",
+            "dependsOn": [
+                "webrtc dbg (x64): Prepare"
+            ],
+            "args": [
+                "./run.py", "-a", "build", "-t", "webrtc", "-p", "win", "-x", "x64", "-c", "debug", "--noWrapper"
+            ],
+        },
+        // hololens 1 debug
+        {
+            "label": "webrtc dbg (hololens 1): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-t", "webrtc", "-p", "winuwp", "-x", "x86", "-c", "debug", "--noWrapper"
+            ],
+        },
+        {
+            "label": "webrtc dbg (hololens 1): Prepare & Build",
+            "dependsOn": [
+                "webrtc dbg (hololens 1): Prepare"
+            ],
+            "args": [
+                "./run.py", "-a", "build", "-t", "webrtc", "-p", "winuwp", "-x", "x86", "-c", "debug", "--noWrapper"
+            ],
+        },
+        {
+            "label": "webrtc dbg (hololens 1) (clang): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-t", "webrtc", "-p", "winuwp", "-x", "x86", "-c", "debug", "--clang", "--noWrapper", "--clang"
+            ],
+        },
+        {
+            "label": "webrtc dbg (hololens 1) (clang): Prepare & Build",
+            "dependsOn": [
+                "webrtc dbg (hololens 1) (clang): Prepare"
+            ],
+            "args": [
+                "./run.py", "-a", "build", "-t", "webrtc", "-p", "winuwp", "-x", "x86", "-c", "debug", "--clang", "--noWrapper", "--clang"
+            ],
+        },
+        // hololens 2 debug
+        {
+            "label": "webrtc dbg (hololens 2): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-t", "webrtc", "-p", "winuwp", "-x", "arm", "-c", "debug", "--noWrapper"
+            ],
+        },
+        {
+            "label": "webrtc dbg (hololens 2): Prepare & Build",
+            "dependsOn": [
+                "webrtc dbg (hololens 2): Prepare"
+            ],
+            "args": [
+                "./run.py", "-a", "build", "-t", "webrtc", "-p", "winuwp", "-x", "arm", "-c", "debug", "--noWrapper"
+            ],
+        },
+        // -----------------------------------------------------
+
+        // -----------------------------------------------------
+        // hlr
+        // -----------------------------------------------------
+        // unity: win x64 debug
+        {
+            "label": "hlr dbg (unity): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-u", "hlr", "-p", "win", "-x", "x64", "-c", "debug", "--noWrapper", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr rel (unity): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-u", "hlr", "-p", "win", "-x", "x64", "-c", "release", "--noWrapper", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr dbg (unity): Build",
+            "args": [
+                "./run.py", "-a", "build", "-u", "hlr", "-p", "win", "-x", "x64", "-c", "debug", "--noWrapper", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr rel (unity): Build",
+            "args": [
+                "./run.py", "-a", "build", "-u", "hlr", "-p", "win", "-x", "x64", "-c", "release", "--noWrapper", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr dbg (unity): Deploy",
+            "command": "robocopy",
+            "args": [
+                "${workspaceFolder}/out/hlr_win_x64_debug",
+                // "${workspaceFolder}/../../examples/unity-remoting-plugin/Assets/Plugins/x86_64",
+                "${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Packages/com.hololight.remoting/Runtime/Plugins/x86_64",
+                "remoting_unity.dll", "remoting_unity.dll.pdb",
+                "/NP",
+                // "IF %ERRORLEVEL% LEQ 1 exit 0"
+            ],
+        },
+        {
+            "label": "hlr rel (unity): Deploy",
+            "command": "robocopy",
+            "args": [
+                "${workspaceFolder}/out/hlr_win_x64_release",
+                "${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Assets/Plugins/x86_64",
+                "remoting_unity.dll", "remoting_unity.dll.pdb",
+                "/NP",
+                // "IF %ERRORLEVEL% LEQ 1 exit 0"
+            ],
+        },
+        {
+            "label": "hlr dbg (unity): Prepare & Build",
+            "dependsOn": [
+                "hlr dbg (unity): Prepare",
+                "hlr dbg (unity): Build"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "hlr rel (unity): Prepare & Build",
+            "dependsOn": [
+                "hlr rel (unity): Prepare",
+                "hlr rel (unity): Build"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "hlr dbg (unity): Build & Deploy",
+            "dependsOn": [
+                "hlr dbg (unity): Build",
+                "hlr dbg (unity): Deploy"
+            ],
+            "dependsOrder": "sequence",
+        },
+        {
+            "label": "hlr rel (unity): Build & Deploy",
+            "dependsOn": [
+                "hlr rel (unity): Build",
+                "hlr rel (unity): Deploy"
+            ],
+            "dependsOrder": "sequence",
+        },
+        {
+            "label": "hlr dbg (unity): Prepare, Build & Deploy",
+            "dependsOn": [
+                "hlr dbg (unity): Prepare",
+                "hlr dbg (unity): Build",
+                "hlr dbg (unity): Deploy"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "hlr rel (unity): Prepare, Build & Deploy",
+            "dependsOn": [
+                "hlr rel (unity): Prepare",
+                "hlr rel (unity): Build",
+                "hlr rel (unity): Deploy"
+            ],
+            "dependsOrder": "sequence"
+        },
+        // -----------------------------------------------------
+
+        // -----------------------------------------------------
+        // unity: win x64 debug (clang)
+        {
+            "label": "hlr dbg (unity) (clang): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-u", "hlr", "-p", "win", "-x", "x64", "-c", "debug", "--noWrapper", "--clang", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr rel (unity) (clang): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-u", "hlr", "-p", "win", "-x", "x64", "-c", "release", "--noWrapper", "--clang", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr dbg (unity) (clang): Build",
+            "args": [
+                "./run.py", "-a", "build", "-u", "hlr", "-p", "win", "-x", "x64", "-c", "debug", "--noWrapper", "--clang", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr rel (unity) (clang): Build",
+            "args": [
+                "./run.py", "-a", "build", "-u", "hlr", "-p", "win", "-x", "x64", "-c", "release", "--noWrapper", "--clang", "--", "hlr_userdef.py"
+            ],
+        },
+        // {
+            // "label": "hlr dbg (unity): Deploy",
+            // "group": "build",
+            // "type": "shell",
+            // "options": {
+                // "cwd": "${workspaceFolder}/external/webrtc-uwp-sdk/scripts"
+            // },
+            // "command": "robocopy",
+            // "args": [
+                // "${workspaceFolder}/external/webrtc-uwp-sdk/webrtc/xplatform/webrtc/out/hlr_win_x64_debug",
+                // "${workspaceFolder}/../../examples/unity-remoting-plugin/Assets/Plugins/x86_64",
+                // "remoting_unity.dll", "remoting_unity.dll.pdb",
+                // "/NP",
+                // // "IF %ERRORLEVEL% LEQ 1 exit 0"
+            // ],
+            // // "problemMatcher": []
+        // },
+        {
+            "label": "hlr dbg (unity) (clang): Prepare & Build",
+            "dependsOn": [
+                "hlr dbg (unity) (clang): Prepare",
+                "hlr dbg (unity) (clang): Build"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "hlr rel (unity) (clang): Prepare & Build",
+            "dependsOn": [
+                "hlr rel (unity) (clang): Prepare",
+                "hlr rel (unity) (clang): Build"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "hlr dbg (unity) (clang): Build & Deploy",
+            "dependsOn": [
+                "hlr dbg (unity) (clang): Build",
+                "hlr dbg (unity) (clang): Deploy"
+            ],
+            "dependsOrder": "sequence",
+        },
+        {
+            "label": "hlr rel (unity) (clang): Build & Deploy",
+            "dependsOn": [
+                "hlr rel (unity) (clang): Build",
+                "hlr rel (unity) (clang): Deploy"
+            ],
+            "dependsOrder": "sequence",
+        },
+        {
+            "label": "hlr dbg (unity) (clang): Prepare, Build & Deploy",
+            "dependsOn": [
+                "hlr dbg (unity) (clang): Prepare",
+                "hlr dbg (unity) (clang): Build",
+                "hlr dbg (unity): Deploy"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "hlr rel (unity) (clang): Prepare, Build & Deploy",
+            "dependsOn": [
+                "hlr rel (unity) (clang): Prepare",
+                "hlr rel (unity) (clang): Build",
+                "hlr rel (unity): Deploy"
+            ],
+            "dependsOrder": "sequence"
+        },
+        // -----------------------------------------------------
+
+        // -----------------------------------------------------
+        // hololens 1: winuwp x86 debug
+        {
+            "label": "hlr dbg (hololens 1): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-u", "hlr", "-p", "winuwp", "-x", "x86", "-c", "debug", "--noWrapper", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr rel (hololens 1): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-u", "hlr", "-p", "winuwp", "-x", "x86", "-c", "release", "--noWrapper", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr dbg (hololens 1): Build",
+            "args": [
+                "./run.py", "-a", "build", "-u", "hlr", "-p", "winuwp", "-x", "x86", "-c", "debug", "--noWrapper", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr rel (hololens 1): Build",
+            "args": [
+                "./run.py", "-a", "build", "-u", "hlr", "-p", "winuwp", "-x", "x86", "-c", "release", "--noWrapper", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr dbg (hololens 1): Deploy",
+            "command": "robocopy",
+            "args": [
+                "${workspaceFolder}/out/hlr_winuwp_x86_debug",
+                "${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/Debug",
+                "remoting.dll", "remoting.dll.lib", "remoting.dll.pdb",
+                "/NP",
+                // "IF %ERRORLEVEL% LEQ 1 exit 0"
+            ],
+        },
+        {
+            "label": "hlr rel (hololens 1): Deploy",
+            "command": "robocopy",
+            "args": [
+                "${workspaceFolder}/out/hlr_winuwp_x86_release",
+                "${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/Release",
+                "remoting.dll", "remoting.dll.lib", "remoting.dll.pdb",
+                "/NP",
+                // "IF %ERRORLEVEL% LEQ 1 exit 0"
+            ],
+        },
+        {
+            "label": "hlr dbg (hololens 1): Prepare & Build",
+            "dependsOn": [
+                "hlr dbg (hololens 1): Prepare",
+                "hlr dbg (hololens 1): Build"
+            ],
+            "dependsOrder": "sequence",
+        },
+        {
+            "label": "hlr rel (hololens 1): Prepare & Build",
+            "dependsOn": [
+                "hlr rel (hololens 1): Prepare",
+                "hlr rel (hololens 1): Build"
+            ],
+            "dependsOrder": "sequence",
+        },
+        {
+            "label": "hlr dbg (hololens 1): Build & Deploy",
+            "dependsOn": [
+                "hlr dbg (hololens 1): Build",
+                "hlr dbg (hololens 1): Deploy"
+            ],
+            "dependsOrder": "sequence",
+        },
+        {
+            "label": "hlr rel (hololens 1): Build & Deploy",
+            "dependsOn": [
+                "hlr rel (hololens 1): Build",
+                "hlr rel (hololens 1): Deploy"
+            ],
+            "dependsOrder": "sequence",
+        },
+        {
+            "label": "hlr dbg (hololens 1): Prepare, Build & Deploy",
+            "dependsOn": [
+                "hlr dbg (hololens 1): Prepare",
+                "hlr dbg (hololens 1): Build",
+                "hlr dbg (hololens 1): Deploy"
+            ],
+            "dependsOrder": "sequence",
+            // "runOptions": {
+                // "reevaluateOnRerun": true
+            // }
+        },
+        {
+            "label": "hlr rel (hololens 1): Prepare, Build & Deploy",
+            "dependsOn": [
+                "hlr rel (hololens 1): Prepare",
+                "hlr rel (hololens 1): Build",
+                "hlr rel (hololens 1): Deploy"
+            ],
+            "dependsOrder": "sequence",
+            // "runOptions": {
+                // "reevaluateOnRerun": true
+            // }
+        },
+        // -----------------------------------------------------
+        // -----------------------------------------------------
+        // hololens 1: winuwp x86 debug (clang)
+        {
+            "label": "hlr dbg (hololens 1) (clang): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-u", "hlr", "-p", "winuwp", "-x", "x86", "-c", "debug", "--noWrapper", "--clang", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr rel (hololens 1) (clang): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-u", "hlr", "-p", "winuwp", "-x", "x86", "-c", "release", "--noWrapper", "--clang", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr dbg (hololens 1) (clang): Build",
+            "args": [
+                "./run.py", "-a", "build", "-u", "hlr", "-p", "winuwp", "-x", "x86", "-c", "debug", "--noWrapper", "--clang", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr rel (hololens 1) (clang): Build",
+            "args": [
+                "./run.py", "-a", "build", "-u", "hlr", "-p", "winuwp", "-x", "x86", "-c", "release", "--noWrapper", "--clang", "--", "hlr_userdef.py"
+            ],
+        },
+        // {
+        //     "label": "hlr dbg (hololens 1): Deploy",
+        //     "group": "build",
+        //     "type": "shell",
+        //     "options": {
+        //         "cwd": "${workspaceFolder}/external/webrtc-uwp-sdk/scripts"
+        //     },
+        //     "command": "robocopy",
+        //     "args": [
+        //         "${workspaceFolder}/external/webrtc-uwp-sdk/webrtc/xplatform/webrtc/out/hlr_winuwp_x86_debug",
+        //         "${workspaceFolder}/../../examples/NativeImmersiveClient/Debug",
+        //         "remoting.dll", "remoting.dll.lib", "remoting.dll.pdb",
+        //         "/NP",
+        //         // "IF %ERRORLEVEL% LEQ 1 exit 0"
+        //     ],
+        //     // "problemMatcher": [],
+        // },
+        {
+            "label": "hlr dbg (hololens 1) (clang): Prepare & Build",
+            "dependsOn": [
+                "hlr dbg (hololens 1) (clang): Prepare",
+                "hlr dbg (hololens 1) (clang): Build"
+            ],
+            "dependsOrder": "sequence",
+        },
+        {
+            "label": "hlr rel (hololens 1) (clang): Prepare & Build",
+            "dependsOn": [
+                "hlr rel (hololens 1) (clang): Prepare",
+                "hlr rel (hololens 1) (clang): Build"
+            ],
+            "dependsOrder": "sequence",
+        },
+        {
+            "label": "hlr dbg (hololens 1) (clang): Build & Deploy",
+            "dependsOn": [
+                "hlr dbg (hololens 1) (clang): Build",
+                "hlr dbg (hololens 1): Deploy"
+            ],
+            "dependsOrder": "sequence",
+        },
+        {
+            "label": "hlr rel (hololens 1) (clang): Build & Deploy",
+            "dependsOn": [
+                "hlr rel (hololens 1) (clang): Build",
+                "hlr rel (hololens 1): Deploy"
+            ],
+            "dependsOrder": "sequence",
+        },
+        {
+            "label": "hlr dbg (hololens 1) (clang): Prepare, Build & Deploy",
+            "dependsOn": [
+                "hlr dbg (hololens 1) (clang): Prepare",
+                "hlr dbg (hololens 1) (clang): Build",
+                "hlr dbg (hololens 1): Deploy"
+            ],
+            "dependsOrder": "sequence",
+            // "runOptions": {
+                // "reevaluateOnRerun": true
+            // }
+        },
+        {
+            "label": "hlr rel (hololens 1) (clang): Prepare, Build & Deploy",
+            "dependsOn": [
+                "hlr rel (hololens 1) (clang): Prepare",
+                "hlr rel (hololens 1) (clang): Build",
+                "hlr rel (hololens 1): Deploy"
+            ],
+            "dependsOrder": "sequence",
+            // "runOptions": {
+                // "reevaluateOnRerun": true
+            // }
+        },
+        // -----------------------------------------------------
+        // -----------------------------------------------------
+        // hololens 2: winuwp arm debug
+        {
+            "label": "hlr dbg (hololens 2): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-u", "hlr", "-p", "winuwp", "-x", "arm", "-c", "debug", "--noWrapper", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr rel (hololens 2): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-u", "hlr", "-p", "winuwp", "-x", "arm", "-c", "release", "--noWrapper", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr dbg (hololens 2): Build",
+            "args": [
+                "./run.py", "-a", "build", "-u", "hlr", "-p", "winuwp", "-x", "arm", "-c", "debug", "--noWrapper", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr rel (hololens 2): Build",
+            "args": [
+                "./run.py", "-a", "build", "-u", "hlr", "-p", "winuwp", "-x", "arm", "-c", "release", "--noWrapper", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr dbg (hololens 2): Deploy",
+            "command": "robocopy",
+            "args": [
+                "${workspaceFolder}/out/hlr_winuwp_arm_debug",
+                "${workspaceFolder}/../../../../../examples/NativeImmersiveClient/",
+                "remoting.dll", "remoting.dll.lib", "remoting.dll.pdb",
+                "/NP",
+                // "IF %ERRORLEVEL% LEQ 1 exit 0"
+            ],
+        },
+        {
+            "label": "hlr rel (hololens 2): Deploy",
+            "command": "robocopy",
+            "args": [
+                "${workspaceFolder}/out/hlr_winuwp_arm_release",
+                "${workspaceFolder}/../../../../../examples/NativeImmersiveClient/",
+                "remoting.dll", "remoting.dll.lib", "remoting.dll.pdb",
+                "/NP",
+                // "IF %ERRORLEVEL% LEQ 1 exit 0"
+            ],
+        },
+        {
+            "label": "hlr dbg (hololens 2): Prepare & Build",
+            "dependsOn": [
+                "hlr dbg (hololens 2): Prepare",
+                "hlr dbg (hololens 2): Build"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "hlr rel (hololens 2): Prepare & Build",
+            "dependsOn": [
+                "hlr rel (hololens 2): Prepare",
+                "hlr rel (hololens 2): Build"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "hlr dbg (hololens 2): Build & Deploy",
+            "dependsOn": [
+                "hlr dbg (hololens 2): Build",
+                "hlr dbg (hololens 2): Deploy"
+            ],
+            "dependsOrder": "sequence",
+        },
+        {
+            "label": "hlr rel (hololens 2): Build & Deploy",
+            "dependsOn": [
+                "hlr rel (hololens 2): Build",
+                "hlr rel (hololens 2): Deploy"
+            ],
+            "dependsOrder": "sequence",
+        },
+        {
+            "label": "hlr dbg (hololens 2): Prepare, Build & Deploy",
+            "dependsOn": [
+                "hlr dbg (hololens 2): Prepare",
+                "hlr dbg (hololens 2): Build",
+                "hlr dbg (hololens 2): Deploy"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "hlr rel (hololens 2): Prepare, Build & Deploy",
+            "dependsOn": [
+                "hlr rel (hololens 2): Prepare",
+                "hlr rel (hololens 2): Build",
+                "hlr rel (hololens 2): Deploy"
+            ],
+            "dependsOrder": "sequence"
+        },
+        // -----------------------------------------------------
+        // hololens 2: winuwp arm debug (clang)
+        {
+            "label": "hlr dbg (hololens 2) (clang): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-u", "hlr", "-p", "winuwp", "-x", "arm", "-c", "debug", "--noWrapper", "--clang", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr rel (hololens 2) (clang): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-u", "hlr", "-p", "winuwp", "-x", "arm", "-c", "release", "--noWrapper", "--clang", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr dbg (hololens 2) (clang): Build",
+            "args": [
+                "./run.py", "-a", "build", "-u", "hlr", "-p", "winuwp", "-x", "arm", "-c", "debug", "--noWrapper", "--clang", "--", "hlr_userdef.py"
+            ],
+        },
+        {
+            "label": "hlr rel (hololens 2) (clang): Build",
+            "args": [
+                "./run.py", "-a", "build", "-u", "hlr", "-p", "winuwp", "-x", "arm", "-c", "release", "--noWrapper", "--clang", "--", "hlr_userdef.py"
+            ],
+        },
+        // {
+        //     "label": "hlr dbg (hololens 2) (clang): Deploy",
+        //     "group": "build",
+        //     "type": "shell",
+        //     "options": {
+        //         "cwd": "${workspaceFolder}/external/webrtc-uwp-sdk/scripts"
+        //     },
+        //     "command": "robocopy",
+        //     "args": [
+        //         "${workspaceFolder}/external/webrtc-uwp-sdk/webrtc/xplatform/webrtc/out/hlr_winuwp_arm_debug",
+        //         "${workspaceFolder}/../../examples/NativeImmersiveClient/",
+        //         "remoting.dll", "remoting.dll.lib", "remoting.dll.pdb",
+        //         "/NP",
+        //         // "IF %ERRORLEVEL% LEQ 1 exit 0"
+        //     ],
+        //     // "problemMatcher": []
+        // },
+        {
+            "label": "hlr dbg (hololens 2) (clang): Prepare & Build",
+            "dependsOn": [
+                "hlr dbg (hololens 2) (clang): Prepare",
+                "hlr dbg (hololens 2) (clang): Build"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "hlr rel (hololens 2) (clang): Prepare & Build",
+            "dependsOn": [
+                "hlr rel (hololens 2) (clang): Prepare",
+                "hlr rel (hololens 2) (clang): Build"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "hlr dbg (hololens 2) (clang): Build & Deploy",
+            "dependsOn": [
+                "hlr dbg (hololens 2) (clang): Build",
+                "hlr dbg (hololens 2): Deploy"
+            ],
+            "dependsOrder": "sequence",
+        },
+        {
+            "label": "hlr rel (hololens 2) (clang): Build & Deploy",
+            "dependsOn": [
+                "hlr rel (hololens 2) (clang): Build",
+                "hlr rel (hololens 2): Deploy"
+            ],
+            "dependsOrder": "sequence",
+        },
+        {
+            "label": "hlr dbg (hololens 2) (clang): Prepare, Build & Deploy",
+            "dependsOn": [
+                "hlr dbg (hololens 2) (clang): Prepare",
+                "hlr dbg (hololens 2) (clang): Build",
+                "hlr dbg (hololens 2): Deploy"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "hlr rel (hololens 2) (clang): Prepare, Build & Deploy",
+            "dependsOn": [
+                "hlr rel (hololens 2) (clang): Prepare",
+                "hlr rel (hololens 2) (clang): Build",
+                "hlr rel (hololens 2): Deploy"
+            ],
+            "dependsOrder": "sequence"
+        },
+        // -----------------------------------------------------
+
+        // -----------------------------------------------------
+        {
+            "label": "hlr dbg (all): Prepare, Build & Deploy",
+            "dependsOn": [
+                // "hlr dbg (unity): Prepare, Build & Deploy",
+                "hlr dbg (unity) (clang): Prepare, Build & Deploy",
+                "hlr dbg (hololens 1): Prepare, Build & Deploy",
+                // "hlr dbg (hololens 2): Prepare, Build & Deploy",
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "hlr rel (all): Prepare, Build & Deploy",
+            "dependsOn": [
+                // "hlr rel (unity): Prepare, Build & Deploy",
+                "hlr rel (unity) (clang): Prepare, Build & Deploy",
+                "hlr rel (hololens 1): Prepare, Build & Deploy",
+                // "hlr rel (hololens 2): Prepare, Build & Deploy",
+            ],
+            "dependsOrder": "sequence"
+        },
+        // -----------------------------------------------------
+        {
+            "label": "hlr dbg (all) (clang): Prepare, Build & Deploy",
+            "dependsOn": [
+                "hlr dbg (unity) (clang): Prepare, Build & Deploy",
+                "hlr dbg (hololens 1) (clang): Prepare, Build & Deploy",
+                // "hlr dbg (hololens 2): Prepare, Build & Deploy",
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "hlr rel (all) (clang): Prepare, Build & Deploy",
+            "dependsOn": [
+                "hlr rel (unity) (clang): Prepare, Build & Deploy",
+                "hlr rel (hololens 1) (clang): Prepare, Build & Deploy",
+                // "hlr rel (hololens 2): Prepare, Build & Deploy",
+            ],
+            "dependsOrder": "sequence"
+        },
+        // -----------------------------------------------------
+
+        // -----------------------------------------------------
+        // utils
+        {
+            "label": "gen flatbuffers",
+            "options": {
+                "cwd": "${workspaceFolder}/remoting/data"
+            },
+            "command": "flatc",
+            "args": [
+                "--cpp", "--scoped-enums", "--cpp-str-flex-ctor", "-o", "remoting/", "api.fbs"
+            ],
+        },
+        // -----------------------------------------------------
+
+
+
+        {
+            "label": "remoting_with_tests dbg (unity): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-u", "remoting_with_tests", "-p", "win", "-x", "x64", "-c", "debug", "--noWrapper", "./remoting_with_tests_userdef.py"
+            ],
+        },
+        {
+            "label": "remoting_with_tests rel (unity): Prepare",
+            "args": [
+                "./run.py", "-a", "prepare", "-u", "remoting_with_tests", "-p", "win", "-x", "x64", "-c", "release", "--noWrapper", "./remoting_with_tests_userdef.py"
+            ],
+        },
+        {
+            "label": "remoting_with_tests dbg (unity): Build",
+            "args": [
+                "./run.py", "-a", "build", "-u", "remoting_with_tests", "-p", "win", "-x", "x64", "-c", "debug", "--noWrapper", "./remoting_with_tests_userdef.py"
+            ],
+        },
+        {
+            "label": "remoting_with_tests rel (unity): Build",
+            "args": [
+                "./run.py", "-a", "build", "-u", "remoting_with_tests", "-p", "win", "-x", "x64", "-c", "release", "--noWrapper", "./remoting_with_tests_userdef.py"
+            ],
+        },
+        {
+            "label": "remoting_with_tests dbg (unity): Prepare & Build",
+            "dependsOn": [
+                "remoting_with_tests dbg (unity): Prepare",
+                "remoting_with_tests dbg (unity): Build"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "remoting_with_tests rel (unity): Prepare & Build",
+            "dependsOn": [
+                "remoting_with_tests rel (unity): Prepare",
+                "remoting_with_tests rel (unity): Build"
+            ],
+            "dependsOrder": "sequence"
+        },
+    ]
+}
