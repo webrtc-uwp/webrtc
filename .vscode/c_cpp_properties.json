@@ -3,13 +3,19 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**",
+                "${workspaceFolder}/remoting/extras/bindings/platforms/unity/include",
+                "${workspaceFolder}/remoting/extras/bindings/platforms/unity/src",
+                "${workspaceFolder}/remoting/extras/bindings/platforms/unity/external",
                 "${workspaceFolder}/remoting/include",
                 "${workspaceFolder}/remoting/src",
                 "${workspaceFolder}/remoting/data",
-                "${workspaceFolder}/remoting/external/*",
-                "${workspaceFolder}/remoting/external/expected/**",
-                "${workspaceFolder}/remoting/external/flatbuffers/**"
+                "${workspaceFolder}/remoting/external",
+                "${workspaceFolder}",
+                "${workspaceFolder}/third_party/abseil-cpp",
+                "${workspaceFolder}/third_party/",
+                "${workspaceFolder}/third_party/libyuv/include",
+                "${workspaceFolder}/third_party/jsoncpp/source/include",
+                "${workspaceFolder}/third_party/googletest/src/googletest/include"
             ],
             "defines": [
                 "_DEBUG",
@@ -18,7 +24,7 @@
                 "WEBRTC_WIN"
             ],
             "windowsSdkVersion": "10.0.17134.0",
-            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.23.28105/bin/Hostx64/x64/cl.exe",
+            "compilerPath": "\"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.23.28105/bin/Hostx64/x64/cl.exe\"",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "msvc-x64"
