@@ -56,5 +56,7 @@
                 }
             }
         ]
-    }
+    },
+    "C_Cpp.clang_format_path": "${workspaceFolder}/buildtools/win/clang-format.exe",
+    "C_Cpp.clang_format_style": "file"
 }
