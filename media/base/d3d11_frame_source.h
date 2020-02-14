@@ -18,12 +18,12 @@
 #include <winrt/base.h>
 #include <d3d11.h>
 
-namespace hololight {
+namespace hlr {
     class D3D11VideoFrameSource : public rtc::AdaptedVideoTrackSource {
         //Threading in this lib is all over the place, and engines have their own threading considerations
         //so let's not forget this. We might need a thread checker like android or other impls.
         public:
-        static rtc::scoped_refptr<hololight::D3D11VideoFrameSource>
+        static rtc::scoped_refptr<D3D11VideoFrameSource>
             Create(ID3D11Device* device, ID3D11DeviceContext* context, D3D11_TEXTURE2D_DESC* desc, rtc::Thread* signaling_thread);
 
         ~D3D11VideoFrameSource() override;

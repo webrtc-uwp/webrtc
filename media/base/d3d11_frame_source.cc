@@ -16,7 +16,7 @@
 
 using webrtc::VideoFrame;
 
-namespace hololight {
+namespace hlr {
 rtc::scoped_refptr<D3D11VideoFrameSource> D3D11VideoFrameSource::Create(
     ID3D11Device* device,
     ID3D11DeviceContext* context,

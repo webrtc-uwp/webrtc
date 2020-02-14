@@ -16,7 +16,7 @@
 
 using namespace webrtc;
 
-namespace hololight {
+namespace hlr {
 rtc::scoped_refptr<D3D11VideoFrameBuffer> D3D11VideoFrameBuffer::Create(
     ID3D11DeviceContext* context,
     ID3D11Texture2D* staging_texture,

@@ -26,7 +26,7 @@
 // missing. This case assumes we just want the texture to stay on the GPU and
 // use it as a resource for rendering.
 
-namespace hololight {
+namespace hlr {
 class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
  public:
  ~D3D11VideoFrameBuffer() override;
