@@ -32,7 +32,7 @@
     // "group": "build",
     "type": "shell",
     // "problemMatcher": "$gcc",
-    // "problemMatcher": []
+    "problemMatcher": [],
     "command": "python",
     "options": {
         "cwd": "${workspaceFolder}/../../../scripts"
@@ -582,7 +582,7 @@
             "command": "robocopy",
             "args": [
                 "${workspaceFolder}/out/hlr_winuwp_arm_debug",
-                "${workspaceFolder}/../../../../../examples/NativeImmersiveClient/",
+                "${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/ARM/Debug",
                 "remoting.dll", "remoting.dll.lib", "remoting.dll.pdb",
                 "/NP",
                 // "IF %ERRORLEVEL% LEQ 1 exit 0"
@@ -593,7 +593,7 @@
             "command": "robocopy",
             "args": [
                 "${workspaceFolder}/out/hlr_winuwp_arm_release",
-                "${workspaceFolder}/../../../../../examples/NativeImmersiveClient/",
+                "${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/ARM/Release",
                 "remoting.dll", "remoting.dll.lib", "remoting.dll.pdb",
                 "/NP",
                 // "IF %ERRORLEVEL% LEQ 1 exit 0"
