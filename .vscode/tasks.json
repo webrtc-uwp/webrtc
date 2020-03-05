@@ -181,7 +181,7 @@
             "command": "robocopy",
             "args": [
                 "${workspaceFolder}/out/hlr_win_x64_debug",
-                // "${workspaceFolder}/../../examples/unity-remoting-plugin/Assets/Plugins/x86_64",
+                // "${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Assets/Plugins/x86_64",
                 "${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Packages/com.hololight.remoting/Runtime/Plugins/x86_64",
                 "remoting_unity.dll", "remoting_unity.dll.pdb",
                 "/NP",
@@ -193,7 +193,8 @@
             "command": "robocopy",
             "args": [
                 "${workspaceFolder}/out/hlr_win_x64_release",
-                "${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Assets/Plugins/x86_64",
+                // "${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Assets/Plugins/x86_64",
+                "${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Packages/com.hololight.remoting/Runtime/Plugins/x86_64",
                 "remoting_unity.dll", "remoting_unity.dll.pdb",
                 "/NP",
                 // "IF %ERRORLEVEL% LEQ 1 exit 0"
