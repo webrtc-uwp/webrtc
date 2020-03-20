@@ -752,7 +752,7 @@
                 // "hlr dbg (unity): Prepare, Build & Deploy",
                 "hlr dbg (unity) (clang): Prepare, Build & Deploy",
                 "hlr dbg (hololens 1): Prepare, Build & Deploy",
-                // "hlr dbg (hololens 2): Prepare, Build & Deploy",
+                "hlr dbg (hololens 2): Prepare, Build & Deploy",
             ],
             "dependsOrder": "sequence"
         },
@@ -762,29 +762,29 @@
                 // "hlr rel (unity): Prepare, Build & Deploy",
                 "hlr rel (unity) (clang): Prepare, Build & Deploy",
                 "hlr rel (hololens 1): Prepare, Build & Deploy",
-                // "hlr rel (hololens 2): Prepare, Build & Deploy",
+                "hlr rel (hololens 2): Prepare, Build & Deploy",
             ],
             "dependsOrder": "sequence"
         },
         // -----------------------------------------------------
-        {
-            "label": "hlr dbg (all) (clang): Prepare, Build & Deploy",
-            "dependsOn": [
-                "hlr dbg (unity) (clang): Prepare, Build & Deploy",
-                "hlr dbg (hololens 1) (clang): Prepare, Build & Deploy",
-                // "hlr dbg (hololens 2): Prepare, Build & Deploy",
-            ],
-            "dependsOrder": "sequence"
-        },
-        {
-            "label": "hlr rel (all) (clang): Prepare, Build & Deploy",
-            "dependsOn": [
-                "hlr rel (unity) (clang): Prepare, Build & Deploy",
-                "hlr rel (hololens 1) (clang): Prepare, Build & Deploy",
-                // "hlr rel (hololens 2): Prepare, Build & Deploy",
-            ],
-            "dependsOrder": "sequence"
-        },
+        // {
+        //     "label": "hlr dbg (all) (clang): Prepare, Build & Deploy",
+        //     "dependsOn": [
+        //         "hlr dbg (unity) (clang): Prepare, Build & Deploy",
+        //         "hlr dbg (hololens 1) (clang): Prepare, Build & Deploy",
+        //         "hlr dbg (hololens 2) (clang): Prepare, Build & Deploy",
+        //     ],
+        //     "dependsOrder": "sequence"
+        // },
+        // {
+        //     "label": "hlr rel (all) (clang): Prepare, Build & Deploy",
+        //     "dependsOn": [
+        //         "hlr rel (unity) (clang): Prepare, Build & Deploy",
+        //         "hlr rel (hololens 1) (clang): Prepare, Build & Deploy",
+        //         "hlr rel (hololens 2) (clang): Prepare, Build & Deploy",
+        //     ],
+        //     "dependsOrder": "sequence"
+        // },
         // -----------------------------------------------------
 
         // -----------------------------------------------------
