@@ -1,7 +1,7 @@
 {
     "files.associations": {
         "api.h": "c",
-        "api_types.h": "c",
+        "types.h": "c",
         "cassert": "c",
         "__config": "c",
         "assert.h": "c",
@@ -25,7 +25,11 @@
         "**/.git/objects/**": true,
         "**/.git/subtree-cache/**": true,
         "**/node_modules/*/**": true,
-        "**/remoting/external/webrtc-uwp-sdk/**": true
+        "**/remoting/external/webrtc-uwp-sdk/**": true,
+        // "external/webrtc-uwp-sdk/webrtc/xplatform/webrtc/remoting/*": true,
+        // "external/webrtc-uwp-sdk/*": true,
+        //"external/*": true,
+        // "remoting/external/webrtc-uwp-sdk/webrtc/xplatform/webrtc": true,
     },
     "files.exclude": {
         "**/.git": true,
@@ -33,7 +37,44 @@
         "**/.hg": true,
         "**/CVS": true,
         "**/.DS_Store": true,
-        "**/remoting/external/webrtc-uwp-sdk/**": true
+        "**/remoting/external/webrtc-uwp-sdk/**": true,
+        // "remoting": false,
+        // "remoting/external/webrtc-uwp-sdk/webrtc/xplatform/webrtc": true,
+        // "webrtc/*.*": true,
+        "api": true,
+        "audio": true,
+        "base": true,
+        "build": true,
+        "build_overrides": true,
+        "buildtools": true,
+        "call": true,
+        "chromium": true,
+        "common_audio": true,
+        "common_video": true,
+        "data": true,
+        "examples": true,
+        "infra": true,
+        "logging": true,
+        "media": true,
+        "modules": true,
+        "ortc": true,
+        "p2p": true,
+        "pc": true,
+        "resources": true,
+        "rtc_base": true,
+        "rtc_tools": true,
+        "sdk": true,
+        "stats": true,
+        "style-guide": true,
+        "system_wrappers": true,
+        "test": true,
+        "testing": true,
+        "third_party": true,
+        "tools": true,
+        "tools_webrtc": true,
+        "video": true,
+        "webrtc": true,
+        // "**/webrtc/.gn": true,
     },
     "editor.tokenColorCustomizations": {
         "textMateRules": [
@@ -58,5 +99,6 @@
         ]
     },
     "C_Cpp.clang_format_path": "${workspaceFolder}/buildtools/win/clang-format.exe",
-    "C_Cpp.clang_format_style": "file"
+    "C_Cpp.clang_format_style": "file",
+    "files.trimTrailingWhitespace": true
 }
