@@ -182,7 +182,7 @@
             "args": [
                 "${workspaceFolder}/out/hlr_win_x64_debug",
                 // "${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Assets/Plugins/x86_64",
-                "${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Packages/com.hololight.remoting/Runtime/Plugins/x86_64",
+                "${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Packages/com.hololight.isar/Runtime/Plugins/x86_64",
                 "remoting_unity.dll", "remoting_unity.dll.pdb",
                 "/NP",
                 // "IF %ERRORLEVEL% LEQ 1 exit 0"
@@ -194,7 +194,7 @@
             "args": [
                 "${workspaceFolder}/out/hlr_win_x64_release",
                 // "${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Assets/Plugins/x86_64",
-                "${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Packages/com.hololight.remoting/Runtime/Plugins/x86_64",
+                "${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Packages/com.hololight.isar/Runtime/Plugins/x86_64",
                 "remoting_unity.dll", "remoting_unity.dll.pdb",
                 "/NP",
                 // "IF %ERRORLEVEL% LEQ 1 exit 0"
@@ -378,7 +378,7 @@
             "command": "robocopy",
             "args": [
                 "${workspaceFolder}/out/hlr_winuwp_x86_debug",
-                "${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/Debug",
+                //"${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/Debug", // no longer needed since vs build events pull the files now (te)
                 "remoting.dll", "remoting.dll.lib", "remoting.dll.pdb",
                 "/NP",
                 // "IF %ERRORLEVEL% LEQ 1 exit 0"
@@ -389,7 +389,7 @@
             "command": "robocopy",
             "args": [
                 "${workspaceFolder}/out/hlr_winuwp_x86_release",
-                "${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/Release",
+                //"${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/Release", // no longer needed since vs build events pull the files now (te)
                 "remoting.dll", "remoting.dll.lib", "remoting.dll.pdb",
                 "/NP",
                 // "IF %ERRORLEVEL% LEQ 1 exit 0"
@@ -583,7 +583,7 @@
             "command": "robocopy",
             "args": [
                 "${workspaceFolder}/out/hlr_winuwp_arm_debug",
-                "${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/ARM/Debug",
+                //"${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/ARM/Debug", // no longer needed since vs build events pull the files now (te)
                 "remoting.dll", "remoting.dll.lib", "remoting.dll.pdb",
                 "/NP",
                 // "IF %ERRORLEVEL% LEQ 1 exit 0"
@@ -594,7 +594,7 @@
             "command": "robocopy",
             "args": [
                 "${workspaceFolder}/out/hlr_winuwp_arm_release",
-                "${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/ARM/Release",
+                //"${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/ARM/Release", // no longer needed since vs build events pull the files now (te)
                 "remoting.dll", "remoting.dll.lib", "remoting.dll.pdb",
                 "/NP",
                 // "IF %ERRORLEVEL% LEQ 1 exit 0"
