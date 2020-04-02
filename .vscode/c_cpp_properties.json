@@ -28,6 +28,35 @@
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "msvc-x64"
+        },
+        {
+            "name": "Win32 (clang)",
+            "includePath": [
+                "${workspaceFolder}/remoting/extras/bindings/platforms/unity/include",
+                "${workspaceFolder}/remoting/extras/bindings/platforms/unity/src",
+                "${workspaceFolder}/remoting/extras/bindings/platforms/unity/external",
+                "${workspaceFolder}/remoting/include",
+                "${workspaceFolder}/remoting/src",
+                "${workspaceFolder}/remoting/data",
+                "${workspaceFolder}/remoting/external",
+                "${workspaceFolder}",
+                "${workspaceFolder}/third_party/abseil-cpp",
+                "${workspaceFolder}/third_party/",
+                "${workspaceFolder}/third_party/libyuv/include",
+                "${workspaceFolder}/third_party/jsoncpp/source/include",
+                "${workspaceFolder}/third_party/googletest/src/googletest/include"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "WEBRTC_WIN"
+            ],
+            "windowsSdkVersion": "10.0.17134.0",
+            "compilerPath": "\"C:\\r-sdk\\libs\\remoting\\external\\webrtc-uwp-sdk\\webrtc\\xplatform\\webrtc\\third_party\\llvm-build\\Release+Asserts\\bin\\clang-cl.exe\"",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64"
         }
     ],
     "version": 4
