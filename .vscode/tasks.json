@@ -75,7 +75,7 @@
             ],
         },
         {
-            "label": "webrtc dbg (x86): Prepare & Build",
+            "label": "webrtc dbg (x86): Prepare | Build",
             "dependsOn": [
                 "webrtc dbg (x86): Prepare"
             ],
@@ -91,7 +91,7 @@
             ],
         },
         {
-            "label": "webrtc dbg (x64): Prepare & Build",
+            "label": "webrtc dbg (x64): Prepare | Build",
             "dependsOn": [
                 "webrtc dbg (x64): Prepare"
             ],
@@ -107,7 +107,7 @@
             ],
         },
         {
-            "label": "webrtc dbg (hololens 1): Prepare & Build",
+            "label": "webrtc dbg (hololens 1): Prepare | Build",
             "dependsOn": [
                 "webrtc dbg (hololens 1): Prepare"
             ],
@@ -122,7 +122,7 @@
             ],
         },
         {
-            "label": "webrtc dbg (hololens 1) (clang): Prepare & Build",
+            "label": "webrtc dbg (hololens 1) (clang): Prepare | Build",
             "dependsOn": [
                 "webrtc dbg (hololens 1) (clang): Prepare"
             ],
@@ -138,7 +138,7 @@
             ],
         },
         {
-            "label": "webrtc dbg (hololens 2): Prepare & Build",
+            "label": "webrtc dbg (hololens 2): Prepare | Build",
             "dependsOn": [
                 "webrtc dbg (hololens 2): Prepare"
             ],
@@ -211,7 +211,7 @@
             "command": "robocopy ${workspaceFolder}/out/hlr_win_x64_release ${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Packages/com.hololight.isar/Runtime/Plugins/x86_64 remoting_unity.dll remoting_unity.dll.pdb /NP; if($LASTEXITCODE -lt 8) { exit 0 }",
         },
         {
-            "label": "hlr dbg (unity): Prepare & Build",
+            "label": "hlr dbg (unity): Prepare | Build",
             "dependsOn": [
                 "hlr dbg (unity): Prepare",
                 "hlr dbg (unity): Build"
@@ -219,7 +219,7 @@
             "dependsOrder": "sequence"
         },
         {
-            "label": "hlr rel (unity): Prepare & Build",
+            "label": "hlr rel (unity): Prepare | Build",
             "dependsOn": [
                 "hlr rel (unity): Prepare",
                 "hlr rel (unity): Build"
@@ -227,7 +227,7 @@
             "dependsOrder": "sequence"
         },
         {
-            "label": "hlr dbg (unity): Build & Deploy",
+            "label": "hlr dbg (unity): Build | Deploy",
             "dependsOn": [
                 "hlr dbg (unity): Build",
                 "hlr dbg (unity): Deploy"
@@ -235,7 +235,7 @@
             "dependsOrder": "sequence",
         },
         {
-            "label": "hlr rel (unity): Build & Deploy",
+            "label": "hlr rel (unity): Build | Deploy",
             "dependsOn": [
                 "hlr rel (unity): Build",
                 "hlr rel (unity): Deploy"
@@ -243,7 +243,7 @@
             "dependsOrder": "sequence",
         },
         {
-            "label": "hlr dbg (unity): Prepare, Build & Deploy",
+            "label": "hlr dbg (unity): Prepare | Build | Deploy",
             "dependsOn": [
                 "hlr dbg (unity): Prepare",
                 "hlr dbg (unity): Build",
@@ -252,7 +252,7 @@
             "dependsOrder": "sequence"
         },
         {
-            "label": "hlr rel (unity): Prepare, Build & Deploy",
+            "label": "hlr rel (unity): Prepare | Build | Deploy",
             "dependsOn": [
                 "hlr rel (unity): Prepare",
                 "hlr rel (unity): Build",
@@ -306,7 +306,7 @@
             // // "problemMatcher": []
         // },
         {
-            "label": "hlr dbg (unity) (clang): Prepare & Build",
+            "label": "hlr dbg (unity) (clang): Prepare | Build",
             "dependsOn": [
                 "hlr dbg (unity) (clang): Prepare",
                 "hlr dbg (unity) (clang): Build"
@@ -314,7 +314,7 @@
             "dependsOrder": "sequence"
         },
         {
-            "label": "hlr rel (unity) (clang): Prepare & Build",
+            "label": "hlr rel (unity) (clang): Prepare | Build",
             "dependsOn": [
                 "hlr rel (unity) (clang): Prepare",
                 "hlr rel (unity) (clang): Build"
@@ -322,7 +322,7 @@
             "dependsOrder": "sequence"
         },
         {
-            "label": "hlr dbg (unity) (clang): Build & Deploy",
+            "label": "hlr dbg (unity) (clang): Build | Deploy",
             "dependsOn": [
                 "hlr dbg (unity) (clang): Build",
                 "hlr dbg (unity) (clang): Deploy"
@@ -330,7 +330,7 @@
             "dependsOrder": "sequence",
         },
         {
-            "label": "hlr rel (unity) (clang): Build & Deploy",
+            "label": "hlr rel (unity) (clang): Build | Deploy",
             "dependsOn": [
                 "hlr rel (unity) (clang): Build",
                 "hlr rel (unity) (clang): Deploy"
@@ -338,7 +338,7 @@
             "dependsOrder": "sequence",
         },
         {
-            "label": "hlr dbg (unity) (clang): Prepare, Build & Deploy",
+            "label": "hlr dbg (unity) (clang): Prepare | Build | Deploy",
             "dependsOn": [
                 "hlr dbg (unity) (clang): Prepare",
                 "hlr dbg (unity) (clang): Build",
@@ -347,7 +347,7 @@
             "dependsOrder": "sequence"
         },
         {
-            "label": "hlr rel (unity) (clang): Prepare, Build & Deploy",
+            "label": "hlr rel (unity) (clang): Prepare | Build | Deploy",
             "dependsOn": [
                 "hlr rel (unity) (clang): Prepare",
                 "hlr rel (unity) (clang): Build",
@@ -388,33 +388,33 @@
         //     "command": "robocopy",
         //     "args": [
         //         "${workspaceFolder}/out/hlr_winuwp_x86_debug",
-        //         "${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/Debug",
-        //         "remoting.dll", "remoting.dll.lib", "remoting.dll.pdb",
+        //         "${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/Debug/HololensClient",
+        //         "remoting.dll", "remoting.dll.pdb",
         //         "/NP",
         //         "; if($LASTEXITCODE -lt 8) { exit 0 }"
         //     ],
         // },
         {
             "label": "hlr dbg (hololens 1): Deploy",
-            "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_x86_debug ${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/Debug remoting.dll remoting.dll.lib remoting.dll.pdb /NP; if($LASTEXITCODE -lt 8) { exit 0 }",
+            "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_x86_debug ${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/Debug/HololensClient remoting.dll remoting.dll.pdb /NP; if($LASTEXITCODE -lt 8) { exit 0 }",
         },
         // {
         //     "label": "hlr rel (hololens 1): Deploy",
         //     "command": "robocopy",
         //     "args": [
         //         "${workspaceFolder}/out/hlr_winuwp_x86_release",
-        //         "${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/Release",
-        //         "remoting.dll", "remoting.dll.lib", "remoting.dll.pdb",
+        //         "${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/Release/HololensClient",
+        //         "remoting.dll", "remoting.dll.pdb",
         //         "/NP",
         //         "; if($LASTEXITCODE -lt 8) { exit 0 }"
         //     ],
         // },
         {
             "label": "hlr rel (hololens 1): Deploy",
-            "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_x86_release ${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/Release remoting.dll remoting.dll.lib remoting.dll.pdb /NP; if($LASTEXITCODE -lt 8) { exit 0 }",
+            "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_x86_release ${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/Release/HololensClient remoting.dll remoting.dll.pdb /NP; if($LASTEXITCODE -lt 8) { exit 0 }",
         },
         {
-            "label": "hlr dbg (hololens 1): Prepare & Build",
+            "label": "hlr dbg (hololens 1): Prepare | Build",
             "dependsOn": [
                 "hlr dbg (hololens 1): Prepare",
                 "hlr dbg (hololens 1): Build"
@@ -422,7 +422,7 @@
             "dependsOrder": "sequence",
         },
         {
-            "label": "hlr rel (hololens 1): Prepare & Build",
+            "label": "hlr rel (hololens 1): Prepare | Build",
             "dependsOn": [
                 "hlr rel (hololens 1): Prepare",
                 "hlr rel (hololens 1): Build"
@@ -430,7 +430,7 @@
             "dependsOrder": "sequence",
         },
         {
-            "label": "hlr dbg (hololens 1): Build & Deploy",
+            "label": "hlr dbg (hololens 1): Build | Deploy",
             "dependsOn": [
                 "hlr dbg (hololens 1): Build",
                 "hlr dbg (hololens 1): Deploy"
@@ -438,7 +438,7 @@
             "dependsOrder": "sequence",
         },
         {
-            "label": "hlr rel (hololens 1): Build & Deploy",
+            "label": "hlr rel (hololens 1): Build | Deploy",
             "dependsOn": [
                 "hlr rel (hololens 1): Build",
                 "hlr rel (hololens 1): Deploy"
@@ -446,7 +446,7 @@
             "dependsOrder": "sequence",
         },
         {
-            "label": "hlr dbg (hololens 1): Prepare, Build & Deploy",
+            "label": "hlr dbg (hololens 1): Prepare | Build | Deploy",
             "dependsOn": [
                 "hlr dbg (hololens 1): Prepare",
                 "hlr dbg (hololens 1): Build",
@@ -458,7 +458,7 @@
             // }
         },
         {
-            "label": "hlr rel (hololens 1): Prepare, Build & Deploy",
+            "label": "hlr rel (hololens 1): Prepare | Build | Deploy",
             "dependsOn": [
                 "hlr rel (hololens 1): Prepare",
                 "hlr rel (hololens 1): Build",
@@ -506,15 +506,15 @@
         //     "command": "robocopy",
         //     "args": [
         //         "${workspaceFolder}/external/webrtc-uwp-sdk/webrtc/xplatform/webrtc/out/hlr_winuwp_x86_debug",
-        //         "${workspaceFolder}/../../examples/NativeImmersiveClient/Debug",
-        //         "remoting.dll", "remoting.dll.lib", "remoting.dll.pdb",
+        //         "${workspaceFolder}/../../examples/NativeImmersiveClient/Debug/HololensClient",
+        //         "remoting.dll", "remoting.dll.pdb",
         //         "/NP",
         //         // "IF %ERRORLEVEL% LEQ 1 exit 0"
         //     ],
         //     // "problemMatcher": [],
         // },
         // {
-        //     "label": "hlr dbg (hololens 1) (clang): Prepare & Build",
+        //     "label": "hlr dbg (hololens 1) (clang): Prepare | Build",
         //     "dependsOn": [
         //         "hlr dbg (hololens 1) (clang): Prepare",
         //         "hlr dbg (hololens 1) (clang): Build"
@@ -522,7 +522,7 @@
         //     "dependsOrder": "sequence",
         // },
         // {
-        //     "label": "hlr rel (hololens 1) (clang): Prepare & Build",
+        //     "label": "hlr rel (hololens 1) (clang): Prepare | Build",
         //     "dependsOn": [
         //         "hlr rel (hololens 1) (clang): Prepare",
         //         "hlr rel (hololens 1) (clang): Build"
@@ -530,7 +530,7 @@
         //     "dependsOrder": "sequence",
         // },
         // {
-        //     "label": "hlr dbg (hololens 1) (clang): Build & Deploy",
+        //     "label": "hlr dbg (hololens 1) (clang): Build | Deploy",
         //     "dependsOn": [
         //         "hlr dbg (hololens 1) (clang): Build",
         //         "hlr dbg (hololens 1): Deploy"
@@ -538,7 +538,7 @@
         //     "dependsOrder": "sequence",
         // },
         // {
-        //     "label": "hlr rel (hololens 1) (clang): Build & Deploy",
+        //     "label": "hlr rel (hololens 1) (clang): Build | Deploy",
         //     "dependsOn": [
         //         "hlr rel (hololens 1) (clang): Build",
         //         "hlr rel (hololens 1): Deploy"
@@ -546,7 +546,7 @@
         //     "dependsOrder": "sequence",
         // },
         // {
-        //     "label": "hlr dbg (hololens 1) (clang): Prepare, Build & Deploy",
+        //     "label": "hlr dbg (hololens 1) (clang): Prepare | Build | Deploy",
         //     "dependsOn": [
         //         "hlr dbg (hololens 1) (clang): Prepare",
         //         "hlr dbg (hololens 1) (clang): Build",
@@ -558,7 +558,7 @@
         //     // }
         // },
         // {
-        //     "label": "hlr rel (hololens 1) (clang): Prepare, Build & Deploy",
+        //     "label": "hlr rel (hololens 1) (clang): Prepare | Build | Deploy",
         //     "dependsOn": [
         //         "hlr rel (hololens 1) (clang): Prepare",
         //         "hlr rel (hololens 1) (clang): Build",
@@ -601,8 +601,8 @@
         //     "command": "robocopy",
         //     "args": [
         //         "${workspaceFolder}/out/hlr_winuwp_arm_debug",
-        //         "${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/ARM/Debug",
-        //         "remoting.dll", "remoting.dll.lib", "remoting.dll.pdb",
+        //         "${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/ARM/Debug/HololensClient",
+        //         "remoting.dll", "remoting.dll.pdb",
         //         "/NP",
         //         // " ^& IF %ERRORLEVEL% LEQ 1 exit 0"
         //         // " ^& IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0"
@@ -611,15 +611,15 @@
         // },
         {
             "label": "hlr dbg (hololens 2): Deploy",
-            "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_arm_debug ${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/ARM/Debug remoting.dll remoting.dll.lib remoting.dll.pdb /NP; if($LASTEXITCODE -lt 8) { exit 0 }",
+            "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_arm_debug ${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/ARM/Debug/HololensClient remoting.dll remoting.dll.pdb /NP; if($LASTEXITCODE -lt 8) { exit 0 }",
         },
         // {
         //     "label": "hlr rel (hololens 2): Deploy",
         //     "command": "robocopy",
         //     "args": [
         //         "${workspaceFolder}/out/hlr_winuwp_arm_release",
-        //         "${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/ARM/Release",
-        //         "remoting.dll", "remoting.dll.lib", "remoting.dll.pdb",
+        //         "${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/ARM/Release/HololensClient",
+        //         "remoting.dll", "remoting.dll.pdb",
         //         "/NP",
         //         // " ^& IF %ERRORLEVEL% LEQ 1 exit 0"
         //         " ^& IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0"
@@ -627,10 +627,10 @@
         // },
         {
             "label": "hlr rel (hololens 2): Deploy",
-            "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_arm_release ${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/ARM/Release remoting.dll remoting.dll.lib remoting.dll.pdb /NP; if($LASTEXITCODE -lt 8) { exit 0 }",
+            "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_arm_release ${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/ARM/Release/HololensClient remoting.dll remoting.dll.pdb /NP; if($LASTEXITCODE -lt 8) { exit 0 }",
         },
         {
-            "label": "hlr dbg (hololens 2): Prepare & Build",
+            "label": "hlr dbg (hololens 2): Prepare | Build",
             "dependsOn": [
                 "hlr dbg (hololens 2): Prepare",
                 "hlr dbg (hololens 2): Build"
@@ -638,7 +638,7 @@
             "dependsOrder": "sequence"
         },
         {
-            "label": "hlr rel (hololens 2): Prepare & Build",
+            "label": "hlr rel (hololens 2): Prepare | Build",
             "dependsOn": [
                 "hlr rel (hololens 2): Prepare",
                 "hlr rel (hololens 2): Build"
@@ -646,7 +646,7 @@
             "dependsOrder": "sequence"
         },
         {
-            "label": "hlr dbg (hololens 2): Build & Deploy",
+            "label": "hlr dbg (hololens 2): Build | Deploy",
             "dependsOn": [
                 "hlr dbg (hololens 2): Build",
                 "hlr dbg (hololens 2): Deploy"
@@ -654,7 +654,7 @@
             "dependsOrder": "sequence",
         },
         {
-            "label": "hlr rel (hololens 2): Build & Deploy",
+            "label": "hlr rel (hololens 2): Build | Deploy",
             "dependsOn": [
                 "hlr rel (hololens 2): Build",
                 "hlr rel (hololens 2): Deploy"
@@ -662,7 +662,7 @@
             "dependsOrder": "sequence",
         },
         {
-            "label": "hlr dbg (hololens 2): Prepare, Build & Deploy",
+            "label": "hlr dbg (hololens 2): Prepare | Build | Deploy",
             "dependsOn": [
                 "hlr dbg (hololens 2): Prepare",
                 "hlr dbg (hololens 2): Build",
@@ -671,7 +671,7 @@
             "dependsOrder": "sequence"
         },
         {
-            "label": "hlr rel (hololens 2): Prepare, Build & Deploy",
+            "label": "hlr rel (hololens 2): Prepare | Build | Deploy",
             "dependsOn": [
                 "hlr rel (hololens 2): Prepare",
                 "hlr rel (hololens 2): Build",
@@ -715,15 +715,15 @@
         //     "command": "robocopy",
         //     "args": [
         //         "${workspaceFolder}/external/webrtc-uwp-sdk/webrtc/xplatform/webrtc/out/hlr_winuwp_arm_debug",
-        //         "${workspaceFolder}/../../examples/NativeImmersiveClient/",
-        //         "remoting.dll", "remoting.dll.lib", "remoting.dll.pdb",
+        //         "${workspaceFolder}/../../examples/NativeImmersiveClient/Debug/HololensClient",
+        //         "remoting.dll", "remoting.dll.pdb",
         //         "/NP",
         //         // "IF %ERRORLEVEL% LEQ 1 exit 0"
         //     ],
         //     // "problemMatcher": []
         // },
         // {
-        //     "label": "hlr dbg (hololens 2) (clang): Prepare & Build",
+        //     "label": "hlr dbg (hololens 2) (clang): Prepare | Build",
         //     "dependsOn": [
         //         "hlr dbg (hololens 2) (clang): Prepare",
         //         "hlr dbg (hololens 2) (clang): Build"
@@ -731,7 +731,7 @@
         //     "dependsOrder": "sequence"
         // },
         // {
-        //     "label": "hlr rel (hololens 2) (clang): Prepare & Build",
+        //     "label": "hlr rel (hololens 2) (clang): Prepare | Build",
         //     "dependsOn": [
         //         "hlr rel (hololens 2) (clang): Prepare",
         //         "hlr rel (hololens 2) (clang): Build"
@@ -739,7 +739,7 @@
         //     "dependsOrder": "sequence"
         // },
         // {
-        //     "label": "hlr dbg (hololens 2) (clang): Build & Deploy",
+        //     "label": "hlr dbg (hololens 2) (clang): Build | Deploy",
         //     "dependsOn": [
         //         "hlr dbg (hololens 2) (clang): Build",
         //         "hlr dbg (hololens 2): Deploy"
@@ -747,7 +747,7 @@
         //     "dependsOrder": "sequence",
         // },
         // {
-        //     "label": "hlr rel (hololens 2) (clang): Build & Deploy",
+        //     "label": "hlr rel (hololens 2) (clang): Build | Deploy",
         //     "dependsOn": [
         //         "hlr rel (hololens 2) (clang): Build",
         //         "hlr rel (hololens 2): Deploy"
@@ -755,7 +755,7 @@
         //     "dependsOrder": "sequence",
         // },
         // {
-        //     "label": "hlr dbg (hololens 2) (clang): Prepare, Build & Deploy",
+        //     "label": "hlr dbg (hololens 2) (clang): Prepare | Build | Deploy",
         //     "dependsOn": [
         //         "hlr dbg (hololens 2) (clang): Prepare",
         //         "hlr dbg (hololens 2) (clang): Build",
@@ -764,7 +764,7 @@
         //     "dependsOrder": "sequence"
         // },
         // {
-        //     "label": "hlr rel (hololens 2) (clang): Prepare, Build & Deploy",
+        //     "label": "hlr rel (hololens 2) (clang): Prepare | Build | Deploy",
         //     "dependsOn": [
         //         "hlr rel (hololens 2) (clang): Prepare",
         //         "hlr rel (hololens 2) (clang): Build",
@@ -776,44 +776,41 @@
 
         // -----------------------------------------------------
         {
-            "label": "hlr dbg (all): Prepare, Build & Deploy",
+            "label": "hlr dbg (all): Prepare | Build",
             "dependsOn": [
-                // "hlr dbg (unity): Prepare, Build & Deploy",
-                "hlr dbg (unity) (clang): Prepare, Build & Deploy",
-                "hlr dbg (hololens 1): Prepare, Build & Deploy",
-                "hlr dbg (hololens 2): Prepare, Build & Deploy",
+                "hlr dbg (unity) (clang): Prepare | Build",
+                "hlr dbg (hololens 1): Prepare | Build",
+                "hlr dbg (hololens 2): Prepare | Build",
             ],
             "dependsOrder": "sequence"
         },
         {
-            "label": "hlr rel (all): Prepare, Build & Deploy",
+            "label": "hlr rel (all): Prepare | Build",
             "dependsOn": [
-                // "hlr rel (unity): Prepare, Build & Deploy",
-                "hlr rel (unity) (clang): Prepare, Build & Deploy",
-                "hlr rel (hololens 1): Prepare, Build & Deploy",
-                "hlr rel (hololens 2): Prepare, Build & Deploy",
+                "hlr rel (unity) (clang): Prepare | Build",
+                "hlr rel (hololens 1): Prepare | Build",
+                "hlr rel (hololens 2): Prepare | Build",
             ],
             "dependsOrder": "sequence"
         },
-        // -----------------------------------------------------
-        // {
-        //     "label": "hlr dbg (all) (clang): Prepare, Build & Deploy",
-        //     "dependsOn": [
-        //         "hlr dbg (unity) (clang): Prepare, Build & Deploy",
-        //         "hlr dbg (hololens 1) (clang): Prepare, Build & Deploy",
-        //         "hlr dbg (hololens 2) (clang): Prepare, Build & Deploy",
-        //     ],
-        //     "dependsOrder": "sequence"
-        // },
-        // {
-        //     "label": "hlr rel (all) (clang): Prepare, Build & Deploy",
-        //     "dependsOn": [
-        //         "hlr rel (unity) (clang): Prepare, Build & Deploy",
-        //         "hlr rel (hololens 1) (clang): Prepare, Build & Deploy",
-        //         "hlr rel (hololens 2) (clang): Prepare, Build & Deploy",
-        //     ],
-        //     "dependsOrder": "sequence"
-        // },
+        {
+            "label": "hlr dbg (all): Prepare | Build | Server Deploy",
+            "dependsOn": [
+                "hlr dbg (unity) (clang): Prepare | Build | Deploy",
+                "hlr dbg (hololens 1): Prepare | Build",
+                "hlr dbg (hololens 2): Prepare | Build",
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "hlr rel (all): Prepare | Build | Server Deploy",
+            "dependsOn": [
+                "hlr rel (unity) (clang): Prepare | Build | Deploy",
+                "hlr rel (hololens 1): Prepare | Build",
+                "hlr rel (hololens 2): Prepare | Build",
+            ],
+            "dependsOrder": "sequence"
+        },
         // -----------------------------------------------------
 
         // -----------------------------------------------------
@@ -857,7 +854,7 @@
             ],
         },
         {
-            "label": "remoting_with_tests dbg (unity): Prepare & Build",
+            "label": "remoting_with_tests dbg (unity): Prepare | Build",
             "dependsOn": [
                 "remoting_with_tests dbg (unity): Prepare",
                 "remoting_with_tests dbg (unity): Build"
@@ -865,7 +862,7 @@
             "dependsOrder": "sequence"
         },
         {
-            "label": "remoting_with_tests rel (unity): Prepare & Build",
+            "label": "remoting_with_tests rel (unity): Prepare | Build",
             "dependsOn": [
                 "remoting_with_tests rel (unity): Prepare",
                 "remoting_with_tests rel (unity): Build"
