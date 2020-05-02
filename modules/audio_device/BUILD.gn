@@ -225,6 +225,16 @@ rtc_source_set("audio_device_impl") {
     deps += [ ":audio_device_ios_objc" ]
   }
 
+  # mr-werbtc : Needed to use ADM2; see webrtc:11544
+  # https://bugs.chromium.org/p/webrtc/issues/detail?id=11544
+  rtc_include_audio_device_module_from_input_and_output = true # TODO - Add option
+  if (rtc_include_audio_device_module_from_input_and_output && is_win && current_os != "winuwp") {
+    deps += [
+      ":audio_device_module_from_input_and_output",
+      ":windows_core_audio_utility",
+    ]
+  }
+
   sources = [
     "dummy/audio_device_dummy.cc",
     "dummy/audio_device_dummy.h",
