@@ -27,7 +27,7 @@ namespace webrtc {
 
 // Allow packets to be transmitted in up to 2 times max video bitrate if the
 // bandwidth estimate allows it.
-const uint8_t kTransmissionMaxBitrateMultiplier = 2;
+const uint8_t kTransmissionMaxBitrateMultiplier = 200;
 const int kDefaultBitrateBps = 300000;
 
 // Require a bitrate increase of max(10%, 20kbps) to resume paused streams.

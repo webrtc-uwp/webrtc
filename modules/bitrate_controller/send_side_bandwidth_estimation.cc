@@ -337,11 +337,14 @@ void SendSideBandwidthEstimation::UpdateEstimate(int64_t now_ms) {
       //   108kbps.
       new_bitrate = static_cast<uint32_t>(
           min_bitrate_history_.front().second * 1.08 + 0.5);
+      if(new_bitrate<500000){
+        new_bitrate=2*new_bitrate;
+      }
 
       // Add 1 kbps extra, just to make sure that we do not get stuck
       // (gives a little extra increase at low rates, negligible at higher
       // rates).
-      new_bitrate += 1000;
+      new_bitrate += 100000;
     } else if (current_bitrate_bps_ > bitrate_threshold_bps_) {
       if (loss <= high_loss_threshold_) {
         // Loss between 2% - 10%: Do nothing.
@@ -412,12 +415,18 @@ void SendSideBandwidthEstimation::CapBitrateToThresholds(int64_t now_ms,
                                                          uint32_t bitrate_bps) {
   if (bwe_incoming_ > 0 && bitrate_bps > bwe_incoming_) {
     bitrate_bps = bwe_incoming_;
+      RTC_LOG(LS_INFO)<<"Bitrate bwe :"<<bitrate_bps;
+
   }
-  if (delay_based_bitrate_bps_ > 0 && bitrate_bps > delay_based_bitrate_bps_) {
-    bitrate_bps = delay_based_bitrate_bps_;
-  }
+  // if (delay_based_bitrate_bps_ > 0 && bitrate_bps > delay_based_bitrate_bps_) {
+  //   bitrate_bps = delay_based_bitrate_bps_;
+  //     RTC_LOG(LS_INFO)<<"Bitrate delay:"<<bitrate_bps;
+
+  // }
   if (bitrate_bps > max_bitrate_configured_) {
     bitrate_bps = max_bitrate_configured_;
+      RTC_LOG(LS_INFO)<<"Bitrate max:"<<bitrate_bps;
+
   }
   if (bitrate_bps < min_bitrate_configured_) {
     if (last_low_bitrate_log_ms_ == -1 ||
