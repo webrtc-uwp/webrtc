@@ -41,7 +41,7 @@
         // "remoting": false,
         // "remoting/external/webrtc-uwp-sdk/webrtc/xplatform/webrtc": true,
         // "webrtc/*.*": true,
-        "api": true,
+       /* "api": true,
         "audio": true,
         "base": true,
         "build": true,
@@ -73,7 +73,7 @@
         "tools": true,
         "tools_webrtc": true,
         "video": true,
-        "webrtc": true,
+        "webrtc": true,*/
         // "**/webrtc/.gn": true,
     },
     "editor.tokenColorCustomizations": {
