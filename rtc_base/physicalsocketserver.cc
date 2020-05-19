@@ -149,6 +149,10 @@ bool PhysicalSocket::Create(int family, int type) {
   if (udp_) {
     SetEnabledEvents(DE_READ | DE_WRITE);
   }
+      constexpr int bufferSizeBytes = 256 * 1024 * 1024;
+    setsockopt(s_, SOL_SOCKET, SO_SNDBUF, (char*)&bufferSizeBytes, sizeof(bufferSizeBytes));
+    setsockopt(s_, SOL_SOCKET, SO_RCVBUF, (char*)&bufferSizeBytes, sizeof(bufferSizeBytes));
+    RTC_LOG(LS_INFO)<<"resize should work out";
   return s_ != INVALID_SOCKET;
 }
 
@@ -164,6 +168,7 @@ SocketAddress PhysicalSocket::GetLocalAddress() const {
     RTC_LOG(LS_WARNING) << "GetLocalAddress: unable to get local addr, socket="
                         << s_;
   }
+
   return address;
 }
 
