@@ -22,9 +22,10 @@ rtc::scoped_refptr<D3D11VideoFrameBuffer> D3D11VideoFrameBuffer::Create(
     ID3D11Texture2D* staging_texture,
     ID3D11Texture2D* rendered_image,
     int width,
-    int height) {
+    int height,
+    DXGI_FORMAT format) {
   return new rtc::RefCountedObject<D3D11VideoFrameBuffer>(
-      context, staging_texture, rendered_image, width, height);
+      context, staging_texture, rendered_image, width, height, format);
 }
 
 rtc::scoped_refptr<D3D11VideoFrameBuffer> D3D11VideoFrameBuffer::Create(
@@ -35,10 +36,11 @@ rtc::scoped_refptr<D3D11VideoFrameBuffer> D3D11VideoFrameBuffer::Create(
     int height,
     uint8_t* dst_y,
     uint8_t* dst_u,
-    uint8_t* dst_v) {
+    uint8_t* dst_v,
+    DXGI_FORMAT format) {
   return new rtc::RefCountedObject<D3D11VideoFrameBuffer>(
       context, staging_texture, rendered_image, width, height, dst_y, dst_u,
-      dst_v);
+      dst_v, format);
 }
 
 VideoFrameBuffer::Type D3D11VideoFrameBuffer::type() const {
@@ -53,8 +55,9 @@ D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(ID3D11DeviceContext* context,
                                              ID3D11Texture2D* staging_texture,
                                              ID3D11Texture2D* rendered_image,
                                              int width,
-                                             int height)
-    : width_(width), height_(height) {
+                                             int height,
+                                             DXGI_FORMAT format)
+    : width_(width), height_(height), texture_format_(format) {
   RTC_CHECK(rendered_image != nullptr);
   staging_texture_.copy_from(staging_texture);
   rendered_image_.copy_from(rendered_image);
@@ -68,21 +71,21 @@ D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(ID3D11DeviceContext* context,
                                              int height,
                                              uint8_t* dst_y,
                                              uint8_t* dst_u,
-                                             uint8_t* dst_v)
+                                             uint8_t* dst_v,
+                                             DXGI_FORMAT format)
     : width_(width),
       height_(height),
       dst_y_(dst_y),
       dst_u_(dst_u),
-      dst_v_(dst_v) {
+      dst_v_(dst_v),
+      texture_format_(format) {
   RTC_CHECK(rendered_image != nullptr);
   context_.copy_from(context);
   staging_texture_.copy_from(staging_texture);
   rendered_image_.copy_from(rendered_image);
 }
 
-D3D11VideoFrameBuffer::~D3D11VideoFrameBuffer() {
-
-}
+D3D11VideoFrameBuffer::~D3D11VideoFrameBuffer() {}
 
 int D3D11VideoFrameBuffer::width() const {
   return width_;
@@ -109,21 +112,24 @@ D3D11VideoFrameBuffer::ToI420() {
     int stride_y = width_;
     int stride_uv = stride_y / 2;
 
-    // TODO: this very much depends on the texture format. We should make clear
-    // which ones we support and either check at creation time or somewhere
-    // else.
-    int result = libyuv::ARGBToI420(
-        static_cast<uint8_t*>(mapped.pData), mapped.RowPitch, dst_y_, width_,
-        dst_u_, stride_uv, dst_v_, stride_uv, width_, height_);
-    assert(result == 0);
-    context_->Unmap(staging_texture_.get(), 0);
+    if (texture_format_ == DXGI_FORMAT_R8G8B8A8_UNORM ||
+        texture_format_ == DXGI_FORMAT_R8G8B8A8_TYPELESS) {
+      int32_t conversion_result = libyuv::ARGBToI420(
+          static_cast<uint8_t*>(mapped.pData), mapped.RowPitch, dst_y_, width_,
+          dst_u_, stride_uv, dst_v_, stride_uv, width_, height_);
 
-    if (result != 0) {
-      RTC_LOG(LS_ERROR) << "i420 conversion failed with error code" << result;
+      if (conversion_result != 0) {
+        RTC_LOG(LS_ERROR) << "i420 conversion failed with error code"
+                          << conversion_result;
+        // crash in debug mode so we can find out what went wrong
+        RTC_DCHECK(conversion_result == 0);
+      }
+    } else {
+      FATAL() << "Unsupported texture format";
     }
 
-    // return I420Buffer::Copy(width_, height_, dst_y_, stride_y, dst_u_,
-    //                         stride_uv, dst_v_, stride_uv);
+    context_->Unmap(staging_texture_.get(), 0);
+
     rtc::Callback0<void> unused;
     return webrtc::WrapI420Buffer(width_, height_, dst_y_, stride_y, dst_u_,
                                   stride_uv, dst_v_, stride_uv, unused);
@@ -131,4 +137,4 @@ D3D11VideoFrameBuffer::ToI420() {
 
   return nullptr;
 }
-}  // namespace hololight
+}  // namespace hlr

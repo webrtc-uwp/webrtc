@@ -47,6 +47,7 @@ namespace hlr {
         winrt::com_ptr<ID3D11Texture2D> staging_texture_;
         winrt::com_ptr<ID3D11Device> device_;
         winrt::com_ptr<ID3D11DeviceContext> context_;
+        DXGI_FORMAT texture_format_;
         int width_;
         int height_;
 

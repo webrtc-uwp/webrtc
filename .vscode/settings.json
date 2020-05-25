@@ -19,7 +19,9 @@
         "vector": "cpp",
         "xmemory": "cpp",
         "xstddef": "cpp",
-        "xstring": "cpp"
+        "xstring": "cpp",
+        "codecvt": "cpp",
+        "xlocale": "cpp"
     },
     "files.watcherExclude": {
         "**/.git/objects/**": true,

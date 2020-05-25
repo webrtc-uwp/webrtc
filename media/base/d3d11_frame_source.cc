@@ -59,6 +59,7 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(ID3D11Device* device,
 
   width_ = desc->Width;
   height_ = desc->Height;
+  texture_format_ = desc->Format;
 
   dst_y_ = static_cast<uint8_t*>(malloc(width_ * height_));
   dst_u_ = static_cast<uint8_t*>(malloc((width_ / 2) * (height_ / 2)));
@@ -137,7 +138,7 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* rendered_image,
 
   auto d3dFrameBuffer = D3D11VideoFrameBuffer::Create(
       context_.get(), staging_texture_.get(), rendered_image, width_, height_,
-      dst_y_, dst_u_, dst_v_);
+      dst_y_, dst_u_, dst_v_, texture_format_);
 
   // on windows, the best way to do this would be to convert to nv12 directly
   // since the encoder expects that. libyuv features an ARGBToNV12 function. The

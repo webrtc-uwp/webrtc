@@ -37,7 +37,8 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
       ID3D11Texture2D* staging_texture,
       ID3D11Texture2D* rendered_image,
       int width,
-      int height);
+      int height,
+      DXGI_FORMAT format);
   static rtc::scoped_refptr<D3D11VideoFrameBuffer> Create(
       ID3D11DeviceContext* context,
       ID3D11Texture2D* staging_texture,
@@ -46,7 +47,8 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
       int height,
       uint8_t* dst_y,
       uint8_t* dst_u,
-      uint8_t* dst_v);
+      uint8_t* dst_v,
+      DXGI_FORMAT format);
   webrtc::VideoFrameBuffer::Type type() const override;
   int width() const override;
   int height() const override;
@@ -64,7 +66,8 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
                         ID3D11Texture2D* staging_texture,
                         ID3D11Texture2D* rendered_image,
                         int width,
-                        int height);
+                        int height,
+                        DXGI_FORMAT format);
   D3D11VideoFrameBuffer(ID3D11DeviceContext* context,
                         ID3D11Texture2D* staging_texture,
                         ID3D11Texture2D* rendered_image,
@@ -72,7 +75,8 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
                         int height,
                         uint8_t* dst_y,
                         uint8_t* dst_u,
-                        uint8_t* dst_v);
+                        uint8_t* dst_v,
+                        DXGI_FORMAT format);
 
  private:
   const int width_;
@@ -91,6 +95,8 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
   uint8_t* dst_y_;
   uint8_t* dst_u_;
   uint8_t* dst_v_;
+
+  DXGI_FORMAT texture_format_;
 };
 }  // namespace hololight
 
