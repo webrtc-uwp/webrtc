@@ -15,7 +15,8 @@
                 "${workspaceFolder}/third_party/",
                 "${workspaceFolder}/third_party/libyuv/include",
                 "${workspaceFolder}/third_party/jsoncpp/source/include",
-                "${workspaceFolder}/third_party/googletest/src/googletest/include"
+                "${workspaceFolder}/third_party/googletest/src/googletest/include",
+                "${workspaceFolder}/remoting/extras/bindings/platforms/unity/external/unity"
             ],
             "defines": [
                 "_DEBUG",
