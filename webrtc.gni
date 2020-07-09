@@ -233,6 +233,10 @@ declare_args() {
 
   # Include tests in standalone checkout.
   rtc_include_tests = !build_with_chromium && !build_with_mozilla
+
+  # mr-werbtc: Needed to use ADM2; see webrtc:11544
+  # https://bugs.chromium.org/p/webrtc/issues/detail?id=11544
+  rtc_include_audio_device_module_from_input_and_output = false
 }
 
 # Make it possible to provide custom locations for some libraries (move these
