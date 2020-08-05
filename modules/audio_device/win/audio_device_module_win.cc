@@ -38,6 +38,34 @@ namespace {
     }                                 \
   } while (0)
 
+#define RETURN_IF_OUTPUT_IS_INITIALIZED(...) \
+  do {                                       \
+    if (output_->PlayoutIsInitialized()) {   \
+      return __VA_ARGS__;                    \
+    }                                        \
+  } while (0)
+
+#define RETURN_IF_INPUT_IS_INITIALIZED(...) \
+  do {                                      \
+    if (input_->RecordingIsInitialized()) { \
+      return __VA_ARGS__;                   \
+    }                                       \
+  } while (0)
+
+#define RETURN_IF_OUTPUT_IS_ACTIVE(...) \
+  do {                                  \
+    if (output_->Playing()) {           \
+      return __VA_ARGS__;               \
+    }                                   \
+  } while (0)
+
+#define RETURN_IF_INPUT_IS_ACTIVE(...) \
+  do {                                 \
+    if (input_->Recording()) {         \
+      return __VA_ARGS__;              \
+    }                                  \
+  } while (0)
+
 // This class combines a generic instance of an AudioInput and a generic
 // instance of an AudioOutput to create an AudioDeviceModule. This is mostly
 // done by delegating to the audio input/output with some glue code. This class
@@ -225,6 +253,7 @@ class WindowsAudioDeviceModule : public AudioDeviceModuleForTest {
     RTC_LOG(INFO) << __FUNCTION__;
     RTC_DCHECK_RUN_ON(&thread_checker_);
     RETURN_IF_OUTPUT_RESTARTS(0);
+    RETURN_IF_OUTPUT_IS_INITIALIZED(0);
     return output_->InitPlayout();
   }
 
@@ -246,6 +275,7 @@ class WindowsAudioDeviceModule : public AudioDeviceModuleForTest {
     RTC_LOG(INFO) << __FUNCTION__;
     RTC_DCHECK_RUN_ON(&thread_checker_);
     RETURN_IF_INPUT_RESTARTS(0);
+    RETURN_IF_INPUT_IS_INITIALIZED(0);
     return input_->InitRecording();
   }
 
@@ -260,6 +290,7 @@ class WindowsAudioDeviceModule : public AudioDeviceModuleForTest {
     RTC_LOG(INFO) << __FUNCTION__;
     RTC_DCHECK_RUN_ON(&thread_checker_);
     RETURN_IF_OUTPUT_RESTARTS(0);
+    RETURN_IF_OUTPUT_IS_ACTIVE(0);
     return output_->StartPlayout();
   }
 
@@ -281,6 +312,7 @@ class WindowsAudioDeviceModule : public AudioDeviceModuleForTest {
     RTC_LOG(INFO) << __FUNCTION__;
     RTC_DCHECK_RUN_ON(&thread_checker_);
     RETURN_IF_INPUT_RESTARTS(0);
+    RETURN_IF_INPUT_IS_ACTIVE(0);
     return input_->StartRecording();
   }
 

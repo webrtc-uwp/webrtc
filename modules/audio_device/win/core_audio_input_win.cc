@@ -43,13 +43,13 @@ CoreAudioInput::~CoreAudioInput() {
 int CoreAudioInput::Init() {
   RTC_DLOG(INFO) << __FUNCTION__;
   RTC_DCHECK_RUN_ON(&thread_checker_);
-  StopRecording();
   return 0;
 }
 
 int CoreAudioInput::Terminate() {
   RTC_DLOG(INFO) << __FUNCTION__;
   RTC_DCHECK_RUN_ON(&thread_checker_);
+  StopRecording();
   return 0;
 }
 
