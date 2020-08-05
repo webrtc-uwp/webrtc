@@ -485,7 +485,8 @@ bool CoreAudioBase::Init() {
     return false;
   }
   RTC_DLOG(INFO) << "audio session state: " << SessionStateToString(state);
-  RTC_DCHECK_EQ(state, AudioSessionStateInactive);
+  // https://bugs.chromium.org/p/webrtc/issues/detail?id=11833
+  //RTC_DCHECK_EQ(state, AudioSessionStateInactive);
 
   // Register the client to receive notifications of session events, including
   // changes in the stream state.
