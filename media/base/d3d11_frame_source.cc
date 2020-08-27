@@ -42,7 +42,7 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(ID3D11Device* device,
   sampleDesc.Count = 1;
   sampleDesc.Quality = 0;
 
-  // the braces make sure sure the struct is zero-initialized
+  // the braces make sure the struct is zero-initialized
   D3D11_TEXTURE2D_DESC stagingDesc = {};
   stagingDesc.ArraySize = desc->ArraySize;
   stagingDesc.BindFlags = 0;
@@ -74,6 +74,10 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(ID3D11Device* device,
   // be nice. Or Rust.
   HRESULT hr =
       device_->CreateTexture2D(&stagingDesc, nullptr, staging_texture_.put());
+
+  std::string name = "D3D11VideoFrameSource_Staging";
+  staging_texture_->SetPrivateData(WKPDID_D3DDebugObjectName, name.length(), name.c_str());
+
   if (FAILED(hr)) {
     // TODO: something sensible, but constructors can't return values...meh.
     // maybe we should write a static Create method that can fail instead.
