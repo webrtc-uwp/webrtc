@@ -296,7 +296,10 @@ int CoreAudioBase::DeviceName(int index,
 bool CoreAudioBase::Init() {
   RTC_DLOG(INFO) << __FUNCTION__ << "[" << DirectionToString(direction())
                  << "]";
-  RTC_DCHECK(!device_id_.empty());
+  if (device_id_.empty()) {
+    return false;
+  }
+
   RTC_DCHECK(audio_device_buffer_);
   RTC_DCHECK(!audio_client_);
   RTC_DCHECK(!audio_session_control_.Get());
