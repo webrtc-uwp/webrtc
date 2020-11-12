@@ -12,6 +12,8 @@
 
 #include "rtc_base/win32.h"
 
+#include <socketapi.h>
+
 namespace rtc {
 
 // Please don't remove this function.
@@ -29,6 +31,10 @@ class WinsockInitializer {
     WSADATA wsaData;
     WORD wVersionRequested = MAKEWORD(1, 0);
     err_ = WSAStartup(wVersionRequested, &wsaData);
+
+    if (!err_) {
+      hr_ = SetSocketMediaStreamingMode(true);
+    }
   }
   ~WinsockInitializer() {
     if (!err_)
@@ -38,6 +44,7 @@ class WinsockInitializer {
 
  private:
   int err_;
+  HRESULT hr_;
 };
 WinsockInitializer g_winsockinit;
 #endif
