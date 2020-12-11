@@ -178,5 +178,6 @@
     },
     "C_Cpp.clang_format_path": "${workspaceFolder}/buildtools/win/clang-format.exe",
     "C_Cpp.clang_format_style": "file",
-    "files.trimTrailingWhitespace": true
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
 }
