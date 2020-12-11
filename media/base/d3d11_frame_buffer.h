@@ -29,9 +29,14 @@
 namespace hlr {
 class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
  public:
- ~D3D11VideoFrameBuffer() override;
-  // TODO: look up if refcounting is needed/common for buffers. It is for
-  // sources but maybe I mixed it up.
+  ~D3D11VideoFrameBuffer() override;
+
+  // KL: Used on client side. ToI420 would probably crash because it has no
+  // buffers to copy to, since those are supplied from the outside. On the
+  // client CPU download isn't needed as the texture is decoded on the GPU and
+  // stays there.
+  // The only user of this (decoder) doesn't supply neither context nor
+  // staging_texture. Can we delete those?
   static rtc::scoped_refptr<D3D11VideoFrameBuffer> Create(
       ID3D11DeviceContext* context,
       ID3D11Texture2D* staging_texture,
@@ -39,26 +44,33 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
       int width,
       int height,
       DXGI_FORMAT format);
+
+  // KL: Used on server side. Supports calling ToI420 (i.e. downloading to CPU)
+  // because the encoder expects the data in this format.
   static rtc::scoped_refptr<D3D11VideoFrameBuffer> Create(
       ID3D11DeviceContext* context,
       ID3D11Texture2D* staging_texture,
       ID3D11Texture2D* rendered_image,
-      int width,
-      int height,
       uint8_t* dst_y,
       uint8_t* dst_u,
       uint8_t* dst_v,
-      DXGI_FORMAT format);
+      D3D11_TEXTURE2D_DESC rendered_image_desc);
+
   webrtc::VideoFrameBuffer::Type type() const override;
+
   int width() const override;
+
   int height() const override;
 
   // Returns the subresource index for rendered_image_.
   // This is needed because the decoder MFT allocates a texture array, so the
   // resource is always the same but we get different subresources each frame.
   uint32_t subresource_index() { return subresource_index_; }
+
   void set_subresource_index(uint32_t val) { subresource_index_ = val; }
+
   ID3D11Texture2D* texture() { return rendered_image_.get(); }
+
   rtc::scoped_refptr<webrtc::I420BufferInterface> ToI420() override;
 
  protected:
@@ -68,19 +80,21 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
                         int width,
                         int height,
                         DXGI_FORMAT format);
+
   D3D11VideoFrameBuffer(ID3D11DeviceContext* context,
                         ID3D11Texture2D* staging_texture,
                         ID3D11Texture2D* rendered_image,
-                        int width,
-                        int height,
+                        // int width,
+                        // int height,
                         uint8_t* dst_y,
                         uint8_t* dst_u,
                         uint8_t* dst_v,
-                        DXGI_FORMAT format);
+                        D3D11_TEXTURE2D_DESC rendered_image_desc
+                        /*                        DXGI_FORMAT format*/);
 
  private:
-  const int width_;
-  const int height_;
+  int width_;
+  int height_;
 
   // This is only used in i420 conversion to download data from the GPU.
   winrt::com_ptr<ID3D11Texture2D> staging_texture_;
@@ -97,7 +111,8 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
   uint8_t* dst_v_;
 
   DXGI_FORMAT texture_format_;
+  D3D11_TEXTURE2D_DESC rendered_image_desc_;
 };
-}  // namespace hololight
+}  // namespace hlr
 
 #endif  // HOLOLIGHT_D3D11VIDEOFRAMEBUFFER

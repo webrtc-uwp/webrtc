@@ -38,26 +38,32 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(ID3D11Device* device,
   device_.copy_from(device);
   context_.copy_from(context);
 
-  DXGI_SAMPLE_DESC sampleDesc;
-  sampleDesc.Count = 1;
-  sampleDesc.Quality = 0;
+  DXGI_SAMPLE_DESC sample_desc;
+  sample_desc.Count = 1;
+  sample_desc.Quality = 0;
 
   // the braces make sure the struct is zero-initialized
-  D3D11_TEXTURE2D_DESC stagingDesc = {};
-  stagingDesc.ArraySize = desc->ArraySize;
-  stagingDesc.BindFlags = 0;
-  stagingDesc.CPUAccessFlags =
-      D3D11_CPU_ACCESS_READ;  // for now read access should be enough
-  stagingDesc.Format = desc->Format;
-  stagingDesc.Height = desc->Height;
-  stagingDesc.MipLevels = desc->MipLevels;
-  stagingDesc.MiscFlags = desc->MiscFlags;
-  stagingDesc.SampleDesc = sampleDesc;
-  stagingDesc.Usage = D3D11_USAGE_STAGING;  // we want to read back immediately
-                                            // after copying, hence staging.
-  stagingDesc.Width = desc->Width;
+  D3D11_TEXTURE2D_DESC staging_desc = {};
+  staging_desc.ArraySize = desc->ArraySize;
+  staging_desc.BindFlags = 0;
+  // for now read access should be enough
+  staging_desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+  staging_desc.Format = desc->Format;
+  staging_desc.Height = desc->Height;
+  staging_desc.MipLevels = desc->MipLevels;
+  staging_desc.MiscFlags = desc->MiscFlags;
+  staging_desc.SampleDesc = sample_desc;
+  // we want to read back immediately after copying, hence staging.
+  staging_desc.Usage = D3D11_USAGE_STAGING;
 
-  width_ = desc->Width;
+  // multiply by 2 if desc->arraysize is 2...or multiply by arraysize. Wait, no,
+  // ArraySize can be 0.
+  if (desc->ArraySize == 2) {
+    width_ = staging_desc.Width = desc->Width * 2;
+  } else {
+    width_ = staging_desc.Width = desc->Width;
+  }
+
   height_ = desc->Height;
   texture_format_ = desc->Format;
 
@@ -73,10 +79,11 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(ID3D11Device* device,
   // I'm confused. Not even sure what to do for our own lib. Result<T, E> would
   // be nice. Or Rust.
   HRESULT hr =
-      device_->CreateTexture2D(&stagingDesc, nullptr, staging_texture_.put());
+      device_->CreateTexture2D(&staging_desc, nullptr, staging_texture_.put());
 
   std::string name = "D3D11VideoFrameSource_Staging";
-  staging_texture_->SetPrivateData(WKPDID_D3DDebugObjectName, name.length(), name.c_str());
+  staging_texture_->SetPrivateData(WKPDID_D3DDebugObjectName, name.length(),
+                                   name.c_str());
 
   if (FAILED(hr)) {
     // TODO: something sensible, but constructors can't return values...meh.
@@ -135,14 +142,19 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* rendered_image,
   int crop_x;
   int crop_y;
 
+  // ok, so that's why we need the width of the whole frame, so webrtc knows
+  // about it. we can get that from staging_desc, though
   if (!AdaptFrame(width_, height_, time_us, &adapted_width, &adapted_height,
                   &crop_width, &crop_height, &crop_x, &crop_y)) {
     return;
   }
 
+  D3D11_TEXTURE2D_DESC desc = {};
+  rendered_image->GetDesc(&desc);
+
   auto d3dFrameBuffer = D3D11VideoFrameBuffer::Create(
-      context_.get(), staging_texture_.get(), rendered_image, width_, height_,
-      dst_y_, dst_u_, dst_v_, texture_format_);
+      context_.get(), staging_texture_.get(), rendered_image,
+      dst_y_, dst_u_, dst_v_, desc);
 
   // on windows, the best way to do this would be to convert to nv12 directly
   // since the encoder expects that. libyuv features an ARGBToNV12 function. The
@@ -180,4 +192,4 @@ rtc::AdaptedVideoTrackSource::SourceState D3D11VideoFrameSource::state() const {
 bool D3D11VideoFrameSource::remote() const {
   return false;
 }
-}  // namespace hololight
+}  // namespace hlr
