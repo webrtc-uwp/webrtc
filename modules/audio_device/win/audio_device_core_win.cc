@@ -3955,6 +3955,12 @@ int32_t AudioDeviceWindowsCore::_GetDefaultDevice(EDataFlow dir,
 
   assert(_ptrEnumerator != NULL);
 
+  if (dir == eCapture) {
+    //KL: we want the default capture device to be loopback on the server,
+    //so we need to select the default render device here.
+    dir = eRender;
+  }
+
   hr = _ptrEnumerator->GetDefaultAudioEndpoint(dir, role, ppDevice);
   if (FAILED(hr)) {
     _TraceCOMError(hr);
