@@ -97,7 +97,8 @@
         "valarray": "cpp",
         "xlocbuf": "cpp",
         "xlocmes": "cpp",
-        "compare": "cpp"
+        "compare": "cpp",
+        "*.inc": "cpp"
     },
     "files.watcherExclude": {
         "**/.git/objects/**": true,

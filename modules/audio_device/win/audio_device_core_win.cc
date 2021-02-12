@@ -3280,7 +3280,9 @@ DWORD AudioDeviceWindowsCore::DoCaptureThread() {
         if (flags & AUDCLNT_BUFFERFLAGS_SILENT) {
           // Treat all of the data in the packet as silence and ignore the
           // actual data values.
-          RTC_LOG(LS_WARNING) << "AUDCLNT_BUFFERFLAGS_SILENT";
+          // KL: with loopback device silent buffers are expected when the server
+          // doesn't play sound at all. No need to spam the logs.
+          // RTC_LOG(LS_WARNING) << "AUDCLNT_BUFFERFLAGS_SILENT";
           pData = NULL;
         }
 
