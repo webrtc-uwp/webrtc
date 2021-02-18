@@ -124,7 +124,12 @@ LogMessage::LogMessage(const char* file,
     tag_ = FilenameFromPath(file);
     print_stream_ << "(line " << line << "): ";
 #else
-    print_stream_ << "(" << FilenameFromPath(file) << ":" << line << "): ";
+    // use a format visual studio understands (unfortunately it's a relative path so the output is still not clickable)
+    char const* remoting = "../../remoting";
+    if (strlen(file) >= strlen(remoting) && (strncmp(file, remoting, strlen(remoting))==0) ) {
+      print_stream_ << /* FilenameFromPath( */file/* ) */ << "(" << line << "): " /* << abs_path_str.c_str() */;
+    } else
+      print_stream_ << "(" << FilenameFromPath(file) << ":" << line << "): ";
 #endif
   }
 
