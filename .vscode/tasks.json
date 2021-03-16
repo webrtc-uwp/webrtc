@@ -59,20 +59,55 @@
       {
         "label": "run interactive (webrtc)",
         "args": [
-          "./run.py", "-a", "${input:run_action}", "-t", "webrtc", "-p", "${input:run_platform}", "-x", "${input:run_arch}", "-c", "debug", "--noWrapper"
-        ],
+          "./run.py",
+          "-a",
+          "${input:run_action}",
+          "-t",
+          "webrtc",
+          "-p",
+          "${input:run_platform}",
+          "-x",
+          "${input:run_arch}",
+          "-c",
+          "debug",
+          "--noWrapper"
+        ]
       },
       {
         "label": "run interactive (hlr)",
         "args": [
-          "./run.py", "-a", "${input:run_action}", "-u", "hlr", "-p", "${input:run_platform}", "-x", "${input:run_arch}", "-c", "debug", "--noWrapper", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "${input:run_action}",
+          "-u",
+          "hlr",
+          "-p",
+          "${input:run_platform}",
+          "-x",
+          "${input:run_arch}",
+          "-c",
+          "debug",
+          "--noWrapper",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "webrtc dbg (x86): Prepare",
         "args": [
-          "./run.py", "-a", "prepare", "-t", "webrtc", "-p", "win", "-x", "x86", "-c", "debug", "--noWrapper"
-        ],
+          "./run.py",
+          "-a",
+          "prepare",
+          "-t",
+          "webrtc",
+          "-p",
+          "win",
+          "-x",
+          "x86",
+          "-c",
+          "debug",
+          "--noWrapper"
+        ]
       },
       {
         "label": "webrtc dbg (x86): Prepare | Build",
@@ -80,14 +115,36 @@
           "webrtc dbg (x86): Prepare"
         ],
         "args": [
-          "./run.py", "-a", "build", "-t", "webrtc", "-p", "win", "-x", "x86", "-c", "debug", "--noWrapper"
-        ],
+          "./run.py",
+          "-a",
+          "build",
+          "-t",
+          "webrtc",
+          "-p",
+          "win",
+          "-x",
+          "x86",
+          "-c",
+          "debug",
+          "--noWrapper"
+        ]
       },
       {
         "label": "webrtc dbg (x64): Prepare",
         "args": [
-          "./run.py", "-a", "prepare", "-t", "webrtc", "-p", "win", "-x", "x64", "-c", "debug", "--noWrapper"
-        ],
+          "./run.py",
+          "-a",
+          "prepare",
+          "-t",
+          "webrtc",
+          "-p",
+          "win",
+          "-x",
+          "x64",
+          "-c",
+          "debug",
+          "--noWrapper"
+        ]
       },
       {
         "label": "webrtc dbg (x64): Prepare | Build",
@@ -95,14 +152,36 @@
           "webrtc dbg (x64): Prepare"
         ],
         "args": [
-          "./run.py", "-a", "build", "-t", "webrtc", "-p", "win", "-x", "x64", "-c", "debug", "--noWrapper"
-        ],
+          "./run.py",
+          "-a",
+          "build",
+          "-t",
+          "webrtc",
+          "-p",
+          "win",
+          "-x",
+          "x64",
+          "-c",
+          "debug",
+          "--noWrapper"
+        ]
       },
       {
         "label": "webrtc dbg (hololens 1): Prepare",
         "args": [
-          "./run.py", "-a", "prepare", "-t", "webrtc", "-p", "winuwp", "-x", "x86", "-c", "debug", "--noWrapper"
-        ],
+          "./run.py",
+          "-a",
+          "prepare",
+          "-t",
+          "webrtc",
+          "-p",
+          "winuwp",
+          "-x",
+          "x86",
+          "-c",
+          "debug",
+          "--noWrapper"
+        ]
       },
       {
         "label": "webrtc dbg (hololens 1): Prepare | Build",
@@ -110,14 +189,37 @@
           "webrtc dbg (hololens 1): Prepare"
         ],
         "args": [
-          "./run.py", "-a", "build", "-t", "webrtc", "-p", "winuwp", "-x", "x86", "-c", "debug", "--noWrapper"
-        ],
+          "./run.py",
+          "-a",
+          "build",
+          "-t",
+          "webrtc",
+          "-p",
+          "winuwp",
+          "-x",
+          "x86",
+          "-c",
+          "debug",
+          "--noWrapper"
+        ]
       },
       {
         "label": "webrtc dbg (hololens 1) (clang): Prepare",
         "args": [
-          "./run.py", "-a", "prepare", "-t", "webrtc", "-p", "winuwp", "-x", "x86", "-c", "debug", "--clang", "--noWrapper"
-        ],
+          "./run.py",
+          "-a",
+          "prepare",
+          "-t",
+          "webrtc",
+          "-p",
+          "winuwp",
+          "-x",
+          "x86",
+          "-c",
+          "debug",
+          "--clang",
+          "--noWrapper"
+        ]
       },
       {
         "label": "webrtc dbg (hololens 1) (clang): Prepare | Build",
@@ -125,14 +227,37 @@
           "webrtc dbg (hololens 1) (clang): Prepare"
         ],
         "args": [
-          "./run.py", "-a", "build", "-t", "webrtc", "-p", "winuwp", "-x", "x86", "-c", "debug", "--clang", "--noWrapper"
-        ],
+          "./run.py",
+          "-a",
+          "build",
+          "-t",
+          "webrtc",
+          "-p",
+          "winuwp",
+          "-x",
+          "x86",
+          "-c",
+          "debug",
+          "--clang",
+          "--noWrapper"
+        ]
       },
       {
         "label": "webrtc dbg (hololens 2): Prepare",
         "args": [
-          "./run.py", "-a", "prepare", "-t", "webrtc", "-p", "winuwp", "-x", "arm", "-c", "debug", "--noWrapper"
-        ],
+          "./run.py",
+          "-a",
+          "prepare",
+          "-t",
+          "webrtc",
+          "-p",
+          "winuwp",
+          "-x",
+          "arm",
+          "-c",
+          "debug",
+          "--noWrapper"
+        ]
       },
       {
         "label": "webrtc dbg (hololens 2): Prepare | Build",
@@ -140,32 +265,95 @@
           "webrtc dbg (hololens 2): Prepare"
         ],
         "args": [
-          "./run.py", "-a", "build", "-t", "webrtc", "-p", "winuwp", "-x", "arm", "-c", "debug", "--noWrapper"
-        ],
+          "./run.py",
+          "-a",
+          "build",
+          "-t",
+          "webrtc",
+          "-p",
+          "winuwp",
+          "-x",
+          "arm",
+          "-c",
+          "debug",
+          "--noWrapper"
+        ]
       },
       {
         "label": "hlr dbg (unity): Prepare",
         "args": [
-          "./run.py", "-a", "prepare", "-u", "hlr", "-p", "win", "-x", "x64", "-c", "debug", "--noWrapper", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "prepare",
+          "-u",
+          "hlr",
+          "-p",
+          "win",
+          "-x",
+          "x64",
+          "-c",
+          "debug",
+          "--noWrapper",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr rel (unity): Prepare",
         "args": [
-          "./run.py", "-a", "prepare", "-u", "hlr", "-p", "win", "-x", "x64", "-c", "release", "--noWrapper", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "prepare",
+          "-u",
+          "hlr",
+          "-p",
+          "win",
+          "-x",
+          "x64",
+          "-c",
+          "release",
+          "--noWrapper",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr dbg (unity): Build",
         "args": [
-          "./run.py", "-a", "build", "-u", "hlr", "-p", "win", "-x", "x64", "-c", "debug", "--noWrapper", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "build",
+          "-u",
+          "hlr",
+          "-p",
+          "win",
+          "-x",
+          "x64",
+          "-c",
+          "debug",
+          "--noWrapper",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr rel (unity): Build",
         "args": [
-          "./run.py", "-a", "build", "-u", "hlr", "-p", "win", "-x", "x64", "-c", "release", "--noWrapper", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "build",
+          "-u",
+          "hlr",
+          "-p",
+          "win",
+          "-x",
+          "x64",
+          "-c",
+          "release",
+          "--noWrapper",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr dbg (unity): Deploy",
@@ -176,12 +364,20 @@
         "command": "robocopy ${workspaceFolder}/out/hlr_win_x64_release ${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Packages/com.hololight.isar/Runtime/Plugins/x86_64 remoting_unity.dll remoting_unity.dll.pdb /NP /IS; if($LASTEXITCODE -lt 8) { exit 0 }"
       },
       {
+        "label": "hlr dbg (unity): Clean",
+        "command": "Remove-Item -LiteralPath '${workspaceFolder}/out/hlr_win_x64_debug/remoting*' -Force",
+      },
+      {
+        "label": "hlr rel (unity): Clean",
+        "command": "Remove-Item -LiteralPath '${workspaceFolder}/out/hlr_win_x64_release/remoting*' -Force"
+      },
+      {
         "label": "hlr dbg (unity): Prepare | Build",
         "dependsOn": [
           "hlr dbg (unity): Prepare",
           "hlr dbg (unity): Build"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr rel (unity): Prepare | Build",
@@ -189,7 +385,25 @@
           "hlr rel (unity): Prepare",
           "hlr rel (unity): Build"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
+      },
+      {
+        "label": "hlr dbg (unity): Clean | Prepare | Build",
+        "dependsOn": [
+          "hlr dbg (unity): Clean",
+          "hlr dbg (unity): Prepare",
+          "hlr dbg (unity): Build"
+        ],
+        "dependsOrder": "sequence"
+      },
+      {
+        "label": "hlr rel (unity): Clean | Prepare | Build",
+        "dependsOn": [
+          "hlr rel (unity): Clean",
+          "hlr rel (unity): Prepare",
+          "hlr rel (unity): Build"
+        ],
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr dbg (unity): Build | Deploy",
@@ -197,7 +411,7 @@
           "hlr dbg (unity): Build",
           "hlr dbg (unity): Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr rel (unity): Build | Deploy",
@@ -205,7 +419,7 @@
           "hlr rel (unity): Build",
           "hlr rel (unity): Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr dbg (unity): Prepare | Build | Deploy",
@@ -214,7 +428,7 @@
           "hlr dbg (unity): Build",
           "hlr dbg (unity): Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr rel (unity): Prepare | Build | Deploy",
@@ -223,31 +437,107 @@
           "hlr rel (unity): Build",
           "hlr rel (unity): Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
+      },
+      {
+        "label": "hlr dbg (unity): Clean | Prepare | Build | Deploy",
+        "dependsOn": [
+          "hlr dbg (unity): Clean",
+          "hlr dbg (unity): Prepare",
+          "hlr dbg (unity): Build",
+          "hlr dbg (unity): Deploy"
+        ],
+        "dependsOrder": "sequence"
+      },
+      {
+        "label": "hlr rel (unity): Clean | Prepare | Build | Deploy",
+        "dependsOn": [
+          "hlr rel (unity): Clean",
+          "hlr rel (unity): Prepare",
+          "hlr rel (unity): Build",
+          "hlr rel (unity): Deploy"
+        ],
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr dbg (unity) (clang): Prepare",
         "args": [
-          "./run.py", "-a", "prepare", "-u", "hlr", "-p", "win", "-x", "x64", "-c", "debug", "--noWrapper", "--clang", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "prepare",
+          "-u",
+          "hlr",
+          "-p",
+          "win",
+          "-x",
+          "x64",
+          "-c",
+          "debug",
+          "--noWrapper",
+          "--clang",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr rel (unity) (clang): Prepare",
         "args": [
-          "./run.py", "-a", "prepare", "-u", "hlr", "-p", "win", "-x", "x64", "-c", "release", "--noWrapper", "--clang", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "prepare",
+          "-u",
+          "hlr",
+          "-p",
+          "win",
+          "-x",
+          "x64",
+          "-c",
+          "release",
+          "--noWrapper",
+          "--clang",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr dbg (unity) (clang): Build",
         "args": [
-          "./run.py", "-a", "build", "-u", "hlr", "-p", "win", "-x", "x64", "-c", "debug", "--noWrapper", "--clang", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "build",
+          "-u",
+          "hlr",
+          "-p",
+          "win",
+          "-x",
+          "x64",
+          "-c",
+          "debug",
+          "--noWrapper",
+          "--clang",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr rel (unity) (clang): Build",
         "args": [
-          "./run.py", "-a", "build", "-u", "hlr", "-p", "win", "-x", "x64", "-c", "release", "--noWrapper", "--clang", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "build",
+          "-u",
+          "hlr",
+          "-p",
+          "win",
+          "-x",
+          "x64",
+          "-c",
+          "release",
+          "--noWrapper",
+          "--clang",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr dbg (unity) (clang): Prepare | Build",
@@ -255,7 +545,7 @@
           "hlr dbg (unity) (clang): Prepare",
           "hlr dbg (unity) (clang): Build"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr rel (unity) (clang): Prepare | Build",
@@ -263,7 +553,25 @@
           "hlr rel (unity) (clang): Prepare",
           "hlr rel (unity) (clang): Build"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
+      },
+      {
+        "label": "hlr dbg (unity) (clang): Clean | Prepare | Build",
+        "dependsOn": [
+          "hlr dbg (unity): Clean",
+          "hlr dbg (unity) (clang): Prepare",
+          "hlr dbg (unity) (clang): Build"
+        ],
+        "dependsOrder": "sequence"
+      },
+      {
+        "label": "hlr rel (unity) (clang): Clean | Prepare | Build",
+        "dependsOn": [
+          "hlr rel (unity): Clean",
+          "hlr rel (unity) (clang): Prepare",
+          "hlr rel (unity) (clang): Build"
+        ],
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr dbg (unity) (clang): Build | Deploy",
@@ -271,7 +579,7 @@
           "hlr dbg (unity) (clang): Build",
           "hlr dbg (unity): Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr rel (unity) (clang): Build | Deploy",
@@ -280,6 +588,7 @@
           "hlr rel (unity): Deploy"
         ],
         "dependsOrder": "sequence",
+        "problemMatcher": []
       },
       {
         "label": "hlr dbg (unity) (clang): Prepare | Build | Deploy",
@@ -288,7 +597,7 @@
           "hlr dbg (unity) (clang): Build",
           "hlr dbg (unity): Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr rel (unity) (clang): Prepare | Build | Deploy",
@@ -297,31 +606,107 @@
           "hlr rel (unity) (clang): Build",
           "hlr rel (unity): Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
+      },
+      {
+        "label": "hlr dbg (unity) (clang): Clean | Prepare | Build | Deploy",
+        "dependsOn": [
+          "hlr dbg (unity): Clean",
+          "hlr dbg (unity) (clang): Prepare",
+          "hlr dbg (unity) (clang): Build",
+          "hlr dbg (unity): Deploy"
+        ],
+        "dependsOrder": "sequence"
+      },
+      {
+        "label": "hlr rel (unity) (clang): Clean | Prepare | Build | Deploy",
+        "dependsOn": [
+          "hlr rel (unity): Clean",
+          "hlr rel (unity) (clang): Prepare",
+          "hlr rel (unity) (clang): Build",
+          "hlr rel (unity): Deploy"
+        ],
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr dbg (unity) (clang) (uwp): Prepare",
         "args": [
-          "./run.py", "-a", "prepare", "-u", "hlr", "-p", "winuwp", "-x", "x64", "-c", "debug", "--noWrapper", "--clang", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "prepare",
+          "-u",
+          "hlr",
+          "-p",
+          "winuwp",
+          "-x",
+          "x64",
+          "-c",
+          "debug",
+          "--noWrapper",
+          "--clang",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr rel (unity) (clang) (uwp): Prepare",
         "args": [
-          "./run.py", "-a", "prepare", "-u", "hlr", "-p", "winuwp", "-x", "x64", "-c", "release", "--noWrapper", "--clang", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "prepare",
+          "-u",
+          "hlr",
+          "-p",
+          "winuwp",
+          "-x",
+          "x64",
+          "-c",
+          "release",
+          "--noWrapper",
+          "--clang",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr dbg (unity) (clang) (uwp): Build",
         "args": [
-          "./run.py", "-a", "build", "-u", "hlr", "-p", "winuwp", "-x", "x64", "-c", "debug", "--noWrapper", "--clang", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "build",
+          "-u",
+          "hlr",
+          "-p",
+          "winuwp",
+          "-x",
+          "x64",
+          "-c",
+          "debug",
+          "--noWrapper",
+          "--clang",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr rel (unity) (clang) (uwp): Build",
         "args": [
-          "./run.py", "-a", "build", "-u", "hlr", "-p", "winuwp", "-x", "x64", "-c", "release", "--noWrapper", "--clang", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "build",
+          "-u",
+          "hlr",
+          "-p",
+          "winuwp",
+          "-x",
+          "x64",
+          "-c",
+          "release",
+          "--noWrapper",
+          "--clang",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr dbg (unity) (uwp): Deploy",
@@ -332,12 +717,20 @@
         "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_x64_release ${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Packages/com.hololight.isar/Runtime/Plugins/WSA/x64 remoting_unity.dll remoting_unity.dll.pdb /NP /IS; if($LASTEXITCODE -lt 8) { exit 0 }"
       },
       {
+        "label": "hlr dbg (unity) (uwp): Clean",
+        "command": "Remove-Item -LiteralPath '$(workspaceFolder}/out/hlr_winuwp_x64_debug/remoting*' -Force"
+      },
+      {
+        "label": "hlr rel (unity) (uwp): Clean",
+        "command": "Remove-Item -LiteralPath '${workspaceFolder}/out/hlr_winuwp_x64_release/remoting*' -Force"
+      },
+      {
         "label": "hlr dbg (unity) (clang) (uwp): Prepare | Build",
         "dependsOn": [
           "hlr dbg (unity) (clang) (uwp): Prepare",
           "hlr dbg (unity) (clang) (uwp): Build"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr rel (unity) (clang) (uwp): Prepare | Build",
@@ -345,7 +738,25 @@
           "hlr rel (unity) (clang) (uwp): Prepare",
           "hlr rel (unity) (clang) (uwp): Build"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
+      },
+      {
+        "label": "hlr dbg (unity) (clang) (uwp): Clean | Prepare | Build",
+        "dependsOn": [
+          "hlr dbg (unity) (uwp): Clean",
+          "hlr dbg (unity) (clang) (uwp): Prepare",
+          "hlr dbg (unity) (clang) (uwp): Build"
+        ],
+        "dependsOrder": "sequence"
+      },
+      {
+        "label": "hlr rel (unity) (clang) (uwp): Clean | Prepare | Build",
+        "dependsOn": [
+          "hlr rel (unity) (uwp): Clean",
+          "hlr rel (unity) (clang) (uwp): Prepare",
+          "hlr rel (unity) (clang) (uwp): Build"
+        ],
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr dbg (unity) (clang) (uwp): Build | Deploy",
@@ -353,7 +764,7 @@
           "hlr dbg (unity) (clang) (uwp): Build",
           "hlr dbg (unity) (uwp): Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr rel (unity) (clang) (uwp): Build | Deploy",
@@ -361,7 +772,7 @@
           "hlr rel (unity) (clang) (uwp): Build",
           "hlr rel (unity) (uwp): Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr dbg (unity) (clang) (uwp): Prepare | Build | Deploy",
@@ -371,6 +782,7 @@
           "hlr dbg (unity) (uwp): Deploy"
         ],
         "dependsOrder": "sequence",
+        "problemMatcher": []
       },
       {
         "label": "hlr rel (unity) (clang) (uwp): Prepare | Build | Deploy",
@@ -379,55 +791,138 @@
           "hlr rel (unity) (clang) (uwp): Build",
           "hlr rel (unity) (uwp): Deploy"
         ],
+        "dependsOrder": "sequence"
+      },
+      {
+        "label": "hlr dbg (unity) (clang) (uwp): Clean | Prepare | Build | Deploy",
+        "dependsOn": [
+          "hlr dbg (unity) (uwp): Clean",
+          "hlr dbg (unity) (clang) (uwp): Prepare",
+          "hlr dbg (unity) (clang) (uwp): Build",
+          "hlr dbg (unity) (uwp): Deploy"
+        ],
         "dependsOrder": "sequence",
+        "problemMatcher": []
+      },
+      {
+        "label": "hlr rel (unity) (clang) (uwp): Clean | Prepare | Build | Deploy",
+        "dependsOn": [
+          "hlr rel (unity) (uwp): Clean",
+          "hlr rel (unity) (clang) (uwp): Prepare",
+          "hlr rel (unity) (clang) (uwp): Build",
+          "hlr rel (unity) (uwp): Deploy"
+        ],
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr dbg (hololens 1): Prepare",
         "args": [
-          "./run.py", "-a", "prepare", "-u", "hlr", "-p", "winuwp", "-x", "x86", "-c", "debug", "--noWrapper", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "prepare",
+          "-u",
+          "hlr",
+          "-p",
+          "winuwp",
+          "-x",
+          "x86",
+          "-c",
+          "debug",
+          "--noWrapper",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr rel (hololens 1): Prepare",
         "args": [
-          "./run.py", "-a", "prepare", "-u", "hlr", "-p", "winuwp", "-x", "x86", "-c", "release", "--noWrapper", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "prepare",
+          "-u",
+          "hlr",
+          "-p",
+          "winuwp",
+          "-x",
+          "x86",
+          "-c",
+          "release",
+          "--noWrapper",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr dbg (hololens 1): Build",
         "args": [
-          "./run.py", "-a", "build", "-u", "hlr", "-p", "winuwp", "-x", "x86", "-c", "debug", "--noWrapper", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "build",
+          "-u",
+          "hlr",
+          "-p",
+          "winuwp",
+          "-x",
+          "x86",
+          "-c",
+          "debug",
+          "--noWrapper",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr rel (hololens 1): Build",
         "args": [
-          "./run.py", "-a", "build", "-u", "hlr", "-p", "winuwp", "-x", "x86", "-c", "release", "--noWrapper", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "build",
+          "-u",
+          "hlr",
+          "-p",
+          "winuwp",
+          "-x",
+          "x86",
+          "-c",
+          "release",
+          "--noWrapper",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr dbg (hololens 1): Deploy",
-        "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_x86_debug ${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/Debug/HololensClient remoting.dll remoting.dll.pdb /NP /IS; if($LASTEXITCODE -lt 8) { exit 0 }"
+        "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_x86_debug ${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/Debug/Isar remoting.dll remoting.dll.pdb /NP /IS; if($LASTEXITCODE -lt 8) { exit 0 }"
       },
       {
         "label": "hlr rel (hololens 1): Deploy",
-        "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_x86_release ${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/Release/HololensClient remoting.dll remoting.dll.pdb /NP /IS; if($LASTEXITCODE -lt 8) { exit 0 }"
+        "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_x86_release ${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/Release/Isar remoting.dll remoting.dll.pdb /NP /IS; if($LASTEXITCODE -lt 8) { exit 0 }"
       },
       {
-        "label": "hlr dbg (hololens 1): Prepare | Build",
+        "label": "hlr dbg (hololens 1): Clean",
+        "command": "Remove-Item -LiteralPath '$(workspaceFolder}/out/hlr_winuwp_x86_debug/remoting*' -Force"
+      },
+      {
+        "label": "hlr rel (hololens 1): Clean",
+        "command": "Remove-Item -LiteralPath '${workspaceFolder}/out/hlr_winuwp_x86_release/remoting*' -Force"
+      },
+      {
+        "label": "hlr dbg (hololens 1): Clean | Prepare | Build",
         "dependsOn": [
+          "hlr dbg (hololens 1): Clean",
           "hlr dbg (hololens 1): Prepare",
           "hlr dbg (hololens 1): Build"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (hololens 1): Prepare | Build",
+        "label": "hlr rel (hololens 1): Clean | Prepare | Build",
         "dependsOn": [
+          "hlr rel (hololens 1): Clean",
           "hlr rel (hololens 1): Prepare",
           "hlr rel (hololens 1): Build"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr dbg (hololens 1): Build | Deploy",
@@ -435,7 +930,7 @@
           "hlr dbg (hololens 1): Build",
           "hlr dbg (hololens 1): Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr rel (hololens 1): Build | Deploy",
@@ -443,73 +938,137 @@
           "hlr rel (hololens 1): Build",
           "hlr rel (hololens 1): Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (hololens 1): Prepare | Build | Deploy",
+        "label": "hlr dbg (hololens 1): Clean | Prepare | Build | Deploy",
         "dependsOn": [
+          "hlr dbg (hololens 1): Clean",
           "hlr dbg (hololens 1): Prepare",
           "hlr dbg (hololens 1): Build",
           "hlr dbg (hololens 1): Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (hololens 1): Prepare | Build | Deploy",
+        "label": "hlr rel (hololens 1): Clean | Prepare | Build | Deploy",
         "dependsOn": [
+          "hlr rel (hololens 1): Clean",
           "hlr rel (hololens 1): Prepare",
           "hlr rel (hololens 1): Build",
           "hlr rel (hololens 1): Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr dbg (hololens 2): Prepare",
         "args": [
-          "./run.py", "-a", "prepare", "-u", "hlr", "-p", "winuwp", "-x", "arm", "-c", "debug", "--noWrapper", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "prepare",
+          "-u",
+          "hlr",
+          "-p",
+          "winuwp",
+          "-x",
+          "arm",
+          "-c",
+          "debug",
+          "--noWrapper",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr rel (hololens 2): Prepare",
         "args": [
-          "./run.py", "-a", "prepare", "-u", "hlr", "-p", "winuwp", "-x", "arm", "-c", "release", "--noWrapper", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "prepare",
+          "-u",
+          "hlr",
+          "-p",
+          "winuwp",
+          "-x",
+          "arm",
+          "-c",
+          "release",
+          "--noWrapper",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr dbg (hololens 2): Build",
         "args": [
-          "./run.py", "-a", "build", "-u", "hlr", "-p", "winuwp", "-x", "arm", "-c", "debug", "--noWrapper", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "build",
+          "-u",
+          "hlr",
+          "-p",
+          "winuwp",
+          "-x",
+          "arm",
+          "-c",
+          "debug",
+          "--noWrapper",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr rel (hololens 2): Build",
         "args": [
-          "./run.py", "-a", "build", "-u", "hlr", "-p", "winuwp", "-x", "arm", "-c", "release", "--noWrapper", "--", "hlr_userdef.py"
-        ],
+          "./run.py",
+          "-a",
+          "build",
+          "-u",
+          "hlr",
+          "-p",
+          "winuwp",
+          "-x",
+          "arm",
+          "-c",
+          "release",
+          "--noWrapper",
+          "--",
+          "hlr_userdef.py"
+        ]
       },
       {
         "label": "hlr dbg (hololens 2): Deploy",
-        "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_arm_debug ${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/ARM/Debug/HololensClient remoting.dll remoting.dll.pdb /NP /IS; if($LASTEXITCODE -lt 8) { exit 0 }"
+        "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_arm_debug ${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/ARM/Debug/Isar remoting.dll remoting.dll.pdb /NP /IS; if($LASTEXITCODE -lt 8) { exit 0 }"
       },
       {
         "label": "hlr rel (hololens 2): Deploy",
-        "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_arm_release ${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/ARM/Release/HololensClient remoting.dll remoting.dll.pdb /NP /IS; if($LASTEXITCODE -lt 8) { exit 0 }"
+        "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_arm_release ${workspaceFolder}/../../../../../../../examples/NativeImmersiveClient/ARM/Release/Isar remoting.dll remoting.dll.pdb /NP /IS; if($LASTEXITCODE -lt 8) { exit 0 }"
       },
       {
-        "label": "hlr dbg (hololens 2): Prepare | Build",
+        "label": "hlr dbg (hololens 2): Clean",
+        "command": "Remove-Item -LiteralPath '$(workspaceFolder}/out/hlr_winuwp_arm_debug/remoting*' -Force"
+      },
+      {
+        "label": "hlr rel (hololens 2): Clean",
+        "command": "Remove-Item -LiteralPath '${workspaceFolder}/out/hlr_winuwp_arm_release/remoting*' -Force"
+      },
+      {
+        "label": "hlr dbg (hololens 2): Clean | Prepare | Build",
         "dependsOn": [
+          "hlr dbg (hololens 2): Clean",
           "hlr dbg (hololens 2): Prepare",
           "hlr dbg (hololens 2): Build"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (hololens 2): Prepare | Build",
+        "label": "hlr rel (hololens 2): Clean | Prepare | Build",
         "dependsOn": [
+          "hlr rel (hololens 2): Clean",
           "hlr rel (hololens 2): Prepare",
           "hlr rel (hololens 2): Build"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr dbg (hololens 2): Build | Deploy",
@@ -517,7 +1076,7 @@
           "hlr dbg (hololens 2): Build",
           "hlr dbg (hololens 2): Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr rel (hololens 2): Build | Deploy",
@@ -525,25 +1084,27 @@
           "hlr rel (hololens 2): Build",
           "hlr rel (hololens 2): Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (hololens 2): Prepare | Build | Deploy",
+        "label": "hlr dbg (hololens 2): Clean | Prepare | Build | Deploy",
         "dependsOn": [
+          "hlr dbg (hololens 2): Clean",
           "hlr dbg (hololens 2): Prepare",
           "hlr dbg (hololens 2): Build",
           "hlr dbg (hololens 2): Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (hololens 2): Prepare | Build | Deploy",
+        "label": "hlr rel (hololens 2): Clean | Prepare | Build | Deploy",
         "dependsOn": [
+          "hlr rel (hololens 2): Clean",
           "hlr rel (hololens 2): Prepare",
           "hlr rel (hololens 2): Build",
           "hlr rel (hololens 2): Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr dbg (all): Build",
@@ -564,7 +1125,7 @@
       {
         "label": "hlr dbg (all): Deploy",
         "dependsOn": [
-          "hlr dbg (unity) (clang): Deploy",
+          "hlr dbg (unity): Deploy",
           "hlr dbg (hololens 2): Deploy"
         ],
         "dependsOrder": "parallel"
@@ -572,26 +1133,28 @@
       {
         "label": "hlr rel (all): Deploy",
         "dependsOn": [
-          "hlr rel (unity) (clang): Deploy",
+          "hlr rel (unity): Deploy",
           "hlr rel (hololens 2): Deploy"
         ],
         "dependsOrder": "parallel"
       },
       {
-        "label": "hlr dbg (all): Prepare | Build",
+        "label": "hlr dbg (all): Clean | Prepare | Build",
         "dependsOn": [
-          "hlr dbg (unity) (clang): Prepare | Build",
-          "hlr dbg (hololens 2): Prepare | Build"
+          "hlr dbg (unity) (clang): Clean | Prepare | Build",
+          "hlr dbg (hololens 2): Clean | Prepare | Build"
         ],
         "dependsOrder": "sequence",
+        "problemMatcher": []
       },
       {
-        "label": "hlr rel (all): Prepare | Build",
+        "label": "hlr rel (all): Clean | Prepare | Build",
         "dependsOn": [
-          "hlr rel (unity) (clang): Prepare | Build",
-          "hlr rel (hololens 2): Prepare | Build"
+          "hlr rel (unity) (clang): Clean | Prepare | Build",
+          "hlr rel (hololens 2): Clean | Prepare | Build"
         ],
         "dependsOrder": "sequence",
+        "problemMatcher": []
       },
       {
         "label": "hlr dbg (all): Build | Deploy",
@@ -599,7 +1162,7 @@
           "hlr dbg (unity) (clang): Build | Deploy",
           "hlr dbg (hololens 2): Build | Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
         "label": "hlr rel (all): Build | Deploy",
@@ -607,23 +1170,24 @@
           "hlr rel (unity) (clang): Build | Deploy",
           "hlr rel (hololens 2): Build | Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (all): Prepare | Build | Deploy",
+        "label": "hlr dbg (all): Clean | Prepare | Build | Deploy",
         "dependsOn": [
-          "hlr dbg (unity) (clang): Prepare | Build | Deploy",
-          "hlr dbg (hololens 2): Prepare | Build | Deploy"
+          "hlr dbg (unity) (clang): Clean | Prepare | Build | Deploy",
+          "hlr dbg (hololens 2): Clean | Prepare | Build | Deploy"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (all): Prepare | Build | Deploy",
+        "label": "hlr rel (all): Clean | Prepare | Build | Deploy",
         "dependsOn": [
-          "hlr rel (unity) (clang): Prepare | Build | Deploy",
-          "hlr rel (hololens 2): Prepare | Build | Deploy"
+          "hlr rel (unity) (clang): Clean | Prepare | Build | Deploy",
+          "hlr rel (hololens 2): Clean | Prepare | Build | Deploy"
         ],
         "dependsOrder": "sequence",
+        "problemMatcher": []
       },
       {
         "label": "gen flatbuffers",
@@ -632,36 +1196,85 @@
         },
         "command": "flatc",
         "args": [
-          "--cpp", "--scoped-enums", "--cpp-str-flex-ctor", "-o", "remoting/", "api.fbs"
-        ],
+          "--cpp",
+          "--scoped-enums",
+          "--cpp-str-flex-ctor",
+          "-o",
+          "remoting/",
+          "api.fbs"
+        ]
       },
       {
         "label": "remoting_with_tests dbg (unity): Prepare",
         "args": [
-          "./run.py", "-a", "prepare", "-u", "remoting_with_tests", "-p", "win", "-x", "x64", "-c", "debug", "--noWrapper",
+          "./run.py",
+          "-a",
+          "prepare",
+          "-u",
+          "remoting_with_tests",
+          "-p",
+          "win",
+          "-x",
+          "x64",
+          "-c",
+          "debug",
+          "--noWrapper",
           "./remoting_with_tests_userdef.py"
-        ],
+        ]
       },
       {
         "label": "remoting_with_tests rel (unity): Prepare",
         "args": [
-          "./run.py", "-a", "prepare", "-u", "remoting_with_tests", "-p", "win", "-x", "x64", "-c", "release", "--noWrapper",
+          "./run.py",
+          "-a",
+          "prepare",
+          "-u",
+          "remoting_with_tests",
+          "-p",
+          "win",
+          "-x",
+          "x64",
+          "-c",
+          "release",
+          "--noWrapper",
           "./remoting_with_tests_userdef.py"
-        ],
+        ]
       },
       {
         "label": "remoting_with_tests dbg (unity): Build",
         "args": [
-          "./run.py", "-a", "build", "-u", "remoting_with_tests", "-p", "win", "-x", "x64", "-c", "debug", "--noWrapper",
+          "./run.py",
+          "-a",
+          "build",
+          "-u",
+          "remoting_with_tests",
+          "-p",
+          "win",
+          "-x",
+          "x64",
+          "-c",
+          "debug",
+          "--noWrapper",
           "./remoting_with_tests_userdef.py"
-        ],
+        ]
       },
       {
         "label": "remoting_with_tests rel (unity): Build",
         "args": [
-          "./run.py", "-a", "build", "-u", "remoting_with_tests", "-p", "win", "-x", "x64", "-c", "release", "--noWrapper",
+          "./run.py",
+          "-a",
+          "build",
+          "-u",
+          "remoting_with_tests",
+          "-p",
+          "win",
+          "-x",
+          "x64",
+          "-c",
+          "release",
+          "--noWrapper",
           "./remoting_with_tests_userdef.py"
-        ],
+        ]
       },
       {
         "label": "remoting_with_tests dbg (unity): Prepare | Build",
@@ -669,7 +1282,7 @@
           "remoting_with_tests dbg (unity): Prepare",
           "remoting_with_tests dbg (unity): Build"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       },
       {
         "label": "remoting_with_tests rel (unity): Prepare | Build",
@@ -677,7 +1290,7 @@
           "remoting_with_tests rel (unity): Prepare",
           "remoting_with_tests rel (unity): Build"
         ],
-        "dependsOrder": "sequence",
+        "dependsOrder": "sequence"
       }
     ]
 }
