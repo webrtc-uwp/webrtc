@@ -2158,19 +2158,19 @@ int32_t AudioDeviceWindowsCore::InitRecording() {
   }
 
   // Initialize the microphone (devices might have been added or removed)
-  // if (InitMicrophone() == -1) {
-  //   RTC_LOG(LS_WARNING) << "InitMicrophone() failed";
-  // }
+  if (InitMicrophone() == -1) {
+    RTC_LOG(LS_WARNING) << "InitMicrophone() failed";
+  }
 
   // Ensure that the updated capturing endpoint device is valid
   if (_ptrDeviceIn == NULL) {
     return -1;
   }
 
-  // if (_builtInAecEnabled) {
-  //   // The DMO will configure the capture device.
-  //   return InitRecordingDMO();
-  // }
+  if (_builtInAecEnabled) {
+    // The DMO will configure the capture device.
+    return InitRecordingDMO();
+  }
 
   HRESULT hr = S_OK;
   WAVEFORMATEX* pWfxIn = NULL;
@@ -2179,39 +2179,13 @@ int32_t AudioDeviceWindowsCore::InitRecording() {
 
   // Create COM object with IAudioClient interface.
   SAFE_RELEASE(_ptrClientIn);
-  // hr = _ptrDeviceIn->Activate(__uuidof(IAudioClient), CLSCTX_ALL, NULL,
-  //                             (void**)&_ptrClientIn);
+  hr = _ptrDeviceIn->Activate(__uuidof(IAudioClient), CLSCTX_ALL, NULL,
+                              (void**)&_ptrClientIn);
   EXIT_ON_ERROR(hr);
 
   // Retrieve the stream format that the audio engine uses for its internal
   // processing (mixing) of shared-mode streams.
-  hr = _ptrEnumerator->GetDefaultAudioEndpoint(eRender, eConsole, &_ptrDeviceIn);
-
-  EXIT_ON_ERROR(hr);
-
-  hr = _ptrDeviceIn->Activate(__uuidof(IAudioClient), CLSCTX_ALL, NULL,
-                              (void**)&_ptrClientIn);
-
-  EXIT_ON_ERROR(hr);
-
   hr = _ptrClientIn->GetMixFormat(&pWfxIn);
-
-  EXIT_ON_ERROR(hr);
-
-  hr = _ptrClientIn->Initialize(AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_LOOPBACK,
-                                5000000, 0, pWfxIn, NULL);
-
-  EXIT_ON_ERROR(hr);
-
-  UINT32 bufferFrameCount;
-  hr = _ptrClientIn->GetBufferSize(&bufferFrameCount);
-  EXIT_ON_ERROR(hr);
-
-  // Get an IAudioCaptureClient interface.
-  SAFE_RELEASE(_ptrCaptureClient);
-  hr = _ptrClientIn->GetService(__uuidof(IAudioCaptureClient),
-                                (void**)&_ptrCaptureClient);
-
   if (SUCCEEDED(hr)) {
     RTC_LOG(LS_VERBOSE) << "Audio Engine's current capturing mix format:";
     // format type
@@ -2304,17 +2278,17 @@ int32_t AudioDeviceWindowsCore::InitRecording() {
   }
 
   // Create a capturing stream.
-  // hr = _ptrClientIn->Initialize(
-  //     AUDCLNT_SHAREMODE_SHARED,  // share Audio Engine with other applications
-  //     AUDCLNT_STREAMFLAGS_EVENTCALLBACK |  // processing of the audio buffer by
-  //                                          // the client will be event driven
-  //         AUDCLNT_STREAMFLAGS_NOPERSIST,   // volume and mute settings for an
-  //                                          // audio session will not persist
-  //                                          // across system restarts
-  //     0,                    // required for event-driven shared mode
-  //     0,                    // periodicity
-  //     (WAVEFORMATEX*)&Wfx,  // selected wave format
-  //     NULL);                // session GUID
+  hr = _ptrClientIn->Initialize(
+      AUDCLNT_SHAREMODE_SHARED,  // share Audio Engine with other applications
+      AUDCLNT_STREAMFLAGS_EVENTCALLBACK |  // processing of the audio buffer by
+                                           // the client will be event driven
+          AUDCLNT_STREAMFLAGS_NOPERSIST,   // volume and mute settings for an
+                                           // audio session will not persist
+                                           // across system restarts
+      0,                    // required for event-driven shared mode
+      0,                    // periodicity
+      (WAVEFORMATEX*)&Wfx,  // selected wave format
+      NULL);                // session GUID
 
   if (hr != S_OK) {
     RTC_LOG(LS_ERROR) << "IAudioClient::Initialize() failed:";
@@ -2336,8 +2310,8 @@ int32_t AudioDeviceWindowsCore::InitRecording() {
 
   // Get the actual size of the shared (endpoint buffer).
   // Typical value is 960 audio frames <=> 20ms @ 48kHz sample rate.
-  //UINT bufferFrameCount(0);
-  //hr = _ptrClientIn->GetBufferSize(&bufferFrameCount);
+  UINT bufferFrameCount(0);
+  hr = _ptrClientIn->GetBufferSize(&bufferFrameCount);
   if (SUCCEEDED(hr)) {
     RTC_LOG(LS_VERBOSE) << "IAudioClient::GetBufferSize() => "
                         << bufferFrameCount << " (<=> "
@@ -2346,7 +2320,13 @@ int32_t AudioDeviceWindowsCore::InitRecording() {
 
   // Set the event handle that the system signals when an audio buffer is ready
   // to be processed by the client.
-  //hr = _ptrClientIn->SetEventHandle(_hCaptureSamplesReadyEvent);
+  hr = _ptrClientIn->SetEventHandle(_hCaptureSamplesReadyEvent);
+  EXIT_ON_ERROR(hr);
+
+  // Get an IAudioCaptureClient interface.
+  SAFE_RELEASE(_ptrCaptureClient);
+  hr = _ptrClientIn->GetService(__uuidof(IAudioCaptureClient),
+                                (void**)&_ptrCaptureClient);
   EXIT_ON_ERROR(hr);
 
   // Mark capture side as initialized
@@ -2389,19 +2369,19 @@ int32_t AudioDeviceWindowsCore::StartRecording() {
 
     // Create thread which will drive the capturing
     LPTHREAD_START_ROUTINE lpStartAddress = WSAPICaptureThread;
-    //if (_builtInAecEnabled) {
+    if (_builtInAecEnabled) {
       // Redirect to the DMO polling method.
-      //lpStartAddress = WSAPICaptureThreadPollDMO;
+      lpStartAddress = WSAPICaptureThreadPollDMO;
 
-      // if (!_playing) {
-      //   // The DMO won't provide us captured output data unless we
-      //   // give it render data to process.
-      //   RTC_LOG(LS_ERROR)
-      //       << "Playout must be started before recording when using"
-      //       << " the built-in AEC";
-      //   return -1;
-      // }
-    //}
+      if (!_playing) {
+        // The DMO won't provide us captured output data unless we
+        // give it render data to process.
+        RTC_LOG(LS_ERROR)
+            << "Playout must be started before recording when using"
+            << " the built-in AEC";
+        return -1;
+      }
+    }
 
     assert(_hRecThread == NULL);
     _hRecThread = CreateThread(NULL, 0, lpStartAddress, this, 0, NULL);
@@ -2415,12 +2395,12 @@ int32_t AudioDeviceWindowsCore::StartRecording() {
 
   }  // critScoped
 
-  // DWORD ret = WaitForSingleObject(_hCaptureStartedEvent, 1000);
-  // if (ret != WAIT_OBJECT_0) {
-  //   RTC_LOG(LS_VERBOSE) << "capturing did not start up properly";
-  //   return -1;
-  // }
-  // RTC_LOG(LS_VERBOSE) << "capture audio stream has now started...";
+  DWORD ret = WaitForSingleObject(_hCaptureStartedEvent, 1000);
+  if (ret != WAIT_OBJECT_0) {
+    RTC_LOG(LS_VERBOSE) << "capturing did not start up properly";
+    return -1;
+  }
+  RTC_LOG(LS_VERBOSE) << "capture audio stream has now started...";
 
   _recording = true;
 
@@ -2454,7 +2434,7 @@ int32_t AudioDeviceWindowsCore::StopRecording() {
   // Stop the driving thread...
   RTC_LOG(LS_VERBOSE) << "closing down the webrtc_core_audio_capture_thread...";
   // Manual-reset event; it will remain signalled to stop all capture threads.
-  //SetEvent(_hShutdownCaptureEvent);
+  SetEvent(_hShutdownCaptureEvent);
 
   _UnLock();
   DWORD ret = WaitForSingleObject(_hRecThread, 2000);
@@ -2467,7 +2447,7 @@ int32_t AudioDeviceWindowsCore::StopRecording() {
   }
   _Lock();
 
-  //ResetEvent(_hShutdownCaptureEvent);  // Must be manually reset.
+  ResetEvent(_hShutdownCaptureEvent);  // Must be manually reset.
   // Ensure that the thread has released these interfaces properly.
   assert(err == -1 || _ptrClientIn == NULL);
   assert(err == -1 || _ptrCaptureClient == NULL);
@@ -2592,7 +2572,7 @@ int32_t AudioDeviceWindowsCore::StopPlayout() {
     // stop the driving thread...
     RTC_LOG(LS_VERBOSE)
         << "closing down the webrtc_core_audio_render_thread...";
-    //SetEvent(_hShutdownRenderEvent);
+    SetEvent(_hShutdownRenderEvent);
   }  // critScoped
 
   DWORD ret = WaitForSingleObject(_hPlayThread, 2000);
@@ -2614,7 +2594,7 @@ int32_t AudioDeviceWindowsCore::StopPlayout() {
     // in case that the render thread has exited before StopPlayout(),
     // this event might be caught by the new render thread within same VoE
     // instance.
-    //ResetEvent(_hShutdownRenderEvent);
+    ResetEvent(_hShutdownRenderEvent);
 
     SAFE_RELEASE(_ptrClientOut);
     SAFE_RELEASE(_ptrRenderClient);
@@ -2808,7 +2788,7 @@ DWORD AudioDeviceWindowsCore::DoRenderThread() {
   // Set event which will ensure that the calling thread modifies the playing
   // state to true.
   //
-  //SetEvent(_hRenderStartedEvent);
+  SetEvent(_hRenderStartedEvent);
 
   // >> ------------------ THREAD LOOP ------------------
 
@@ -3022,7 +3002,7 @@ DWORD AudioDeviceWindowsCore::DoCaptureThreadPollDMO() {
 
   // Set event which will ensure that the calling thread modifies the
   // recording state to true.
-  //SetEvent(_hCaptureStartedEvent);
+  SetEvent(_hCaptureStartedEvent);
 
   // >> ---------------------------- THREAD LOOP ----------------------------
   while (keepRecording) {
@@ -3130,7 +3110,7 @@ DWORD AudioDeviceWindowsCore::DoCaptureThreadPollDMO() {
 
 DWORD AudioDeviceWindowsCore::DoCaptureThread() {
   bool keepRecording = true;
-  //HANDLE waitArray[2] = {_hShutdownCaptureEvent, _hCaptureSamplesReadyEvent};
+  HANDLE waitArray[2] = {_hShutdownCaptureEvent, _hCaptureSamplesReadyEvent};
   HRESULT hr = S_OK;
 
   LARGE_INTEGER t1;
@@ -3215,26 +3195,26 @@ DWORD AudioDeviceWindowsCore::DoCaptureThread() {
   // Set event which will ensure that the calling thread modifies the recording
   // state to true.
   //
-  //SetEvent(_hCaptureStartedEvent);
+  SetEvent(_hCaptureStartedEvent);
 
   // >> ---------------------------- THREAD LOOP ----------------------------
 
   while (keepRecording) {
     // Wait for a capture notification event or a shutdown event
-    // DWORD waitResult = WaitForMultipleObjects(2, waitArray, FALSE, 500);
-    // switch (waitResult) {
-    //   case WAIT_OBJECT_0 + 0:  // _hShutdownCaptureEvent
-    //     keepRecording = false;
-    //     break;
-    //   case WAIT_OBJECT_0 + 1:  // _hCaptureSamplesReadyEvent
-    //     break;
-    //   case WAIT_TIMEOUT:  // timeout notification
-    //     RTC_LOG(LS_WARNING) << "capture event timed out after 0.5 seconds";
-    //     goto Exit;
-    //   default:  // unexpected error
-    //     RTC_LOG(LS_WARNING) << "unknown wait termination on capture side";
-    //     goto Exit;
-    // }
+    DWORD waitResult = WaitForMultipleObjects(2, waitArray, FALSE, 500);
+    switch (waitResult) {
+      case WAIT_OBJECT_0 + 0:  // _hShutdownCaptureEvent
+        keepRecording = false;
+        break;
+      case WAIT_OBJECT_0 + 1:  // _hCaptureSamplesReadyEvent
+        break;
+      case WAIT_TIMEOUT:  // timeout notification
+        RTC_LOG(LS_WARNING) << "capture event timed out after 0.5 seconds";
+        goto Exit;
+      default:  // unexpected error
+        RTC_LOG(LS_WARNING) << "unknown wait termination on capture side";
+        goto Exit;
+    }
 
     while (keepRecording) {
       BYTE* pData = 0;
