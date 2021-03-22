@@ -280,7 +280,7 @@
         ]
       },
       {
-        "label": "hlr dbg (unity): Prepare",
+        "label": "hlr dbg (x64): Prepare",
         "args": [
           "./run.py",
           "-a",
@@ -299,7 +299,7 @@
         ]
       },
       {
-        "label": "hlr rel (unity): Prepare",
+        "label": "hlr rel (x64): Prepare",
         "args": [
           "./run.py",
           "-a",
@@ -318,7 +318,7 @@
         ]
       },
       {
-        "label": "hlr dbg (unity): Build",
+        "label": "hlr dbg (x64): Build",
         "args": [
           "./run.py",
           "-a",
@@ -337,7 +337,7 @@
         ]
       },
       {
-        "label": "hlr rel (unity): Build",
+        "label": "hlr rel (x64): Build",
         "args": [
           "./run.py",
           "-a",
@@ -356,111 +356,111 @@
         ]
       },
       {
-        "label": "hlr dbg (unity): Deploy",
+        "label": "hlr dbg (x64): Deploy",
         "command": "robocopy ${workspaceFolder}/out/hlr_win_x64_debug ${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Packages/com.hololight.isar/Runtime/Plugins/x86_64 remoting_unity.dll remoting_unity.dll.pdb /NP /IS; if($LASTEXITCODE -lt 8) { exit 0 }"
       },
       {
-        "label": "hlr rel (unity): Deploy",
+        "label": "hlr rel (x64): Deploy",
         "command": "robocopy ${workspaceFolder}/out/hlr_win_x64_release ${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Packages/com.hololight.isar/Runtime/Plugins/x86_64 remoting_unity.dll remoting_unity.dll.pdb /NP /IS; if($LASTEXITCODE -lt 8) { exit 0 }"
       },
       {
-        "label": "hlr dbg (unity): Clean",
-        "command": "Remove-Item -LiteralPath '${workspaceFolder}/out/hlr_win_x64_debug/remoting*' -Force",
+        "label": "hlr dbg (x64): Clean",
+        "command": "Remove-Item -LiteralPath '${workspaceFolder}/out/hlr_win_x64_debug/remoting*' -Force"
       },
       {
-        "label": "hlr rel (unity): Clean",
+        "label": "hlr rel (x64): Clean",
         "command": "Remove-Item -LiteralPath '${workspaceFolder}/out/hlr_win_x64_release/remoting*' -Force"
       },
       {
-        "label": "hlr dbg (unity): Prepare | Build",
+        "label": "hlr dbg (x64): Prepare | Build",
         "dependsOn": [
-          "hlr dbg (unity): Prepare",
-          "hlr dbg (unity): Build"
+          "hlr dbg (x64): Prepare",
+          "hlr dbg (x64): Build"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (unity): Prepare | Build",
+        "label": "hlr rel (x64): Prepare | Build",
         "dependsOn": [
-          "hlr rel (unity): Prepare",
-          "hlr rel (unity): Build"
+          "hlr rel (x64): Prepare",
+          "hlr rel (x64): Build"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (unity): Clean | Prepare | Build",
+        "label": "hlr dbg (x64): Clean | Prepare | Build",
         "dependsOn": [
-          "hlr dbg (unity): Clean",
-          "hlr dbg (unity): Prepare",
-          "hlr dbg (unity): Build"
+          "hlr dbg (x64): Clean",
+          "hlr dbg (x64): Prepare",
+          "hlr dbg (x64): Build"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (unity): Clean | Prepare | Build",
+        "label": "hlr rel (x64): Clean | Prepare | Build",
         "dependsOn": [
-          "hlr rel (unity): Clean",
-          "hlr rel (unity): Prepare",
-          "hlr rel (unity): Build"
+          "hlr rel (x64): Clean",
+          "hlr rel (x64): Prepare",
+          "hlr rel (x64): Build"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (unity): Build | Deploy",
+        "label": "hlr dbg (x64): Build | Deploy",
         "dependsOn": [
-          "hlr dbg (unity): Build",
-          "hlr dbg (unity): Deploy"
+          "hlr dbg (x64): Build",
+          "hlr dbg (x64): Deploy"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (unity): Build | Deploy",
+        "label": "hlr rel (x64): Build | Deploy",
         "dependsOn": [
-          "hlr rel (unity): Build",
-          "hlr rel (unity): Deploy"
+          "hlr rel (x64): Build",
+          "hlr rel (x64): Deploy"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (unity): Prepare | Build | Deploy",
+        "label": "hlr dbg (x64): Prepare | Build | Deploy",
         "dependsOn": [
-          "hlr dbg (unity): Prepare",
-          "hlr dbg (unity): Build",
-          "hlr dbg (unity): Deploy"
+          "hlr dbg (x64): Prepare",
+          "hlr dbg (x64): Build",
+          "hlr dbg (x64): Deploy"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (unity): Prepare | Build | Deploy",
+        "label": "hlr rel (x64): Prepare | Build | Deploy",
         "dependsOn": [
-          "hlr rel (unity): Prepare",
-          "hlr rel (unity): Build",
-          "hlr rel (unity): Deploy"
+          "hlr rel (x64): Prepare",
+          "hlr rel (x64): Build",
+          "hlr rel (x64): Deploy"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (unity): Clean | Prepare | Build | Deploy",
+        "label": "hlr dbg (x64): Clean | Prepare | Build | Deploy",
         "dependsOn": [
-          "hlr dbg (unity): Clean",
-          "hlr dbg (unity): Prepare",
-          "hlr dbg (unity): Build",
-          "hlr dbg (unity): Deploy"
+          "hlr dbg (x64): Clean",
+          "hlr dbg (x64): Prepare",
+          "hlr dbg (x64): Build",
+          "hlr dbg (x64): Deploy"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (unity): Clean | Prepare | Build | Deploy",
+        "label": "hlr rel (x64): Clean | Prepare | Build | Deploy",
         "dependsOn": [
-          "hlr rel (unity): Clean",
-          "hlr rel (unity): Prepare",
-          "hlr rel (unity): Build",
-          "hlr rel (unity): Deploy"
+          "hlr rel (x64): Clean",
+          "hlr rel (x64): Prepare",
+          "hlr rel (x64): Build",
+          "hlr rel (x64): Deploy"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (unity) (clang): Prepare",
+        "label": "hlr dbg (x64) (clang): Prepare",
         "args": [
           "./run.py",
           "-a",
@@ -480,7 +480,7 @@
         ]
       },
       {
-        "label": "hlr rel (unity) (clang): Prepare",
+        "label": "hlr rel (x64) (clang): Prepare",
         "args": [
           "./run.py",
           "-a",
@@ -500,7 +500,7 @@
         ]
       },
       {
-        "label": "hlr dbg (unity) (clang): Build",
+        "label": "hlr dbg (x64) (clang): Build",
         "args": [
           "./run.py",
           "-a",
@@ -520,7 +520,7 @@
         ]
       },
       {
-        "label": "hlr rel (unity) (clang): Build",
+        "label": "hlr rel (x64) (clang): Build",
         "args": [
           "./run.py",
           "-a",
@@ -540,96 +540,96 @@
         ]
       },
       {
-        "label": "hlr dbg (unity) (clang): Prepare | Build",
+        "label": "hlr dbg (x64) (clang): Prepare | Build",
         "dependsOn": [
-          "hlr dbg (unity) (clang): Prepare",
-          "hlr dbg (unity) (clang): Build"
+          "hlr dbg (x64) (clang): Prepare",
+          "hlr dbg (x64) (clang): Build"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (unity) (clang): Prepare | Build",
+        "label": "hlr rel (x64) (clang): Prepare | Build",
         "dependsOn": [
-          "hlr rel (unity) (clang): Prepare",
-          "hlr rel (unity) (clang): Build"
+          "hlr rel (x64) (clang): Prepare",
+          "hlr rel (x64) (clang): Build"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (unity) (clang): Clean | Prepare | Build",
+        "label": "hlr dbg (x64) (clang): Clean | Prepare | Build",
         "dependsOn": [
-          "hlr dbg (unity): Clean",
-          "hlr dbg (unity) (clang): Prepare",
-          "hlr dbg (unity) (clang): Build"
+          "hlr dbg (x64): Clean",
+          "hlr dbg (x64) (clang): Prepare",
+          "hlr dbg (x64) (clang): Build"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (unity) (clang): Clean | Prepare | Build",
+        "label": "hlr rel (x64) (clang): Clean | Prepare | Build",
         "dependsOn": [
-          "hlr rel (unity): Clean",
-          "hlr rel (unity) (clang): Prepare",
-          "hlr rel (unity) (clang): Build"
+          "hlr rel (x64): Clean",
+          "hlr rel (x64) (clang): Prepare",
+          "hlr rel (x64) (clang): Build"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (unity) (clang): Build | Deploy",
+        "label": "hlr dbg (x64) (clang): Build | Deploy",
         "dependsOn": [
-          "hlr dbg (unity) (clang): Build",
-          "hlr dbg (unity): Deploy"
+          "hlr dbg (x64) (clang): Build",
+          "hlr dbg (x64): Deploy"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (unity) (clang): Build | Deploy",
+        "label": "hlr rel (x64) (clang): Build | Deploy",
         "dependsOn": [
-          "hlr rel (unity) (clang): Build",
-          "hlr rel (unity): Deploy"
+          "hlr rel (x64) (clang): Build",
+          "hlr rel (x64): Deploy"
         ],
         "dependsOrder": "sequence",
         "problemMatcher": []
       },
       {
-        "label": "hlr dbg (unity) (clang): Prepare | Build | Deploy",
+        "label": "hlr dbg (x64) (clang): Prepare | Build | Deploy",
         "dependsOn": [
-          "hlr dbg (unity) (clang): Prepare",
-          "hlr dbg (unity) (clang): Build",
-          "hlr dbg (unity): Deploy"
+          "hlr dbg (x64) (clang): Prepare",
+          "hlr dbg (x64) (clang): Build",
+          "hlr dbg (x64): Deploy"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (unity) (clang): Prepare | Build | Deploy",
+        "label": "hlr rel (x64) (clang): Prepare | Build | Deploy",
         "dependsOn": [
-          "hlr rel (unity) (clang): Prepare",
-          "hlr rel (unity) (clang): Build",
-          "hlr rel (unity): Deploy"
+          "hlr rel (x64) (clang): Prepare",
+          "hlr rel (x64) (clang): Build",
+          "hlr rel (x64): Deploy"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (unity) (clang): Clean | Prepare | Build | Deploy",
+        "label": "hlr dbg (x64) (clang): Clean | Prepare | Build | Deploy",
         "dependsOn": [
-          "hlr dbg (unity): Clean",
-          "hlr dbg (unity) (clang): Prepare",
-          "hlr dbg (unity) (clang): Build",
-          "hlr dbg (unity): Deploy"
+          "hlr dbg (x64): Clean",
+          "hlr dbg (x64) (clang): Prepare",
+          "hlr dbg (x64) (clang): Build",
+          "hlr dbg (x64): Deploy"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (unity) (clang): Clean | Prepare | Build | Deploy",
+        "label": "hlr rel (x64) (clang): Clean | Prepare | Build | Deploy",
         "dependsOn": [
-          "hlr rel (unity): Clean",
-          "hlr rel (unity) (clang): Prepare",
-          "hlr rel (unity) (clang): Build",
-          "hlr rel (unity): Deploy"
+          "hlr rel (x64): Clean",
+          "hlr rel (x64) (clang): Prepare",
+          "hlr rel (x64) (clang): Build",
+          "hlr rel (x64): Deploy"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (unity) (clang) (uwp): Prepare",
+        "label": "hlr dbg (x64) (clang) (uwp): Prepare",
         "args": [
           "./run.py",
           "-a",
@@ -649,7 +649,7 @@
         ]
       },
       {
-        "label": "hlr rel (unity) (clang) (uwp): Prepare",
+        "label": "hlr rel (x64) (clang) (uwp): Prepare",
         "args": [
           "./run.py",
           "-a",
@@ -669,7 +669,7 @@
         ]
       },
       {
-        "label": "hlr dbg (unity) (clang) (uwp): Build",
+        "label": "hlr dbg (x64) (clang) (uwp): Build",
         "args": [
           "./run.py",
           "-a",
@@ -689,7 +689,7 @@
         ]
       },
       {
-        "label": "hlr rel (unity) (clang) (uwp): Build",
+        "label": "hlr rel (x64) (clang) (uwp): Build",
         "args": [
           "./run.py",
           "-a",
@@ -709,108 +709,109 @@
         ]
       },
       {
-        "label": "hlr dbg (unity) (uwp): Deploy",
+        "label": "hlr dbg (x64) (uwp): Deploy",
         "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_x64_debug ${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Packages/com.hololight.isar/Runtime/Plugins/WSA/x64 remoting_unity.dll remoting_unity.dll.pdb /NP /IS; if($LASTEXITCODE -lt 8) { exit 0 }"
       },
       {
-        "label": "hlr rel (unity) (uwp): Deploy",
+        "label": "hlr rel (x64) (uwp): Deploy",
         "command": "robocopy ${workspaceFolder}/out/hlr_winuwp_x64_release ${workspaceFolder}/../../../../../../../examples/unity-remoting-plugin/Packages/com.hololight.isar/Runtime/Plugins/WSA/x64 remoting_unity.dll remoting_unity.dll.pdb /NP /IS; if($LASTEXITCODE -lt 8) { exit 0 }"
       },
       {
-        "label": "hlr dbg (unity) (uwp): Clean",
+        "label": "hlr dbg (x64) (uwp): Clean",
         "command": "Remove-Item -LiteralPath '$(workspaceFolder}/out/hlr_winuwp_x64_debug/remoting*' -Force"
       },
       {
-        "label": "hlr rel (unity) (uwp): Clean",
+        "label": "hlr rel (x64) (uwp): Clean",
         "command": "Remove-Item -LiteralPath '${workspaceFolder}/out/hlr_winuwp_x64_release/remoting*' -Force"
       },
       {
-        "label": "hlr dbg (unity) (clang) (uwp): Prepare | Build",
+        "label": "hlr dbg (x64) (clang) (uwp): Prepare | Build",
         "dependsOn": [
-          "hlr dbg (unity) (clang) (uwp): Prepare",
-          "hlr dbg (unity) (clang) (uwp): Build"
+          "hlr dbg (x64) (clang) (uwp): Prepare",
+          "hlr dbg (x64) (clang) (uwp): Build"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (unity) (clang) (uwp): Prepare | Build",
+        "label": "hlr rel (x64) (clang) (uwp): Prepare | Build",
         "dependsOn": [
-          "hlr rel (unity) (clang) (uwp): Prepare",
-          "hlr rel (unity) (clang) (uwp): Build"
+          "hlr rel (x64) (clang) (uwp): Prepare",
+          "hlr rel (x64) (clang) (uwp): Build"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (unity) (clang) (uwp): Clean | Prepare | Build",
+        "label": "hlr dbg (x64) (clang) (uwp): Clean | Prepare | Build",
         "dependsOn": [
-          "hlr dbg (unity) (uwp): Clean",
-          "hlr dbg (unity) (clang) (uwp): Prepare",
-          "hlr dbg (unity) (clang) (uwp): Build"
+          "hlr dbg (x64) (uwp): Clean",
+          "hlr dbg (x64) (clang) (uwp): Prepare",
+          "hlr dbg (x64) (clang) (uwp): Build"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (unity) (clang) (uwp): Clean | Prepare | Build",
+        "label": "hlr rel (x64) (clang) (uwp): Clean | Prepare | Build",
         "dependsOn": [
-          "hlr rel (unity) (uwp): Clean",
-          "hlr rel (unity) (clang) (uwp): Prepare",
-          "hlr rel (unity) (clang) (uwp): Build"
+          "hlr rel (x64) (uwp): Clean",
+          "hlr rel (x64) (clang) (uwp): Prepare",
+          "hlr rel (x64) (clang) (uwp): Build"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (unity) (clang) (uwp): Build | Deploy",
+        "label": "hlr dbg (x64) (clang) (uwp): Build | Deploy",
         "dependsOn": [
-          "hlr dbg (unity) (clang) (uwp): Build",
-          "hlr dbg (unity) (uwp): Deploy"
+          "hlr dbg (x64) (clang) (uwp): Build",
+          "hlr dbg (x64) (uwp): Deploy"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (unity) (clang) (uwp): Build | Deploy",
+        "label": "hlr rel (x64) (clang) (uwp): Build | Deploy",
         "dependsOn": [
-          "hlr rel (unity) (clang) (uwp): Build",
-          "hlr rel (unity) (uwp): Deploy"
+          "hlr rel (x64) (clang) (uwp): Build",
+          "hlr rel (x64) (uwp): Deploy"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (unity) (clang) (uwp): Prepare | Build | Deploy",
+        "label": "hlr dbg (x64) (clang) (uwp): Prepare | Build | Deploy",
         "dependsOn": [
-          "hlr dbg (unity) (clang) (uwp): Prepare",
-          "hlr dbg (unity) (clang) (uwp): Build",
-          "hlr dbg (unity) (uwp): Deploy"
+          "hlr dbg (x64) (clang) (uwp): Prepare",
+          "hlr dbg (x64) (clang) (uwp): Build",
+          "hlr dbg (x64) (uwp): Deploy"
         ],
         "dependsOrder": "sequence",
         "problemMatcher": []
       },
       {
-        "label": "hlr rel (unity) (clang) (uwp): Prepare | Build | Deploy",
+        "label": "hlr rel (x64) (clang) (uwp): Prepare | Build | Deploy",
         "dependsOn": [
-          "hlr rel (unity) (clang) (uwp): Prepare",
-          "hlr rel (unity) (clang) (uwp): Build",
-          "hlr rel (unity) (uwp): Deploy"
-        ],
-        "dependsOrder": "sequence"
-      },
-      {
-        "label": "hlr dbg (unity) (clang) (uwp): Clean | Prepare | Build | Deploy",
-        "dependsOn": [
-          "hlr dbg (unity) (uwp): Clean",
-          "hlr dbg (unity) (clang) (uwp): Prepare",
-          "hlr dbg (unity) (clang) (uwp): Build",
-          "hlr dbg (unity) (uwp): Deploy"
+          "hlr rel (x64) (clang) (uwp): Prepare",
+          "hlr rel (x64) (clang) (uwp): Build",
+          "hlr rel (x64) (uwp): Deploy"
         ],
         "dependsOrder": "sequence",
         "problemMatcher": []
       },
       {
-        "label": "hlr rel (unity) (clang) (uwp): Clean | Prepare | Build | Deploy",
+        "label": "hlr dbg (x64) (clang) (uwp): Clean | Prepare | Build | Deploy",
         "dependsOn": [
-          "hlr rel (unity) (uwp): Clean",
-          "hlr rel (unity) (clang) (uwp): Prepare",
-          "hlr rel (unity) (clang) (uwp): Build",
-          "hlr rel (unity) (uwp): Deploy"
+          "hlr dbg (x64) (uwp): Clean",
+          "hlr dbg (x64) (clang) (uwp): Prepare",
+          "hlr dbg (x64) (clang) (uwp): Build",
+          "hlr dbg (x64) (uwp): Deploy"
+        ],
+        "dependsOrder": "sequence",
+        "problemMatcher": []
+      },
+      {
+        "label": "hlr rel (x64) (clang) (uwp): Clean | Prepare | Build | Deploy",
+        "dependsOn": [
+          "hlr rel (x64) (uwp): Clean",
+          "hlr rel (x64) (clang) (uwp): Prepare",
+          "hlr rel (x64) (clang) (uwp): Build",
+          "hlr rel (x64) (uwp): Deploy"
         ],
         "dependsOrder": "sequence"
       },
@@ -1109,23 +1110,33 @@
       {
         "label": "hlr dbg (all): Build",
         "dependsOn": [
-          "hlr dbg (unity) (clang): Build",
+          "hlr dbg (x64) (clang): Build",
           "hlr dbg (hololens 2): Build"
         ],
-        "dependsOrder": "parallel"
+        "dependsOrder": "sequence",
+        "problemMatcher": []
       },
       {
         "label": "hlr rel (all): Build",
         "dependsOn": [
-          "hlr rel (unity) (clang): Build",
+          "hlr rel (x64) (clang): Build",
           "hlr rel (hololens 2): Build"
         ],
         "dependsOrder": "parallel"
       },
       {
+        "label": "hlr dbg & rel (all): Build",
+        "dependsOn": [
+          "hlr dbg (all): Build",
+          "hlr rel (all): Build"
+        ],
+        "dependsOrder": "sequence",
+        "problemMatcher": []
+      },
+      {
         "label": "hlr dbg (all): Deploy",
         "dependsOn": [
-          "hlr dbg (unity): Deploy",
+          "hlr dbg (x64): Deploy",
           "hlr dbg (hololens 2): Deploy"
         ],
         "dependsOrder": "parallel"
@@ -1133,7 +1144,7 @@
       {
         "label": "hlr rel (all): Deploy",
         "dependsOn": [
-          "hlr rel (unity): Deploy",
+          "hlr rel (x64): Deploy",
           "hlr rel (hololens 2): Deploy"
         ],
         "dependsOrder": "parallel"
@@ -1141,7 +1152,7 @@
       {
         "label": "hlr dbg (all): Clean | Prepare | Build",
         "dependsOn": [
-          "hlr dbg (unity) (clang): Clean | Prepare | Build",
+          "hlr dbg (x64) (clang): Clean | Prepare | Build",
           "hlr dbg (hololens 2): Clean | Prepare | Build"
         ],
         "dependsOrder": "sequence",
@@ -1150,7 +1161,7 @@
       {
         "label": "hlr rel (all): Clean | Prepare | Build",
         "dependsOn": [
-          "hlr rel (unity) (clang): Clean | Prepare | Build",
+          "hlr rel (x64) (clang): Clean | Prepare | Build",
           "hlr rel (hololens 2): Clean | Prepare | Build"
         ],
         "dependsOrder": "sequence",
@@ -1159,7 +1170,7 @@
       {
         "label": "hlr dbg (all): Build | Deploy",
         "dependsOn": [
-          "hlr dbg (unity) (clang): Build | Deploy",
+          "hlr dbg (x64) (clang): Build | Deploy",
           "hlr dbg (hololens 2): Build | Deploy"
         ],
         "dependsOrder": "sequence"
@@ -1167,7 +1178,7 @@
       {
         "label": "hlr rel (all): Build | Deploy",
         "dependsOn": [
-          "hlr rel (unity) (clang): Build | Deploy",
+          "hlr rel (x64) (clang): Build | Deploy",
           "hlr rel (hololens 2): Build | Deploy"
         ],
         "dependsOrder": "sequence"
@@ -1175,7 +1186,7 @@
       {
         "label": "hlr dbg (all): Clean | Prepare | Build | Deploy",
         "dependsOn": [
-          "hlr dbg (unity) (clang): Clean | Prepare | Build | Deploy",
+          "hlr dbg (x64) (clang): Clean | Prepare | Build | Deploy",
           "hlr dbg (hololens 2): Clean | Prepare | Build | Deploy"
         ],
         "dependsOrder": "sequence"
@@ -1183,7 +1194,7 @@
       {
         "label": "hlr rel (all): Clean | Prepare | Build | Deploy",
         "dependsOn": [
-          "hlr rel (unity) (clang): Clean | Prepare | Build | Deploy",
+          "hlr rel (x64) (clang): Clean | Prepare | Build | Deploy",
           "hlr rel (hololens 2): Clean | Prepare | Build | Deploy"
         ],
         "dependsOrder": "sequence",
@@ -1205,7 +1216,7 @@
         ]
       },
       {
-        "label": "remoting_with_tests dbg (unity): Prepare",
+        "label": "remoting_with_tests dbg (x64): Prepare",
         "args": [
           "./run.py",
           "-a",
@@ -1223,7 +1234,7 @@
         ]
       },
       {
-        "label": "remoting_with_tests rel (unity): Prepare",
+        "label": "remoting_with_tests rel (x64): Prepare",
         "args": [
           "./run.py",
           "-a",
@@ -1241,7 +1252,7 @@
         ]
       },
       {
-        "label": "remoting_with_tests dbg (unity): Build",
+        "label": "remoting_with_tests dbg (x64): Build",
         "args": [
           "./run.py",
           "-a",
@@ -1259,7 +1270,7 @@
         ]
       },
       {
-        "label": "remoting_with_tests rel (unity): Build",
+        "label": "remoting_with_tests rel (x64): Build",
         "args": [
           "./run.py",
           "-a",
@@ -1277,18 +1288,18 @@
         ]
       },
       {
-        "label": "remoting_with_tests dbg (unity): Prepare | Build",
+        "label": "remoting_with_tests dbg (x64): Prepare | Build",
         "dependsOn": [
-          "remoting_with_tests dbg (unity): Prepare",
-          "remoting_with_tests dbg (unity): Build"
+          "remoting_with_tests dbg (x64): Prepare",
+          "remoting_with_tests dbg (x64): Build"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "remoting_with_tests rel (unity): Prepare | Build",
+        "label": "remoting_with_tests rel (x64): Prepare | Build",
         "dependsOn": [
-          "remoting_with_tests rel (unity): Prepare",
-          "remoting_with_tests rel (unity): Build"
+          "remoting_with_tests rel (x64): Prepare",
+          "remoting_with_tests rel (x64): Build"
         ],
         "dependsOrder": "sequence"
       }
