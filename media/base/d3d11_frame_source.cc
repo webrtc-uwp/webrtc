@@ -162,12 +162,6 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* rendered_image,
   // we'd need to modify. Then we could also introduce d3d11 as frame type.
   auto i420Buffer = d3dFrameBuffer->ToI420();
 
-  // TODO: AdaptFrame somewhere, probably needs an override to deal with d3d and
-  // such
-  // 5 months later: AdaptFrame doesn't modify the frame data at all. It just
-  // tells us when to do shit, which is nice. Also prevents us from spamming the
-  // sink (networking) when it can't handle more shit.
-
   // TODO: set more stuff if needed, such as ntp timestamp
   auto frame = VideoFrame::Builder()
                    .set_video_frame_buffer(i420Buffer)

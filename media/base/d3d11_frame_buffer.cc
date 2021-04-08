@@ -102,7 +102,7 @@ int D3D11VideoFrameBuffer::height() const {
 }
 
 // Copies contents of rendered_image_ to staging_texture_, then downloads it to
-// the CPU and converts to i$20 via libyuv.
+// the CPU and converts to i420 via libyuv.
 rtc::scoped_refptr<webrtc::I420BufferInterface>
 D3D11VideoFrameBuffer::ToI420() {
   // if the user didn't pass in temp buffers, we don't support converting to
@@ -111,20 +111,14 @@ D3D11VideoFrameBuffer::ToI420() {
   RTC_CHECK(dst_u_ != nullptr);
   RTC_CHECK(dst_v_ != nullptr);
 
-  // TODO: Last arg should use the number of mip levels from rendered_image_,
-  // which I guess is part of its description. Also, we need 2
-  // CopySubresourceRegion calls that use the dimensions of the texture....so we
-  // need desc again?
-  // D3D11_TEXTURE2D_DESC rendered_image_desc = {};
-  // rendered_image_->GetDesc(&rendered_image_desc);
-
   if (rendered_image_desc_.ArraySize == 1) {
-    // old code, just like before
+    // Double-wide texture
     context_->CopySubresourceRegion(staging_texture_.get(), 0, 0, 0, 0,
                                     rendered_image_.get(), subresource_index_,
                                     nullptr);
 
   } else if (rendered_image_desc_.ArraySize == 2) {
+    // Texture array (2 images)
     UINT left_eye_subresource =
         D3D11CalcSubresource(0, 0, rendered_image_desc_.MipLevels);
     UINT right_eye_subresource =
@@ -167,6 +161,13 @@ D3D11VideoFrameBuffer::ToI420() {
         // crash in debug mode so we can find out what went wrong
         RTC_DCHECK(conversion_result == 0);
       }
+    } else if (texture_format_ == DXGI_FORMAT_R16_TYPELESS) {
+      FATAL() << "Depth support not implemented yet";
+      //what do we do here? well, it depends.
+      //can webrtc handle i420 without chroma? if yes, use that somehow.
+      //if not, well...investigate if there's something in the codebase already.
+      //in that case we might send garbage/empty chroma and ignore it on the other side or whatever.
+      //let's try empty chroma first tho.
     } else {
       FATAL() << "Unsupported texture format";
     }
