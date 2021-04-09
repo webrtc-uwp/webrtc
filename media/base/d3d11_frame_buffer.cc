@@ -162,12 +162,53 @@ D3D11VideoFrameBuffer::ToI420() {
         RTC_DCHECK(conversion_result == 0);
       }
     } else if (texture_format_ == DXGI_FORMAT_R16_TYPELESS) {
-      FATAL() << "Depth support not implemented yet";
+      // FATAL() << "Depth support not implemented yet";
       //what do we do here? well, it depends.
       //can webrtc handle i420 without chroma? if yes, use that somehow.
       //if not, well...investigate if there's something in the codebase already.
       //in that case we might send garbage/empty chroma and ignore it on the other side or whatever.
       //let's try empty chroma first tho.
+
+      //wait, i420 is 8-bit color depth, but our depth buffer is 16-bit. what do we do?
+      //can we somehow pack this into i420? there is i010buffer, but only a special vp9 profile uses that.
+      //maybe pack 8 bits into luma and the rest alternating between chroma planes? that could work...
+      //so that'd look like:
+      //- first 8 bits in Y
+      //- next 8 bits in U
+      //- then 8 bits in Y
+      //- then 8 bits in V
+      //but that also means our resolution needs to be a power of 4. is that always the case? probably not.
+
+      //other strategy: fill Y plane with black pixels and put the actual depth data in U and V. This way
+      //U and V will always have the same size.
+
+      //luma is full black
+      // memset(dst_y_, 0, stride_y);
+
+      //but then u and v are the same size as y... :/
+      //also, there's chroma subsampling so some stuff might be lost if it's not in Y...meh.
+      //maybe we could also create the data in some format that's convenient for us and use libyuv
+      //to convert to i420?
+
+      //so let's at least fill the luma plane with useful data, i.e. from our depth buffer.
+      //so bits are gone for Y, we have 8 bits remaining. what do we do with them?
+      //split up into 4 bits and fill the planes? could also work.
+      stride_uv = 0;
+      uint16_t* pixel = reinterpret_cast<uint16_t*>(mapped.pData);
+      //rowpitch is in bytes...so if we want it in 16-bits, divide by 2
+      uint32_t row_pitch_16 = mapped.RowPitch / 2;
+      for (uint32_t i = 0; i < row_pitch_16; i++) {
+        uint8_t high = *pixel >> 8;
+        [[maybe_unused]] uint8_t low = static_cast<uint8_t>(*pixel);
+
+        //write 8 bits into Y plane
+        dst_y_[i] = high;
+
+        //do something with rest (later)
+        //smoke test: having empty uv crashes inside the encoder, because of course it does.
+
+        pixel++;
+      }
     } else {
       FATAL() << "Unsupported texture format";
     }
