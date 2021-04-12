@@ -193,7 +193,7 @@ D3D11VideoFrameBuffer::ToI420() {
       //so let's at least fill the luma plane with useful data, i.e. from our depth buffer.
       //so bits are gone for Y, we have 8 bits remaining. what do we do with them?
       //split up into 4 bits and fill the planes? could also work.
-      stride_uv = 0;
+
       uint16_t* pixel = reinterpret_cast<uint16_t*>(mapped.pData);
       //rowpitch is in bytes...so if we want it in 16-bits, divide by 2
       uint32_t row_pitch_16 = mapped.RowPitch / 2;
@@ -206,6 +206,15 @@ D3D11VideoFrameBuffer::ToI420() {
 
         //do something with rest (later)
         //smoke test: having empty uv crashes inside the encoder, because of course it does.
+        //split low into 4-bit values, zero-extend them and write into u and v
+        uint8_t high_nibble_mask = 0xF0;
+        uint8_t low_nibble_mask = 0x0F;
+
+        uint8_t hn = low & high_nibble_mask;
+        uint8_t ln = low & low_nibble_mask;
+
+        dst_u_[i] = hn;
+        dst_v_[i] = ln;
 
         pixel++;
       }
