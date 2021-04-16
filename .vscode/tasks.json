@@ -1054,6 +1054,38 @@
         "command": "Remove-Item -LiteralPath '${workspaceFolder}/out/hlr_winuwp_arm_release/remoting*' -Force"
       },
       {
+        "label": "hlr dbg (hololens 2): Prepare | Build",
+        "dependsOn": [
+          "hlr dbg (hololens 2): Prepare",
+          "hlr dbg (hololens 2): Build"
+        ],
+        "dependsOrder": "sequence"
+      },
+      {
+        "label": "hlr rel (hololens 2): Prepare | Build",
+        "dependsOn": [
+          "hlr rel (hololens 2): Prepare",
+          "hlr rel (hololens 2): Build"
+        ],
+        "dependsOrder": "sequence"
+      },
+      {
+        "label": "hlr dbg (hololens 2): Build | Deploy",
+        "dependsOn": [
+          "hlr dbg (hololens 2): Build",
+          "hlr dbg (hololens 2): Deploy"
+        ],
+        "dependsOrder": "sequence"
+      },
+      {
+        "label": "hlr rel (hololens 2): Build | Deploy",
+        "dependsOn": [
+          "hlr rel (hololens 2): Build",
+          "hlr rel (hololens 2): Deploy"
+        ],
+        "dependsOrder": "sequence"
+      },
+      {
         "label": "hlr dbg (hololens 2): Clean | Prepare | Build",
         "dependsOn": [
           "hlr dbg (hololens 2): Clean",
@@ -1072,16 +1104,18 @@
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (hololens 2): Build | Deploy",
+        "label": "hlr dbg (hololens 2): Prepare | Build | Deploy",
         "dependsOn": [
+          "hlr dbg (hololens 2): Prepare",
           "hlr dbg (hololens 2): Build",
           "hlr dbg (hololens 2): Deploy"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (hololens 2): Build | Deploy",
+        "label": "hlr rel (hololens 2): Prepare | Build | Deploy",
         "dependsOn": [
+          "hlr rel (hololens 2): Prepare",
           "hlr rel (hololens 2): Build",
           "hlr rel (hololens 2): Deploy"
         ],
@@ -1189,7 +1223,8 @@
           "hlr dbg (x64) (clang): Clean | Prepare | Build | Deploy",
           "hlr dbg (hololens 2): Clean | Prepare | Build | Deploy"
         ],
-        "dependsOrder": "sequence"
+        "dependsOrder": "sequence",
+        "problemMatcher": []
       },
       {
         "label": "hlr rel (all): Clean | Prepare | Build | Deploy",
