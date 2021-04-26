@@ -37,8 +37,8 @@ rtc::scoped_refptr<D3D11VideoFrameBuffer> D3D11VideoFrameBuffer::Create(
     uint8_t* dst_v,
     D3D11_TEXTURE2D_DESC rendered_image_desc) {
   return new rtc::RefCountedObject<D3D11VideoFrameBuffer>(
-      context, staging_texture, rendered_image, dst_y, dst_u,
-      dst_v, rendered_image_desc);
+      context, staging_texture, rendered_image, dst_y, dst_u, dst_v,
+      rendered_image_desc);
 }
 
 VideoFrameBuffer::Type D3D11VideoFrameBuffer::type() const {
@@ -63,13 +63,14 @@ D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(ID3D11DeviceContext* context,
   context_.copy_from(context);
 }
 
-D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(ID3D11DeviceContext* context,
-                                             ID3D11Texture2D* staging_texture,
-                                             ID3D11Texture2D* rendered_image,
-                                             uint8_t* dst_y,
-                                             uint8_t* dst_u,
-                                             uint8_t* dst_v,
-                                             D3D11_TEXTURE2D_DESC rendered_image_desc)
+D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(
+    ID3D11DeviceContext* context,
+    ID3D11Texture2D* staging_texture,
+    ID3D11Texture2D* rendered_image,
+    uint8_t* dst_y,
+    uint8_t* dst_u,
+    uint8_t* dst_v,
+    D3D11_TEXTURE2D_DESC rendered_image_desc)
     : dst_y_(dst_y),
       dst_u_(dst_u),
       dst_v_(dst_v),
@@ -162,62 +163,37 @@ D3D11VideoFrameBuffer::ToI420() {
         RTC_DCHECK(conversion_result == 0);
       }
     } else if (texture_format_ == DXGI_FORMAT_R16_TYPELESS) {
-      // FATAL() << "Depth support not implemented yet";
-      //what do we do here? well, it depends.
-      //can webrtc handle i420 without chroma? if yes, use that somehow.
-      //if not, well...investigate if there's something in the codebase already.
-      //in that case we might send garbage/empty chroma and ignore it on the other side or whatever.
-      //let's try empty chroma first tho.
-
-      //wait, i420 is 8-bit color depth, but our depth buffer is 16-bit. what do we do?
-      //can we somehow pack this into i420? there is i010buffer, but only a special vp9 profile uses that.
-      //maybe pack 8 bits into luma and the rest alternating between chroma planes? that could work...
-      //so that'd look like:
-      //- first 8 bits in Y
-      //- next 8 bits in U
-      //- then 8 bits in Y
-      //- then 8 bits in V
-      //but that also means our resolution needs to be a power of 4. is that always the case? probably not.
-
-      //other strategy: fill Y plane with black pixels and put the actual depth data in U and V. This way
-      //U and V will always have the same size.
-
-      //luma is full black
-      // memset(dst_y_, 0, stride_y);
-
-      //but then u and v are the same size as y... :/
-      //also, there's chroma subsampling so some stuff might be lost if it's not in Y...meh.
-      //maybe we could also create the data in some format that's convenient for us and use libyuv
-      //to convert to i420?
-
-      //so let's at least fill the luma plane with useful data, i.e. from our depth buffer.
-      //so bits are gone for Y, we have 8 bits remaining. what do we do with them?
-      //split up into 4 bits and fill the planes? could also work.
-
+      // This is uint16_t because we have a 16-bpp texture format
       uint16_t* pixel = reinterpret_cast<uint16_t*>(mapped.pData);
-      //rowpitch is in bytes...so if we want it in 16-bits, divide by 2
+      // RowPitch is in bytes...so if we want it in units of 16-bits, divide by 2
       uint32_t row_pitch_16 = mapped.RowPitch / 2;
-      for (uint32_t i = 0; i < row_pitch_16; i++) {
-        uint8_t high = *pixel >> 8;
-        [[maybe_unused]] uint8_t low = static_cast<uint8_t>(*pixel);
 
-        //write 8 bits into Y plane
-        dst_y_[i] = high;
+      for (int col = 0; col < height_; col++) {
+        for (uint32_t i = 0; i < row_pitch_16; i++) {
+          uint8_t high = *pixel >> 8;
+          uint8_t low = static_cast<uint8_t>(*pixel);
 
-        //do something with rest (later)
-        //smoke test: having empty uv crashes inside the encoder, because of course it does.
-        //split low into 4-bit values, zero-extend them and write into u and v
-        uint8_t high_nibble_mask = 0xF0;
-        uint8_t low_nibble_mask = 0x0F;
+          // write high 8 bits into Y plane
+          dst_y_[i] = high;
 
-        uint8_t hn = low & high_nibble_mask;
-        uint8_t ln = low & low_nibble_mask;
+          // smoke test: having empty uv crashes inside the encoder, because of
+          // course it does. split low into 4-bit values, zero-extend them and
+          // write into u and v
+          uint8_t high_nibble_mask = 0xF0;
+          uint8_t low_nibble_mask = 0x0F;
 
-        dst_u_[i] = hn;
-        dst_v_[i] = ln;
+          uint8_t hn = low & high_nibble_mask;
+          uint8_t ln = low & low_nibble_mask;
 
-        pixel++;
+          dst_u_[i] = hn;
+          dst_v_[i] = ln;
+
+          pixel++;
+        }
       }
+
+      // TODO: print all the bytes after packing the planes into YUV
+
     } else {
       FATAL() << "Unsupported texture format";
     }
