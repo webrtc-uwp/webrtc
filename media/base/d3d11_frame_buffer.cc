@@ -164,31 +164,36 @@ D3D11VideoFrameBuffer::ToI420() {
       }
     } else if (texture_format_ == DXGI_FORMAT_R16_TYPELESS) {
       // This is uint16_t because we have a 16-bpp texture format
-      uint16_t* pixel = reinterpret_cast<uint16_t*>(mapped.pData);
+      uint16_t* pixel_ptr = reinterpret_cast<uint16_t*>(mapped.pData);
       // RowPitch is in bytes...so if we want it in units of 16-bits, divide by 2
       uint32_t row_pitch_16 = mapped.RowPitch / 2;
+      uint32_t uv_write_index = 0;
 
       for (int col = 0; col < height_; col++) {
         for (uint32_t i = 0; i < row_pitch_16; i++) {
-          uint8_t high = *pixel >> 8;
-          uint8_t low = static_cast<uint8_t>(*pixel);
+          uint8_t high = *pixel_ptr >> 8;
+          uint8_t low = static_cast<uint8_t>(*pixel_ptr);
 
           // write high 8 bits into Y plane
-          dst_y_[i] = high;
+          dst_y_[col * row_pitch_16 + i] = high;
 
-          // smoke test: having empty uv crashes inside the encoder, because of
-          // course it does. split low into 4-bit values, zero-extend them and
-          // write into u and v
-          uint8_t high_nibble_mask = 0xF0;
-          uint8_t low_nibble_mask = 0x0F;
+          if ((col % 2 == 0) && (i % 2 == 0)) {
+            // smoke test: having empty uv crashes inside the encoder, because of
+            // course it does. split low into 4-bit values, zero-extend them and
+            // write into u and v
+            // uint8_t high_nibble_mask = 0xF0;
+            // uint8_t low_nibble_mask = 0x0F;
 
-          uint8_t hn = low & high_nibble_mask;
-          uint8_t ln = low & low_nibble_mask;
+            // uint8_t hn = low & high_nibble_mask;
+            // uint8_t ln = low & low_nibble_mask;
 
-          dst_u_[i] = hn;
-          dst_v_[i] = ln;
+            dst_u_[uv_write_index] = low;
+            // dst_v_[uv_write_index] = low;
+            dst_v_[uv_write_index] = 0;
+            uv_write_index++;
+          }
 
-          pixel++;
+          pixel_ptr++;
         }
       }
 
