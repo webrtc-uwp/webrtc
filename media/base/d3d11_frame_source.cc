@@ -44,7 +44,7 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(ID3D11Device* device,
 
   // the braces make sure the struct is zero-initialized
   D3D11_TEXTURE2D_DESC staging_desc = {};
-  staging_desc.ArraySize = desc->ArraySize;
+  staging_desc.ArraySize = 1;
   staging_desc.BindFlags = 0;
   // for now read access should be enough
   staging_desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;

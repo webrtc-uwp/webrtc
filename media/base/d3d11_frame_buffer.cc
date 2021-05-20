@@ -169,15 +169,16 @@ D3D11VideoFrameBuffer::ToI420() {
       uint32_t row_pitch_16 = mapped.RowPitch / 2;
       uint32_t uv_write_index = 0;
 
-      for (int col = 0; col < height_; col++) {
-        for (uint32_t i = 0; i < row_pitch_16; i++) {
+      for (int y = 0; y < height_; y++) {
+        for (uint32_t x = 0; x < row_pitch_16; x++) {
           uint8_t high = *pixel_ptr >> 8;
           uint8_t low = static_cast<uint8_t>(*pixel_ptr);
 
           // write high 8 bits into Y plane
-          dst_y_[col * row_pitch_16 + i] = high;
+          // dst_y_[y * row_pitch_16 + x] = low;
+          dst_y_[y * row_pitch_16 + x] = high;
 
-          if ((col % 2 == 0) && (i % 2 == 0)) {
+          if ((y % 2 == 0) && (x % 2 == 0)) {
             // smoke test: having empty uv crashes inside the encoder, because of
             // course it does. split low into 4-bit values, zero-extend them and
             // write into u and v
@@ -187,6 +188,7 @@ D3D11VideoFrameBuffer::ToI420() {
             // uint8_t hn = low & high_nibble_mask;
             // uint8_t ln = low & low_nibble_mask;
 
+            // dst_u_[uv_write_index] = high;
             dst_u_[uv_write_index] = low;
             // dst_v_[uv_write_index] = low;
             dst_v_[uv_write_index] = 0;
