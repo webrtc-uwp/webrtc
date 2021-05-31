@@ -92,7 +92,7 @@ D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(
     width_ = rendered_image_desc.Width;
   }
 
-  height_ = rendered_image_desc.Height;
+  height_ = rendered_image_desc.Height * 2;
   texture_format_ = rendered_image_desc.Format;
 }
 
@@ -160,7 +160,7 @@ D3D11VideoFrameBuffer::ToI420() {
         texture_format_ == DXGI_FORMAT_R8G8B8A8_TYPELESS) {
       int32_t conversion_result = libyuv::ARGBToI420(
           static_cast<uint8_t*>(mapped.pData), mapped.RowPitch, dst_y_, width_,
-          dst_u_, stride_uv, dst_v_, stride_uv, width_, height_);
+          dst_u_, stride_uv, dst_v_, stride_uv, width_, height_ / 2);
 
       if (conversion_result != 0) {
         RTC_LOG(LS_ERROR) << "i420 conversion failed with error code"
@@ -217,9 +217,9 @@ D3D11VideoFrameBuffer::ToI420() {
     // +-----------+-----------+
     //Our Y res is 2880x936.
     //UV res is 1440x468.
-    //Full image res is 2880*1872.
+    //2 Y planes are 2880*1872.
     //Y depth start is at offset 2695680.
-    //U depth start is at offset 673921.
+    //U depth start is at offset 673920.
     //same for V depth, buffers are separate.
     //U and V are half in each dimension, always.
     hr = context_->Map(staging_depth_texture_.get(), 0, D3D11_MAP_READ, 0, &mapped);
@@ -229,9 +229,9 @@ D3D11VideoFrameBuffer::ToI420() {
       uint16_t* pixel_ptr = reinterpret_cast<uint16_t*>(mapped.pData);
       // RowPitch is in bytes...so if we want it in units of 16-bits, divide by 2
       uint32_t row_pitch_16 = mapped.RowPitch / 2;
-      uint32_t uv_write_index = 673921;
+      uint32_t uv_write_index = 673920;
 
-      for (int y = 0; y < height_; y++) {
+      for (int y = 0; y < height_ / 2; y++) {
         for (uint32_t x = 0; x < row_pitch_16; x++) {
           uint8_t high = *pixel_ptr >> 8;
           uint8_t low = static_cast<uint8_t>(*pixel_ptr);
