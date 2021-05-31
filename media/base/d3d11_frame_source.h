@@ -29,6 +29,7 @@ namespace hlr {
         ~D3D11VideoFrameSource() override;
 
         void OnFrameCaptured(ID3D11Texture2D* rendered_image, webrtc::XRTimestamp timestamp = webrtc::XRTimestamp());
+        void OnFrameCaptured(ID3D11Texture2D* rendered_image, ID3D11Texture2D* depth_image, webrtc::XRTimestamp timestamp);
 
         absl::optional<bool> needs_denoising() const override;
 
@@ -45,6 +46,7 @@ namespace hlr {
 
         private:
         winrt::com_ptr<ID3D11Texture2D> staging_texture_;
+        winrt::com_ptr<ID3D11Texture2D> depth_staging_texture_;
         winrt::com_ptr<ID3D11Device> device_;
         winrt::com_ptr<ID3D11DeviceContext> context_;
         DXGI_FORMAT texture_format_;

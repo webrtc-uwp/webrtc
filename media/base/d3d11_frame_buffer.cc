@@ -32,12 +32,14 @@ rtc::scoped_refptr<D3D11VideoFrameBuffer> D3D11VideoFrameBuffer::Create(
     ID3D11DeviceContext* context,
     ID3D11Texture2D* staging_texture,
     ID3D11Texture2D* rendered_image,
+    ID3D11Texture2D* staging_depth_texture,
+    ID3D11Texture2D* rendered_depth_image,
     uint8_t* dst_y,
     uint8_t* dst_u,
     uint8_t* dst_v,
     D3D11_TEXTURE2D_DESC rendered_image_desc) {
   return new rtc::RefCountedObject<D3D11VideoFrameBuffer>(
-      context, staging_texture, rendered_image, dst_y, dst_u, dst_v,
+      context, staging_texture, rendered_image, staging_depth_texture, rendered_depth_image, dst_y, dst_u, dst_v,
       rendered_image_desc);
 }
 
@@ -67,6 +69,8 @@ D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(
     ID3D11DeviceContext* context,
     ID3D11Texture2D* staging_texture,
     ID3D11Texture2D* rendered_image,
+    ID3D11Texture2D* staging_depth_texture,
+    ID3D11Texture2D* rendered_depth_image,
     uint8_t* dst_y,
     uint8_t* dst_u,
     uint8_t* dst_v,
@@ -75,12 +79,12 @@ D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(
       dst_u_(dst_u),
       dst_v_(dst_v),
       rendered_image_desc_(rendered_image_desc) {
-  // instead of getting width, height and format as args we could pass desc
-  // (staging or rendered?) and set members based on that here
   RTC_CHECK(rendered_image != nullptr);
   context_.copy_from(context);
   staging_texture_.copy_from(staging_texture);
+  staging_depth_texture_.copy_from(staging_depth_texture);
   rendered_image_.copy_from(rendered_image);
+  rendered_depth_image_.copy_from(rendered_depth_image);
 
   if (rendered_image_desc.ArraySize == 2) {
     width_ = rendered_image_desc.Width * 2;
@@ -117,6 +121,8 @@ D3D11VideoFrameBuffer::ToI420() {
     context_->CopySubresourceRegion(staging_texture_.get(), 0, 0, 0, 0,
                                     rendered_image_.get(), subresource_index_,
                                     nullptr);
+
+    context_->CopySubresourceRegion(staging_depth_texture_.get(), 0,0,0,0,rendered_depth_image_.get(), 0, nullptr);
 
   } else if (rendered_image_desc_.ArraySize == 2) {
     // Texture array (2 images)
@@ -162,7 +168,7 @@ D3D11VideoFrameBuffer::ToI420() {
         // crash in debug mode so we can find out what went wrong
         RTC_DCHECK(conversion_result == 0);
       }
-    } else if (texture_format_ == DXGI_FORMAT_R16_TYPELESS) {
+    } /*else if (texture_format_ == DXGI_FORMAT_R16_TYPELESS) {
       // This is uint16_t because we have a 16-bpp texture format
       uint16_t* pixel_ptr = reinterpret_cast<uint16_t*>(mapped.pData);
       // RowPitch is in bytes...so if we want it in units of 16-bits, divide by 2
@@ -175,22 +181,10 @@ D3D11VideoFrameBuffer::ToI420() {
           uint8_t low = static_cast<uint8_t>(*pixel_ptr);
 
           // write high 8 bits into Y plane
-          // dst_y_[y * row_pitch_16 + x] = low;
           dst_y_[y * row_pitch_16 + x] = high;
 
           if ((y % 2 == 0) && (x % 2 == 0)) {
-            // smoke test: having empty uv crashes inside the encoder, because of
-            // course it does. split low into 4-bit values, zero-extend them and
-            // write into u and v
-            // uint8_t high_nibble_mask = 0xF0;
-            // uint8_t low_nibble_mask = 0x0F;
-
-            // uint8_t hn = low & high_nibble_mask;
-            // uint8_t ln = low & low_nibble_mask;
-
-            // dst_u_[uv_write_index] = high;
             dst_u_[uv_write_index] = low;
-            // dst_v_[uv_write_index] = low;
             dst_v_[uv_write_index] = 0;
             uv_write_index++;
           }
@@ -198,14 +192,65 @@ D3D11VideoFrameBuffer::ToI420() {
           pixel_ptr++;
         }
       }
-
-      // TODO: print all the bytes after packing the planes into YUV
-
-    } else {
+    }*/ else {
       FATAL() << "Unsupported texture format";
     }
 
     context_->Unmap(staging_texture_.get(), 0);
+
+    // +-----------------------+
+    // |                       |
+    // |                       |
+    // |       Y color         |
+    // |                       |
+    // +-----------------------+
+    // |                       |
+    // |                       |
+    // |       Y depth         |
+    // |                       |
+    // +-----------+-----------+
+    // |           |           |
+    // |  U color  |  V color  |
+    // +-----------+-----------+
+    // |           |           |
+    // |  U depth  |  V depth  |
+    // +-----------+-----------+
+    //Our Y res is 2880x936.
+    //UV res is 1440x468.
+    //Full image res is 2880*1872.
+    //Y depth start is at offset 2695680.
+    //U depth start is at offset 673921.
+    //same for V depth, buffers are separate.
+    //U and V are half in each dimension, always.
+    hr = context_->Map(staging_depth_texture_.get(), 0, D3D11_MAP_READ, 0, &mapped);
+    if (SUCCEEDED(hr)) {
+      //if this works, check formats again as before...
+
+      uint16_t* pixel_ptr = reinterpret_cast<uint16_t*>(mapped.pData);
+      // RowPitch is in bytes...so if we want it in units of 16-bits, divide by 2
+      uint32_t row_pitch_16 = mapped.RowPitch / 2;
+      uint32_t uv_write_index = 673921;
+
+      for (int y = 0; y < height_; y++) {
+        for (uint32_t x = 0; x < row_pitch_16; x++) {
+          uint8_t high = *pixel_ptr >> 8;
+          uint8_t low = static_cast<uint8_t>(*pixel_ptr);
+
+          // write high 8 bits into Y plane
+          dst_y_[y * row_pitch_16 + x + 2695680] = high;
+
+          if ((y % 2 == 0) && (x % 2 == 0)) {
+            dst_u_[uv_write_index] = low;
+            dst_v_[uv_write_index] = 0;
+            uv_write_index++;
+          }
+
+          pixel_ptr++;
+        }
+      }
+    }
+
+    context_->Unmap(staging_depth_texture_.get(), 0);
 
     rtc::Callback0<void> unused;
     return webrtc::WrapI420Buffer(width_, height_, dst_y_, stride_y, dst_u_,

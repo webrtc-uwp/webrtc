@@ -51,6 +51,8 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
       ID3D11DeviceContext* context,
       ID3D11Texture2D* staging_texture,
       ID3D11Texture2D* rendered_image,
+      ID3D11Texture2D* staging_depth_texture,
+      ID3D11Texture2D* rendered_depth_image,
       uint8_t* dst_y,
       uint8_t* dst_u,
       uint8_t* dst_v,
@@ -84,8 +86,8 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
   D3D11VideoFrameBuffer(ID3D11DeviceContext* context,
                         ID3D11Texture2D* staging_texture,
                         ID3D11Texture2D* rendered_image,
-                        // int width,
-                        // int height,
+                        ID3D11Texture2D* staging_depth_texture,
+                        ID3D11Texture2D* rendered_depth_image,
                         uint8_t* dst_y,
                         uint8_t* dst_u,
                         uint8_t* dst_v,
@@ -98,9 +100,11 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
 
   // This is only used in i420 conversion to download data from the GPU.
   winrt::com_ptr<ID3D11Texture2D> staging_texture_;
+  winrt::com_ptr<ID3D11Texture2D> staging_depth_texture_;
 
   // This texture holds the actual contents
   winrt::com_ptr<ID3D11Texture2D> rendered_image_;
+  winrt::com_ptr<ID3D11Texture2D> rendered_depth_image_;
   winrt::com_ptr<ID3D11DeviceContext> context_;
   uint32_t subresource_index_ = 0;
 

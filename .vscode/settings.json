@@ -98,7 +98,9 @@
         "xlocbuf": "cpp",
         "xlocmes": "cpp",
         "compare": "cpp",
-        "*.inc": "cpp"
+        "*.inc": "cpp",
+        "bit": "cpp",
+        "stop_token": "cpp"
     },
     "files.watcherExclude": {
         "**/.git/objects/**": true,
