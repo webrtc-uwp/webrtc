@@ -168,6 +168,29 @@ D3D11VideoFrameBuffer::ToI420() {
         // crash in debug mode so we can find out what went wrong
         RTC_DCHECK(conversion_result == 0);
       }
+
+      //alpha: pack stuff into V plane of depth data to test if it works
+      //very unfortunate to loop over this same data twice :/
+      //maybe use ARGBToUVRow instead of this at some point (not public api :/ but CopyPlane is, maybe useful)
+      uint8_t* ptr = static_cast<uint8_t*>(mapped.pData);
+      uint32_t width_in_pixels = mapped.RowPitch / 4; //4 because 4 components, 8-bit each
+      uint32_t uv_write_index = 673920; //same as below
+
+      for (int y = 0; y < height_ / 2; y++) {
+        for (uint32_t x = 0; x < width_in_pixels; x++) {
+
+          if ((y % 2 == 0) && (x % 2 == 0)) {
+            //maybe instead of taking the raw value of this pixel, take the average or something.
+            //https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format#portable-coding-for-endian-independence
+            dst_v_[uv_write_index] = ptr[3];
+            uv_write_index++;
+          }
+
+          ptr++;
+        }
+      }
+
+
     } /*else if (texture_format_ == DXGI_FORMAT_R16_TYPELESS) {
       // This is uint16_t because we have a 16-bpp texture format
       uint16_t* pixel_ptr = reinterpret_cast<uint16_t*>(mapped.pData);
@@ -241,7 +264,7 @@ D3D11VideoFrameBuffer::ToI420() {
 
           if ((y % 2 == 0) && (x % 2 == 0)) {
             dst_u_[uv_write_index] = low;
-            dst_v_[uv_write_index] = 0;
+            // dst_v_[uv_write_index] = 0;
             uv_write_index++;
           }
 
