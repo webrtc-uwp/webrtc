@@ -13,6 +13,7 @@
 
 #include <d3d11.h>
 #include <winrt/base.h>
+#include <optional>
 
 #include "api/video/video_frame_buffer.h"
 #include "rtc_base/refcountedobject.h"
@@ -114,7 +115,8 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
   uint8_t* dst_u_;
   uint8_t* dst_v_;
 
-  DXGI_FORMAT texture_format_;
+  DXGI_FORMAT color_texture_format_;
+  std::optional<DXGI_FORMAT> depth_texture_format_;
   D3D11_TEXTURE2D_DESC rendered_image_desc_;
 };
 }  // namespace hlr

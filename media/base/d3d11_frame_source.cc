@@ -73,13 +73,6 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(ID3D11Device* device,
   dst_u_ = static_cast<uint8_t*>(malloc((width_ / 2) * (height_ /*/ 2*/)));
   dst_v_ = static_cast<uint8_t*>(malloc((width_ / 2) * (height_ /*/ 2*/)));
 
-  // wait. can we even use exceptions in this lib? windows version has rtti
-  // enabled via gn, not sure if this implies exceptions.
-  // https://google.github.io/styleguide/cppguide.html#Windows_Code says
-  // exceptions are ok in stl code, which is why they are enabled in windows
-  // builds. still, we shouldn't write exception handling code ourselves...well,
-  // I'm confused. Not even sure what to do for our own lib. Result<T, E> would
-  // be nice. Or Rust.
   HRESULT hr =
       device_->CreateTexture2D(&staging_desc, nullptr, staging_texture_.put());
 
