@@ -96,6 +96,9 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
                         /*                        DXGI_FORMAT format*/);
 
  private:
+  bool DownloadColor();
+  void DownloadDepth();
+
   int width_;
   int height_;
 
