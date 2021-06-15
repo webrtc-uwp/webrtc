@@ -629,7 +629,7 @@
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (x64) (clang) (uwp): Prepare",
+        "label": "hlr dbg (x64) (uwp): Prepare",
         "args": [
           "./run.py",
           "-a",
@@ -643,13 +643,12 @@
           "-c",
           "debug",
           "--noWrapper",
-          "--clang",
           "--",
           "hlr_userdef.py"
         ]
       },
       {
-        "label": "hlr rel (x64) (clang) (uwp): Prepare",
+        "label": "hlr rel (x64) (uwp): Prepare",
         "args": [
           "./run.py",
           "-a",
@@ -663,13 +662,12 @@
           "-c",
           "release",
           "--noWrapper",
-          "--clang",
           "--",
           "hlr_userdef.py"
         ]
       },
       {
-        "label": "hlr dbg (x64) (clang) (uwp): Build",
+        "label": "hlr dbg (x64) (uwp): Build",
         "args": [
           "./run.py",
           "-a",
@@ -683,13 +681,12 @@
           "-c",
           "debug",
           "--noWrapper",
-          "--clang",
           "--",
           "hlr_userdef.py"
         ]
       },
       {
-        "label": "hlr rel (x64) (clang) (uwp): Build",
+        "label": "hlr rel (x64) (uwp): Build",
         "args": [
           "./run.py",
           "-a",
@@ -703,7 +700,6 @@
           "-c",
           "release",
           "--noWrapper",
-          "--clang",
           "--",
           "hlr_userdef.py"
         ]
@@ -725,92 +721,93 @@
         "command": "Remove-Item -LiteralPath '${workspaceFolder}/out/hlr_winuwp_x64_release/remoting*' -Force"
       },
       {
-        "label": "hlr dbg (x64) (clang) (uwp): Prepare | Build",
+        "label": "hlr dbg (x64) (uwp): Prepare | Build",
         "dependsOn": [
-          "hlr dbg (x64) (clang) (uwp): Prepare",
-          "hlr dbg (x64) (clang) (uwp): Build"
+          "hlr dbg (x64) (uwp): Prepare",
+          "hlr dbg (x64) (uwp): Build"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (x64) (clang) (uwp): Prepare | Build",
+        "label": "hlr rel (x64) (uwp): Prepare | Build",
         "dependsOn": [
-          "hlr rel (x64) (clang) (uwp): Prepare",
-          "hlr rel (x64) (clang) (uwp): Build"
+          "hlr rel (x64) (uwp): Prepare",
+          "hlr rel (x64) (uwp): Build"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (x64) (clang) (uwp): Clean | Prepare | Build",
+        "label": "hlr dbg (x64) (uwp): Clean | Prepare | Build",
         "dependsOn": [
           "hlr dbg (x64) (uwp): Clean",
-          "hlr dbg (x64) (clang) (uwp): Prepare",
-          "hlr dbg (x64) (clang) (uwp): Build"
+          "hlr dbg (x64) (uwp): Prepare",
+          "hlr dbg (x64) (uwp): Build"
         ],
-        "dependsOrder": "sequence"
+        "dependsOrder": "sequence",
+        "problemMatcher": []
       },
       {
-        "label": "hlr rel (x64) (clang) (uwp): Clean | Prepare | Build",
+        "label": "hlr rel (x64) (uwp): Clean | Prepare | Build",
         "dependsOn": [
           "hlr rel (x64) (uwp): Clean",
-          "hlr rel (x64) (clang) (uwp): Prepare",
-          "hlr rel (x64) (clang) (uwp): Build"
+          "hlr rel (x64) (uwp): Prepare",
+          "hlr rel (x64) (uwp): Build"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (x64) (clang) (uwp): Build | Deploy",
+        "label": "hlr dbg (x64) (uwp): Build | Deploy",
         "dependsOn": [
-          "hlr dbg (x64) (clang) (uwp): Build",
+          "hlr dbg (x64) (uwp): Build",
           "hlr dbg (x64) (uwp): Deploy"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr rel (x64) (clang) (uwp): Build | Deploy",
+        "label": "hlr rel (x64) (uwp): Build | Deploy",
         "dependsOn": [
-          "hlr rel (x64) (clang) (uwp): Build",
+          "hlr rel (x64) (uwp): Build",
           "hlr rel (x64) (uwp): Deploy"
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "hlr dbg (x64) (clang) (uwp): Prepare | Build | Deploy",
+        "label": "hlr dbg (x64) (uwp): Prepare | Build | Deploy",
         "dependsOn": [
-          "hlr dbg (x64) (clang) (uwp): Prepare",
-          "hlr dbg (x64) (clang) (uwp): Build",
+          "hlr dbg (x64) (uwp): Prepare",
+          "hlr dbg (x64) (uwp): Build",
           "hlr dbg (x64) (uwp): Deploy"
         ],
         "dependsOrder": "sequence",
         "problemMatcher": []
       },
       {
-        "label": "hlr rel (x64) (clang) (uwp): Prepare | Build | Deploy",
+        "label": "hlr rel (x64) (uwp): Prepare | Build | Deploy",
         "dependsOn": [
-          "hlr rel (x64) (clang) (uwp): Prepare",
-          "hlr rel (x64) (clang) (uwp): Build",
+          "hlr rel (x64) (uwp): Prepare",
+          "hlr rel (x64) (uwp): Build",
           "hlr rel (x64) (uwp): Deploy"
         ],
         "dependsOrder": "sequence",
         "problemMatcher": []
       },
       {
-        "label": "hlr dbg (x64) (clang) (uwp): Clean | Prepare | Build | Deploy",
+        "label": "hlr dbg (x64) (uwp): Clean | Prepare | Build | Deploy",
         "dependsOn": [
           "hlr dbg (x64) (uwp): Clean",
-          "hlr dbg (x64) (clang) (uwp): Prepare",
-          "hlr dbg (x64) (clang) (uwp): Build",
+          "hlr dbg (x64) (uwp): Prepare",
+          "hlr dbg (x64) (uwp): Build",
           "hlr dbg (x64) (uwp): Deploy"
         ],
         "dependsOrder": "sequence",
         "problemMatcher": []
       },
       {
-        "label": "hlr rel (x64) (clang) (uwp): Clean | Prepare | Build | Deploy",
+        "label": "hlr rel (x64) (uwp): Clean | Prepare | Build | Deploy",
         "dependsOn": [
           "hlr rel (x64) (uwp): Clean",
-          "hlr rel (x64) (clang) (uwp): Prepare",
-          "hlr rel (x64) (clang) (uwp): Build",
+          "hlr rel (x64) (uwp): Prepare",
+          "hlr rel (x64) (uwp): Build",
           "hlr rel (x64) (uwp): Deploy"
         ],
         "dependsOrder": "sequence"
@@ -1110,7 +1107,8 @@
           "hlr dbg (hololens 2): Build",
           "hlr dbg (hololens 2): Deploy"
         ],
-        "dependsOrder": "sequence"
+        "dependsOrder": "sequence",
+        "problemMatcher": []
       },
       {
         "label": "hlr rel (hololens 2): Prepare | Build | Deploy",
@@ -1140,6 +1138,24 @@
           "hlr rel (hololens 2): Deploy"
         ],
         "dependsOrder": "sequence"
+      },
+      {
+        "label": "hlr dbg (all): Prepare",
+        "dependsOn": [
+          "hlr dbg (x64) (clang): Prepare",
+          "hlr dbg (hololens 2): Prepare"
+        ],
+        "dependsOrder": "sequence",
+        "problemMatcher": []
+      },
+      {
+        "label": "hlr rel (all): Prepare",
+        "dependsOn": [
+          "hlr rel (x64) (clang): Prepare",
+          "hlr rel (hololens 2): Prepare"
+        ],
+        "dependsOrder": "sequence",
+        "problemMatcher": []
       },
       {
         "label": "hlr dbg (all): Build",
@@ -1184,6 +1200,24 @@
         "dependsOrder": "parallel"
       },
       {
+        "label": "hlr dbg (all): Prepare | Build",
+        "dependsOn": [
+          "hlr dbg (x64) (clang): Prepare | Build",
+          "hlr dbg (hololens 2): Prepare | Build"
+        ],
+        "dependsOrder": "sequence",
+        "problemMatcher": []
+      },
+      {
+        "label": "hlr rel (all): Prepare | Build",
+        "dependsOn": [
+          "hlr rel (x64) (clang): Prepare | Build",
+          "hlr rel (hololens 2): Prepare | Build"
+        ],
+        "dependsOrder": "sequence",
+        "problemMatcher": []
+      },
+      {
         "label": "hlr dbg (all): Clean | Prepare | Build",
         "dependsOn": [
           "hlr dbg (x64) (clang): Clean | Prepare | Build",
@@ -1202,12 +1236,31 @@
         "problemMatcher": []
       },
       {
+        "label": "hlr dbg (all): Prepare | Build | Deploy",
+        "dependsOn": [
+          "hlr dbg (x64) (clang): Prepare | Build | Deploy",
+          "hlr dbg (hololens 2): Prepare | Build | Deploy"
+        ],
+        "dependsOrder": "sequence",
+        "problemMatcher": []
+      },
+      {
+        "label": "hlr rel (all): Prepare | Build | Deploy",
+        "dependsOn": [
+          "hlr rel (x64) (clang): Prepare | Build | Deploy",
+          "hlr rel (hololens 2): Prepare | Build | Deploy"
+        ],
+        "dependsOrder": "sequence",
+        "problemMatcher": []
+      },
+      {
         "label": "hlr dbg (all): Build | Deploy",
         "dependsOn": [
           "hlr dbg (x64) (clang): Build | Deploy",
           "hlr dbg (hololens 2): Build | Deploy"
         ],
-        "dependsOrder": "sequence"
+        "dependsOrder": "sequence",
+        "problemMatcher": []
       },
       {
         "label": "hlr rel (all): Build | Deploy",
@@ -1248,7 +1301,8 @@
           "-o",
           "remoting/",
           "api.fbs"
-        ]
+        ],
+        "problemMatcher": []
       },
       {
         "label": "remoting_with_tests dbg (x64): Prepare",
