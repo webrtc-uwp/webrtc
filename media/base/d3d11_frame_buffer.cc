@@ -37,10 +37,12 @@ rtc::scoped_refptr<D3D11VideoFrameBuffer> D3D11VideoFrameBuffer::Create(
     uint8_t* dst_y,
     uint8_t* dst_u,
     uint8_t* dst_v,
-    D3D11_TEXTURE2D_DESC rendered_image_desc) {
+    D3D11_TEXTURE2D_DESC rendered_image_desc,
+    int32_t width,
+    int32_t height) {
   return new rtc::RefCountedObject<D3D11VideoFrameBuffer>(
       context, staging_texture, rendered_image, staging_depth_texture,
-      rendered_depth_image, dst_y, dst_u, dst_v, rendered_image_desc);
+      rendered_depth_image, dst_y, dst_u, dst_v, rendered_image_desc, width, height);
 }
 
 VideoFrameBuffer::Type D3D11VideoFrameBuffer::type() const {
@@ -74,8 +76,12 @@ D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(
     uint8_t* dst_y,
     uint8_t* dst_u,
     uint8_t* dst_v,
-    D3D11_TEXTURE2D_DESC rendered_image_desc)
-    : dst_y_(dst_y),
+    D3D11_TEXTURE2D_DESC rendered_image_desc,
+    int32_t width,
+    int32_t height)
+    : width_(width),
+      height_(height),
+      dst_y_(dst_y),
       dst_u_(dst_u),
       dst_v_(dst_v),
       rendered_image_desc_(rendered_image_desc) {
@@ -87,13 +93,13 @@ D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(
   rendered_depth_image_.copy_from(rendered_depth_image);
 
   // can we set width/height from the outside instead of this?
-  if (rendered_image_desc.ArraySize == 2) {
-    width_ = rendered_image_desc.Width * 2;
-  } else {
-    width_ = rendered_image_desc.Width;
-  }
+  // if (rendered_image_desc.ArraySize == 2) {
+  //   width_ = rendered_image_desc.Width * 2;
+  // } else {
+  //   width_ = rendered_image_desc.Width;
+  // }
 
-  height_ = rendered_image_desc.Height * 2;
+  // height_ = rendered_image_desc.Height * 2;
   color_texture_format_ = rendered_image_desc.Format;
 
   // TODO: instead of passing desc as a param, call GetDesc here (for color). We
@@ -150,7 +156,7 @@ bool D3D11VideoFrameBuffer::DownloadColor() {
         uint8_t* ptr = static_cast<uint8_t*>(mapped.pData);
         uint32_t width_in_pixels =
             mapped.RowPitch / 4;  // 4 because 4 components, 8-bit each
-        uint32_t uv_write_index = width_ / 2 * height_ / 2;  // same as below
+        uint32_t uv_write_index = width_ / 2 * height_ / 4;  // same as below
 
         for (int y = 0; y < height_ / 2; y++) {
           for (uint32_t x = 0; x < width_in_pixels; x++) {
@@ -191,17 +197,17 @@ void D3D11VideoFrameBuffer::DownloadDepth() {
         uint16_t* pixel_ptr = reinterpret_cast<uint16_t*>(mapped.pData);
         // RowPitch is in bytes...so if we want it in units of 16-bits, divide
         // by 2
-        uint32_t row_pitch_16 = mapped.RowPitch / 2;
-        uint32_t uv_write_index = width_ / 2 * height_ / 2;
+        // uint32_t row_pitch_16 = mapped.RowPitch / 2;
+        uint32_t uv_write_index = width_ / 2 * height_ / 4;
 
         for (int y = 0; y < height_ / 2; y++) {
-          for (uint32_t x = 0; x < row_pitch_16; x++) {
+          for (uint32_t x = 0; x < /*row_pitch_16*/ static_cast<uint32_t>(width_); x++) {
             uint8_t high = *pixel_ptr >> 8;
             uint8_t low = static_cast<uint8_t>(*pixel_ptr);
 
             // write high 8 bits into Y plane
             int32_t y_offset = width_ * height_ / 2;
-            dst_y_[y * row_pitch_16 + x + y_offset] = high;
+            dst_y_[y * width_ + x + y_offset] = high;
 
             if ((y % 2 == 0) && (x % 2 == 0)) {
               dst_u_[uv_write_index] = low;
@@ -272,84 +278,10 @@ D3D11VideoFrameBuffer::ToI420() {
         << "Got frame with ArraySize > 2, not sure what to do with this";
   }
 
-  // Move to method DownloadColor
-  D3D11_MAPPED_SUBRESOURCE mapped;
-  HRESULT hr =
-      context_->Map(staging_texture_.get(), 0, D3D11_MAP_READ, 0, &mapped);
+  int stride_y = width_;
+  int stride_uv = stride_y / 2;
+  if (DownloadColor()) {
 
-  if (SUCCEEDED(hr)) {
-    int stride_y = width_;
-    int stride_uv = stride_y / 2;
-
-    if (color_texture_format_ == DXGI_FORMAT_R8G8B8A8_UNORM ||
-        color_texture_format_ == DXGI_FORMAT_R8G8B8A8_TYPELESS) {
-      int32_t conversion_result = libyuv::ARGBToI420(
-          static_cast<uint8_t*>(mapped.pData), mapped.RowPitch, dst_y_, width_,
-          dst_u_, stride_uv, dst_v_, stride_uv, width_, height_ / 2);
-
-      if (conversion_result != 0) {
-        RTC_LOG(LS_ERROR) << "i420 conversion failed with error code"
-                          << conversion_result;
-        // crash in debug mode so we can find out what went wrong
-        RTC_DCHECK(conversion_result == 0);
-      }
-
-      // Get alpha from color texture if we're sending that
-      if (rendered_depth_image_.get() != nullptr) {
-        // alpha: pack stuff into V plane of depth data to test if it works
-        // very unfortunate to loop over this same data twice :/
-        // maybe use ARGBToUVRow instead of this at some point (not public api
-        // :/ but CopyPlane is, maybe useful)
-        uint8_t* ptr = static_cast<uint8_t*>(mapped.pData);
-        uint32_t width_in_pixels =
-            mapped.RowPitch / 4;  // 4 because 4 components, 8-bit each
-        uint32_t uv_write_index = width_ / 2 * height_ / 2;  // same as below
-
-        for (int y = 0; y < height_ / 2; y++) {
-          for (uint32_t x = 0; x < width_in_pixels; x++) {
-            if ((y % 2 == 0) && (x % 2 == 0)) {
-              // maybe instead of taking the raw value of this pixel, take the
-              // average or something.
-              // https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format#portable-coding-for-endian-independence
-              dst_v_[uv_write_index] = ptr[3];
-              uv_write_index++;
-            }
-
-            // 1 pixel = 4 bytes for RGBA
-            ptr += 4;
-          }
-        }
-      }
-
-    } /*else if (color_texture_format_ == DXGI_FORMAT_R16_TYPELESS) {
-      // This is uint16_t because we have a 16-bpp texture format
-      uint16_t* pixel_ptr = reinterpret_cast<uint16_t*>(mapped.pData);
-      // RowPitch is in bytes...so if we want it in units of 16-bits, divide by
-    2 uint32_t row_pitch_16 = mapped.RowPitch / 2; uint32_t uv_write_index = 0;
-
-      for (int y = 0; y < height_; y++) {
-        for (uint32_t x = 0; x < row_pitch_16; x++) {
-          uint8_t high = *pixel_ptr >> 8;
-          uint8_t low = static_cast<uint8_t>(*pixel_ptr);
-
-          // write high 8 bits into Y plane
-          dst_y_[y * row_pitch_16 + x] = high;
-
-          if ((y % 2 == 0) && (x % 2 == 0)) {
-            dst_u_[uv_write_index] = low;
-            dst_v_[uv_write_index] = 0;
-            uv_write_index++;
-          }
-
-          pixel_ptr++;
-        }
-      }
-    }*/
-    else {
-      FATAL() << "Unsupported texture format";
-    }
-
-    context_->Unmap(staging_texture_.get(), 0);
 
     // +-----------------------+
     // |                       |

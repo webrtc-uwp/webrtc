@@ -57,7 +57,9 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
       uint8_t* dst_y,
       uint8_t* dst_u,
       uint8_t* dst_v,
-      D3D11_TEXTURE2D_DESC rendered_image_desc);
+      D3D11_TEXTURE2D_DESC rendered_image_desc,
+      int32_t width,
+      int32_t height);
 
   webrtc::VideoFrameBuffer::Type type() const override;
 
@@ -92,8 +94,9 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
                         uint8_t* dst_y,
                         uint8_t* dst_u,
                         uint8_t* dst_v,
-                        D3D11_TEXTURE2D_DESC rendered_image_desc
-                        /*                        DXGI_FORMAT format*/);
+                        D3D11_TEXTURE2D_DESC rendered_image_desc,
+                        int32_t width,
+                        int32_t height);
 
  private:
   bool DownloadColor();

@@ -147,49 +147,6 @@ D3D11VideoFrameSource::~D3D11VideoFrameSource() {
 // KL: delete this.
 void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* rendered_image,
                                             webrtc::XRTimestamp timestamp) {
-  // TODO: this should get its config from somewhere else
-  // also, right now we should copy to staging, download to cpu,
-  // convert with libyuv and then call OnFrame. I think that'd be the
-  // easiest way to get something on screen. Later we can investigate leaving
-  // the texture on the gpu until it's encoded.
-  // int64_t time_us = rtc::TimeMicros();
-
-  // int adapted_width;
-  // int adapted_height;
-  // int crop_width;
-  // int crop_height;
-  // int crop_x;
-  // int crop_y;
-
-  // // ok, so that's why we need the width of the whole frame, so webrtc knows
-  // // about it. we can get that from staging_desc, though
-  // if (!AdaptFrame(width_, height_, time_us, &adapted_width, &adapted_height,
-  //                 &crop_width, &crop_height, &crop_x, &crop_y)) {
-  //   return;
-  // }
-
-  // D3D11_TEXTURE2D_DESC desc = {};
-  // rendered_image->GetDesc(&desc);
-
-  // auto d3dFrameBuffer = D3D11VideoFrameBuffer::Create(
-  //     context_.get(), staging_texture_.get(), rendered_image, dst_y_, dst_u_,
-  //     dst_v_, desc);
-
-  // // on windows, the best way to do this would be to convert to nv12 directly
-  // // since the encoder expects that. libyuv features an ARGBToNV12 function.
-  // The
-  // // problem now is, which frame type do we use? There's none for nv12. I
-  // guess
-  // // we'd need to modify. Then we could also introduce d3d11 as frame type.
-  // auto i420Buffer = d3dFrameBuffer->ToI420();
-
-  // // TODO: set more stuff if needed, such as ntp timestamp
-  // auto frame = VideoFrame::Builder()
-  //                  .set_video_frame_buffer(i420Buffer)
-  //                  .set_timestamp_us(time_us)
-  //                  .build();
-  // frame.set_xr_timestamp(timestamp);
-  // OnFrame(frame);
 }
 
 void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* rendered_image,
@@ -257,9 +214,12 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* rendered_image,
   // won't work. Fuck. but if we sized our dst_y/u/v accordingly, could we reuse
   // our current code? 2 staging textures are needed (different sizes?) for
   // calling map.
+  D3D11_TEXTURE2D_DESC depth_desc;
+  depth_image->GetDesc(&depth_desc);
+
   auto d3dFrameBuffer = D3D11VideoFrameBuffer::Create(
       context_.get(), staging_texture_.get(), rendered_image,
-      depth_staging_texture_.get(), depth_image, dst_y_, dst_u_, dst_v_, desc);
+      depth_staging_texture_.get(), depth_image, dst_y_, dst_u_, dst_v_, desc, width_, height_);
 
   // on windows, the best way to do this would be to convert to nv12 directly
   // since the encoder expects that. libyuv features an ARGBToNV12 function. The
