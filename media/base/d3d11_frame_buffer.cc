@@ -42,7 +42,8 @@ rtc::scoped_refptr<D3D11VideoFrameBuffer> D3D11VideoFrameBuffer::Create(
     int32_t height) {
   return new rtc::RefCountedObject<D3D11VideoFrameBuffer>(
       context, staging_texture, rendered_image, staging_depth_texture,
-      rendered_depth_image, dst_y, dst_u, dst_v, rendered_image_desc, width, height);
+      rendered_depth_image, dst_y, dst_u, dst_v, rendered_image_desc, width,
+      height);
 }
 
 VideoFrameBuffer::Type D3D11VideoFrameBuffer::type() const {
@@ -188,48 +189,122 @@ bool D3D11VideoFrameBuffer::DownloadColor() {
 /// the image is double-high.
 void D3D11VideoFrameBuffer::DownloadDepth() {
   if (rendered_depth_image_.get() != nullptr) {
-    D3D11_MAPPED_SUBRESOURCE mapped = {};
-    HRESULT hr = context_->Map(staging_depth_texture_.get(), 0, D3D11_MAP_READ,
-                               0, &mapped);
+    // Theoretically we should check depth_image_desc (which we don't have here
+    // right now) but if color is a texture array, depth is too.
+    bool single_pass = rendered_image_desc_.ArraySize == 2;
+    if (single_pass) {
+      // special codepath for single pass mapping. maybe put this in
+      // DownloadDepthSinglePass method.
+      D3D11_MAPPED_SUBRESOURCE mapped_left = {};
+      D3D11_MAPPED_SUBRESOURCE mapped_right = {};
+      int32_t left_eye_subresource = 0;
+      int32_t right_eye_subresource = 1;
+      HRESULT hr =
+          context_->Map(staging_depth_texture_.get(), left_eye_subresource,
+                        D3D11_MAP_READ, 0, &mapped_left);
 
-    if (SUCCEEDED(hr)) {
-      if (depth_texture_format_ == DXGI_FORMAT_R16_TYPELESS) {
-        uint16_t* pixel_ptr = reinterpret_cast<uint16_t*>(mapped.pData);
-        // RowPitch is in bytes...so if we want it in units of 16-bits, divide
-        // by 2
-        // uint32_t row_pitch_16 = mapped.RowPitch / 2;
-        uint32_t uv_write_index = width_ / 2 * height_ / 4;
+      if (SUCCEEDED(hr)) {
+        hr = context_->Map(staging_depth_texture_.get(), right_eye_subresource,
+                           D3D11_MAP_READ, 0, &mapped_right);
 
-        for (int y = 0; y < height_ / 2; y++) {
-          for (uint32_t x = 0; x < /*row_pitch_16*/ static_cast<uint32_t>(width_); x++) {
-            uint8_t high = *pixel_ptr >> 8;
-            uint8_t low = static_cast<uint8_t>(*pixel_ptr);
+        if (SUCCEEDED(hr)) {
+          // do the thing only if both maps worked
+          int32_t y_offset = width_ * height_ / 2;
 
-            // write high 8 bits into Y plane
-            int32_t y_offset = width_ * height_ / 2;
-            dst_y_[y * width_ + x + y_offset] = high;
+          for (int y = 0; y < height_ / 2; y++) {
+            for (int x = 0; x < width_; x++) {
+              uint8_t high = 0;
+              uint8_t low = 0;
+              uint16_t* left_ptr = static_cast<uint16_t*>(mapped_left.pData);
+              uint16_t* right_ptr = static_cast<uint16_t*>(mapped_right.pData);
+              uint32_t uv_write_index = width_ / 2 * height_ / 4;
 
-            if ((y % 2 == 0) && (x % 2 == 0)) {
-              dst_u_[uv_write_index] = low;
-              // dst_v_[uv_write_index] = 0;
-              uv_write_index++;
+              // if we iterate over the whole thing write indices are nice for
+              // the U plane. read indices we need to increase by the right
+              // amount...and there's this switch which pointer we read from, so
+              // needs an extra condition inside the loop (branch predictor go
+              // brrr). Hope it's not too bad. Either way, doing this in-engine
+              // on a gpu is probably better.
+              if (x < width_ / 2) {
+                // read from left eye subresource
+                // inc left subresource ptr
+                high = *left_ptr >> 8;
+                low = static_cast<uint8_t>(*left_ptr);
+                left_ptr++;
+              } else {
+                // read from right eye subresource
+                // inc right subresource ptr
+                high = *right_ptr >> 8;
+                low = static_cast<uint8_t>(*right_ptr);
+                right_ptr++;
+              }
+
+              // write high byte into Y plane
+              dst_y_[y * width_ + x + y_offset] = high;
+
+              // write low byte into U plane
+              if ((y % 2 == 0) && (x % 2 == 0)) {
+                dst_u_[uv_write_index] = low;
+                uv_write_index++;
+              }
             }
-
-            pixel_ptr++;
           }
+          context_->Unmap(staging_depth_texture_.get(), right_eye_subresource);
+        } else {
+          RTC_LOG(LS_WARNING)
+              << "Failed to map depth texture array subresource "
+              << right_eye_subresource;
         }
+        context_->Unmap(staging_depth_texture_.get(), left_eye_subresource);
       } else {
-        RTC_LOG(LS_WARNING) << "Unsupported depth texture format; depth data "
-                               "will not be sent";
+        RTC_LOG(LS_WARNING) << "Failed to map depth texture array subresource "
+                            << left_eye_subresource;
       }
+    } else {
+      D3D11_MAPPED_SUBRESOURCE mapped = {};
+      HRESULT hr = context_->Map(staging_depth_texture_.get(), 0,
+                                 D3D11_MAP_READ, 0, &mapped);
 
-      context_->Unmap(staging_depth_texture_.get(), 0);
+      if (SUCCEEDED(hr)) {
+        if (depth_texture_format_ == DXGI_FORMAT_R16_TYPELESS) {
+          uint16_t* pixel_ptr = reinterpret_cast<uint16_t*>(mapped.pData);
+          // RowPitch can be higher than width_, which breaks things (out of
+          // bounds writes). Note that this could theoretically send the wrong
+          // image if there's i.e. padding in the front instead of in the back
+          // of a row of pixels.
+          uint32_t uv_write_index = width_ / 2 * height_ / 4;
+
+          for (int y = 0; y < height_ / 2; y++) {
+            for (uint32_t x = 0; x < static_cast<uint32_t>(width_); x++) {
+              uint8_t high = *pixel_ptr >> 8;
+              uint8_t low = static_cast<uint8_t>(*pixel_ptr);
+
+              // write high 8 bits into Y plane
+              int32_t y_offset = width_ * height_ / 2;
+              dst_y_[y * width_ + x + y_offset] = high;
+
+              if ((y % 2 == 0) && (x % 2 == 0)) {
+                dst_u_[uv_write_index] = low;
+                // dst_v_[uv_write_index] = 0;
+                uv_write_index++;
+              }
+
+              pixel_ptr++;
+            }
+          }
+        } else {
+          RTC_LOG(LS_WARNING) << "Unsupported depth texture format; depth data "
+                                 "will not be sent";
+        }
+
+        context_->Unmap(staging_depth_texture_.get(), 0);
+      }
     }
   }
 }
 
-// Copies contents of rendered_image_ to staging_texture_, then downloads it to
-// the CPU and converts to i420 via libyuv.
+// Copies contents of rendered_image_ to staging_texture_, then downloads it
+// to the CPU and converts to i420 via libyuv.
 rtc::scoped_refptr<webrtc::I420BufferInterface>
 D3D11VideoFrameBuffer::ToI420() {
   // if the user didn't pass in temp buffers, we don't support converting to
@@ -244,7 +319,8 @@ D3D11VideoFrameBuffer::ToI420() {
                                     rendered_image_.get(), subresource_index_,
                                     nullptr);
 
-    // We want depth to be optional, so check for existence before each access.
+    // We want depth to be optional, so check for existence before each
+    // access.
     if (rendered_depth_image_.get() != nullptr) {
       // context_->CopySubresourceRegion(staging_depth_texture_.get(),
       // 0,0,0,0,rendered_depth_image_.get(), 0, nullptr);
@@ -268,9 +344,9 @@ D3D11VideoFrameBuffer::ToI420() {
         rendered_image_.get(), right_eye_subresource, nullptr);
 
     if (rendered_depth_image_.get() != nullptr) {
-      // TODO: in this case our staging texture needs to be an array because we
-      // can't copysubresourceregion with depthstencil resources...which means
-      // we need extra logic for staging texture allocation ._.
+      // TODO: in this case our staging texture needs to be an array because
+      // we can't copysubresourceregion with depthstencil resources...which
+      // means we need extra logic for staging texture allocation ._.
       RTC_LOG(LS_WARNING) << "Single pass depth is broken, fix it";
     }
   } else {
@@ -281,8 +357,6 @@ D3D11VideoFrameBuffer::ToI420() {
   int stride_y = width_;
   int stride_uv = stride_y / 2;
   if (DownloadColor()) {
-
-
     // +-----------------------+
     // |                       |
     // |                       |

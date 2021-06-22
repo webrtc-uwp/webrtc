@@ -98,6 +98,14 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(ID3D11Device* device,
   // If we get a desc for depth, allocate a staging texture for depth
   if (depth_desc != nullptr) {
     staging_desc.Format = depth_desc->Format;
+
+    // Another special case: you can't copy part of a resource that is BIND_DEPTH_STENCIL (which depth buffers are).
+    // That means we can't copy left and right eyes separately to a staging texture; we can only copy the whole thing at once,
+    // which means our staging texture for depth needs to be an array, just like Unity's depth texture is.
+    if (single_pass) {
+      staging_desc.ArraySize = 2;
+    }
+
     hr = device_->CreateTexture2D(&staging_desc, nullptr,
                                   depth_staging_texture_.put());
     if (FAILED(hr)) {
@@ -214,8 +222,10 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* rendered_image,
   // won't work. Fuck. but if we sized our dst_y/u/v accordingly, could we reuse
   // our current code? 2 staging textures are needed (different sizes?) for
   // calling map.
-  D3D11_TEXTURE2D_DESC depth_desc;
-  depth_image->GetDesc(&depth_desc);
+  if (depth_image != nullptr) {
+    D3D11_TEXTURE2D_DESC depth_desc;
+    depth_image->GetDesc(&depth_desc);
+  }
 
   auto d3dFrameBuffer = D3D11VideoFrameBuffer::Create(
       context_.get(), staging_texture_.get(), rendered_image,
