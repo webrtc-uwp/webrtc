@@ -104,6 +104,7 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(ID3D11Device* device,
     // which means our staging texture for depth needs to be an array, just like Unity's depth texture is.
     if (single_pass) {
       staging_desc.ArraySize = 2;
+      staging_desc.Width = depth_desc->Width;
     }
 
     hr = device_->CreateTexture2D(&staging_desc, nullptr,

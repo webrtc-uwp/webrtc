@@ -344,10 +344,7 @@ D3D11VideoFrameBuffer::ToI420() {
         rendered_image_.get(), right_eye_subresource, nullptr);
 
     if (rendered_depth_image_.get() != nullptr) {
-      // TODO: in this case our staging texture needs to be an array because
-      // we can't copysubresourceregion with depthstencil resources...which
-      // means we need extra logic for staging texture allocation ._.
-      RTC_LOG(LS_WARNING) << "Single pass depth is broken, fix it";
+      context_->CopyResource(staging_depth_texture_.get(), rendered_depth_image_.get());
     }
   } else {
     RTC_LOG(LS_WARNING)
