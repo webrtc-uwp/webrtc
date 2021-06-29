@@ -33,6 +33,7 @@ rtc::scoped_refptr<D3D11VideoFrameBuffer> D3D11VideoFrameBuffer::Create(
     ID3D11Texture2D* staging_texture,
     ID3D11Texture2D* rendered_image,
     ID3D11Texture2D* staging_depth_texture,
+    ID3D11Texture2D* staging_depth_texture_array,
     ID3D11Texture2D* rendered_depth_image,
     uint8_t* dst_y,
     uint8_t* dst_u,
@@ -42,8 +43,8 @@ rtc::scoped_refptr<D3D11VideoFrameBuffer> D3D11VideoFrameBuffer::Create(
     int32_t height) {
   return new rtc::RefCountedObject<D3D11VideoFrameBuffer>(
       context, staging_texture, rendered_image, staging_depth_texture,
-      rendered_depth_image, dst_y, dst_u, dst_v, rendered_image_desc, width,
-      height);
+      staging_depth_texture_array, rendered_depth_image, dst_y, dst_u, dst_v,
+      rendered_image_desc, width, height);
 }
 
 VideoFrameBuffer::Type D3D11VideoFrameBuffer::type() const {
@@ -73,6 +74,7 @@ D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(
     ID3D11Texture2D* staging_texture,
     ID3D11Texture2D* rendered_image,
     ID3D11Texture2D* staging_depth_texture,
+    ID3D11Texture2D* staging_depth_texture_array,
     ID3D11Texture2D* rendered_depth_image,
     uint8_t* dst_y,
     uint8_t* dst_u,
@@ -90,6 +92,7 @@ D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(
   context_.copy_from(context);
   staging_texture_.copy_from(staging_texture);
   staging_depth_texture_.copy_from(staging_depth_texture);
+  staging_depth_texture_array_.copy_from(staging_depth_texture_array);
   rendered_image_.copy_from(rendered_image);
   rendered_depth_image_.copy_from(rendered_depth_image);
 
@@ -191,7 +194,7 @@ void D3D11VideoFrameBuffer::DownloadDepth() {
   if (rendered_depth_image_.get() != nullptr) {
     // Theoretically we should check depth_image_desc (which we don't have here
     // right now) but if color is a texture array, depth is too.
-    bool single_pass = rendered_image_desc_.ArraySize == 2;
+    bool single_pass = /*rendered_image_desc_.ArraySize == 2*/ false;
     if (single_pass) {
       // special codepath for single pass mapping. maybe put this in
       // DownloadDepthSinglePass method.
@@ -344,7 +347,18 @@ D3D11VideoFrameBuffer::ToI420() {
         rendered_image_.get(), right_eye_subresource, nullptr);
 
     if (rendered_depth_image_.get() != nullptr) {
-      context_->CopyResource(staging_depth_texture_.get(), rendered_depth_image_.get());
+      // for single pass copy to staging texture array first, then copy to
+      // double-wide/high texture
+      context_->CopyResource(staging_depth_texture_array_.get(),
+                             rendered_depth_image_.get());
+
+      context_->CopySubresourceRegion(staging_depth_texture_.get(), 0, 0, 0, 0,
+                                      staging_depth_texture_array_.get(),
+                                      left_eye_subresource, nullptr);
+
+      context_->CopySubresourceRegion(
+          staging_depth_texture_.get(), 0, rendered_image_desc_.Width, 0, 0,
+          staging_depth_texture_array_.get(), right_eye_subresource, nullptr);
     }
   } else {
     RTC_LOG(LS_WARNING)

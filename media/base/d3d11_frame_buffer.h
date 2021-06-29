@@ -53,6 +53,7 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
       ID3D11Texture2D* staging_texture,
       ID3D11Texture2D* rendered_image,
       ID3D11Texture2D* staging_depth_texture,
+      ID3D11Texture2D* staging_depth_texture_array,
       ID3D11Texture2D* rendered_depth_image,
       uint8_t* dst_y,
       uint8_t* dst_u,
@@ -90,6 +91,7 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
                         ID3D11Texture2D* staging_texture,
                         ID3D11Texture2D* rendered_image,
                         ID3D11Texture2D* staging_depth_texture,
+                        ID3D11Texture2D* staging_depth_texture_array,
                         ID3D11Texture2D* rendered_depth_image,
                         uint8_t* dst_y,
                         uint8_t* dst_u,
@@ -108,6 +110,10 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
   // This is only used in i420 conversion to download data from the GPU.
   winrt::com_ptr<ID3D11Texture2D> staging_texture_;
   winrt::com_ptr<ID3D11Texture2D> staging_depth_texture_;
+
+  // This one is used as a workaround for CopySubresourceRegion not working with
+  // BIND_DEPTH_STENCIL textures.
+  winrt::com_ptr<ID3D11Texture2D> staging_depth_texture_array_;
 
   // This texture holds the actual contents
   winrt::com_ptr<ID3D11Texture2D> rendered_image_;
