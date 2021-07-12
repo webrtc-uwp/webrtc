@@ -32,7 +32,7 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
  public:
   ~D3D11VideoFrameBuffer() override;
 
-  // KL: Used on client side. ToI420 would probably crash because it has no
+  // Used on client side. ToI420 would probably crash because it has no
   // buffers to copy to, since those are supplied from the outside. On the
   // client CPU download isn't needed as the texture is decoded on the GPU and
   // stays there.
@@ -46,7 +46,7 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
       int height,
       DXGI_FORMAT format);
 
-  // KL: Used on server side. Supports calling ToI420 (i.e. downloading to CPU)
+  // Used on server side. Supports calling ToI420 (i.e. downloading to CPU)
   // because the encoder expects the data in this format.
   static rtc::scoped_refptr<D3D11VideoFrameBuffer> Create(
       ID3D11DeviceContext* context,

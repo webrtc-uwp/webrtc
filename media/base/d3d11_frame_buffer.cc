@@ -95,19 +95,8 @@ D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(
   staging_depth_texture_array_.copy_from(staging_depth_texture_array);
   rendered_image_.copy_from(rendered_image);
   rendered_depth_image_.copy_from(rendered_depth_image);
-
-  // can we set width/height from the outside instead of this?
-  // if (rendered_image_desc.ArraySize == 2) {
-  //   width_ = rendered_image_desc.Width * 2;
-  // } else {
-  //   width_ = rendered_image_desc.Width;
-  // }
-
-  // height_ = rendered_image_desc.Height * 2;
   color_texture_format_ = rendered_image_desc.Format;
 
-  // TODO: instead of passing desc as a param, call GetDesc here (for color). We
-  // don't need it outside.
   if (rendered_depth_image_.get() != nullptr) {
     D3D11_TEXTURE2D_DESC depth_desc = {};
     rendered_depth_image->GetDesc(&depth_desc);
@@ -151,9 +140,8 @@ bool D3D11VideoFrameBuffer::DownloadColor() {
         RTC_DCHECK(conversion_result == 0);
       }
 
-      // Get alpha from color texture if we're sending that
       if (rendered_depth_image_.get() != nullptr) {
-        // alpha: pack stuff into V plane of depth data to test if it works
+        // Alpha: pack stuff into V plane of depth data to test if it works
         // very unfortunate to loop over this same data twice :/
         // maybe use ARGBToUVRow instead of this at some point (not public api
         // :/ but CopyPlane is, maybe useful)
@@ -194,114 +182,43 @@ void D3D11VideoFrameBuffer::DownloadDepth() {
   if (rendered_depth_image_.get() != nullptr) {
     // Theoretically we should check depth_image_desc (which we don't have here
     // right now) but if color is a texture array, depth is too.
-    bool single_pass = /*rendered_image_desc_.ArraySize == 2*/ false;
-    if (single_pass) {
-      // special codepath for single pass mapping. maybe put this in
-      // DownloadDepthSinglePass method.
-      D3D11_MAPPED_SUBRESOURCE mapped_left = {};
-      D3D11_MAPPED_SUBRESOURCE mapped_right = {};
-      int32_t left_eye_subresource = 0;
-      int32_t right_eye_subresource = 1;
-      HRESULT hr =
-          context_->Map(staging_depth_texture_.get(), left_eye_subresource,
-                        D3D11_MAP_READ, 0, &mapped_left);
+    D3D11_MAPPED_SUBRESOURCE mapped = {};
+    HRESULT hr = context_->Map(staging_depth_texture_.get(), 0, D3D11_MAP_READ,
+                               0, &mapped);
 
-      if (SUCCEEDED(hr)) {
-        hr = context_->Map(staging_depth_texture_.get(), right_eye_subresource,
-                           D3D11_MAP_READ, 0, &mapped_right);
+    if (SUCCEEDED(hr)) {
+      if (depth_texture_format_ == DXGI_FORMAT_R16_TYPELESS) {
+        uint16_t* pixel_ptr = reinterpret_cast<uint16_t*>(mapped.pData);
+        // RowPitch can be higher than width_, which breaks things (out of
+        // bounds writes). Note that this could theoretically send the wrong
+        // image if there's i.e. padding in the front instead of in the back
+        // of a row of pixels.
+        uint32_t uv_write_index = width_ / 2 * height_ / 4;
 
-        if (SUCCEEDED(hr)) {
-          // do the thing only if both maps worked
-          int32_t y_offset = width_ * height_ / 2;
+        for (int y = 0; y < height_ / 2; y++) {
+          for (uint32_t x = 0; x < static_cast<uint32_t>(width_); x++) {
+            uint8_t high = *pixel_ptr >> 8;
+            uint8_t low = static_cast<uint8_t>(*pixel_ptr);
 
-          for (int y = 0; y < height_ / 2; y++) {
-            for (int x = 0; x < width_; x++) {
-              uint8_t high = 0;
-              uint8_t low = 0;
-              uint16_t* left_ptr = static_cast<uint16_t*>(mapped_left.pData);
-              uint16_t* right_ptr = static_cast<uint16_t*>(mapped_right.pData);
-              uint32_t uv_write_index = width_ / 2 * height_ / 4;
+            // Write high 8 bits into Y plane
+            int32_t y_offset = width_ * height_ / 2;
+            dst_y_[y * width_ + x + y_offset] = high;
 
-              // if we iterate over the whole thing write indices are nice for
-              // the U plane. read indices we need to increase by the right
-              // amount...and there's this switch which pointer we read from, so
-              // needs an extra condition inside the loop (branch predictor go
-              // brrr). Hope it's not too bad. Either way, doing this in-engine
-              // on a gpu is probably better.
-              if (x < width_ / 2) {
-                // read from left eye subresource
-                // inc left subresource ptr
-                high = *left_ptr >> 8;
-                low = static_cast<uint8_t>(*left_ptr);
-                left_ptr++;
-              } else {
-                // read from right eye subresource
-                // inc right subresource ptr
-                high = *right_ptr >> 8;
-                low = static_cast<uint8_t>(*right_ptr);
-                right_ptr++;
-              }
-
-              // write high byte into Y plane
-              dst_y_[y * width_ + x + y_offset] = high;
-
-              // write low byte into U plane
-              if ((y % 2 == 0) && (x % 2 == 0)) {
-                dst_u_[uv_write_index] = low;
-                uv_write_index++;
-              }
+            if ((y % 2 == 0) && (x % 2 == 0)) {
+              // Low 8 bits go into U plane
+              dst_u_[uv_write_index] = low;
+              uv_write_index++;
             }
+
+            pixel_ptr++;
           }
-          context_->Unmap(staging_depth_texture_.get(), right_eye_subresource);
-        } else {
-          RTC_LOG(LS_WARNING)
-              << "Failed to map depth texture array subresource "
-              << right_eye_subresource;
         }
-        context_->Unmap(staging_depth_texture_.get(), left_eye_subresource);
       } else {
-        RTC_LOG(LS_WARNING) << "Failed to map depth texture array subresource "
-                            << left_eye_subresource;
+        RTC_LOG(LS_WARNING) << "Unsupported depth texture format; depth data "
+                               "will not be sent";
       }
-    } else {
-      D3D11_MAPPED_SUBRESOURCE mapped = {};
-      HRESULT hr = context_->Map(staging_depth_texture_.get(), 0,
-                                 D3D11_MAP_READ, 0, &mapped);
 
-      if (SUCCEEDED(hr)) {
-        if (depth_texture_format_ == DXGI_FORMAT_R16_TYPELESS) {
-          uint16_t* pixel_ptr = reinterpret_cast<uint16_t*>(mapped.pData);
-          // RowPitch can be higher than width_, which breaks things (out of
-          // bounds writes). Note that this could theoretically send the wrong
-          // image if there's i.e. padding in the front instead of in the back
-          // of a row of pixels.
-          uint32_t uv_write_index = width_ / 2 * height_ / 4;
-
-          for (int y = 0; y < height_ / 2; y++) {
-            for (uint32_t x = 0; x < static_cast<uint32_t>(width_); x++) {
-              uint8_t high = *pixel_ptr >> 8;
-              uint8_t low = static_cast<uint8_t>(*pixel_ptr);
-
-              // write high 8 bits into Y plane
-              int32_t y_offset = width_ * height_ / 2;
-              dst_y_[y * width_ + x + y_offset] = high;
-
-              if ((y % 2 == 0) && (x % 2 == 0)) {
-                dst_u_[uv_write_index] = low;
-                // dst_v_[uv_write_index] = 0;
-                uv_write_index++;
-              }
-
-              pixel_ptr++;
-            }
-          }
-        } else {
-          RTC_LOG(LS_WARNING) << "Unsupported depth texture format; depth data "
-                                 "will not be sent";
-        }
-
-        context_->Unmap(staging_depth_texture_.get(), 0);
-      }
+      context_->Unmap(staging_depth_texture_.get(), 0);
     }
   }
 }
@@ -325,8 +242,6 @@ D3D11VideoFrameBuffer::ToI420() {
     // We want depth to be optional, so check for existence before each
     // access.
     if (rendered_depth_image_.get() != nullptr) {
-      // context_->CopySubresourceRegion(staging_depth_texture_.get(),
-      // 0,0,0,0,rendered_depth_image_.get(), 0, nullptr);
       context_->CopyResource(staging_depth_texture_.get(),
                              rendered_depth_image_.get());
     }
@@ -368,30 +283,6 @@ D3D11VideoFrameBuffer::ToI420() {
   int stride_y = width_;
   int stride_uv = stride_y / 2;
   if (DownloadColor()) {
-    // +-----------------------+
-    // |                       |
-    // |                       |
-    // |       Y color         |
-    // |                       |
-    // +-----------------------+
-    // |                       |
-    // |                       |
-    // |       Y depth         |
-    // |                       |
-    // +-----------+-----------+
-    // |           |           |
-    // |  U color  |  V color  |
-    // +-----------+-----------+
-    // |           |           |
-    // |  U depth  |  V depth  |
-    // +-----------+-----------+
-    // Our Y res is 2880x936.
-    // UV res is 1440x468.
-    // 2 Y planes are 2880*1872.
-    // Y depth start is at offset 2695680.
-    // U depth start is at offset 673920.
-    // same for V depth, buffers are separate.
-    // U and V are half in each dimension, always.
     DownloadDepth();
 
     rtc::Callback0<void> unused;
