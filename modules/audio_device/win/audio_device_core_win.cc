@@ -1675,9 +1675,14 @@ int16_t AudioDeviceWindowsCore::RecordingDevices() {
   rtc::CritScope lock(&_critSect);
 
   if (_RefreshDeviceList(eCapture) != -1) {
-    //KL: we say there's one more device for capture (loopback) even if technically
-    //it is not in the IMMDeviceCollection for type eCapture
-    return (_DeviceListCount(eCapture)) + 1;
+    auto recording_device_count = _DeviceListCount(eCapture);
+    if (recording_device_count > 0) {
+      //KL: we say there's one more device for capture (loopback) even if technically
+      //it is not in the IMMDeviceCollection for type eCapture
+      return recording_device_count + 1;
+    } else {
+      return recording_device_count;
+    }
   }
 
   return -1;
