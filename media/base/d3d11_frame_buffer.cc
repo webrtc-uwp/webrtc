@@ -122,6 +122,12 @@ bool D3D11VideoFrameBuffer::DownloadColor() {
   D3D11_MAPPED_SUBRESOURCE mapped = {};
   HRESULT hr =
       context_->Map(staging_texture_.get(), 0, D3D11_MAP_READ, 0, &mapped);
+  int32_t color_height = 0;
+  if (rendered_depth_image_.get() != nullptr) {
+    color_height = height_ / 2;
+  } else {
+    color_height = height_;
+  }
 
   if (SUCCEEDED(hr)) {
     int stride_y = width_;
@@ -131,7 +137,7 @@ bool D3D11VideoFrameBuffer::DownloadColor() {
         color_texture_format_ == DXGI_FORMAT_R8G8B8A8_TYPELESS) {
       int32_t conversion_result = libyuv::ARGBToI420(
           static_cast<uint8_t*>(mapped.pData), mapped.RowPitch, dst_y_, width_,
-          dst_u_, stride_uv, dst_v_, stride_uv, width_, height_ / 2);
+          dst_u_, stride_uv, dst_v_, stride_uv, width_, color_height);
 
       if (conversion_result != 0) {
         RTC_LOG(LS_ERROR) << "i420 conversion failed with error code"
