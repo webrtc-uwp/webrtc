@@ -6,37 +6,42 @@
     // python ./run.py -a prepare build -u hlr -p winuwp -x x64 -c release --noWrapper --clang -- hlr_userdef.py
 
     "version": "2.0.0",
-    "inputs": [
-        {
-            "id": "run_action",
-            "type": "pickString",
-            "options": [
-                "prepare", "build", "clean"
-            ],
-            "description": "select the action for run.py"
-        },
-        {
-            "id": "run_platform",
-            "type": "pickString",
-            "options": [
-                "win", "winuwp"
-            ],
-            "description": "select the platform for run.py"
-        },
-        {
-            "id": "run_arch",
-            "type": "pickString",
-            "options": [
-                "x86", "x64", "arm", "arm64"
-            ],
-            "description": "select the CPU architecture for run.py"
-        }
-    ],
+    // "inputs": [
+    //     {
+    //         "id": "run_action",
+    //         "type": "pickString",
+    //         "options": [
+    //             "prepare", "build", "clean"
+    //         ],
+    //         "description": "select the action for run.py"
+    //     },
+    //     {
+    //         "id": "run_platform",
+    //         "type": "pickString",
+    //         "options": [
+    //             "win", "winuwp"
+    //         ],
+    //         "description": "select the platform for run.py"
+    //     },
+    //     {
+    //         "id": "run_arch",
+    //         "type": "pickString",
+    //         "options": [
+    //             "x86", "x64", "arm", "arm64"
+    //         ],
+    //         "description": "select the CPU architecture for run.py"
+    //     }
+    // ],
     // default values
     // "group": "build",
     "type": "shell",
-    // "problemMatcher": "$gcc",
-    "problemMatcher": [],
+    // "problemMatcher": [],
+    "problemMatcher": ["$msCompile", "$gcc"],
+    // {
+    //   "base": "$msCompile",
+    //   "severity": "error",
+    //   "pattern":
+    // }
     "command": "python",
     "options": {
         "cwd": "${workspaceFolder}/../../../scripts"
@@ -48,7 +53,7 @@
         "panel": "dedicated",
         "showReuseMessage": false,
         "clear": true,
-        "revealProblems": "onProblem",
+        "revealProblems": "never",
     },
     "tasks": [
       {
@@ -56,229 +61,229 @@
         "type": "shell",
         "command": "echo ${workspaceFolder}"
       },
-      {
-        "label": "run interactive (webrtc)",
-        "args": [
-          "./run.py",
-          "-a",
-          "${input:run_action}",
-          "-t",
-          "webrtc",
-          "-p",
-          "${input:run_platform}",
-          "-x",
-          "${input:run_arch}",
-          "-c",
-          "debug",
-          "--noWrapper"
-        ]
-      },
-      {
-        "label": "run interactive (hlr)",
-        "args": [
-          "./run.py",
-          "-a",
-          "${input:run_action}",
-          "-u",
-          "hlr",
-          "-p",
-          "${input:run_platform}",
-          "-x",
-          "${input:run_arch}",
-          "-c",
-          "debug",
-          "--noWrapper",
-          "--",
-          "hlr_userdef.py"
-        ]
-      },
-      {
-        "label": "webrtc dbg (x86): Prepare",
-        "args": [
-          "./run.py",
-          "-a",
-          "prepare",
-          "-t",
-          "webrtc",
-          "-p",
-          "win",
-          "-x",
-          "x86",
-          "-c",
-          "debug",
-          "--noWrapper"
-        ]
-      },
-      {
-        "label": "webrtc dbg (x86): Prepare | Build",
-        "dependsOn": [
-          "webrtc dbg (x86): Prepare"
-        ],
-        "args": [
-          "./run.py",
-          "-a",
-          "build",
-          "-t",
-          "webrtc",
-          "-p",
-          "win",
-          "-x",
-          "x86",
-          "-c",
-          "debug",
-          "--noWrapper"
-        ]
-      },
-      {
-        "label": "webrtc dbg (x64): Prepare",
-        "args": [
-          "./run.py",
-          "-a",
-          "prepare",
-          "-t",
-          "webrtc",
-          "-p",
-          "win",
-          "-x",
-          "x64",
-          "-c",
-          "debug",
-          "--noWrapper"
-        ]
-      },
-      {
-        "label": "webrtc dbg (x64): Prepare | Build",
-        "dependsOn": [
-          "webrtc dbg (x64): Prepare"
-        ],
-        "args": [
-          "./run.py",
-          "-a",
-          "build",
-          "-t",
-          "webrtc",
-          "-p",
-          "win",
-          "-x",
-          "x64",
-          "-c",
-          "debug",
-          "--noWrapper"
-        ]
-      },
-      {
-        "label": "webrtc dbg (hololens 1): Prepare",
-        "args": [
-          "./run.py",
-          "-a",
-          "prepare",
-          "-t",
-          "webrtc",
-          "-p",
-          "winuwp",
-          "-x",
-          "x86",
-          "-c",
-          "debug",
-          "--noWrapper"
-        ]
-      },
-      {
-        "label": "webrtc dbg (hololens 1): Prepare | Build",
-        "dependsOn": [
-          "webrtc dbg (hololens 1): Prepare"
-        ],
-        "args": [
-          "./run.py",
-          "-a",
-          "build",
-          "-t",
-          "webrtc",
-          "-p",
-          "winuwp",
-          "-x",
-          "x86",
-          "-c",
-          "debug",
-          "--noWrapper"
-        ]
-      },
-      {
-        "label": "webrtc dbg (hololens 1) (clang): Prepare",
-        "args": [
-          "./run.py",
-          "-a",
-          "prepare",
-          "-t",
-          "webrtc",
-          "-p",
-          "winuwp",
-          "-x",
-          "x86",
-          "-c",
-          "debug",
-          "--clang",
-          "--noWrapper"
-        ]
-      },
-      {
-        "label": "webrtc dbg (hololens 1) (clang): Prepare | Build",
-        "dependsOn": [
-          "webrtc dbg (hololens 1) (clang): Prepare"
-        ],
-        "args": [
-          "./run.py",
-          "-a",
-          "build",
-          "-t",
-          "webrtc",
-          "-p",
-          "winuwp",
-          "-x",
-          "x86",
-          "-c",
-          "debug",
-          "--clang",
-          "--noWrapper"
-        ]
-      },
-      {
-        "label": "webrtc dbg (hololens 2): Prepare",
-        "args": [
-          "./run.py",
-          "-a",
-          "prepare",
-          "-t",
-          "webrtc",
-          "-p",
-          "winuwp",
-          "-x",
-          "arm",
-          "-c",
-          "debug",
-          "--noWrapper"
-        ]
-      },
-      {
-        "label": "webrtc dbg (hololens 2): Prepare | Build",
-        "dependsOn": [
-          "webrtc dbg (hololens 2): Prepare"
-        ],
-        "args": [
-          "./run.py",
-          "-a",
-          "build",
-          "-t",
-          "webrtc",
-          "-p",
-          "winuwp",
-          "-x",
-          "arm",
-          "-c",
-          "debug",
-          "--noWrapper"
-        ]
-      },
+      // {
+      //   "label": "run interactive (webrtc)",
+      //   "args": [
+      //     "./run.py",
+      //     "-a",
+      //     "${input:run_action}",
+      //     "-t",
+      //     "webrtc",
+      //     "-p",
+      //     "${input:run_platform}",
+      //     "-x",
+      //     "${input:run_arch}",
+      //     "-c",
+      //     "debug",
+      //     "--noWrapper"
+      //   ]
+      // },
+      // {
+      //   "label": "run interactive (hlr)",
+      //   "args": [
+      //     "./run.py",
+      //     "-a",
+      //     "${input:run_action}",
+      //     "-u",
+      //     "hlr",
+      //     "-p",
+      //     "${input:run_platform}",
+      //     "-x",
+      //     "${input:run_arch}",
+      //     "-c",
+      //     "debug",
+      //     "--noWrapper",
+      //     "--",
+      //     "hlr_userdef.py"
+      //   ]
+      // },
+      // {
+      //   "label": "webrtc dbg (x86): Prepare",
+      //   "args": [
+      //     "./run.py",
+      //     "-a",
+      //     "prepare",
+      //     "-t",
+      //     "webrtc",
+      //     "-p",
+      //     "win",
+      //     "-x",
+      //     "x86",
+      //     "-c",
+      //     "debug",
+      //     "--noWrapper"
+      //   ]
+      // },
+      // {
+      //   "label": "webrtc dbg (x86): Prepare | Build",
+      //   "dependsOn": [
+      //     "webrtc dbg (x86): Prepare"
+      //   ],
+      //   "args": [
+      //     "./run.py",
+      //     "-a",
+      //     "build",
+      //     "-t",
+      //     "webrtc",
+      //     "-p",
+      //     "win",
+      //     "-x",
+      //     "x86",
+      //     "-c",
+      //     "debug",
+      //     "--noWrapper"
+      //   ]
+      // },
+      // {
+      //   "label": "webrtc dbg (x64): Prepare",
+      //   "args": [
+      //     "./run.py",
+      //     "-a",
+      //     "prepare",
+      //     "-t",
+      //     "webrtc",
+      //     "-p",
+      //     "win",
+      //     "-x",
+      //     "x64",
+      //     "-c",
+      //     "debug",
+      //     "--noWrapper"
+      //   ]
+      // },
+      // {
+      //   "label": "webrtc dbg (x64): Prepare | Build",
+      //   "dependsOn": [
+      //     "webrtc dbg (x64): Prepare"
+      //   ],
+      //   "args": [
+      //     "./run.py",
+      //     "-a",
+      //     "build",
+      //     "-t",
+      //     "webrtc",
+      //     "-p",
+      //     "win",
+      //     "-x",
+      //     "x64",
+      //     "-c",
+      //     "debug",
+      //     "--noWrapper"
+      //   ]
+      // },
+      // {
+      //   "label": "webrtc dbg (hololens 1): Prepare",
+      //   "args": [
+      //     "./run.py",
+      //     "-a",
+      //     "prepare",
+      //     "-t",
+      //     "webrtc",
+      //     "-p",
+      //     "winuwp",
+      //     "-x",
+      //     "x86",
+      //     "-c",
+      //     "debug",
+      //     "--noWrapper"
+      //   ]
+      // },
+      // {
+      //   "label": "webrtc dbg (hololens 1): Prepare | Build",
+      //   "dependsOn": [
+      //     "webrtc dbg (hololens 1): Prepare"
+      //   ],
+      //   "args": [
+      //     "./run.py",
+      //     "-a",
+      //     "build",
+      //     "-t",
+      //     "webrtc",
+      //     "-p",
+      //     "winuwp",
+      //     "-x",
+      //     "x86",
+      //     "-c",
+      //     "debug",
+      //     "--noWrapper"
+      //   ]
+      // },
+      // {
+      //   "label": "webrtc dbg (hololens 1) (clang): Prepare",
+      //   "args": [
+      //     "./run.py",
+      //     "-a",
+      //     "prepare",
+      //     "-t",
+      //     "webrtc",
+      //     "-p",
+      //     "winuwp",
+      //     "-x",
+      //     "x86",
+      //     "-c",
+      //     "debug",
+      //     "--clang",
+      //     "--noWrapper"
+      //   ]
+      // },
+      // {
+      //   "label": "webrtc dbg (hololens 1) (clang): Prepare | Build",
+      //   "dependsOn": [
+      //     "webrtc dbg (hololens 1) (clang): Prepare"
+      //   ],
+      //   "args": [
+      //     "./run.py",
+      //     "-a",
+      //     "build",
+      //     "-t",
+      //     "webrtc",
+      //     "-p",
+      //     "winuwp",
+      //     "-x",
+      //     "x86",
+      //     "-c",
+      //     "debug",
+      //     "--clang",
+      //     "--noWrapper"
+      //   ]
+      // },
+      // {
+      //   "label": "webrtc dbg (hololens 2): Prepare",
+      //   "args": [
+      //     "./run.py",
+      //     "-a",
+      //     "prepare",
+      //     "-t",
+      //     "webrtc",
+      //     "-p",
+      //     "winuwp",
+      //     "-x",
+      //     "arm",
+      //     "-c",
+      //     "debug",
+      //     "--noWrapper"
+      //   ]
+      // },
+      // {
+      //   "label": "webrtc dbg (hololens 2): Prepare | Build",
+      //   "dependsOn": [
+      //     "webrtc dbg (hololens 2): Prepare"
+      //   ],
+      //   "args": [
+      //     "./run.py",
+      //     "-a",
+      //     "build",
+      //     "-t",
+      //     "webrtc",
+      //     "-p",
+      //     "winuwp",
+      //     "-x",
+      //     "arm",
+      //     "-c",
+      //     "debug",
+      //     "--noWrapper"
+      //   ]
+      // },
       {
         "label": "hlr dbg (x64): Prepare",
         "args": [
@@ -1305,92 +1310,156 @@
         "problemMatcher": []
       },
       {
-        "label": "remoting_with_tests dbg (x64): Prepare",
+        "label": "vcam: dbg x64",
+        "options": {
+          "cwd": "${workspaceFolder}/remoting/extras/vcam"
+        },
+        "command": "\"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Auxiliary/Build/vcvars64.bat\" && msbuild",
+        // "command": "%VCINSTALLDIR%\\Auxiliary\\Build\\vcvars64.bat",
         "args": [
-          "./run.py",
-          "-a",
-          "prepare",
-          "-u",
-          "remoting_with_tests",
-          "-p",
-          "win",
-          "-x",
-          "x64",
-          "-c",
-          "debug",
-          "--noWrapper",
-          "./remoting_with_tests_userdef.py"
-        ]
+          "vcam.sln -noLogo -t:Rebuild -p:Configuration=Debug"
+        ],
+        "problemMatcher": ["$msCompile"],
       },
       {
-        "label": "remoting_with_tests rel (x64): Prepare",
+        "label": "vcam: rel x64",
+        "options": {
+          "cwd": "${workspaceFolder}/remoting/extras/vcam"
+        },
+        "command": "\"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Auxiliary/Build/vcvars64.bat\" && msbuild",
+        // "command": "%VCINSTALLDIR%\\Auxiliary\\Build\\vcvars64.bat",
         "args": [
-          "./run.py",
-          "-a",
-          "prepare",
-          "-u",
-          "remoting_with_tests",
-          "-p",
-          "win",
-          "-x",
-          "x64",
-          "-c",
-          "release",
-          "--noWrapper",
-          "./remoting_with_tests_userdef.py"
-        ]
+          "vcam.sln -noLogo -t:Rebuild -p:Configuration=Release"
+        ],
+        "problemMatcher": ["$msCompile"],
       },
       {
-        "label": "remoting_with_tests dbg (x64): Build",
+        "label": "vcam: dbg x86",
+        "options": {
+          "cwd": "${workspaceFolder}/remoting/extras/vcam"
+        },
+        "command": "\"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Auxiliary/Build/vcvars32.bat\" && msbuild",
+        // "command": "%VCINSTALLDIR%\\Auxiliary\\Build\\vcvars64.bat",
         "args": [
-          "./run.py",
-          "-a",
-          "build",
-          "-u",
-          "remoting_with_tests",
-          "-p",
-          "win",
-          "-x",
-          "x64",
-          "-c",
-          "debug",
-          "--noWrapper",
-          "./remoting_with_tests_userdef.py"
-        ]
+          "vcam.sln -noLogo -t:Rebuild -p:Configuration=Debug"
+        ],
+        "problemMatcher": ["$msCompile"],
       },
       {
-        "label": "remoting_with_tests rel (x64): Build",
+        "label": "vcam: rel x86",
+        "options": {
+          "cwd": "${workspaceFolder}/remoting/extras/vcam"
+        },
+        "command": "'C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Auxiliary/Build/vcvars32.bat' && msbuild",
+        // "command": "%VCINSTALLDIR%\\Auxiliary\\Build\\vcvars64.bat",
         "args": [
-          "./run.py",
-          "-a",
-          "build",
-          "-u",
-          "remoting_with_tests",
-          "-p",
-          "win",
-          "-x",
-          "x64",
-          "-c",
-          "release",
-          "--noWrapper",
-          "./remoting_with_tests_userdef.py"
-        ]
+          "vcam.sln -noLogo -t:Rebuild -p:Configuration=Release"
+        ],
+        "problemMatcher": ["$msCompile"],
       },
       {
-        "label": "remoting_with_tests dbg (x64): Prepare | Build",
+        "label": "vcam: dbg all",
         "dependsOn": [
-          "remoting_with_tests dbg (x64): Prepare",
-          "remoting_with_tests dbg (x64): Build"
+          "vcam: dbg x64",
+          "vcam: dbg x86",
         ],
         "dependsOrder": "sequence"
       },
       {
-        "label": "remoting_with_tests rel (x64): Prepare | Build",
+        "label": "vcam: rel all",
         "dependsOn": [
-          "remoting_with_tests rel (x64): Prepare",
-          "remoting_with_tests rel (x64): Build"
+          "vcam: rel x64",
+          "vcam: rel x86",
         ],
         "dependsOrder": "sequence"
-      }
+      },
+      // {
+      //   "label": "remoting_with_tests dbg (x64): Prepare",
+      //   "args": [
+      //     "./run.py",
+      //     "-a",
+      //     "prepare",
+      //     "-u",
+      //     "remoting_with_tests",
+      //     "-p",
+      //     "win",
+      //     "-x",
+      //     "x64",
+      //     "-c",
+      //     "debug",
+      //     "--noWrapper",
+      //     "./remoting_with_tests_userdef.py"
+      //   ]
+      // },
+      // {
+      //   "label": "remoting_with_tests rel (x64): Prepare",
+      //   "args": [
+      //     "./run.py",
+      //     "-a",
+      //     "prepare",
+      //     "-u",
+      //     "remoting_with_tests",
+      //     "-p",
+      //     "win",
+      //     "-x",
+      //     "x64",
+      //     "-c",
+      //     "release",
+      //     "--noWrapper",
+      //     "./remoting_with_tests_userdef.py"
+      //   ]
+      // },
+      // {
+      //   "label": "remoting_with_tests dbg (x64): Build",
+      //   "args": [
+      //     "./run.py",
+      //     "-a",
+      //     "build",
+      //     "-u",
+      //     "remoting_with_tests",
+      //     "-p",
+      //     "win",
+      //     "-x",
+      //     "x64",
+      //     "-c",
+      //     "debug",
+      //     "--noWrapper",
+      //     "./remoting_with_tests_userdef.py"
+      //   ]
+      // },
+      // {
+      //   "label": "remoting_with_tests rel (x64): Build",
+      //   "args": [
+      //     "./run.py",
+      //     "-a",
+      //     "build",
+      //     "-u",
+      //     "remoting_with_tests",
+      //     "-p",
+      //     "win",
+      //     "-x",
+      //     "x64",
+      //     "-c",
+      //     "release",
+      //     "--noWrapper",
+      //     "./remoting_with_tests_userdef.py"
+      //   ]
+      // },
+      // {
+      //   "label": "remoting_with_tests dbg (x64): Prepare | Build",
+      //   "dependsOn": [
+      //     "remoting_with_tests dbg (x64): Prepare",
+      //     "remoting_with_tests dbg (x64): Build"
+      //   ],
+      //   "dependsOrder": "sequence"
+      // },
+      // {
+      //   "label": "remoting_with_tests rel (x64): Prepare | Build",
+      //   "dependsOn": [
+      //     "remoting_with_tests rel (x64): Prepare",
+      //     "remoting_with_tests rel (x64): Build"
+      //   ],
+      //   "dependsOrder": "sequence"
+      // }
     ]
 }
