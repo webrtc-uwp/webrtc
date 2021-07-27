@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "Win32",
+            "name": "windows-msvc-arm",
             "includePath": [
                 "${workspaceFolder}/remoting/extras/bindings/platforms/unity/include",
                 "${workspaceFolder}/remoting/extras/bindings/platforms/unity/src",
@@ -22,16 +22,18 @@
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE",
-                "WEBRTC_WIN"
+                "WEBRTC_WIN",
+                "WINUWP",
+                "CPPWINRT_VERSION"
             ],
             "windowsSdkVersion": "10.0.17134.0",
             "compilerPath": "\"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.23.28105/bin/Hostx64/x64/cl.exe\"",
             "cStandard": "c11",
             "cppStandard": "c++17",
-            "intelliSenseMode": "msvc-x64"
+            "intelliSenseMode": "windows-msvc-arm"
         },
         {
-            "name": "Win32 (clang)",
+            "name": "windows-clang-x64",
             "includePath": [
                 "${workspaceFolder}/remoting/extras/bindings/platforms/unity/include",
                 "${workspaceFolder}/remoting/extras/bindings/platforms/unity/src",
@@ -51,13 +53,14 @@
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE",
-                "WEBRTC_WIN"
+                "WEBRTC_WIN",
+                "CPPWINRT_VERSION"
             ],
             "windowsSdkVersion": "10.0.17134.0",
             "compilerPath": "\"C:\\r-sdk\\libs\\remoting\\external\\webrtc-uwp-sdk\\webrtc\\xplatform\\webrtc\\third_party\\llvm-build\\Release+Asserts\\bin\\clang-cl.exe\"",
             "cStandard": "c11",
             "cppStandard": "c++17",
-            "intelliSenseMode": "clang-x64"
+            "intelliSenseMode": "windows-clang-x64"
         }
     ],
     "version": 4
