@@ -67,9 +67,12 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(ID3D11Device* device,
   height_ = desc->Height;
   texture_format_ = desc->Format;
 
-  dst_y_ = static_cast<uint8_t*>(malloc(width_ * height_));
-  dst_u_ = static_cast<uint8_t*>(malloc((width_ / 2) * (height_ / 2)));
-  dst_v_ = static_cast<uint8_t*>(malloc((width_ / 2) * (height_ / 2)));
+  auto ceil = [](float x) { return int(x + 0.5); };
+  int dst_y_size = (width_ * height_);
+  int dst_u_size = ceil(width_ / 2.0) * ceil(height_ / 2.0);
+  dst_y_ = static_cast<uint8_t*>(malloc(dst_y_size + 2 * dst_u_size));
+  dst_u_ = dst_y_ + dst_y_size;
+  dst_v_ = dst_u_ + dst_u_size;
 
   // wait. can we even use exceptions in this lib? windows version has rtti
   // enabled via gn, not sure if this implies exceptions.
@@ -78,19 +81,17 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(ID3D11Device* device,
   // builds. still, we shouldn't write exception handling code ourselves...well,
   // I'm confused. Not even sure what to do for our own lib. Result<T, E> would
   // be nice. Or Rust.
-  HRESULT hr =
-      device_->CreateTexture2D(&staging_desc, nullptr, staging_texture_.put());
+  HRESULT hr = device_->CreateTexture2D(&staging_desc, nullptr, staging_texture_.put());
 
   std::string name = "D3D11VideoFrameSource_Staging";
-  staging_texture_->SetPrivateData(WKPDID_D3DDebugObjectName, name.length(),
-                                   name.c_str());
+  staging_texture_->SetPrivateData(WKPDID_D3DDebugObjectName, name.length(), name.c_str());
 
-  if (FAILED(hr)) {
-    // TODO: something sensible, but constructors can't return values...meh.
-    // maybe we should write a static Create method that can fail instead.
-    RTC_LOG_GLE_EX(LS_ERROR, hr) << "Failed creating the staging texture. The "
-                                    "D3D11 frame source will not work.";
-  }
+  RTC_CHECK(SUCCEEDED(hr)) << "Failed creating the staging texture. The D3D11 frame source will not work.";
+  // if (FAILED(hr)) {
+  //   // TODO: something sensible, but constructors can't return values...meh.
+  //   // maybe we should write a static Create method that can fail instead.
+  //   RTC_LOG_GLE_EX(LS_ERROR, hr) << "Failed creating the staging texture. The D3D11 frame source will not work.";
+  // }
 
   // not sure if we need to notify...but maybe we could call setstate from the
   // outside.
@@ -113,17 +114,7 @@ void D3D11VideoFrameSource::SetState(
 }
 
 D3D11VideoFrameSource::~D3D11VideoFrameSource() {
-  if (dst_y_ != nullptr) {
-    free(dst_y_);
-  }
-
-  if (dst_u_ != nullptr) {
-    free(dst_u_);
-  }
-
-  if (dst_v_ != nullptr) {
-    free(dst_v_);
-  }
+  free(dst_y_);
 }
 
 void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* rendered_image,

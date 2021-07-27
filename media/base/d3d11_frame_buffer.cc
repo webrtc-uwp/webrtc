@@ -105,11 +105,10 @@ int D3D11VideoFrameBuffer::height() const {
 // the CPU and converts to i$20 via libyuv.
 rtc::scoped_refptr<webrtc::I420BufferInterface>
 D3D11VideoFrameBuffer::ToI420() {
-  // if the user didn't pass in temp buffers, we don't support converting to
-  // I420.
+  // if the user didn't pass in temp buffers, we don't support converting to I420.
   RTC_CHECK(dst_y_ != nullptr);
-  RTC_CHECK(dst_u_ != nullptr);
-  RTC_CHECK(dst_v_ != nullptr);
+  // RTC_CHECK(dst_u_ != nullptr);
+  // RTC_CHECK(dst_v_ != nullptr);
 
   // TODO: Last arg should use the number of mip levels from rendered_image_,
   // which I guess is part of its description. Also, we need 2
@@ -148,18 +147,17 @@ D3D11VideoFrameBuffer::ToI420() {
   }
 
   D3D11_MAPPED_SUBRESOURCE mapped;
-  HRESULT hr =
-      context_->Map(staging_texture_.get(), 0, D3D11_MAP_READ, 0, &mapped);
+  HRESULT hr = context_->Map(staging_texture_.get(), 0, D3D11_MAP_READ, 0, &mapped);
 
   if (SUCCEEDED(hr)) {
     int stride_y = width_;
-    int stride_uv = stride_y / 2;
+    int stride_uv = int(width_ / 2.0 + 0.5);
 
     if (texture_format_ == DXGI_FORMAT_R8G8B8A8_UNORM ||
         texture_format_ == DXGI_FORMAT_R8G8B8A8_TYPELESS) {
       int32_t conversion_result = libyuv::ARGBToI420(
-          static_cast<uint8_t*>(mapped.pData), mapped.RowPitch, dst_y_, width_,
-          dst_u_, stride_uv, dst_v_, stride_uv, width_, height_);
+          static_cast<uint8_t*>(mapped.pData), mapped.RowPitch, OUT dst_y_, width_,
+          OUT dst_u_, stride_uv, OUT dst_v_, stride_uv, width_, height_);
 
       if (conversion_result != 0) {
         RTC_LOG(LS_ERROR) << "i420 conversion failed with error code"
