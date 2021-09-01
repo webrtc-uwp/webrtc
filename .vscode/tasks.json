@@ -1312,56 +1312,60 @@
       {
         "label": "vcam: dbg x64",
         "options": {
-          "cwd": "${workspaceFolder}/remoting/extras/vcam"
+          "cwd": "${workspaceFolder}/remoting/"
         },
-        "command": "\"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Auxiliary/Build/vcvars64.bat\" && msbuild",
-        // "command": "%VCINSTALLDIR%\\Auxiliary\\Build\\vcvars64.bat",
+        "command": "./vcam.bat",
         "args": [
-          "vcam.sln -noLogo -t:Rebuild -p:Configuration=Debug"
+          "build", "Debug", "x64"
         ],
-        "problemMatcher": ["$msCompile"],
+        "problemMatcher": [
+          "$msCompile"
+        ]
       },
       {
         "label": "vcam: rel x64",
         "options": {
-          "cwd": "${workspaceFolder}/remoting/extras/vcam"
+          "cwd": "${workspaceFolder}/remoting/"
         },
-        "command": "\"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Auxiliary/Build/vcvars64.bat\" && msbuild",
-        // "command": "%VCINSTALLDIR%\\Auxiliary\\Build\\vcvars64.bat",
+        "command": "./vcam.bat",
         "args": [
-          "vcam.sln -noLogo -t:Rebuild -p:Configuration=Release"
+          "build", "Release", "x64"
         ],
-        "problemMatcher": ["$msCompile"],
+        "problemMatcher": [
+          "$msCompile"
+        ]
       },
       {
         "label": "vcam: dbg x86",
         "options": {
-          "cwd": "${workspaceFolder}/remoting/extras/vcam"
+          "cwd": "${workspaceFolder}/remoting/"
         },
-        "command": "\"C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Auxiliary/Build/vcvars32.bat\" && msbuild",
-        // "command": "%VCINSTALLDIR%\\Auxiliary\\Build\\vcvars64.bat",
+        "command": "./vcam.bat",
         "args": [
-          "vcam.sln -noLogo -t:Rebuild -p:Configuration=Debug"
+          "build", "Debug", "x86"
         ],
-        "problemMatcher": ["$msCompile"],
+        "problemMatcher": [
+          "$msCompile"
+        ]
       },
       {
         "label": "vcam: rel x86",
         "options": {
-          "cwd": "${workspaceFolder}/remoting/extras/vcam"
+          "cwd": "${workspaceFolder}/remoting/"
         },
-        "command": "'C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Auxiliary/Build/vcvars32.bat' && msbuild",
-        // "command": "%VCINSTALLDIR%\\Auxiliary\\Build\\vcvars64.bat",
+        "command": "./vcam.bat",
         "args": [
-          "vcam.sln -noLogo -t:Rebuild -p:Configuration=Release"
+          "build", "Release", "x86"
         ],
-        "problemMatcher": ["$msCompile"],
+        "problemMatcher": [
+          "$msCompile"
+        ]
       },
       {
         "label": "vcam: dbg all",
         "dependsOn": [
           "vcam: dbg x64",
-          "vcam: dbg x86",
+          "vcam: dbg x86"
         ],
         "dependsOrder": "sequence"
       },
@@ -1369,7 +1373,7 @@
         "label": "vcam: rel all",
         "dependsOn": [
           "vcam: rel x64",
-          "vcam: rel x86",
+          "vcam: rel x86"
         ],
         "dependsOrder": "sequence"
       },
