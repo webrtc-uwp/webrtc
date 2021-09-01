@@ -42,37 +42,22 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(ID3D11Device* device,
   sample_desc.Count = 1;
   sample_desc.Quality = 0;
 
-  // the braces make sure the struct is zero-initialized
-  D3D11_TEXTURE2D_DESC staging_desc = {};
-  staging_desc.ArraySize = desc->ArraySize;
+  D3D11_TEXTURE2D_DESC staging_desc = *desc;
+  assert(staging_desc.ArraySize > 0);
+  staging_desc.Width *= staging_desc.ArraySize; // copy all textures into a single texture
+  staging_desc.ArraySize = 1;
+  staging_desc.SampleDesc = DXGI_SAMPLE_DESC{ /*Count*/ 1, /*Quality*/ 0 };
+  staging_desc.Usage = D3D11_USAGE_STAGING; // we want to read back immediately after copying, hence staging
   staging_desc.BindFlags = 0;
-  // for now read access should be enough
-  staging_desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-  staging_desc.Format = desc->Format;
-  staging_desc.Height = desc->Height;
-  staging_desc.MipLevels = desc->MipLevels;
-  staging_desc.MiscFlags = desc->MiscFlags;
-  staging_desc.SampleDesc = sample_desc;
-  // we want to read back immediately after copying, hence staging.
-  staging_desc.Usage = D3D11_USAGE_STAGING;
+  staging_desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ; // for now read access should be enough
 
-  // multiply by 2 if desc->arraysize is 2...or multiply by arraysize. Wait, no,
-  // ArraySize can be 0.
-  if (desc->ArraySize == 2) {
-    width_ = staging_desc.Width = desc->Width * 2;
-  } else {
-    width_ = staging_desc.Width = desc->Width;
-  }
+  width_ = staging_desc.Width;
+  height_ = staging_desc.Height;
+  texture_format_ = staging_desc.Format;
 
-  height_ = desc->Height;
-  texture_format_ = desc->Format;
-
-  auto ceil = [](float x) { return int(x + 0.5); };
   int dst_y_size = (width_ * height_);
-  int dst_u_size = ceil(width_ / 2.0) * ceil(height_ / 2.0);
-  dst_y_ = static_cast<uint8_t*>(malloc(dst_y_size + 2 * dst_u_size));
-  dst_u_ = dst_y_ + dst_y_size;
-  dst_v_ = dst_u_ + dst_u_size;
+  int dst_u_size = div_ceiled_fast(width_, 2) * div_ceiled_fast(height_, 2);
+  frame_mem_arena_ = static_cast<uint8_t*>(malloc(dst_y_size + 2 * dst_u_size));
 
   // wait. can we even use exceptions in this lib? windows version has rtti
   // enabled via gn, not sure if this implies exceptions.
@@ -114,7 +99,7 @@ void D3D11VideoFrameSource::SetState(
 }
 
 D3D11VideoFrameSource::~D3D11VideoFrameSource() {
-  free(dst_y_);
+  free(frame_mem_arena_);
 }
 
 void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* rendered_image,
@@ -144,18 +129,19 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* rendered_image,
   rendered_image->GetDesc(&desc);
 
   auto d3dFrameBuffer = D3D11VideoFrameBuffer::Create(
-      context_.get(), staging_texture_.get(), rendered_image,
-      dst_y_, dst_u_, dst_v_, desc);
+      context_.get(), staging_texture_.get(), rendered_image, desc);
 
   // on windows, the best way to do this would be to convert to nv12 directly
   // since the encoder expects that. libyuv features an ARGBToNV12 function. The
   // problem now is, which frame type do we use? There's none for nv12. I guess
   // we'd need to modify. Then we could also introduce d3d11 as frame type.
-  auto i420Buffer = d3dFrameBuffer->ToI420();
+  int dst_y_size = (width_ * height_);
+  int dst_u_size = div_ceiled_fast(width_, 2) * div_ceiled_fast(height_, 2);
+  int size = dst_y_size + 2 * dst_u_size;
+  auto i420Buffer = d3dFrameBuffer->ToI420(frame_mem_arena_, size);
 
-  // TODO: AdaptFrame somewhere, probably needs an override to deal with d3d and
-  // such
-  // 5 months later: AdaptFrame doesn't modify the frame data at all. It just
+  // TODO: AdaptFrame somewhere, probably needs an override to deal with d3d and such
+  // NOTE: 5 months later: AdaptFrame doesn't modify the frame data at all. It just
   // tells us when to do shit, which is nice. Also prevents us from spamming the
   // sink (networking) when it can't handle more shit.
 

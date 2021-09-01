@@ -17,6 +17,10 @@
 #include "api/video/video_frame_buffer.h"
 #include "rtc_base/refcountedobject.h"
 
+namespace hlr {
+
+inline int div_ceiled_fast(int dividend, int divisor) { assert(dividend != 0); return 1 + ((dividend - 1) / divisor); /*if dividend != 0*/ };
+
 // KL, doing MFT D3D11 work:
 // I guess this should support the case where we don't care about i420 (even if
 // webrtc says it's mandatory, or we just make a shitty but non-crashing version
@@ -26,7 +30,6 @@
 // missing. This case assumes we just want the texture to stay on the GPU and
 // use it as a resource for rendering.
 
-namespace hlr {
 class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
  public:
   ~D3D11VideoFrameBuffer() override;
@@ -43,7 +46,8 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
       ID3D11Texture2D* rendered_image,
       int width,
       int height,
-      DXGI_FORMAT format);
+      DXGI_FORMAT format,
+      uint32_t subresource_index);
 
   // KL: Used on server side. Supports calling ToI420 (i.e. downloading to CPU)
   // because the encoder expects the data in this format.
@@ -51,9 +55,6 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
       ID3D11DeviceContext* context,
       ID3D11Texture2D* staging_texture,
       ID3D11Texture2D* rendered_image,
-      uint8_t* dst_y,
-      uint8_t* dst_u,
-      uint8_t* dst_v,
       D3D11_TEXTURE2D_DESC rendered_image_desc);
 
   webrtc::VideoFrameBuffer::Type type() const override;
@@ -67,11 +68,17 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
   // resource is always the same but we get different subresources each frame.
   uint32_t subresource_index() { return subresource_index_; }
 
-  void set_subresource_index(uint32_t val) { subresource_index_ = val; }
-
   ID3D11Texture2D* texture() { return rendered_image_.get(); }
 
   rtc::scoped_refptr<webrtc::I420BufferInterface> ToI420() override;
+  rtc::scoped_refptr<webrtc::I420BufferInterface> ToI420(uint8_t* buffer, int capacity);
+  uint8_t* ToNV12(uint8_t* IN OUT buffer, int capacity);
+  // uint8_t* LoadToMemory(uint8_t* OUT destination, size_t capacity);
+  rtc::scoped_refptr<webrtc::I420BufferInterface> ToI420_New(uint8_t* buffer, int capacity);
+  uint8_t* ToNV12_New(uint8_t* IN OUT buffer, int capacity);
+ protected:
+  void StageTexture(); // TODO: pass staging texture as arg and make this public?
+  template<typename T> HRESULT UseMappedResource(T action);
 
  protected:
   D3D11VideoFrameBuffer(ID3D11DeviceContext* context,
@@ -79,39 +86,29 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
                         ID3D11Texture2D* rendered_image,
                         int width,
                         int height,
-                        DXGI_FORMAT format);
+                        DXGI_FORMAT format,
+                        uint32_t subresource_index);
 
   D3D11VideoFrameBuffer(ID3D11DeviceContext* context,
                         ID3D11Texture2D* staging_texture,
                         ID3D11Texture2D* rendered_image,
                         // int width,
                         // int height,
-                        uint8_t* dst_y,
-                        uint8_t* dst_u,
-                        uint8_t* dst_v,
                         D3D11_TEXTURE2D_DESC rendered_image_desc
-                        /*                        DXGI_FORMAT format*/);
+                        /*DXGI_FORMAT format*/);
 
  private:
+
+  winrt::com_ptr<ID3D11DeviceContext> context_;
+  winrt::com_ptr<ID3D11Texture2D> rendered_image_;
+  D3D11_TEXTURE2D_DESC rendered_image_desc_;
+  uint32_t subresource_index_;
   int width_;
   int height_;
+  DXGI_FORMAT texture_format_; // TODO: already contains width & height, do we need the redundancy?
 
-  // This is only used in i420 conversion to download data from the GPU.
+  // This is only used for loading data from the GPU.
   winrt::com_ptr<ID3D11Texture2D> staging_texture_;
-
-  // This texture holds the actual contents
-  winrt::com_ptr<ID3D11Texture2D> rendered_image_;
-  winrt::com_ptr<ID3D11DeviceContext> context_;
-  uint32_t subresource_index_ = 0;
-
-  // i guess these don't really need to be members and could be passed as
-  // parameters instead
-  uint8_t* dst_y_;
-  uint8_t* dst_u_;
-  uint8_t* dst_v_;
-
-  DXGI_FORMAT texture_format_;
-  D3D11_TEXTURE2D_DESC rendered_image_desc_;
 };
 }  // namespace hlr
 
