@@ -453,9 +453,9 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
   RTC_DCHECK_RUN_ON(worker_thread_);
 
   // original values
-  //const int kMinBandwidthBps = 30000;
-  //const int kStartBandwidthBps = 300000;
-  //const int kMaxBandwidthBps = 2000000;
+  // const int kMinBandwidthBps = 30000;
+  // const int kStartBandwidthBps = 300000;
+  // const int kMaxBandwidthBps = 2000000;
 
   // te, set higher values than current default to avoid slow startbitrate
   const int kMinBandwidthBps = 1500000;
