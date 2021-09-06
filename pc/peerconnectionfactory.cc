@@ -458,7 +458,7 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
   // const int kMaxBandwidthBps = 2000000;
 
   // te, set higher values than current default to avoid slow startbitrate
-  const int kMinBandwidthBps = 1500000;
+  const int kMinBandwidthBps = 150000;
   const int kStartBandwidthBps = 40000000;
   const int kMaxBandwidthBps = 100000000;
 
