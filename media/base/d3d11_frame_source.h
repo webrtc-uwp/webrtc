@@ -51,9 +51,7 @@ namespace hlr {
         int width_;
         int height_;
 
-        uint8_t* dst_y_ = nullptr;
-        uint8_t* dst_u_ = nullptr;
-        uint8_t* dst_v_ = nullptr;
+        uint8_t* frame_mem_arena_ = nullptr;
 
         rtc::Thread* signaling_thread_;
         rtc::AdaptedVideoTrackSource::SourceState state_ = rtc::AdaptedVideoTrackSource::SourceState::kInitializing;

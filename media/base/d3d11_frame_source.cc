@@ -42,34 +42,22 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(ID3D11Device* device,
   sample_desc.Count = 1;
   sample_desc.Quality = 0;
 
-  // the braces make sure the struct is zero-initialized
-  D3D11_TEXTURE2D_DESC staging_desc = {};
-  staging_desc.ArraySize = desc->ArraySize;
+  D3D11_TEXTURE2D_DESC staging_desc = *desc;
+  assert(staging_desc.ArraySize > 0);
+  staging_desc.Width *= staging_desc.ArraySize; // copy all textures into a single texture
+  staging_desc.ArraySize = 1;
+  staging_desc.SampleDesc = DXGI_SAMPLE_DESC{ /*Count*/ 1, /*Quality*/ 0 };
+  staging_desc.Usage = D3D11_USAGE_STAGING; // we want to read back immediately after copying, hence staging
   staging_desc.BindFlags = 0;
-  // for now read access should be enough
-  staging_desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-  staging_desc.Format = desc->Format;
-  staging_desc.Height = desc->Height;
-  staging_desc.MipLevels = desc->MipLevels;
-  staging_desc.MiscFlags = desc->MiscFlags;
-  staging_desc.SampleDesc = sample_desc;
-  // we want to read back immediately after copying, hence staging.
-  staging_desc.Usage = D3D11_USAGE_STAGING;
+  staging_desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ; // for now read access should be enough
 
-  // multiply by 2 if desc->arraysize is 2...or multiply by arraysize. Wait, no,
-  // ArraySize can be 0.
-  if (desc->ArraySize == 2) {
-    width_ = staging_desc.Width = desc->Width * 2;
-  } else {
-    width_ = staging_desc.Width = desc->Width;
-  }
+  width_ = staging_desc.Width;
+  height_ = staging_desc.Height;
+  texture_format_ = staging_desc.Format;
 
-  height_ = desc->Height;
-  texture_format_ = desc->Format;
-
-  dst_y_ = static_cast<uint8_t*>(malloc(width_ * height_));
-  dst_u_ = static_cast<uint8_t*>(malloc((width_ / 2) * (height_ / 2)));
-  dst_v_ = static_cast<uint8_t*>(malloc((width_ / 2) * (height_ / 2)));
+  int dst_y_size = (width_ * height_);
+  int dst_u_size = div_ceiled_fast(width_, 2) * div_ceiled_fast(height_, 2);
+  frame_mem_arena_ = static_cast<uint8_t*>(malloc(dst_y_size + 2 * dst_u_size));
 
   // wait. can we even use exceptions in this lib? windows version has rtti
   // enabled via gn, not sure if this implies exceptions.
@@ -78,19 +66,17 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(ID3D11Device* device,
   // builds. still, we shouldn't write exception handling code ourselves...well,
   // I'm confused. Not even sure what to do for our own lib. Result<T, E> would
   // be nice. Or Rust.
-  HRESULT hr =
-      device_->CreateTexture2D(&staging_desc, nullptr, staging_texture_.put());
+  HRESULT hr = device_->CreateTexture2D(&staging_desc, nullptr, staging_texture_.put());
 
   std::string name = "D3D11VideoFrameSource_Staging";
-  staging_texture_->SetPrivateData(WKPDID_D3DDebugObjectName, name.length(),
-                                   name.c_str());
+  staging_texture_->SetPrivateData(WKPDID_D3DDebugObjectName, name.length(), name.c_str());
 
-  if (FAILED(hr)) {
-    // TODO: something sensible, but constructors can't return values...meh.
-    // maybe we should write a static Create method that can fail instead.
-    RTC_LOG_GLE_EX(LS_ERROR, hr) << "Failed creating the staging texture. The "
-                                    "D3D11 frame source will not work.";
-  }
+  RTC_CHECK(SUCCEEDED(hr)) << "Failed creating the staging texture. The D3D11 frame source will not work.";
+  // if (FAILED(hr)) {
+  //   // TODO: something sensible, but constructors can't return values...meh.
+  //   // maybe we should write a static Create method that can fail instead.
+  //   RTC_LOG_GLE_EX(LS_ERROR, hr) << "Failed creating the staging texture. The D3D11 frame source will not work.";
+  // }
 
   // not sure if we need to notify...but maybe we could call setstate from the
   // outside.
@@ -113,17 +99,7 @@ void D3D11VideoFrameSource::SetState(
 }
 
 D3D11VideoFrameSource::~D3D11VideoFrameSource() {
-  if (dst_y_ != nullptr) {
-    free(dst_y_);
-  }
-
-  if (dst_u_ != nullptr) {
-    free(dst_u_);
-  }
-
-  if (dst_v_ != nullptr) {
-    free(dst_v_);
-  }
+  free(frame_mem_arena_);
 }
 
 void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* rendered_image,
@@ -153,18 +129,19 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* rendered_image,
   rendered_image->GetDesc(&desc);
 
   auto d3dFrameBuffer = D3D11VideoFrameBuffer::Create(
-      context_.get(), staging_texture_.get(), rendered_image,
-      dst_y_, dst_u_, dst_v_, desc);
+      context_.get(), staging_texture_.get(), rendered_image, desc);
 
   // on windows, the best way to do this would be to convert to nv12 directly
   // since the encoder expects that. libyuv features an ARGBToNV12 function. The
   // problem now is, which frame type do we use? There's none for nv12. I guess
   // we'd need to modify. Then we could also introduce d3d11 as frame type.
-  auto i420Buffer = d3dFrameBuffer->ToI420();
+  int dst_y_size = (width_ * height_);
+  int dst_u_size = div_ceiled_fast(width_, 2) * div_ceiled_fast(height_, 2);
+  int size = dst_y_size + 2 * dst_u_size;
+  auto i420Buffer = d3dFrameBuffer->ToI420(frame_mem_arena_, size);
 
-  // TODO: AdaptFrame somewhere, probably needs an override to deal with d3d and
-  // such
-  // 5 months later: AdaptFrame doesn't modify the frame data at all. It just
+  // TODO: AdaptFrame somewhere, probably needs an override to deal with d3d and such
+  // NOTE: 5 months later: AdaptFrame doesn't modify the frame data at all. It just
   // tells us when to do shit, which is nice. Also prevents us from spamming the
   // sink (networking) when it can't handle more shit.
 
