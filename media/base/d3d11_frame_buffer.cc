@@ -167,7 +167,7 @@ D3D11VideoFrameBuffer::ToI420(uint8_t* buffer, int capacity) {
   uint8_t* dst_u  = dst_dh + size_y;
   uint8_t* dst_dl = dst_u + (size_u * has_depth_alpha);
   uint8_t* dst_v  = dst_dl + size_u;
-  uint8_t* dst_a  = dst_v + (size_v * has_depth_alpha);
+  // uint8_t* dst_a  = dst_v + (size_v * has_depth_alpha);
 
   auto convertToI420 = [&](void* src_data, int src_row_pitch, int /* src_depth_pitch */) {
     if (!(color_texture_desc_.Format == DXGI_FORMAT_R8G8B8A8_UNORM

@@ -414,13 +414,22 @@ struct PlayoutDelay {
 // timestamp
 struct XRTimestamp {
   XRTimestamp() = default;
-  XRTimestamp(int64_t timestamp, float fx, float fy, float fz)
-      : prediction(timestamp), focus_x(fx), focus_y(fy), focus_z(fz) {}
+  XRTimestamp(int64_t timestamp,
+              float fx,
+              float fy,
+              float fz,
+              int64_t bandwidth)
+      : prediction(timestamp),
+        focus_x(fx),
+        focus_y(fy),
+        focus_z(fz),
+        Bandwidth(bandwidth) {}
 
   int64_t prediction = 0;
   float focus_x = 0;
   float focus_y = 0;
   float focus_z = 0;
+  int64_t Bandwidth = 0;
 };
 
 }  // namespace webrtc
