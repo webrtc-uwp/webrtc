@@ -125,122 +125,6 @@ int D3D11VideoFrameBuffer::height() const {
   return height_;
 }
 
-#if false
-/// Downloads color data from staging texture to CPU and writes into
-/// intermediate buffers. If depth/alpha is enabled it also gets alpha data
-/// and writes into the 2nd half of the V plane (double-high).
-/// Returns true if successful.
-bool D3D11VideoFrameBuffer::DownloadColor() {
-  D3D11_MAPPED_SUBRESOURCE mapped = {};
-  HRESULT hr = context_->Map(color_staging_texture_.get(), 0, D3D11_MAP_READ, 0, &mapped);
-  int32_t color_height = 0;
-  if (depth_texture_.get() != nullptr) {
-    color_height = height_ / 2;
-  } else {
-    color_height = height_;
-  }
-
-  if (SUCCEEDED(hr)) {
-    int stride_y = width_;
-    int stride_uv = stride_y / 2;
-
-    if (color_texture_format_ == DXGI_FORMAT_R8G8B8A8_UNORM ||
-        color_texture_format_ == DXGI_FORMAT_R8G8B8A8_TYPELESS) {
-      int32_t conversion_result = libyuv::ARGBToI420(
-          static_cast<uint8_t*>(mapped.pData), mapped.RowPitch, dst_y_, width_,
-          dst_u_, stride_uv, dst_v_, stride_uv, width_, color_height);
-
-      if (conversion_result != 0) {
-        RTC_LOG(LS_ERROR) << "i420 conversion failed with error code"
-                          << conversion_result;
-        // crash in debug mode so we can find out what went wrong
-        RTC_DCHECK(conversion_result == 0);
-      }
-
-      if (depth_texture_.get() != nullptr) {
-        // Alpha: pack stuff into V plane of depth data to test if it works
-        // very unfortunate to loop over this same data twice :/
-        // maybe use ARGBToUVRow instead of this at some point (not public api
-        // :/ but CopyPlane is, maybe useful)
-        uint8_t* ptr = static_cast<uint8_t*>(mapped.pData);
-        uint32_t width_in_pixels =
-            mapped.RowPitch / 4;  // 4 because 4 components, 8-bit each
-        uint32_t uv_write_index = width_ / 2 * height_ / 4;  // same as below
-
-        for (int y = 0; y < height_ / 2; y++) {
-          for (uint32_t x = 0; x < width_in_pixels; x++) {
-            if ((y % 2 == 0) && (x % 2 == 0)) {
-              // maybe instead of taking the raw value of this pixel, take the
-              // average or something.
-              // https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format#portable-coding-for-endian-independence
-              dst_v_[uv_write_index] = ptr[3];
-              uv_write_index++;
-            }
-
-            // 1 pixel = 4 bytes for RGBA
-            ptr += 4;
-          }
-        }
-      }
-    } else {
-      FATAL() << "Unsupported texture format";
-    }
-
-    context_->Unmap(color_staging_texture_.get(), 0);
-    return true;
-  }
-
-  return false;
-}
-
-/// Downloads depth data and writes it into the 2nd half of Y and U planes if
-/// the image is double-high.
-void D3D11VideoFrameBuffer::DownloadDepth() {
-  if (depth_texture_.get() != nullptr) {
-    // Theoretically we should check depth_image_desc (which we don't have here
-    // right now) but if color is a texture array, depth is too.
-    D3D11_MAPPED_SUBRESOURCE mapped = {};
-    HRESULT hr = context_->Map(depth_staging_texture_.get(), 0, D3D11_MAP_READ,
-                               0, &mapped);
-
-    if (SUCCEEDED(hr)) {
-      if (depth_texture_format_ == DXGI_FORMAT_R16_TYPELESS) {
-        uint16_t* pixel_ptr = reinterpret_cast<uint16_t*>(mapped.pData);
-        // RowPitch can be higher than width_, which breaks things (out of
-        // bounds writes). Note that this could theoretically send the wrong
-        // image if there's i.e. padding in the front instead of in the back
-        // of a row of pixels.
-        uint32_t uv_write_index = width_ / 2 * height_ / 4;
-
-        for (int y = 0; y < height_ / 2; y++) {
-          for (uint32_t x = 0; x < static_cast<uint32_t>(width_); x++) {
-            uint8_t high = *pixel_ptr >> 8;
-            uint8_t low = static_cast<uint8_t>(*pixel_ptr);
-
-            // Write high 8 bits into Y plane
-            int32_t y_offset = width_ * height_ / 2;
-            dst_y_[y * width_ + x + y_offset] = high;
-
-            if ((y % 2 == 0) && (x % 2 == 0)) {
-              // Low 8 bits go into U plane
-              dst_u_[uv_write_index] = low;
-              uv_write_index++;
-            }
-
-            pixel_ptr++;
-          }
-        }
-      } else {
-        RTC_LOG(LS_WARNING) << "Unsupported depth texture format; depth data "
-                               "will not be sent";
-      }
-
-      context_->Unmap(depth_staging_texture_.get(), 0);
-    }
-  }
-}
-#endif
-
 // Copies contents of color_texture_ to color_staging_texture_, then downloads it
 // to the CPU and converts to i420 via libyuv.
 rtc::scoped_refptr<webrtc::I420BufferInterface>
@@ -254,51 +138,68 @@ D3D11VideoFrameBuffer::ToI420() {
 rtc::scoped_refptr<webrtc::I420BufferInterface>
 D3D11VideoFrameBuffer::ToI420(uint8_t* buffer, int capacity) {
   RTC_CHECK(buffer != nullptr);
-  int frame_width = width_, frame_height = height_;
-  int stride_y = frame_width;
-  int size_y = frame_width * frame_height;
-  int stride_uv = div_ceiled_fast(frame_width, 2);
-  int size_u = stride_uv * div_ceiled_fast(frame_height, 2);
-  RTC_CHECK(capacity >= (size_y + 2 * size_u));
+
+  const int has_depth_alpha = (int)(depth_texture_.get() != nullptr);
+
+  const int frame_width = width_;
+  const int frame_height = div_ceiled_fast(height_, 1 + has_depth_alpha);
+
+  const int& width_y = frame_width;
+  const int& height_y = frame_height;
+  const int& stride_y = width_y;
+  const int size_y = width_y * height_y;
+
+  const int width_u = div_ceiled_fast(width_y, 2);
+  const int height_u = div_ceiled_fast(height_y, 2);
+  const int stride_u = width_u;
+  const int size_u = width_u * height_u;
+
+  // const int& width_v = width_u;
+  // const int& height_v = height_u;
+  const int& stride_v = stride_u;
+  const int& size_v = size_u;
+  const int size_yuv = size_y + size_u + size_v;
+  RTC_CHECK(capacity >= size_yuv * (1 + has_depth_alpha));
+
+  uint8_t* dst_y  = buffer;
+  uint8_t* dst_dh = dst_y + (size_y * has_depth_alpha);
+
+  uint8_t* dst_u  = dst_dh + size_y;
+  uint8_t* dst_dl = dst_u + (size_u * has_depth_alpha);
+  uint8_t* dst_v  = dst_dl + size_u;
+  uint8_t* dst_a  = dst_v + (size_v * has_depth_alpha);
+
+  auto convertToI420 = [&](void* src_data, int src_row_pitch, int /* src_depth_pitch */) {
+    if (!(color_texture_desc_.Format == DXGI_FORMAT_R8G8B8A8_UNORM
+       || color_texture_desc_.Format == DXGI_FORMAT_R8G8B8A8_TYPELESS)) {
+      FATAL() << "Unsupported color texture format";
+      return;
+    }
+
+    uint8_t* src_data8 = static_cast<uint8_t*>(src_data);
+    int conversion_result = libyuv::ARGBToI420(
+        src_data8, src_row_pitch,
+        OUT dst_y, stride_y,
+        OUT dst_u, stride_u,
+        OUT dst_v, stride_v,
+        frame_width, frame_height);
+
+    if (conversion_result != 0) {
+      RTC_LOG(LS_ERROR) << "i420 conversion failed with error code" << conversion_result;
+      // crash in debug mode so we can find out what went wrong
+      RTC_DCHECK(conversion_result == 0);
+    }
+  };
 
   StageTextures();
 
-  D3D11_MAPPED_SUBRESOURCE mapped;
-  HRESULT hr = context_->Map(color_staging_texture_.get(), 0, D3D11_MAP_READ, 0, &mapped);
-
-  if (SUCCEEDED(hr)) {
-    // int frame_width = width_, frame_height = height_;
-    // int stride_y = frame_width;
-    // int size_y = frame_width * frame_height;
-    // int stride_uv = div_ceiled_fast(frame_width, 2);
-    // int size_u = stride_uv * div_ceiled_fast(frame_height, 2);
-    uint8_t* dst_y = buffer;
-    uint8_t* dst_u = dst_y + size_y;
-    uint8_t* dst_v = dst_u + size_u;
-
-    if (color_texture_desc_.Format == DXGI_FORMAT_R8G8B8A8_UNORM
-     || color_texture_desc_.Format == DXGI_FORMAT_R8G8B8A8_TYPELESS) {
-      int32_t conversion_result = libyuv::ARGBToI420(
-          static_cast<uint8_t*>(mapped.pData), mapped.RowPitch,
-          OUT dst_y, stride_y,
-          OUT dst_u, stride_uv,
-          OUT dst_v, stride_uv,
-          frame_width, frame_height);
-
-      if (conversion_result != 0) {
-        RTC_LOG(LS_ERROR) << "i420 conversion failed with error code" << conversion_result;
-        // crash in debug mode so we can find out what went wrong
-        RTC_DCHECK(conversion_result == 0);
-      }
-    } else {
-      FATAL() << "Unsupported texture format";
-    }
-
-    context_->Unmap(color_staging_texture_.get(), 0);
-
+  HRESULT hr = S_OK;
+  ON_SUCCEEDED(UseStagedResource(color_staging_texture_.get(), convertToI420));
+  if(SUCCEEDED(hr))
+  {
     rtc::Callback0<void> unused;
     // TODO: not needed, see ToNV12
-    return webrtc::WrapI420Buffer(width_, height_, dst_y, stride_y, dst_u, stride_uv, dst_v, stride_uv, unused);
+    return webrtc::WrapI420Buffer(width_, height_, dst_y, stride_y, dst_u, stride_u, dst_v, stride_v, unused);
   }
 
   return nullptr;
@@ -604,70 +505,12 @@ D3D11VideoFrameBuffer::ToI420AlphaDepth(uint8_t* buffer, int capacity) {
   return nullptr;
 }
 
-rtc::scoped_refptr<webrtc::I420BufferInterface>
-D3D11VideoFrameBuffer::ToI420_New(uint8_t* buffer, int capacity) {
-  RTC_CHECK(buffer != nullptr);
-
-  const int has_depth_alpha = (int)(depth_texture_.get() != nullptr);
-
-  const int frame_width = width_;
-  const int frame_height = height_ / (1 + has_depth_alpha);
-
-  const int stride_y = frame_width;
-  const int size_y = frame_width * frame_height;
-  const int stride_u = div_ceiled_fast(frame_width, 2);
-  const int& stride_v = stride_u;
-  const int size_u = stride_u * div_ceiled_fast(frame_height, 2);
-  const int& size_v = size_u;
-  RTC_CHECK(capacity >= (size_y + size_u + size_v));
-
-  uint8_t* dst_y = buffer;
-  uint8_t* dst_u = dst_y + size_y;
-  uint8_t* dst_v = dst_u + size_u;
-  // uint8_t* dst_a = dst_v + size_u + size_y + size_u;
-
-  auto convertToI420 = [&](void* src_data, int src_row_pitch, int /* src_depth_pitch */) {
-    if (color_texture_desc_.Format == DXGI_FORMAT_R8G8B8A8_UNORM
-     || color_texture_desc_.Format == DXGI_FORMAT_R8G8B8A8_TYPELESS) {
-      int32_t conversion_result = libyuv::ARGBToI420(
-          static_cast<uint8_t*>(src_data), src_row_pitch,
-          OUT dst_y, stride_y,
-          OUT dst_u, stride_u,
-          OUT dst_v, stride_v,
-          frame_width, frame_height);
-
-      if (conversion_result != 0) {
-        RTC_LOG(LS_ERROR) << "i420 conversion failed with error code" << conversion_result;
-        // crash in debug mode so we can find out what went wrong
-        RTC_DCHECK(conversion_result == 0);
-      }
-
-      if (depth_texture_.get() != nullptr) {
-        // Alpha: pack stuff into V plane of depth data to test if it works
-        // very unfortunate to loop over this same data twice :/
-        // maybe use ARGBToUVRow instead of this at some point (not public api :/ but CopyPlane is, maybe useful)
-
-
-      }
-    } else {
-      FATAL() << "Unsupported texture format";
-    }
-  };
-
-  StageTextures();
-
-  if(SUCCEEDED(UseStagedResource(color_staging_texture_.get(), convertToI420)))
-  {
-    rtc::Callback0<void> unused;
-    // TODO: not needed, see ToNV12
-    return webrtc::WrapI420Buffer(width_, height_, dst_y, stride_y, dst_u, stride_u, dst_v, stride_v, unused);
-  }
-
-  return nullptr;
-}
-
 // Stages, downloads and converts texture to NV12
 uint8_t* D3D11VideoFrameBuffer::ToNV12(uint8_t* buffer, int capacity) {
+  // TODO: redo to match ToI420
+  __debugbreak();
+  return nullptr;
+
   RTC_CHECK(buffer != nullptr);
   int frame_width = width_, frame_height = height_;
   int stride_y = frame_width;
@@ -719,6 +562,10 @@ uint8_t* D3D11VideoFrameBuffer::ToNV12(uint8_t* buffer, int capacity) {
 }
 
 uint8_t* D3D11VideoFrameBuffer::ToNV12AlphaDepth(uint8_t* buffer, int capacity) {
+  // TODO: redo to match ToI420
+  __debugbreak();
+  return nullptr;
+
   RTC_CHECK(buffer != nullptr);
   const int has_depth_alpha = (int)(depth_texture_.get() != nullptr);
 
@@ -881,6 +728,10 @@ uint8_t* D3D11VideoFrameBuffer::ToNV12AlphaDepth(uint8_t* buffer, int capacity) 
 
 // Stages, downloads and converts texture to NV12
 uint8_t* D3D11VideoFrameBuffer::ToNV12_New(uint8_t* buffer, int capacity) {
+  // TODO: redo to match ToI420
+  __debugbreak();
+  return nullptr;
+
   RTC_CHECK(buffer != nullptr);
   int frame_width = width_, frame_height = height_;
   int stride_y = frame_width;
