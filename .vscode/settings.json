@@ -100,7 +100,10 @@
         "compare": "cpp",
         "*.inc": "cpp",
         "bit": "cpp",
-        "stop_token": "cpp"
+        "stop_token": "cpp",
+        "charconv": "cpp",
+        "format": "cpp",
+        "hlr_api.h": "c"
     },
     "files.watcherExclude": {
         "**/.git/objects/**": true,

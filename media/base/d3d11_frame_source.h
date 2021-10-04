@@ -44,7 +44,7 @@ namespace hlr {
         D3D11VideoFrameSource(ID3D11Device* device, ID3D11DeviceContext* context, D3D11_TEXTURE2D_DESC* color_desc, D3D11_TEXTURE2D_DESC* depth_desc, rtc::Thread* signaling_thread);
 
         private:
-        winrt::com_ptr<ID3D11Texture2D> staging_texture_;
+        winrt::com_ptr<ID3D11Texture2D> color_staging_texture_;
         winrt::com_ptr<ID3D11Texture2D> depth_staging_texture_;
         winrt::com_ptr<ID3D11Texture2D> depth_staging_texture_array_;
         winrt::com_ptr<ID3D11Device> device_;
@@ -52,9 +52,8 @@ namespace hlr {
         int width_;
         int height_;
 
-        uint8_t* dst_y_ = nullptr;
-        uint8_t* dst_u_ = nullptr;
-        uint8_t* dst_v_ = nullptr;
+        size_t frame_mem_arena_size_ = 0;
+        uint8_t* frame_mem_arena_ = nullptr;
 
         rtc::Thread* signaling_thread_;
         rtc::AdaptedVideoTrackSource::SourceState state_ = rtc::AdaptedVideoTrackSource::SourceState::kInitializing;

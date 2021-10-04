@@ -13,6 +13,7 @@
 
 #include "d3d11_frame_buffer.h"
 #include "d3d11_frame_source.h"
+#include "third_party/winuwp_h264/Utils/Utils.h"
 
 using webrtc::VideoFrame;
 
@@ -27,11 +28,12 @@ rtc::scoped_refptr<D3D11VideoFrameSource> D3D11VideoFrameSource::Create(
       device, context, color_desc, depth_desc, signaling_thread);
 }
 
-D3D11VideoFrameSource::D3D11VideoFrameSource(ID3D11Device* device,
-                                             ID3D11DeviceContext* context,
-                                             D3D11_TEXTURE2D_DESC* color_desc,
-                                             D3D11_TEXTURE2D_DESC* depth_desc,
-                                             rtc::Thread* signaling_thread)
+D3D11VideoFrameSource::D3D11VideoFrameSource(
+    ID3D11Device* device,
+    ID3D11DeviceContext* context,
+    D3D11_TEXTURE2D_DESC* color_desc,
+    D3D11_TEXTURE2D_DESC* depth_desc,
+    rtc::Thread* signaling_thread)
     : signaling_thread_(signaling_thread), is_screencast_(false) {
   assert(device);
   assert(context);
@@ -40,104 +42,64 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(ID3D11Device* device,
   device_.copy_from(device);
   context_.copy_from(context);
 
-  DXGI_SAMPLE_DESC sample_desc;
-  sample_desc.Count = 1;
-  sample_desc.Quality = 0;
-
-  D3D11_TEXTURE2D_DESC staging_desc = {};
-  staging_desc.ArraySize = 1;
-  staging_desc.BindFlags = 0;
-  staging_desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-  staging_desc.Format = color_desc->Format;
-  staging_desc.Height = color_desc->Height;
-  staging_desc.MipLevels = color_desc->MipLevels;
-  staging_desc.MiscFlags = color_desc->MiscFlags;
-  staging_desc.SampleDesc = sample_desc;
-  // We want to read back immediately after copying, hence staging.
-  staging_desc.Usage = D3D11_USAGE_STAGING;
-
-  // multiply by 2 if desc->arraysize is 2...or multiply by arraysize. Wait, no,
-  // ArraySize can be 0.
-  bool single_pass = color_desc->ArraySize == 2;
+  D3D11_TEXTURE2D_DESC staging_desc = *color_desc;
+  assert(staging_desc.ArraySize > 0);
+  // NOTE: mono textures can be part of a texture array pool so we check for exactly 2 to narrow it down but it's error prone
+  bool single_pass = staging_desc.ArraySize == 2; // TODO: is this really single pass or did you mean mono/stereo?
   if (single_pass) {
-    width_ = staging_desc.Width = color_desc->Width * 2;
-  } else {
-    // Multi-pass already gives us double-wide, so we use the width as is.
-    width_ = staging_desc.Width = color_desc->Width;
+    staging_desc.Width *= 2; // merge stereo textures into a single texture
   }
+  // if (depth_desc != nullptr) staging_desc.Height *= 2; // double the height to store depth information.
+  staging_desc.ArraySize = 1;
+  staging_desc.SampleDesc = DXGI_SAMPLE_DESC{ /*Count*/ 1, /*Quality*/ 0 };
+  staging_desc.Usage = D3D11_USAGE_STAGING; // we want to read back immediately after copying, hence staging
+  staging_desc.BindFlags = 0;
+  staging_desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ; // for now read access should be enough
 
-  if (depth_desc != nullptr) {
-    // Double the height because we have depth information.
-    height_ = color_desc->Height * 2;
-  } else {
-    // Use existing height if there's no depth info.
-    height_ = color_desc->Height;
-  }
+  width_ = staging_desc.Width;
+  height_ = staging_desc.Height;
 
-  // U and V are always half on each side, so 1/4 of the Y plane size.
-  dst_y_ = static_cast<uint8_t*>(malloc(width_ * height_));
-  dst_u_ = static_cast<uint8_t*>(malloc((width_ / 2) * (height_ / 2)));
-  dst_v_ = static_cast<uint8_t*>(malloc((width_ / 2) * (height_ / 2)));
+#define PASS_STRING_LITERAL(_string) strlen(_string), _string
 
-  HRESULT hr =
-      device_->CreateTexture2D(&staging_desc, nullptr, staging_texture_.put());
-
-  std::string name = "D3D11VideoFrameSource_Staging";
-  staging_texture_->SetPrivateData(WKPDID_D3DDebugObjectName, name.length(),
-                                   name.c_str());
-
-  if (FAILED(hr)) {
-    // TODO: something sensible, but constructors can't return values...meh.
-    // maybe we should write a static Create method that can fail instead.
-    RTC_LOG_GLE_EX(LS_ERROR, hr) << "Failed creating the staging texture. The "
-                                    "D3D11 frame source will not work.";
-  }
+  HRESULT hr = S_OK;
+  ON_SUCCEEDED(device_->CreateTexture2D(&staging_desc, nullptr, color_staging_texture_.put()));
+  RTC_CHECK(SUCCEEDED(hr)) << "Failed creating the staging texture. The D3D11 frame source will not work.";
+  ON_SUCCEEDED(color_staging_texture_->SetPrivateData(WKPDID_D3DDebugObjectName, PASS_STRING_LITERAL("D3D11VideoFrameSource_Staging")));
 
   // If we get a desc for depth, allocate a staging texture for depth
   if (depth_desc != nullptr) {
+    height_ *= 2;
     staging_desc.Format = depth_desc->Format;
 
-    hr = device_->CreateTexture2D(&staging_desc, nullptr,
-                                  depth_staging_texture_.put());
-
-    if (FAILED(hr)) {
-      RTC_LOG_GLE_EX(LS_ERROR, hr)
-          << "Failed creating the depth staging texture. The "
-             "D3D11 frame source will not work.";
-    }
-    name = "D3D11VideoFrameSource_Depth_Staging";
-    depth_staging_texture_->SetPrivateData(WKPDID_D3DDebugObjectName,
-                                           name.length(), name.c_str());
+    ON_SUCCEEDED(device_->CreateTexture2D(&staging_desc, nullptr, depth_staging_texture_.put()));
+    ON_SUCCEEDED(depth_staging_texture_->SetPrivateData(WKPDID_D3DDebugObjectName, PASS_STRING_LITERAL("D3D11VideoFrameSource_Depth_Staging")));
 
     // Another special case: you can't copy part of a resource that is
     // BIND_DEPTH_STENCIL (which depth buffers are). That means we can't copy
     // left and right eyes separately to a staging texture; we can only copy the
-    // whole thing at once, which means our staging texture for depth needs to
-    // be an array, just like Unity's depth texture is.
+    // whole thing at once, which means our staging texture for depth needs to be an array, just like Unity's depth texture is.
+    // TODO: which thing? is there one texture for both eyes, is that one you mean?
     if (single_pass) {
       staging_desc.ArraySize = 2;
       staging_desc.Width = depth_desc->Width;
-
-      hr = device_->CreateTexture2D(&staging_desc, nullptr,
-                                    depth_staging_texture_array_.put());
-      if (FAILED(hr)) {
-        RTC_LOG_GLE_EX(LS_ERROR, hr)
-            << "Failed creating the depth staging texture array. The "
-               "D3D11 frame source will not work.";
-      }
-      name = "D3D11VideoFrameSource_Depth_Staging_Array";
-      depth_staging_texture_array_->SetPrivateData(WKPDID_D3DDebugObjectName,
-                                                   name.length(), name.c_str());
+      ON_SUCCEEDED(device_->CreateTexture2D(&staging_desc, nullptr, depth_staging_texture_array_.put()));
+      ON_SUCCEEDED(depth_staging_texture_array_->SetPrivateData(WKPDID_D3DDebugObjectName, PASS_STRING_LITERAL("D3D11VideoFrameSource_Depth_Staging_Array")));
     }
   }
 
-  // not sure if we need to notify...but maybe we could call setstate from the
-  // outside.
+#undef PASS_STRING_LITERAL
+
+  // depth is accounted for in the height_ variable
+  const int dst_y_size = width_ * height_; // TODO: what about the bits per channel?
+  const int dst_u_size = div_ceiled_fast(width_, 2) * div_ceiled_fast(height_, 2);
+  frame_mem_arena_size_ = dst_y_size + 2 * dst_u_size;
+  frame_mem_arena_ = static_cast<uint8_t*>(malloc(frame_mem_arena_size_));
+
+  // not sure if we need to notify...but maybe we could call setstate from the outside.
   state_ = webrtc::MediaSourceInterface::SourceState::kLive;
 }
 
-void D3D11VideoFrameSource::SetState(
-    rtc::AdaptedVideoTrackSource::SourceState state) {
+void D3D11VideoFrameSource::SetState(rtc::AdaptedVideoTrackSource::SourceState state) {
   if (rtc::Thread::Current() != signaling_thread_) {
     invoker_.AsyncInvoke<void>(
         RTC_FROM_HERE, signaling_thread_,
@@ -152,21 +114,11 @@ void D3D11VideoFrameSource::SetState(
 }
 
 D3D11VideoFrameSource::~D3D11VideoFrameSource() {
-  if (dst_y_ != nullptr) {
-    free(dst_y_);
-  }
-
-  if (dst_u_ != nullptr) {
-    free(dst_u_);
-  }
-
-  if (dst_v_ != nullptr) {
-    free(dst_v_);
-  }
+  free(frame_mem_arena_);
 }
 
-void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* rendered_image,
-                                            ID3D11Texture2D* depth_image,
+void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
+                                            ID3D11Texture2D* depth_texture,
                                             webrtc::XRTimestamp timestamp) {
   int64_t time_us = rtc::TimeMicros();
 
@@ -182,19 +134,18 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* rendered_image,
     return;
   }
 
-  D3D11_TEXTURE2D_DESC desc = {};
-  rendered_image->GetDesc(&desc);
-
+  // height_ includes depth
   auto d3d_frame_buffer = D3D11VideoFrameBuffer::Create(
-      context_.get(), staging_texture_.get(), rendered_image,
-      depth_staging_texture_.get(), depth_staging_texture_array_.get(),
-      depth_image, dst_y_, dst_u_, dst_v_, desc, width_, height_);
+      context_.get(),
+      color_texture, color_staging_texture_.get(),
+      depth_texture, depth_staging_texture_.get(), depth_staging_texture_array_.get()//,
+      /* TODO: width_, height_ */ /* adapted_width, adapted_height */);
 
   // on windows, the best way to do this would be to convert to nv12 directly
   // since the encoder expects that. libyuv features an ARGBToNV12 function. The
   // problem now is, which frame type do we use? There's none for nv12. I guess
   // we'd need to modify. Then we could also introduce d3d11 as frame type.
-  auto i420_buffer = d3d_frame_buffer->ToI420();
+  auto i420_buffer = d3d_frame_buffer->ToI420AlphaDepth(frame_mem_arena_, frame_mem_arena_size_);
 
   auto frame = VideoFrame::Builder()
                    .set_video_frame_buffer(i420_buffer)
