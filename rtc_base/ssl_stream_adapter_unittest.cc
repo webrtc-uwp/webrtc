@@ -1334,7 +1334,7 @@ TEST_P(SSLStreamAdapterTestDTLS, TestDTLSExporter) {
 
 // Test not yet valid certificates are not rejected.
 TEST_P(SSLStreamAdapterTestDTLS, TestCertNotYetValid) {
-  long one_day = 60 * 60 * 24;
+  int one_day = 60 * 60 * 24;
   // Make the certificates not valid until one day later.
   ResetIdentitiesWithValidity(one_day, one_day);
   TestHandshake();
@@ -1342,7 +1342,7 @@ TEST_P(SSLStreamAdapterTestDTLS, TestCertNotYetValid) {
 
 // Test expired certificates are not rejected.
 TEST_P(SSLStreamAdapterTestDTLS, TestCertExpired) {
-  long one_day = 60 * 60 * 24;
+  int one_day = 60 * 60 * 24;
   // Make the certificates already expired.
   ResetIdentitiesWithValidity(-one_day, -one_day);
   TestHandshake();
