@@ -23,22 +23,16 @@ namespace hlr {
 
 rtc::scoped_refptr<D3D11VideoFrameBuffer> D3D11VideoFrameBuffer::Create(
     ID3D11DeviceContext* context,
-    ID3D11Texture2D* color_texture,
-    ID3D11Texture2D* color_staging_texture,
-    int width,
-    int height,
-    uint32_t subresource_index) {
+    ID3D11Texture2D* color_texture, ID3D11Texture2D* color_staging_texture,
+    UINT subresource_index, UINT subresource_width, UINT subresource_height) {
   return new rtc::RefCountedObject<D3D11VideoFrameBuffer>(
-      context, color_texture, color_staging_texture, width, height, subresource_index);
+      context, color_texture, color_staging_texture, subresource_index, subresource_width, subresource_height);
 }
 
 rtc::scoped_refptr<D3D11VideoFrameBuffer> D3D11VideoFrameBuffer::Create(
     ID3D11DeviceContext* context,
-    ID3D11Texture2D* color_texture,
-    ID3D11Texture2D* color_staging_texture,
-    ID3D11Texture2D* depth_texture,
-    ID3D11Texture2D* depth_staging_texture,
-    ID3D11Texture2D* depth_staging_texture_array) {
+    ID3D11Texture2D* color_texture, ID3D11Texture2D* color_staging_texture,
+    ID3D11Texture2D* depth_texture, ID3D11Texture2D* depth_staging_texture, ID3D11Texture2D* depth_staging_texture_array) {
   return new rtc::RefCountedObject<D3D11VideoFrameBuffer>(
       context,
       color_texture, color_staging_texture,
@@ -51,14 +45,13 @@ VideoFrameBuffer::Type D3D11VideoFrameBuffer::type() const {
 
 D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(
     ID3D11DeviceContext* context,
-    ID3D11Texture2D* color_texture,
-    ID3D11Texture2D* color_staging_texture,
-    int /* width */,
-    int /* height */,
-    uint32_t subresource_index)
-    : subresource_index_(subresource_index)//,
-      // width_(width),
-      // height_(height)
+    ID3D11Texture2D* color_texture, ID3D11Texture2D* color_staging_texture,
+    UINT subresource_index, UINT subresource_width, UINT subresource_height)
+    : subresource_index_(subresource_index),
+      subresource_width_(subresource_width),
+      subresource_height_(subresource_height),
+      width_(subresource_width),
+      height_(subresource_height)
 {
   RTC_CHECK(color_texture != nullptr);
   context_.copy_from(context);
@@ -68,12 +61,12 @@ D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(
   D3D11_TEXTURE2D_DESC color_texture_desc = {};
   color_texture->GetDesc(&color_texture_desc);
   color_texture_desc_ = color_texture_desc;
+
   // color_texture_format_ = color_texture_desc.Format;
-  width_ = color_texture_desc.Width;
   if (color_texture_desc.ArraySize == 2) {
     width_ *= 2;
   }
-  height_ = color_texture_desc.Height;
+  // height_ = color_texture_desc.Height;
 
   depth_texture_ = nullptr;
   depth_staging_texture_ = nullptr;
@@ -82,11 +75,8 @@ D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(
 
 D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(
     ID3D11DeviceContext* context,
-    ID3D11Texture2D* color_texture,
-    ID3D11Texture2D* color_staging_texture,
-    ID3D11Texture2D* depth_texture,
-    ID3D11Texture2D* depth_staging_texture,
-    ID3D11Texture2D* depth_staging_texture_array)
+    ID3D11Texture2D* color_texture, ID3D11Texture2D* color_staging_texture,
+    ID3D11Texture2D* depth_texture, ID3D11Texture2D* depth_staging_texture, ID3D11Texture2D* depth_staging_texture_array)
     : subresource_index_(0) {
   RTC_CHECK(color_texture != nullptr);
   context_.copy_from(context);
@@ -99,12 +89,13 @@ D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(
   D3D11_TEXTURE2D_DESC color_texture_desc = {};
   color_texture->GetDesc(&color_texture_desc);
   color_texture_desc_ = color_texture_desc;
-  // color_texture_format_ = color_texture_desc.Format;
-  width_ = color_texture_desc.Width;
+
+  width_ = subresource_width_ = color_texture_desc.Width;
   if (color_texture_desc.ArraySize == 2) {
     width_ *= 2;
   }
-  height_ = color_texture_desc.Height;
+
+  height_ = subresource_height_ = color_texture_desc.Height;
 
   depth_texture_desc_ = {};
   if (depth_texture != nullptr) {
@@ -139,10 +130,8 @@ rtc::scoped_refptr<webrtc::I420BufferInterface>
 D3D11VideoFrameBuffer::ToI420(uint8_t* buffer, int capacity) {
   RTC_CHECK(buffer != nullptr);
 
-  const int has_depth_alpha = (int)(depth_texture_.get() != nullptr);
-
-  const int frame_width = width_;
-  const int frame_height = div_ceiled_fast(height_, 1 + has_depth_alpha);
+  const int frame_width = subresource_width_;
+  const int frame_height = subresource_height_;
 
   const int& width_y = frame_width;
   const int& height_y = frame_height;
@@ -159,6 +148,8 @@ D3D11VideoFrameBuffer::ToI420(uint8_t* buffer, int capacity) {
   const int& stride_v = stride_u;
   const int& size_v = size_u;
   const int size_yuv = size_y + size_u + size_v;
+
+  const int has_depth_alpha = (int)(depth_texture_.get() != nullptr);
   RTC_CHECK(capacity >= size_yuv * (1 + has_depth_alpha));
 
   uint8_t* dst_y  = buffer;
@@ -205,18 +196,16 @@ D3D11VideoFrameBuffer::ToI420(uint8_t* buffer, int capacity) {
   return nullptr;
 }
 
-static __forceinline int toIndex(int x, int y, int frame_width) {
-  return x + y * frame_width;
+static __forceinline int toIndex(int x, int y, int width) {
+  return x + y * width;
 };
 
 rtc::scoped_refptr<webrtc::I420BufferInterface>
 D3D11VideoFrameBuffer::ToI420AlphaDepth(uint8_t* buffer, int capacity) {
   RTC_CHECK(buffer != nullptr);
 
-  const int has_depth_alpha = (int)(depth_texture_.get() != nullptr);
-
-  const int frame_width = width_;
-  const int frame_height = div_ceiled_fast(height_, 1 + has_depth_alpha);
+  const int frame_width = subresource_width_;
+  const int frame_height = subresource_height_;
 
   const int& width_y = frame_width;
   const int& height_y = frame_height;
@@ -233,6 +222,8 @@ D3D11VideoFrameBuffer::ToI420AlphaDepth(uint8_t* buffer, int capacity) {
   const int& stride_v = stride_u;
   const int& size_v = size_u;
   const int size_yuv = size_y + size_u + size_v;
+
+  const int has_depth_alpha = (int)(depth_texture_.get() != nullptr);
   RTC_CHECK(capacity >= size_yuv * (1 + has_depth_alpha));
 
   uint8_t* dst_y  = buffer;
@@ -789,11 +780,14 @@ void D3D11VideoFrameBuffer::StageTextures() {
   // D3D11_TEXTURE2D_DESC color_texture_desc = {};
   // color_texture_->GetDesc(&color_texture_desc);
 
+  D3D11_BOX region{0, 0, 0, subresource_width_, subresource_height_, 1};
+
+  auto *depth_ptr = depth_texture_.get();
   if (color_texture_desc_.ArraySize == 1) {
     // single double-wide texture
-    context_->CopySubresourceRegion(color_staging_texture_.get(), 0, 0, 0, 0, color_texture_.get(), subresource_index_, nullptr);
+    context_->CopySubresourceRegion(color_staging_texture_.get(), 0, 0, 0, 0, color_texture_.get(), subresource_index_, &region);
 
-    if (depth_texture_.get() != nullptr) {
+    if (depth_ptr != nullptr) {
       context_->CopyResource(depth_staging_texture_.get(), depth_texture_.get());
     }
 
@@ -802,20 +796,20 @@ void D3D11VideoFrameBuffer::StageTextures() {
     UINT left_eye_color_subresource = D3D11CalcSubresource(0, 0, color_texture_desc_.MipLevels);
     UINT right_eye_color_subresource = D3D11CalcSubresource(0, 1, color_texture_desc_.MipLevels);
 
-    context_->CopySubresourceRegion(color_staging_texture_.get(), 0, 0, 0, 0, color_texture_.get(), left_eye_color_subresource, nullptr);
-    context_->CopySubresourceRegion(color_staging_texture_.get(), 0, color_texture_desc_.Width, 0, 0, color_texture_.get(), right_eye_color_subresource, nullptr);
+    context_->CopySubresourceRegion(color_staging_texture_.get(), 0, 0, 0, 0, color_texture_.get(), left_eye_color_subresource, &region);
+    context_->CopySubresourceRegion(color_staging_texture_.get(), 0, color_texture_desc_.Width, 0, 0, color_texture_.get(), right_eye_color_subresource, &region);
 
-    if (depth_texture_.get() != nullptr) {
+    if (depth_ptr != nullptr) {
       // for single pass copy to staging texture array first, then copy to double-wide/high texture
       UINT left_eye_depth_subresource = D3D11CalcSubresource(0, 0, depth_texture_desc_.MipLevels);
       UINT right_eye_depth_subresource = D3D11CalcSubresource(0, 1, depth_texture_desc_.MipLevels);
 #if true
       context_->CopyResource(depth_staging_texture_array_.get(), depth_texture_.get());
-      context_->CopySubresourceRegion(depth_staging_texture_.get(), 0, 0, 0, 0, depth_staging_texture_array_.get(), left_eye_depth_subresource, nullptr);
-      context_->CopySubresourceRegion(depth_staging_texture_.get(), 0, color_texture_desc_.Width, 0, 0, depth_staging_texture_array_.get(), right_eye_depth_subresource, nullptr);
+      context_->CopySubresourceRegion(depth_staging_texture_.get(), 0, 0, 0, 0, depth_staging_texture_array_.get(), left_eye_depth_subresource, &region);
+      context_->CopySubresourceRegion(depth_staging_texture_.get(), 0, color_texture_desc_.Width, 0, 0, depth_staging_texture_array_.get(), right_eye_depth_subresource, &region);
 #else
-      context_->CopySubresourceRegion(depth_staging_texture_.get(), 0, 0, 0, 0, depth_texture_.get(), left_eye_depth_subresource, nullptr);
-      context_->CopySubresourceRegion(depth_staging_texture_.get(), 0, color_texture_desc_.Width, 0, 0, depth_texture_.get(), right_eye_depth_subresource, nullptr);
+      context_->CopySubresourceRegion(depth_staging_texture_.get(), 0, 0, 0, 0, depth_texture_.get(), left_eye_depth_subresource, &region);
+      context_->CopySubresourceRegion(depth_staging_texture_.get(), 0, color_texture_desc_.Width, 0, 0, depth_texture_.get(), right_eye_depth_subresource, &region);
 #endif
     }
 

@@ -31,6 +31,15 @@ inline int div_ceiled_fast(int dividend, int divisor) { assert(dividend != 0); r
 // use it as a resource for rendering.
 
 class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
+ protected:
+  D3D11VideoFrameBuffer(ID3D11DeviceContext* context,
+                        ID3D11Texture2D* color_texture, ID3D11Texture2D* color_staging_texture,
+                        UINT subresource_index, UINT subresource_width, UINT subresource_height);
+
+  D3D11VideoFrameBuffer(ID3D11DeviceContext* context,
+                        ID3D11Texture2D* color_texture, ID3D11Texture2D* color_staging_texture,
+                        ID3D11Texture2D* depth_texture, ID3D11Texture2D* depth_staging_texture, ID3D11Texture2D* depth_staging_texture_array);
+
  public:
   ~D3D11VideoFrameBuffer() override;
 
@@ -40,11 +49,8 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
   // The only user of this (decoder) doesn't supply neither context nor staging_texture. Can we delete those?
   static rtc::scoped_refptr<D3D11VideoFrameBuffer> Create(
       ID3D11DeviceContext* context,
-      ID3D11Texture2D* color_texture,
-      ID3D11Texture2D* color_staging_texture,
-      int width,
-      int height,
-      uint32_t subresource_index);
+      ID3D11Texture2D* color_texture, ID3D11Texture2D* color_staging_texture,
+      UINT subresource_index, UINT subreouce_width, UINT subresource_height);
 
   // Used on server side. Supports calling ToI420 (i.e. downloading to CPU)
   // because the encoder expects the data in this format.
@@ -84,27 +90,16 @@ class D3D11VideoFrameBuffer : public webrtc::VideoFrameBuffer {
   void DownloadDepth();
 #endif
 
- protected:
-  D3D11VideoFrameBuffer(ID3D11DeviceContext* context,
-                        ID3D11Texture2D* color_texture,
-                        ID3D11Texture2D* color_staging_texture,
-                        int width, int height,
-                        uint32_t subresource_index);
-
-  D3D11VideoFrameBuffer(ID3D11DeviceContext* context,
-                        ID3D11Texture2D* color_texture,
-                        ID3D11Texture2D* color_staging_texture,
-                        ID3D11Texture2D* depth_texture,
-                        ID3D11Texture2D* depth_staging_texture,
-                        ID3D11Texture2D* depth_staging_texture_array);
-
  private:
   winrt::com_ptr<ID3D11DeviceContext> context_;
   winrt::com_ptr<ID3D11Texture2D> color_texture_;
   D3D11_TEXTURE2D_DESC color_texture_desc_;
-  uint32_t subresource_index_;
-  int width_; // total buffer width (color + depth)
-  int height_; // total buffer height (color + depth)
+  UINT subresource_index_;
+  // NOTE: not necessarily the size of the source texture dimensions (they could contain padding because the decoder outputs pot/even sizes)
+  UINT subresource_width_;
+  UINT subresource_height_;
+  UINT width_; // total buffer width (color + depth)
+  UINT height_; // total buffer height (color + depth)
   // DXGI_FORMAT color_texture_format_; // TODO: already contains width & height, do we need the redundancy?
 
   winrt::com_ptr<ID3D11Texture2D> depth_texture_;
