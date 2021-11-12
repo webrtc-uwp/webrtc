@@ -64,7 +64,7 @@ D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(
 
   // color_texture_format_ = color_texture_desc.Format;
   if (color_texture_desc.ArraySize == 2) {
-    width_ *= 2;
+    width_ = subresource_width_ *= 2;
   }
   // height_ = color_texture_desc.Height;
 
@@ -92,7 +92,7 @@ D3D11VideoFrameBuffer::D3D11VideoFrameBuffer(
 
   width_ = subresource_width_ = color_texture_desc.Width;
   if (color_texture_desc.ArraySize == 2) {
-    width_ *= 2;
+    width_ = subresource_width_ *= 2;
   }
 
   height_ = subresource_height_ = color_texture_desc.Height;
@@ -490,6 +490,7 @@ D3D11VideoFrameBuffer::ToI420AlphaDepth(uint8_t* buffer, int capacity) {
   {
     rtc::Callback0<void> unused;
     // TODO: not needed, see ToNV12
+    // webrtc::I420BufferPool
     return webrtc::WrapI420Buffer(width_, height_, dst_y, stride_y, dst_u, stride_u, dst_v, stride_v, unused);
   }
 
@@ -796,8 +797,8 @@ void D3D11VideoFrameBuffer::StageTextures() {
     UINT left_eye_color_subresource = D3D11CalcSubresource(0, 0, color_texture_desc_.MipLevels);
     UINT right_eye_color_subresource = D3D11CalcSubresource(0, 1, color_texture_desc_.MipLevels);
 
-    context_->CopySubresourceRegion(color_staging_texture_.get(), 0, 0, 0, 0, color_texture_.get(), left_eye_color_subresource, &region);
-    context_->CopySubresourceRegion(color_staging_texture_.get(), 0, color_texture_desc_.Width, 0, 0, color_texture_.get(), right_eye_color_subresource, &region);
+    context_->CopySubresourceRegion(color_staging_texture_.get(), 0, 0, 0, 0, color_texture_.get(), left_eye_color_subresource, 0);
+    context_->CopySubresourceRegion(color_staging_texture_.get(), 0, color_texture_desc_.Width, 0, 0, color_texture_.get(), right_eye_color_subresource, 0);
 
     if (depth_ptr != nullptr) {
       // for single pass copy to staging texture array first, then copy to double-wide/high texture
@@ -805,11 +806,11 @@ void D3D11VideoFrameBuffer::StageTextures() {
       UINT right_eye_depth_subresource = D3D11CalcSubresource(0, 1, depth_texture_desc_.MipLevels);
 #if true
       context_->CopyResource(depth_staging_texture_array_.get(), depth_texture_.get());
-      context_->CopySubresourceRegion(depth_staging_texture_.get(), 0, 0, 0, 0, depth_staging_texture_array_.get(), left_eye_depth_subresource, &region);
-      context_->CopySubresourceRegion(depth_staging_texture_.get(), 0, color_texture_desc_.Width, 0, 0, depth_staging_texture_array_.get(), right_eye_depth_subresource, &region);
+      context_->CopySubresourceRegion(depth_staging_texture_.get(), 0, 0, 0, 0, depth_staging_texture_array_.get(), left_eye_depth_subresource, 0);
+      context_->CopySubresourceRegion(depth_staging_texture_.get(), 0, color_texture_desc_.Width, 0, 0, depth_staging_texture_array_.get(), right_eye_depth_subresource, 0);
 #else
-      context_->CopySubresourceRegion(depth_staging_texture_.get(), 0, 0, 0, 0, depth_texture_.get(), left_eye_depth_subresource, &region);
-      context_->CopySubresourceRegion(depth_staging_texture_.get(), 0, color_texture_desc_.Width, 0, 0, depth_texture_.get(), right_eye_depth_subresource, &region);
+      context_->CopySubresourceRegion(depth_staging_texture_.get(), 0, 0, 0, 0, depth_texture_.get(), left_eye_depth_subresource, 0);
+      context_->CopySubresourceRegion(depth_staging_texture_.get(), 0, color_texture_desc_.Width, 0, 0, depth_texture_.get(), right_eye_depth_subresource, 0);
 #endif
     }
 

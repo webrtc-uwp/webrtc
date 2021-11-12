@@ -146,7 +146,7 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
   // problem now is, which frame type do we use? There's none for nv12. I guess
   // we'd need to modify. Then we could also introduce d3d11 as frame type.
   auto i420_buffer = d3d_frame_buffer->ToI420AlphaDepth(frame_mem_arena_, frame_mem_arena_size_);
-
+  // TODO: dont use mem arena here because OnFrame(frame) below queues the i420 buffer for the encoder which is dequeued async
   auto frame = VideoFrame::Builder()
                    .set_video_frame_buffer(i420_buffer)
                    .set_timestamp_us(time_us)
