@@ -1393,12 +1393,84 @@
         ],
         "dependsOrder": "sequence"
       },
+      {
+        "label": "remoting_with_tests dbg (x64): Prepare",
+        "args": [
+          "./run.py",
+          "-a",
+          "prepare",
+          "-u",
+          "remoting_with_tests",
+          "-p",
+          "win",
+          "-x",
+          "x64",
+          "-c",
+          "debug",
+          "--noWrapper",
+          "./remoting_with_tests_userdef.py"
+        ]
+      },
+      {
+        "label": "remoting_with_tests rel (x64): Prepare",
+        "args": [
+          "./run.py",
+          "-a",
+          "prepare",
+          "-u",
+          "remoting_with_tests",
+          "-p",
+          "win",
+          "-x",
+          "x64",
+          "-c",
+          "release",
+          "--noWrapper",
+          "./remoting_with_tests_userdef.py"
+        ]
+      },
+      {
+        "label": "remoting_with_tests dbg (x64): Build",
+        "args": [
+          "./run.py",
+          "-a",
+          "build",
+          "-u",
+          "remoting_with_tests",
+          "-p",
+          "win",
+          "-x",
+          "x64",
+          "-c",
+          "debug",
+          "--noWrapper",
+          "./remoting_with_tests_userdef.py"
+        ]
+      },
+      {
+        "label": "remoting_with_tests rel (x64): Build",
+        "args": [
+          "./run.py",
+          "-a",
+          "build",
+          "-u",
+          "remoting_with_tests",
+          "-p",
+          "win",
+          "-x",
+          "x64",
+          "-c",
+          "release",
+          "--noWrapper",
+          "./remoting_with_tests_userdef.py"
+        ]
+      },
       // {
-      //   "label": "remoting_with_tests dbg (x64): Prepare",
+      //   "label": "remoting_with_tests dbg (x64): Run Unit Tests",
       //   "args": [
       //     "./run.py",
       //     "-a",
-      //     "prepare",
+      //     "rununittests",
       //     "-u",
       //     "remoting_with_tests",
       //     "-p",
@@ -1412,11 +1484,11 @@
       //   ]
       // },
       // {
-      //   "label": "remoting_with_tests rel (x64): Prepare",
+      //   "label": "remoting_with_tests rel (x64): Run Unit Tests",
       //   "args": [
       //     "./run.py",
       //     "-a",
-      //     "prepare",
+      //     "rununittests",
       //     "-u",
       //     "remoting_with_tests",
       //     "-p",
@@ -1425,61 +1497,27 @@
       //     "x64",
       //     "-c",
       //     "release",
+      //     "--unitTests",
+      //     "remoting_tests",
       //     "--noWrapper",
       //     "./remoting_with_tests_userdef.py"
       //   ]
       // },
-      // {
-      //   "label": "remoting_with_tests dbg (x64): Build",
-      //   "args": [
-      //     "./run.py",
-      //     "-a",
-      //     "build",
-      //     "-u",
-      //     "remoting_with_tests",
-      //     "-p",
-      //     "win",
-      //     "-x",
-      //     "x64",
-      //     "-c",
-      //     "debug",
-      //     "--noWrapper",
-      //     "./remoting_with_tests_userdef.py"
-      //   ]
-      // },
-      // {
-      //   "label": "remoting_with_tests rel (x64): Build",
-      //   "args": [
-      //     "./run.py",
-      //     "-a",
-      //     "build",
-      //     "-u",
-      //     "remoting_with_tests",
-      //     "-p",
-      //     "win",
-      //     "-x",
-      //     "x64",
-      //     "-c",
-      //     "release",
-      //     "--noWrapper",
-      //     "./remoting_with_tests_userdef.py"
-      //   ]
-      // },
-      // {
-      //   "label": "remoting_with_tests dbg (x64): Prepare | Build",
-      //   "dependsOn": [
-      //     "remoting_with_tests dbg (x64): Prepare",
-      //     "remoting_with_tests dbg (x64): Build"
-      //   ],
-      //   "dependsOrder": "sequence"
-      // },
-      // {
-      //   "label": "remoting_with_tests rel (x64): Prepare | Build",
-      //   "dependsOn": [
-      //     "remoting_with_tests rel (x64): Prepare",
-      //     "remoting_with_tests rel (x64): Build"
-      //   ],
-      //   "dependsOrder": "sequence"
-      // }
+      {
+        "label": "remoting_with_tests dbg (x64): Prepare | Build",
+        "dependsOn": [
+          "remoting_with_tests dbg (x64): Prepare",
+          "remoting_with_tests dbg (x64): Build"
+        ],
+        "dependsOrder": "sequence"
+      },
+      {
+        "label": "remoting_with_tests rel (x64): Prepare | Build",
+        "dependsOn": [
+          "remoting_with_tests rel (x64): Prepare",
+          "remoting_with_tests rel (x64): Build"
+        ],
+        "dependsOrder": "sequence"
+      }
     ]
 }

@@ -146,4 +146,6 @@
     "C_Cpp.clang_format_style": "file",
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
+    "testMate.cpp.test.workingDirectory": "${workspaceFolder}/out",
+    "testMate.cpp.test.runtimeLimit": 10
 }
