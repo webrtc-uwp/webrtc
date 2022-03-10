@@ -1675,14 +1675,7 @@ int16_t AudioDeviceWindowsCore::RecordingDevices() {
   rtc::CritScope lock(&_critSect);
 
   if (_RefreshDeviceList(eCapture) != -1) {
-    auto recording_device_count = _DeviceListCount(eCapture);
-    if (recording_device_count > 0) {
-      //KL: we say there's one more device for capture (loopback) even if technically
-      //it is not in the IMMDeviceCollection for type eCapture
-      return recording_device_count + 1;
-    } else {
-      return recording_device_count;
-    }
+    return (_DeviceListCount(eCapture));
   }
 
   return -1;
@@ -1713,21 +1706,14 @@ int32_t AudioDeviceWindowsCore::SetRecordingDevice(uint16_t index) {
 
   assert(_ptrCaptureCollection != NULL);
 
+  // Select an endpoint capture device given the specified index
   SAFE_RELEASE(_ptrDeviceIn);
-  if (index == (nDevices - 1)) {
-    //KL: The last index for us is always the loopback device, which we create by ourselves
-    //because it's not in the IMMDeviceCollection when enumerating.
-    hr = _ptrEnumerator->GetDefaultAudioEndpoint(eRender, eCommunications, &_ptrDeviceIn);
-  } else {
-    // Select an endpoint capture device given the specified index
-    hr = _ptrCaptureCollection->Item(index, &_ptrDeviceIn);
-  }
-
+  hr = _ptrCaptureCollection->Item(index, &_ptrDeviceIn);
   if (FAILED(hr)) {
-      _TraceCOMError(hr);
-      SAFE_RELEASE(_ptrDeviceIn);
-      return -1;
-    }
+    _TraceCOMError(hr);
+    SAFE_RELEASE(_ptrDeviceIn);
+    return -1;
+  }
 
   WCHAR szDeviceName[MAX_PATH];
   const int bufferLen = sizeof(szDeviceName) / sizeof(szDeviceName)[0];
@@ -2291,30 +2277,14 @@ int32_t AudioDeviceWindowsCore::InitRecording() {
     RTC_LOG(LS_VERBOSE) << "_recChannels      : " << _recChannels;
   }
 
-  DWORD streamFlags = AUDCLNT_STREAMFLAGS_EVENTCALLBACK |  // processing of the audio buffer by
-                                                          // the client will be event driven
-                      AUDCLNT_STREAMFLAGS_NOPERSIST;   // volume and mute settings for an
-                                                        // audio session will not persist
-                                                        // across system restarts
-  IMMEndpoint* pEndpoint = nullptr;
-  hr = _ptrDeviceIn->QueryInterface(IID_PPV_ARGS(&pEndpoint));
-  EXIT_ON_ERROR(hr);
-
-  EDataFlow flow = eRender;
-  hr = pEndpoint->GetDataFlow(&flow);
-  EXIT_ON_ERROR(hr);
-
-  //KL: check if current IMMDevice is loopback and if yes, add loopback flag to Initialize
-  if (flow == eRender) {
-    streamFlags |= AUDCLNT_STREAMFLAGS_LOOPBACK;
-  }
-
-  pEndpoint->Release();
-
   // Create a capturing stream.
   hr = _ptrClientIn->Initialize(
       AUDCLNT_SHAREMODE_SHARED,  // share Audio Engine with other applications
-      streamFlags,
+      AUDCLNT_STREAMFLAGS_EVENTCALLBACK |  // processing of the audio buffer by
+                                           // the client will be event driven
+          AUDCLNT_STREAMFLAGS_NOPERSIST,   // volume and mute settings for an
+                                           // audio session will not persist
+                                           // across system restarts
       0,                    // required for event-driven shared mode
       0,                    // periodicity
       (WAVEFORMATEX*)&Wfx,  // selected wave format
@@ -3285,9 +3255,7 @@ DWORD AudioDeviceWindowsCore::DoCaptureThread() {
         if (flags & AUDCLNT_BUFFERFLAGS_SILENT) {
           // Treat all of the data in the packet as silence and ignore the
           // actual data values.
-          // KL: with loopback device silent buffers are expected when the server
-          // doesn't play sound at all. No need to spam the logs.
-          // RTC_LOG(LS_WARNING) << "AUDCLNT_BUFFERFLAGS_SILENT";
+          RTC_LOG(LS_WARNING) << "AUDCLNT_BUFFERFLAGS_SILENT";
           pData = NULL;
         }
 
@@ -3962,12 +3930,6 @@ int32_t AudioDeviceWindowsCore::_GetDefaultDevice(EDataFlow dir,
 
   assert(_ptrEnumerator != NULL);
 
-  if (dir == eCapture) {
-    //KL: we want the default capture device to be loopback on the server,
-    //so we need to select the default render device here.
-    dir = eRender;
-  }
-
   hr = _ptrEnumerator->GetDefaultAudioEndpoint(dir, role, ppDevice);
   if (FAILED(hr)) {
     _TraceCOMError(hr);
@@ -4001,27 +3963,7 @@ int32_t AudioDeviceWindowsCore::_GetListDevice(EDataFlow dir,
   }
 
   hr = pCollection->Item(index, ppDevice);
-  //KL: if this returns E_INVALIDARG and we're at index GetCount, return a pointer
-  //to default render device which we can use in loopback mode.
-  if (hr == E_INVALIDARG && dir == eCapture) {
-    uint32_t count = 0;
-    hr = pCollection->GetCount(&count);
-
-    if (FAILED(hr)) {
-      _TraceCOMError(hr);
-      SAFE_RELEASE(pCollection);
-      return -1;
-    } else if (static_cast<uint32_t>(index) == count) {
-      hr = _ptrEnumerator->GetDefaultAudioEndpoint(eRender, eCommunications, ppDevice);
-      //KL: if this works, clean up those COM returns somehow
-      if (FAILED(hr)) {
-        _TraceCOMError(hr);
-        SAFE_RELEASE(pCollection);
-        return -1;
-      }
-    }
-  }
-  else if (FAILED(hr)) {
+  if (FAILED(hr)) {
     _TraceCOMError(hr);
     SAFE_RELEASE(pCollection);
     return -1;
