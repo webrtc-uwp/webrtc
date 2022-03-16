@@ -59,6 +59,33 @@ namespace hlr {
         rtc::AdaptedVideoTrackSource::SourceState state_ = rtc::AdaptedVideoTrackSource::SourceState::kInitializing;
         rtc::AsyncInvoker invoker_;
         const bool is_screencast_;
+
+        void SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc);
+        void ConvertToNV12();
+        winrt::com_ptr<ID3DBlob> CompileShader(const char* hlsl, const char* entrypoint, const char* shaderTarget);
+
+        // Shaders for converting to NV12 in GPU
+        winrt::com_ptr<ID3D11Texture2D>         textureNV12;
+        winrt::com_ptr<ID3D11VertexShader>      vShaderToNV12_;
+        winrt::com_ptr<ID3D11PixelShader>       pShaderToNV12_Y;
+        winrt::com_ptr<ID3D11PixelShader>       pShaderToNV12_UV;
+        winrt::com_ptr<ID3D11RenderTargetView>  renderTargetViewNV12Y;
+        winrt::com_ptr<ID3D11RenderTargetView>  renderTargetViewNV12UV;
+        winrt::com_ptr<ID3D11InputLayout> m_inputLayout;
+		winrt::com_ptr<ID3D11Buffer> m_vertexBuffer;
+		winrt::com_ptr<ID3D11Buffer> m_indexBuffer;
+        winrt::com_ptr<ID3D11SamplerState> m_samplerState;
+        winrt::com_ptr<ID3D11DepthStencilState> m_depthStencilState;
+        winrt::com_ptr<ID3D11ShaderResourceView> color_texture_srv;
+        D3D11_VIEWPORT nv12DrawingViewport;
+        bool is_once_SRV = false;
+
+        inline void SetD3DDebugName(ID3D11DeviceChild* obj, const std::string& name)
+        {
+            assert(obj);
+            assert(!name.empty());
+            obj->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<uint32_t>(name.size()), name.c_str());
+        }
     };
 }
 
