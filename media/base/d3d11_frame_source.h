@@ -61,7 +61,7 @@ namespace hlr {
         const bool is_screencast_;
 
         void SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc);
-        void ConvertToNV12();
+        void ConvertToNV12(ID3D11Texture2D* color_texture);
         winrt::com_ptr<ID3DBlob> CompileShader(const char* hlsl, const char* entrypoint, const char* shaderTarget);
 
         // Shaders for converting to NV12 in GPU
@@ -77,8 +77,11 @@ namespace hlr {
         winrt::com_ptr<ID3D11SamplerState> m_samplerState;
         winrt::com_ptr<ID3D11DepthStencilState> m_depthStencilState;
         winrt::com_ptr<ID3D11ShaderResourceView> color_texture_srv;
+        winrt::com_ptr<ID3D11Texture2D> sharedNV12Texture;
+
         D3D11_VIEWPORT nv12DrawingViewport;
         bool is_once_SRV = false;
+        D3D11_TEXTURE2D_DESC frameDesc;
 
         inline void SetD3DDebugName(ID3D11DeviceChild* obj, const std::string& name)
         {

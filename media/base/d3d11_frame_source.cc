@@ -27,6 +27,7 @@
 // D3D
 #include <D3Dcompiler.h>
 #pragma comment(lib, "D3DCompiler.lib")
+#include <thread>
 
 using webrtc::VideoFrame;
 
@@ -106,7 +107,7 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(
   staging_desc.ArraySize = 1;
   staging_desc.SampleDesc = DXGI_SAMPLE_DESC{ /*Count*/ 1, /*Quality*/ 0 };
   staging_desc.Usage = D3D11_USAGE_DEFAULT; // we want to read back immediately after copying, hence staging
-  staging_desc.BindFlags = 0;
+  staging_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
   #endif
 
   width_ = staging_desc.Width;
@@ -152,6 +153,25 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(
   state_ = webrtc::MediaSourceInterface::SourceState::kLive;
 
   SetupNV12Shaders(color_desc);
+
+    //Create nv12 texture description
+  D3D11_TEXTURE2D_DESC copyDesc = {};
+  ZeroMemory(&copyDesc, sizeof(D3D11_TEXTURE2D_DESC));
+  copyDesc.Width = width_;
+  copyDesc.Height = height_;
+  copyDesc.MipLevels = 1;
+  copyDesc.ArraySize = 1;
+  copyDesc.Format = DXGI_FORMAT_NV12;
+  copyDesc.SampleDesc.Count = 1;
+  copyDesc.SampleDesc.Quality = 0;
+  copyDesc.Usage = D3D11_USAGE_DEFAULT;
+  copyDesc.BindFlags = 0;
+  copyDesc.CPUAccessFlags = 0;
+  copyDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_NTHANDLE |          // Istemi: added flags to make encoder side happy
+                       D3D11_RESOURCE_MISC_SHARED;
+
+  //Make a copy our NV12 texture2D
+  hr = device_->CreateTexture2D(&copyDesc, nullptr, sharedNV12Texture.put());
 }
 
 void D3D11VideoFrameSource::SetState(rtc::AdaptedVideoTrackSource::SourceState state) {
@@ -205,16 +225,25 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
   // we'd need to modify. Then we could also introduce d3d11 as frame type.
   frameBuffer = d3d_frame_buffer->ToI420AlphaDepth(frame_mem_arena_, frame_mem_arena_size_);
   #else
+
+  color_texture->GetDesc(&frameDesc);
+  if (frameDesc.ArraySize == 2)
+  {
+    // texture array (2 images)
+    UINT left_eye_color_subresource = D3D11CalcSubresource(0, 0, frameDesc.MipLevels);
+    UINT right_eye_color_subresource = D3D11CalcSubresource(0, 1, frameDesc.MipLevels);
+
+    context_->CopySubresourceRegion(color_staging_texture_.get(), 0, 0, 0, 0, color_texture, left_eye_color_subresource, 0);
+    context_->CopySubresourceRegion(color_staging_texture_.get(), 0, frameDesc.Width, 0, 0, color_texture, right_eye_color_subresource, 0);
+  }
+
   if (!is_once_SRV)
   {
-    D3D11_TEXTURE2D_DESC frameDesc;
-    color_texture->GetDesc(&frameDesc);
-    auto const colorTextureResourceView = CD3D11_SHADER_RESOURCE_VIEW_DESC(color_texture,
+    auto const colorTextureResourceView = CD3D11_SHADER_RESOURCE_VIEW_DESC(color_staging_texture_.get(),
                                                                           D3D11_SRV_DIMENSION_TEXTURE2D,
                                                                           DXGI_FORMAT_R8G8B8A8_UNORM);
 
-
-    HRESULT hr = device_->CreateShaderResourceView(color_texture,
+    HRESULT hr = device_->CreateShaderResourceView(color_staging_texture_.get(),
                                       &colorTextureResourceView,
                                       color_texture_srv.put());
 
@@ -222,12 +251,16 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
     is_once_SRV = true;
   }
 
+
   // // Convert from argb to nv12
-  ConvertToNV12();
+  ConvertToNV12(color_texture);
+
+
+  context_->CopyResource(sharedNV12Texture.get(), textureNV12.get());
 
   // Create buffer
 	winrt::com_ptr<IMFMediaBuffer> nv12Buffer;
-	auto hr = MFCreateDXGISurfaceBuffer(__uuidof(ID3D11Texture2D), textureNV12.get(), 0, FALSE, nv12Buffer.put());
+	HRESULT hr = MFCreateDXGISurfaceBuffer(__uuidof(ID3D11Texture2D), sharedNV12Texture.get(), 0, FALSE, nv12Buffer.put());
   // (width * height) + (width / 2 * height / 2) + (width / 2 * height / 2) for YUV channels
   uint64_t bufferLength = (adapted_width * adapted_height) + (adapted_width * (adapted_height / 2));
   nv12Buffer->SetCurrentLength(bufferLength);
@@ -416,9 +449,8 @@ void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc)
   //Create nv12 texture description
   D3D11_TEXTURE2D_DESC nv12TextDesc = {};
   ZeroMemory(&nv12TextDesc, sizeof(D3D11_TEXTURE2D_DESC));
-  nv12TextDesc.Width = color_desc->Width;
-  nv12TextDesc.Width *= color_desc->ArraySize;                            // handle multi view
-  nv12TextDesc.Height = color_desc->Height;
+  nv12TextDesc.Width = width_;
+  nv12TextDesc.Height = height_;
   nv12TextDesc.MipLevels = 1;
   nv12TextDesc.ArraySize = 1;
   nv12TextDesc.Format = DXGI_FORMAT_NV12;
@@ -427,8 +459,7 @@ void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc)
   nv12TextDesc.Usage = D3D11_USAGE_DEFAULT;
   nv12TextDesc.BindFlags = D3D11_BIND_RENDER_TARGET;
   nv12TextDesc.CPUAccessFlags = 0;
-  nv12TextDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_NTHANDLE |          // Istemi: added flags to make encoder side happy
-                            D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+  nv12TextDesc.MiscFlags = 0;
 
   // Sampler for yuv textures
   D3D11_SAMPLER_DESC sampler_desc;
@@ -487,7 +518,7 @@ void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc)
   SUCCEEDED(hr);
 }
 
-void D3D11VideoFrameSource::ConvertToNV12()
+void D3D11VideoFrameSource::ConvertToNV12(ID3D11Texture2D* color_texture)
 {
   //Temp wrappers & others for render passes
   float clearcolor [] = {0,0,0,0};
@@ -551,6 +582,51 @@ void D3D11VideoFrameSource::ConvertToNV12()
   context_->PSSetShaderResources(0, 1, shaderResourceTextures);
   context_->PSSetSamplers(0, 1, samplers);
   context_->DrawIndexed(6, 0, 0);
+
+  //----------------TESTINGGGGGG
+  // winrt::com_ptr<ID3D11Texture2D> stagingTexture;
+  // D3D11_TEXTURE2D_DESC TexDesc = {};
+  // TexDesc.Width = width_;
+  // TexDesc.Height = height_;
+  // TexDesc.Format = DXGI_FORMAT_R8G8B8A8_TYPELESS;
+  // TexDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+  // TexDesc.Usage = D3D11_USAGE_STAGING;
+  // // TexDesc.BindFlags = D3D11_BIND_RENDER_TARGET;
+  // TexDesc.SampleDesc = frameDesc.SampleDesc;
+  // TexDesc.MipLevels = 1;
+  // TexDesc.MiscFlags = 0;
+  // TexDesc.ArraySize = 1;
+  // HRESULT hr = device_->CreateTexture2D(&TexDesc, nullptr, stagingTexture.put());
+  // SUCCEEDED(hr);
+
+  // CD3D11_RENDER_TARGET_VIEW_DESC stagingRTVDesc;
+  // ZeroMemory(&stagingRTVDesc, sizeof(CD3D11_RENDER_TARGET_VIEW_DESC));
+  // stagingRTVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+  // stagingRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+
+  // winrt::com_ptr<ID3D11RenderTargetView>  rtvStagingTexture;
+  // hr = device_->CreateRenderTargetView(color_texture,
+  //                                 &stagingRTVDesc,
+  //                                 rtvStagingTexture.put());
+
+  // // float clearDummyValues [] = {0.2f, 0.7f, 0.3f, 0.6f };
+  // // context_->ClearRenderTargetView(rtvStagingTexture.get(), clearDummyValues);
+
+  // D3D11_MAPPED_SUBRESOURCE ResourceDesc;
+  // UINT left_eye_color_subresource = D3D11CalcSubresource(0, 0, frameDesc.MipLevels);
+  // UINT right_eye_color_subresource = D3D11CalcSubresource(0, 1, frameDesc.MipLevels);
+
+  // context_->CopySubresourceRegion(stagingTexture.get(), 0, 0, 0, 0, color_texture, left_eye_color_subresource, 0);
+  // context_->CopySubresourceRegion(stagingTexture.get(), 0, frameDesc.Width, 0, 0, color_texture, right_eye_color_subresource, 0);
+  // context_->Map(stagingTexture.get(), 0, D3D11_MAP_READ, 0, &ResourceDesc);
+
+  // if (ResourceDesc.pData)
+  // {
+  //   uint8_t* src_data8 = static_cast<uint8_t*>(ResourceDesc.pData);
+  //   RTC_LOG(LS_ERROR) << src_data8;
+  // }
+  // context_->Unmap(stagingTexture.get(), 0);
+  //----------------END TESTING
 }
 
 winrt::com_ptr<ID3DBlob> D3D11VideoFrameSource::CompileShader(const char* hlsl, const char* entrypoint, const char* shaderTarget) {
