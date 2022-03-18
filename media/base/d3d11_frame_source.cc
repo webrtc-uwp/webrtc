@@ -89,6 +89,10 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(
   device_.copy_from(device);
   context_.copy_from(context);
 
+  width_ = color_desc->Width * color_desc->ArraySize;
+  height_ = color_desc->Height;
+
+  #if defined(CpuVideoFrameBuffer)
   D3D11_TEXTURE2D_DESC staging_desc = *color_desc;
   assert(staging_desc.ArraySize > 0);
   // NOTE: mono textures can be part of a texture array pool so we check for exactly 2 to narrow it down but it's error prone
@@ -97,21 +101,11 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(
     staging_desc.Width *= 2; // merge stereo textures into a single texture
   }
   // if (depth_desc != nullptr) staging_desc.Height *= 2; // double the height to store depth information.
-  #if defined(CpuVideoFrameBuffer)
   staging_desc.ArraySize = 1;
   staging_desc.SampleDesc = DXGI_SAMPLE_DESC{ /*Count*/ 1, /*Quality*/ 0 };
   staging_desc.Usage = D3D11_USAGE_STAGING; // we want to read back immediately after copying, hence staging
   staging_desc.BindFlags = 0;
   staging_desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ; // for now read access should be enough
-  #else
-  staging_desc.ArraySize = 1;
-  staging_desc.SampleDesc = DXGI_SAMPLE_DESC{ /*Count*/ 1, /*Quality*/ 0 };
-  staging_desc.Usage = D3D11_USAGE_DEFAULT; // we want to read back immediately after copying, hence staging
-  staging_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-  #endif
-
-  width_ = staging_desc.Width;
-  height_ = staging_desc.Height;
 
 #define PASS_STRING_LITERAL(_string) strlen(_string), _string
 
@@ -152,7 +146,29 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(
   // not sure if we need to notify...but maybe we could call setstate from the outside.
   state_ = webrtc::MediaSourceInterface::SourceState::kLive;
 
+  #else
+  D3D11_TEXTURE2D_DESC flattened_desc = *color_desc;
+  flattened_desc.Width = width_;
+  flattened_desc.ArraySize = 1;
+  flattened_desc.SampleDesc = DXGI_SAMPLE_DESC{ /*Count*/ 1, /*Quality*/ 0 };
+  flattened_desc.Usage = D3D11_USAGE_DEFAULT;
+  flattened_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+  HRESULT hr = S_OK;
+  ON_SUCCEEDED(device_->CreateTexture2D(&flattened_desc, nullptr, flattened_color_texture_.put()));
+  RTC_CHECK(SUCCEEDED(hr)) << "Failed creating the flattened colour texture. The D3D11 frame source will not work.";
+
+  // If we get a desc for depth, allocate a staging texture for depth
+  if (depth_desc != nullptr) {
+    height_ *= 2;
+    flattened_desc.Format = depth_desc->Format;
+
+    ON_SUCCEEDED(device_->CreateTexture2D(&flattened_desc, nullptr, flattened_depth_texture_.put()));
+    RTC_CHECK(SUCCEEDED(hr)) << "Failed creating the flattened depth texture. The D3D11 frame source will not work.";
+  }
+
   SetupNV12Shaders(color_desc);
+  #endif
 }
 
 void D3D11VideoFrameSource::SetState(rtc::AdaptedVideoTrackSource::SourceState state) {
@@ -190,9 +206,8 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
     return;
   }
 
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> frameBuffer;
+  rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer;
 
-  // height_ includes depth
   #if defined(CpuVideoFrameBuffer)
   auto d3d_frame_buffer = D3D11VideoFrameBuffer::Create(
       context_.get(),
@@ -204,68 +219,76 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
   // since the encoder expects that. libyuv features an ARGBToNV12 function. The
   // problem now is, which frame type do we use? There's none for nv12. I guess
   // we'd need to modify. Then we could also introduce d3d11 as frame type.
-  frameBuffer = d3d_frame_buffer->ToI420AlphaDepth(frame_mem_arena_, frame_mem_arena_size_);
+  frame_buffer = d3d_frame_buffer->ToI420AlphaDepth(frame_mem_arena_, frame_mem_arena_size_);
   #else
-
-  color_texture->GetDesc(&frameDesc);
-  if (frameDesc.ArraySize == 2)
+  D3D11_TEXTURE2D_DESC frame_desc;
+  color_texture->GetDesc(&frame_desc);
+  if(frame_desc.ArraySize == 1){
+    context_->CopyResource(flattened_color_texture_.get(), color_texture);
+  }
+  else if (frame_desc.ArraySize == 2)
   {
     // texture array (2 images)
-    UINT left_eye_color_subresource = D3D11CalcSubresource(0, 0, frameDesc.MipLevels);
-    UINT right_eye_color_subresource = D3D11CalcSubresource(0, 1, frameDesc.MipLevels);
+    UINT left_eye_color_subresource = D3D11CalcSubresource(0, 0, frame_desc.MipLevels);
+    UINT right_eye_color_subresource = D3D11CalcSubresource(0, 1, frame_desc.MipLevels);
 
-    context_->CopySubresourceRegion(color_staging_texture_.get(), 0, 0, 0, 0, color_texture, left_eye_color_subresource, 0);
-    context_->CopySubresourceRegion(color_staging_texture_.get(), 0, frameDesc.Width, 0, 0, color_texture, right_eye_color_subresource, 0);
+    context_->CopySubresourceRegion(flattened_color_texture_.get(), 0, 0, 0, 0, color_texture, left_eye_color_subresource, 0);
+    context_->CopySubresourceRegion(flattened_color_texture_.get(), 0, frame_desc.Width, 0, 0, color_texture, right_eye_color_subresource, 0);
+  }
+  else{
+    RTC_LOG(LS_ERROR) << "Received a colour texture with ArraySize > 2";
   }
 
-  if (!is_once_SRV)
+  if (!is_once_srv_)
   {
-    auto const colorTextureResourceView = CD3D11_SHADER_RESOURCE_VIEW_DESC(color_staging_texture_.get(),
+    auto const color_texture_resource_view = CD3D11_SHADER_RESOURCE_VIEW_DESC(flattened_color_texture_.get(),
                                                                           D3D11_SRV_DIMENSION_TEXTURE2D,
                                                                           DXGI_FORMAT_R8G8B8A8_UNORM);
 
-    HRESULT hr = device_->CreateShaderResourceView(color_staging_texture_.get(),
-                                      &colorTextureResourceView,
-                                      color_texture_srv.put());
+    HRESULT hr = device_->CreateShaderResourceView(flattened_color_texture_.get(),
+                                      &color_texture_resource_view,
+                                      color_texture_srv_.put());
 
     SUCCEEDED(hr);
-    is_once_SRV = true;
+    is_once_srv_ = true;
   }
 
-
-  // // Convert from argb to nv12
+  // Convert from argb to nv12
   ConvertToNV12(color_texture);
 
   //Make a copy our NV12 texture2D
-  winrt::com_ptr<IDXGIKeyedMutex> pKeyedMutex;
-  HRESULT hr = sharedNV12Texture->QueryInterface(pKeyedMutex.put());
-  if(SUCCEEDED(hr))
-  {
-    pKeyedMutex->AcquireSync(0, 5);
-    context_->CopyResource(sharedNV12Texture.get(), textureNV12.get());
+  winrt::com_ptr<IDXGIKeyedMutex> keyed_mutex;
+  HRESULT hr = shared_nv12_texture_->QueryInterface(keyed_mutex.put());
+  RTC_CHECK(SUCCEEDED(hr)) << "Texture is not correctly shareable";
+
+  hr = keyed_mutex->AcquireSync(0, 5);
+  if(FAILED(hr)){
+    RTC_LOG(LS_WARNING) << "Failed to acquire the shared mutex in at converter within 5ms, dropping frame";
+    return;
   }
-  if(pKeyedMutex)
-    pKeyedMutex->ReleaseSync(1);
+
+  context_->CopyResource(shared_nv12_texture_.get(), render_target_nv12_.get());
+  keyed_mutex->ReleaseSync(1);
 
   // Create buffer
-	winrt::com_ptr<IMFMediaBuffer> nv12Buffer;
-	hr = MFCreateDXGISurfaceBuffer(__uuidof(ID3D11Texture2D), sharedNV12Texture.get(), 0, FALSE, nv12Buffer.put());
+	winrt::com_ptr<IMFMediaBuffer> nv12_buffer;
+	hr = MFCreateDXGISurfaceBuffer(__uuidof(ID3D11Texture2D), shared_nv12_texture_.get(), 0, FALSE, nv12_buffer.put());
   // (width * height) + (width / 2 * height / 2) + (width / 2 * height / 2) for YUV channels
-  uint64_t bufferLength = (adapted_width * adapted_height) + (adapted_width * (adapted_height / 2));
-  nv12Buffer->SetCurrentLength(bufferLength);
+  uint64_t buffer_length = (adapted_width * adapted_height) + (adapted_width * (adapted_height / 2));
+  nv12_buffer->SetCurrentLength(buffer_length);
 	// CHECK_HR(hr, "Failed to create IMFMediaBuffer");
 
 	// Create sample
-	winrt::com_ptr<IMFSample> nv12Sample;
-	hr = MFCreateSample(nv12Sample.put());
+	winrt::com_ptr<IMFSample> nv12_sample;
+	hr = MFCreateSample(nv12_sample.put());
 	// CHECK_HR(hr, "Failed to create IMFSample");
-	hr = nv12Sample->AddBuffer(nv12Buffer.get());
+	hr = nv12_sample->AddBuffer(nv12_buffer.get());
 	// CHECK_HR(hr, "Failed to add buffer to IMFSample");
 
-  frameBuffer = MFNativeHandleBuffer::Create(cricket::FOURCC_NV12, nv12Sample, width_, height_);
+  frame_buffer = MFNativeHandleBuffer::Create(cricket::FOURCC_NV12, nv12_sample, width_, height_);
   #endif
   auto frame = VideoFrame::Builder()
-                   .set_video_frame_buffer(frameBuffer)
+                   .set_video_frame_buffer(frame_buffer)
                    .set_timestamp_us(time_us)
                    .build();
   frame.set_xr_timestamp(timestamp);
@@ -290,8 +313,9 @@ bool D3D11VideoFrameSource::remote() const {
 
 void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc)
 {
-  HRESULT hr;
+  HRESULT hr = S_OK;
 
+#if defined (GpuVideoFrameBuffer)
   const char* vShader = R"_(
 
   struct VertexInputType
@@ -374,17 +398,17 @@ void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc)
   hr = device_->CreateVertexShader(vertexShaderBytes->GetBufferPointer(),
                               vertexShaderBytes->GetBufferSize(),
                               nullptr,
-                              vShaderToNV12_.put());
+                              v_shader_to_nv12_.put());
 
   hr = device_->CreatePixelShader(pShaderBytesY->GetBufferPointer(),
                               pShaderBytesY->GetBufferSize(),
                               nullptr,
-                              pShaderToNV12_Y.put());
+                              p_shader_to_nv12_y_.put());
 
   hr = device_->CreatePixelShader(pShaderBytesUV->GetBufferPointer(),
                           pShaderBytesUV->GetBufferSize(),
                           nullptr,
-                          pShaderToNV12_UV.put());
+                          p_shader_to_nv12_uv_.put());
 
   //Setup vertex buffers
   constexpr std::array<DirectX::XMFLOAT2, 4> billboardVertices
@@ -418,7 +442,7 @@ void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc)
   hr = device_->CreateInputLayout(
     vertexDesc.data(), static_cast<UINT>(vertexDesc.size()),
     vertexShaderBytes->GetBufferPointer(), static_cast<UINT>(vertexShaderBytes->GetBufferSize()),
-    m_inputLayout.put()
+    input_layout_.put()
   );
 
   D3D11_SUBRESOURCE_DATA vertexBufferData;
@@ -426,14 +450,14 @@ void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc)
   vertexBufferData.SysMemPitch = 0;
   vertexBufferData.SysMemSlicePitch = 0;
   const CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(DirectX::XMFLOAT2) * static_cast<UINT>(billboardVertices.size()), D3D11_BIND_VERTEX_BUFFER);
-  hr = device_->CreateBuffer(&vertexBufferDesc, &vertexBufferData, m_vertexBuffer.put());
+  hr = device_->CreateBuffer(&vertexBufferDesc, &vertexBufferData, vertex_buffer_.put());
 
   D3D11_SUBRESOURCE_DATA indexBufferData;
   indexBufferData.pSysMem = billboardIndices.data();
   indexBufferData.SysMemPitch = 0;
   indexBufferData.SysMemSlicePitch = 0;
   const CD3D11_BUFFER_DESC indexBufferDesc(sizeof(unsigned short) * static_cast<UINT>(billboardIndices.size()), D3D11_BIND_INDEX_BUFFER);
-  hr = device_->CreateBuffer(&indexBufferDesc, &indexBufferData, m_indexBuffer.put());
+  hr = device_->CreateBuffer(&indexBufferDesc, &indexBufferData, index_buffer_.put());
 
   //Create nv12 texture description
   D3D11_TEXTURE2D_DESC nv12TextDesc = {};
@@ -464,26 +488,26 @@ void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc)
   sampler_desc.BorderColor[3] = 1.0f;
 
   //Create our sampler
-  hr = device_->CreateSamplerState(&sampler_desc, m_samplerState.put());
+  hr = device_->CreateSamplerState(&sampler_desc, sampler_state_.put());
 
   //Create our NV12 texture2D
-  hr = device_->CreateTexture2D(&nv12TextDesc, nullptr, textureNV12.put());
-  SetD3DDebugName(textureNV12.get(), "RNV12Texture");
+  hr = device_->CreateTexture2D(&nv12TextDesc, nullptr, render_target_nv12_.put());
+  SetD3DDebugName(render_target_nv12_.get(), "RNV12Texture");
   SUCCEEDED(hr);
 
   //Set viewport
-  nv12DrawingViewport = {};
-  nv12DrawingViewport.Width  = color_desc->Width;
-  nv12DrawingViewport.Height = color_desc->Height;
-  nv12DrawingViewport.MaxDepth = D3D11_MAX_DEPTH;
-  nv12DrawingViewport.MinDepth = 0;
+  nv12_drawing_viewport_ = {};
+  nv12_drawing_viewport_.Width  = color_desc->Width;
+  nv12_drawing_viewport_.Height = color_desc->Height;
+  nv12_drawing_viewport_.MaxDepth = D3D11_MAX_DEPTH;
+  nv12_drawing_viewport_.MinDepth = 0;
 
   //Set stencil & depth state
   D3D11_DEPTH_STENCIL_DESC dsDesc;
   ZeroMemory(&dsDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
   dsDesc.DepthEnable = false;
   dsDesc.StencilEnable = false;
-  hr = device_->CreateDepthStencilState(&dsDesc, m_depthStencilState.put());
+  hr = device_->CreateDepthStencilState(&dsDesc, depth_stencil_state_.put());
 
   //Set our render targets
   CD3D11_RENDER_TARGET_VIEW_DESC nv12RTVDescY;
@@ -496,15 +520,15 @@ void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc)
   nv12RTVDescUV.Format = DXGI_FORMAT_R8G8_UNORM;
   nv12RTVDescUV.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 
-  hr = device_->CreateRenderTargetView(textureNV12.get(),
+  hr = device_->CreateRenderTargetView(render_target_nv12_.get(),
                                   &nv12RTVDescY,
-                                  renderTargetViewNV12Y.put());
+                                  render_target_view_nv12_y_.put());
 
-  hr = device_->CreateRenderTargetView(textureNV12.get(),
+  hr = device_->CreateRenderTargetView(render_target_nv12_.get(),
                                   &nv12RTVDescUV,
-                                  renderTargetViewNV12UV.put());
+                                  render_target_view_nv12_uv_.put());
 
-  //Create copy nv12 texture description
+  //Create copy nv12 texture description for passing to encoder
   D3D11_TEXTURE2D_DESC copyDesc = {};
   ZeroMemory(&copyDesc, sizeof(D3D11_TEXTURE2D_DESC));
   copyDesc.Width = width_;
@@ -519,29 +543,30 @@ void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc)
   copyDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_NTHANDLE |          // Istemi: added flags to make encoder side happy
                        D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
-  hr = device_->CreateTexture2D(&copyDesc, nullptr, sharedNV12Texture.put());
-
+  hr = device_->CreateTexture2D(&copyDesc, nullptr, shared_nv12_texture_.put());
+#endif
   SUCCEEDED(hr);
 }
 
 void D3D11VideoFrameSource::ConvertToNV12(ID3D11Texture2D* color_texture)
 {
+#if defined (GpuVideoFrameBuffer)
   //Temp wrappers & others for render passes
   float clearcolor [] = {0,0,0,0};
-  ID3D11RenderTargetView * const targets[] = { renderTargetViewNV12Y.get(),
-                                              renderTargetViewNV12UV.get()};
+  ID3D11RenderTargetView * const targets[] = { render_target_view_nv12_y_.get(),
+                                              render_target_view_nv12_uv_.get()};
 
-  ID3D11ShaderResourceView* shaderResourceTextures[] = {color_texture_srv.get()};
+  ID3D11ShaderResourceView* shaderResourceTextures[] = {color_texture_srv_.get()};
 
-  ID3D11SamplerState * samplers[] = { m_samplerState.get() };
+  ID3D11SamplerState * samplers[] = { sampler_state_.get() };
 
   //Set vertex shader
-  context_->VSSetShader(vShaderToNV12_.get(), nullptr, 0);
+  context_->VSSetShader(v_shader_to_nv12_.get(), nullptr, 0);
 
   // Each vertex is one instance of the XMFLOAT2 struct.
   const UINT stride = sizeof(DirectX::XMFLOAT2);
   const UINT offset = 0;
-  ID3D11Buffer* pBuffer = m_vertexBuffer.get();
+  ID3D11Buffer* pBuffer = vertex_buffer_.get();
   context_->IASetVertexBuffers(
     0,
     1,
@@ -551,64 +576,66 @@ void D3D11VideoFrameSource::ConvertToNV12(ID3D11Texture2D* color_texture)
   );
 
   context_->IASetIndexBuffer(
-    m_indexBuffer.get(),
+    index_buffer_.get(),
     DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
     0
   );
 
   // Set primitive layout & stuff
   context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  context_->IASetInputLayout(m_inputLayout.get());
-  context_->RSSetViewports(1, &nv12DrawingViewport);
+  context_->IASetInputLayout(input_layout_.get());
+  context_->RSSetViewports(1, &nv12_drawing_viewport_);
   context_->OMSetBlendState(NULL, nullptr, 0xffffffff);
-  context_->OMSetDepthStencilState(m_depthStencilState.get(), 1);
+  context_->OMSetDepthStencilState(depth_stencil_state_.get(), 1);
 
   //----------------------First Render Pass----------------------------------------------
 
   //Set viewport to original again
-  nv12DrawingViewport.Width  = width_;
-  nv12DrawingViewport.Height = height_;
+  nv12_drawing_viewport_.Width  = width_;
+  nv12_drawing_viewport_.Height = height_;
 
   context_->OMSetRenderTargets(1, &targets[0], nullptr);
-  context_->RSSetViewports(1, &nv12DrawingViewport);
+  context_->RSSetViewports(1, &nv12_drawing_viewport_);
   context_->ClearRenderTargetView(targets[0], clearcolor);
-  context_->PSSetShader(pShaderToNV12_Y.get(), nullptr, 0);
+  context_->PSSetShader(p_shader_to_nv12_y_.get(), nullptr, 0);
   context_->PSSetShaderResources(0, 1, shaderResourceTextures);
   context_->PSSetSamplers(0, 1, samplers);
   context_->DrawIndexed(6, 0, 0);
 
   //----------------------Second Render Pass----------------------------------------------
-  nv12DrawingViewport.Width  = width_ / 2;
-  nv12DrawingViewport.Height = height_ / 2;
+  nv12_drawing_viewport_.Width  = width_ / 2;
+  nv12_drawing_viewport_.Height = height_ / 2;
 
   context_->OMSetRenderTargets(1, &targets[1], nullptr);
-  context_->RSSetViewports(1, &nv12DrawingViewport);
+  context_->RSSetViewports(1, &nv12_drawing_viewport_);
   context_->ClearRenderTargetView(targets[1], clearcolor);
-  context_->PSSetShader(pShaderToNV12_UV.get(), nullptr, 0);
+  context_->PSSetShader(p_shader_to_nv12_uv_.get(), nullptr, 0);
   context_->PSSetShaderResources(0, 1, shaderResourceTextures);
   context_->PSSetSamplers(0, 1, samplers);
   context_->DrawIndexed(6, 0, 0);
+#endif
 }
 
 winrt::com_ptr<ID3DBlob> D3D11VideoFrameSource::CompileShader(const char* hlsl, const char* entrypoint, const char* shaderTarget) {
-    winrt::com_ptr<ID3DBlob> compiled;
-    winrt::com_ptr<ID3DBlob> errMsgs;
-    DWORD flags = D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_WARNINGS_ARE_ERRORS;
+  winrt::com_ptr<ID3DBlob> compiled;
+  winrt::com_ptr<ID3DBlob> errMsgs;
+#if defined (GpuVideoFrameBuffer)
+  DWORD flags = D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_WARNINGS_ARE_ERRORS;
 
 #ifdef _DEBUG
-      flags |= D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_DEBUG;
+  flags |= D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_DEBUG;
 #else
-      flags |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
+  flags |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
 #endif
 
-      HRESULT hr =
-          D3DCompile(hlsl, strlen(hlsl), nullptr, nullptr, nullptr, entrypoint, shaderTarget, flags, 0, compiled.put(), errMsgs.put());
-      if (FAILED(hr)) {
-          std::string errMsg((const char*)errMsgs->GetBufferPointer(), errMsgs->GetBufferSize());
-          // DEBUG_PRINT("D3DCompile failed %X: %s", hr, errMsg.c_str());
-          // CHECK_HRESULT(hr, "D3DCompile failed");
-      }
-
-      return compiled;
+  HRESULT hr =
+      D3DCompile(hlsl, strlen(hlsl), nullptr, nullptr, nullptr, entrypoint, shaderTarget, flags, 0, compiled.put(), errMsgs.put());
+  if (FAILED(hr)) {
+      std::string errMsg((const char*)errMsgs->GetBufferPointer(), errMsgs->GetBufferSize());
+      // DEBUG_PRINT("D3DCompile failed %X: %s", hr, errMsg.c_str());
+      // CHECK_HRESULT(hr, "D3DCompile failed");
+  }
+#endif
+  return compiled;
 }
 }  // namespace hlr

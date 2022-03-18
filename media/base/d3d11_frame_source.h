@@ -52,7 +52,8 @@ namespace hlr {
         int width_;
         int height_;
 
-        size_t frame_mem_arena_size_ = 0;
+        [[maybe_unused]] size_t frame_mem_arena_size_ = 0;
+        [[maybe_unused]]
         uint8_t* frame_mem_arena_ = nullptr;
 
         rtc::Thread* signaling_thread_;
@@ -64,24 +65,24 @@ namespace hlr {
         void ConvertToNV12(ID3D11Texture2D* color_texture);
         winrt::com_ptr<ID3DBlob> CompileShader(const char* hlsl, const char* entrypoint, const char* shaderTarget);
 
-        // Shaders for converting to NV12 in GPU
-        winrt::com_ptr<ID3D11Texture2D>         textureNV12;
-        winrt::com_ptr<ID3D11VertexShader>      vShaderToNV12_;
-        winrt::com_ptr<ID3D11PixelShader>       pShaderToNV12_Y;
-        winrt::com_ptr<ID3D11PixelShader>       pShaderToNV12_UV;
-        winrt::com_ptr<ID3D11RenderTargetView>  renderTargetViewNV12Y;
-        winrt::com_ptr<ID3D11RenderTargetView>  renderTargetViewNV12UV;
-        winrt::com_ptr<ID3D11InputLayout> m_inputLayout;
-		winrt::com_ptr<ID3D11Buffer> m_vertexBuffer;
-		winrt::com_ptr<ID3D11Buffer> m_indexBuffer;
-        winrt::com_ptr<ID3D11SamplerState> m_samplerState;
-        winrt::com_ptr<ID3D11DepthStencilState> m_depthStencilState;
-        winrt::com_ptr<ID3D11ShaderResourceView> color_texture_srv;
-        winrt::com_ptr<ID3D11Texture2D> sharedNV12Texture;
-
-        D3D11_VIEWPORT nv12DrawingViewport;
-        bool is_once_SRV = false;
-        D3D11_TEXTURE2D_DESC frameDesc;
+        // GPU conversions
+        winrt::com_ptr<ID3D11Texture2D>         flattened_color_texture_;
+        winrt::com_ptr<ID3D11Texture2D>         flattened_depth_texture_;
+        winrt::com_ptr<ID3D11Texture2D>         render_target_nv12_;
+        winrt::com_ptr<ID3D11VertexShader>      v_shader_to_nv12_;
+        winrt::com_ptr<ID3D11PixelShader>       p_shader_to_nv12_y_;
+        winrt::com_ptr<ID3D11PixelShader>       p_shader_to_nv12_uv_;
+        winrt::com_ptr<ID3D11RenderTargetView>  render_target_view_nv12_y_;
+        winrt::com_ptr<ID3D11RenderTargetView>  render_target_view_nv12_uv_;
+        winrt::com_ptr<ID3D11InputLayout> input_layout_;
+		winrt::com_ptr<ID3D11Buffer> vertex_buffer_;
+		winrt::com_ptr<ID3D11Buffer> index_buffer_;
+        winrt::com_ptr<ID3D11SamplerState> sampler_state_;
+        winrt::com_ptr<ID3D11DepthStencilState> depth_stencil_state_;
+        winrt::com_ptr<ID3D11ShaderResourceView> color_texture_srv_;
+        winrt::com_ptr<ID3D11Texture2D> shared_nv12_texture_;
+        [[maybe_unused]] D3D11_VIEWPORT nv12_drawing_viewport_;
+        [[maybe_unused]] bool is_once_srv_ = false;
 
         inline void SetD3DDebugName(ID3D11DeviceChild* obj, const std::string& name)
         {
