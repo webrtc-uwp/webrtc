@@ -31,12 +31,9 @@
 
 using webrtc::VideoFrame;
 
-// #define CpuVideoFrameBuffer
-#define GpuVideoFrameBuffer
-
 namespace hlr {
 
-#if defined(GpuVideoFrameBuffer)
+#if GpuVideoFrameBuffer
 // Used to store a IMFSample native handle buffer for a VideoFrame
 class MFNativeHandleBuffer : public webrtc::NativeHandleBuffer {
  public:
@@ -92,7 +89,7 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(
   width_ = color_desc->Width * color_desc->ArraySize;
   height_ = color_desc->Height;
 
-  #if defined(CpuVideoFrameBuffer)
+#if !GpuVideoFrameBuffer
   D3D11_TEXTURE2D_DESC staging_desc = *color_desc;
   assert(staging_desc.ArraySize > 0);
   // NOTE: mono textures can be part of a texture array pool so we check for exactly 2 to narrow it down but it's error prone
@@ -146,7 +143,7 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(
   // not sure if we need to notify...but maybe we could call setstate from the outside.
   state_ = webrtc::MediaSourceInterface::SourceState::kLive;
 
-  #else
+#else
   D3D11_TEXTURE2D_DESC flattened_desc = *color_desc;
   flattened_desc.Width = width_;
   flattened_desc.ArraySize = 1;
@@ -165,10 +162,15 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(
 
     ON_SUCCEEDED(device_->CreateTexture2D(&flattened_desc, nullptr, flattened_depth_texture_.put()));
     RTC_CHECK(SUCCEEDED(hr)) << "Failed creating the flattened depth texture. The D3D11 frame source will not work.";
+
+    flattened_desc.Width = depth_desc->Width;
+    flattened_desc.ArraySize = depth_desc->ArraySize;
+    ON_SUCCEEDED(device_->CreateTexture2D(&flattened_desc, nullptr, depth_texture_array_.put()));
+    RTC_CHECK(SUCCEEDED(hr)) << "Failed creating the depth texture array. The D3D11 frame source will not work.";
   }
 
-  SetupNV12Shaders(color_desc);
-  #endif
+  SetupNV12Shaders(color_desc, depth_desc);
+#endif
 }
 
 void D3D11VideoFrameSource::SetState(rtc::AdaptedVideoTrackSource::SourceState state) {
@@ -186,7 +188,9 @@ void D3D11VideoFrameSource::SetState(rtc::AdaptedVideoTrackSource::SourceState s
 }
 
 D3D11VideoFrameSource::~D3D11VideoFrameSource() {
+#if !GpuVideoFrameBuffer
   free(frame_mem_arena_);
+#endif
 }
 
 void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
@@ -208,7 +212,7 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
 
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer;
 
-  #if defined(CpuVideoFrameBuffer)
+  #if !GpuVideoFrameBuffer
   auto d3d_frame_buffer = D3D11VideoFrameBuffer::Create(
       context_.get(),
       color_texture, color_staging_texture_.get(),
@@ -221,19 +225,33 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
   // we'd need to modify. Then we could also introduce d3d11 as frame type.
   frame_buffer = d3d_frame_buffer->ToI420AlphaDepth(frame_mem_arena_, frame_mem_arena_size_);
   #else
-  D3D11_TEXTURE2D_DESC frame_desc;
-  color_texture->GetDesc(&frame_desc);
-  if(frame_desc.ArraySize == 1){
+  D3D11_TEXTURE2D_DESC color_desc, depth_desc;
+  color_texture->GetDesc(&color_desc);
+  if(depth_texture) depth_texture->GetDesc(&depth_desc);
+
+  if(color_desc.ArraySize == 1){
     context_->CopyResource(flattened_color_texture_.get(), color_texture);
+    if(depth_texture){
+      context_->CopyResource(flattened_depth_texture_.get(), depth_texture);
+    }
   }
-  else if (frame_desc.ArraySize == 2)
+  else if (color_desc.ArraySize == 2)
   {
     // texture array (2 images)
-    UINT left_eye_color_subresource = D3D11CalcSubresource(0, 0, frame_desc.MipLevels);
-    UINT right_eye_color_subresource = D3D11CalcSubresource(0, 1, frame_desc.MipLevels);
+    UINT left_eye_color_subresource = D3D11CalcSubresource(0, 0, color_desc.MipLevels);
+    UINT right_eye_color_subresource = D3D11CalcSubresource(0, 1, color_desc.MipLevels);
 
     context_->CopySubresourceRegion(flattened_color_texture_.get(), 0, 0, 0, 0, color_texture, left_eye_color_subresource, 0);
-    context_->CopySubresourceRegion(flattened_color_texture_.get(), 0, frame_desc.Width, 0, 0, color_texture, right_eye_color_subresource, 0);
+    context_->CopySubresourceRegion(flattened_color_texture_.get(), 0, color_desc.Width, 0, 0, color_texture, right_eye_color_subresource, 0);
+    if(depth_texture){
+      // texture array (2 images)
+      UINT left_eye_depth_subresource = D3D11CalcSubresource(0, 0, depth_desc.MipLevels);
+      UINT right_eye_depth_subresource = D3D11CalcSubresource(0, 1, depth_desc.MipLevels);
+
+      context_->CopyResource(depth_texture_array_.get(), depth_texture);
+      context_->CopySubresourceRegion(flattened_depth_texture_.get(), 0, 0, 0, 0, depth_texture_array_.get(), left_eye_depth_subresource, 0);
+      context_->CopySubresourceRegion(flattened_depth_texture_.get(), 0, depth_desc.Width, 0, 0, depth_texture_array_.get(), right_eye_depth_subresource, 0);
+    }
   }
   else{
     RTC_LOG(LS_ERROR) << "Received a colour texture with ArraySize > 2";
@@ -248,13 +266,22 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
     HRESULT hr = device_->CreateShaderResourceView(flattened_color_texture_.get(),
                                       &color_texture_resource_view,
                                       color_texture_srv_.put());
+    if(depth_texture){
+      auto const depth_texture_resource_view = CD3D11_SHADER_RESOURCE_VIEW_DESC(flattened_depth_texture_.get(),
+                                                                          D3D11_SRV_DIMENSION_TEXTURE2D,
+                                                                          DXGI_FORMAT_R16_UNORM);
+
+      hr = device_->CreateShaderResourceView(flattened_depth_texture_.get(),
+                                      &depth_texture_resource_view,
+                                      depth_texture_srv_.put());
+    }
 
     SUCCEEDED(hr);
     is_once_srv_ = true;
   }
 
   // Convert from argb to nv12
-  ConvertToNV12(color_texture);
+  ConvertToNV12(color_texture, depth_texture);
 
   //Make a copy our NV12 texture2D
   winrt::com_ptr<IDXGIKeyedMutex> keyed_mutex;
@@ -267,7 +294,10 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
     return;
   }
 
-  context_->CopyResource(shared_nv12_texture_.get(), render_target_nv12_.get());
+  context_->CopySubresourceRegion(shared_nv12_texture_.get(), 0, 0, 0, 0, render_target_nv12_color_.get(), 0, NULL);
+  if(depth_texture){
+    context_->CopySubresourceRegion(shared_nv12_texture_.get(), 0, 0, color_desc.Height, 0, render_target_nv12_depth_.get(), 0, NULL);
+  }
   keyed_mutex->ReleaseSync(1);
 
   // Create buffer
@@ -311,84 +341,187 @@ bool D3D11VideoFrameSource::remote() const {
   return false;
 }
 
-void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc)
+#if GpuVideoFrameBuffer
+void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc, D3D11_TEXTURE2D_DESC* depth_desc)
 {
   HRESULT hr = S_OK;
+  const char* vShader;
+  const char* pShaderUV;
+  const char* pShaderY;
 
-#if defined (GpuVideoFrameBuffer)
-  const char* vShader = R"_(
+  if(!depth_desc){
+    vShader = R"_(
 
-  struct VertexInputType
-  {
-    float2 uv: TEXCOORD0;
-    uint id: SV_InstanceID;
-  };
+    struct VertexInputType
+    {
+      float2 uv: TEXCOORD0;
+      uint id: SV_InstanceID;
+    };
 
-  struct PixelInputType
-  {
-      float4 position : SV_POSITION;
-      float2 tex : TEXCOORD0;
-  };
+    struct PixelInputType
+    {
+        float4 position : SV_POSITION;
+        float2 tex : TEXCOORD0;
+    };
 
-  PixelInputType main(VertexInputType input)
-  {
-    PixelInputType output;
+    PixelInputType main(VertexInputType input)
+    {
+      PixelInputType output;
 
-    output.tex = input.uv;
-    output.position = float4((output.tex.x - 0.5f) * 2, -(output.tex.y-0.5f) * 2, 0, 1);
+      output.tex = input.uv;
+      output.position = float4((output.tex.x - 0.5f) * 2, -(output.tex.y-0.5f) * 2, 0, 1);
 
-    return output;
-  })_";
+      return output;
+    })_";
 
-  const char* pShaderY = R"_(
+    pShaderY = R"_(
 
-  struct PixelInputType
-  {
-      float4 position : SV_POSITION;
-      float2 tex : TEXCOORD0;
-  };
+    struct PixelInputType
+    {
+        float4 position : SV_POSITION;
+        float2 tex : TEXCOORD0;
+    };
 
-  Texture2D<float4> color_texture : register(t0);
+    Texture2D<float4> color_texture : register(t0);
 
-  SamplerState samp_color : register(s0);
+    SamplerState samp_color : register(s0);
 
-  float main(PixelInputType input) : SV_TARGET
-  {
-    float4 sampledColor =  color_texture.Sample(samp_color, input.tex);
+    float main(PixelInputType input) : SV_TARGET
+    {
+      float4 sampledColor =  color_texture.Sample(samp_color, input.tex);
 
-    // Range 0-255
-    float ColorY = (0.257f * sampledColor.b + 0.504f * sampledColor.g + 0.098f * sampledColor.r) + (16 / 256.0f);
-    ColorY = clamp(ColorY, 0.0f, 255.0f);
+      // Range 0-1
+      float ColorY = (0.257f * sampledColor.b + 0.504f * sampledColor.g + 0.098f * sampledColor.r) + (16 / 256.0f);
+      ColorY = clamp(ColorY, 0.0f, 1.0f);
 
-    return ColorY;
-  })_";
+      return ColorY;
+    })_";
 
-  const char* pShaderUV = R"_(
+    pShaderUV = R"_(
 
-  struct PixelInputType
-  {
-      float4 position : SV_POSITION;
-      float2 tex : TEXCOORD0;
-  };
+    struct PixelInputType
+    {
+        float4 position : SV_POSITION;
+        float2 tex : TEXCOORD0;
+    };
 
-  Texture2D<float4> color_texture : register(t0);
+    Texture2D<float4> color_texture : register(t0);
 
-  SamplerState samp_color : register(s0);
+    SamplerState samp_color : register(s0);
 
-  float2 main(PixelInputType input) : SV_TARGET
-  {
-    float4 sampledColor =  color_texture.Sample(samp_color, input.tex);
+    float2 main(PixelInputType input) : SV_TARGET
+    {
+      float4 sampledColor =  color_texture.Sample(samp_color, input.tex);
 
-    // Range 0-255
-    float ColorU = (-0.148f * sampledColor.b - 0.291f * sampledColor.g + 0.439f * sampledColor.r) + (128.0f / 256.0f);
-    float ColorV = (0.439f * sampledColor.b - 0.368f * sampledColor.g - 0.071f * sampledColor.r) + (128.0f / 256.0f);
+      // Range 0-1
+      float ColorU = (-0.148f * sampledColor.b - 0.291f * sampledColor.g + 0.439f * sampledColor.r) + (128.0f / 256.0f);
+      float ColorV = (0.439f * sampledColor.b - 0.368f * sampledColor.g - 0.071f * sampledColor.r) + (128.0f / 256.0f);
 
-    ColorU = clamp(ColorU, 0.0f, 255.0f);
-    ColorV = clamp(ColorV, 0.0f, 255.0f);
+      ColorU = clamp(ColorU, 0.0f, 1.0f);
+      ColorV = clamp(ColorV, 0.0f, 1.0f);
 
-    return float2(ColorU, ColorV);
-    //return input.tex;
-  })_";
+      return float2(ColorU, ColorV);
+      //return input.tex;
+    })_";
+  }
+  else{
+    vShader = R"_(
+
+    struct VertexInputType
+    {
+      float2 uv: TEXCOORD0;
+      uint id: SV_InstanceID;
+    };
+
+    struct PixelInputType
+    {
+        float4 position : SV_POSITION;
+        float2 tex : TEXCOORD0;
+    };
+
+    PixelInputType main(VertexInputType input)
+    {
+      PixelInputType output;
+
+      output.tex = input.uv;
+      output.position = float4((output.tex.x - 0.5f) * 2, -(output.tex.y-0.5f) * 2, 0, 1);
+
+      return output;
+    })_";
+
+    pShaderY = R"_(
+
+    struct PixelInputType
+    {
+        float4 position : SV_POSITION;
+        float2 tex : TEXCOORD0;
+    };
+
+    struct YOutput
+    {
+      float color : SV_Target0;
+      float depth : SV_Target1;
+    };
+
+    Texture2D<float4> color_texture : register(t0);
+    Texture2D<float> depth_texture : register(t1);
+
+    SamplerState texture_sampler : register(s0);
+
+    YOutput main(PixelInputType input)
+    {
+      YOutput output;
+      float4 sampledColor = color_texture.Sample(texture_sampler, input.tex);
+
+      // Range 0-1
+      output.color = (0.257f * sampledColor.b + 0.504f * sampledColor.g + 0.098f * sampledColor.r) + (16 / 256.0f);
+
+      float depth = depth_texture.Sample(texture_sampler, input.tex);
+      uint highDepth = depth * 65535;
+      output.depth = (highDepth >> 8) / 255;
+
+      return output;
+    })_";
+
+    pShaderUV = R"_(
+
+    struct PixelInputType
+    {
+        float4 position : SV_POSITION;
+        float2 tex : TEXCOORD0;
+    };
+
+    struct UVOutput
+    {
+      float2 color : SV_Target0;
+      float2 depth_alpha : SV_Target1;
+    };
+
+    Texture2D<float4> color_texture : register(t0);
+    Texture2D<float> depth_texture : register(t1);
+
+    SamplerState texture_sampler : register(s0);
+
+    UVOutput main(PixelInputType input)
+    {
+      UVOutput output;
+      float4 sampledColor =  color_texture.Sample(texture_sampler, input.tex);
+
+      // Range 0-1
+      float ColorU = (-0.148f * sampledColor.b - 0.291f * sampledColor.g + 0.439f * sampledColor.r) + (128.0f / 256.0f);
+      float ColorV = (0.439f * sampledColor.b - 0.368f * sampledColor.g - 0.071f * sampledColor.r) + (128.0f / 256.0f);
+
+      output.color = float2(ColorU, ColorV);
+
+      float depth = depth_texture.Sample(texture_sampler, input.tex);
+      uint lowDepth = depth * 65535;
+      lowDepth = lowDepth & 0xFF;
+
+      output.depth_alpha = float2(lowDepth, sampledColor.a);
+
+      return output;
+    })_";
+  }
 
   //Create & compile shaders
   const winrt::com_ptr<ID3DBlob> vertexShaderBytes = CompileShader(vShader, "main", "vs_5_0");
@@ -463,7 +596,7 @@ void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc)
   D3D11_TEXTURE2D_DESC nv12TextDesc = {};
   ZeroMemory(&nv12TextDesc, sizeof(D3D11_TEXTURE2D_DESC));
   nv12TextDesc.Width = width_;
-  nv12TextDesc.Height = height_;
+  nv12TextDesc.Height = color_desc->Height; // Don't use height_ incase we have depth
   nv12TextDesc.MipLevels = 1;
   nv12TextDesc.ArraySize = 1;
   nv12TextDesc.Format = DXGI_FORMAT_NV12;
@@ -474,7 +607,7 @@ void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc)
   nv12TextDesc.CPUAccessFlags = 0;
   nv12TextDesc.MiscFlags = 0;
 
-  // Sampler for yuv textures
+  // Sampler for rgba textures
   D3D11_SAMPLER_DESC sampler_desc;
   ZeroMemory(&sampler_desc, sizeof(D3D11_SAMPLER_DESC));
   sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -491,9 +624,15 @@ void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc)
   hr = device_->CreateSamplerState(&sampler_desc, sampler_state_.put());
 
   //Create our NV12 texture2D
-  hr = device_->CreateTexture2D(&nv12TextDesc, nullptr, render_target_nv12_.put());
-  SetD3DDebugName(render_target_nv12_.get(), "RNV12Texture");
+  hr = device_->CreateTexture2D(&nv12TextDesc, nullptr, render_target_nv12_color_.put());
+  SetD3DDebugName(render_target_nv12_color_.get(), "RNV12TextureColor");
   SUCCEEDED(hr);
+
+  if(depth_desc){
+    hr = device_->CreateTexture2D(&nv12TextDesc, nullptr, render_target_nv12_depth_.put());
+    SetD3DDebugName(render_target_nv12_depth_.get(), "RNV12TextureDepth");
+    SUCCEEDED(hr);
+  }
 
   //Set viewport
   nv12_drawing_viewport_ = {};
@@ -510,23 +649,33 @@ void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc)
   hr = device_->CreateDepthStencilState(&dsDesc, depth_stencil_state_.put());
 
   //Set our render targets
-  CD3D11_RENDER_TARGET_VIEW_DESC nv12RTVDescY;
-  ZeroMemory(&nv12RTVDescY, sizeof(CD3D11_RENDER_TARGET_VIEW_DESC));
-  nv12RTVDescY.Format = DXGI_FORMAT_R8_UNORM;
-  nv12RTVDescY.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+  CD3D11_RENDER_TARGET_VIEW_DESC nv12RTVDescYColor;
+  ZeroMemory(&nv12RTVDescYColor, sizeof(CD3D11_RENDER_TARGET_VIEW_DESC));
+  nv12RTVDescYColor.Format = DXGI_FORMAT_R8_UNORM;
+  nv12RTVDescYColor.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 
-  CD3D11_RENDER_TARGET_VIEW_DESC nv12RTVDescUV;
-  ZeroMemory(&nv12RTVDescUV, sizeof(CD3D11_RENDER_TARGET_VIEW_DESC));
-  nv12RTVDescUV.Format = DXGI_FORMAT_R8G8_UNORM;
-  nv12RTVDescUV.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+  CD3D11_RENDER_TARGET_VIEW_DESC nv12RTVDescUVColor;
+  ZeroMemory(&nv12RTVDescUVColor, sizeof(CD3D11_RENDER_TARGET_VIEW_DESC));
+  nv12RTVDescUVColor.Format = DXGI_FORMAT_R8G8_UNORM;
+  nv12RTVDescUVColor.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 
-  hr = device_->CreateRenderTargetView(render_target_nv12_.get(),
-                                  &nv12RTVDescY,
-                                  render_target_view_nv12_y_.put());
+  hr = device_->CreateRenderTargetView(render_target_nv12_color_.get(),
+                                  &nv12RTVDescYColor,
+                                  render_target_view_nv12_y_color_.put());
 
-  hr = device_->CreateRenderTargetView(render_target_nv12_.get(),
-                                  &nv12RTVDescUV,
-                                  render_target_view_nv12_uv_.put());
+  hr = device_->CreateRenderTargetView(render_target_nv12_color_.get(),
+                                  &nv12RTVDescUVColor,
+                                  render_target_view_nv12_uv_color_.put());
+
+  if(depth_desc){
+    hr = device_->CreateRenderTargetView(render_target_nv12_depth_.get(),
+                                    &nv12RTVDescYColor,
+                                    render_target_view_nv12_y_depth_.put());
+
+    hr = device_->CreateRenderTargetView(render_target_nv12_depth_.get(),
+                                    &nv12RTVDescUVColor,
+                                    render_target_view_nv12_uv_depth_.put());
+  }
 
   //Create copy nv12 texture description for passing to encoder
   D3D11_TEXTURE2D_DESC copyDesc = {};
@@ -544,19 +693,28 @@ void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc)
                        D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
   hr = device_->CreateTexture2D(&copyDesc, nullptr, shared_nv12_texture_.put());
-#endif
   SUCCEEDED(hr);
 }
 
-void D3D11VideoFrameSource::ConvertToNV12(ID3D11Texture2D* color_texture)
+void D3D11VideoFrameSource::ConvertToNV12(ID3D11Texture2D* color_texture, ID3D11Texture2D* depth_texture)
 {
-#if defined (GpuVideoFrameBuffer)
+  D3D11_TEXTURE2D_DESC color_desc;
+  color_texture->GetDesc(&color_desc);
   //Temp wrappers & others for render passes
   float clearcolor [] = {0,0,0,0};
-  ID3D11RenderTargetView * const targets[] = { render_target_view_nv12_y_.get(),
-                                              render_target_view_nv12_uv_.get()};
+  std::vector<ID3D11RenderTargetView*> yRenderTargets;
+  std::vector<ID3D11RenderTargetView*> uvRenderTargets;
+  std::vector<ID3D11ShaderResourceView*> shaderResourceTextures;
 
-  ID3D11ShaderResourceView* shaderResourceTextures[] = {color_texture_srv_.get()};
+  yRenderTargets.push_back(render_target_view_nv12_y_color_.get());
+  uvRenderTargets.push_back(render_target_view_nv12_uv_color_.get());
+  shaderResourceTextures.push_back(color_texture_srv_.get());
+
+  if(depth_texture){
+    yRenderTargets.push_back(render_target_view_nv12_y_depth_.get());
+    uvRenderTargets.push_back(render_target_view_nv12_uv_depth_.get());
+    shaderResourceTextures.push_back(depth_texture_srv_.get());
+  }
 
   ID3D11SamplerState * samplers[] = { sampler_state_.get() };
 
@@ -592,34 +750,36 @@ void D3D11VideoFrameSource::ConvertToNV12(ID3D11Texture2D* color_texture)
 
   //Set viewport to original again
   nv12_drawing_viewport_.Width  = width_;
-  nv12_drawing_viewport_.Height = height_;
+  nv12_drawing_viewport_.Height = color_desc.Height;
 
-  context_->OMSetRenderTargets(1, &targets[0], nullptr);
+  context_->OMSetRenderTargets(yRenderTargets.size(), yRenderTargets.data(), nullptr);
   context_->RSSetViewports(1, &nv12_drawing_viewport_);
-  context_->ClearRenderTargetView(targets[0], clearcolor);
+  for(auto* target : yRenderTargets){
+    context_->ClearRenderTargetView(target, clearcolor);
+  }
   context_->PSSetShader(p_shader_to_nv12_y_.get(), nullptr, 0);
-  context_->PSSetShaderResources(0, 1, shaderResourceTextures);
+  context_->PSSetShaderResources(0, shaderResourceTextures.size(), shaderResourceTextures.data());
   context_->PSSetSamplers(0, 1, samplers);
   context_->DrawIndexed(6, 0, 0);
 
   //----------------------Second Render Pass----------------------------------------------
-  nv12_drawing_viewport_.Width  = width_ / 2;
-  nv12_drawing_viewport_.Height = height_ / 2;
+  nv12_drawing_viewport_.Width  /= 2;
+  nv12_drawing_viewport_.Height /= 2;
 
-  context_->OMSetRenderTargets(1, &targets[1], nullptr);
+  context_->OMSetRenderTargets(uvRenderTargets.size(), uvRenderTargets.data(), nullptr);
   context_->RSSetViewports(1, &nv12_drawing_viewport_);
-  context_->ClearRenderTargetView(targets[1], clearcolor);
+  for(auto* target : uvRenderTargets){
+    context_->ClearRenderTargetView(target, clearcolor);
+  }
   context_->PSSetShader(p_shader_to_nv12_uv_.get(), nullptr, 0);
-  context_->PSSetShaderResources(0, 1, shaderResourceTextures);
+  context_->PSSetShaderResources(0, shaderResourceTextures.size(), shaderResourceTextures.data());
   context_->PSSetSamplers(0, 1, samplers);
   context_->DrawIndexed(6, 0, 0);
-#endif
 }
 
 winrt::com_ptr<ID3DBlob> D3D11VideoFrameSource::CompileShader(const char* hlsl, const char* entrypoint, const char* shaderTarget) {
   winrt::com_ptr<ID3DBlob> compiled;
   winrt::com_ptr<ID3DBlob> errMsgs;
-#if defined (GpuVideoFrameBuffer)
   DWORD flags = D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_WARNINGS_ARE_ERRORS;
 
 #ifdef _DEBUG
@@ -634,8 +794,9 @@ winrt::com_ptr<ID3DBlob> D3D11VideoFrameSource::CompileShader(const char* hlsl, 
       std::string errMsg((const char*)errMsgs->GetBufferPointer(), errMsgs->GetBufferSize());
       // DEBUG_PRINT("D3DCompile failed %X: %s", hr, errMsg.c_str());
       // CHECK_HRESULT(hr, "D3DCompile failed");
+      RTC_LOG(LS_WARNING) << errMsg;
   }
-#endif
   return compiled;
 }
+#endif
 }  // namespace hlr
