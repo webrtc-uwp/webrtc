@@ -33,34 +33,34 @@ using webrtc::VideoFrame;
 
 namespace hlr {
 
-#if GpuVideoFrameBuffer
-// Used to store a IMFSample native handle buffer for a VideoFrame
-class MFNativeHandleBuffer : public webrtc::NativeHandleBuffer {
- public:
-  static rtc::scoped_refptr<MFNativeHandleBuffer> Create(cricket::FourCC fourCC,
-                       const winrt::com_ptr<IMFSample>& sample,
-                       int width,
-                       int height){
-    return new rtc::RefCountedObject<MFNativeHandleBuffer>(fourCC, sample, width, height);
-  };
+// #if GpuVideoFrameBuffer
+// // Used to store a IMFSample native handle buffer for a VideoFrame
+// class MFNativeHandleBuffer : public webrtc::NativeHandleBuffer {
+//  public:
+//   static rtc::scoped_refptr<MFNativeHandleBuffer> Create(cricket::FourCC fourCC,
+//                        const winrt::com_ptr<IMFSample>& sample,
+//                        int width,
+//                        int height){
+//     return new rtc::RefCountedObject<MFNativeHandleBuffer>(fourCC, sample, width, height);
+//   };
 
-  MFNativeHandleBuffer(cricket::FourCC fourCC,
-                       const winrt::com_ptr<IMFSample>& sample,
-                       int width,
-                       int height)
-      : NativeHandleBuffer(sample.get(), width, height), fourCC_(fourCC), sample_(sample)/*, i420Buffer_(i420Buffer)*/ {}
+//   MFNativeHandleBuffer(cricket::FourCC fourCC,
+//                        const winrt::com_ptr<IMFSample>& sample,
+//                        int width,
+//                        int height)
+//       : NativeHandleBuffer(sample.get(), width, height), fourCC_(fourCC), sample_(sample)/*, i420Buffer_(i420Buffer)*/ {}
 
-  ~MFNativeHandleBuffer() override {}
+//   ~MFNativeHandleBuffer() override {}
 
-  rtc::scoped_refptr<webrtc::I420BufferInterface> ToI420() override { return nullptr; }
+//   rtc::scoped_refptr<webrtc::I420BufferInterface> ToI420() override { return nullptr; }
 
-  cricket::FourCC fourCC() const override { return fourCC_; }
+//   cricket::FourCC fourCC() const override { return fourCC_; }
 
- private:
-  cricket::FourCC fourCC_{};
-  winrt::com_ptr<IMFSample> sample_;
-};
-#endif
+//  private:
+//   cricket::FourCC fourCC_{};
+//   winrt::com_ptr<IMFSample> sample_;
+// };
+// #endif
 
 rtc::scoped_refptr<D3D11VideoFrameSource> D3D11VideoFrameSource::Create(
     ID3D11Device* device,
@@ -288,7 +288,9 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
   HRESULT hr = shared_nv12_texture_->QueryInterface(keyed_mutex.put());
   RTC_CHECK(SUCCEEDED(hr)) << "Texture is not correctly shareable";
 
-  hr = keyed_mutex->AcquireSync(0, 5);
+  unsigned int lock_key = 0;
+  unsigned int release_key = 1;
+  hr = keyed_mutex->AcquireSync(lock_key, 5);
   if(FAILED(hr)){
     RTC_LOG(LS_WARNING) << "Failed to acquire the shared mutex in at converter within 5ms, dropping frame";
     return;
@@ -298,7 +300,7 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
   if(depth_texture){
     context_->CopySubresourceRegion(shared_nv12_texture_.get(), 0, 0, color_desc.Height, 0, render_target_nv12_depth_.get(), 0, NULL);
   }
-  keyed_mutex->ReleaseSync(1);
+  keyed_mutex->ReleaseSync(release_key);
 
   // Create buffer
 	winrt::com_ptr<IMFMediaBuffer> nv12_buffer;
@@ -315,7 +317,14 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
 	hr = nv12_sample->AddBuffer(nv12_buffer.get());
 	// CHECK_HR(hr, "Failed to add buffer to IMFSample");
 
-  frame_buffer = MFNativeHandleBuffer::Create(cricket::FOURCC_NV12, nv12_sample, width_, height_);
+  // Pass in the lock/release keys flipped to keep synchronisation
+  frame_buffer = new rtc::RefCountedObject<webrtc::MFNativeHandleBuffer>(
+    cricket::FOURCC_NV12,
+    nv12_sample,
+    width_,
+    height_,
+    release_key,
+    lock_key);
   #endif
   auto frame = VideoFrame::Builder()
                    .set_video_frame_buffer(frame_buffer)
