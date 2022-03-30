@@ -486,8 +486,8 @@ void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc, D
       output.color = (0.257f * sampledColor.b + 0.504f * sampledColor.g + 0.098f * sampledColor.r) + (16 / 256.0f);
 
       float depth = depth_texture.Sample(texture_sampler, input.tex);
-      uint highDepth = depth * 65535;
-      output.depth = (highDepth >> 8) / 255;
+      uint highDepth = depth * 65535.0f;
+      output.depth = (highDepth >> 8) / 255.0f;
 
       return output;
     })_";
@@ -523,7 +523,7 @@ void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc, D
       output.color = float2(ColorU, ColorV);
 
       float depth = depth_texture.Sample(texture_sampler, input.tex);
-      uint lowDepth = depth * 65535;
+      uint lowDepth = depth * 65535.0f;
       lowDepth = lowDepth & 0xFF;
 
       output.depth_alpha = float2(lowDepth, sampledColor.a);
