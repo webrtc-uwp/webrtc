@@ -791,7 +791,7 @@ winrt::com_ptr<ID3DBlob> D3D11VideoFrameSource::CompileShader(const char* hlsl, 
   winrt::com_ptr<ID3DBlob> errMsgs;
   DWORD flags = D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_WARNINGS_ARE_ERRORS;
 
-#ifdef _DEBUG
+#ifndef NDEBUG
   flags |= D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_DEBUG;
 #else
   flags |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
