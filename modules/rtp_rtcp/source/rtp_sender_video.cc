@@ -159,7 +159,7 @@ void RTPSenderVideo::SendVideoPacket(std::unique_ptr<RtpPacketToSend> packet,
   size_t packet_size = packet->size();
   uint16_t seq_num = packet->SequenceNumber();
   if (!rtp_sender_->SendToNetwork(std::move(packet), storage,
-                                  RtpPacketSender::kLowPriority)) {
+                                  RtpPacketSender::kHighPriority)) {
     RTC_LOG(LS_WARNING) << "Failed to send video packet " << seq_num;
     return;
   }
@@ -204,7 +204,7 @@ void RTPSenderVideo::SendVideoPacketAsRedMaybeWithUlpfec(
   // Send |red_packet| instead of |packet| for allocated sequence number.
   size_t red_packet_size = red_packet->size();
   if (rtp_sender_->SendToNetwork(std::move(red_packet), media_packet_storage,
-                                 RtpPacketSender::kLowPriority)) {
+                                 RtpPacketSender::kHighPriority)) {
     rtc::CritScope cs(&stats_crit_);
     video_bitrate_.Update(red_packet_size, clock_->TimeInMilliseconds());
   } else {
@@ -219,7 +219,7 @@ void RTPSenderVideo::SendVideoPacketAsRedMaybeWithUlpfec(
     rtp_packet->set_capture_time_ms(media_packet->capture_time_ms());
     uint16_t fec_sequence_number = rtp_packet->SequenceNumber();
     if (rtp_sender_->SendToNetwork(std::move(rtp_packet), fec_storage,
-                                   RtpPacketSender::kLowPriority)) {
+                                   RtpPacketSender::kHighPriority)) {
       rtc::CritScope cs(&stats_crit_);
       fec_bitrate_.Update(fec_packet->length(), clock_->TimeInMilliseconds());
     } else {
@@ -247,7 +247,7 @@ void RTPSenderVideo::SendVideoPacketWithFlexfec(
       size_t packet_length = fec_packet->size();
       uint16_t seq_num = fec_packet->SequenceNumber();
       if (rtp_sender_->SendToNetwork(std::move(fec_packet), kDontRetransmit,
-                                     RtpPacketSender::kLowPriority)) {
+                                     RtpPacketSender::kHighPriority)) {
         rtc::CritScope cs(&stats_crit_);
         fec_bitrate_.Update(packet_length, clock_->TimeInMilliseconds());
       } else {
