@@ -15,6 +15,13 @@
 #include <sys/syscall.h>
 #endif
 
+#if defined (WEBRTC_WIN)
+#if WINVER >= _WIN32_WINNT_WIN10
+#include <locale>
+#include <codecvt>
+#endif
+#endif
+
 namespace rtc {
 
 PlatformThreadId CurrentThreadId() {
@@ -57,7 +64,7 @@ bool IsThreadRefEqual(const PlatformThreadRef& a, const PlatformThreadRef& b) {
 #if defined(WEBRTC_WIN)
 void SetCurrentThreadNameHelper(THREADNAME_INFO threadname_info) {
   __try {
-    ::RaiseException(0x406D1388, 0, sizeof(threadname_info) / sizeof(DWORD),
+    ::RaiseException(0x406D1388, 0, sizeof(threadname_info) / sizeof(ULONG_PTR),
       reinterpret_cast<ULONG_PTR*>(&threadname_info));
   }
   __except (EXCEPTION_EXECUTE_HANDLER) {
@@ -67,6 +74,12 @@ void SetCurrentThreadNameHelper(THREADNAME_INFO threadname_info) {
 
 void SetCurrentThreadName(const char* name) {
 #if defined(WEBRTC_WIN)
+#if WINVER >= _WIN32_WINNT_WIN10
+  // Additionally use the new windows 10 SetThreadDescription to allow thread name to be visible in perf tools.
+  // See https://docs.microsoft.com/en-us/visualstudio/debugger/how-to-set-a-thread-name-in-native-code?view=vs-2022
+  std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> strconverter;
+  SetThreadDescription(GetCurrentThread(), strconverter.from_bytes(name).c_str());
+#endif
   THREADNAME_INFO threadname_info;
   threadname_info.dwType = 0x1000;
   threadname_info.szName = name;
@@ -77,6 +90,7 @@ void SetCurrentThreadName(const char* name) {
   prctl(PR_SET_NAME, reinterpret_cast<unsigned long>(name));  // NOLINT
 #elif defined(WEBRTC_MAC) || defined(WEBRTC_IOS)
   pthread_setname_np(name);
+
 #endif
 }
 
