@@ -85,7 +85,7 @@ if (!build_with_chromium) {
           "video:sv_loopback",
           "video:video_loopback",
         ]
-      } 
+      }
     }
   }
 }
@@ -388,7 +388,9 @@ if (!build_with_chromium) {
 
     deps = [
       ":webrtc_common",
-"//third_party/idl:idl",      "api:transport_api",
+      "//remoting:remoting_all",
+      "//third_party/idl:idl",
+      "api:transport_api",
       "audio",
       "call",
       "common_audio",
@@ -607,8 +609,8 @@ if (rtc_include_tests) {
       deps += [ ":webrtc_perf_tests_bundle_data" ]
     }
     if ( current_os == "winuwp" ) {
-      deps -= [ 
-        "video:video_full_stack_tests" 
+      deps -= [
+        "video:video_full_stack_tests"
       ]
     }
   }

@@ -1310,6 +1310,22 @@
         "problemMatcher": []
       },
       {
+        "label": "gen flatbuffers extensions",
+        "options": {
+          "cwd": "${workspaceFolder}/remoting/external/flatbuffers/extensions"
+        },
+        "command": "flatc",
+        "args": [
+          "--cpp",
+          "--scoped-enums",
+          "--cpp-str-flex-ctor",
+          "-o",
+          "generated/",
+          "spatial_meshing.fbs"
+        ],
+        "problemMatcher": []
+      },
+      {
         "label": "vcam: dbg x64",
         "options": {
           "cwd": "${workspaceFolder}/remoting/"

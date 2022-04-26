@@ -57,7 +57,7 @@
                 "CPPWINRT_VERSION"
             ],
             "windowsSdkVersion": "10.0.17134.0",
-            "compilerPath": "\"C:\\r-sdk\\libs\\remoting\\external\\webrtc-uwp-sdk\\webrtc\\xplatform\\webrtc\\third_party\\llvm-build\\Release+Asserts\\bin\\clang-cl.exe\"",
+            "compilerPath": "\"C:\\remoting-sdk\\libs\\remoting\\external\\webrtc-uwp-sdk\\webrtc\\xplatform\\webrtc\\third_party\\llvm-build\\Release+Asserts\\bin\\clang-cl.exe\"",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "windows-clang-x64"
