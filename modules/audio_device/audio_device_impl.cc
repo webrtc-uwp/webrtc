@@ -178,8 +178,7 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects() {
       (audio_layer == kPlatformDefaultAudio)) {
     RTC_LOG(INFO) << "Attempting to use the Windows Core Audio APIs...";
     if (AudioDeviceWindowsCore::CoreAudioIsSupported()) {
-      //audio_device_.reset(new AudioDeviceWindowsCore());
-      audio_device_.reset(new AudioDeviceDummy());
+      audio_device_.reset(new AudioDeviceWindowsCore());
       RTC_LOG(INFO) << "Windows Core Audio APIs will be utilized";
     }
   }

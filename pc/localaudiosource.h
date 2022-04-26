@@ -34,14 +34,13 @@ class LocalAudioSource : public Notifier<AudioSourceInterface> {
   void AddSink(AudioTrackSinkInterface* sink) override {}
   void RemoveSink(AudioTrackSinkInterface* sink) override {}
 
-  void Initialize(const cricket::AudioOptions* audio_options);
-
-
  protected:
   LocalAudioSource() {}
   ~LocalAudioSource() override {}
 
  private:
+  void Initialize(const cricket::AudioOptions* audio_options);
+
   cricket::AudioOptions options_;
 };
 
