@@ -38,6 +38,8 @@
                 "${workspaceFolder}/remoting/extras/bindings/platforms/unity/include",
                 "${workspaceFolder}/remoting/extras/bindings/platforms/unity/src",
                 "${workspaceFolder}/remoting/extras/bindings/platforms/unity/external",
+                "${workspaceFolder}/remoting/extras/bindings/platforms/unity/external/unity",
+                "${workspaceFolder}/remoting/extras/bindings/platforms/unity/external/unity/XR",
                 "${workspaceFolder}/remoting/include",
                 "${workspaceFolder}/remoting/src",
                 "${workspaceFolder}/remoting/data",
