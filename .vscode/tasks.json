@@ -1294,34 +1294,38 @@
         "problemMatcher": []
       },
       {
-        "label": "gen flatbuffers",
+        "label": "gen isar.protocol",
         "options": {
-          "cwd": "${workspaceFolder}/remoting/data"
+          "cwd": "${workspaceFolder}/remoting/src"
         },
         "command": "flatc",
         "args": [
           "--cpp",
           "--scoped-enums",
+          // "--filename-suffix", "",
           "--cpp-str-flex-ctor",
           "-o",
-          "remoting/",
-          "api.fbs"
+          // generated in-tree for now
+          "remoting/generated/",
+          "isar.protocol.fbs",
+          // "isar.protocol.meshing.fbs",
         ],
         "problemMatcher": []
       },
       {
-        "label": "gen flatbuffers extensions",
+        "label": "gen isar.protocol.extensions",
         "options": {
-          "cwd": "${workspaceFolder}/remoting/external/flatbuffers/extensions"
+          "cwd": "${workspaceFolder}/remoting/extras/isar.protocol.extensions"
         },
         "command": "flatc",
         "args": [
           "--cpp",
           "--scoped-enums",
+          // "--filename-suffix", "",
           "--cpp-str-flex-ctor",
           "-o",
-          "generated/",
-          "spatial_meshing.fbs"
+          "isar.protocol/",
+          "meshing.fbs"
         ],
         "problemMatcher": []
       },
