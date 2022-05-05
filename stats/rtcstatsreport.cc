@@ -71,12 +71,12 @@ rtc::scoped_refptr<RTCStatsReport> RTCStatsReport::Copy() const {
 }
 
 void RTCStatsReport::AddStats(std::unique_ptr<const RTCStats> stats) {
-  auto result =
+  [[maybe_unused]] auto result =
       stats_.insert(std::make_pair(std::string(stats->id()), std::move(stats)));
-  RTC_DCHECK(result.second)
-      << "A stats object with ID " << result.first->second->id()
-      << " is already "
-         "present in this stats report.";
+  // RTC_DCHECK(result.second)
+  //     << "A stats object with ID " << result.first->second->id()
+  //     << " is already "
+  //        "present in this stats report.";
 }
 
 const RTCStats* RTCStatsReport::Get(const std::string& id) const {
