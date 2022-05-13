@@ -51,7 +51,7 @@ const int kMaxOverusesBeforeApplyRampupDelay = 4;
 // The maximum exponent to use in VCMExpFilter.
 const float kMaxExp = 7.0f;
 // Default value used before first reconfiguration.
-const int kDefaultFrameRate = 60;
+const int kDefaultFrameRate = 30;
 // Default sample diff, default frame rate.
 const float kDefaultSampleDiffMs = 1000.0f / kDefaultFrameRate;
 // A factor applied to the sample diff on OnTargetFramerateUpdated to determine
@@ -62,7 +62,7 @@ const float kMaxSampleDiffMarginFactor = 1.35f;
 // Minimum framerate allowed for usage calculation. This prevents crazy long
 // encode times from being accepted if the frame rate happens to be low.
 const int kMinFramerate = 7;
-const int kMaxFramerate = 60;
+const int kMaxFramerate = 30;
 
 const auto kScaleReasonCpu = AdaptationObserverInterface::AdaptReason::kCpu;
 

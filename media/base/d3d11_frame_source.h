@@ -89,7 +89,6 @@ namespace hlr {
         winrt::com_ptr<ID3D11DepthStencilState> depth_stencil_state_;
         winrt::com_ptr<ID3D11ShaderResourceView> color_texture_srv_;
         winrt::com_ptr<ID3D11ShaderResourceView> depth_texture_srv_;
-        winrt::com_ptr<ID3D11Texture2D> shared_nv12_texture_;
         D3D11_VIEWPORT nv12_drawing_viewport_;
         bool is_once_srv_ = false;
 

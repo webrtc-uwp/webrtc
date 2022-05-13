@@ -14,5 +14,6 @@ namespace cricket {
 
 const int kMinVideoBitrateBps = 30000;
 const int kVideoMtu = 1200;
-const int kVideoRtpBufferSize = 65536;
+// const int kVideoRtpBufferSize = 65536;
+const int kVideoRtpBufferSize = 256 * 1000;
 }  // namespace cricket

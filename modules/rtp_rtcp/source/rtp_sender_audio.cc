@@ -238,7 +238,7 @@ bool RTPSenderAudio::SendAudio(FrameType frame_type,
                          packet->Timestamp(), "seqnum",
                          packet->SequenceNumber());
   bool send_result = rtp_sender_->SendToNetwork(
-      std::move(packet), kDontRetransmit, RtpPacketSender::kLowPriority);
+      std::move(packet), kAllowRetransmission, RtpPacketSender::kHighPriority);
   if (first_packet_sent_()) {
     RTC_LOG(LS_INFO) << "First audio RTP packet sent to pacer";
   }
@@ -321,8 +321,8 @@ bool RTPSenderAudio::SendTelephoneEventPacket(bool ended,
     dtmfbuffer[1] = E | R | volume;
     ByteWriter<uint16_t>::WriteBigEndian(dtmfbuffer + 2, duration);
 
-    result = rtp_sender_->SendToNetwork(std::move(packet), kDontRetransmit,
-                                        RtpPacketSender::kLowPriority);
+    result = rtp_sender_->SendToNetwork(std::move(packet), kAllowRetransmission,
+                                        RtpPacketSender::kHighPriority);
     send_count--;
   } while (send_count > 0 && result);
 
