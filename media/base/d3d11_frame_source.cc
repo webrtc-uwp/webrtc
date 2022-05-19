@@ -298,6 +298,8 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
   copyDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_NTHANDLE |          // Istemi: added flags to make encoder side happy
                        D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
+  // TODO: Potential overkill recreating the texture every frame. This requires further investigation.
+  // Tracked in https://holo.atlassian.net/browse/IAR-509
   winrt::com_ptr<ID3D11Texture2D> shared_nv12_texture;
   HRESULT hr = device_->CreateTexture2D(&copyDesc, nullptr, shared_nv12_texture.put());
 
