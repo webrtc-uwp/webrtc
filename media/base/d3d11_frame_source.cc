@@ -295,8 +295,9 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
   copyDesc.SampleDesc.Quality = 0;
   copyDesc.Usage = D3D11_USAGE_DEFAULT;
   copyDesc.BindFlags = 0;
-  copyDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_NTHANDLE |          // Istemi: added flags to make encoder side happy
-                       D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+  // Since the encoder uses a different d3d device, the below flags are required to ensure synchronisation
+  // with the rendering device
+  copyDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_NTHANDLE | D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
   // TODO: Potential overkill recreating the texture every frame. This requires further investigation.
   // Tracked in https://holo.atlassian.net/browse/IAR-509
