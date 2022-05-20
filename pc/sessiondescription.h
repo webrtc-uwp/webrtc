@@ -46,7 +46,7 @@ extern const char kMediaProtocolUdpDtlsSctp[];
 extern const char kMediaProtocolTcpDtlsSctp[];
 
 // Options to control how session descriptions are generated.
-const int kAutoBandwidth = 100000000;
+const int kAutoBandwidth = -1;
 
 class AudioContentDescription;
 class VideoContentDescription;

@@ -16,7 +16,7 @@ namespace cricket {
 
 const int kVideoCodecClockrate = 90000;
 const int kDataCodecClockrate = 90000;
-const int kDataMaxBandwidth = 2000000;  // bps
+const int kDataMaxBandwidth = 30720;  // bps
 
 const float kHighSystemCpuThreshold = 0.85f;
 const float kLowSystemCpuThreshold = 0.65f;

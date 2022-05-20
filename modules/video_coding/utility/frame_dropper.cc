@@ -30,7 +30,7 @@ const float kDefaultMaxDropDurationSecs = 4.0f;
 // TODO(isheriff): Should this be higher to avoid dropping too many packets when
 // the bandwidth is unknown at the start ?
 const float kDefaultTargetBitrateKbps = 300.0f;
-const float kDefaultIncomingFrameRate = 60;
+const float kDefaultIncomingFrameRate = 30;
 const float kLeakyBucketSizeSeconds = 0.5f;
 
 // A delta frame that is bigger than |kLargeDeltaFactor| times the average

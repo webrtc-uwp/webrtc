@@ -283,9 +283,30 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
   // Convert from argb to nv12
   ConvertToNV12(color_texture, depth_texture);
 
+  //Create copy nv12 texture description for passing to encoder
+  D3D11_TEXTURE2D_DESC copyDesc = {};
+  ZeroMemory(&copyDesc, sizeof(D3D11_TEXTURE2D_DESC));
+  copyDesc.Width = width_;
+  copyDesc.Height = height_;
+  copyDesc.MipLevels = 1;
+  copyDesc.ArraySize = 1;
+  copyDesc.Format = DXGI_FORMAT_NV12;
+  copyDesc.SampleDesc.Count = 1;
+  copyDesc.SampleDesc.Quality = 0;
+  copyDesc.Usage = D3D11_USAGE_DEFAULT;
+  copyDesc.BindFlags = 0;
+  // Since the encoder uses a different d3d device, the below flags are required to ensure synchronisation
+  // with the rendering device
+  copyDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_NTHANDLE | D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+
+  // TODO: Potential overkill recreating the texture every frame. This requires further investigation.
+  // Tracked in https://holo.atlassian.net/browse/IAR-509
+  winrt::com_ptr<ID3D11Texture2D> shared_nv12_texture;
+  HRESULT hr = device_->CreateTexture2D(&copyDesc, nullptr, shared_nv12_texture.put());
+
   //Make a copy our NV12 texture2D
   winrt::com_ptr<IDXGIKeyedMutex> keyed_mutex;
-  HRESULT hr = shared_nv12_texture_->QueryInterface(keyed_mutex.put());
+  hr = shared_nv12_texture->QueryInterface(keyed_mutex.put());
   RTC_CHECK(SUCCEEDED(hr)) << "Texture is not correctly shareable";
 
   unsigned int lock_key = 0;
@@ -296,15 +317,15 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
     return;
   }
 
-  context_->CopySubresourceRegion(shared_nv12_texture_.get(), 0, 0, 0, 0, render_target_nv12_color_.get(), 0, NULL);
+  context_->CopySubresourceRegion(shared_nv12_texture.get(), 0, 0, 0, 0, render_target_nv12_color_.get(), 0, NULL);
   if(depth_texture){
-    context_->CopySubresourceRegion(shared_nv12_texture_.get(), 0, 0, color_desc.Height, 0, render_target_nv12_depth_.get(), 0, NULL);
+    context_->CopySubresourceRegion(shared_nv12_texture.get(), 0, 0, color_desc.Height, 0, render_target_nv12_depth_.get(), 0, NULL);
   }
   keyed_mutex->ReleaseSync(release_key);
 
   // Create buffer
 	winrt::com_ptr<IMFMediaBuffer> nv12_buffer;
-	hr = MFCreateDXGISurfaceBuffer(__uuidof(ID3D11Texture2D), shared_nv12_texture_.get(), 0, FALSE, nv12_buffer.put());
+	hr = MFCreateDXGISurfaceBuffer(__uuidof(ID3D11Texture2D), shared_nv12_texture.get(), 0, FALSE, nv12_buffer.put());
   // (width * height) + (width / 2 * height / 2) + (width / 2 * height / 2) for YUV channels
   uint64_t buffer_length = (adapted_width * adapted_height) + (adapted_width * (adapted_height / 2));
   nv12_buffer->SetCurrentLength(buffer_length);
@@ -686,22 +707,6 @@ void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc, D
                                     render_target_view_nv12_uv_depth_.put());
   }
 
-  //Create copy nv12 texture description for passing to encoder
-  D3D11_TEXTURE2D_DESC copyDesc = {};
-  ZeroMemory(&copyDesc, sizeof(D3D11_TEXTURE2D_DESC));
-  copyDesc.Width = width_;
-  copyDesc.Height = height_;
-  copyDesc.MipLevels = 1;
-  copyDesc.ArraySize = 1;
-  copyDesc.Format = DXGI_FORMAT_NV12;
-  copyDesc.SampleDesc.Count = 1;
-  copyDesc.SampleDesc.Quality = 0;
-  copyDesc.Usage = D3D11_USAGE_DEFAULT;
-  copyDesc.BindFlags = 0;
-  copyDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_NTHANDLE |          // Istemi: added flags to make encoder side happy
-                       D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
-
-  hr = device_->CreateTexture2D(&copyDesc, nullptr, shared_nv12_texture_.put());
   SUCCEEDED(hr);
 }
 

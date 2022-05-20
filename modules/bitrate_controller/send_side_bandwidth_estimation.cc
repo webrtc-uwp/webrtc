@@ -337,14 +337,11 @@ void SendSideBandwidthEstimation::UpdateEstimate(int64_t now_ms) {
       //   108kbps.
       new_bitrate = static_cast<uint32_t>(
           min_bitrate_history_.front().second * 1.08 + 0.5);
-      if(new_bitrate<500000){
-        new_bitrate=2*new_bitrate;
-      }
 
       // Add 1 kbps extra, just to make sure that we do not get stuck
       // (gives a little extra increase at low rates, negligible at higher
       // rates).
-      new_bitrate += 100000;
+      new_bitrate += 1000;
     } else if (current_bitrate_bps_ > bitrate_threshold_bps_) {
       if (loss <= high_loss_threshold_) {
         // Loss between 2% - 10%: Do nothing.
