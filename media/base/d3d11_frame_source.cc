@@ -547,7 +547,7 @@ void D3D11VideoFrameSource::SetupNV12Shaders(D3D11_TEXTURE2D_DESC* color_desc, D
       uint lowDepth = depth * 65535.0f;
       lowDepth = lowDepth & 0xFF;
 
-      output.depth_alpha = float2(lowDepth, sampledColor.a);
+      output.depth_alpha = float2(lowDepth / 255.0f, sampledColor.a);
 
       return output;
     })_";
