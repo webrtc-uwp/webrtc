@@ -89,6 +89,11 @@ D3D11VideoFrameSource::D3D11VideoFrameSource(
   width_ = color_desc->Width * color_desc->ArraySize;
   height_ = color_desc->Height;
 
+  if(color_desc->Format == DXGI_FORMAT_NV12){
+    is_passthrough_ = true;
+    return;
+  }
+
 #if !GpuVideoFrameBuffer
   D3D11_TEXTURE2D_DESC staging_desc = *color_desc;
   assert(staging_desc.ArraySize > 0);
@@ -196,21 +201,20 @@ D3D11VideoFrameSource::~D3D11VideoFrameSource() {
 void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
                                             ID3D11Texture2D* depth_texture,
                                             webrtc::XRTimestamp timestamp) {
+  HRESULT hr = S_OK;
   int64_t time_us = rtc::TimeMicros();
-
   int adapted_width;
   int adapted_height;
   int crop_width;
   int crop_height;
   int crop_x;
   int crop_y;
+  rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer;
 
   if (!AdaptFrame(width_, height_, time_us, &adapted_width, &adapted_height,
                   &crop_width, &crop_height, &crop_x, &crop_y)) {
     return;
   }
-
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer;
 
   #if !GpuVideoFrameBuffer
   auto d3d_frame_buffer = D3D11VideoFrameBuffer::Create(
@@ -225,63 +229,71 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
   // we'd need to modify. Then we could also introduce d3d11 as frame type.
   frame_buffer = d3d_frame_buffer->ToI420AlphaDepth(frame_mem_arena_, frame_mem_arena_size_);
   #else
+  unsigned int lock_key = 0;
+  unsigned int release_key = 1;
+  winrt::com_ptr<ID3D11Texture2D> shared_nv12_texture;
   D3D11_TEXTURE2D_DESC color_desc, depth_desc;
   color_texture->GetDesc(&color_desc);
   if(depth_texture) depth_texture->GetDesc(&depth_desc);
 
-  if(color_desc.ArraySize == 1){
-    context_->CopyResource(flattened_color_texture_.get(), color_texture);
-    if(depth_texture){
-      context_->CopyResource(flattened_depth_texture_.get(), depth_texture);
-    }
-  }
-  else if (color_desc.ArraySize == 2)
-  {
-    // texture array (2 images)
-    UINT left_eye_color_subresource = D3D11CalcSubresource(0, 0, color_desc.MipLevels);
-    UINT right_eye_color_subresource = D3D11CalcSubresource(0, 1, color_desc.MipLevels);
-
-    context_->CopySubresourceRegion(flattened_color_texture_.get(), 0, 0, 0, 0, color_texture, left_eye_color_subresource, 0);
-    context_->CopySubresourceRegion(flattened_color_texture_.get(), 0, color_desc.Width, 0, 0, color_texture, right_eye_color_subresource, 0);
-    if(depth_texture){
-      // texture array (2 images)
-      UINT left_eye_depth_subresource = D3D11CalcSubresource(0, 0, depth_desc.MipLevels);
-      UINT right_eye_depth_subresource = D3D11CalcSubresource(0, 1, depth_desc.MipLevels);
-
-      context_->CopyResource(depth_texture_array_.get(), depth_texture);
-      context_->CopySubresourceRegion(flattened_depth_texture_.get(), 0, 0, 0, 0, depth_texture_array_.get(), left_eye_depth_subresource, 0);
-      context_->CopySubresourceRegion(flattened_depth_texture_.get(), 0, depth_desc.Width, 0, 0, depth_texture_array_.get(), right_eye_depth_subresource, 0);
-    }
+  if(is_passthrough_){
+    render_target_nv12_color_.attach(color_texture);
   }
   else{
-    RTC_LOG(LS_ERROR) << "Received a colour texture with ArraySize > 2";
-  }
+    if(color_desc.ArraySize == 1){
+      context_->CopyResource(flattened_color_texture_.get(), color_texture);
+      if(depth_texture){
+        context_->CopyResource(flattened_depth_texture_.get(), depth_texture);
+      }
+    }
+    else if (color_desc.ArraySize == 2)
+    {
+      // texture array (2 images)
+      UINT left_eye_color_subresource = D3D11CalcSubresource(0, 0, color_desc.MipLevels);
+      UINT right_eye_color_subresource = D3D11CalcSubresource(0, 1, color_desc.MipLevels);
 
-  if (!is_once_srv_)
-  {
-    auto const color_texture_resource_view = CD3D11_SHADER_RESOURCE_VIEW_DESC(flattened_color_texture_.get(),
-                                                                          D3D11_SRV_DIMENSION_TEXTURE2D,
-                                                                          DXGI_FORMAT_R8G8B8A8_UNORM);
+      context_->CopySubresourceRegion(flattened_color_texture_.get(), 0, 0, 0, 0, color_texture, left_eye_color_subresource, 0);
+      context_->CopySubresourceRegion(flattened_color_texture_.get(), 0, color_desc.Width, 0, 0, color_texture, right_eye_color_subresource, 0);
+      if(depth_texture){
+        // texture array (2 images)
+        UINT left_eye_depth_subresource = D3D11CalcSubresource(0, 0, depth_desc.MipLevels);
+        UINT right_eye_depth_subresource = D3D11CalcSubresource(0, 1, depth_desc.MipLevels);
 
-    HRESULT hr = device_->CreateShaderResourceView(flattened_color_texture_.get(),
-                                      &color_texture_resource_view,
-                                      color_texture_srv_.put());
-    if(depth_texture){
-      auto const depth_texture_resource_view = CD3D11_SHADER_RESOURCE_VIEW_DESC(flattened_depth_texture_.get(),
-                                                                          D3D11_SRV_DIMENSION_TEXTURE2D,
-                                                                          DXGI_FORMAT_R16_UNORM);
-
-      hr = device_->CreateShaderResourceView(flattened_depth_texture_.get(),
-                                      &depth_texture_resource_view,
-                                      depth_texture_srv_.put());
+        context_->CopyResource(depth_texture_array_.get(), depth_texture);
+        context_->CopySubresourceRegion(flattened_depth_texture_.get(), 0, 0, 0, 0, depth_texture_array_.get(), left_eye_depth_subresource, 0);
+        context_->CopySubresourceRegion(flattened_depth_texture_.get(), 0, depth_desc.Width, 0, 0, depth_texture_array_.get(), right_eye_depth_subresource, 0);
+      }
+    }
+    else{
+      RTC_LOG(LS_ERROR) << "Received a colour texture with ArraySize > 2";
     }
 
-    SUCCEEDED(hr);
-    is_once_srv_ = true;
-  }
+    if (!is_once_srv_)
+    {
+      auto const color_texture_resource_view = CD3D11_SHADER_RESOURCE_VIEW_DESC(flattened_color_texture_.get(),
+                                                                            D3D11_SRV_DIMENSION_TEXTURE2D,
+                                                                            DXGI_FORMAT_R8G8B8A8_UNORM);
 
-  // Convert from argb to nv12
-  ConvertToNV12(color_texture, depth_texture);
+      hr = device_->CreateShaderResourceView(flattened_color_texture_.get(),
+                                        &color_texture_resource_view,
+                                        color_texture_srv_.put());
+      if(depth_texture){
+        auto const depth_texture_resource_view = CD3D11_SHADER_RESOURCE_VIEW_DESC(flattened_depth_texture_.get(),
+                                                                            D3D11_SRV_DIMENSION_TEXTURE2D,
+                                                                            DXGI_FORMAT_R16_UNORM);
+
+        hr = device_->CreateShaderResourceView(flattened_depth_texture_.get(),
+                                        &depth_texture_resource_view,
+                                        depth_texture_srv_.put());
+      }
+
+      SUCCEEDED(hr);
+      is_once_srv_ = true;
+    }
+
+    // Convert from argb to nv12
+    ConvertToNV12(color_texture, depth_texture);
+  }
 
   //Create copy nv12 texture description for passing to encoder
   D3D11_TEXTURE2D_DESC copyDesc = {};
@@ -301,16 +313,13 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
 
   // TODO: Potential overkill recreating the texture every frame. This requires further investigation.
   // Tracked in https://holo.atlassian.net/browse/IAR-509
-  winrt::com_ptr<ID3D11Texture2D> shared_nv12_texture;
-  HRESULT hr = device_->CreateTexture2D(&copyDesc, nullptr, shared_nv12_texture.put());
+  hr = device_->CreateTexture2D(&copyDesc, nullptr, shared_nv12_texture.put());
 
   //Make a copy our NV12 texture2D
   winrt::com_ptr<IDXGIKeyedMutex> keyed_mutex;
   hr = shared_nv12_texture->QueryInterface(keyed_mutex.put());
   RTC_CHECK(SUCCEEDED(hr)) << "Texture is not correctly shareable";
 
-  unsigned int lock_key = 0;
-  unsigned int release_key = 1;
   hr = keyed_mutex->AcquireSync(lock_key, 5);
   if(FAILED(hr)){
     RTC_LOG(LS_WARNING) << "Failed to acquire the shared mutex in at converter within 5ms, dropping frame";
@@ -322,6 +331,10 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
     context_->CopySubresourceRegion(shared_nv12_texture.get(), 0, 0, color_desc.Height, 0, render_target_nv12_depth_.get(), 0, NULL);
   }
   keyed_mutex->ReleaseSync(release_key);
+
+  if(is_passthrough_){
+    render_target_nv12_color_.detach();
+  }
 
   // Create buffer
 	winrt::com_ptr<IMFMediaBuffer> nv12_buffer;

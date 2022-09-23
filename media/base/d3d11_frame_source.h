@@ -52,6 +52,7 @@ namespace hlr {
         winrt::com_ptr<ID3D11DeviceContext> context_;
         int width_;
         int height_;
+        bool is_passthrough_ = false;
 
         rtc::Thread* signaling_thread_;
         rtc::AdaptedVideoTrackSource::SourceState state_ = rtc::AdaptedVideoTrackSource::SourceState::kInitializing;
