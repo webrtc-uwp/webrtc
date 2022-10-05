@@ -237,7 +237,7 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
   if(depth_texture) depth_texture->GetDesc(&depth_desc);
 
   if(is_passthrough_){
-    render_target_nv12_color_.attach(color_texture);
+    shared_nv12_texture.copy_from(color_texture);
   }
   else{
     if(color_desc.ArraySize == 1){
@@ -293,47 +293,43 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
 
     // Convert from argb to nv12
     ConvertToNV12(color_texture, depth_texture);
-  }
 
-  //Create copy nv12 texture description for passing to encoder
-  D3D11_TEXTURE2D_DESC copyDesc = {};
-  ZeroMemory(&copyDesc, sizeof(D3D11_TEXTURE2D_DESC));
-  copyDesc.Width = width_;
-  copyDesc.Height = height_;
-  copyDesc.MipLevels = 1;
-  copyDesc.ArraySize = 1;
-  copyDesc.Format = DXGI_FORMAT_NV12;
-  copyDesc.SampleDesc.Count = 1;
-  copyDesc.SampleDesc.Quality = 0;
-  copyDesc.Usage = D3D11_USAGE_DEFAULT;
-  copyDesc.BindFlags = 0;
-  // Since the encoder uses a different d3d device, the below flags are required to ensure synchronisation
-  // with the rendering device
-  copyDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_NTHANDLE | D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+    //Create copy nv12 texture description for passing to encoder
+    D3D11_TEXTURE2D_DESC copyDesc = {};
+    ZeroMemory(&copyDesc, sizeof(D3D11_TEXTURE2D_DESC));
+    copyDesc.Width = width_;
+    copyDesc.Height = height_;
+    copyDesc.MipLevels = 1;
+    copyDesc.ArraySize = 1;
+    copyDesc.Format = DXGI_FORMAT_NV12;
+    copyDesc.SampleDesc.Count = 1;
+    copyDesc.SampleDesc.Quality = 0;
+    copyDesc.Usage = D3D11_USAGE_DEFAULT;
+    copyDesc.BindFlags = 0;
+    // Since the encoder uses a different d3d device, the below flags are required to ensure synchronisation
+    // with the rendering device
+    copyDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_NTHANDLE | D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
-  // TODO: Potential overkill recreating the texture every frame. This requires further investigation.
-  // Tracked in https://holo.atlassian.net/browse/IAR-509
-  hr = device_->CreateTexture2D(&copyDesc, nullptr, shared_nv12_texture.put());
+    // TODO: Potential overkill recreating the texture every frame. This requires further investigation.
+    // Tracked in https://holo.atlassian.net/browse/IAR-509
+    hr = device_->CreateTexture2D(&copyDesc, nullptr, shared_nv12_texture.put());
 
-  //Make a copy our NV12 texture2D
-  winrt::com_ptr<IDXGIKeyedMutex> keyed_mutex;
-  hr = shared_nv12_texture->QueryInterface(keyed_mutex.put());
-  RTC_CHECK(SUCCEEDED(hr)) << "Texture is not correctly shareable";
+    //Make a copy our NV12 texture2D
+    winrt::com_ptr<IDXGIKeyedMutex> keyed_mutex;
+    hr = shared_nv12_texture->QueryInterface(keyed_mutex.put());
+    RTC_CHECK(SUCCEEDED(hr)) << "Texture is not correctly shareable";
 
-  hr = keyed_mutex->AcquireSync(lock_key, 5);
-  if(FAILED(hr)){
-    RTC_LOG(LS_WARNING) << "Failed to acquire the shared mutex in at converter within 5ms, dropping frame";
-    return;
-  }
+    hr = keyed_mutex->AcquireSync(lock_key, 5);
+    if(FAILED(hr)){
+      RTC_LOG(LS_WARNING) << "Failed to acquire the shared mutex in at converter within 5ms, dropping frame";
+      return;
+    }
 
-  context_->CopySubresourceRegion(shared_nv12_texture.get(), 0, 0, 0, 0, render_target_nv12_color_.get(), 0, NULL);
-  if(depth_texture){
-    context_->CopySubresourceRegion(shared_nv12_texture.get(), 0, 0, color_desc.Height, 0, render_target_nv12_depth_.get(), 0, NULL);
-  }
-  keyed_mutex->ReleaseSync(release_key);
-
-  if(is_passthrough_){
-    render_target_nv12_color_.detach();
+    context_->CopySubresourceRegion(shared_nv12_texture.get(), 0, 0, 0, 0, render_target_nv12_color_.get(), 0, NULL);
+    if(depth_texture){
+      context_->CopySubresourceRegion(shared_nv12_texture.get(), 0, 0, color_desc.Height, 0, render_target_nv12_depth_.get(), 0, NULL);
+    }
+    keyed_mutex->ReleaseSync(release_key);
   }
 
   // Create buffer
