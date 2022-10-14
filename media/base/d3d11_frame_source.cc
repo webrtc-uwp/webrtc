@@ -211,6 +211,15 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
   int crop_y;
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer;
 
+  D3D11_TEXTURE2D_DESC color_desc, depth_desc;
+  color_texture->GetDesc(&color_desc);
+  if(depth_texture) depth_texture->GetDesc(&depth_desc);
+
+  // This will work for the server for now as we can guarentee we never change the
+  // width or height. This will need to be handled if we intend to do that however
+  width_ = color_desc.Width * color_desc.ArraySize;
+  height_ = color_desc.Height;
+
   if (!AdaptFrame(width_, height_, time_us, &adapted_width, &adapted_height,
                   &crop_width, &crop_height, &crop_x, &crop_y)) {
     return;
@@ -232,9 +241,6 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
   unsigned int lock_key = 0;
   unsigned int release_key = 1;
   winrt::com_ptr<ID3D11Texture2D> shared_nv12_texture;
-  D3D11_TEXTURE2D_DESC color_desc, depth_desc;
-  color_texture->GetDesc(&color_desc);
-  if(depth_texture) depth_texture->GetDesc(&depth_desc);
 
   if(is_passthrough_){
     shared_nv12_texture.copy_from(color_texture);
