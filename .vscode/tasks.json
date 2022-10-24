@@ -1314,15 +1314,6 @@
       },
       {
         "label": "gen isar.protocol.extensions",
-        "dependsOn": [
-          "gen isar.protocol.extensions.meshing",
-          "gen isar.protocol.extensions.anchoring"
-        ],
-        "dependsOrder": "sequence",
-        "problemMatcher": []
-      },
-      {
-        "label": "gen isar.protocol.extensions.meshing",
         "options": {
           "cwd": "${workspaceFolder}/remoting/extras/isar.protocol.extensions"
         },
@@ -1334,23 +1325,7 @@
           "--cpp-str-flex-ctor",
           "-o",
           "isar.protocol/",
-          "meshing.fbs"
-        ],
-        "problemMatcher": []
-      },
-      {
-        "label": "gen isar.protocol.extensions.anchoring",
-        "options": {
-          "cwd": "${workspaceFolder}/remoting/extras/isar.protocol.extensions"
-        },
-        "command": "flatc",
-        "args": [
-          "--cpp",
-          "--scoped-enums",
-          // "--filename-suffix", "",
-          "--cpp-str-flex-ctor",
-          "-o",
-          "isar.protocol/",
+          "meshing.fbs",
           "anchoring.fbs"
         ],
         "problemMatcher": []
