@@ -73,6 +73,6 @@
 /OUTPUT
 sdk/windows/
 sdk/idl/
-**/.vscode
+# **/.vscode
 **/.vs
 /remoting
