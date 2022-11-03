@@ -1323,9 +1323,8 @@
           "--cpp-str-flex-ctor",
           "-o",
           "isar.protocol/",
-          "-I",
-          "../../src/",
           "meshing.fbs",
+          "anchoring.fbs"
           "camera.fbs",
         ],
         "problemMatcher": []
