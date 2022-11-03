@@ -17,7 +17,6 @@
                 "${workspaceFolder}/remoting/external",
                 "${workspaceFolder}/remoting/include",
                 "${workspaceFolder}/remoting/src",
-                "${workspaceFolder}/remoting/src/remoting/generated",
                 "${workspaceFolder}",
             ],
             "defines": [

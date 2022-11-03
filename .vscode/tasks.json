@@ -1302,13 +1302,12 @@
         "args": [
           "--cpp",
           "--scoped-enums",
-          // "--filename-suffix", "",
           "--cpp-str-flex-ctor",
           "-o",
-          // generated in-tree for now
           "remoting/generated/",
           "isar.protocol.fbs",
-          // "isar.protocol.meshing.fbs",
+          // "--filename-suffix",
+          // "\"\"",
         ],
         "problemMatcher": []
       },
@@ -1321,14 +1320,13 @@
         "args": [
           "--cpp",
           "--scoped-enums",
-          // "--filename-suffix", "",
           "--cpp-str-flex-ctor",
           "-o",
           "isar.protocol/",
           "-I",
           "../../src/",
           "meshing.fbs",
-          "camera.fbs"
+          "camera.fbs",
         ],
         "problemMatcher": []
       },
