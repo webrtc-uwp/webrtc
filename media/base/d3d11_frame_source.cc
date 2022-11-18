@@ -219,6 +219,7 @@ void D3D11VideoFrameSource::OnFrameCaptured(ID3D11Texture2D* color_texture,
   // width or height. This will need to be handled if we intend to do that however
   width_ = color_desc.Width * color_desc.ArraySize;
   height_ = color_desc.Height;
+  if(depth_texture) height_ *= 2;
 
   if (!AdaptFrame(width_, height_, time_us, &adapted_width, &adapted_height,
                   &crop_width, &crop_height, &crop_x, &crop_y)) {
